@@ -1,25 +1,26 @@
 import React, { useCallback, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  useSharedValue,
   withDelay,
-  withSpring,
   withSequence,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
+
 import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-  recordAnimationUpdates,
-  unmockAnimationTimer,
-  mockAnimationTimer,
   clearRenderOutput,
+  describe,
+  expect,
+  getTestComponent,
+  mockAnimationTimer,
+  recordAnimationUpdates,
+  render,
+  test,
+  unmockAnimationTimer,
+  useTestRef,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 

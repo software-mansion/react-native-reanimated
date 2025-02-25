@@ -18,17 +18,31 @@ copy_files_recursively() {
   done
 }
 
-# Worklets iOS files
-copy_files_recursively "apple/worklets" "../react-native-worklets/apple/worklets"
+WORKLETS_DIR="../react-native-worklets"
 
-# Worklets Android files
-# Note that we don't duplicate "android/src/main"
-copy_files_recursively "android/src/worklets" "../react-native-worklets/android/src/worklets"
+if [ ! -d "$WORKLETS_DIR" ]; then
+  echo "Please run this script from react-native-reanimated package"
+  exit 1
+fi
 
-# Worklets Android-specific cpp files
-copy_files_recursively "android/src/main/cpp/worklets" "../react-native-worklets/android/src/main/cpp/worklets"
+TYPESCRIPT_DEST_DIR="src/worklets"
+rm -fr "$TYPESCRIPT_DEST_DIR"
+copy_files_recursively "$TYPESCRIPT_DEST_DIR" "$WORKLETS_DIR/src/worklets"
 
-# Worklets Common cpp files
-copy_files_recursively "Common/cpp/worklets" "../react-native-worklets/Common/cpp/worklets"
+IOS_DEST_DIR="apple/worklets"
+rm -fr "$IOS_DEST_DIR"
+copy_files_recursively "$IOS_DEST_DIR" "$WORKLETS_DIR/apple/worklets"
+
+ANDROID_JAVA_DEST_DIR="android/src/worklets"
+rm -fr "$ANDROID_JAVA_DEST_DIR"
+copy_files_recursively "$ANDROID_JAVA_DEST_DIR" "$WORKLETS_DIR/android/src/worklets"
+
+ANDROID_CPP_DEST_DIR="android/src/main/cpp/worklets"
+rm -fr "$ANDROID_CPP_DEST_DIR"
+copy_files_recursively "$ANDROID_CPP_DEST_DIR" "$WORKLETS_DIR/android/src/main/cpp/worklets"
+
+COMMON_CPP_DEST_DIR="Common/cpp/worklets"
+rm -fr "$COMMON_CPP_DEST_DIR"
+copy_files_recursively "$COMMON_CPP_DEST_DIR" "$WORKLETS_DIR/Common/cpp/worklets"
 
 echo "Done duplicating Worklets in Reanimated"

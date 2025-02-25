@@ -105,76 +105,125 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
         "[Reanimated] TransformOperation must have exactly one property.");
   }
 
-  std::string property =
+  const auto propertyName =
       propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
-  TransformOperationType operationType = getTransformOperationType(property);
+  const auto propertyValue =
+      obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
+  TransformOperationType operationType =
+      getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOperationType::Perspective:
-      return std::make_shared<PerspectiveOperation>(
-          obj.getProperty(rt, "perspective").asNumber());
+      return std::make_shared<PerspectiveOperation>(propertyValue.asNumber());
     case TransformOperationType::Rotate:
       return std::make_shared<RotateOperation>(
-          obj.getProperty(rt, "rotate").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateX:
       return std::make_shared<RotateXOperation>(
-          obj.getProperty(rt, "rotateX").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateY:
       return std::make_shared<RotateYOperation>(
-          obj.getProperty(rt, "rotateY").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateZ:
       return std::make_shared<RotateZOperation>(
-          obj.getProperty(rt, "rotateZ").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::Scale:
-      return std::make_shared<ScaleOperation>(
-          obj.getProperty(rt, "scale").asNumber());
+      return std::make_shared<ScaleOperation>(propertyValue.asNumber());
     case TransformOperationType::ScaleX:
-      return std::make_shared<ScaleXOperation>(
-          obj.getProperty(rt, "scaleX").asNumber());
+      return std::make_shared<ScaleXOperation>(propertyValue.asNumber());
     case TransformOperationType::ScaleY:
-      return std::make_shared<ScaleYOperation>(
-          obj.getProperty(rt, "scaleY").asNumber());
+      return std::make_shared<ScaleYOperation>(propertyValue.asNumber());
     case TransformOperationType::TranslateX: {
-      const auto &property = obj.getProperty(rt, "translateX");
-      if (property.isNumber()) {
-        return std::make_shared<TranslateXOperation>(property.asNumber());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateXOperation>(propertyValue.asNumber());
       }
       return std::make_shared<TranslateXOperation>(
-          property.asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::TranslateY: {
-      const auto &property = obj.getProperty(rt, "translateY");
-      if (property.isNumber()) {
-        return std::make_shared<TranslateYOperation>(property.asNumber());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateYOperation>(propertyValue.asNumber());
       }
       return std::make_shared<TranslateYOperation>(
-          property.asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::SkewX:
       return std::make_shared<SkewXOperation>(
-          obj.getProperty(rt, "skewX").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::SkewY:
       return std::make_shared<SkewYOperation>(
-          obj.getProperty(rt, "skewY").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::Matrix:
       return std::make_shared<MatrixOperation>(
-          TransformMatrix(rt, obj.getProperty(rt, "matrix")));
+          TransformMatrix(rt, propertyValue));
     default:
       throw std::invalid_argument(
-          "[Reanimated] Unknown transform operation: " + property);
+          "[Reanimated] Unknown transform operation: " + propertyName);
   }
 }
 
-jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
-  const auto &value = valueToJSIValue(rt);
-  if (value.isUndefined()) {
-    return jsi::Value::undefined();
+std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
+    const folly::dynamic &value) {
+  if (!value.isObject()) {
+    throw std::invalid_argument(
+        "[Reanimated] TransformOperation must be an object.");
   }
 
-  jsi::Object obj(rt);
-  obj.setProperty(
-      rt, jsi::String::createFromUtf8(rt, getOperationName()), value);
-  return obj;
+  auto &obj = value;
+  if (obj.size() != 1) {
+    throw std::invalid_argument(
+        "[Reanimated] TransformOperation must have exactly one property.");
+  }
+
+  auto propertyName = obj.items().begin()->first.getString();
+  auto propertyValue = obj.items().begin()->second;
+  TransformOperationType operationType =
+      getTransformOperationType(propertyName);
+
+  switch (operationType) {
+    case TransformOperationType::Perspective:
+      return std::make_shared<PerspectiveOperation>(propertyValue.getDouble());
+    case TransformOperationType::Rotate:
+      return std::make_shared<RotateOperation>(propertyValue.getString());
+    case TransformOperationType::RotateX:
+      return std::make_shared<RotateXOperation>(propertyValue.getString());
+    case TransformOperationType::RotateY:
+      return std::make_shared<RotateYOperation>(propertyValue.getString());
+    case TransformOperationType::RotateZ:
+      return std::make_shared<RotateZOperation>(propertyValue.getString());
+    case TransformOperationType::Scale:
+      return std::make_shared<ScaleOperation>(propertyValue.getDouble());
+    case TransformOperationType::ScaleX:
+      return std::make_shared<ScaleXOperation>(propertyValue.getDouble());
+    case TransformOperationType::ScaleY:
+      return std::make_shared<ScaleYOperation>(propertyValue.getDouble());
+    case TransformOperationType::TranslateX: {
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateXOperation>(propertyValue.getDouble());
+      }
+      return std::make_shared<TranslateXOperation>(propertyValue.getString());
+    }
+    case TransformOperationType::TranslateY: {
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateYOperation>(propertyValue.getDouble());
+      }
+      return std::make_shared<TranslateYOperation>(propertyValue.getString());
+    }
+    case TransformOperationType::SkewX:
+      return std::make_shared<SkewXOperation>(propertyValue.getString());
+    case TransformOperationType::SkewY:
+      return std::make_shared<SkewYOperation>(propertyValue.getString());
+    case TransformOperationType::Matrix:
+      return std::make_shared<MatrixOperation>(TransformMatrix(propertyValue));
+    default:
+      throw std::invalid_argument(
+          "[Reanimated] Unknown transform operation: " + propertyName);
+  }
+}
+
+folly::dynamic TransformOperation::toDynamic() const {
+  const auto &value = valueToDynamic();
+  return folly::dynamic::object(getOperationName(), value);
 }
 
 template <typename TValue>
@@ -232,9 +281,9 @@ PerspectiveOperation::PerspectiveOperation(double value)
 TransformOperationType PerspectiveOperation::type() const {
   return TransformOperationType::Perspective;
 }
-jsi::Value PerspectiveOperation::valueToJSIValue(jsi::Runtime &rt) const {
+folly::dynamic PerspectiveOperation::valueToDynamic() const {
   // Perspective cannot be 0, so we return undefined in this case
-  return value.value != 0 ? value.toJSIValue(rt) : jsi::Value::undefined();
+  return value.value != 0 ? value.toDynamic() : folly::dynamic();
 }
 TransformMatrix PerspectiveOperation::toMatrix() const {
   return TransformMatrix::Perspective(value.value);
@@ -246,8 +295,8 @@ RotateOperation::RotateOperation(const std::string &value)
 TransformOperationType RotateOperation::type() const {
   return TransformOperationType::Rotate;
 }
-jsi::Value RotateOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+folly::dynamic RotateOperation::valueToDynamic() const {
+  return value.toDynamic();
 }
 TransformMatrix RotateOperation::toMatrix() const {
   return TransformMatrix::RotateZ(value.value);
@@ -288,8 +337,8 @@ ScaleOperation::ScaleOperation(double value)
 TransformOperationType ScaleOperation::type() const {
   return TransformOperationType::Scale;
 }
-jsi::Value ScaleOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+folly::dynamic ScaleOperation::valueToDynamic() const {
+  return value.toDynamic();
 }
 bool ScaleOperation::canConvertTo(TransformOperationType type) const {
   return type == TransformOperationType::ScaleX ||
@@ -334,8 +383,8 @@ TranslateOperation::TranslateOperation(const std::string &value)
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
-jsi::Value TranslateOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+folly::dynamic TranslateOperation::valueToDynamic() const {
+  return value.toDynamic();
 }
 TransformMatrix TranslateOperation::toMatrix() const {
   return toMatrix(value.value);
@@ -366,8 +415,8 @@ TransformMatrix TranslateYOperation::toMatrix(double resolvedValue) const {
 // Skew
 SkewOperation::SkewOperation(const std::string &value)
     : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
-jsi::Value SkewOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+folly::dynamic SkewOperation::valueToDynamic() const {
+  return value.toDynamic();
 }
 
 TransformOperationType SkewXOperation::type() const {
@@ -498,13 +547,14 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
   return true;
 }
 
-jsi::Value MatrixOperation::valueToJSIValue(jsi::Runtime &rt) const {
+folly::dynamic MatrixOperation::valueToDynamic() const {
   if (!std::holds_alternative<TransformMatrix>(value)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert unprocessed transform operations to the JSI value.");
   }
-  return std::get<TransformMatrix>(value).toJSIValue(rt);
+  return std::get<TransformMatrix>(value).toDynamic();
 }
+
 TransformMatrix MatrixOperation::toMatrix() const {
   if (!std::holds_alternative<TransformMatrix>(value)) {
     throw std::invalid_argument(

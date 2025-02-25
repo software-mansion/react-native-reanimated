@@ -22,5 +22,8 @@
     "@stylexjs/babel-plugin": "^0.10.0",
     "prettier": "^3.3.3",
     "serve": "^14.2.3"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }

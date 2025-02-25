@@ -1,6 +1,9 @@
 'use strict';
-import { ReanimatedModule } from './ReanimatedModule';
-import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
+import {
+  controlEdgeToEdgeValues,
+  isEdgeToEdge,
+} from 'react-native-is-edge-to-edge';
+
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -9,21 +12,29 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
-import { initializeUIRuntime } from './initializers';
-import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
+import { SensorContainer } from './SensorContainer';
+import type { WorkletFunction } from './WorkletsResolver';
+import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export type { WorkletRuntime } from './runtimes';
-export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  makeShareable,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './WorkletsResolver';
 
+const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
 /** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
 export const isReanimated3 = () => true;
@@ -43,7 +54,7 @@ export function getViewProp<T>(
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
-  if (isFabric() && !component) {
+  if (IS_FABRIC && !component) {
     throw new ReanimatedError(
       'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
@@ -112,12 +123,21 @@ export function subscribeForKeyboardEvents(
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
   }
+
+  if (__DEV__) {
+    controlEdgeToEdgeValues({
+      isStatusBarTranslucentAndroid: options.isStatusBarTranslucentAndroid,
+      isNavigationBarTranslucentAndroid:
+        options.isNavigationBarTranslucentAndroid,
+    });
+  }
+
   return ReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(
       handleAndFlushAnimationFrame as WorkletFunction
     ),
-    options.isStatusBarTranslucentAndroid ?? false,
-    options.isNavigationBarTranslucentAndroid ?? false
+    EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
+    EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
 }
 
@@ -152,10 +172,6 @@ export function initializeSensor(
 export function unregisterSensor(sensorId: number): void {
   const sensorContainer = getSensorContainer();
   return sensorContainer.unregisterSensor(sensorId);
-}
-
-if (!isWeb()) {
-  initializeUIRuntime(ReanimatedModule);
 }
 
 type FeaturesConfig = {

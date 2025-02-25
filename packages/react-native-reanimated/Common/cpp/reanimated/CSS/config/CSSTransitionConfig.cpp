@@ -3,6 +3,23 @@
 
 namespace reanimated {
 
+std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
+    const CSSTransitionPropertiesSettings &propertiesSettings,
+    const std::string &propName) {
+  // Try to use property specific settings first
+  const auto &propIt = propertiesSettings.find(propName);
+  if (propIt != propertiesSettings.end()) {
+    return propIt->second;
+  }
+  // Fallback to "all" settings if no property specific settings are available
+  const auto &allIt = propertiesSettings.find("all");
+  if (allIt != propertiesSettings.end()) {
+    return allIt->second;
+  }
+  // Or return nullopt if no settings are available
+  return std::nullopt;
+}
+
 TransitionProperties getProperties(
     jsi::Runtime &rt,
     const jsi::Object &config) {
@@ -22,6 +39,10 @@ TransitionProperties getProperties(
   }
 
   return std::nullopt;
+}
+
+bool getAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "allowDiscrete").asBool();
 }
 
 CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
@@ -44,7 +65,8 @@ CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
         CSSTransitionPropertySettings{
             getDuration(rt, propertySettings),
             getTimingFunction(rt, propertySettings),
-            getDelay(rt, propertySettings)});
+            getDelay(rt, propertySettings),
+            getAllowDiscrete(rt, propertySettings)});
   }
 
   return result;
@@ -57,8 +79,7 @@ CSSTransitionConfig parseCSSTransitionConfig(
   return CSSTransitionConfig{
       getProperties(rt, configObj),
       parseCSSTransitionPropertiesSettings(
-          rt, configObj.getProperty(rt, "settings").asObject(rt)),
-      configObj.getProperty(rt, "allowDiscrete").asBool()};
+          rt, configObj.getProperty(rt, "settings").asObject(rt))};
 }
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
@@ -74,9 +95,6 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
   if (partialObj.hasProperty(rt, "settings")) {
     result.settings = parseCSSTransitionPropertiesSettings(
         rt, partialObj.getProperty(rt, "settings").asObject(rt));
-  }
-  if (partialObj.hasProperty(rt, "allowDiscrete")) {
-    result.allowDiscrete = partialObj.getProperty(rt, "allowDiscrete").asBool();
   }
 
   return result;

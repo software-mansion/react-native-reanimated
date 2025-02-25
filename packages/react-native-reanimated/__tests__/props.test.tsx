@@ -1,13 +1,14 @@
-import { View, Pressable, Text } from 'react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import type { ViewStyle } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Pressable, Text, View } from 'react-native';
+
 import Animated, {
+  getAnimatedStyle,
   interpolate,
   interpolateColor,
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
 } from '../src';
-import { getAnimatedStyle } from '../src/jestUtils';
 import { processBoxShadow } from '../src/processBoxShadow';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -85,9 +86,12 @@ describe('Test of boxShadow prop', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const pressable = getByTestId('pressable');
 
-    expect(pressable.props.style.boxShadow).toBe(
-      '0px 4px 10px 0px rgba(255, 0, 0, 1)'
-    );
+    expect(pressable.props.style).toEqual([
+      {
+        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)',
+      },
+      getDefaultStyle(),
+    ]);
     expect(pressable).toHaveAnimatedStyle(style);
     fireEvent.press(pressable);
     jest.advanceTimersByTime(600);
@@ -111,13 +115,18 @@ describe('Test of boxShadow prop', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const pressable = getByTestId('pressable');
 
-    expect(pressable.props.style.boxShadow).toBe(
-      '0px 4px 10px 0px rgba(255, 0, 0, 1)'
-    );
+    expect(pressable.props.style).toEqual([
+      {
+        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)',
+      },
+      getDefaultStyle(),
+    ]);
 
-    processBoxShadow(pressable.props.style);
+    const unprocessedStyle = getAnimatedStyle(pressable) as ViewStyle;
 
-    expect(pressable.props.style.boxShadow).toEqual([
+    processBoxShadow(unprocessedStyle);
+
+    expect(unprocessedStyle.boxShadow).toEqual([
       {
         offsetX: 0,
         offsetY: 4,

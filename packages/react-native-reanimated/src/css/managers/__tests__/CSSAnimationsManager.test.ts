@@ -1,6 +1,7 @@
 'use strict';
-import CSSAnimationsManager from '../CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import { CSSKeyframesRuleImpl } from '../../models';
+import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   registerCSSAnimations,
   unregisterCSSAnimations,
@@ -10,13 +11,15 @@ import type {
   CSSAnimationProperties,
   ExistingCSSAnimationProperties,
 } from '../../types';
-import { CSSKeyframesRuleImpl } from '../../models';
-import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
+import type { ProcessedAnimation } from '../CSSAnimationsManager';
+import CSSAnimationsManager from '../CSSAnimationsManager';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   updateCSSAnimations: jest.fn(),
+  registerCSSKeyframes: jest.fn(),
+  unregisterCSSKeyframes: jest.fn(),
 }));
 
 describe('CSSAnimationsManager', () => {
@@ -44,9 +47,8 @@ describe('CSSAnimationsManager', () => {
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
         expect(registerCSSAnimations).toHaveBeenCalledWith(shadowNodeWrapper, [
           {
-            ...new CSSKeyframesRuleImpl(animationProperties.animationName)
-              .normalizedKeyframes,
-            ...normalizeSingleCSSAnimationSettings(animationProperties),
+            name: expect.any(String),
+            settings: normalizeSingleCSSAnimationSettings(animationProperties),
           },
         ]);
 
@@ -134,23 +136,30 @@ describe('CSSAnimationsManager', () => {
     });
 
     describe('multiple animations', () => {
-      // TODO - add after implementing examples
+      // TODO - add after fixing multiple animations implementation for native
     });
   });
 
   describe('detach', () => {
     it('detaches all animations attached to the view', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (manager as any).attachedAnimations = [
+      const attachedAnimations: ProcessedAnimation[] = [
         {
-          serializedKeyframes: '{"from":{"opacity":1},"to":{"opacity":0.5}}',
-          animationProperties: {},
+          keyframesRule: new CSSKeyframesRuleImpl({
+            from: { opacity: 1 },
+            to: { opacity: 0.5 },
+          }),
+          normalizedSettings: normalizeSingleCSSAnimationSettings({}),
         },
         {
-          serializedKeyframes: '{"from":{"opacity":0},"to":{"opacity":1}}',
-          animationProperties: {},
+          keyframesRule: new CSSKeyframesRuleImpl({
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          }),
+          normalizedSettings: normalizeSingleCSSAnimationSettings({}),
         },
       ];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (manager as any).attachedAnimations = attachedAnimations;
 
       manager.detach();
 
@@ -164,4 +173,6 @@ describe('CSSAnimationsManager', () => {
       expect(updateCSSAnimations).not.toHaveBeenCalled();
     });
   });
+
+  // TODO - adds integration tests for the new CSSKeyframesRegistry
 });

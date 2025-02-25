@@ -21,48 +21,6 @@ compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
-def self.install_modules_dependencies_legacy(s)
-  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  s.dependency "React-Core"
-  if $new_arch_enabled
-    s.dependency "React-RCTFabric"
-    s.dependency "ReactCodegen"
-  end
-  s.dependency "RCT-Folly"
-  s.dependency "RCTRequired"
-  s.dependency "RCTTypeSafety"
-  s.dependency 'FBLazyVector'
-  s.dependency 'React-Core'
-  s.dependency 'React-CoreModules'
-  s.dependency 'React-Core/DevSupport'
-  if !$config[:is_tvos_target]
-    s.dependency 'React-RCTActionSheet'
-  end
-  s.dependency 'React-RCTNetwork'
-  s.dependency 'React-RCTAnimation'
-  s.dependency 'React-RCTLinking'
-  s.dependency 'React-RCTBlob'
-  s.dependency 'React-RCTSettings'
-  s.dependency 'React-RCTText'
-  s.dependency 'React-RCTImage'
-  s.dependency 'React-Core/RCTWebSocket'
-  s.dependency 'React-cxxreact'
-  s.dependency 'React-jsi'
-  s.dependency 'React-jsiexecutor'
-  s.dependency 'React-jsinspector'
-  s.dependency 'Yoga'
-  s.dependency 'DoubleConversion'
-  s.dependency 'glog'
-  if using_hermes && !$config[:is_tvos_target]
-    s.dependency 'React-hermes'
-    s.dependency 'hermes-engine'
-  end
-  s.dependency 'React-callinvoker'
-  if !$new_arch_enabled
-    s.dependency 'React-RCTAppDelegate'
-  end
-end
-
 Pod::Spec.new do |s|
 
   s.name         = "RNReanimated"
@@ -113,6 +71,8 @@ Pod::Spec.new do |s|
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 
+  external_worklets_header_path = $config[:has_external_worklets] ? "\"$(PODS_ROOT)/Headers/Public/RNWorklets\"" : ''
+
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -125,6 +85,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      external_worklets_header_path,
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
@@ -140,6 +101,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/RCT-Folly"',
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      external_worklets_header_path,
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",
@@ -147,10 +109,12 @@ Pod::Spec.new do |s|
     "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{debug_flag} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
-  s.dependency "ReactCommon/turbomodule/core"
-  if defined?(install_modules_dependencies()) != nil
-    install_modules_dependencies(s)
-  else
-    install_modules_dependencies_legacy(s)
+
+  install_modules_dependencies(s)
+
+  s.dependency 'React-jsi'
+  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+  if using_hermes && !$config[:is_tvos_target]
+    s.dependency 'React-hermes'
   end
 end

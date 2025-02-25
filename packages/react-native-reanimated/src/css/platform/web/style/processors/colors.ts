@@ -1,5 +1,6 @@
 'use strict';
 import type { ColorValue } from 'react-native';
+
 import type { ValueProcessor } from '../types';
 
 export const processColor: ValueProcessor<ColorValue> = (value) => {

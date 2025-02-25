@@ -1,30 +1,31 @@
 'use strict';
+import type {
+  ShadowNodeWrapper,
+  StyleProps,
+  Value3D,
+  ValueRotation,
+} from '../../commonTypes';
+import { SensorType } from '../../commonTypes';
+import type {
+  NormalizedCSSAnimationKeyframesConfig,
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../../css/platform/native';
+import { ReanimatedError } from '../../errors';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import { SensorType } from '../../commonTypes';
 import type {
-  IReanimatedModule,
   IWorkletsModule,
-  ShadowNodeWrapper,
   ShareableRef,
-  StyleProps,
-  Value3D,
-  ValueRotation,
   WorkletFunction,
-} from '../../commonTypes';
+} from '../../WorkletsResolver';
+import { logger, WorkletsModule } from '../../WorkletsResolver';
+import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
-import { logger } from '../../logger';
-import { ReanimatedError } from '../../errors';
-import { WorkletsModule } from '../../worklets';
-import type {
-  NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../../css/platform/native';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -281,9 +282,27 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  registerCSSKeyframes(
+    _animationName: string,
+    _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSKeyframes` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSKeyframes(_animationName: string): void {
+    throw new ReanimatedError(
+      '`unregisterCSSKeyframes` is not available in JSReanimated.'
+    );
+  }
+
   registerCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    _animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimations` is not available in JSReanimated.'

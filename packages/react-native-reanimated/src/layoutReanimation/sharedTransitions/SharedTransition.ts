@@ -1,5 +1,6 @@
 'use strict';
 import { withTiming } from '../../animation';
+import { getReduceMotionFromConfig } from '../../animation/util';
 import type {
   CustomProgressAnimation,
   LayoutAnimationsOptions,
@@ -13,10 +14,9 @@ import {
   ReduceMotion,
   SharedTransitionType,
 } from '../../commonTypes';
-import { ProgressTransitionManager } from './ProgressTransitionManager';
-import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
-import { getReduceMotionFromConfig } from '../../animation/util';
 import { ReanimatedError } from '../../errors';
+import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
+import { ProgressTransitionManager } from './ProgressTransitionManager';
 
 const SUPPORTED_PROPS = [
   'width',

@@ -1,14 +1,14 @@
 'use strict';
-import { BaseAnimationBuilder } from '../animationBuilder';
+import { withTiming } from '../../animation';
+import { assertEasingIsWorklet } from '../../animation/util';
 import type {
   EasingFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../../commonTypes';
-import { Easing } from '../../Easing';
 import type { EasingFunctionFactory } from '../../Easing';
-import { withTiming } from '../../animation';
-import { assertEasingIsWorklet } from '../../animation/util';
+import { Easing } from '../../Easing';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
  * Layout transitions with a curved animation. You can modify the behavior by

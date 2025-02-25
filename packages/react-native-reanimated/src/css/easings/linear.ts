@@ -1,12 +1,12 @@
 'use strict';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { PERCENTAGE_REGEX } from '../constants';
 import { ReanimatedError } from '../errors';
 import type { Point } from '../types';
 import type {
-  ParametrizedTimingFunction,
-  NormalizedLinearEasing,
   ControlPoint,
+  NormalizedLinearEasing,
+  ParametrizedTimingFunction,
 } from './types';
 
 export const ERROR_MESSAGES = {
@@ -51,7 +51,9 @@ export class LinearEasing implements ParametrizedTimingFunction {
     if (points.length < 2) {
       throw new ReanimatedError(ERROR_MESSAGES.invalidPointsCount());
     }
-    this.points = points;
+    this.points = points.map((p) =>
+      Array.isArray(p) && p.length === 1 ? p[0] : p
+    );
   }
 
   toString(): string {

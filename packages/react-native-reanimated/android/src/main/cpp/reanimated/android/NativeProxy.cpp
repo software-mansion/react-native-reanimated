@@ -217,6 +217,11 @@ void NativeProxy::registerEventHandler() {
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
+  // Module might be already destroyed.
+  if (!javaPart_) {
+    return;
+  }
+
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
@@ -324,15 +329,13 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
-    jsi::Runtime &rt,
     Tag tag,
-    const jsi::Object &props) {
+    const folly::dynamic &props) {
   static const auto method =
       getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
           "synchronouslyUpdateUIProps");
   jni::local_ref<ReadableMap::javaobject> uiProps =
-      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(props));
   method(javaPart_.get(), tag, uiProps);
 }
 #endif

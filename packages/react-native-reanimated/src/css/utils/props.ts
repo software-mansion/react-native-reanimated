@@ -1,4 +1,5 @@
 'use strict';
+import { isSharedValue } from '../../isSharedValue';
 import type {
   AnyRecord,
   CSSAnimationProperties,
@@ -23,17 +24,25 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 ] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
-  const transitionProperties: Partial<CSSTransitionProperties> = {};
+  let transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
     if (prop === 'animationName') {
       animationName = value as CSSAnimationProperties['animationName'];
     } else if (isAnimationSetting(prop)) {
+      // TODO - add support for animation shorthand
       animationProperties[prop] = value;
     } else if (isTransitionProp(prop)) {
-      transitionProperties[prop] = value;
-    } else {
+      // If there is a shorthand `transition` property, all properties specified
+      // before are ignored and only these specified later are taken into account
+      // and override ones from the shorthand
+      if (prop === 'transition') {
+        transitionProperties = { transition: value };
+      } else {
+        transitionProperties[prop] = value;
+      }
+    } else if (!isSharedValue(value)) {
       filteredStyle[prop] = value;
     }
   }

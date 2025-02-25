@@ -1,0 +1,12 @@
+name: Reanimated clang-tidy lint [Nightly]
+on:
+  pull_request:
+    paths:
+      - .github/workflows/reanimated-clang-tidy-lint-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+
+jobs:
+  reanimated-clang-tidy-lint-nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/reanimated-clang-tidy-lint.yml

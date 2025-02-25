@@ -20,6 +20,8 @@ interface ReanimatedPluginOptions {
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
+  extraPlugins?: string[];
+  extraPresets?: string[];
 }
 ```
 
@@ -68,9 +70,9 @@ Turning on this option suppresses a helpful warning when you use [inline shared 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';
 
-function MyView(){
+function MyView() {
   const width = useSharedValue(100);
-  return <Animated.View style={width: width.value}>; // Loss of reactivity when using `width.value` instead of `width`!
+  return <Animated.View style={{ width: width.value }}>; // Loss of reactivity when using `width.value` instead of `width`!
 }
 ```
 
@@ -199,3 +201,11 @@ This option can also be useful for Web apps. In Reanimated, we have numerous che
 Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+### extraPlugins
+
+This is a list of Babel plugins that will be used when transforming worklets' code with Reanimated Babel Plugin.
+
+### extraPresets
+
+This is a list of Babel presets that will be used when transforming worklets' code with Reanimated Babel Plugin.

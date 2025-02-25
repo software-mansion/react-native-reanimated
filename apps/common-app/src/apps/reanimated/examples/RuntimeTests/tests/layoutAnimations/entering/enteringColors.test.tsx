@@ -1,13 +1,14 @@
+import React from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { withDelay, withTiming } from 'react-native-reanimated';
-import React from 'react';
+
 import {
   describe,
-  test,
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
+  test,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ColorSnapshots as Snapshots } from './entering.snapshot';

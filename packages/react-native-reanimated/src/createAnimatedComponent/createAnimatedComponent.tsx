@@ -1,20 +1,21 @@
 'use strict';
-import React from 'react';
+import invariant from 'invariant';
 import type {
-  ComponentType,
-  ComponentClass,
-  FunctionComponent,
   Component,
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
 } from 'react';
+import React from 'react';
+import type { FlatList, FlatListProps } from 'react-native';
+
+import type { AnimateProps } from '../helperTypes';
 import type { Options } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 import type {
   AnimatedComponentProps,
   InitialComponentProps,
 } from './commonTypes';
-import type { AnimateProps } from '../helperTypes';
-import type { FlatList, FlatListProps } from 'react-native';
-import invariant from 'invariant';
 
 /**
  * Lets you create an Animated version of any React Native component.
@@ -74,7 +75,7 @@ export function createAnimatedComponent(
     }
   }
 
-  return React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
@@ -82,4 +83,9 @@ export function createAnimatedComponent(
       />
     );
   });
+
+  animatedComponent.displayName =
+    Component.displayName || Component.name || 'Component';
+
+  return animatedComponent;
 }

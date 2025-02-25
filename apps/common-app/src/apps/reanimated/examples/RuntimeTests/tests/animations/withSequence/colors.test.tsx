@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
-  withSequence,
+  useSharedValue,
   withDelay,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
-import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
-import { View, StyleSheet } from 'react-native';
+
+import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {

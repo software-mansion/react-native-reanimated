@@ -3,37 +3,11 @@
 
 namespace reanimated {
 
-jsi::Value getKeyframesStyle(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "keyframesStyle");
+double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
+  return settings.getProperty(rt, "iterationCount").asNumber();
 }
 
-KeyframeEasingFunctions getKeyframeTimingFunctions(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  KeyframeEasingFunctions result;
-  const auto &keyframeTimingFunctions =
-      config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
-  const auto timingFunctionOffsets =
-      keyframeTimingFunctions.getPropertyNames(rt);
-  const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
-
-  for (size_t i = 0; i < timingFunctionsCount; ++i) {
-    const auto offset =
-        timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easingFunction = createEasingFunction(
-        rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
-
-    result[std::stod(offset)] = easingFunction;
-  }
-
-  return result;
-}
-
-double getIterationCount(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "iterationCount").asNumber();
-}
-
-AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
+AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &settings) {
   static const std::unordered_map<std::string, AnimationDirection>
       strToEnumMap = {
           {"normal", AnimationDirection::Normal},
@@ -41,7 +15,7 @@ AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
           {"alternate", AnimationDirection::Alternate},
           {"alternate-reverse", AnimationDirection::AlternateReverse}};
 
-  const auto str = config.getProperty(rt, "direction").asString(rt).utf8(rt);
+  const auto str = settings.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -50,14 +24,14 @@ AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
   return it->second;
 }
 
-AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config) {
+AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &settings) {
   static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
       {{"none", AnimationFillMode::None},
        {"forwards", AnimationFillMode::Forwards},
        {"backwards", AnimationFillMode::Backwards},
        {"both", AnimationFillMode::Both}};
 
-  const auto str = config.getProperty(rt, "fillMode").asString(rt).utf8(rt);
+  const auto str = settings.getProperty(rt, "fillMode").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -66,13 +40,13 @@ AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config) {
   return it->second;
 }
 
-AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config) {
+AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings) {
   static const std::unordered_map<std::string, AnimationPlayState>
       strToEnumMap = {
           {"running", AnimationPlayState::Running},
           {"paused", AnimationPlayState::Paused}};
 
-  const auto str = config.getProperty(rt, "playState").asString(rt).utf8(rt);
+  const auto str = settings.getProperty(rt, "playState").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -81,21 +55,19 @@ AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config) {
   return it->second;
 }
 
-CSSAnimationConfig parseCSSAnimationConfig(
+CSSAnimationSettings parseCSSAnimationSettings(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto &configObj = config.asObject(rt);
+    const jsi::Value &settings) {
+  const auto &settingsObj = settings.asObject(rt);
 
   return {
-      getKeyframesStyle(rt, configObj),
-      getKeyframeTimingFunctions(rt, configObj),
-      getDuration(rt, configObj),
-      getTimingFunction(rt, configObj),
-      getDelay(rt, configObj),
-      getIterationCount(rt, configObj),
-      getDirection(rt, configObj),
-      getFillMode(rt, configObj),
-      getPlayState(rt, configObj)};
+      getDuration(rt, settingsObj),
+      getTimingFunction(rt, settingsObj),
+      getDelay(rt, settingsObj),
+      getIterationCount(rt, settingsObj),
+      getDirection(rt, settingsObj),
+      getFillMode(rt, settingsObj),
+      getPlayState(rt, settingsObj)};
 }
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(

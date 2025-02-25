@@ -1,18 +1,22 @@
 'use strict';
 import type { Component } from 'react';
 import { useRef } from 'react';
-import { useSharedValue } from './useSharedValue';
-import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
+import type { FlatList, ScrollView } from 'react-native';
+import { Platform } from 'react-native';
+
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { makeShareableCloneRecursive } from '../shareables';
-import { shareableMappingCache } from '../shareableMappingCache';
-import { Platform } from 'react-native';
-import { findNodeHandle } from '../platformFunctions/findNodeHandle';
-import type { ScrollView, FlatList } from 'react-native';
 import { isFabric, isWeb } from '../PlatformChecker';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+import {
+  makeShareableCloneRecursive,
+  shareableMappingCache,
+} from '../WorkletsResolver';
+import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
@@ -25,9 +29,9 @@ interface MaybeScrollableComponent extends Component {
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (isFabric() && component.getNativeScrollRef) {
+  if (IS_FABRIC && component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!isFabric() && component.getScrollableNode) {
+  } else if (!IS_FABRIC && component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
@@ -54,7 +58,7 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        const getTagValueFunction = isFabric()
+        const getTagValueFunction = IS_FABRIC
           ? getShadowNodeWrapperFromRef
           : findNodeHandle;
 
@@ -67,13 +71,13 @@ export function useAnimatedRef<
         tag.value = getTagOrShadowNodeWrapper();
 
         // On Fabric we have to unwrap the tag from the shadow node wrapper
-        fun.getTag = isFabric()
+        fun.getTag = IS_FABRIC
           ? () => findNodeHandle(getComponentOrScrollable(component))
           : getTagOrShadowNodeWrapper;
 
         fun.current = component;
         // viewName is required only on iOS with Paper
-        if (Platform.OS === 'ios' && !isFabric()) {
+        if (Platform.OS === 'ios' && !IS_FABRIC) {
           viewName.value =
             (component as MaybeScrollableComponent)?.viewConfig
               ?.uiViewClassName || 'RCTView';

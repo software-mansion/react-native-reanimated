@@ -1,6 +1,6 @@
-import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
-import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 
 const style = {
   width: 100,

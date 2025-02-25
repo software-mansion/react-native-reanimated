@@ -1,22 +1,21 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
+import {
+  configureWebCSSAnimations,
+  insertCSSAnimation,
+  maybeAddSuffixes,
+  parseTimingFunction,
+  processKeyframeDefinitions,
+  removeCSSAnimation,
+} from '../platform/web';
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
 } from '../types';
-import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
-import {
-  configureWebCSSAnimations,
-  removeCSSAnimation,
-  kebabize,
-  maybeAddSuffixes,
-  parseTimingFunction,
-  insertCSSAnimation,
-  processKeyframeDefinitions,
-} from '../platform/web';
-import { convertConfigPropertiesToArrays } from '../utils';
+import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']
@@ -43,10 +42,6 @@ export default class CSSAnimationsManager {
   }
 
   attach(animationProperties: ExistingCSSAnimationProperties | null) {
-    if (!animationProperties) {
-      return;
-    }
-
     this.update(animationProperties);
   }
 
@@ -57,7 +52,7 @@ export default class CSSAnimationsManager {
     }
 
     const { animationName: definitions, ...animationSettings } =
-      convertConfigPropertiesToArrays(animationProperties);
+      convertPropertiesToArrays(animationProperties);
 
     if (definitions.length === 0) {
       this.detach();
@@ -155,24 +150,17 @@ export default class CSSAnimationsManager {
   ) {
     this.element.style.animationName = animationNames.join(',');
 
-    const maybeDuration = maybeAddSuffixes(
+    this.element.style.animationDuration = maybeAddSuffixes(
       animationSettings,
       'animationDuration',
       'ms'
-    );
+    ).join(',');
 
-    if (maybeDuration) {
-      this.element.style.animationDuration = maybeDuration.join(',');
-    }
-
-    const maybeDelay = maybeAddSuffixes(
+    this.element.style.animationDelay = maybeAddSuffixes(
       animationSettings,
       'animationDelay',
       'ms'
-    );
-    if (maybeDelay) {
-      this.element.style.animationDelay = maybeDelay.join(',');
-    }
+    ).join(',');
 
     if (animationSettings.animationIterationCount) {
       this.element.style.animationIterationCount =
@@ -181,7 +169,7 @@ export default class CSSAnimationsManager {
 
     if (animationSettings.animationDirection) {
       this.element.style.animationDirection =
-        animationSettings.animationDirection.map(kebabize).join(',');
+        animationSettings.animationDirection.map(kebabizeCamelCase).join(',');
     }
 
     if (animationSettings.animationFillMode) {

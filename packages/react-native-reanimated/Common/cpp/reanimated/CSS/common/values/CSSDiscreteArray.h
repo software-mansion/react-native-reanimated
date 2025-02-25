@@ -12,9 +12,6 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename TValue>
-concept CSSValueDerived = std::is_base_of_v<CSSValue, TValue>;
-
 /*
  * CSSDiscreteArray is used for array interpolation when arrays need to be
  * treated as discrete values. Instead of interpolating between corresponding
@@ -22,8 +19,7 @@ concept CSSValueDerived = std::is_base_of_v<CSSValue, TValue>;
  * treated as single discrete values.
  */
 template <CSSValueDerived TValue>
-struct CSSDiscreteArray
-    : public CSSBaseValue<CSSValueType::Array, CSSDiscreteArray<TValue>> {
+struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
   static constexpr bool is_discrete_value = true;
 
   std::vector<TValue> values;
@@ -31,10 +27,11 @@ struct CSSDiscreteArray
   CSSDiscreteArray();
   explicit CSSDiscreteArray(const std::vector<TValue> &values);
   explicit CSSDiscreteArray(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSDiscreteArray(const folly::dynamic &value);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
   CSSDiscreteArray<TValue> interpolate(

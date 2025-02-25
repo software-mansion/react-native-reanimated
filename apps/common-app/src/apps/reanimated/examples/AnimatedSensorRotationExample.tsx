@@ -1,11 +1,10 @@
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   SensorType,
   useAnimatedSensor,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { StyleSheet, Text, View } from 'react-native';
-
-import React from 'react';
 
 export default function AnimatedSensorRotationExample() {
   const rotation = useAnimatedSensor(SensorType.ROTATION);

@@ -1,11 +1,10 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   BounceInLeft,
   FadeOutRight,
   Layout,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 export default function BasicLayoutAnimation() {
   const [state, setState] = React.useState(false);

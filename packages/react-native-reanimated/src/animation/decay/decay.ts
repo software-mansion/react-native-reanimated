@@ -1,20 +1,20 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import type {
+  Animation,
   AnimationCallback,
   Timestamp,
-  Animation,
 } from '../../commonTypes';
+import { ReanimatedError } from '../../errors';
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import { rigidDecay } from './rigidDecay';
 import { rubberBandDecay } from './rubberBandDecay';
-import { isValidRubberBandConfig } from './utils';
 import type {
   DecayAnimation,
   DecayConfig,
   DefaultDecayConfig,
   InnerDecayAnimation,
 } from './utils';
-import { rigidDecay } from './rigidDecay';
-import { ReanimatedError } from '../../errors';
+import { isValidRubberBandConfig } from './utils';
 
 export type WithDecayConfig = DecayConfig;
 
@@ -112,13 +112,16 @@ export const withDecay = function (
       }
     }
 
+    // To ensure the animation is correctly initialized and starts as expected
+    // we need to set its current value to undefined.
+    // Setting current to 0 breaks the animation.
     return {
       onFrame: decay,
       onStart,
       callback,
       velocity: config.velocity ?? 0,
       initialVelocity: 0,
-      current: 0,
+      current: undefined,
       lastTimestamp: 0,
       startTimestamp: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),

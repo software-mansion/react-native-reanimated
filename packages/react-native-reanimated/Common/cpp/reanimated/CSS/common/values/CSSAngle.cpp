@@ -59,10 +59,6 @@ bool CSSAngle::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isString();
 }
 
-jsi::Value CSSAngle::toJSIValue(jsi::Runtime &rt) const {
-  return jsi::String::createFromUtf8(rt, toString());
-}
-
 folly::dynamic CSSAngle::toDynamic() const {
   return folly::dynamic(toString());
 }

@@ -18,8 +18,15 @@ public class AndroidUIScheduler {
 
   private final Runnable mUIThreadRunnable =
       () -> {
-        if (mActive.get()) {
-          triggerUI();
+        /**
+         * This callback is called on the UI thread, but the module is invalidated on the JS thread.
+         * Therefore we must synchronize for reloads. Without synchronization the cpp part gets torn
+         * down while the UI thread is still executing it, leading to crashes.
+         */
+        synchronized (mActive) {
+          if (mActive.get()) {
+            triggerUI();
+          }
         }
       };
 
@@ -32,6 +39,8 @@ public class AndroidUIScheduler {
 
   public native void triggerUI();
 
+  public native void invalidate();
+
   @DoNotStrip
   private void scheduleTriggerOnUI() {
     UiThreadUtil.runOnUiThread(
@@ -43,6 +52,9 @@ public class AndroidUIScheduler {
   }
 
   public void deactivate() {
-    mActive.set(false);
+    synchronized (mActive) {
+      mActive.set(false);
+      invalidate();
+    }
   }
 }

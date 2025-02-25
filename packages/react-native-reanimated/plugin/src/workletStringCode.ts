@@ -2,8 +2,8 @@ import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
-  File as BabelFile,
   ExpressionStatement,
+  File as BabelFile,
   FunctionDeclaration,
   Identifier,
   VariableDeclaration,
@@ -31,10 +31,11 @@ import {
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
+
+import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
-import { workletTransformSync } from './transform';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -133,7 +134,11 @@ export function buildWorkletString(
 
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
-    extraPlugins: [getClosurePlugin(closureVariables)],
+    extraPlugins: [
+      getClosurePlugin(closureVariables),
+      ...(state.opts.extraPlugins ?? []),
+    ],
+    extraPresets: state.opts.extraPresets,
     compact: true,
     sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,

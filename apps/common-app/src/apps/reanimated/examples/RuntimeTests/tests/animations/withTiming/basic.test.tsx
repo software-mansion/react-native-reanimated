@@ -1,19 +1,20 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReJest/types';
+import { Dimensions, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+
 import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
   callTracker,
   callTrackerFn,
+  describe,
+  expect,
+  getTestComponent,
   getTrackerCallCount,
+  render,
+  test,
+  useTestRef,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 
 enum Tracker {
   UseAnimatedStyle = 'useAnimatedStyleTracker',

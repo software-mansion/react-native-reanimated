@@ -1,10 +1,12 @@
 'use strict';
 import type { ColorValue, DimensionValue } from 'react-native';
-import type { CSSTimingFunction } from '../../easings';
+
+import { processColor } from '../../../Colors';
+import type { ParametrizedTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import { ReanimatedError } from '../../errors';
-import type { ConvertValuesToArrays } from '../../types';
-import { processColor } from '../../../Colors';
+import type { AddArrayPropertyType, ConvertValuesToArrays } from '../../types';
+import { kebabizeCamelCase } from '../../utils';
 
 export function hasSuffix(value: unknown): value is string {
   return typeof value === 'string' && isNaN(parseInt(value[value.length - 1]));
@@ -20,32 +22,19 @@ export function maybeAddSuffixes<T, K extends keyof T>(
   suffix: string
 ) {
   if (!(key in object)) {
-    return;
+    return [];
   }
 
-  return object[key].map((value) =>
-    hasSuffix(value) ? String(value) : `${String(value)}${suffix}`
-  );
+  return object[key].map((value) => maybeAddSuffix(value, suffix));
 }
 
-export function kebabize<T extends string>(property: T) {
-  return property
-    .split('')
-    .map((letter, index) =>
-      letter.toUpperCase() === letter
-        ? `${index !== 0 ? '-' : ''}${letter.toLowerCase()}`
-        : letter
-    )
-    .join('');
-}
-
-function easingMapper(easing: CSSTimingFunction) {
+function easingMapper(easing: ParametrizedTimingFunction | string) {
   if (typeof easing === 'string') {
     return easing;
   }
 
   if (easing instanceof StepsEasing) {
-    return `steps(${easing.stepsNumber}, ${kebabize(easing.modifier)})`;
+    return `steps(${easing.stepsNumber}, ${kebabizeCamelCase(easing.modifier)})`;
   }
 
   if (easing instanceof CubicBezierEasing) {
@@ -64,7 +53,7 @@ function easingMapper(easing: CSSTimingFunction) {
 }
 
 export function parseTimingFunction(
-  timingFunction: CSSTimingFunction | CSSTimingFunction[]
+  timingFunction: AddArrayPropertyType<ParametrizedTimingFunction | string>
 ) {
   if (Array.isArray(timingFunction)) {
     return timingFunction.map(easingMapper).join(', ');

@@ -1,29 +1,29 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
+import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import {
   removeViewStyle,
   setViewStyle,
   styleBuilder,
 } from '../platform/native';
-import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import CSSTransitionManager from './CSSTransitionManager';
-import CSSAnimationsManager from './CSSAnimationsManager';
 import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
+import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager {
   private readonly viewTag: number;
-  private readonly CSSAnimationsManager: CSSAnimationsManager;
-  private readonly cssTransitionManager: CSSTransitionManager;
+  private readonly cssAnimationsManager: CSSAnimationsManager;
+  private readonly cssTransitionsManager: CSSTransitionsManager;
 
   constructor({ shadowNodeWrapper, viewConfig, viewTag }: ViewInfo) {
     const tag = viewTag as number;
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewTag = tag;
-    this.CSSAnimationsManager = new CSSAnimationsManager(wrapper, tag);
-    this.cssTransitionManager = new CSSTransitionManager(wrapper, tag);
+    this.cssAnimationsManager = new CSSAnimationsManager(wrapper, tag);
+    this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
 
     if (viewConfig) {
       adaptViewConfig(viewConfig);
@@ -46,8 +46,8 @@ export default class CSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionManager.update(transitionProperties);
-    this.CSSAnimationsManager.update(animationProperties);
+    this.cssTransitionsManager.update(transitionProperties);
+    this.cssAnimationsManager.update(animationProperties);
 
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may
@@ -58,8 +58,8 @@ export default class CSSManager {
   }
 
   detach(): void {
-    this.CSSAnimationsManager.detach();
-    this.cssTransitionManager.detach();
+    this.cssAnimationsManager.detach();
+    this.cssTransitionsManager.detach();
     removeViewStyle(this.viewTag);
   }
 }

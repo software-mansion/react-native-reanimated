@@ -1,51 +1,52 @@
 'use strict';
-import React from 'react';
-import type { Component } from 'react';
 import '../layoutReanimation/animationsManager';
-import { adaptViewConfig } from '../ConfigHelper';
-import { enableLayoutAnimations } from '../core';
-import { SharedTransition } from '../layoutReanimation';
-import { LayoutAnimationType } from '../commonTypes';
-import type { StyleProps } from '../commonTypes';
+
+import type React from 'react';
+
 import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
+import type { StyleProps } from '../commonTypes';
+import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import JSPropsUpdater from './JSPropsUpdater';
-import type {
-  AnimatedComponentProps,
-  AnimatedProps,
-  InitialComponentProps,
-  AnimatedComponentRef,
-  IAnimatedComponentInternal,
-  INativeEventsManager,
-  NestedArray,
-  AnyComponent,
-} from './commonTypes';
-import { filterStyles, flattenArray } from './utils';
-import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
-import { InlinePropManager } from './InlinePropManager';
-import { PropsFilter } from './PropsFilter';
+import { adaptViewConfig } from '../ConfigHelper';
+import { enableLayoutAnimations } from '../core';
+import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { SharedTransition } from '../layoutReanimation';
 import {
-  startWebLayoutAnimation,
-  tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
   saveSnapshot,
+  startWebLayoutAnimation,
+  tryActivateLayoutTransition,
 } from '../layoutReanimation/web';
-import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { NativeEventsManager } from './NativeEventsManager';
-import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { Platform } from 'react-native';
+import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
+import type {
+  AnimatedComponentProps,
+  AnimatedComponentRef,
+  AnimatedProps,
+  AnyComponent,
+  IAnimatedComponentInternal,
+  INativeEventsManager,
+  InitialComponentProps,
+  NestedArray,
+} from './commonTypes';
+import { InlinePropManager } from './InlinePropManager';
+import JSPropsUpdater from './JSPropsUpdater';
+import { NativeEventsManager } from './NativeEventsManager';
+import { PropsFilter } from './PropsFilter';
+import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -98,7 +99,7 @@ export default class AnimatedComponent
       !entering ||
       getReducedMotionFromConfig(entering as CustomConfig) ||
       skipEntering ||
-      !isFabric()
+      !IS_FABRIC
     ) {
       return;
     }
@@ -184,7 +185,7 @@ export default class AnimatedComponent
         this._componentDOMRef as ReanimatedHTMLElement,
         LayoutAnimationType.EXITING
       );
-    } else if (exiting && !IS_WEB && !isFabric()) {
+    } else if (exiting && !IS_WEB && !IS_FABRIC) {
       const reduceMotionInExiting =
         'getReduceMotion' in exiting &&
         typeof exiting.getReduceMotion === 'function'
@@ -209,7 +210,7 @@ export default class AnimatedComponent
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
       }
-      if (isFabric()) {
+      if (IS_FABRIC) {
         removeFromPropsRegistry(viewTag);
       }
     }
@@ -343,7 +344,7 @@ export default class AnimatedComponent
     const filtered = filterStyles(flattenArray(props.style ?? []));
     this._prevAnimatedStyles = this._animatedStyles;
     this._animatedStyles = filtered.animatedStyles;
-    this._planStyle = filtered.plainStyle;
+    this._cssStyle = filtered.cssStyle;
   }
 
   _configureLayoutTransition() {
@@ -404,7 +405,7 @@ export default class AnimatedComponent
       if (sharedTransitionTag) {
         this._configureSharedTransition();
       }
-      if (exiting && isFabric()) {
+      if (exiting && IS_FABRIC) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -420,7 +421,7 @@ export default class AnimatedComponent
       }
 
       const skipEntering = this.context?.current;
-      if (entering && !isFabric() && !skipEntering && !IS_WEB) {
+      if (entering && !IS_FABRIC && !skipEntering && !IS_WEB) {
         updateLayoutAnimations(
           tag,
           LayoutAnimationType.ENTERING,
@@ -458,20 +459,17 @@ export default class AnimatedComponent
       filteredProps.entering &&
       !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
     ) {
-      filteredProps.style = {
-        ...(filteredProps.style ?? {}),
-        visibility: 'hidden', // Hide component until `componentDidMount` triggers
-      };
+      filteredProps.style = Array.isArray(filteredProps.style)
+        ? filteredProps.style.concat([{ visibility: 'hidden' }])
+        : {
+            ...(filteredProps.style ?? {}),
+            visibility: 'hidden', // Hide component until `componentDidMount` triggers
+          };
     }
-
-    const platformProps = Platform.select({
-      web: {},
-      default: { collapsable: false },
-    });
 
     const skipEntering = this.context?.current;
     const nativeID =
-      skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
+      skipEntering || !IS_FABRIC ? undefined : `${this.reanimatedID}`;
 
     const jestProps = IS_JEST
       ? {
@@ -480,18 +478,10 @@ export default class AnimatedComponent
         }
       : {};
 
-    const ChildComponent = this.ChildComponent;
-
-    return (
-      <ChildComponent
-        nativeID={nativeID}
-        {...filteredProps}
-        {...jestProps}
-        // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-        // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-        ref={this._setComponentRef as (ref: Component) => void}
-        {...platformProps}
-      />
-    );
+    return super.render({
+      nativeID,
+      ...filteredProps,
+      ...jestProps,
+    });
   }
 }

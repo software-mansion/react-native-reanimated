@@ -1,3 +1,38 @@
 'use strict';
 
-export { WorkletsTurboModule } from './specs';
+export type {
+  IWorkletsModule,
+  LoggerConfig,
+  ShareableRef,
+  WorkletFunction,
+  WorkletFunctionDev,
+  WorkletRuntime,
+  WorkletsModuleProxy,
+  WorkletStackDetails,
+} from './worklets';
+export {
+  callMicrotasks,
+  createCustomError,
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  isWorkletFunction,
+  logger,
+  LogLevel,
+  makeShareable,
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
+  mockedRequestAnimationFrame,
+  registerCustomError,
+  registerLoggerConfig,
+  registerWorkletStackDetails,
+  reportFatalErrorOnJS,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+  runOnUIImmediately,
+  setupCallGuard,
+  setupConsole,
+  shareableMappingCache,
+  updateLoggerConfig,
+  WorkletsModule,
+} from './worklets';

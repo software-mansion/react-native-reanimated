@@ -9,25 +9,23 @@ CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const unsigned index,
-    const CSSAnimationConfig &config,
+    const CSSKeyframesConfig &keyframesConfig,
+    const CSSAnimationSettings &settings,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),
-      fillMode_(config.fillMode),
+      fillMode_(settings.fillMode),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
-          config.duration,
-          config.delay,
-          config.iterationCount,
-          config.direction,
-          config.easingFunction,
-          config.keyframeEasingFunctions)),
-      styleInterpolator_(
-          AnimationStyleInterpolator(progressProvider_, viewStylesRepository)) {
-  styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
-
-  if (config.playState == AnimationPlayState::Paused) {
+          settings.duration,
+          settings.delay,
+          settings.iterationCount,
+          settings.direction,
+          settings.easingFunction,
+          keyframesConfig.keyframeEasingFunctions)),
+      styleInterpolator_(keyframesConfig.styleInterpolator) {
+  if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
 }
@@ -64,26 +62,22 @@ bool CSSAnimation::hasBackwardsFillMode() const {
       fillMode_ == AnimationFillMode::Both;
 }
 
-jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getStyleValue(rt, shadowNode_);
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
 }
 
-jsi::Value CSSAnimation::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
+  return isReversed() ? styleInterpolator_->getLastKeyframeValue()
+                      : styleInterpolator_->getFirstKeyframeValue();
 }
 
-jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
-  return isReversed() ? styleInterpolator_.getLastKeyframeValue(rt)
-                      : styleInterpolator_.getFirstKeyframeValue(rt);
+folly::dynamic CSSAnimation::getForwardsFillStyle() const {
+  return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
+                      : styleInterpolator_->getLastKeyframeValue();
 }
 
-jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
-  return isReversed() ? styleInterpolator_.getFirstKeyframeValue(rt)
-                      : styleInterpolator_.getLastKeyframeValue(rt);
-}
-
-jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
-  return styleInterpolator_.reset(rt, shadowNode_);
+folly::dynamic CSSAnimation::getResetStyle() const {
+  return styleInterpolator_->getResetStyle(shadowNode_);
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -94,7 +88,7 @@ void CSSAnimation::run(const double timestamp) {
   progressProvider_->play(timestamp);
 }
 
-jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
+folly::dynamic CSSAnimation::update(const double timestamp) {
   progressProvider_->update(timestamp);
 
   // Check if the animation has not started yet because of the delay
@@ -103,11 +97,10 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
   // progress)
   if (progressProvider_->getState(timestamp) ==
       AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle(rt)
-                                  : jsi::Value::undefined();
+    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
-  return styleInterpolator_.update(rt, shadowNode_);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
 }
 
 void CSSAnimation::updateSettings(

@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { WithSpringConfig } from 'react-native-reanimated';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
+  test,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './withSpring.snapshot';

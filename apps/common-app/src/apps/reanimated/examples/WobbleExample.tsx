@@ -1,13 +1,13 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  withTiming,
   Easing,
   useAnimatedStyle,
+  useSharedValue,
   withRepeat,
   withSequence,
+  withTiming,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
-import React from 'react';
 
 const ANGLE = 9;
 const TIME = 100;

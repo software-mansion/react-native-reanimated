@@ -2,17 +2,18 @@ import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { AnimatableValueObject, MeasuredDimensions } from 'react-native-reanimated';
 import Animated, {
-  runOnUI,
+  Easing,
   measure,
+  runOnUI,
   useAnimatedRef,
+  useAnimatedStyle,
+  useFrameCallback,
   useSharedValue,
   withDelay,
   withTiming,
-  useAnimatedStyle,
-  Easing,
-  useFrameCallback,
 } from 'react-native-reanimated';
-import { describe, expect, test, render, wait, registerValue, getRegisteredValue } from '../../ReJest/RuntimeTestsApi';
+
+import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
 
 const DEFAULT_STYLE = {

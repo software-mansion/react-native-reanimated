@@ -1,8 +1,8 @@
 'use strict';
-import { isFabric } from '../PlatformChecker';
-import updateProps from '../UpdateProps';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
+import { isFabric } from '../PlatformChecker';
+import updateProps from '../UpdateProps';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,

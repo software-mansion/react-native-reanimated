@@ -1,31 +1,38 @@
 'use strict';
+import type React from 'react';
+
 import type {
-  Value3D,
-  ValueRotation,
-  ShareableRef,
   LayoutAnimationBatchItem,
-  IReanimatedModule,
-  IWorkletsModule,
-  WorkletFunction,
   ShadowNodeWrapper,
   StyleProps,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
-import { checkCppVersion } from '../platform-specific/checkCppVersion';
-import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, isWeb } from '../PlatformChecker';
-import type React from 'react';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { ReanimatedTurboModule } from '../specs';
-import { ReanimatedError } from '../errors';
-import { WorkletsModule } from '../worklets';
-import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
 import type {
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+import { ReanimatedError, registerReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
+import { ReanimatedTurboModule } from '../specs';
+import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from '../WorkletsResolver';
+import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
+import type {
+  IReanimatedModule,
+  ReanimatedModuleProxy,
+} from './reanimatedModuleProxy';
 
-const IS_WEB = isWeb();
+const IS_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -67,7 +74,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!isFabric() && !IS_WEB) {
+    if (!IS_FABRIC && !IS_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
@@ -76,6 +83,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
+    executeOnUIRuntimeSync(function initializeUI() {
+      'worklet';
+      registerReanimatedError();
+      setupRequestAnimationFrame();
+    })();
   }
 
   registerSensor(
@@ -119,7 +131,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     callback?: (result: T) => void
   ) {
     let shadowNodeWrapper;
-    if (isFabric()) {
+    if (IS_FABRIC) {
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         component as React.Component
       );
@@ -180,9 +192,26 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.removeViewStyle(viewTag);
   }
 
+  registerCSSKeyframes(
+    animationName: string,
+    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSKeyframes(
+      animationName,
+      keyframesConfig
+    );
+  }
+
+  unregisterCSSKeyframes(animationName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  }
+
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ) {
     this.#reanimatedModuleProxy.registerCSSAnimations(
       shadowNodeWrapper,

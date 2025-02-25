@@ -1,23 +1,24 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
+  useAnimatedStyle,
   useSharedValue,
-  withTiming,
   withSequence,
   withSpring,
-  useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
+
 import {
-  describe,
-  test,
-  expect,
-  render,
   callTracker,
+  describe,
+  expect,
+  getRegisteredValue,
   getTrackerCallCount,
   mockAnimationTimer,
   recordAnimationUpdates,
-  getRegisteredValue,
   registerValue,
+  render,
+  test,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';

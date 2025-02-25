@@ -1,18 +1,18 @@
 'use strict';
 import type { StyleProps } from '../commonTypes';
+import { adaptViewConfig } from '../ConfigHelper';
+import { isSharedValue } from '../isSharedValue';
+import { startMapper, stopMapper } from '../mappers';
+import updateProps from '../UpdateProps';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
-  IAnimatedComponentInternal,
   AnimatedComponentProps,
+  IAnimatedComponentInternal,
   IInlinePropManager,
   ViewInfo,
 } from './commonTypes';
 import { flattenArray } from './utils';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { adaptViewConfig } from '../ConfigHelper';
-import updateProps from '../UpdateProps';
-import { stopMapper, startMapper } from '../mappers';
-import { isSharedValue } from '../isSharedValue';
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {

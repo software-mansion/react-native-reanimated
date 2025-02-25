@@ -1,10 +1,10 @@
 import type {
-  PageScrollStateChangedNativeEvent,
   PagerViewOnPageScrollEvent,
   PagerViewOnPageSelectedEvent,
+  PageScrollStateChangedNativeEvent,
 } from 'react-native-pager-view';
-import { useEvent, useHandler } from 'react-native-reanimated';
 import type { ReanimatedEvent } from 'react-native-reanimated';
+import { useEvent, useHandler } from 'react-native-reanimated';
 
 export function useAnimatedPagerScrollHandler<
   TContext extends Record<string, unknown>,

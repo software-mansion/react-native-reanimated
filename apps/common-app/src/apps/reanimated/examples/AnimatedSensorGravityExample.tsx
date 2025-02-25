@@ -1,11 +1,10 @@
-import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
-  SensorType,
-} from 'react-native-reanimated';
-import { StyleSheet, Text, View } from 'react-native';
-
 import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  SensorType,
+  useAnimatedSensor,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 export default function AnimatedSensorGravityExample() {
   const gravity = useAnimatedSensor(SensorType.GRAVITY);
