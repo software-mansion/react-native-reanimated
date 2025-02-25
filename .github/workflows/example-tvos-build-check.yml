@@ -9,7 +9,10 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/**
+      - packages/react-native-worklets/RNWorklets.podspec
+      - packages/react-native-worklets/scripts/worklets_utils.rb
+      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/Common/**
   merge_group:
     branches:
       - main
@@ -22,7 +25,10 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/**
+      - packages/react-native-worklets/RNWorklets.podspec
+      - packages/react-native-worklets/scripts/worklets_utils.rb
+      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/Common/**
   workflow_call:
   workflow_dispatch:
 
