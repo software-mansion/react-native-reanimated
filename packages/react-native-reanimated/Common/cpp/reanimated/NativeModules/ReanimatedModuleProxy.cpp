@@ -64,8 +64,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
-      synchronouslyUpdateUIPropsFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
@@ -489,7 +487,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
   auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
     auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    nativePropNames_.insert(name);
     animatablePropNames_.insert(name);
   }
 #else
@@ -600,22 +597,6 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(
-    jsi::Runtime &rt,
-    const jsi::Object &props) {
-  const jsi::Array propNames = props.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    bool isLayoutProp =
-        nativePropNames_.find(propName) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-  return false;
-}
-
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -758,25 +739,6 @@ void ReanimatedModuleProxy::performOperations() {
     jsi::Function jsPropsUpdater =
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
-  }
-
-  bool hasLayoutUpdates = false;
-
-  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-      hasLayoutUpdates = true;
-      break;
-    }
-  }
-
-  if (!hasLayoutUpdates) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-    }
-    return;
   }
 
   if (propsRegistry_->shouldReanimatedSkipCommit()) {

@@ -9,6 +9,4 @@ class ReaCompatibility {
   public void registerFabricEventListener(NodesManager nodesManager) {}
 
   public void unregisterFabricEventListener(NodesManager nodesManager) {}
-
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {}
 }
