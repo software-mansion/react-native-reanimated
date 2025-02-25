@@ -117,9 +117,6 @@ def reactNativeArchitectures() {
 }
 
 buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["Worklets_kotlinVersion"]
-
     repositories {
         google()
         mavenCentral()
@@ -128,8 +125,6 @@ buildscript {
         classpath "com.android.tools.build:gradle:8.2.1"
         classpath "de.undercouch:gradle-download-task:5.6.0"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
-        // noinspection DifferentKotlinGradleVersion
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
