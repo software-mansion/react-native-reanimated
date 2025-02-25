@@ -1,7 +1,7 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import { WorkletsTurboModule } from '../../specs';
+import { WorkletsTurboModule } from '../specs';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';

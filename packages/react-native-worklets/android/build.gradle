@@ -257,8 +257,6 @@ android {
     sourceSets {
         main {
             java {
-                srcDirs += "src/worklets/main"
-
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
                     srcDirs += "src/worklets/paper"
                 }
