@@ -130,11 +130,6 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
-  }
-
-  @DoNotStrip
   public String obtainProp(int viewTag, String propName) {
     return mNodesManager.obtainProp(viewTag, propName);
   }

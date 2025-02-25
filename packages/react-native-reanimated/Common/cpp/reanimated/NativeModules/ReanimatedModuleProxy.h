@@ -191,7 +191,6 @@ class ReanimatedModuleProxy
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
@@ -213,9 +212,6 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
-
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
