@@ -1,5 +1,6 @@
 'use strict';
 import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { processColorsInProps } from '../Colors';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
@@ -14,7 +15,6 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import { logger } from '../WorkletsResolver';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,

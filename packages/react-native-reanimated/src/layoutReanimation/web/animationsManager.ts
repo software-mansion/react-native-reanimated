@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from 'react-native-worklets';
+
 import { LayoutAnimationType } from '../../commonTypes';
 import type {
   AnimatedComponentProps,
@@ -7,7 +9,6 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import { logger } from '../../WorkletsResolver';
 import { Keyframe } from '../animationBuilder';
 import type { TransitionData } from './animationParser';
 import { makeElementVisible } from './componentStyle';

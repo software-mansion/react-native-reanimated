@@ -1,6 +1,7 @@
 'use strict';
 
-import { logger } from '../WorkletsResolver';
+import { logger } from 'react-native-worklets';
+
 import type { RNScreensTurboModuleType } from './commonTypes';
 
 function noopFactory<T>(defaultReturnValue?: T): () => T {

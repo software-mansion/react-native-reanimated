@@ -1,6 +1,7 @@
 'use strict';
+import type { WorkletFunction } from 'react-native-worklets';
+
 import { WorkletEventHandler } from '../WorkletEventHandler';
-import type { WorkletFunction } from '../WorkletsResolver';
 import type { ReanimatedEvent } from './commonTypes';
 import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
 import { useEvent } from './useEvent';

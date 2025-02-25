@@ -26,7 +26,7 @@
     "type:check:plugin": "cd plugin && yarn type:check:src",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
-    "build": "./scripts/duplicate-worklets-code.sh && yarn build:plugin && bob build",
+    "build": "yarn workspace react-native-worklets build && bob build",
     "build:plugin": "cd plugin && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
     "use-strict-check": "node ./scripts/validate-use-strict.js",
@@ -96,7 +96,8 @@
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-worklets": "0.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",

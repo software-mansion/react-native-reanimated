@@ -1,5 +1,6 @@
 'use strict';
 import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
 
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type {
@@ -13,7 +14,6 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import { logger } from '../WorkletsResolver';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,

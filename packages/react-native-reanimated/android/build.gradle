@@ -77,9 +77,6 @@ def REANIMATED_PROFILING = safeAppExtGet("enableReanimatedProfiling", false)
 // Set version for prefab
 version REANIMATED_VERSION
 
-def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
-
-def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def JS_RUNTIME = {
@@ -158,11 +155,6 @@ android {
     }
 
     prefab {
-        if (!hasExternalWorklets) {
-            worklets {
-                headers workletsPrefabHeadersDir.absolutePath
-            }
-        }
         reanimated {
             headers reanimatedPrefabHeadersDir.absolutePath
         }
@@ -193,14 +185,9 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
-                        "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
-                if (hasExternalWorklets) {
-                    targets("reanimated")
-                } else {
-                    targets("reanimated", "worklets")
-                }
+                targets("reanimated")
             }
         }
 
@@ -272,16 +259,6 @@ android {
     }
     sourceSets.main {
         java {
-            if (hasExternalWorklets) {
-                srcDirs += "src/externalWorklets/with"
-            } else {
-                srcDirs += "src/worklets/main"
-                srcDirs += "src/externalWorklets/without"
-                if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/externalWorklets/withoutPaper"
-                }
-            }
-
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
@@ -332,15 +309,6 @@ task assertMinimalReactNativeVersionTask {
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
-if (!hasExternalWorklets) {
-    task prepareWorkletsHeadersForPrefabs(type: Copy) {
-        from("$projectDir/src/main/cpp")
-        from("$projectDir/../Common/cpp")
-        include("worklets/**/*.h")
-        into(workletsPrefabHeadersDir)
-    }
-}
-
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
@@ -370,15 +338,13 @@ dependencies {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
  
-    if (hasExternalWorklets) {
+    if (project != rootProject) {
+        // This is needed for linting in Reanimated's repo.
         implementation project(":react-native-worklets")
     }
 }
 
 afterEvaluate {
-    if (!hasExternalWorklets) {
-        preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
-    }
     preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
     if (JS_RUNTIME == "v8") {

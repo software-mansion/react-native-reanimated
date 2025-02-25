@@ -1,11 +1,11 @@
 'use strict';
 import type { NativeModule } from 'react-native';
 import { NativeEventEmitter, Platform } from 'react-native';
+import { runOnJS, runOnUIImmediately } from 'react-native-worklets';
 
 import type { StyleProps } from '../commonTypes';
 import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import NativeReanimatedModule from '../specs/NativeReanimatedModule';
-import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
