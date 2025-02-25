@@ -2,6 +2,8 @@
 
 Work in progress!
 
+Do not consider any of the APIs as stable.
+
 ## License
 
 Worklets library is licensed under [The MIT License](LICENSE).
