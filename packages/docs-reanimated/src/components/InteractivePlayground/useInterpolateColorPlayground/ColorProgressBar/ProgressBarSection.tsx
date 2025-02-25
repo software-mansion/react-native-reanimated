@@ -48,7 +48,7 @@ const ProgressBarSection = ({ color1, color2 }) => {
         <p>RGB (with gamma correction)</p>
         <p>HSV</p>
         <p>HSV (with correction)</p>
-        <p>OK L*a*b*</p>
+        <p>OKLAB</p>
       </div>
       <div className={clsx(styles.progressBarSectionPart)}>
         <ColorProgressBar
