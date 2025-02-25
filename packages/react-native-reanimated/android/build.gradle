@@ -25,7 +25,7 @@ def isNewArchitectureEnabled() {
     return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
-def resolveReactNativeDirectory() {
+def reactNativeRootDir = {
     def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
     if (reactNativeLocation != null) {
         return file(reactNativeLocation)
@@ -33,12 +33,12 @@ def resolveReactNativeDirectory() {
 
     // Fallback to node resolver for custom directory structures like monorepos.
     def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
-    if(reactNativePackage.exists()) {
+    if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
 
     throw new GradleException(
-        "[Reanimated] Unable to resolve react-native location in node_modules. You should project extension property (in `app/build.gradle`) `REACT_NATIVE_NODE_MODULES_DIR` with path to react-native."
+        "[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
     )
 }
 
@@ -58,8 +58,6 @@ def toPlatformFileString(String path) {
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
-
-def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
