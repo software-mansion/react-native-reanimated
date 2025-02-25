@@ -16,8 +16,7 @@ string(
   CMAKE_CXX_FLAGS
   " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
     -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
-    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
-    -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
+    -DREANIMATED_VERSION=${REANIMATED_VERSION}")
 
 string(APPEND CMAKE_CXX_FLAGS
        " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
@@ -34,21 +33,6 @@ endif()
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
 endif()
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
-else()
-  message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
-endif()
-
-# Resolves "CMake Warning: Manually-specified variables were not used by the
-# project" when any of the following variables is not used in some build
-# configuration.
-set(IGNORE_ME "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")

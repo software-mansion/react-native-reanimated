@@ -308,9 +308,9 @@ dependencies {
     }
 }
 
-afterEvaluate {
-    preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
 
+afterEvaluate {
     if (JS_RUNTIME == "v8") {
         def buildTasks = tasks.findAll({ task ->
             !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })

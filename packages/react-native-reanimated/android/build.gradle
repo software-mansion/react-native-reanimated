@@ -79,38 +79,6 @@ version REANIMATED_VERSION
 
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
-def JS_RUNTIME = {
-    // Override JS runtime with environment variable
-    if (System.getenv("JS_RUNTIME")) {
-        return System.getenv("JS_RUNTIME")
-    }
-
-    // Enable V8 runtime if react-native-v8 is installed
-    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
-    if (v8Project != null) {
-        return "v8"
-    }
-
-    // Check if Hermes is enabled in app setup
-    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
-    if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
-        return "hermes"
-    }
-
-    // Use JavaScriptCore (JSC) by default
-    return "jsc"
-}.call()
-
-def jsRuntimeDir = {
-    if (JS_RUNTIME == "hermes") {
-        return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
-    } else if (JS_RUNTIME == "v8") {
-        return findProject(":react-native-v8").getProjectDir().getParent()
-    } else {
-        return Paths.get(reactNativeRootDir.path, "ReactCommon", "jsi")
-    }
-}.call()
-
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
@@ -179,8 +147,6 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
-                        "-DJS_RUNTIME=${JS_RUNTIME}",
-                        "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
@@ -201,24 +167,8 @@ android {
     }
     buildTypes {
         debug {
-            externalNativeBuild {
-                cmake {
-                    if (JS_RUNTIME == "hermes") {
-                        arguments "-DHERMES_ENABLE_DEBUGGER=1"
-                    } else {
-                        arguments "-DHERMES_ENABLE_DEBUGGER=0"
-                    }
-                }
-            }
             packagingOptions {
                 doNotStrip "**/**/*.so"
-            }
-        }
-        release {
-            externalNativeBuild {
-                cmake {
-                    arguments "-DHERMES_ENABLE_DEBUGGER=0"
-                }
             }
         }
     }
@@ -334,9 +284,6 @@ dependencies {
     implementation "androidx.core:core:1.6.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
-    if (JS_RUNTIME == "hermes") {
-        implementation "com.facebook.react:hermes-android" // version substituted by RNGP
-    }
  
     if (project != rootProject) {
         // This is needed for linting in Reanimated's repo.
@@ -344,15 +291,4 @@ dependencies {
     }
 }
 
-afterEvaluate {
-    preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
-
-    if (JS_RUNTIME == "v8") {
-        def buildTasks = tasks.findAll({ task ->
-            !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })
-        buildTasks.forEach { task ->
-            def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
-            task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
-        }
-    }
-}
+preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
