@@ -17,12 +17,6 @@ def safeAppExtGet(prop, fallback) {
     appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
 }
 
-def resolveBuildType() {
-    Gradle gradle = getGradle()
-    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
-    return tskReqStr.contains('Release') ? 'release' : 'debug'
-}
-
 def isReanimatedExampleApp() {
     return safeAppExtGet("isReanimatedExampleApp", false)
 }
@@ -221,6 +215,9 @@ android {
                     }
                 }
             }
+            packagingOptions {
+                doNotStrip "**/**/*.so"
+            }
         }
         release {
             externalNativeBuild {
@@ -234,7 +231,6 @@ android {
         abortOnError false
     }
     packagingOptions {
-        doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
         // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
         // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
         // only the ones that make the build fail (ideally we should only include libreanimated but we
