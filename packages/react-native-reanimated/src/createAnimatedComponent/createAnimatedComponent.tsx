@@ -7,7 +7,7 @@ import type {
   ComponentClass,
   ComponentType,
   FunctionComponent,
-  MutableRefObject,
+  RefObject,
 } from 'react';
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
@@ -34,8 +34,15 @@ import {
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { findHostInstance } from '../platform-specific/findHostInstance';
-import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
+import {
+  isFabric,
+  isJest,
+  isReact19,
+  isWeb,
+  shouldBeUseWeb,
+} from '../PlatformChecker';
 import { removeFromPropsRegistry } from '../PropsRegistry';
+import { componentWithRef } from '../reactUtils';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -58,6 +65,7 @@ import { flattenArray } from './utils';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
+const IS_REACT_19 = isReact19();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
@@ -114,11 +122,13 @@ export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
   options?: Options<InitialComponentProps>
 ): any {
-  invariant(
-    typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
-    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
-  );
+  if (!IS_REACT_19) {
+    invariant(
+      typeof Component !== 'function' ||
+        (Component.prototype && Component.prototype.isReactComponent),
+      `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
+    );
+  }
 
   class AnimatedComponent
     extends React.Component<AnimatedComponentProps<InitialComponentProps>>
@@ -525,7 +535,7 @@ export function createAnimatedComponent(
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
-        this.props.forwardedRef as MutableRefObject<
+        this.props.forwardedRef as RefObject<
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
@@ -655,14 +665,12 @@ export function createAnimatedComponent(
     Component.displayName || Component.name || 'Component'
   })`;
 
-  const animatedComponent = React.forwardRef<Component>((props, ref) => {
-    return (
-      <AnimatedComponent
-        {...props}
-        {...(ref === null ? null : { forwardedRef: ref })}
-      />
-    );
-  });
+  const animatedComponent = componentWithRef((props, ref) => (
+    <AnimatedComponent
+      {...props}
+      {...(ref === null ? null : { forwardedRef: ref })}
+    />
+  ));
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';

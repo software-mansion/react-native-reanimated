@@ -6409,7 +6409,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^18.2.6":
+"@types/react@npm:*":
   version: 18.3.8
   resolution: "@types/react@npm:18.3.8"
   dependencies:
@@ -6419,7 +6419,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^19.0.0":
+"@types/react@npm:^19.0.10":
   version: 19.0.10
   resolution: "@types/react@npm:19.0.10"
   dependencies:
@@ -11305,7 +11305,7 @@ __metadata:
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/jest": "npm:^29.5.13"
-    "@types/react": "npm:^19.0.0"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^19.0.0"
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
@@ -14687,7 +14687,7 @@ __metadata:
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@react-navigation/stack": "npm:^7.0.0"
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
-    "@types/react": "npm:^18.2.6"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
     common-app: "workspace:*"
@@ -16747,7 +16747,7 @@ __metadata:
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/jest": "npm:^29.5.13"
-    "@types/react": "npm:^19.0.0"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^19.0.0"
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
@@ -17737,7 +17737,7 @@ __metadata:
     "@types/invariant": "npm:^2.2.35"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^18.0.0"
-    "@types/react": "npm:^19.0.0"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^19.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     "@typescript-eslint/parser": "npm:^6.19.0"
@@ -17868,7 +17868,7 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native/eslint-config": "npm:0.76.5"
     "@types/jest": "npm:^29.5.5"
-    "@types/react": "npm:^19.0.0"
+    "@types/react": "npm:^19.0.10"
     eslint: "npm:^8.57.0"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
@@ -20270,7 +20270,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.77.0"
     "@react-native/metro-config": "npm:0.77.0"
     "@react-native/typescript-config": "npm:0.77.0"
-    "@types/react": "npm:^18.2.6"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
     eslint: "npm:^8.57.0"

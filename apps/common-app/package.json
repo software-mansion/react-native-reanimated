@@ -5,7 +5,8 @@
   "scripts": {
     "build": "yarn patch-package",
     "lint": "eslint .",
-    "format": "prettier --write --list-different ."
+    "format": "prettier --write --list-different .",
+    "type:check": "tsc --noEmit"
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": "*",

@@ -1,5 +1,5 @@
 'use strict';
-import React, { forwardRef, useRef } from 'react';
+import React, { useRef } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -11,6 +11,7 @@ import { FlatList } from 'react-native';
 import type { AnimatedStyle, ILayoutAnimationBuilder } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
+import { componentWithRef } from '../reactUtils';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
 import { AnimatedView } from './View';
 
@@ -113,7 +114,9 @@ const FlatListForwardRefRender = function <Item = any>(
   );
 };
 
-export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
+export const ReanimatedFlatList = componentWithRef(
+  FlatListForwardRefRender
+) as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any,

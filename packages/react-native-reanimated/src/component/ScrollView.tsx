@@ -1,6 +1,6 @@
 'use strict';
 import type { ForwardedRef } from 'react';
-import React, { forwardRef } from 'react';
+import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
@@ -9,6 +9,7 @@ import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollViewOffset } from '../hook';
+import { componentWithRef } from '../reactUtils';
 
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
@@ -23,7 +24,7 @@ interface AnimatedScrollViewComplement extends ScrollView {
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
-export const AnimatedScrollView = forwardRef(
+export const AnimatedScrollView = componentWithRef(
   (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
     const { scrollViewOffset, ...restProps } = props;
     const animatedRef = (

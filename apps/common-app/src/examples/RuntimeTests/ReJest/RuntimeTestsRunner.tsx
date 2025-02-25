@@ -107,19 +107,19 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
     tests.forEach(button => {
       setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
       if (select) {
-        testSelectionCallbacks.current!.add(button.importTest);
+        testSelectionCallbacks.current.add(button.importTest);
       } else {
-        testSelectionCallbacks.current!.delete(button.importTest);
+        testSelectionCallbacks.current.delete(button.importTest);
       }
     });
   }
 
   function selectClick(button: TestData) {
     setSelectedTests(new Map(selectedTests.set(button.testSuiteName, !selectedTests.get(button.testSuiteName))));
-    if (testSelectionCallbacks.current!.has(button.importTest)) {
-      testSelectionCallbacks.current!.delete(button.importTest);
+    if (testSelectionCallbacks.current.has(button.importTest)) {
+      testSelectionCallbacks.current.delete(button.importTest);
     } else {
-      testSelectionCallbacks.current!.add(button.importTest);
+      testSelectionCallbacks.current.add(button.importTest);
     }
   }
 
