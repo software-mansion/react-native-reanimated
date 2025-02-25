@@ -25,7 +25,7 @@ def isNewArchitectureEnabled() {
     return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
-def reactNativeRootDir = {
+def resolveReactNativeDirectory() {
     def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
     if (reactNativeLocation != null) {
         return file(reactNativeLocation)
@@ -58,6 +58,8 @@ def toPlatformFileString(String path) {
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
+
+def reactNativeRootDir = resolveReactNativeDirectory()
 
 def reactProperties = new Properties()
 file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
