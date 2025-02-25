@@ -446,7 +446,9 @@ dependencies {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
  
-    implementation project(":react-native-worklets")
+    if(project != rootProject) {
+        implementation project(":react-native-worklets")
+    }
 }
 
 def nativeBuildDependsOn(dependsOnTask) {
