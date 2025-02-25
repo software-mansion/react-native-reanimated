@@ -52,4 +52,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   return @YES;
 }
 
+- (void)invalidate
+{
+  // We have to destroy extra runtimes when invalidate is called. If we clean
+  // it up later instead there's a chance the runtime will retain references
+  // to invalidated memory and will crash on destruction.
+  workletsModuleProxy_.reset();
+
+  [super invalidate];
+}
+
 @end

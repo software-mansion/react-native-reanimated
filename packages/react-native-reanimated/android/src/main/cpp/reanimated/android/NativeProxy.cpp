@@ -49,6 +49,7 @@ NativeProxy::NativeProxy(
           isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -81,8 +82,6 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   reanimatedModuleProxy_->cleanupSensors();
-
-  layoutAnimations_->cthis()->invalidate();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -192,7 +191,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -213,6 +213,11 @@ void NativeProxy::registerEventHandler() {
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
+  // Module might be already destroyed.
+  if (!javaPart_) {
+    return;
+  }
+
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
@@ -471,8 +476,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakThis = weak_from_this()](
+                                int tag, bool removeView) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -600,6 +610,11 @@ void NativeProxy::setupLayoutAnimations() {
           return {};
         }
       });
+}
+
+void NativeProxy::invalidateCpp() {
+  layoutAnimations_->cthis()->invalidate();
+  reanimatedModuleProxy_.reset();
 }
 
 } // namespace reanimated

@@ -52,14 +52,14 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
   std::string className =
       __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
-  // Only one instance should exist, but it is possible for two instances
-  // to co-exist during a reload.
-  assertWithMessage(
-      instanceCount_ <= 1,
-      "[Reanimated] More than one instance of " + className +
-          " present. This may indicate a memory leak due to a retain cycle.");
-
+  // React Native can spawn up to two instances of a Native Module at the same
+  // time. This happens during a reload when a new instance of React Native is
+  // created while simultaneously the old one is torn down.
   instanceCount_++;
+  assertWithMessage(
+      instanceCount_ <= 2,
+      "[Reanimated] More than two instances of " + className +
+          " present. This may indicate a memory leak due to a retain cycle.");
 }
 
 template <class T>

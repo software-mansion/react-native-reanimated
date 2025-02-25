@@ -1480,7 +1480,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0-rc.1):
+  - RNReanimated (3.17.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1500,10 +1500,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0-rc.1)
-    - RNReanimated/worklets (= 3.17.0-rc.1)
+    - RNReanimated/reanimated (= 3.17.0)
+    - RNReanimated/worklets (= 3.17.0)
     - Yoga
-  - RNReanimated/reanimated (3.17.0-rc.1):
+  - RNReanimated/reanimated (3.17.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1523,9 +1523,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0-rc.1)
+    - RNReanimated/reanimated/apple (= 3.17.0)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0-rc.1):
+  - RNReanimated/reanimated/apple (3.17.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1546,7 +1546,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0-rc.1):
+  - RNReanimated/worklets (3.17.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1566,9 +1566,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0-rc.1)
+    - RNReanimated/worklets/apple (= 3.17.0)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0-rc.1):
+  - RNReanimated/worklets/apple (3.17.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1865,8 +1865,8 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNCPicker: 124b4fb5859ba1a3fd53a91e16d1e7a0fc016e59
   RNGestureHandler: 8c8722468ee6ced80a0723943c894798d2613a81
-  RNReanimated: 3d557e6830d6e11affbe10fbcc99db775c298fa5
-  RNSVG: 7d403633772d39f695b8a1ccb64db8499e807dac
+  RNReanimated: 59f0fda45df9b27d0dec7f129528fa426c54e4de
+  RNSVG: 46769c92d1609e617dbf9326ad8a0cff912d0982
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 

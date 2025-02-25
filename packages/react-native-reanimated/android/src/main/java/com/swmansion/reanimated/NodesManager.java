@@ -130,6 +130,7 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mNativeProxy != null) {
+      mNativeProxy.invalidate();
       mNativeProxy = null;
     }
 
