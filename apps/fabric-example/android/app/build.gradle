@@ -55,6 +55,7 @@ react {
 }
 
 project.ext["isReanimatedExampleApp"] = true
+project.ext["enableReanimatedProfiling"] = true
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.

@@ -17,10 +17,6 @@ def safeAppExtGet(prop, fallback) {
     appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
 }
 
-def isReanimatedExampleApp() {
-    return safeAppExtGet("isReanimatedExampleApp", false)
-}
-
 def isNewArchitectureEnabled() {
     // To opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
@@ -72,8 +68,8 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
-def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
-def REANIMATED_PROFILING = isReanimatedExampleApp()
+def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
+def REANIMATED_PROFILING = safeAppExtGet("enableReanimatedProfiling", false)
 
 // Set version for prefab
 version REANIMATED_VERSION
