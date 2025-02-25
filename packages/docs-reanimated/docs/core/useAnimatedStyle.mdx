@@ -77,6 +77,35 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
+- Animated styles take precedence over React Native's static styles. All values specified in animated styles override values from static styles.
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => ({
+    width: sv.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        // highlight-start
+        animatedStyles, // ⚠️ overrides the static style width
+        { width: 100 },
+        // highlight-end
+      ]}
+    />
+  );
+}
+```
+
+</Indent>
+
+- Animated styles don't follow the order in which they are specified in the style array. The last updated animated style is the one that takes effect.
+
+- Removing the animated style from the view doesn't unset values that were applied in the animated style. To unset these values, you need to manually set them to `undefined` in the animated style.
+
 - Mutating shared values in `useAnimatedStyle`'s callback is an undefined behavior which may lead to infinite loops.
 
 <Indent>

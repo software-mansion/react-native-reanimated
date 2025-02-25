@@ -215,7 +215,7 @@ const AnimationWidget = ({
   color2: RGB;
   interpolateFunction: (c1: RGB, c2: RGB, p: number) => RGB;
 }) => {
-  const animatedBoxRef = useRef<HTMLDivElement>(null);
+  const animatedBoxRef = useRef<HTMLDivElement>();
   const frame = useRef(0);
   const firstFrameTime = useRef(performance.now());
   const currentBoxColor = useRef(color1);

@@ -238,7 +238,7 @@ function HomeScreen({
           <Animated.Image
             sharedTransitionTag={tag}
             sharedTransitionStyle={transition}
-            source={profiles[tag as Tag].image}
+            source={profiles[tag].image}
             style={homeStyles.profile}
           />
           <Animated.Text

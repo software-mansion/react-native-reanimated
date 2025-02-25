@@ -7,6 +7,7 @@ import React, { useRef } from 'react';
 import type { ImageProps, ViewProps } from 'react-native';
 import { FlatList, Image, ScrollView, Text, View } from 'react-native';
 
+import type { AnimatedRef } from '../..';
 import Animated, { useAnimatedRef } from '../..';
 
 function UseAnimatedRefTest() {
@@ -37,11 +38,11 @@ function UseAnimatedRefTest() {
   }
 
   function UseAnimatedRefTestComponent() {
-    const Component = (props: ViewProps) => {
+    const Component = (props: ViewProps & { ref: AnimatedRef<View> }) => {
       return <View {...props} />;
     };
     const AnimatedRefComponent = Animated.createAnimatedComponent(Component);
-    const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
+    const animatedRef = useAnimatedRef<View>();
     return <AnimatedRefComponent ref={animatedRef} />;
   }
 

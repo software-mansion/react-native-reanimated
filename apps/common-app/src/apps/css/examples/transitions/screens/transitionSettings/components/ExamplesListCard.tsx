@@ -145,6 +145,7 @@ type ExampleProps = {
 const Example = memo(function Example({
   displayStyleChanges,
   item,
+  ref,
   renderExample,
   transitionProperties,
   transitionStyles,
