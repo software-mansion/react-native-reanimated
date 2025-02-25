@@ -46,8 +46,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return workletsModuleProxy_;
   }
 
-  void requestAnimationFrame(std::function<void(const double)> callback);
-
  private:
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
@@ -65,11 +63,12 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
+  std::function<void(std::function<void(const double)>)>
+  getForwardedRequestAnimationFrame();
+
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<std::function<void(std::function<void(const double)>)>>
-      forwardedRequestAnimationFrame_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
 
