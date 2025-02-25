@@ -42,6 +42,14 @@ def resolveReactNativeDirectory() {
     )
 }
 
+def getReactNativeMinorVersion() {
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def reactProperties = new Properties()
+    file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+    def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+    return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
+}
+
 def getWorkletsVersion() {
     def inputFile = file(projectDir.path + '/../package.json')
     def json = new JsonSlurper().parseText(inputFile.text)
@@ -60,12 +68,7 @@ if (isNewArchitectureEnabled()) {
 }
 
 def reactNativeRootDir = resolveReactNativeDirectory()
-
-def reactProperties = new Properties()
-file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-
-def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
-def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
