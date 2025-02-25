@@ -47,7 +47,7 @@ export function useAnimatedRef<
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);
 
-  const ref = useRef<AnimatedRef<TComponent>>();
+  const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
   if (!ref.current) {
     const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
@@ -97,5 +97,6 @@ export function useAnimatedRef<
     ref.current = fun;
   }
 
+  console.log('ref.current:', ref.current);
   return ref.current;
 }
