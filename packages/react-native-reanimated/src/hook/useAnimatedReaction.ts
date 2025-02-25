@@ -1,9 +1,9 @@
 'use strict';
 import { useEffect } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
 
 import { startMapper, stopMapper } from '../core';
 import { shouldBeUseWeb } from '../PlatformChecker';
-import type { WorkletFunction } from '../WorkletsResolver';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 

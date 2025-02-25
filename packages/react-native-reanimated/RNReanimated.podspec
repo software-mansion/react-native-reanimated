@@ -35,24 +35,7 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  if $config[:has_external_worklets]
-    s.dependency "RNWorklets"
-  else
-    s.subspec "worklets" do |ss|
-      ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
-      ss.header_dir = "worklets"
-      ss.header_mappings_dir = "Common/cpp/worklets"
-  
-      ss.subspec "apple" do |sss|
-        # Please be careful with the snakes.
-        # 🐍🐍🐍
-        # Thank you for your understanding.
-        sss.source_files = "apple/worklets/**/*.{mm,h,m}"
-        sss.header_dir = "worklets"
-        sss.header_mappings_dir = "apple/worklets"
-      end
-    end
-  end
+  s.dependency "RNWorklets"
 
   s.subspec "reanimated" do |ss|
     ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
@@ -71,8 +54,6 @@ Pod::Spec.new do |s|
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 
-  external_worklets_header_path = $config[:has_external_worklets] ? "\"$(PODS_ROOT)/Headers/Public/RNWorklets\"" : ''
-
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -85,7 +66,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
-      external_worklets_header_path,
+      '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
@@ -101,7 +82,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/RCT-Folly"',
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
-      external_worklets_header_path,
+      '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",

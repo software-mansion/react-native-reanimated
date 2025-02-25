@@ -1,5 +1,11 @@
 'use strict';
 import type React from 'react';
+import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
 
 import type {
   LayoutAnimationBatchItem,
@@ -20,12 +26,6 @@ import { jsVersion } from '../platform-specific/jsVersion';
 import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 import { ReanimatedTurboModule } from '../specs';
-import type {
-  IWorkletsModule,
-  ShareableRef,
-  WorkletFunction,
-} from '../WorkletsResolver';
-import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
