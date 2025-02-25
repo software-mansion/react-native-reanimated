@@ -446,7 +446,8 @@ dependencies {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
  
-    if(project != rootProject) {
+    if (project != rootProject) {
+        // This is needed for linting in Reanimated's repo.
         implementation project(":react-native-worklets")
     }
 }
