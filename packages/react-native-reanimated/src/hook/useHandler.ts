@@ -1,9 +1,9 @@
 'use strict';
 import { useEffect, useRef } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareable } from 'react-native-worklets';
 
 import { isJest, isWeb } from '../PlatformChecker';
-import type { WorkletFunction } from '../WorkletsResolver';
-import { makeShareable } from '../WorkletsResolver';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 

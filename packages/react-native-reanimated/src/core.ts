@@ -3,6 +3,8 @@ import {
   controlEdgeToEdgeValues,
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
+import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
 
 import type {
   AnimatedKeyboardOptions,
@@ -17,8 +19,6 @@ import { ReanimatedError } from './errors';
 import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import type { WorkletFunction } from './WorkletsResolver';
-import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
@@ -30,7 +30,7 @@ export {
   runOnJS,
   runOnRuntime,
   runOnUI,
-} from './WorkletsResolver';
+} from 'react-native-worklets';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

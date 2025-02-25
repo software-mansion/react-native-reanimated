@@ -32,10 +32,9 @@ function hsvStarInterpolation(
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
 }
 
-// TODO (OKLAB): Uncomment when OKLAB support is released officially
-// function oklabInterpolation(color1: string, color2: string, progress: number) {
-//   return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
-// }
+function oklabInterpolation(color1: string, color2: string, progress: number) {
+  return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
+}
 
 const ProgressBarSection = ({ color1, color2 }) => {
   return (
@@ -49,8 +48,7 @@ const ProgressBarSection = ({ color1, color2 }) => {
         <p>RGB (with gamma correction)</p>
         <p>HSV</p>
         <p>HSV (with correction)</p>
-        {/* TODO (OKLAB): Uncomment when OKLAB support is released officially */}
-        {/* <p>OK L*a*b*</p> */}
+        <p>OKLAB</p>
       </div>
       <div className={clsx(styles.progressBarSectionPart)}>
         <ColorProgressBar
@@ -73,12 +71,11 @@ const ProgressBarSection = ({ color1, color2 }) => {
           color2={color2}
           interpolateFunction={hsvStarInterpolation}
         />
-        {/* TODO (OKLAB): Uncomment when OKLAB support is released officially */}
-        {/* <ColorProgressBar */}
-        {/*   color1={color1} */}
-        {/*   color2={color2} */}
-        {/*   interpolateFunction={oklabInterpolation} */}
-        {/* /> */}
+        <ColorProgressBar
+          color1={color1}
+          color2={color2}
+          interpolateFunction={oklabInterpolation}
+        />
       </div>
     </div>
   );

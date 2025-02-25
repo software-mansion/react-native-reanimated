@@ -1,12 +1,12 @@
 'use strict';
 import { useEffect } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { ReduceMotion } from '../commonTypes';
 import {
   isReducedMotionEnabledInSystem,
   ReducedMotionManager,
 } from '../ReducedMotion';
-import { logger } from '../WorkletsResolver';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally

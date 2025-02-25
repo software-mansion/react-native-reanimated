@@ -1,5 +1,6 @@
 'use strict';
 import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
 
 import type {
   AnimatedRef,
@@ -12,7 +13,6 @@ import {
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import { logger } from '../WorkletsResolver';
 import { dispatchCommand } from './dispatchCommand';
 
 type ScrollTo = <T extends Component>(

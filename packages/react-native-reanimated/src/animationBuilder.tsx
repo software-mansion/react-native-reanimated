@@ -1,4 +1,6 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -6,7 +8,6 @@ import type {
   StyleProps,
 } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
-import { logger } from './WorkletsResolver';
 
 const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,
