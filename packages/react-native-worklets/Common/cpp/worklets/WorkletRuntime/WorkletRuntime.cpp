@@ -1,4 +1,5 @@
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/WorkletRuntime/AroundLock.h>
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -7,22 +8,6 @@
 #include <jsi/decorator.h>
 
 namespace worklets {
-
-class AroundLock {
-  const std::shared_ptr<std::recursive_mutex> mutex_;
-
- public:
-  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex)
-      : mutex_(mutex) {}
-
-  void before() const {
-    mutex_->lock();
-  }
-
-  void after() const {
-    mutex_->unlock();
-  }
-};
 
 class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
   AroundLock aroundLock_;
