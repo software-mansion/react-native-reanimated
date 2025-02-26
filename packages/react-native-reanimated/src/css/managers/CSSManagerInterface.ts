@@ -1,3 +1,4 @@
+'use strict';
 import type { CSSStyle } from '../types';
 
 export type CSSManagerInterface = {
