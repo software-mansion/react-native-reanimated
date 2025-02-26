@@ -1,16 +1,12 @@
 #import <React/RCTBridge+Private.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
-#if REACT_NATIVE_MINOR_VERSION >= 75
 #import <React/RCTCallInvoker.h>
-#endif // REACT_NATIVE_MINOR_VERSION >= 75
-#endif // RCT_NEW_ARCH_ENABLED
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAModule.h>
@@ -35,27 +31,8 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
-#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
-// nothing
-#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
-@end
-#endif // RCT_NEW_ARCH_ENABLED
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
-#endif // RCT_NEW_ARCH_ENABLED
-
 @implementation REAModule {
-#ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-#else
-  NSMutableArray<AnimatedOperation> *_operations;
-#endif // RCT_NEW_ARCH_ENABLED
 #ifndef NDEBUG
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -63,24 +40,18 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 @synthesize callInvoker = _callInvoker;
-#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
-#ifdef RCT_NEW_ARCH_ENABLED
 + (BOOL)requiresMainQueueSetup
 {
   return YES;
 }
-#endif // RCT_NEW_ARCH_ENABLED
 
 - (void)invalidate
 {
-#ifdef RCT_NEW_ARCH_ENABLED
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-#endif // RCT_NEW_ARCH_ENABLED
   [_nodesManager invalidate];
   [super invalidate];
 }
@@ -92,8 +63,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   // will be called from that queue.
   return RCTGetUIManagerQueue();
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
 
 - (std::shared_ptr<UIManager>)getUIManager
 {
@@ -147,51 +116,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
-#else // RCT_NEW_ARCH_ENABLED
-
-- (void)setBridge:(RCTBridge *)bridge
-{
-  [super setBridge:bridge];
-
-  _nodesManager = [[REANodesManager alloc] initWithModule:self uiManager:self.bridge.uiManager];
-  _operations = [NSMutableArray new];
-
-  [bridge.uiManager.observerCoordinator addObserver:self];
-  _animationsManager = [[REAAnimationsManager alloc] initWithUIManager:bridge.uiManager];
-}
-
-#pragma mark-- Batch handling
-
-- (void)addOperationBlock:(AnimatedOperation)operation
-{
-  [_operations addObject:operation];
-}
-
-#pragma mark - RCTUIManagerObserver
-
-- (void)uiManagerWillPerformMounting:(RCTUIManager *)uiManager
-{
-  [_nodesManager maybeFlushUpdateBuffer];
-  if (_operations.count == 0) {
-    return;
-  }
-
-  NSArray<AnimatedOperation> *operations = _operations;
-  _operations = [NSMutableArray new];
-
-  REANodesManager *nodesManager = _nodesManager;
-
-  [uiManager
-      addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary<NSNumber *, REAUIView *> *viewRegistry) {
-        for (AnimatedOperation operation in operations) {
-          operation(nodesManager);
-        }
-        [nodesManager operationsBatchDidComplete];
-      }];
-}
-
-#endif // RCT_NEW_ARCH_ENABLED
-
 #pragma mark-- Events
 
 - (NSArray<NSString *> *)supportedEvents
@@ -225,12 +149,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-
-#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsCallInvoker = _callInvoker.callInvoker;
-#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
-  auto jsCallInvoker = self.bridge.jsCallInvoker;
-#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
   auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
 
@@ -244,22 +163,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   jsi::Runtime &rnRuntime = *jsiRuntime;
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
-#ifdef RCT_NEW_ARCH_ENABLED
   [self attachReactEventListener:reanimatedModuleProxy];
   const auto &uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
   reanimatedModuleProxy->initializeFabric(uiManager);
-#endif // RCT_NEW_ARCH_ENABLED
 
   return @YES;
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
-#endif // RCT_NEW_ARCH_ENABLED
 
 @end
