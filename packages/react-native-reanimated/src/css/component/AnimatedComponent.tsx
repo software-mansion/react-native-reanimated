@@ -23,7 +23,7 @@ import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const PlatformCSSManager = SHOULD_BE_USE_WEB ? CSSManagerWeb : CSSManagerNative;
+const CSSManager = SHOULD_BE_USE_WEB ? CSSManagerWeb : CSSManagerNative;
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -153,7 +153,7 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    this._CSSManager = new PlatformCSSManager(this._getViewInfo());
+    this._CSSManager = new CSSManager(this._getViewInfo());
     this._CSSManager?.attach(this._cssStyle);
   }
 
