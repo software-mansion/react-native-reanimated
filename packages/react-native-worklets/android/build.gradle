@@ -164,7 +164,6 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
 
         externalNativeBuild {
             cmake {
@@ -252,10 +251,6 @@ android {
         main {
             java {
                 srcDirs += "src/worklets/main"
-
-                if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/worklets/paper"
-                }
             }
         }
     }

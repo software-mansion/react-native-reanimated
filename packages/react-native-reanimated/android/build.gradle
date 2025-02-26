@@ -161,7 +161,6 @@ android {
         versionCode 1
         versionName REANIMATED_VERSION
 
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
         buildConfigField("boolean", "REANIMATED_PROFILING", REANIMATED_PROFILING.toString())
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
@@ -251,29 +250,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-    sourceSets.main {
-        java {
-            if (IS_NEW_ARCHITECTURE_ENABLED) {
-                srcDirs += "src/fabric/java"
-            } else {
-                srcDirs += "src/paper/java"
-            }
-
-            // BorderRadiiDrawableUtils
-            if (REACT_NATIVE_MINOR_VERSION <= 75) {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
-            }
-
-            // ReanimatedNativeHierarchyManager
-            if (REACT_NATIVE_MINOR_VERSION <= 75) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/75"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/latest"
-            }
-        }
     }
     tasks.withType(ExternalNativeBuildJsonTask) {
         compileTask ->

@@ -28,7 +28,6 @@ public class NativeProxy extends NativeProxyCommon {
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
-    ReactFeatureFlagsWrapper.enableMountHooks();
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);

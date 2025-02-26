@@ -41,7 +41,7 @@ public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
               true,
               reactModule.needsEagerInit(),
               reactModule.isCxxModule(),
-              BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
+              true));
     }
 
     return () -> reactModuleInfoMap;

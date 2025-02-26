@@ -80,24 +80,17 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
 
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
-      if (uiManager instanceof FabricUIManager) {
-        ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-        mUnsubscribe =
-            Utils.combineRunnables(
-                mUnsubscribe,
-                () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
-      } else {
-        throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
-      }
-    } else {
-      UIManager uiManager =
-          Objects.requireNonNull(UIManagerHelper.getUIManager(reactCtx, UIManagerType.DEFAULT));
-      uiManager.addUIManagerEventListener(this);
+    UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
+    if (uiManager instanceof FabricUIManager) {
+      ((FabricUIManager) uiManager).addUIManagerEventListener(this);
       mUnsubscribe =
-          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerEventListener(this));
+          Utils.combineRunnables(
+              mUnsubscribe,
+              () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
+    } else {
+      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
     }
+
     reactCtx.addLifecycleEventListener(this);
     mUnsubscribe =
         Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
