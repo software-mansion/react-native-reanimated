@@ -55,6 +55,7 @@ module.exports = {
       extends: ['plugin:jsdoc/recommended'],
       rules: {
         'jsdoc/tag-lines': 'off',
+        'jsdoc/require-param-description': 'off',
       },
     },
   ],

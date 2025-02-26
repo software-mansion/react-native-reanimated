@@ -1,6 +1,5 @@
 const fs = require('fs');
 const { cat, exec } = require('shelljs');
-const path = require('path');
 
 let IS_HELP = false;
 let IS_NIGHTLY = false;
@@ -29,7 +28,7 @@ if (IS_NIGHTLY && IS_FRESH) {
 
 const IS_SET_CUSTOM = !IS_NIGHTLY && !IS_FRESH;
 
-const packageJsonPath = path.resolve(__dirname, '../package.json');
+const packageJsonPath = 'package.json';
 const packageJson = JSON.parse(cat(packageJsonPath));
 const currentVersion = packageJson.version;
 
@@ -71,16 +70,5 @@ fs.writeFileSync(
   JSON.stringify(packageJson, null, 2) + '\n',
   'utf-8'
 );
-
-const jsVersionPath = path.resolve(
-  __dirname,
-  '../src/platform-specific/jsVersion.ts'
-);
-const before = cat(jsVersionPath);
-const after = before.replace(
-  /jsVersion = '(.*)';/g,
-  `jsVersion = '${version}';`
-);
-fs.writeFileSync(jsVersionPath, after, 'utf-8');
 
 console.log(currentVersion);
