@@ -13,17 +13,14 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { shouldBeUseWeb } from '../../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
-import type { CSSManagerInterface } from '../managers/CSSManagerInterface';
-import CSSManagerNative from '../managers/CSSManagerNative';
-import CSSManagerWeb from '../managers/CSSManagerWeb';
+import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-const CSSManager = SHOULD_BE_USE_WEB ? CSSManagerWeb : CSSManagerNative;
+const IS_JEST = isJest();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -38,7 +35,7 @@ export default class AnimatedComponent<
 > extends Component<P> {
   ChildComponent: AnyComponent;
 
-  _CSSManager?: CSSManagerInterface;
+  _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
@@ -153,8 +150,10 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    this._CSSManager = new CSSManager(this._getViewInfo());
-    this._CSSManager?.attach(this._cssStyle);
+    if (!IS_JEST) {
+      this._CSSManager = new CSSManager(this._getViewInfo());
+      this._CSSManager?.attach(this._cssStyle);
+    }
   }
 
   componentWillUnmount() {
