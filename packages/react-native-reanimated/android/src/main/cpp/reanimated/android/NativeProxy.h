@@ -10,11 +10,11 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <react/fabric/JFabricUIManager.h>
 #include <react/jni/CxxModuleWrapper.h>
+#include <react/jni/JRuntimeExecutor.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
-#include <react/fabric/JFabricUIManager.h>
-#include <react/jni/JRuntimeExecutor.h>
 #include <react/renderer/scheduler/Scheduler.h>
 
 #include <memory>
@@ -154,8 +154,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
-  );
+          fabricUIManager);
 
   static void registerNatives();
 
@@ -241,8 +240,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
-  );
+          fabricUIManager);
 
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);

@@ -5,8 +5,8 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <cxxreact/MessageQueueThread.h>
-#include <jsi/jsi.h>
 #include <jsi/decorator.h>
+#include <jsi/jsi.h>
 
 #include <memory>
 #include <utility>
@@ -71,7 +71,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   (void)rnRuntime; // used only by V8
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
-  
+
   if (supportsLocking) {
     return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
   } else {

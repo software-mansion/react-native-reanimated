@@ -13,9 +13,9 @@
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/fabric/Binding.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-#include <react/fabric/Binding.h>
 
 namespace reanimated {
 
@@ -30,8 +30,7 @@ NativeProxy::NativeProxy(
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
     const bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager
-    )
+        fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(workletsModuleProxy),
@@ -83,8 +82,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
     bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager
-) {
+        fabricUIManager) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
   return makeCxxInstance(
@@ -94,8 +92,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       jsCallInvoker,
       make_global(layoutAnimations),
       isBridgeless,
-      fabricUIManager
-  );
+      fabricUIManager);
 }
 
 #ifndef NDEBUG
