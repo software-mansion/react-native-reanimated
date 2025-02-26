@@ -4,9 +4,10 @@ import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated
 import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager.web';
+import type { CSSManagerInterface } from './CSSManagerInterface';
 import CSSTransitionsManager from './CSSTransitionsManager.web';
 
-export default class CSSManager {
+export default class CSSManager implements CSSManagerInterface {
   private readonly element: ReanimatedHTMLElement;
 
   private readonly animationsManager: CSSAnimationsManager;

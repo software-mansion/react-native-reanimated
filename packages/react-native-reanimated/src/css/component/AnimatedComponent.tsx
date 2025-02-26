@@ -15,11 +15,15 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
-import { CSSManager } from '../managers';
+import type { CSSManagerInterface } from '../managers/CSSManagerInterface';
+import NativeCSSManager from '../managers/NativeCSSManager';
+import WebCSSManager from '../managers/WebCSSManager';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+const PlatformCSSManager = SHOULD_BE_USE_WEB ? WebCSSManager : NativeCSSManager;
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -34,7 +38,7 @@ export default class AnimatedComponent<
 > extends Component<P> {
   ChildComponent: AnyComponent;
 
-  _CSSManager?: CSSManager;
+  _CSSManager?: CSSManagerInterface;
 
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
@@ -149,7 +153,7 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    this._CSSManager = new CSSManager(this._getViewInfo());
+    this._CSSManager = new PlatformCSSManager(this._getViewInfo());
     this._CSSManager?.attach(this._cssStyle);
   }
 

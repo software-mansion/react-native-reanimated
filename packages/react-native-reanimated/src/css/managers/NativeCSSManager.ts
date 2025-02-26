@@ -10,9 +10,10 @@ import {
 import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager';
+import type { CSSManagerInterface } from './CSSManagerInterface';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
-export default class CSSManager {
+export default class CSSManager implements CSSManagerInterface {
   private readonly viewTag: number;
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;

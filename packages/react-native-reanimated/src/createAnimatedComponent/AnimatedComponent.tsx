@@ -195,7 +195,9 @@ export default class AnimatedComponent
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
       }
-      removeFromPropsRegistry(viewTag);
+      if (!SHOULD_BE_USE_WEB) {
+        removeFromPropsRegistry(viewTag);
+      }
     }
   }
 
