@@ -7,7 +7,7 @@ import CSSAnimationsManager from './CSSAnimationsManager.web';
 import type { CSSManagerInterface } from './CSSManagerInterface';
 import CSSTransitionsManager from './CSSTransitionsManager.web';
 
-export default class CSSManager implements CSSManagerInterface {
+export default class CSSManagerWeb implements CSSManagerInterface {
   private readonly element: ReanimatedHTMLElement;
 
   private readonly animationsManager: CSSAnimationsManager;

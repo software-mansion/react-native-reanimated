@@ -16,14 +16,14 @@ import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import type { CSSManagerInterface } from '../managers/CSSManagerInterface';
-import NativeCSSManager from '../managers/NativeCSSManager';
-import WebCSSManager from '../managers/WebCSSManager';
+import CSSManagerNative from '../managers/CSSManagerNative';
+import CSSManagerWeb from '../managers/CSSManagerWeb';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const PlatformCSSManager = SHOULD_BE_USE_WEB ? WebCSSManager : NativeCSSManager;
+const PlatformCSSManager = SHOULD_BE_USE_WEB ? CSSManagerWeb : CSSManagerNative;
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;

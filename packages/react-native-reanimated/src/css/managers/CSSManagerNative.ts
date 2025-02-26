@@ -13,7 +13,7 @@ import CSSAnimationsManager from './CSSAnimationsManager';
 import type { CSSManagerInterface } from './CSSManagerInterface';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
-export default class CSSManager implements CSSManagerInterface {
+export default class CSSManagerNative implements CSSManagerInterface {
   private readonly viewTag: number;
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
