@@ -97,6 +97,5 @@ export function useAnimatedRef<
     ref.current = fun;
   }
 
-  console.log('ref.current:', ref.current);
   return ref.current;
 }
