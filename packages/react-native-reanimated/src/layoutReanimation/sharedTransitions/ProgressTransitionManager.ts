@@ -1,5 +1,6 @@
 'use strict';
 import { Platform } from 'react-native';
+import { runOnUIImmediately } from 'react-native-worklets';
 
 import type {
   ProgressAnimation,
@@ -8,7 +9,6 @@ import type {
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { ReanimatedError } from '../../errors';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { runOnUIImmediately } from '../../WorkletsResolver';
 
 type TransitionProgressEvent = {
   closing: number;

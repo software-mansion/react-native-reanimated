@@ -1,4 +1,6 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import type {
   AnimatableValue,
   Animation,
@@ -6,7 +8,6 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../WorkletsResolver';
 import type { ClampAnimation } from './commonTypes';
 import {
   defineAnimation,

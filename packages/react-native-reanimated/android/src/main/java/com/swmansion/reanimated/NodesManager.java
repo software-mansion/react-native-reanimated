@@ -7,7 +7,6 @@ import android.os.SystemClock;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
-import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableArray;
@@ -23,7 +22,6 @@ import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactShadowNode;
-import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -418,20 +416,15 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     // TODO: update PropsNode to use this method instead of its own way of updating props
-    boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
     WritableMap newJSProps = Arguments.createMap();
     WritableMap newNativeProps = Arguments.createMap();
 
     for (Map.Entry<String, Object> entry : props.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-      if (uiProps.contains(key)) {
-        hasUIProps = true;
-        addProp(newUIProps, key, value);
-      } else if (nativeProps.contains(key)) {
+      if (uiProps.contains(key) || nativeProps.contains(key)) {
         hasNativeProps = true;
         addProp(newNativeProps, key, value);
       } else {
@@ -441,10 +434,6 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (viewTag != View.NO_ID) {
-      if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
-      }
       if (hasNativeProps) {
         enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
       }
@@ -455,10 +444,6 @@ public class NodesManager implements EventDispatcherListener {
         sendEvent("onReanimatedPropsChange", evt);
       }
     }
-  }
-
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   public String obtainProp(int viewTag, String propName) {

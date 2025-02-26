@@ -69,8 +69,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-      synchronouslyUpdateUIPropsFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -437,7 +435,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
   auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
     auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    nativePropNames_.insert(name);
     animatablePropNames_.insert(name);
   }
 #else
@@ -680,18 +677,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
-  for (const auto &[propName, propValue] : props.items()) {
-    bool isLayoutProp =
-        nativePropNames_.find(propName.asString()) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -873,34 +858,6 @@ void ReanimatedModuleProxy::performOperations() {
     jsi::Function jsPropsUpdater =
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
-  }
-
-  bool hasLayoutUpdates = false;
-#ifdef ANDROID
-  bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
-#else
-  bool hasPropsToRevert = false;
-#endif
-
-  if (!hasPropsToRevert) {
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      if (isThereAnyLayoutProp(props)) {
-        hasLayoutUpdates = true;
-        break;
-      }
-    }
-  }
-
-  if (!hasLayoutUpdates && !hasPropsToRevert) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    ReanimatedSystraceSection s(
-        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(tag, props);
-    }
-    return;
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {

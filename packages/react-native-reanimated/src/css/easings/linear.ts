@@ -1,5 +1,6 @@
 'use strict';
-import { logger } from '../../WorkletsResolver';
+import { logger } from 'react-native-worklets';
+
 import { PERCENTAGE_REGEX } from '../constants';
 import { ReanimatedError } from '../errors';
 import type { Point } from '../types';
