@@ -20,11 +20,11 @@ import {
   ScreenStackHeaderConfig,
 } from 'react-native-screens';
 
-import { isReact19 } from '../reactUtils';
+import { IS_REACT_19 } from '../reactUtils';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
-  Platform.OS === 'web' && isReact19()
-    ? React.forwardRef(ScreenStackHeaderConfig as any)
+  Platform.OS === 'web' && !IS_REACT_19
+    ? React.forwardRef(ScreenStackHeaderConfig)
     : ScreenStackHeaderConfig
 );
 Animated.addWhitelistedNativeProps({ title: true });

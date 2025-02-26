@@ -32,19 +32,11 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
     skipValueRef.current = false;
   }, [skipValueRef]);
 
-  if (IS_REACT_19) {
-    return (
-      <SkipEnteringContext value={skipValueRef}>
-        {props.children}
-      </SkipEnteringContext>
-    );
-  }
+  const Provider = IS_REACT_19
+    ? SkipEnteringContext
+    : SkipEnteringContext.Provider;
 
-  return (
-    <SkipEnteringContext.Provider value={skipValueRef}>
-      {props.children}
-    </SkipEnteringContext.Provider>
-  );
+  return <Provider value={skipValueRef}>{props.children}</Provider>;
 }
 
 // skipExiting (unlike skipEntering) cannot be done by conditionally

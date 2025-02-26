@@ -7,6 +7,8 @@ import type {
   ComponentClass,
   ComponentType,
   FunctionComponent,
+  PropsWithoutRef,
+  Ref,
   RefObject,
 } from 'react';
 import React from 'react';
@@ -665,12 +667,17 @@ export function createAnimatedComponent(
     Component.displayName || Component.name || 'Component'
   })`;
 
-  const animatedComponent = componentWithRef((props, ref) => (
-    <AnimatedComponent
-      {...props}
-      {...(ref === null ? null : { forwardedRef: ref })}
-    />
-  ));
+  const animatedComponent = componentWithRef(
+    (
+      props: PropsWithoutRef<AnimatedComponentProps<InitialComponentProps>>,
+      ref: Ref<Component>
+    ) => (
+      <AnimatedComponent
+        {...props}
+        {...(ref === null ? null : { forwardedRef: ref })}
+      />
+    )
+  );
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';

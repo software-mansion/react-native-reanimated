@@ -1,6 +1,6 @@
 import '../types';
 
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
@@ -125,7 +125,7 @@ function Section({
       <View>
         {React.Children.map(children, (element) =>
           React.cloneElement(
-            element as React.ReactElement<{
+            element as ReactElement<{
               ref: AnimatedRef<React.Component>;
             }>,
             { ref: aref }

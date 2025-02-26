@@ -9,6 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { IS_REACT_19 } from '../reactUtils';
+
 const { width, height } = Dimensions.get('screen');
 
 function randomBetween(a: number, b: number) {
@@ -66,15 +68,19 @@ function EmojiWaterfallProvider({ children }: React.PropsWithChildren) {
     progress.value = withTiming(1, { duration, easing: Easing.linear });
   };
 
+  const ContextProvider = IS_REACT_19
+    ? EmojiWaterfallContext
+    : EmojiWaterfallContext.Provider;
+
   return (
-    <EmojiWaterfallContext value={{ startAnimation }}>
+    <ContextProvider value={{ startAnimation }}>
       {children}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {[...Array(count)].map((_, i) => (
           <Emoji emoji={emoji} progress={progress} key={i} />
         ))}
       </View>
-    </EmojiWaterfallContext>
+    </ContextProvider>
   );
 }
 

@@ -4,13 +4,9 @@ import type {
   PropsWithoutRef,
   RefAttributes,
 } from 'react';
-import React, { forwardRef } from 'react';
+import { forwardRef, version as reactVersion } from 'react';
 
-export function isReact19() {
-  return React.version.startsWith('19.');
-}
-
-const IS_REACT_19 = isReact19();
+export const IS_REACT_19 = reactVersion.startsWith('19.');
 
 // This is an adjusted version of https://github.com/adobe/react-spectrum/issues/7494#issuecomment-2546940052
 // eslint-disable-next-line @typescript-eslint/ban-types
