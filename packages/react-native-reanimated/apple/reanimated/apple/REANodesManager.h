@@ -1,6 +1,6 @@
 #import <React/RCTBridgeModule.h>
-#import <React/RCTUIManager.h>
 #import <React/RCTSurfacePresenterStub.h>
+#import <React/RCTUIManager.h>
 
 #import <reanimated/apple/READisplayLink.h>
 

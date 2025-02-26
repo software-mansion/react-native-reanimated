@@ -20,9 +20,9 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
+#import <React/RCTUIManager.h>
 #import <react/renderer/core/ShadowNode.h>
 #import <react/renderer/uimanager/primitives.h>
-#import <React/RCTUIManager.h>
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>

@@ -1,12 +1,12 @@
 #import <React/RCTBridge+Private.h>
 
+#import <React/RCTCallInvoker.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
-#import <React/RCTCallInvoker.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAModule.h>
