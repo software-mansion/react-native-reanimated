@@ -259,51 +259,6 @@ var require_useWorkletsError = __commonJS({
   },
 });
 
-// public/useWorkletsResolver.js
-var require_useWorkletsResolver = __commonJS({
-  'public/useWorkletsResolver.js'(exports2) {
-    'use strict';
-    Object.defineProperty(exports2, '__esModule', { value: true });
-    var rule = {
-      create: function (context) {
-        return {
-          ImportDeclaration(node) {
-            const workletsRegex = /\/worklets[/.*]?/;
-            if (node.source.value.match(workletsRegex)) {
-              const replacement = node.source.value.replace(
-                workletsRegex,
-                '/WorkletsResolver'
-              );
-              context.report({
-                node,
-                messageId: 'useWorkletsResolver',
-                fix: function (fixer) {
-                  return fixer.replaceText(node.source, `'${replacement}'`);
-                },
-              });
-            }
-          },
-        };
-      },
-      meta: {
-        docs: {
-          recommended: 'recommended',
-          description:
-            "Warns when `react-native-reanimated` doesn't use `WorkletsResolver` to import worklets' files`.",
-        },
-        messages: {
-          useWorkletsResolver: "Import worklets' files via WorkletsResolver.",
-        },
-        type: 'suggestion',
-        schema: [],
-        fixable: 'code',
-      },
-      defaultOptions: [],
-    };
-    exports2.default = rule;
-  },
-});
-
 // public/index.js
 var __importDefault =
   (exports && exports.__importDefault) ||
@@ -317,11 +272,9 @@ var noAnimatedStyleToNonAnimatedComponent_1 = __importDefault(
 );
 var useReanimatedError_1 = __importDefault(require_useReanimatedError());
 var useWorkletsError_1 = __importDefault(require_useWorkletsError());
-var useWorkletsResolver_1 = __importDefault(require_useWorkletsResolver());
 exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
   'use-reanimated-error': useReanimatedError_1.default,
   'use-worklets-error': useWorkletsError_1.default,
-  'use-worklets-resolver': useWorkletsResolver_1.default,
 };
