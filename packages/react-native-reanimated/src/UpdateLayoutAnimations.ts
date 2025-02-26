@@ -10,9 +10,7 @@ import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
 } from './core';
-import { isFabric, shouldBeUseWeb } from './PlatformChecker';
-
-const IS_FABRIC = isFabric();
+import { shouldBeUseWeb } from './PlatformChecker';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -29,7 +27,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        IS_FABRIC ? this.flush() : setImmediate(this.flush);
+        this.flush();
       }
     },
     flush(this: void) {

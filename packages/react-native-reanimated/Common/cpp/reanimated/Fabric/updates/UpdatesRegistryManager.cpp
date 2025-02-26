@@ -50,6 +50,12 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+void UpdatesRegistryManager::removeBatch(const std::vector<Tag> &tags) {
+  for (auto &registry : registries_) {
+    registry->removeBatch(tags);
+  }
+}
+
 #ifdef ANDROID
 
 UpdatesRegistryManager::UpdatesRegistryManager(

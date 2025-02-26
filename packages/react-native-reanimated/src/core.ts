@@ -16,7 +16,7 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
@@ -34,7 +34,6 @@ export {
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_FABRIC = isFabric();
 
 /** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
 export const isReanimated3 = () => true;
@@ -54,7 +53,7 @@ export function getViewProp<T>(
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
-  if (IS_FABRIC && !component) {
+  if (!component) {
     throw new ReanimatedError(
       'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );

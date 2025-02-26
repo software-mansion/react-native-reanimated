@@ -6,6 +6,7 @@ import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import { Easing } from '../../Easing';
 import { BaseAnimationBuilder } from '../animationBuilder';
 
@@ -24,10 +25,12 @@ export class CurvedTransition
 {
   static presetName = 'CurvedTransition';
 
-  easingXV: EasingFunction = Easing.in(Easing.ease);
-  easingYV: EasingFunction = Easing.out(Easing.ease);
-  easingWidthV: EasingFunction = Easing.in(Easing.exp);
-  easingHeightV: EasingFunction = Easing.out(Easing.exp);
+  easingXV: EasingFunction | EasingFunctionFactory = Easing.in(Easing.ease);
+  easingYV: EasingFunction | EasingFunctionFactory = Easing.out(Easing.ease);
+  easingWidthV: EasingFunction | EasingFunctionFactory = Easing.in(Easing.exp);
+  easingHeightV: EasingFunction | EasingFunctionFactory = Easing.out(
+    Easing.exp
+  );
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
@@ -35,12 +38,14 @@ export class CurvedTransition
     return new CurvedTransition() as InstanceType<T>;
   }
 
-  static easingX(easing: EasingFunction): CurvedTransition {
+  static easingX(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingX(easing);
   }
 
-  easingX(easing: EasingFunction): CurvedTransition {
+  easingX(easing: EasingFunction | EasingFunctionFactory): CurvedTransition {
     if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
@@ -48,12 +53,14 @@ export class CurvedTransition
     return this;
   }
 
-  static easingY(easing: EasingFunction): CurvedTransition {
+  static easingY(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingY(easing);
   }
 
-  easingY(easing: EasingFunction): CurvedTransition {
+  easingY(easing: EasingFunction | EasingFunctionFactory): CurvedTransition {
     if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
@@ -61,12 +68,16 @@ export class CurvedTransition
     return this;
   }
 
-  static easingWidth(easing: EasingFunction): CurvedTransition {
+  static easingWidth(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingWidth(easing);
   }
 
-  easingWidth(easing: EasingFunction): CurvedTransition {
+  easingWidth(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     if (__DEV__) {
       assertEasingIsWorklet(easing);
     }
@@ -74,12 +85,16 @@ export class CurvedTransition
     return this;
   }
 
-  static easingHeight(easing: EasingFunction): CurvedTransition {
+  static easingHeight(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     const instance = this.createInstance();
     return instance.easingHeight(easing);
   }
 
-  easingHeight(easing: EasingFunction): CurvedTransition {
+  easingHeight(
+    easing: EasingFunction | EasingFunctionFactory
+  ): CurvedTransition {
     if (__DEV__) {
       assertEasingIsWorklet(easing);
     }

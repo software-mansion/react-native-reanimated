@@ -15,7 +15,7 @@ import { RectButton } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { BackButton, DrawerButton } from '@/components';
-import { createStack, IS_MACOS, isFabric } from '@/utils';
+import { createStack, IS_MACOS } from '@/utils';
 
 import { EXAMPLES } from './examples';
 
@@ -103,7 +103,7 @@ function Item({
   missingOnFabric,
   wasClicked,
 }: ItemProps) {
-  const isDisabled = missingOnFabric && isFabric();
+  const isDisabled = missingOnFabric;
   const Button = IS_MACOS ? Pressable : RectButton;
   return (
     <Button

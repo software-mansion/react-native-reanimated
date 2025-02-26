@@ -15,7 +15,7 @@ export class AnimationUpdatesRecorder {
 
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
-      const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
+      const originalUpdateProps = global._updatePropsFabric;
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = (operations: Operation[]) => {
@@ -23,11 +23,7 @@ export class AnimationUpdatesRecorder {
         originalUpdateProps(operations);
       };
 
-      if (global._IS_FABRIC) {
-        global._updatePropsFabric = mockedUpdateProps;
-      } else {
-        global._updatePropsPaper = mockedUpdateProps;
-      }
+      global._updatePropsFabric = mockedUpdateProps;
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
@@ -43,11 +39,7 @@ export class AnimationUpdatesRecorder {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
-        if (global._IS_FABRIC) {
-          global._updatePropsFabric = global.originalUpdateProps;
-        } else {
-          global._updatePropsPaper = global.originalUpdateProps;
-        }
+        global._updatePropsFabric = global.originalUpdateProps;
         global.originalUpdateProps = undefined;
       }
       if (global.originalNotifyAboutProgress) {

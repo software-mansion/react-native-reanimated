@@ -15,9 +15,4 @@ export declare const rules: {
     [],
     TSESLint.RuleListener
   >;
-  'use-worklets-resolver': TSESLint.RuleModule<
-    'useWorkletsResolver',
-    [],
-    TSESLint.RuleListener
-  >;
 };
