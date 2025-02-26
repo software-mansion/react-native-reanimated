@@ -1,9 +1,6 @@
 'use strict';
 import { runOnUI } from 'react-native-worklets';
 
-import { ReanimatedError } from './errors';
-import { isFabric } from './PlatformChecker';
-
 let VIEW_TAGS: number[] = [];
 
 export function removeFromPropsRegistry(viewTag: number) {
@@ -13,14 +10,7 @@ export function removeFromPropsRegistry(viewTag: number) {
   }
 }
 
-const IS_FABRIC = isFabric();
-
 function flush() {
-  if (__DEV__ && !IS_FABRIC) {
-    throw new ReanimatedError(
-      'AnimatedPropsRegistry is only available on Fabric.'
-    );
-  }
   runOnUI(removeFromPropsRegistryOnUI)(VIEW_TAGS);
   VIEW_TAGS = [];
 }

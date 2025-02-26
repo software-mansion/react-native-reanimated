@@ -8,12 +8,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import {
-  isChromeDebugger,
-  isFabric,
-  isJest,
-  shouldBeUseWeb,
-} from '../PlatformChecker';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -34,7 +29,7 @@ type DispatchCommand = <T extends Component>(
  */
 export let dispatchCommand: DispatchCommand;
 
-function dispatchCommandFabric(
+function dispatchCommandNative(
   animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   commandName: string,
   args: Array<unknown> = []
@@ -46,20 +41,6 @@ function dispatchCommandFabric(
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
-}
-
-function dispatchCommandPaper(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
-  commandName: string,
-  args: Array<unknown> = []
-) {
-  'worklet';
-  if (!_WORKLET) {
-    return;
-  }
-
-  const viewTag = animatedRef() as number;
-  global._dispatchCommandPaper!(viewTag, commandName, args);
 }
 
 function dispatchCommandJest() {
@@ -78,11 +59,7 @@ if (!shouldBeUseWeb()) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
-  if (isFabric()) {
-    dispatchCommand = dispatchCommandFabric as unknown as DispatchCommand;
-  } else {
-    dispatchCommand = dispatchCommandPaper as unknown as DispatchCommand;
-  }
+  dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
 } else if (isJest()) {
   dispatchCommand = dispatchCommandJest;
 } else if (isChromeDebugger()) {
