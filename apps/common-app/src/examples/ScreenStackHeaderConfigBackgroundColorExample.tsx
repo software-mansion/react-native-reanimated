@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type {
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
@@ -20,8 +20,12 @@ import {
   ScreenStackHeaderConfig,
 } from 'react-native-screens';
 
+import { isReact19 } from '../reactUtils';
+
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
-  ScreenStackHeaderConfig
+  Platform.OS === 'web' && isReact19()
+    ? React.forwardRef(ScreenStackHeaderConfig as any)
+    : ScreenStackHeaderConfig
 );
 Animated.addWhitelistedNativeProps({ title: true });
 

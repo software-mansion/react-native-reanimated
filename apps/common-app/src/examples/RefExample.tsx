@@ -1,4 +1,3 @@
-import type { RefObject } from 'react';
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -7,13 +6,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { componentWithRef } from '../reactUtils';
+
 export type ChildHandle = {
   toggleState: () => void;
 };
 
-type ChildProps = { ref: RefObject<ChildHandle | null> };
-
-const Child = ({ ref }: ChildProps) => {
+const Child = componentWithRef((_, ref) => {
   const [state, setState] = React.useState(0);
 
   const toggleState = () => {
@@ -27,7 +26,7 @@ const Child = ({ ref }: ChildProps) => {
   });
 
   return <View style={[styles.child, { width: size, height: size }]} />;
-};
+});
 
 export default function RefExample() {
   const x = useSharedValue(0);
