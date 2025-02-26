@@ -74,7 +74,7 @@ import ScrollToSrc from '!!raw-loader!@site/src/examples/ScrollTo';
 - The `scrollTo` function can only be called from [the UI thread](/docs/fundamentals/glossary#ui-thread).
 - Supports `Animated.FlatList`.
 - Usually works with other ScrollView-like and FlatList-like components if they use a `ScrollView` under the hood and are [made animated](/docs/core/createAnimatedComponent#reference).
-- Scrollable components must implement `getScrollableNode` method (and `getNativeScrollRef` method for the New Architecture) to be compatible with `scrollTo`.
+- Scrollable components must implement `getNativeScrollRef` method to be compatible with `scrollTo`.
 
 ## Platform compatibility
 

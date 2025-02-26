@@ -34,10 +34,6 @@ export function shouldBeUseWeb() {
   return isJest() || isChromeDebugger() || isWeb() || isWindows();
 }
 
-export function isFabric() {
-  return !!globalThis.RN$Bridgeless;
-}
-
 export function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
   // this function shouldn't be used to conditionally render components
