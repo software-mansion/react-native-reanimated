@@ -1,12 +1,7 @@
-import com.android.Version
-import org.apache.tools.ant.filters.ReplaceTokens
-import org.apache.tools.ant.taskdefs.condition.Os
-import groovy.json.JsonSlurper
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
-
-import javax.inject.Inject
-import java.nio.file.Files
+import groovy.json.JsonSlurper
 import java.nio.file.Paths
+import org.apache.tools.ant.taskdefs.condition.Os
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
