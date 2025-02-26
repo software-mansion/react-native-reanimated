@@ -27,7 +27,6 @@ export function createUpdatesContainer() {
 
   function _updateNativeSnapshot(updateInfos: JsUpdate[], jsUpdateIndex: number): void {
     'worklet';
-    const isFabric = global._IS_FABRIC;
     nativeSnapshots.modify(values => {
       'worklet';
       for (const updateInfo of updateInfos) {
@@ -35,9 +34,7 @@ export function createUpdatesContainer() {
         const updatedProps = Object.keys(updateInfo.update);
         const propsToUpdate = updatedProps.filter(propName => isValidPropName(propName));
         for (const prop of propsToUpdate) {
-          snapshot[prop] = isFabric
-            ? global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop)
-            : global._obtainPropPaper(updateInfo?.tag, prop);
+          snapshot[prop] = global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop);
         }
         values.push({
           tag: updateInfo.tag,
@@ -83,10 +80,6 @@ export function createUpdatesContainer() {
 
   function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
     'worklet';
-    if (global._IS_FABRIC) {
-      // layout animation doesn't work on Fabric yet
-      return;
-    }
     // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
     const updatesCopy = JSON.parse(JSON.stringify(update));
     if ('backgroundColor' in updatesCopy) {

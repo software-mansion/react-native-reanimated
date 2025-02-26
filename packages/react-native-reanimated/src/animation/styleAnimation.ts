@@ -1,4 +1,6 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import { ColorProperties, processColor } from '../Colors';
 import type {
   AnimatableValue,
@@ -9,7 +11,6 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../WorkletsResolver';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { defineAnimation } from './util';

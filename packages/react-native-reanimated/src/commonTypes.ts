@@ -6,10 +6,10 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
+import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
 
 export type LayoutAnimationsOptions =
   | 'originX'

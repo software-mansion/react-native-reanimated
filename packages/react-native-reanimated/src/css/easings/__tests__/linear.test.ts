@@ -1,5 +1,6 @@
 'use strict';
-import { logger } from '../../../WorkletsResolver';
+import { logger } from 'react-native-worklets';
+
 import type { Percentage } from '../../types';
 import { ERROR_MESSAGES, LinearEasing, WARN_MESSAGES } from '../linear';
 import type { ControlPoint } from '../types';

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
+import { runOnUIImmediately } from 'react-native-worklets';
 
 import { processColorsInProps } from './Colors';
 import type {
@@ -10,10 +11,9 @@ import type {
 } from './commonTypes';
 import { ReanimatedError } from './errors';
 import type { Descriptor } from './hook/commonTypes';
-import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
+import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
-import { runOnUIImmediately } from './WorkletsResolver';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -61,65 +61,33 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-const createUpdatePropsManager = isFabric()
-  ? () => {
-      'worklet';
-      // Fabric
-      const operations: {
-        shadowNodeWrapper: ShadowNodeWrapper;
-        updates: StyleProps | AnimatedStyle<any>;
-      }[] = [];
-      return {
-        update(
-          viewDescriptors: ViewDescriptorsWrapper,
-          updates: StyleProps | AnimatedStyle<any>
-        ) {
-          viewDescriptors.value.forEach((viewDescriptor) => {
-            operations.push({
-              shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
-              updates,
-            });
-            if (operations.length === 1) {
-              queueMicrotask(this.flush);
-            }
-          });
-        },
-        flush(this: void) {
-          global._updatePropsFabric!(operations);
-          operations.length = 0;
-        },
-      };
-    }
-  : () => {
-      'worklet';
-      // Paper
-      const operations: {
-        tag: number;
-        name: string;
-        updates: StyleProps | AnimatedStyle<any>;
-      }[] = [];
-      return {
-        update(
-          viewDescriptors: ViewDescriptorsWrapper,
-          updates: StyleProps | AnimatedStyle<any>
-        ) {
-          viewDescriptors.value.forEach((viewDescriptor) => {
-            operations.push({
-              tag: viewDescriptor.tag as number,
-              name: viewDescriptor.name || 'RCTView',
-              updates,
-            });
-            if (operations.length === 1) {
-              queueMicrotask(this.flush);
-            }
-          });
-        },
-        flush(this: void) {
-          global._updatePropsPaper!(operations);
-          operations.length = 0;
-        },
-      };
-    };
+function createUpdatePropsManager() {
+  'worklet';
+  const operations: {
+    shadowNodeWrapper: ShadowNodeWrapper;
+    updates: StyleProps | AnimatedStyle<any>;
+  }[] = [];
+  return {
+    update(
+      viewDescriptors: ViewDescriptorsWrapper,
+      updates: StyleProps | AnimatedStyle<any>
+    ) {
+      viewDescriptors.value.forEach((viewDescriptor) => {
+        operations.push({
+          shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
+          updates,
+        });
+        if (operations.length === 1) {
+          queueMicrotask(this.flush);
+        }
+      });
+    },
+    flush(this: void) {
+      global._updatePropsFabric!(operations);
+      operations.length = 0;
+    },
+  };
+}
 
 if (shouldBeUseWeb()) {
   const maybeThrowError = () => {

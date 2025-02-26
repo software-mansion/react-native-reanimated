@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
+import { isWorkletFunction, logger, runOnUI } from 'react-native-worklets';
+
 import type { ParsedColorArray } from '../Colors';
 import {
   clampRGBA,
@@ -23,7 +25,6 @@ import type { EasingFunctionFactory } from '../Easing';
 import { ReanimatedError } from '../errors';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReducedMotionManager } from '../ReducedMotion';
-import { isWorkletFunction, logger, runOnUI } from '../WorkletsResolver';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,
