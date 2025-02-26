@@ -9,7 +9,10 @@ import React, {
 } from 'react';
 
 import { setShouldAnimateExitingForTag } from '../core';
+import { isReact19 } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+
+const IS_REACT_19 = isReact19();
 
 export const SkipEnteringContext =
   createContext<React.MutableRefObject<boolean> | null>(null);
@@ -28,6 +31,14 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   useEffect(() => {
     skipValueRef.current = false;
   }, [skipValueRef]);
+
+  if (IS_REACT_19) {
+    return (
+      <SkipEnteringContext value={skipValueRef}>
+        {props.children}
+      </SkipEnteringContext>
+    );
+  }
 
   return (
     <SkipEnteringContext.Provider value={skipValueRef}>

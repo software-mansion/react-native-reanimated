@@ -13,7 +13,7 @@ const IS_REACT_19 = isReact19();
 
 function getCurrentReactOwner() {
   return (
-    // @ts-expect-error React secret internals aren't typed
+    // @ts-expect-error React secret internals waren't typed
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?.A?.getOwner() ||
     // @ts-expect-error React secret internals aren't typed
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentOwner
