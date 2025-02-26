@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { StyleProps } from '../commonTypes';
@@ -194,9 +193,6 @@ export default class AnimatedComponent
       }
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
-      }
-      if (!SHOULD_BE_USE_WEB) {
-        removeFromPropsRegistry(viewTag);
       }
     }
   }

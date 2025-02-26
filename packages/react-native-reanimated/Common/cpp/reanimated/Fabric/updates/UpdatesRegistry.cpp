@@ -27,8 +27,6 @@ void UpdatesRegistry::flushUpdates(
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
     updatesBatch.emplace_back(shadowNode, std::move(props));
   }
-  // Remove all tags scheduled for removal
-  runMarkedRemovals();
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
@@ -96,12 +94,15 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   }
 }
 
-void UpdatesRegistry::runMarkedRemovals() {
-  auto copiedTagsToRemove = std::move(tagsToRemove_);
-  for (const auto tag : copiedTagsToRemove) {
+void UpdatesRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::unique_lock<std::mutex> l(mutex_);
+  for (const auto &tag : tagsToRemove) {
     updatesRegistry_.erase(tag);
   }
-  tagsToRemove_.clear();
+}
+
+bool UpdatesRegistry::isEmpty() {
+  return updatesRegistry_.empty();
 }
 
 #ifdef ANDROID

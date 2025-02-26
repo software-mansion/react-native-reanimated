@@ -6,7 +6,7 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,10 +15,22 @@ import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
+import { LeakCheck } from './components/LeakCheck';
+
+export const NukeContext = createContext<() => void>(() => '');
 
 export default function App() {
+  const [nuked, setNuked] = useState(false);
   const { isReady, navigationState, updateNavigationState } =
     useNavigationState();
+
+  if (nuked) {
+    return (
+      <NukeContext.Provider value={() => setNuked(false)}>
+        <LeakCheck />
+      </NukeContext.Provider>
+    );
+  }
 
   if (!isReady) {
     return (
@@ -29,42 +41,44 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView style={flex.fill}>
-        <NavigationContainer
-          initialState={navigationState}
-          linking={{
-            getPathFromState: (state, options) =>
-              getPathFromState(state, options).replace(/%2F/g, '/'),
-            getStateFromPath: (path) => {
-              const chunks = path.split('/').filter(Boolean);
-              if (chunks.length === 0) return { routes: [] };
+    <NukeContext.Provider value={() => setNuked(true)}>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={flex.fill}>
+          <NavigationContainer
+            initialState={navigationState}
+            linking={{
+              getPathFromState: (state, options) =>
+                getPathFromState(state, options).replace(/%2F/g, '/'),
+              getStateFromPath: (path) => {
+                const chunks = path.split('/').filter(Boolean);
+                if (chunks.length === 0) return { routes: [] };
 
-              const drawerRoute = chunks[0];
-              const stackRoutes = chunks.slice(1).map((_, index, array) => ({
-                name: array.slice(0, index + 1).join('/'),
-              }));
+                const drawerRoute = chunks[0];
+                const stackRoutes = chunks.slice(1).map((_, index, array) => ({
+                  name: array.slice(0, index + 1).join('/'),
+                }));
 
-              return {
-                routes: [
-                  {
-                    name: drawerRoute,
-                    state: {
-                      routes: stackRoutes,
+                return {
+                  routes: [
+                    {
+                      name: drawerRoute,
+                      state: {
+                        routes: stackRoutes,
+                      },
                     },
-                  },
-                ],
-              };
-            },
-            prefixes: [],
-          }}
-          onStateChange={updateNavigationState}>
-          <PortalProvider>
-            <Navigator />
-          </PortalProvider>
-        </NavigationContainer>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+                  ],
+                };
+              },
+              prefixes: [],
+            }}
+            onStateChange={updateNavigationState}>
+            <PortalProvider>
+              <Navigator />
+            </PortalProvider>
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    </NukeContext.Provider>
   );
 }
 

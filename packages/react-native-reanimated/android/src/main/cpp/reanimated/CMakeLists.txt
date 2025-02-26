@@ -12,10 +12,6 @@ find_package(react-native-worklets REQUIRED CONFIG)
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
-
 target_include_directories(
   reanimated
   PRIVATE "${COMMON_CPP_DIR}"
