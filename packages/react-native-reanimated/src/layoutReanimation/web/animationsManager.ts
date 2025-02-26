@@ -1,5 +1,24 @@
 'use strict';
 
+import { logger } from 'react-native-worklets';
+
+import { LayoutAnimationType } from '../../commonTypes';
+import type {
+  AnimatedComponentProps,
+  LayoutAnimationStaticContext,
+} from '../../createAnimatedComponent/commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { Keyframe } from '../animationBuilder';
+import type { TransitionData } from './animationParser';
+import { makeElementVisible } from './componentStyle';
+import {
+  getProcessedConfig,
+  handleExitingAnimation,
+  handleLayoutTransition,
+  maybeModifyStyleForKeyframe,
+  setElementAnimation,
+} from './componentUtils';
 import type {
   AnimationConfig,
   AnimationNames,
@@ -8,28 +27,11 @@ import type {
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
-import type {
-  AnimatedComponentProps,
-  LayoutAnimationStaticContext,
-} from '../../createAnimatedComponent/commonTypes';
-import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   createAnimationWithInitialValues,
   createCustomKeyFrameAnimation,
 } from './createAnimation';
-import {
-  getProcessedConfig,
-  handleExitingAnimation,
-  handleLayoutTransition,
-  maybeModifyStyleForKeyframe,
-  setElementAnimation,
-} from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
-import type { TransitionData } from './animationParser';
-import { Keyframe } from '../animationBuilder';
-import { makeElementVisible } from './componentStyle';
-import { EasingNameSymbol } from '../../Easing';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -39,10 +41,10 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
     animationType === LayoutAnimationType.ENTERING
       ? props.entering
       : animationType === LayoutAnimationType.EXITING
-      ? props.exiting
-      : animationType === LayoutAnimationType.LAYOUT
-      ? props.layout
-      : null;
+        ? props.exiting
+        : animationType === LayoutAnimationType.LAYOUT
+          ? props.layout
+          : null;
 
   return config;
 }
@@ -57,8 +59,8 @@ function checkUndefinedAnimationFail(
     return false;
   }
 
-  console.warn(
-    "[Reanimated] Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay, withCallback, reducedMotion."
+  logger.warn(
+    "Couldn't load entering/exiting animation. Current version supports only predefined animations with modifiers: duration, delay, easing, randomizeDelay, withCallback, reducedMotion."
   );
 
   return true;
@@ -83,8 +85,8 @@ function maybeReportOverwrittenProperties(
     return;
   }
 
-  console.warn(
-    `[Reanimated] ${
+  logger.warn(
+    `${
       commonProperties.length === 1 ? 'Property' : 'Properties'
     } [${commonProperties.join(
       ', '
@@ -165,8 +167,8 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
     if (
       !(keyframeTimestamps.includes('100') || keyframeTimestamps.includes('to'))
     ) {
-      console.warn(
-        `[Reanimated] Neither '100' nor 'to' was specified in Keyframe definition. This may result in wrong final position of your component. One possible solution is to duplicate last timestamp in definition as '100' (or 'to')`
+      logger.warn(
+        `Neither '100' nor 'to' was specified in Keyframe definition. This may result in wrong final position of your component. One possible solution is to duplicate last timestamp in definition as '100' (or 'to')`
       );
     }
   }
@@ -181,7 +183,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 }
 
 export function startWebLayoutAnimation<
-  ComponentProps extends Record<string, unknown>
+  ComponentProps extends Record<string, unknown>,
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: ReanimatedHTMLElement,
@@ -212,7 +214,7 @@ export function startWebLayoutAnimation<
 }
 
 export function tryActivateLayoutTransition<
-  ComponentProps extends Record<string, unknown>
+  ComponentProps extends Record<string, unknown>,
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: ReanimatedHTMLElement,
@@ -232,9 +234,11 @@ export function tryActivateLayoutTransition<
     ?.presetName;
   const exitingAnimation = (props.layout as CustomConfig).exitingV?.presetName;
 
+  const deltaX = (snapshot.width - rect.width) / 2;
+  const deltaY = (snapshot.height - rect.height) / 2;
   const transitionData: TransitionData = {
-    translateX: snapshot.x - rect.x,
-    translateY: snapshot.y - rect.y,
+    translateX: snapshot.x - rect.x + deltaX,
+    translateY: snapshot.y - rect.y + deltaY,
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false

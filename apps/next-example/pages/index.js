@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 import { StyleSheet, Text, View } from 'react-native';
 
 const styles = StyleSheet.create({
@@ -29,14 +30,17 @@ export default function App() {
         Next example
       </Text>
 
+      {/* @ts-expect-error */}
       <Text style={styles.link} accessibilityRole="link" href={`/ssg`}>
         SSG
       </Text>
 
+      {/* @ts-expect-error */}
       <Text style={styles.link} accessibilityRole="link" href={`/ssr`}>
         SSR
       </Text>
 
+      {/* @ts-expect-error */}
       <Text style={styles.link} accessibilityRole="link" href={`/test`}>
         e2e test page
       </Text>

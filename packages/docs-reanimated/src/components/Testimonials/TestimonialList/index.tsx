@@ -39,7 +39,7 @@ const items = [
     link: 'https://twitter.com/bran_aust/status/1754907731536863670',
     image: {
       alt: 'brandon austin',
-      src: 'https://pbs.twimg.com/profile_images/1764586254145130496/gb774OEv_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1807358745401286656/u6hI6CYo_400x400.jpg',
     },
   },
   {
@@ -49,7 +49,7 @@ const items = [
     link: 'https://twitter.com/codewithnomi_/status/1754910812584436199',
     image: {
       alt: 'syed noman',
-      src: 'https://pbs.twimg.com/profile_images/1739613764855738369/BG90fzKe_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1830471268178546688/ZmDKS2cM_400x400.jpg',
     },
   },
   {

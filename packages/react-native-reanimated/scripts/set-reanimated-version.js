@@ -19,8 +19,7 @@ if (IS_HELP) {
   console.warn(
     'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nElse pass the version as an argument.'
   );
-  process.exitCode = 1;
-  return;
+  process.exit(1);
 }
 
 if (IS_NIGHTLY && IS_FRESH) {
@@ -35,7 +34,7 @@ const currentVersion = packageJson.version;
 
 if (process.argv.length < 3) {
   console.log(currentVersion);
-  return;
+  process.exit(0);
 }
 
 let version;
@@ -58,10 +57,7 @@ if (IS_SET_CUSTOM) {
     }).stdout.trim();
     const shortCommit = currentCommit.slice(0, 9);
 
-    const [major, minor] = currentVersion.split('.');
-    const patch = 0;
-    const nextMinor = Number(minor) + 1;
-    version = `${major}.${nextMinor}.${patch}-nightly-${dateIdentifier}-${shortCommit}`;
+    version = `${currentVersion.split('-')[0]}-nightly-${dateIdentifier}-${shortCommit}`;
   } else if (IS_FRESH) {
     version = `${currentVersion}-${dateIdentifier}`;
   }

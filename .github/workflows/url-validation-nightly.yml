@@ -1,0 +1,27 @@
+name: URL validation [Nightly]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/url-validation-nightly.yml
+      - packages/react-native-reanimated/scripts/validate-urls.js
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install monorepo node dependencies
+        run: yarn install
+      - name: Install node-fetch 2
+        working-directory: packages/react-native-reanimated
+        run: yarn add node-fetch@2
+
+      - name: Validate urls
+        run: node packages/react-native-reanimated/scripts/validate-urls.js

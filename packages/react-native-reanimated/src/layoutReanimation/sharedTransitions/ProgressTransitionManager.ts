@@ -1,11 +1,13 @@
 'use strict';
-import { runOnUIImmediately } from '../../threads';
+import { Platform } from 'react-native';
+import { runOnUIImmediately } from 'react-native-worklets';
+
 import type {
   ProgressAnimation,
   SharedTransitionAnimationsValues,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
-import { Platform } from 'react-native';
+import { ReanimatedError } from '../../errors';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 
 type TransitionProgressEvent = {
@@ -229,8 +231,8 @@ if (shouldBeUseWeb()) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!isJest()) {
-      throw new Error(
-        '[Reanimated] `ProgressTransitionRegister` is not available on non-native platform.'
+      throw new ReanimatedError(
+        '`ProgressTransitionRegister` is not available on non-native platform.'
       );
     }
   };

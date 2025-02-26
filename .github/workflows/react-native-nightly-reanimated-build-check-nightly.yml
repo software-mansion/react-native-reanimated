@@ -1,0 +1,76 @@
+name: React Native nightly Reanimated build check [Nightly]
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    strategy:
+      matrix:
+        react-native-architecture: ['Paper', 'Fabric']
+        platform: ['iOS', 'Android']
+      fail-fast: false
+    env:
+      REACT_NATIVE_TAG: nightly
+      APP_NAME: app
+    concurrency:
+      group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Setup Yarn
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
+        run: corepack enable && yarn init
+      - name: Set up JDK 18
+        if: ${{ matrix.platform == 'Android' }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '18'
+      - name: Load "next" tag if available
+        run: |
+          if npm view react-native dist-tags | grep -q 'next:' ; then
+            echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
+          fi
+      - name: Install React Native CLI
+        run: yarn add @react-native-community/cli
+      - name: Create app
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Setup Yarn Modern in app
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
+      - name: Install Reanimated
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Install Paper Pods (iOS)
+        if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: bundle install && bundle exec pod install
+      - name: Install Fabric Pods (iOS)
+        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
+      - name: Setup Fabric (Android)
+        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
+        working-directory: ${{ env.APP_NAME }}/android
+        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+      - name: Build app (iOS)
+        if: ${{ matrix.platform == 'iOS' }}
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn react-native run-ios --terminal='Terminal'
+      - name: Build app (Android)
+        if: ${{ matrix.platform == 'Android' }}
+        working-directory: ${{ env.APP_NAME }}/android
+        run: ./gradlew assembleDebug --console=plain

@@ -1,17 +1,19 @@
 'use strict';
-import { defineAnimation } from './util';
+import { logger } from 'react-native-worklets';
+
+import { ColorProperties, processColor } from '../Colors';
 import type {
-  Timestamp,
   AnimatableValue,
-  AnimationObject,
+  AnimatedStyle,
   Animation,
+  AnimationObject,
   NestedObject,
   NestedObjectValues,
-  AnimatedStyle,
+  Timestamp,
 } from '../commonTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { ColorProperties, processColor } from '../Colors';
+import { defineAnimation } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -185,7 +187,7 @@ export function withStyleAnimation(
             prevVal = (prevAnimation as any).current;
           }
           if (prevVal === undefined) {
-            console.warn(
+            logger.warn(
               `Initial values for animation are missing for property ${currentEntry.path.join(
                 '.'
               )}`

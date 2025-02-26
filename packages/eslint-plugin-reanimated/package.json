@@ -1,25 +1,26 @@
 {
   "name": "eslint-plugin-reanimated",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "types": "lib",
   "scripts": {
     "test": "yarn jest",
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
     "build": "yarn tsc && yarn bundle && rm -rf ./public/* && yarn format",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint --max-warnings=0 src",
     "format": "prettier --write --list-different ."
   },
   "devDependencies": {
-    "@types/jest": "^29.5.11",
+    "@types/jest": "^29.5.13",
     "@types/node": "^20.11.5",
     "@typescript-eslint/parser": "^6.19.1",
     "@typescript-eslint/rule-tester": "^6.19.1",
     "@typescript-eslint/utils": "^6.19.1",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.25.0",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "prettier": "2.8.8",
+    "prettier": "^3.3.3",
     "ts-jest": "^29.1.2",
     "typescript": "~5.3.0"
   }

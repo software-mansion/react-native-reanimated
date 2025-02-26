@@ -1,16 +1,18 @@
 'use strict';
+import { withSequence, withTiming } from '../../animation';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
-import { withSequence, withTiming } from '../../animation';
+} from '../../commonTypes';
 import { Easing } from '../../Easing';
 import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
- * Layout jumps - quite literally - from one position to another. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Layout jumps - quite literally - from one position to another. You can modify
+ * the behavior by chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `layout` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#jumping-transition
  */

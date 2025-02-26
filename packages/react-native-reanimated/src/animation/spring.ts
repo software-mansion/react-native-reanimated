@@ -1,27 +1,27 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
+  AnimatableValue,
   Animation,
   AnimationCallback,
-  AnimatableValue,
   Timestamp,
 } from '../commonTypes';
 import type {
-  SpringConfig,
-  SpringAnimation,
-  InnerSpringAnimation,
-  SpringConfigInner,
   DefaultSpringConfig,
+  InnerSpringAnimation,
+  SpringAnimation,
+  SpringConfig,
+  SpringConfigInner,
 } from './springUtils';
 import {
-  initialCalculations,
   calculateNewMassToMatchDuration,
-  underDampedSpringCalculations,
+  checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
+  initialCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
-  checkIfConfigIsValid,
+  underDampedSpringCalculations,
 } from './springUtils';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(
@@ -33,10 +33,14 @@ type withSpringType = <T extends AnimatableValue>(
 /**
  * Lets you create spring-based animations.
  *
- * @param toValue - the value at which the animation will come to rest - {@link AnimatableValue}
- * @param config - the spring animation configuration - {@link SpringConfig}
- * @param callback - a function called on animation complete - {@link AnimationCallback}
- * @returns an [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation
+ * @param toValue - The value at which the animation will come to rest -
+ *   {@link AnimatableValue}
+ * @param config - The spring animation configuration - {@link SpringConfig}
+ * @param callback - A function called on animation complete -
+ *   {@link AnimationCallback}
+ * @returns An [animation
+ *   object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object)
+ *   which holds the current state of the animation
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
  */
 export const withSpring = ((

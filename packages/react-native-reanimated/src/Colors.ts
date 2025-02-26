@@ -1,7 +1,6 @@
 'use strict';
 /**
- * Copied from:
- * react-native/Libraries/StyleSheet/normalizeColor.js
+ * Copied from: react-native/Libraries/StyleSheet/normalizeColor.js
  * react-native/Libraries/StyleSheet/processColor.js
  * https://github.com/wcandillon/react-native-redash/blob/master/src/Colors.ts
  */
@@ -163,6 +162,13 @@ function parsePercentage(str: string): number {
     return 1;
   }
   return int / 100;
+}
+
+export function clampRGBA(RGBA: ParsedColorArray): void {
+  'worklet';
+  for (let i = 0; i < 4; i++) {
+    RGBA[i] = Math.max(0, Math.min(RGBA[i], 1));
+  }
 }
 
 const names: Record<string, number> = makeShareable({
@@ -336,12 +342,23 @@ export const ColorProperties = makeShareable([
   'borderBlockEndColor',
   'borderBlockStartColor',
   'color',
+  'outlineColor',
   'shadowColor',
   'textDecorationColor',
   'tintColor',
   'textShadowColor',
   'overlayColor',
+  // SVG color properties
+  'fill',
+  'floodColor',
+  'lightingColor',
+  'stopColor',
+  'stroke',
 ]);
+
+const NestedColorProperties = makeShareable({
+  boxShadow: 'color',
+});
 
 // // ts-prune-ignore-next Exported for the purpose of tests only
 export function normalizeColor(color: unknown): number | null {
@@ -524,11 +541,10 @@ export const rgbaColor = (
 };
 
 /**
- *
- * @param r - red value (0-255)
- * @param g - green value (0-255)
- * @param b - blue value (0-255)
- * @returns \{h: hue (0-1), s: saturation (0-1), v: value (0-1)\}
+ * @param r - Red value (0-255)
+ * @param g - Green value (0-255)
+ * @param b - Blue value (0-255)
+ * @returns `{h: hue (0-1), s: saturation (0-1), v: value (0-1)}`
  */
 export function RGBtoHSV(r: number, g: number, b: number): HSV {
   'worklet';
@@ -561,11 +577,10 @@ export function RGBtoHSV(r: number, g: number, b: number): HSV {
 }
 
 /**
- *
- * @param h - hue (0-1)
- * @param s - saturation (0-1)
- * @param v - value (0-1)
- * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
+ * @param h - Hue (0-1)
+ * @param s - Saturation (0-1)
+ * @param v - Value (0-1)
+ * @returns `{r: red (0-255), g: green (0-255), b: blue (0-255)}`
  */
 function HSVtoRGB(h: number, s: number, v: number): RGB {
   'worklet';
@@ -671,6 +686,19 @@ export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (ColorProperties.includes(key)) {
       props[key] = processColor(props[key]);
+    } else if (
+      NestedColorProperties[key as keyof typeof NestedColorProperties]
+    ) {
+      const propGroupList = props[key] as StyleProps[];
+      for (const propGroup of propGroupList) {
+        const nestedPropertyName =
+          NestedColorProperties[key as keyof typeof NestedColorProperties];
+        if (propGroup[nestedPropertyName] !== undefined) {
+          propGroup[nestedPropertyName] = processColor(
+            propGroup[nestedPropertyName]
+          );
+        }
+      }
     }
   }
 }

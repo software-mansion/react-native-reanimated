@@ -1,34 +1,115 @@
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
+import {
+  executeOnUIRuntimeSync,
+  logger,
+  makeShareableCloneRecursive,
+  runOnUI,
+  shareableMappingCache,
+} from 'react-native-worklets';
+
 import type { Mutable } from './commonTypes';
-import { shareableMappingCache } from './shareableMappingCache';
-import { makeShareableCloneRecursive } from './shareables';
-import { executeOnUIRuntimeSync, runOnUI } from './threads';
+import { ReanimatedError } from './errors';
+import { shouldBeUseWeb } from './PlatformChecker';
+import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+function shouldWarnAboutAccessDuringRender() {
+  return __DEV__ && isReactRendering() && !isFirstReactRender();
+}
+
+function checkInvalidReadDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    logger.warn(
+      "Reading from `value` during component render. Please ensure that you don't access the `value` property nor use `get` method of a shared value while React is rendering a component.",
+      { strict: true }
+    );
+  }
+}
+
+function checkInvalidWriteDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    logger.warn(
+      "Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.",
+      { strict: true }
+    );
+  }
+}
+
 type Listener<Value> = (newValue: Value) => void;
+
+type PartialMutable<Value> = Omit<Mutable<Value>, 'get' | 'set'>;
+
+/**
+ * Adds `get` and `set` methods to the mutable object to handle access to
+ * `value` property.
+ *
+ * React Compiler disallows modifying return values of hooks. Even though
+ * assignment to `value` is a setter invocation, Compiler's static analysis
+ * doesn't detect it. That's why we provide a second API for users using the
+ * Compiler.
+ */
+function addCompilerSafeGetAndSet<Value>(mutable: PartialMutable<Value>): void {
+  'worklet';
+  Object.defineProperties(mutable, {
+    get: {
+      value() {
+        return mutable.value;
+      },
+      configurable: false,
+      enumerable: false,
+    },
+    set: {
+      value(newValue: Value | ((value: Value) => Value)) {
+        if (
+          typeof newValue === 'function' &&
+          // If we have an animation definition, we don't want to call it here.
+          !(newValue as Record<string, unknown>).__isAnimationDefinition
+        ) {
+          mutable.value = (newValue as (value: Value) => Value)(mutable.value);
+        } else {
+          mutable.value = newValue as Value;
+        }
+      },
+      configurable: false,
+      enumerable: false,
+    },
+  });
+}
+/**
+ * Hides the internal `_value` property of a mutable. It won't be visible to:
+ *
+ * - `Object.keys`,
+ * - `const prop in obj`,
+ * - Etc.
+ *
+ * This way when the user accidentally sends the SharedValue to React, he won't
+ * get an obscure error message.
+ *
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for
+ * uniformity of behavior.
+ */
+function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
+  'worklet';
+  Object.defineProperty(mutable, '_value', {
+    configurable: false,
+    enumerable: false,
+  });
+}
 
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value() {
       return value;
     },
     set value(newValue) {
-      valueSetter(mutable, newValue);
+      valueSetter(mutable as Mutable<Value>, newValue);
     },
-
-    /**
-     * _value prop should only be accessed by the valueSetter implementation
-     * which may make the decision about updating the mutable value depending
-     * on the provided new value. All other places should only attempt to modify
-     * the mutable by assigning to value prop directly.
-     */
     get _value(): Value {
       return value;
     },
@@ -38,10 +119,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
         listener(newValue);
       });
     },
-
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable,
+        mutable as Mutable<Value>,
         modifier !== undefined ? modifier(value) : value,
         forceUpdate
       );
@@ -56,7 +136,11 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     _animation: null,
     _isReanimatedSharedValue: true,
   };
-  return mutable;
+
+  hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
+
+  return mutable as Mutable<Value>;
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
@@ -67,27 +151,29 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
   });
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
-      return uiValueGetter(mutable);
+      return uiValueGetter(mutable as Mutable<Value>);
     },
     set value(newValue) {
+      checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
       })();
     },
 
     get _value(): Value {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      throw new ReanimatedError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      throw new ReanimatedError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -97,33 +183,38 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw new Error(
-        '[Reanimated] Adding listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw new Error(
-        '[Reanimated] Removing listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Removing listeners is only possible on the UI runtime.'
       );
     },
 
     _isReanimatedSharedValue: true,
   };
 
+  hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
+
   shareableMappingCache.set(mutable, handle);
-  return mutable;
+  return mutable as Mutable<Value>;
 }
 
 function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
   const listeners = new Map<number, Listener<Value>>();
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
-      valueSetter(mutable, newValue);
+      checkInvalidWriteDuringRender();
+      valueSetter(mutable as Mutable<Value>, newValue);
     },
 
     get _value(): Value {
@@ -138,7 +229,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable,
+        mutable as Mutable<Value>,
         modifier !== undefined ? modifier(mutable.value) : mutable.value,
         forceUpdate
       );
@@ -153,7 +244,10 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
     _isReanimatedSharedValue: true,
   };
 
-  return mutable;
+  hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
+
+  return mutable as Mutable<Value>;
 }
 
 export const makeMutable = SHOULD_BE_USE_WEB

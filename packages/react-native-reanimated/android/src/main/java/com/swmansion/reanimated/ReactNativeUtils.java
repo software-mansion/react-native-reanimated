@@ -1,9 +1,7 @@
 package com.swmansion.reanimated;
 
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import com.facebook.react.views.image.ReactImageView;
-import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,17 +26,8 @@ public class ReactNativeUtils {
 
   public static BorderRadii getBorderRadii(View view) {
     if (view.getBackground() != null) {
-      Drawable background = view.getBackground();
-      if (background instanceof ReactViewBackgroundDrawable) {
-        ReactViewBackgroundDrawable drawable = (ReactViewBackgroundDrawable) background;
-        return new BorderRadii(
-            drawable.getFullBorderRadius(),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.TOP_LEFT),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.TOP_RIGHT),
-            drawable.getBorderRadius(ReactViewBackgroundDrawable.BorderRadiusLocation.BOTTOM_LEFT),
-            drawable.getBorderRadius(
-                ReactViewBackgroundDrawable.BorderRadiusLocation.BOTTOM_RIGHT));
-      }
+      return BorderRadiiDrawableUtils.getBorderRadii(view);
+      // TODO: Remove the rest once support for RN 0.75 is dropped.
     } else if (view instanceof ReactImageView) {
       try {
         if (mBorderRadiusField == null) {

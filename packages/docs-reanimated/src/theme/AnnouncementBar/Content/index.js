@@ -2,27 +2,35 @@ import React from 'react';
 import clsx from 'clsx';
 import ArrowButton from './ArrowButton';
 import styles from './styles.module.css';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import AnnouncementBarCloseButton from '@theme/AnnouncementBar/CloseButton';
 
 export default function AnnouncementBarContent(props) {
+  const { isCloseable, close } = props;
   return (
     <div className={clsx(styles.content, props.className)}>
-      <div className={styles.wrapper}>
-        <strong className={styles.headline}>App.js Conf 2024</strong>
-        <p className={styles.subText}>
-          An Expo & React Native conference in Europe is back, May 22-24 in
-          Kraków, Poland!
-        </p>
-      </div>
+      <img
+        className={styles.logo}
+        src={useBaseUrl('/img/react-native-paradise.svg')}
+        alt="React Native Paradise logo"
+      />
+      <strong className={styles.headline}>React Native Paradise</strong>
+      <p className={styles.subText}>
+        Join us for one week of workshops hosted by React Native experts!
+      </p>
       <a
         className={styles.link}
-        href="https://appjs.co/"
+        href="https://paradise.swmansion.com/"
         target="_blank"
         rel="noreferrer noopener">
-        <span className={styles.linkTitle}>Learn More</span>
+        <span className={styles.linkTitle}>Check the details</span>
         <div className={styles.linkArrowContainer}>
           <ArrowButton className={styles.linkArrow} />
         </div>
       </a>
+      {isCloseable && (
+        <AnnouncementBarCloseButton onClick={close} className={styles.close} />
+      )}
     </div>
   );
 }

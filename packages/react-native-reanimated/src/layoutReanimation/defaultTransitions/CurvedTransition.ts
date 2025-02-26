@@ -1,18 +1,20 @@
 'use strict';
-import type {
-  ILayoutAnimationBuilder,
-  LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
-import { BaseAnimationBuilder } from '../animationBuilder';
-import type { EasingFunction } from '../../commonTypes';
-import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 import { assertEasingIsWorklet } from '../../animation/util';
+import type {
+  EasingFunction,
+  ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
+} from '../../commonTypes';
+import { Easing } from '../../Easing';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
- * Layout transitions with a curved animation. You can modify the behavior by chaining methods like `.duration(500)` or `.delay(500)`.
+ * Layout transitions with a curved animation. You can modify the behavior by
+ * chaining methods like `.duration(500)` or `.delay(500)`.
  *
- * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `layout` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#fading-transition
  */

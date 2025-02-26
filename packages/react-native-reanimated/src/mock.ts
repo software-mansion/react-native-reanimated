@@ -1,35 +1,38 @@
 /* eslint-disable n/no-callback-literal */
 'use strict';
 
+import {
+  Animated as AnimatedRN,
+  Image as ImageRN,
+  processColor as processColorRN,
+  Text as TextRN,
+  View as ViewRN,
+} from 'react-native';
+
 import type {
-  WithSpringConfig,
-  WithTimingConfig,
-  WithDecayConfig,
   AnimatableValue,
   AnimationCallback,
+  EventHandler,
+  EventHandlerProcessed,
+  WithDecayConfig,
+  WithSpringConfig,
+  WithTimingConfig,
 } from './index';
 import {
-  IOSReferenceFrame,
+  advanceAnimationByFrame,
+  advanceAnimationByTime,
+  ColorSpace,
+  Extrapolation,
+  getAnimatedStyle,
   InterfaceOrientation,
+  IOSReferenceFrame,
   KeyboardState,
   ReduceMotion,
   SensorType,
-  ColorSpace,
-  Extrapolation,
+  setUpTests,
   SharedTransitionType,
   withReanimatedTimer,
-  advanceAnimationByTime,
-  advanceAnimationByFrame,
-  setUpTests,
-  getAnimatedStyle,
 } from './index';
-import {
-  View as ViewRN,
-  Text as TextRN,
-  Image as ImageRN,
-  Animated as AnimatedRN,
-  processColor as processColorRN,
-} from 'react-native';
 
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
@@ -38,17 +41,58 @@ const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
 
 const hook = {
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
-  // useEvent: ADD ME IF NEEDED
+  useEvent: <
+    Event extends object,
+    Context extends Record<string, unknown> = never,
+  >(
+    _handler: EventHandler<Event, Context>,
+    _eventNames?: string[],
+    _rebuild?: boolean
+  ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
-  useSharedValue: <Value>(init: Value) => ({ value: init }),
+  useSharedValue: <Value>(init: Value) => {
+    const value = { value: init };
+    return new Proxy(value, {
+      get(target, prop) {
+        if (prop === 'value') {
+          return target.value;
+        }
+        if (prop === 'get') {
+          return () => target.value;
+        }
+        if (prop === 'set') {
+          return (newValue: Value | ((currentValue: Value) => Value)) => {
+            if (typeof newValue === 'function') {
+              target.value = (newValue as (currentValue: Value) => Value)(
+                target.value
+              );
+            } else {
+              target.value = newValue;
+            }
+          };
+        }
+      },
+      set(target, prop: string, newValue) {
+        if (prop === 'value') {
+          target.value = newValue;
+          return true;
+        }
+        return false;
+      },
+    });
+  },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedGestureHandler: NOOP_FACTORY,
   useAnimatedReaction: NOOP,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedScrollHandler: NOOP_FACTORY,
-  useDerivedValue: <Value>(processor: () => Value) => ({ value: processor() }),
+  useDerivedValue: <Value>(processor: () => Value) => {
+    const result = processor();
+
+    return { value: result, get: () => result };
+  },
   useAnimatedSensor: () => ({
     sensor: {
       value: {
@@ -277,7 +321,7 @@ const core = {
 const layoutReanimation = {
   BaseAnimationBuilder: new BaseAnimationMock(),
   ComplexAnimationBuilder: new BaseAnimationMock(),
-  Keyframe: new BaseAnimationMock(),
+  Keyframe: BaseAnimationMock,
   // Flip
   FlipInXUp: new BaseAnimationMock(),
   FlipInYLeft: new BaseAnimationMock(),

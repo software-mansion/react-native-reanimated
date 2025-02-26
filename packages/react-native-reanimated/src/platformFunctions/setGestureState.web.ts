@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from 'react-native-worklets';
+
 export function setGestureState() {
-  console.warn('[Reanimated] setGestureState() is not available on web.');
+  logger.warn('setGestureState() is not available on web.');
 }

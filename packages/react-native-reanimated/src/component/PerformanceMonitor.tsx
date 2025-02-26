@@ -1,12 +1,12 @@
 'use strict';
 
 import React, { useEffect, useRef } from 'react';
-import { TextInput, StyleSheet, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
-import type { FrameInfo } from '../frameCallback';
-import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
-import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
+import { createAnimatedComponent } from '../createAnimatedComponent';
+import type { FrameInfo } from '../frameCallback';
+import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
@@ -166,9 +166,11 @@ export type PerformanceMonitorProps = {
 };
 
 /**
- * A component that lets you measure fps values on JS and UI threads on both the Paper and Fabric architectures.
+ * A component that lets you measure fps values on JS and UI threads on both the
+ * Paper and Fabric architectures.
  *
- * @param smoothingFrames - Determines amount of saved frames which will be used for fps value smoothing.
+ * @param smoothingFrames - Determines amount of saved frames which will be used
+ *   for fps value smoothing.
  */
 export function PerformanceMonitor({
   smoothingFrames = DEFAULT_BUFFER_SIZE,
@@ -195,6 +197,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 13,
+    fontVariant: ['tabular-nums'],
     color: '#ffff',
     fontFamily: 'monospace',
     paddingHorizontal: 3,

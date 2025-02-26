@@ -170,6 +170,95 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
   },
 });
 
+// public/useReanimatedError.js
+var require_useReanimatedError = __commonJS({
+  'public/useReanimatedError.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var rule = {
+      create: function (context) {
+        return {
+          NewExpression(node) {
+            if (
+              node.callee.type === utils_1.AST_NODE_TYPES.Identifier &&
+              node.callee.name === 'Error'
+            ) {
+              context.report({
+                node,
+                messageId: 'useReanimatedError',
+                fix: function (fixer) {
+                  return fixer.replaceText(node.callee, 'ReanimatedError');
+                },
+              });
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          recommended: 'recommended',
+          description:
+            'Warns when `new Error` is used instead of `new ReanimatedError`.',
+        },
+        messages: {
+          useReanimatedError:
+            'Use `new ReanimatedError` instead of `new Error`.',
+        },
+        type: 'suggestion',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
+// public/useWorkletsError.js
+var require_useWorkletsError = __commonJS({
+  'public/useWorkletsError.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var rule = {
+      create: function (context) {
+        return {
+          NewExpression(node) {
+            if (
+              node.callee.type === utils_1.AST_NODE_TYPES.Identifier &&
+              node.callee.name === 'Error'
+            ) {
+              context.report({
+                node,
+                messageId: 'useWorkletsError',
+                fix: function (fixer) {
+                  return fixer.replaceText(node.callee, 'WorkletsError');
+                },
+              });
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          recommended: 'recommended',
+          description:
+            'Warns when `new Error` is used instead of `new WorkletsError`.',
+        },
+        messages: {
+          useWorkletsError: 'Use `new WorkletsError` instead of `new Error`.',
+        },
+        type: 'suggestion',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
 // public/index.js
 var __importDefault =
   (exports && exports.__importDefault) ||
@@ -181,7 +270,11 @@ exports.rules = void 0;
 var noAnimatedStyleToNonAnimatedComponent_1 = __importDefault(
   require_noAnimatedStyleToNonAnimatedComponent()
 );
+var useReanimatedError_1 = __importDefault(require_useReanimatedError());
+var useWorkletsError_1 = __importDefault(require_useWorkletsError());
 exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
+  'use-reanimated-error': useReanimatedError_1.default,
+  'use-worklets-error': useWorkletsError_1.default,
 };

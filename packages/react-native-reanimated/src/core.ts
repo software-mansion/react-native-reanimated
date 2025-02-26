@@ -1,65 +1,68 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
-import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
+import {
+  controlEdgeToEdgeValues,
+  isEdgeToEdge,
+} from 'react-native-is-edge-to-edge';
+import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
 import type {
   AnimatedKeyboardOptions,
+  LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
-import { initializeUIRuntime } from './initializers';
-import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
+import { ReanimatedError } from './errors';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export type { WorkletRuntime } from './runtimes';
-export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  makeShareable,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from 'react-native-worklets';
 
+const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
-/**
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
- */
+/** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
 export const isReanimated3 = () => true;
 
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
 /**
- * @deprecated This function was superseded by other checks.
- * We keep it here for backward compatibility reasons.
- * If you need to check if you are using Reanimated 3 or Reanimated 2
- * please use `isReanimated3` function instead.
+ * @deprecated This function was superseded by other checks. We keep it here for
+ *   backward compatibility reasons. If you need to check if you are using
+ *   Reanimated 3 or Reanimated 2 please use `isReanimated3` function instead.
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
  */
 export const isConfigured = isReanimated3;
-
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
-}
 
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
-  if (isFabric() && !component) {
-    throw new Error(
-      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+  if (IS_FABRIC && !component) {
+    throw new ReanimatedError(
+      'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
-    return NativeReanimatedModule.getViewProp(
+    return ReanimatedModule.getViewProp(
       viewTag,
       propName,
       component,
@@ -93,15 +96,17 @@ export function registerEventHandler<T>(
     global.__flushAnimationFrame(eventTimestamp);
     global.__frameTimestamp = undefined;
   }
-  return NativeReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+  return ReanimatedModule.registerEventHandler(
+    makeShareableCloneRecursive(
+      handleAndFlushAnimationFrame as WorkletFunction
+    ),
     eventName,
     emitterReactTag
   );
 }
 
 export function unregisterEventHandler(id: number): void {
-  return NativeReanimatedModule.unregisterEventHandler(id);
+  return ReanimatedModule.unregisterEventHandler(id);
 }
 
 export function subscribeForKeyboardEvents(
@@ -118,14 +123,26 @@ export function subscribeForKeyboardEvents(
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
   }
-  return NativeReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
-    options.isStatusBarTranslucentAndroid ?? false
+
+  if (__DEV__) {
+    controlEdgeToEdgeValues({
+      isStatusBarTranslucentAndroid: options.isStatusBarTranslucentAndroid,
+      isNavigationBarTranslucentAndroid:
+        options.isNavigationBarTranslucentAndroid,
+    });
+  }
+
+  return ReanimatedModule.subscribeForKeyboardEvents(
+    makeShareableCloneRecursive(
+      handleAndFlushAnimationFrame as WorkletFunction
+    ),
+    EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
+    EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
 }
 
 export function unsubscribeFromKeyboardEvents(listenerId: number): void {
-  return NativeReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
+  return ReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
 }
 
 export function registerSensor(
@@ -140,7 +157,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(eventHandler as WorkletFunction)
   );
 }
 
@@ -155,10 +172,6 @@ export function initializeSensor(
 export function unregisterSensor(sensorId: number): void {
   const sensorContainer = getSensorContainer();
   return sensorContainer.unregisterSensor(sensorId);
-}
-
-if (!isWeb()) {
-  initializeUIRuntime();
 }
 
 type FeaturesConfig = {
@@ -180,27 +193,27 @@ export function enableLayoutAnimations(
       enableLayoutAnimations: flag,
       setByUser: true,
     };
-    NativeReanimatedModule.enableLayoutAnimations(flag);
+    ReanimatedModule.enableLayoutAnimations(flag);
   } else if (
     !featuresConfig.setByUser &&
     featuresConfig.enableLayoutAnimations !== flag
   ) {
     featuresConfig.enableLayoutAnimations = flag;
-    NativeReanimatedModule.enableLayoutAnimations(flag);
+    ReanimatedModule.enableLayoutAnimations(flag);
   }
 }
 
 export function configureLayoutAnimationBatch(
   layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
-  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+  ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
 export function setShouldAnimateExitingForTag(
   viewTag: number | HTMLElement,
   shouldAnimate: boolean
 ) {
-  NativeReanimatedModule.setShouldAnimateExitingForTag(
+  ReanimatedModule.setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
@@ -211,6 +224,6 @@ export function jsiConfigureProps(
   nativeProps: string[]
 ): void {
   if (!SHOULD_BE_USE_WEB) {
-    NativeReanimatedModule.configureProps(uiProps, nativeProps);
+    ReanimatedModule.configureProps(uiProps, nativeProps);
   }
 }

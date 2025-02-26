@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/require-jsdoc */
 import { StyleSheet, View, Text } from 'react-native';
 
 export default function App() {
@@ -6,6 +7,7 @@ export default function App() {
       <Text accessibilityRole="header" style={styles.text}>
         Reanimated Page
       </Text>
+      {/* @ts-expect-error */}
       <Text style={styles.link} accessibilityRole="link" href="/">
         Go Back
       </Text>

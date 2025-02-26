@@ -1,31 +1,32 @@
 'use strict';
 import { useEffect, useRef } from 'react';
-import type { WorkletFunction } from '../commonTypes';
-import { isWeb, isJest } from '../PlatformChecker';
+import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareable } from 'react-native-worklets';
+
+import { isJest, isWeb } from '../PlatformChecker';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
-import { makeShareable } from '../shareables';
 
 interface GeneralHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > {
   (event: ReanimatedEvent<Event>, context: Context): void;
 }
 
 type GeneralWorkletHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = WorkletFunction<[event: ReanimatedEvent<Event>, context: Context]>;
 
 type GeneralHandlers<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = Record<string, GeneralHandler<Event, Context> | undefined>;
 
 type GeneralWorkletHandlers<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = Record<string, GeneralWorkletHandler<Event, Context> | undefined>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
@@ -44,13 +45,15 @@ export interface UseHandlerContext<Context extends Record<string, unknown>> {
  *
  * @param handlers - An object of event handlers.
  * @param dependencies - An optional array of dependencies.
- * @returns An object containing a boolean indicating whether the dependencies have changed, and a boolean indicating whether the code is running on the web.
+ * @returns An object containing a boolean indicating whether the dependencies
+ *   have changed, and a boolean indicating whether the code is running on the
+ *   web.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler
  */
 // @ts-expect-error This overload is required by our API.
 export function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
@@ -58,7 +61,7 @@ export function useHandler<
 
 export function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: GeneralWorkletHandlers<Event, Context>,
   dependencies?: DependencyList

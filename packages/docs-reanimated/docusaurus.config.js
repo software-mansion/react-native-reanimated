@@ -51,10 +51,10 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-reanimated',
-          lastVersion: 'current', // <- this makes 3.x docs as default
+          lastVersion: '3.x', // <- this makes 3.x docs as default
           versions: {
             current: {
-              label: '3.x',
+              label: '4.x',
             },
           },
         },
@@ -78,6 +78,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/og-image.png',
+      colorMode: {
+        respectPrefersColorScheme: true,
+      },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -111,10 +114,12 @@ const config = {
           },
         ],
       },
+      // React Native Paradise banner
       announcementBar: {
+        id: 'react-native-paradise-2025',
         content: ' ',
-        backgroundColor: '#03c',
-        textColor: '#fff',
+        backgroundColor: '#fff5f7',
+        textColor: '#001a72',
       },
       footer: {
         style: 'light',

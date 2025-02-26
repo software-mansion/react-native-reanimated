@@ -22,13 +22,16 @@ public class KeyboardAnimationManager {
   }
 
   public int subscribeForKeyboardUpdates(
-      KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper callback,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
       KeyboardAnimationCallback keyboardAnimationCallback =
-          new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
+          new KeyboardAnimationCallback(
+              mKeyboard, this::notifyAboutKeyboardChange, isNavigationBarTranslucent);
       mWindowsInsetsManager.startObservingChanges(
-          keyboardAnimationCallback, isStatusBarTranslucent);
+          keyboardAnimationCallback, isStatusBarTranslucent, isNavigationBarTranslucent);
     }
     mListeners.put(listenerId, callback);
     return listenerId;

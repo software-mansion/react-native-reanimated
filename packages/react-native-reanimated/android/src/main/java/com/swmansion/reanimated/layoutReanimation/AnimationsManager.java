@@ -22,8 +22,8 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
+import com.swmansion.worklets.AndroidUIScheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,20 +32,20 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler;
+  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler = new WeakReference<>(null);
   private ReactContext mContext;
   private UIManager mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
-  private HashSet<Integer> mEnteringViews = new HashSet<>();
-  private HashMap<Integer, Rect> mEnteringViewTargetValues = new HashMap<>();
+  private final HashSet<Integer> mEnteringViews = new HashSet<>();
+  private final HashMap<Integer, Rect> mEnteringViewTargetValues = new HashMap<>();
   private HashMap<Integer, View> mExitingViews = new HashMap<>();
   private HashMap<Integer, Integer> mExitingSubviewCountMap = new HashMap<>();
   private HashSet<Integer> mAncestorsToRemove = new HashSet<>();
   private HashMap<Integer, Runnable> mCallbacks = new HashMap<>();
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
   private boolean isInvalidated;
-  private SharedTransitionManager mSharedTransitionManager;
+  private final SharedTransitionManager mSharedTransitionManager;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -105,6 +105,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
     if (androidUIScheduler != null) {
       androidUIScheduler.triggerUI();
+    } else {
+      return;
     }
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
@@ -215,8 +217,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    ViewManager viewManager = resolveViewManager(tag);
-    ViewManager parentViewManager = resolveViewManager(parent.getId());
+    ViewManager<?, ?> viewManager = resolveViewManager(tag);
+    ViewManager<?, ?> parentViewManager = resolveViewManager(parent.getId());
 
     if (viewManager == null) {
       return;
@@ -253,6 +255,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.finishSharedAnimation(tag);
   }
 
+  /**
+   * @noinspection unused
+   */
   public void printSubTree(View view, int level) {
     if (level == 0) {
       Log.v("rea", "----------------------");
@@ -350,10 +355,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
       float[] matrixValues = new float[9];
-      if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
+      if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray matrixArray) {
         // this array comes from JavaScript
-        ReadableNativeArray matrixArray =
-            (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
         for (int i = 0; i < 9; i++) {
           matrixValues[i] = ((Double) matrixArray.getDouble(i)).floatValue();
         }
@@ -504,7 +507,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private boolean removeOrAnimateExitRecursive(
       View view, boolean shouldRemove, boolean shouldAnimate) {
     int tag = view.getId();
-    ViewManager viewManager = resolveViewManager(tag);
+    ViewManager<?, ?> viewManager = resolveViewManager(tag);
 
     if (viewManager != null) {
       String viewManagerName = viewManager.getName();
@@ -536,8 +539,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     // we might want to keep this view around
     // because one of the (children's) children
     // has an exiting animation
-    if (view instanceof ViewGroup) {
-      ViewGroup viewGroup = (ViewGroup) view;
+    if (view instanceof ViewGroup viewGroup) {
       for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
         if (removeOrAnimateExitRecursive(child, shouldRemove, shouldAnimate)) {
@@ -587,8 +589,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void clearAnimationConfigRecursive(View view) {
     mNativeMethodsHolder.clearAnimationConfig(view.getId());
-    if (view instanceof ViewGroup) {
-      ViewGroup viewGroup = (ViewGroup) view;
+    if (view instanceof ViewGroup viewGroup) {
       for (int i = 0; i < viewGroup.getChildCount(); i++) {
         clearAnimationConfigRecursive(viewGroup.getChildAt(i));
       }
@@ -613,10 +614,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void maybeDropAncestors(View exitingView) {
-    if (!(exitingView.getParent() instanceof View)) {
+    if (!(exitingView.getParent() instanceof View parent)) {
       return;
     }
-    View parent = (View) exitingView.getParent();
     while (parent != null && !(parent instanceof RootView)) {
       View view = parent;
       parent = (View) view.getParent();

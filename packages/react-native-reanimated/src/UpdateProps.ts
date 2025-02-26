@@ -1,21 +1,22 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
+import { runOnUIImmediately } from 'react-native-worklets';
+
 import { processColorsInProps } from './Colors';
 import type {
-  ShadowNodeWrapper,
-  SharedValue,
-  StyleProps,
   AnimatedStyle,
+  ShadowNodeWrapper,
+  StyleProps,
 } from './commonTypes';
+import { ReanimatedError } from './errors';
 import type { Descriptor } from './hook/commonTypes';
-import type { ReanimatedHTMLElement } from './js-reanimated';
-import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
-import { runOnUIImmediately } from './threads';
+import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
 
 let updateProps: (
-  viewDescriptor: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: StyleProps | AnimatedStyle<any>,
   isAnimatedProps?: boolean
 ) => void;
@@ -32,12 +33,17 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
+    if (updates.transformOrigin) {
+      if (!Array.isArray(updates.transformOrigin)) {
+        throw new ReanimatedError('Please use transformOrigin in array form');
+      }
+    }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
 
 export const updatePropsJestWrapper = (
-  viewDescriptors: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
@@ -65,7 +71,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -94,7 +100,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -120,8 +126,8 @@ if (shouldBeUseWeb()) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!isJest()) {
-      throw new Error(
-        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      throw new ReanimatedError(
+        '`UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };
@@ -141,8 +147,16 @@ if (shouldBeUseWeb()) {
 
 export interface UpdatePropsManager {
   update(
-    viewDescriptors: SharedValue<Descriptor[]>,
+    viewDescriptors: ViewDescriptorsWrapper,
     updates: StyleProps | AnimatedStyle<any>
   ): void;
   flush(): void;
+}
+
+/**
+ * This used to be `SharedValue<Descriptors[]>` but objects holding just a
+ * single `value` prop are fine too.
+ */
+interface ViewDescriptorsWrapper {
+  value: Readonly<Descriptor[]>;
 }

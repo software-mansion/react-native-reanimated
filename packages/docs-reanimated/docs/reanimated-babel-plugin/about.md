@@ -128,7 +128,7 @@ const workletContextObject = {
 
 #### [Experimental] Worklet Classes
 
-[Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](<https://en.wikipedia.org/wiki/Polyfill_(programming)>) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
+[Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
 
 `__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
 
@@ -146,6 +146,7 @@ runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
 
 **Pitfalls:**
 
+- Worklet Classes don't support inheritance.
 - Worklet Classes don't support static methods and properties.
 - Class instances cannot be shared between JS and UI threads.
 

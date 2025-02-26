@@ -3,10 +3,11 @@ package com.swmansion.reanimated;
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_END;
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_START;
 
+import androidx.annotation.NonNull;
+import com.facebook.react.BaseReactPackage;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.TurboReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMarker;
@@ -21,23 +22,22 @@ import com.facebook.systrace.Systrace;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @ReactModuleList(
     nativeModules = {
       ReanimatedModule.class,
       ReanimatedUIManager.class,
     })
-public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
-
+public class ReanimatedPackage extends BaseReactPackage implements ReactPackage {
   @Override
-  public NativeModule getModule(String name, ReactApplicationContext reactContext) {
-    if (name.equals(ReanimatedModule.NAME)) {
-      return new ReanimatedModule(reactContext);
-    }
-    if (name.equals(ReanimatedUIManager.NAME)) {
-      return createUIManager(reactContext);
-    }
-    return null;
+  public NativeModule getModule(
+      @NonNull String name, @NonNull ReactApplicationContext reactContext) {
+    return switch (name) {
+      case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
+      case ReanimatedUIManager.NAME -> createUIManager(reactContext);
+      default -> null;
+    };
   }
 
   @Override
@@ -49,26 +49,21 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
 
     final Map<String, ReactModuleInfo> reactModuleInfoMap = new HashMap<>();
     for (Class<? extends NativeModule> moduleClass : moduleList) {
-      ReactModule reactModule = moduleClass.getAnnotation(ReactModule.class);
+      ReactModule reactModule =
+          Objects.requireNonNull(moduleClass.getAnnotation(ReactModule.class));
 
       reactModuleInfoMap.put(
           reactModule.name(),
           new ReactModuleInfo(
               reactModule.name(),
               moduleClass.getName(),
-              true,
+              true, // override UIManagerModule
               reactModule.needsEagerInit(),
-              reactModule.hasConstants(),
               reactModule.isCxxModule(),
               BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
     }
 
-    return new ReactModuleInfoProvider() {
-      @Override
-      public Map<String, ReactModuleInfo> getReactModuleInfos() {
-        return reactModuleInfoMap;
-      }
-    };
+    return () -> reactModuleInfoMap;
   }
 
   private UIManagerModule createUIManager(final ReactApplicationContext reactContext) {

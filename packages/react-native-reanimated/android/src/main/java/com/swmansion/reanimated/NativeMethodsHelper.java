@@ -30,7 +30,8 @@ public class NativeMethodsHelper {
     buffer[1] -= rootY;
 
     float result[] = new float[6];
-    result[0] = result[1] = 0;
+    result[0] = PixelUtil.toDIPFromPixel(view.getLeft());
+    result[1] = PixelUtil.toDIPFromPixel(view.getTop());
     for (int i = 2; i < 6; ++i) result[i] = PixelUtil.toDIPFromPixel(buffer[i - 2]);
 
     return result;

@@ -1,10 +1,12 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
   LayoutAnimationsValues,
-} from './layoutReanimation';
-import type { StyleProps } from './commonTypes';
+  StyleProps,
+} from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 
 const mockTargetValues: LayoutAnimationsValues = {
@@ -28,7 +30,7 @@ const mockTargetValues: LayoutAnimationsValues = {
 
 function getCommonProperties(
   layoutStyle: StyleProps,
-  componentStyle: StyleProps | Array<StyleProps>
+  componentStyle: NestedArray<StyleProps>
 ) {
   let componentStyleFlat = Array.isArray(componentStyle)
     ? componentStyle.flat()
@@ -61,8 +63,8 @@ function maybeReportOverwrittenProperties(
   const commonProperties = getCommonProperties(layoutAnimationStyle, style);
 
   if (commonProperties.length > 0) {
-    console.warn(
-      `[Reanimated] ${
+    logger.warn(
+      `${
         commonProperties.length === 1 ? 'Property' : 'Properties'
       } "${commonProperties.join(
         ', '

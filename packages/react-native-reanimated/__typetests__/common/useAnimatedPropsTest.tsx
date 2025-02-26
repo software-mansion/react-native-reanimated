@@ -5,6 +5,7 @@
 import React from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList } from 'react-native';
+
 import Animated, { useAnimatedProps } from '../..';
 
 function UseAnimatedPropsTest() {
@@ -41,7 +42,7 @@ function UseAnimatedPropsTest() {
 
   function UseAnimatedPropsTestView1() {
     const animatedProps = useAnimatedProps(
-      () => ({ pointerEvents: 'none' } as const)
+      () => ({ pointerEvents: 'none' }) as const
     );
     return <Animated.View animatedProps={animatedProps} />;
   }

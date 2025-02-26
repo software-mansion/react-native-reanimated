@@ -1,8 +1,8 @@
 'use strict';
+import type { ShadowNodeWrapper } from '../commonTypes';
+import type { Descriptor } from '../hook/commonTypes';
 import { isFabric } from '../PlatformChecker';
 import updateProps from '../UpdateProps';
-import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
-import type { Descriptor } from '../hook/commonTypes';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
@@ -32,13 +32,9 @@ function applyStyleForTopScreen(
   const { topScreenStyle: computeTopScreenStyle } = screenTransition;
   const topScreenStyle = computeTopScreenStyle(event, screenDimensions);
   const topScreenDescriptor = {
-    value: [createViewDescriptor(topScreenId)],
+    value: [createViewDescriptor(topScreenId)] as Descriptor[],
   };
-  updateProps(
-    topScreenDescriptor as SharedValue<Descriptor[]>,
-    topScreenStyle,
-    undefined
-  );
+  updateProps(topScreenDescriptor, topScreenStyle, undefined);
 }
 
 export function applyStyleForBelowTopScreen(
@@ -54,13 +50,9 @@ export function applyStyleForBelowTopScreen(
     screenDimensions
   );
   const belowTopScreenDescriptor = {
-    value: [createViewDescriptor(belowTopScreenId)],
+    value: [createViewDescriptor(belowTopScreenId)] as Descriptor[],
   };
-  updateProps(
-    belowTopScreenDescriptor as SharedValue<Descriptor[]>,
-    belowTopScreenStyle,
-    undefined
-  );
+  updateProps(belowTopScreenDescriptor, belowTopScreenStyle, undefined);
 }
 
 export function applyStyle(

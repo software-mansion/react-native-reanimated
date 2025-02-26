@@ -3,10 +3,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+
 import Animated, {
-  useSharedValue,
-  useDerivedValue,
   interpolateColor,
+  useDerivedValue,
+  useSharedValue,
 } from '../..';
 
 function InlineStylesTest() {
@@ -44,7 +45,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest4() {
-    const sv = useSharedValue(true);
+    const sv = useSharedValue('0');
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={{ width: sv }} />;
   }
@@ -55,7 +56,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest6() {
-    const sv = useSharedValue({ width: true });
+    const sv = useSharedValue({ width: '0' });
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={sv} />;
   }
@@ -108,14 +109,24 @@ function InlineStylesTest() {
     const sv = useSharedValue(0);
 
     return (
-      <Animated.View
-        style={{
-          shadowOffset: {
-            width: sv.value,
-            height: sv.value,
-          },
-        }}
-      />
+      <>
+        <Animated.View
+          style={{
+            shadowOffset: {
+              width: sv.value,
+              height: sv.value,
+            },
+          }}
+        />
+        <Animated.View
+          style={{
+            shadowOffset: {
+              width: sv.get(),
+              height: sv.get(),
+            },
+          }}
+        />
+      </>
     );
   }
 
@@ -123,14 +134,24 @@ function InlineStylesTest() {
     const sv = useSharedValue(0);
 
     return (
-      <Animated.View
-        // @ts-expect-error properly detects illegal type
-        style={{
-          shadowOffset: {
-            width: sv.value,
-          },
-        }}
-      />
+      <>
+        <Animated.View
+          // @ts-expect-error properly detects illegal type
+          style={{
+            shadowOffset: {
+              width: sv.value,
+            },
+          }}
+        />
+        <Animated.View
+          // @ts-expect-error properly detects illegal type
+          style={{
+            shadowOffset: {
+              width: sv.get(),
+            },
+          }}
+        />
+      </>
     );
   }
 
@@ -138,11 +159,18 @@ function InlineStylesTest() {
     const sv = useSharedValue({ width: 0, height: 0 });
 
     return (
-      <Animated.View
-        style={{
-          shadowOffset: sv.value,
-        }}
-      />
+      <>
+        <Animated.View
+          style={{
+            shadowOffset: sv.value,
+          }}
+        />
+        <Animated.View
+          style={{
+            shadowOffset: sv.get(),
+          }}
+        />
+      </>
     );
   }
 
@@ -150,12 +178,20 @@ function InlineStylesTest() {
     const sv = useSharedValue({ width: 0 });
 
     return (
-      <Animated.View
-        // @ts-expect-error properly detects illegal type
-        style={{
-          shadowOffset: sv.value,
-        }}
-      />
+      <>
+        <Animated.View
+          // @ts-expect-error properly detects illegal type
+          style={{
+            shadowOffset: sv.value,
+          }}
+        />
+        <Animated.View
+          // @ts-expect-error properly detects illegal type
+          style={{
+            shadowOffset: sv.get(),
+          }}
+        />
+      </>
     );
   }
 
@@ -187,14 +223,13 @@ function InlineStylesTest() {
   function InlineStylesTest23() {
     return (
       <>
-        <Animated.View style={{ overflow: 'scroll' }} />;
+        <Animated.View style={{ overflow: 'scroll' }} />
         <Animated.Image
           source={{ uri: 'uri' }}
           // @ts-expect-error properly detects illegal type */
           style={{ overflow: 'scroll' }}
         />
-        ;
-        <Animated.Text style={{ overflow: 'scroll' }} />;
+        <Animated.Text style={{ overflow: 'scroll' }} />
       </>
     );
   }
@@ -202,13 +237,13 @@ function InlineStylesTest() {
   function InlineStylesTest24() {
     return (
       <>
-        <Animated.View style={{ overflow: 'hidden' }} />;
+        <Animated.View style={{ overflow: 'hidden' }} />
         <Animated.Image
           source={{ uri: 'uri' }}
           style={{ overflow: 'hidden' }}
         />
         ;
-        <Animated.Text style={{ overflow: 'hidden' }} />;
+        <Animated.Text style={{ overflow: 'hidden' }} />
       </>
     );
   }

@@ -1,6 +1,16 @@
 'use strict';
 
-import { Animations, TransitionType } from './config';
+import { logger } from 'react-native-worklets';
+
+import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
+import { ReducedMotionManager } from '../../ReducedMotion';
+import { Keyframe } from '../animationBuilder';
+import type { TransitionData } from './animationParser';
+import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
+import { setElementPosition, snapshots } from './componentStyle';
 import type {
   AnimationCallback,
   AnimationConfig,
@@ -8,21 +18,12 @@ import type {
   CustomConfig,
   KeyframeDefinitions,
 } from './config';
-import { WebEasings, getEasingByName } from './Easing.web';
-import type { WebEasingsNames } from './Easing.web';
-import type { TransitionData } from './animationParser';
+import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
-import { _updatePropsJS } from '../../js-reanimated';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
-import { ReduceMotion } from '../../commonTypes';
-import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
-import { setElementPosition, snapshots } from './componentStyle';
-import { Keyframe } from '../animationBuilder';
-import { ReducedMotionManager } from '../../ReducedMotion';
+import type { WebEasingsNames } from './Easing.web';
+import { getEasingByName, WebEasings } from './Easing.web';
 import { prepareCurvedTransition } from './transition/Curved.web';
-import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
@@ -32,9 +33,7 @@ function getEasingFromConfig(config: CustomConfig): string {
   const easingName = config.easingV[EasingNameSymbol];
 
   if (!(easingName in WebEasings)) {
-    console.warn(
-      `[Reanimated] Selected easing is not currently supported on web.`
-    );
+    logger.warn(`Selected easing is not currently supported on web.`);
 
     return getEasingByName('linear');
   }
@@ -162,6 +161,7 @@ export function setElementAnimation(
 
   const configureAnimation = () => {
     element.style.animationName = animationName;
+    element.style.animationFillMode = 'backwards';
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;

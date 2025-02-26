@@ -1,4 +1,17 @@
+pluginManagement { includeBuild('../../../node_modules/@react-native/gradle-plugin') }
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'FabricExample'
-apply from: file("../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
 includeBuild('../../../node_modules/@react-native/gradle-plugin')
+
+// Build from source (https://reactnative.dev/contributing/how-to-build-from-source)
+// NOTE: Please do not remove these lines even though they are commented out.
+// includeBuild('../../../node_modules/react-native') {
+//     dependencySubstitution {
+//         substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+//         substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+//         substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+//         substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+//     }
+// }

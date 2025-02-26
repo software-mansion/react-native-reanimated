@@ -1,0 +1,67 @@
+name: Babel plugin static check
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/babel-plugin-static-check.yml'
+      - 'packages/react-native-worklets/plugin/**'
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/babel-plugin-static-check.yml'
+      - 'packages/react-native-worklets/plugin/**'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  babel-plugin-static-check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: babel-plugin-static-check-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      EXAMPLE_DIR: apps/fabric-example
+      WORKLETS_DIR: packages/react-native-worklets
+      PLUGIN_DIR: packages/react-native-worklets/plugin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'yarn'
+      - name: Clear annotations
+        run: .github/workflows/helper/clear-annotations.sh
+
+      - name: Install monorepo dependencies
+        run: yarn install --immutable
+      - name: Build Worklets
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: yarn build
+
+      - name: Diff
+        id: diff
+        run: git update-index --refresh && git diff-index --quiet HEAD --
+      - name: Show diff
+        if: failure() && steps.diff.outcome == 'failure'
+        run: git diff
+      - name: Check types
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn type:check
+      - name: Lint and format
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn lint
+      - name: Test
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: yarn jest plugin
+      - name: Check Example App bundling
+        working-directory: ${{ env.EXAMPLE_DIR }}
+        run: |
+          yarn workspace react-native-reanimated build
+          yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'

@@ -1,18 +1,19 @@
 'use strict';
 import { useEffect, useMemo, useRef } from 'react';
-import { initializeSensor, registerSensor, unregisterSensor } from '../core';
+import { callMicrotasks } from 'react-native-worklets';
+
 import type {
-  SensorConfig,
   AnimatedSensor,
+  SensorConfig,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
 import {
-  SensorType,
-  IOSReferenceFrame,
   InterfaceOrientation,
+  IOSReferenceFrame,
+  SensorType,
 } from '../commonTypes';
-import { callMicrotasks } from '../threads';
+import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237
@@ -77,9 +78,12 @@ function adjustVectorToInterfaceOrientation(data: Value3D) {
 /**
  * Lets you create animations based on data from the device's sensors.
  *
- * @param sensorType - Type of the sensor to use. Configured with {@link SensorType} enum.
+ * @param sensorType - Type of the sensor to use. Configured with
+ *   {@link SensorType} enum.
  * @param config - The sensor configuration - {@link SensorConfig}.
- * @returns An object containing the sensor measurements [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) and a function to unregister the sensor
+ * @returns An object containing the sensor measurements [shared
+ *   value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value)
+ *   and a function to unregister the sensor
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
  */
 export function useAnimatedSensor(

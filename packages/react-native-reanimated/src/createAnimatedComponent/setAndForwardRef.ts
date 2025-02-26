@@ -1,22 +1,19 @@
 'use strict';
-/**
- * imported from react-native
- */
+/** Imported from react-native */
 
 import type { MutableRefObject } from 'react';
 
 /* eslint-disable */
 /**
- * This is a helper function for when a component needs to be able to forward a ref
- * to a child component, but still needs to have access to that component as part of
- * its implementation.
+ * This is a helper function for when a component needs to be able to forward a
+ * ref to a child component, but still needs to have access to that component as
+ * part of its implementation.
  *
  * Its main use case is in wrappers for native components.
  *
  * Usage:
  *
- *   class MyView extends React.Component {
- *     _nativeRef = null;
+ * Class MyView extends React.Component { _nativeRef = null;
  *
  *     _setNativeRef = setAndForwardRef({
  *       getForwardedRef: () => this.props.forwardedRef,
@@ -28,13 +25,13 @@ import type { MutableRefObject } from 'react';
  *     render() {
  *       return <View ref={this._setNativeRef} />;
  *     }
- *   }
  *
- *   const MyViewWithRef = React.forwardRef((props, ref) => (
- *     <MyView {...props} forwardedRef={ref} />
- *   ));
+ * }
  *
- *   module.exports = MyViewWithRef;
+ * Const MyViewWithRef = React.forwardRef((props, ref) => ( <MyView {...props}
+ * forwardedRef={ref} /> ));
+ *
+ * Module.exports = MyViewWithRef;
  */
 /* eslint-enable */
 
@@ -56,7 +53,7 @@ function setAndForwardRef<T>({
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
       forwardedRef(ref);
-    } else if (typeof forwardedRef === 'object' && forwardedRef != null) {
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
       // Handle createRef-based refs
       forwardedRef.current = ref;
     }

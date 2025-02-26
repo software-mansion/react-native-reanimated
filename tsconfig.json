@@ -9,10 +9,14 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "NodeNext",
-    "lib": ["es6", "dom"],
+    "lib": ["es6", "dom", "ES2021"],
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+    // We set "noEmit" to `true` only in packages which emit files.
+    "noEmit": true,
+  },
 }

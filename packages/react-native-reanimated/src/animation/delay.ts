@@ -1,13 +1,13 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
-  Animation,
-  Timestamp,
   AnimatableValue,
+  Animation,
   AnimationObject,
   ReduceMotion,
+  Timestamp,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
@@ -21,8 +21,12 @@ type withDelayType = <T extends AnimatableValue>(
  *
  * @param delayMs - Duration (in milliseconds) before the animation starts.
  * @param nextAnimation - The animation to delay.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
- * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @param reduceMotion - Determines how the animation responds to the device's
+ *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
+ *   {@link ReduceMotion}.
+ * @returns An [animation
+ *   object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object)
+ *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay
  */
 export const withDelay = function <T extends AnimationObject>(
@@ -43,8 +47,7 @@ export const withDelay = function <T extends AnimationObject>(
       function delay(animation: DelayAnimation, now: Timestamp): boolean {
         const { startTime, started, previousAnimation } = animation;
         const current: AnimatableValue = animation.current;
-
-        if (now - startTime > delayMs || animation.reduceMotion) {
+        if (now - startTime >= delayMs || animation.reduceMotion) {
           if (!started) {
             nextAnimation.onStart(
               nextAnimation,

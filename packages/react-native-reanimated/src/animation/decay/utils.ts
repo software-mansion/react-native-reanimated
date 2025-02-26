@@ -1,11 +1,11 @@
 'use strict';
 import type {
   AnimatableValue,
-  AnimationObject,
   Animation,
+  AnimationObject,
   ReduceMotion,
-  Timestamp,
   RequiredKeys,
+  Timestamp,
 } from '../../commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
@@ -18,7 +18,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: AnimatableValue;
+  current: AnimatableValue | undefined;
 }
 
 export interface InnerDecayAnimation
@@ -32,12 +32,18 @@ export interface InnerDecayAnimation
  * The decay animation configuration.
  *
  * @param velocity - Initial velocity of the animation. Defaults to 0.
- * @param deceleration - The rate at which the velocity decreases over time. Defaults to 0.998.
- * @param clamp - Array of two numbers which restricts animation's range. Defaults to [].
+ * @param deceleration - The rate at which the velocity decreases over time.
+ *   Defaults to 0.998.
+ * @param clamp - Array of two numbers which restricts animation's range.
+ *   Defaults to [].
  * @param velocityFactor - Velocity multiplier. Defaults to 1.
- * @param rubberBandEffect - Makes the animation bounce over the limit specified in `clamp`. Defaults to `false`.
- * @param rubberBandFactor - Strength of the rubber band effect. Defaults to 0.6.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @param rubberBandEffect - Makes the animation bounce over the limit specified
+ *   in `clamp`. Defaults to `false`.
+ * @param rubberBandFactor - Strength of the rubber band effect. Defaults to
+ *   0.6.
+ * @param reduceMotion - Determines how the animation responds to the device's
+ *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
+ *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay#config
  */
 export type DecayConfig = {

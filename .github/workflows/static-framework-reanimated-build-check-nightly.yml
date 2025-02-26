@@ -1,0 +1,57 @@
+name: Static framework Reanimated build check [Nightly]
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/static-framework-reanimated-build-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-14
+    strategy:
+      matrix:
+        react-native-architecture: ['Paper', 'Fabric']
+      fail-fast: false
+    concurrency:
+      group: ios-static-framework-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      APP_NAME: app
+    steps:
+      - name: Setup Yarn
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
+        run: corepack enable && yarn init
+      - name: Install React Native
+        run: yarn add @react-native-community/cli
+      - name: Create app
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --skip-install --pm yarn --install-pods false --skip-git-init
+      - name: Setup Yarn Modern in app
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
+      - name: Install dependencies
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn install
+      - name: Install Reanimated
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Install Paper Pods
+        if: ${{ matrix.react-native-architecture == 'Paper' }}
+        working-directory: ${{env.APP_NAME}}/ios
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 && bundle install && bundle exec pod install
+      - name: Install Fabric Pods
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        working-directory: ${{env.APP_NAME}}/ios
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && bundle install && bundle exec pod update
+      - name: Build app
+        working-directory: ${{env.APP_NAME}}/ios
+        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -scheme ${{env.APP_NAME}} -configuration Debug -destination 'generic/platform=iOS Simulator' build | xcpretty

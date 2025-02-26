@@ -1,0 +1,103 @@
+{
+  "name": "react-native-worklets",
+  "version": "0.0.1",
+  "description": "The React Native multithreading library",
+  "scripts": {
+    "build": "bob build",
+    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
+    "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android:java && yarn format:apple",
+    "format:android:java": "node ../../scripts/format-java.js",
+    "format:apple": "find apple -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:js": "prettier --write --list-different src",
+    "format:plugin": "yarn workspace babel-plugin-reanimated format",
+    "lint": "yarn lint:js && yarn lint:plugin && yarn lint:android && yarn lint:apple",
+    "lint:android": "./android/gradlew -p android spotlessCheck -q",
+    "lint:apple": "yarn format:apple --dry-run -Werror",
+    "lint:js": "eslint src && yarn prettier --check src",
+    "lint:plugin": "yarn workspace babel-plugin-reanimated lint",
+    "test": "jest",
+    "type:check": "yarn type:check:src && yarn type:check:plugin",
+    "type:check:src": "yarn tsc --noEmit",
+    "type:check:plugin": "yarn workspace babel-plugin-reanimated type:check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git",
+    "directory": "packages/react-native-worklets"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
+  },
+  "homepage": "https://docs.swmansion.com/react-native-reanimated",
+  "peerDependencies": {
+    "@babel/core": "^7.0.0-0",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "15.0.1",
+    "@react-native/eslint-config": "0.76.5",
+    "@types/jest": "^29.5.5",
+    "@types/react": "^18.2.44",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "clang-format-node": "^1.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-reanimated": "workspace:*",
+    "jest": "^29.0.0",
+    "madge": "^5.0.1",
+    "prettier": "^3.3.3",
+    "react": "18.3.1",
+    "react-native": "0.77.0",
+    "react-native-builder-bob": "0.33.1",
+    "typescript": "~5.3.0"
+  },
+  "main": "./lib/module/index",
+  "module": "./lib/module/index",
+  "react-native": "./src/index",
+  "source": "./src/index",
+  "types": "lib/typescript/index.d.ts",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "apple",
+    "Common",
+    "*.podspec",
+    "react-native.config.js",
+    "!apple/build",
+    "!android/build",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
+    "!android/local.properties",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!**/.*"
+  ],
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "module",
+        {
+          "esm": true,
+          "jsxRuntime": "classic"
+        }
+      ],
+      "typescript"
+    ]
+  },
+  "codegenConfig": {
+    "name": "rnworklets",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.swmansion.worklets"
+    }
+  }
+}
