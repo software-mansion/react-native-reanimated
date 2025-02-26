@@ -85,8 +85,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       ((FabricUIManager) uiManager).addUIManagerEventListener(this);
       mUnsubscribe =
           Utils.combineRunnables(
-              mUnsubscribe,
-              () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
+              mUnsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
     } else {
       throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
     }
