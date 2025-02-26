@@ -40,7 +40,7 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    if: github.repository == 'software-mansion/react-native-reanimated' && false # Disable this workflow until react-native-macos supports Fabric
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/macos-example
