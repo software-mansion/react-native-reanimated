@@ -134,6 +134,7 @@ declare global {
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _IS_FABRIC: boolean | undefined;
+  var _registriesLeakCheck: () => string;
   var _updatePropsPaper: (operations: Operation[]) => void;
   var _updatePropsFabric: (operations: Operation[]) => void;
   var _notifyAboutProgress: (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => void;

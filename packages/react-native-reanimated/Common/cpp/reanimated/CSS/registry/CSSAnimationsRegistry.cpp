@@ -33,6 +33,17 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
+void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  for (const auto &viewTag : tagsToRemove) {
+    removeViewAnimations(viewTag);
+    removeFromUpdatesRegistry(viewTag);
+
+    registry_.erase(viewTag);
+  }
+}
+
 void CSSAnimationsRegistry::updateSettings(
     const Tag viewTag,
     const SettingsUpdates &settingsUpdates,
@@ -259,6 +270,11 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   }
 
   return hasUpdates;
+}
+
+bool CSSAnimationsRegistry::isEmpty() {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 
 } // namespace reanimated
