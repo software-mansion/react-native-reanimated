@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ReactCommon/CallInvoker.h>
-#include <ReactCommon/RuntimeExecutor.h>
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -17,13 +16,14 @@ class JSScheduler {
  public:
   explicit JSScheduler(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<CallInvoker> &jsCallInvoker);
+      const std::shared_ptr<CallInvoker> &jsCallInvoker)
+      : rnRuntime_(rnRuntime), jsCallInvoker_(jsCallInvoker) {}
 
-  const std::function<void(Job)> scheduleOnJS = nullptr;
+  void scheduleOnJS(std::function<void(jsi::Runtime &rt)> job);
 
  protected:
   jsi::Runtime &rnRuntime_;
-  const std::shared_ptr<CallInvoker> jsCallInvoker_ = nullptr;
+  const std::shared_ptr<CallInvoker> jsCallInvoker_;
 };
 
 } // namespace worklets
