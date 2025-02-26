@@ -13,12 +13,9 @@
 #include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/JRuntimeExecutor.h>
 #include <react/renderer/scheduler/Scheduler.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
 #include <string>
@@ -155,12 +152,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless
-#ifdef RCT_NEW_ARCH_ENABLED
-      ,
+      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager
-#endif
   );
 
   static void registerNatives();
@@ -178,11 +172,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();
 #endif // NDEBUG
-#ifdef RCT_NEW_ARCH_ENABLED
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
-#endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
@@ -208,24 +200,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       bool isStatusBarTranslucent,
       bool isNavigationBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-  jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
-  void configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps);
-  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
-  void scrollTo(int viewTag, double x, double y, bool animated);
-  void dispatchCommand(
-      jsi::Runtime &rt,
-      const int viewTag,
-      const jsi::Value &commandNameValue,
-      const jsi::Value &argsValue);
-  std::vector<std::pair<std::string, double>> measure(int viewTag);
-#endif
   void handleEvent(
       jni::alias_ref<JString> eventName,
       jint emitterReactTag,
@@ -265,18 +239,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless
-#ifdef RCT_NEW_ARCH_ENABLED
-      ,
+      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager
-#endif
   );
 
-#ifdef RCT_NEW_ARCH_ENABLED
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);
-#endif // RCT_NEW_ARCH_ENABLED
 
   void invalidateCpp();
 };

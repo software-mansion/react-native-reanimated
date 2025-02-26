@@ -15,10 +15,7 @@
 #include <jsi/jsi.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/Binding.h>
-#endif
 
 namespace reanimated {
 
@@ -31,12 +28,9 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    const bool isBridgeless
-#ifdef RCT_NEW_ARCH_ENABLED
-    ,
+    const bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager
-#endif
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
@@ -50,12 +44,9 @@ NativeProxy::NativeProxy(
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
-#ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
-#endif // RCT_NEW_ARCH_ENABLED
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::commonInit(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         &fabricUIManager) {
@@ -72,7 +63,6 @@ void NativeProxy::commonInit(
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
 }
-#endif // RCT_NEW_ARCH_ENABLED
 
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
@@ -91,12 +81,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    bool isBridgeless
-#ifdef RCT_NEW_ARCH_ENABLED
-    ,
+    bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager
-#endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
@@ -106,11 +93,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       make_global(layoutAnimations),
-      isBridgeless
-#ifdef RCT_NEW_ARCH_ENABLED
-      ,
+      isBridgeless,
       fabricUIManager
-#endif
   );
 }
 
@@ -177,9 +161,7 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(
 }
 
 void NativeProxy::performOperations() {
-#ifdef RCT_NEW_ARCH_ENABLED
   reanimatedModuleProxy_->performOperations();
-#endif
 }
 
 bool NativeProxy::getIsReducedMotion() {
@@ -224,102 +206,6 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else
-jsi::Value NativeProxy::obtainProp(
-    jsi::Runtime &rt,
-    const int viewTag,
-    const jsi::Value &propName) {
-  static const auto method =
-      getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
-          "obtainProp");
-  local_ref<JString> propNameJStr =
-      jni::make_jstring(propName.asString(rt).utf8(rt).c_str());
-  auto result = method(javaPart_.get(), viewTag, propNameJStr);
-  std::string str = result->toStdString();
-  return jsi::Value(rt, jsi::String::createFromAscii(rt, str));
-}
-
-void NativeProxy::configureProps(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
-  static const auto method = getJniMethod<void(
-      ReadableNativeArray::javaobject, ReadableNativeArray::javaobject)>(
-      "configureProps");
-  method(
-      javaPart_.get(),
-      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
-          .get(),
-      ReadableNativeArray::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, nativeProps))
-          .get());
-}
-
-void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
-  static const auto method =
-      getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
-          "updateProps");
-  auto array = operations.asObject(rt).asArray(rt);
-  size_t length = array.size(rt);
-  for (size_t i = 0; i < length; ++i) {
-    auto item = array.getValueAtIndex(rt, i).asObject(rt);
-    int viewTag = item.getProperty(rt, "tag").asNumber();
-    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
-    method(
-        javaPart_.get(),
-        viewTag,
-        JNIHelper::ConvertToPropsMap(rt, props).get());
-  }
-}
-
-void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
-  static const auto method =
-      getJniMethod<void(int, double, double, bool)>("scrollTo");
-  method(javaPart_.get(), viewTag, x, y, animated);
-}
-
-inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
-    jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
-  return make_local(
-      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
-}
-
-void NativeProxy::dispatchCommand(
-    jsi::Runtime &rt,
-    const int viewTag,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue) {
-  static const auto method = getJniMethod<void(
-      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
-      "dispatchCommand");
-  local_ref<JString> commandId =
-      jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
-  jni::local_ref<ReadableArray::javaobject> commandArgs =
-      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, argsValue)));
-  method(javaPart_.get(), viewTag, commandId, commandArgs);
-}
-
-std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
-  static const auto method =
-      getJniMethod<local_ref<JArrayFloat>(int)>("measure");
-  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
-  size_t size = output->size();
-  auto elements = output->getRegion(0, size);
-
-  return {
-      {"x", elements[0]},
-      {"y", elements[1]},
-      {"pageX", elements[2]},
-      {"pageY", elements[3]},
-      {"width", elements[4]},
-      {"height", elements[5]},
-  };
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 int NativeProxy::registerSensor(
     int sensorType,
@@ -421,31 +307,12 @@ void NativeProxy::progressLayoutAnimation(
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-  auto updatePropsFunction = bindThis(&NativeProxy::updateProps);
-
-  auto measureFunction = bindThis(&NativeProxy::measure);
-
-  auto scrollToFunction = bindThis(&NativeProxy::scrollTo);
-
-  auto dispatchCommandFunction = bindThis(&NativeProxy::dispatchCommand);
-
-  auto obtainPropFunction = bindThis(&NativeProxy::obtainProp);
-#endif
-
   auto getAnimationTimestamp = bindThis(&NativeProxy::getAnimationTimestamp);
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-  auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
-#endif
-
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
+
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
 
   auto setGestureStateFunction = bindThis(&NativeProxy::setGestureState);
@@ -473,16 +340,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   return {
       requestRender,
-#ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
-#else
-      updatePropsFunction,
-      scrollToFunction,
-      dispatchCommandFunction,
-      measureFunction,
-      configurePropsFunction,
-      obtainPropFunction,
-#endif
       getAnimationTimestamp,
       progressLayoutAnimation,
       endLayoutAnimation,
