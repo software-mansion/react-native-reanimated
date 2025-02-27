@@ -6,7 +6,7 @@ import clsx from 'clsx';
 const MARGIN_BOTTOM = 60;
 const TutorialStep = ({ children, title }) => {
   const [isActive, setIsActive] = useState(false);
-  const componentRef = useRef(null);
+  const componentRef = useRef();
   const handleScroll = () => {
     const height = window.innerHeight;
     const position = window.pageYOffset;

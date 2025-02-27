@@ -2,16 +2,12 @@ import React, { useRef } from 'react';
 import { StyleSheet, View, Button, ViewProps } from 'react-native';
 import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 
-const MyView = ({
-  ref,
-  ...props
-}: {
-  ref: React.Ref<View>;
-  props: ViewProps;
-}) => {
-  // some additional logic
-  return <View ref={ref} {...props} />;
-};
+const MyView = React.forwardRef(
+  (props: ViewProps, ref: React.LegacyRef<View>) => {
+    // some additional logic
+    return <View ref={ref} {...props} />;
+  }
+);
 
 // highlight-next-line
 const MyAnimatedView = Animated.createAnimatedComponent(MyView);
