@@ -1,11 +1,6 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -14,10 +9,15 @@
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
@@ -25,8 +25,8 @@
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
-#include <react/renderer/uimanager/UIManager.h>
 #include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
 #include <string>

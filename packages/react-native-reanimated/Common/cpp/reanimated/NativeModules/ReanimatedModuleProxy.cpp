@@ -19,11 +19,11 @@
 #include <react/renderer/uimanager/primitives.h>
 
 #include <functional>
-#include <unordered_map>
-#include <utility>
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
 namespace reanimated {
 
