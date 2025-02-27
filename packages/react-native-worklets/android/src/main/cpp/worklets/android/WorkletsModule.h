@@ -1,9 +1,5 @@
 #pragma once
 
-#include <react/fabric/JFabricUIManager.h>
-#include <react/jni/JRuntimeExecutor.h>
-#include <react/renderer/scheduler/Scheduler.h>
-
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
