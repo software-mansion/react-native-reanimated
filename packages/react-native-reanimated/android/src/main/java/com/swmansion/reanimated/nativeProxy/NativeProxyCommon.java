@@ -3,7 +3,6 @@ package com.swmansion.reanimated.nativeProxy;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
-import android.util.Log;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
@@ -12,14 +11,10 @@ import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.DevMenuUtils;
-import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
-import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
-import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import com.swmansion.worklets.WorkletsModule;
@@ -64,6 +59,9 @@ public abstract class NativeProxyCommon {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
+    mNodesManager =
+        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
+            .getNodesManager();
   }
 
   protected native void installJSIBindings();
@@ -167,23 +165,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected abstract HybridData getHybridData();
-
-  public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
-    if (Utils.isChromeDebugger) {
-      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
-      return;
-    }
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
-
-    AnimationsManager animationsManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager()
-            .getAnimationsManager();
-
-    animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
-  }
 
   @DoNotStrip
   public boolean getIsReducedMotion() {
