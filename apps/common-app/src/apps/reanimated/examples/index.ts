@@ -103,26 +103,6 @@ import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import ShareablesExample from './ShareablesExample';
-import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
-import CardExample from './SharedElementTransitions/Card';
-import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
-import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
-import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
-import FlatListExample from './SharedElementTransitions/FlatList';
-import GalleryExample from './SharedElementTransitions/Gallery';
-import ImageStackExample from './SharedElementTransitions/ImageStack';
-import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
-import ManyScreensExample from './SharedElementTransitions/ManyScreens';
-import ManyTagsExample from './SharedElementTransitions/ManyTags';
-import ModalsExample from './SharedElementTransitions/Modals';
-import NestedRotationExample from './SharedElementTransitions/NestedRotation';
-import NestedStacksExample from './SharedElementTransitions/NestedStacks';
-import ProfilesExample from './SharedElementTransitions/Profiles';
-import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
-import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
-import RestoreStateExample from './SharedElementTransitions/RestoreState';
-import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
-import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import SharedStyleExample from './SharedStyleExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
@@ -457,26 +437,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
-  GalleryExample: {
-    icon: '🇮🇹',
-    title: 'Gallery',
-    screen: GalleryExample,
-  },
-  ProfilesExample: {
-    icon: '🙆‍♂️',
-    title: 'Profiles',
-    screen: ProfilesExample,
-  },
   VolumeExample: {
     icon: '🎧',
     title: 'Volume slider & sensor',
     screen: VolumeExample,
-  },
-  ProgressTransitionExample: {
-    icon: '☕',
-    title: 'Progress transition',
-    screen: ProgressTransitionExample,
-    missingOnFabric: true,
   },
   MatrixExample: {
     icon: '🧮',
@@ -734,93 +698,5 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
-  },
-
-  // Shared Element Transitions
-
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-    missingOnFabric: true,
-  },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-    missingOnFabric: true,
-  },
-  LayoutAnimationExample: {
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-    missingOnFabric: true,
-  },
-  ManyScreensExample: {
-    title: '[SET] Many screens',
-    screen: ManyScreensExample,
-    missingOnFabric: true,
-  },
-  ManyTagsExample: {
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
-    missingOnFabric: true,
-  },
-  NestedStacksExample: {
-    title: '[SET] Nested stacks',
-    screen: NestedStacksExample,
-    missingOnFabric: true,
-  },
-  ModalsExample: {
-    title: '[SET] Modals',
-    screen: ModalsExample,
-    missingOnFabric: true,
-  },
-  FlatListExample: {
-    title: '[SET] FlatList',
-    screen: FlatListExample,
-    missingOnFabric: true,
-  },
-  ImageStackExample: {
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
-    missingOnFabric: true,
-  },
-  RestoreStateExample: {
-    title: '[SET] Restore State',
-    screen: RestoreStateExample,
-    missingOnFabric: true,
-  },
-  DuplicateTagsExample: {
-    title: '[SET] Duplicate Tags',
-    screen: DuplicateTagsExample,
-    missingOnFabric: true,
-  },
-  ReducedMotionSharedExample: {
-    title: '[SET] Reduced Motion',
-    screen: ReducedMotionSharedExample,
-    missingOnFabric: true,
-  },
-  TransitionRestartExample: {
-    title: '[SET] Transition Restart',
-    screen: TransitionRestartExample,
-    missingOnFabric: true,
-  },
-  ChangeThemeSharedExample: {
-    title: '[SET] Change theme',
-    screen: ChangeThemeSharedExample,
-    missingOnFabric: true,
-  },
-  NestedRotationSharedExample: {
-    title: '[SET] Nested Transforms',
-    screen: NestedRotationExample,
-    missingOnFabric: true,
-  },
-  BorderRadiiExample: {
-    title: '[SET] Border Radii',
-    screen: BorderRadiiExample,
-    missingOnFabric: true,
-  },
-  TabNavigatorExample: {
-    title: '[SET] Tab Navigator',
-    screen: TabNavigatorExample,
-    missingOnFabric: true,
   },
 } as const;

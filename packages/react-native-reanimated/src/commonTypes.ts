@@ -11,7 +11,7 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
 
-export type LayoutAnimationsOptions =
+type LayoutAnimationsOptions =
   | 'originX'
   | 'originY'
   | 'width'
@@ -85,22 +85,10 @@ export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
   TargetLayoutAnimationsValues &
   WindowDimensions;
 
-export interface SharedTransitionAnimationsValues
-  extends LayoutAnimationsValues {
-  currentTransformMatrix: number[];
-  targetTransformMatrix: number[];
-}
-
-export type SharedTransitionAnimationsFunction = (
-  values: SharedTransitionAnimationsValues
-) => LayoutAnimation;
-
 export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
-  SHARED_ELEMENT_TRANSITION = 4,
-  SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
 }
 
 export type LayoutAnimationFunction = (
@@ -110,8 +98,8 @@ export type LayoutAnimationFunction = (
 export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
-  yogaValues: Partial<SharedTransitionAnimationsValues>,
-  config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation
+  yogaValues: Partial<LayoutAnimationsValues>,
+  config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation
 ) => void;
 
 export interface ILayoutAnimationBuilder {
@@ -152,31 +140,11 @@ export interface IExitAnimationBuilder {
   build: () => AnimationConfigFunction<ExitAnimationsValues>;
 }
 
-export type ProgressAnimationCallback = (
-  viewTag: number,
-  progress: number
-) => void;
-
-export type ProgressAnimation = (
-  viewTag: number,
-  values: SharedTransitionAnimationsValues,
-  progress: number
-) => void;
-
-export type CustomProgressAnimation = (
-  values: SharedTransitionAnimationsValues,
-  progress: number
-) => StyleProps;
-
 /**
  * Used to configure the `.defaultTransitionType()` shared transition modifier.
  *
  * @experimental
  */
-export enum SharedTransitionType {
-  ANIMATION = 'animation',
-  PROGRESS_ANIMATION = 'progressAnimation',
-}
 
 export type EntryExitAnimationsValues =
   | EntryAnimationsValues
@@ -189,15 +157,7 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config:
-    | ShareableRef<
-        | Keyframe
-        | LayoutAnimationFunction
-        | SharedTransitionAnimationsFunction
-        | ProgressAnimationCallback
-      >
-    | undefined;
-  sharedTransitionTag?: string;
+  config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
