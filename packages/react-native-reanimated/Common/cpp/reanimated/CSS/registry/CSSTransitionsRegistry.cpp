@@ -27,6 +27,9 @@ void CSSTransitionsRegistry::add(
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
+  if (updatesRegistry_.contains(viewTag)) {
+    return;
+  }
 
   removeFromUpdatesRegistry(viewTag);
 
@@ -34,6 +37,23 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
+}
+void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  for (const auto &viewTag : tagsToRemove) {
+    removeFromUpdatesRegistry(viewTag);
+
+    staticPropsRegistry_->removeObserver(viewTag);
+    delayedTransitionsManager_.remove(viewTag);
+    runningTransitionTags_.erase(viewTag);
+    registry_.erase(viewTag);
+  }
+}
+
+bool CSSTransitionsRegistry::isEmpty() {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateSettings(

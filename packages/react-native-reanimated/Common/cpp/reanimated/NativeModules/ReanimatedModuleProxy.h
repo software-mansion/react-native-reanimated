@@ -221,12 +221,12 @@ class ReanimatedModuleProxy
   }
 
   void requestFlushRegistry();
+  std::function<std::string()> createRegistriesLeakCheck();
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(const folly::dynamic &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
@@ -261,9 +261,6 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
-
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;

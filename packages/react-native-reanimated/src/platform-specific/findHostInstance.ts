@@ -3,7 +3,6 @@
 
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
-import { isFabric } from '../PlatformChecker';
 
 type HostInstanceFabric = {
   __internalInstanceHandle?: Record<string, unknown>;
@@ -39,32 +38,19 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   return undefined;
 }
 
-const IS_FABRIC = isFabric();
-
 function resolveFindHostInstance_DEPRECATED() {
   if (findHostInstance_DEPRECATED !== undefined) {
     return;
   }
-  if (IS_FABRIC) {
-    try {
-      const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
-      // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
-      // access it first, then fallback on named export
-      findHostInstance_DEPRECATED =
-        ReactFabric?.default?.findHostInstance_DEPRECATED ??
-        ReactFabric?.findHostInstance_DEPRECATED;
-    } catch (e) {
-      throw new ReanimatedError(
-        'Failed to resolve findHostInstance_DEPRECATED'
-      );
-    }
-  } else {
-    const ReactNative = require('react-native/Libraries/Renderer/shims/ReactNative');
+  try {
+    const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
     // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
     // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
-      ReactNative?.default?.findHostInstance_DEPRECATED ??
-      ReactNative?.findHostInstance_DEPRECATED;
+      ReactFabric?.default?.findHostInstance_DEPRECATED ??
+      ReactFabric?.findHostInstance_DEPRECATED;
+  } catch (e) {
+    throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }
 
@@ -88,7 +74,7 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    !IS_FABRIC || (component as IAnimatedComponentInternal).hasAnimatedRef()
+    (component as IAnimatedComponentInternal).hasAnimatedRef()
       ? (component as IAnimatedComponentInternal)._componentRef
       : component
   );

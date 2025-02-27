@@ -26,15 +26,6 @@ void commonInit(
     jsi::Runtime &uiRuntime,
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else // RCT_NEW_ARCH_ENABLED
-void setupLayoutAnimationCallbacks(
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
-    std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy,
-    REAAnimationsManager *animationsManager);
-#endif // RCT_NEW_ARCH_ENABLED
-
 } // namespace reanimated
 
 #endif //__cplusplus

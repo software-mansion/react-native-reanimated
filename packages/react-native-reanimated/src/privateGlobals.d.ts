@@ -32,6 +32,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
+  var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _updatePropsPaper:
@@ -53,7 +54,6 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper:
     | ((viewTag: number | null) => MeasuredDimensions)
     | undefined;
@@ -88,4 +88,40 @@ declare global {
     propName: string
   ) => string;
   var RN$Bridgeless: boolean | undefined;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var _getAnimationTimestamp: () => number;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var __flushAnimationFrame: (timestamp: number) => void;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var __frameTimestamp: number | undefined;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var _scheduleOnRuntime: (
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<() => void>
+  ) => void;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
+  /**
+   * @deprecated Internals of `react-native-worklets`, abstain from using in the
+   *   future.
+   */
+  var _makeShareableClone: <T>(
+    value: T,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
 }
