@@ -48,6 +48,9 @@ class CSSTransitionsRegistry
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
+  void updateInUpdatesRegistry(
+      const std::shared_ptr<CSSTransition> &transition,
+      const folly::dynamic &updates);
 };
 
 } // namespace reanimated
