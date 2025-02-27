@@ -14,21 +14,16 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
 #include <unordered_map>
 #include <utility>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <iomanip>
 #include <sstream>
 #include <string>
-#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 
@@ -50,7 +45,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
-#ifdef RCT_NEW_ARCH_ENABLED
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
 #ifdef ANDROID
@@ -67,28 +61,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-#else
-      obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
-      configurePropsPlatformFunction_(
-          platformDepMethodsHolder.configurePropsFunction),
-      updatePropsFunction_(platformDepMethodsHolder.updatePropsFunction),
-#endif
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-#ifdef RCT_NEW_ARCH_ENABLED
-  {
-    auto lock = updatesRegistryManager_->createLock();
-    // Add registries in order of their priority (from the lowest to the
-    // highest)
-    // CSS transitions should be overriden by animated style animations;
-    // animated style animations should be overriden by CSS animations
-    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-    updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-  }
-#endif
+  auto lock = updatesRegistryManager_->createLock();
+  // Add registries in order of their priority (from the lowest to the
+  // highest)
+  // CSS transitions should be overriden by animated style animations;
+  // animated style animations should be overriden by CSS animations
+  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+  updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
+  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 }
 
 void ReanimatedModuleProxy::init(
@@ -105,7 +89,6 @@ void ReanimatedModuleProxy::init(
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
-#ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [weakThis = weak_from_this()](
                          jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
@@ -189,33 +172,19 @@ void ReanimatedModuleProxy::init(
 
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
-#endif
 
   jsi::Runtime &uiRuntime =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
-#ifdef RCT_NEW_ARCH_ENABLED
       obtainProp,
       updateProps,
       measure,
       dispatchCommand,
-#else
-      platformDepMethodsHolder.scrollToFunction,
-      platformDepMethodsHolder.obtainPropFunction,
-      platformDepMethodsHolder.updatePropsFunction,
-      platformDepMethodsHolder.measureFunction,
-      platformDepMethodsHolder.dispatchCommandFunction,
-#endif
       platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
-#ifdef RCT_NEW_ARCH_ENABLED
       progressLayoutAnimation,
       endLayoutAnimation,
-#else
-      platformDepMethodsHolder.progressLayoutAnimation,
-      platformDepMethodsHolder.endLayoutAnimation,
-#endif
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
@@ -271,7 +240,6 @@ void ReanimatedModuleProxy::unregisterEventHandler(
       });
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
   std::stringstream
       invertedHexColorStream; // By default transparency is first, color second
@@ -359,48 +327,6 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   return jsi::Value::undefined();
 }
 
-#else
-
-jsi::Value ReanimatedModuleProxy::getViewProp(
-    jsi::Runtime &rnRuntime,
-    const jsi::Value &viewTag,
-    const jsi::Value &propName,
-    const jsi::Value &callback) {
-  const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
-  const auto funPtr = std::make_shared<jsi::Function>(
-      callback.getObject(rnRuntime).asFunction(rnRuntime));
-
-  const int viewTagInt = viewTag.asNumber();
-
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      [=, weakThis = weak_from_this()]
-
-      () {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        jsi::Runtime &uiRuntime =
-            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
-                ->getJSIRuntime();
-        const jsi::Value propNameValue =
-            jsi::String::createFromUtf8(uiRuntime, propNameStr);
-        const auto resultValue = strongThis->obtainPropFunction_(
-            uiRuntime, viewTagInt, propNameValue);
-        const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
-        const auto jsScheduler =
-            strongThis->workletsModuleProxy_->getJSScheduler();
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-          const auto resultValue =
-              jsi::String::createFromUtf8(rnRuntime, resultStr);
-          funPtr->call(rnRuntime, resultValue);
-        });
-      });
-  return jsi::Value::undefined();
-}
-
-#endif
-
 jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
     jsi::Runtime &,
     const jsi::Value &config) {
@@ -412,7 +338,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
-#ifdef RCT_NEW_ARCH_ENABLED
   auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
     auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
@@ -423,10 +348,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
     auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     animatablePropNames_.insert(name);
   }
-#else
-  configurePropsPlatformFunction_(rt, uiProps, nativeProps);
-#endif // RCT_NEW_ARCH_ENABLED
-
   return jsi::Value::undefined();
 }
 
@@ -525,7 +446,6 @@ void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
@@ -671,7 +591,6 @@ jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
   }
   return nonAnimatableProps;
 }
-#endif // RCT_NEW_ARCH_ENABLED
 
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
@@ -691,8 +610,6 @@ bool ReanimatedModuleProxy::handleEvent(
   // to avoid sending it to JavaScript
   return false;
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
 
 bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
@@ -1071,8 +988,6 @@ ReanimatedModuleProxy::createRegistriesLeakCheck() {
 }
 
 #endif // IS_REANIMATED_EXAMPLE_APP
-
-#endif // RCT_NEW_ARCH_ENABLED
 
 jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
