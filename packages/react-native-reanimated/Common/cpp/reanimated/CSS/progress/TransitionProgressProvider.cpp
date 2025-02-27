@@ -56,10 +56,6 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   return TransitionProgressState::Running;
 }
 
-bool TransitionPropertyProgressProvider::isFirstUpdate() const {
-  return !previousRawProgress_.has_value();
-}
-
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
     const double timestamp) {
   if (duration_ == 0) {

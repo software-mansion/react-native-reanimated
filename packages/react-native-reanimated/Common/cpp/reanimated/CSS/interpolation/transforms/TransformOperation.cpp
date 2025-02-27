@@ -275,7 +275,7 @@ std::string TransformOperationBase<
  */
 
 // Perspective
-PerspectiveOperation::PerspectiveOperation(double value)
+PerspectiveOperation::PerspectiveOperation(const double value)
     : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
 TransformOperationType PerspectiveOperation::type() const {
   return TransformOperationType::Perspective;
@@ -331,7 +331,7 @@ TransformMatrix RotateZOperation::toMatrix() const {
 }
 
 // Scale
-ScaleOperation::ScaleOperation(double value)
+ScaleOperation::ScaleOperation(const double value)
     : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
 TransformOperationType ScaleOperation::type() const {
   return TransformOperationType::Scale;

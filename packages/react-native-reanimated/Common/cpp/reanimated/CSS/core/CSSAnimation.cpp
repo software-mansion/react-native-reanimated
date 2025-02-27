@@ -10,7 +10,6 @@ CSSAnimation::CSSAnimation(
     const unsigned index,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),

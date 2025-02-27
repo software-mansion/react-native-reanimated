@@ -15,7 +15,7 @@ namespace reanimated {
 class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(
-      const PropertyPath &propertyPath,
+      PropertyPath propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   virtual folly::dynamic getStyleValue(

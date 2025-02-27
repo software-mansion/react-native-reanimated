@@ -112,24 +112,24 @@ folly::dynamic ViewStylesRepository::getPropertyValue(
 
   for (size_t i = 0; i < propertyPath.size(); ++i) {
     if (currentValue->isNull() || currentValue->empty()) {
-      return folly::dynamic();
+      return {};
     }
 
     const auto &propName = propertyPath[i];
 
     if (!currentValue->isObject()) {
-      return folly::dynamic();
+      return {};
     }
 
     if (propName == "transform") {
       auto transformIt = currentValue->find("transform");
       if (transformIt == currentValue->items().end()) {
-        return folly::dynamic();
+        return {};
       }
 
       const auto &transform = transformIt->second;
       if (!transform.isArray()) {
-        return folly::dynamic();
+        return {};
       }
 
       if (i + 1 >= propertyPath.size()) {
@@ -147,12 +147,12 @@ folly::dynamic ViewStylesRepository::getPropertyValue(
         }
       }
 
-      return folly::dynamic();
+      return {};
     }
 
     auto propIt = currentValue->find(propName);
     if (propIt == currentValue->items().end()) {
-      return folly::dynamic();
+      return {};
     }
 
     currentValue = &propIt->second;

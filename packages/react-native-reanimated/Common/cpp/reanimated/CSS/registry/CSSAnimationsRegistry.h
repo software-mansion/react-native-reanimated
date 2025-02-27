@@ -22,6 +22,7 @@ class CSSAnimationsRegistry
       std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
 
   bool hasUpdates() const;
+  bool isEmpty() const override;
 
   void set(
       const ShadowNode::Shared &shadowNode,
@@ -35,7 +36,6 @@ class CSSAnimationsRegistry
       double timestamp);
 
   void update(double timestamp);
-  bool isEmpty();
 
  private:
   using Registry =

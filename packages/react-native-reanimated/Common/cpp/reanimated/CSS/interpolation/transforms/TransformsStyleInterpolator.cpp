@@ -178,14 +178,14 @@ TransformsStyleInterpolator::parseTransformOperations(
     return std::nullopt;
   }
 
-  const auto transformsArray = values;
+  const auto& transformsArray = values;
   const auto transformsCount = transformsArray.size();
 
   TransformOperations transformOperations;
   transformOperations.reserve(transformsCount);
 
   for (size_t i = 0; i < transformsCount; ++i) {
-    const auto transform = transformsArray.at(i);
+    const auto& transform = transformsArray.at(i);
     transformOperations.emplace_back(
         TransformOperation::fromDynamic(transform));
   }
@@ -396,8 +396,8 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
     const TransformOperations &operations) {
   auto result = folly::dynamic::array();
 
-  for (size_t i = 0; i < operations.size(); ++i) {
-    result.push_back(operations[i]->toDynamic());
+  for (const auto &operation : operations) {
+    result.push_back(operation->toDynamic());
   }
 
   return result;

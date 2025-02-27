@@ -108,7 +108,7 @@ class CSSValueVariant final : public CSSValue {
     }
   }
 
-  CSSValueVariant(const folly::dynamic &value) {
+  explicit CSSValueVariant(const folly::dynamic &value) {
     if (!tryConstruct(value)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +

@@ -605,13 +605,7 @@ void ReanimatedModuleProxy::registerCSSAnimations(
         cssAnimationKeyframesRegistry_->get(animationName);
 
     animations.emplace_back(std::make_shared<CSSAnimation>(
-        rt,
-        shadowNode,
-        i,
-        keyframesConfig,
-        settings,
-        viewStylesRepository_,
-        timestamp));
+        rt, shadowNode, i, keyframesConfig, settings, timestamp));
   }
 
   cssAnimationsRegistry_->set(shadowNode, std::move(animations), timestamp);

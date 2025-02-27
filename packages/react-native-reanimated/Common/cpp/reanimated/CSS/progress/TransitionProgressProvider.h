@@ -40,8 +40,6 @@ class TransitionPropertyProgressProvider final
   double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
 
-  bool isFirstUpdate() const override;
-
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 

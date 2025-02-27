@@ -25,11 +25,11 @@ class CSSTransitionsRegistry
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   bool hasUpdates() const;
+  bool isEmpty() const override;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag> &tagsToRemove) override;
-  bool isEmpty();
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
 
   void update(double timestamp);

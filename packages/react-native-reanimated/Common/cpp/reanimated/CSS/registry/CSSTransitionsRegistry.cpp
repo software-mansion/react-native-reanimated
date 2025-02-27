@@ -12,6 +12,11 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
+bool CSSTransitionsRegistry::isEmpty() const {
+    return UpdatesRegistry::isEmpty() && registry_.empty() &&
+           runningTransitionTags_.empty();
+}
+
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -48,11 +53,6 @@ void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
     runningTransitionTags_.erase(viewTag);
     registry_.erase(viewTag);
   }
-}
-
-bool CSSTransitionsRegistry::isEmpty() {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateSettings(

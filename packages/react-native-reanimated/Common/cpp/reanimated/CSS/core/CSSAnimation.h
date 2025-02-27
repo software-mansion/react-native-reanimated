@@ -22,7 +22,6 @@ class CSSAnimation {
       unsigned index,
       const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);
 
   CSSAnimationId getId() const;

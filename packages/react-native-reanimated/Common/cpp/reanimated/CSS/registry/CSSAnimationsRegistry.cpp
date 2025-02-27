@@ -6,6 +6,11 @@ bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
 }
 
+bool CSSAnimationsRegistry::isEmpty() const {
+    return UpdatesRegistry::isEmpty() && registry_.empty() &&
+           runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
+}
+
 void CSSAnimationsRegistry::set(
     const ShadowNode::Shared &shadowNode,
     std::vector<std::shared_ptr<CSSAnimation>> &&animations,
@@ -269,11 +274,6 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   }
 
   return hasUpdates;
-}
-
-bool CSSAnimationsRegistry::isEmpty() {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 
 } // namespace reanimated
