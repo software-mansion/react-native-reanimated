@@ -109,7 +109,6 @@ public class NativeProxy {
 
   public native void performOperations();
 
-  @Override
   protected HybridData getHybridData() {
     return mHybridData;
   }
@@ -219,8 +218,6 @@ public class NativeProxy {
   public void unsubscribeFromKeyboardEvents(int listenerId) {
     keyboardAnimationManager.unsubscribeFromKeyboardUpdates(listenerId);
   }
-
-  protected abstract HybridData getHybridData();
 
   @DoNotStrip
   public boolean getIsReducedMotion() {
