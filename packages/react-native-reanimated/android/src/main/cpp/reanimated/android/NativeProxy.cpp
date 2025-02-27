@@ -28,7 +28,6 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    const bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
@@ -39,7 +38,6 @@ NativeProxy::NativeProxy(
           *rnRuntime,
           jsCallInvoker,
           getPlatformDependentMethods(),
-          isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
@@ -80,7 +78,6 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    bool isBridgeless,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
@@ -91,7 +88,6 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       make_global(layoutAnimations),
-      isBridgeless,
       fabricUIManager);
 }
 

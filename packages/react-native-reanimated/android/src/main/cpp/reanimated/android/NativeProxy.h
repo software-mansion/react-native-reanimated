@@ -152,7 +152,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 
@@ -238,7 +237,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 

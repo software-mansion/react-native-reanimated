@@ -41,7 +41,6 @@ public class NativeProxy extends NativeProxyCommon {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             LayoutAnimations,
-            context.isBridgeless(),
             fabricUIManager);
 
     prepareLayoutAnimations(LayoutAnimations);
@@ -57,7 +56,6 @@ public class NativeProxy extends NativeProxyCommon {
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
       LayoutAnimations LayoutAnimations,
-      boolean isBridgeless,
       FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
