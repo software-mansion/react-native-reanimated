@@ -37,10 +37,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const bool isBridgeless,
     const bool isReducedMotion)
     : ReanimatedModuleProxySpec(jsCallInvoker),
-      isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),

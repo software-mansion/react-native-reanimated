@@ -56,7 +56,6 @@ class ReanimatedModuleProxy
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const bool isBridgeless,
       const bool isReducedMotion);
 
   // We need this init method to initialize callbacks with
@@ -207,10 +206,6 @@ class ReanimatedModuleProxy
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] inline bool isBridgeless() const {
-    return isBridgeless_;
-  }
-
   [[nodiscard]] inline bool isReducedMotion() const {
     return isReducedMotion_;
   }
@@ -232,7 +227,6 @@ class ReanimatedModuleProxy
       const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  const bool isBridgeless_;
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;

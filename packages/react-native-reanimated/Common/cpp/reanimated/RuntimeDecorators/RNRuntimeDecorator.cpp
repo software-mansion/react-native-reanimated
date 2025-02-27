@@ -20,9 +20,6 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-  rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
-
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG

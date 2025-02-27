@@ -35,7 +35,6 @@ public class NativeProxy extends NativeProxyCommon {
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
-            context.isBridgeless(),
             fabricUIManager);
 
     installJSIBindings();
@@ -49,7 +48,6 @@ public class NativeProxy extends NativeProxyCommon {
       WorkletsModule workletsModule,
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      boolean isBridgeless,
       FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);

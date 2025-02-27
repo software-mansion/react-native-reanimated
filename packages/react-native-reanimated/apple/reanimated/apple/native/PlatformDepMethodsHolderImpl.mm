@@ -43,20 +43,7 @@ static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
   return propsSet;
 }
 
-SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge)
-{
-  id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
-  auto setGestureStateFunction = [gestureHandlerStateManager, bridge](int handlerTag, int newState) mutable {
-    if (gestureHandlerStateManager == nil) {
-      gestureHandlerStateManager = [bridge moduleForName:@"RNGestureHandlerModule"];
-    }
-
-    setGestureState(gestureHandlerStateManager, handlerTag, newState);
-  };
-  return setGestureStateFunction;
-}
-
-SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry *moduleRegistry)
+SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleRegistry)
 {
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
   auto setGestureStateFunction = [gestureHandlerStateManager, moduleRegistry](int handlerTag, int newState) mutable {
@@ -141,50 +128,7 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 }
 
 PlatformDepMethodsHolder
-makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, REAModule *reaModule)
-{
-  auto requestRender = makeRequestRender(nodesManager);
-
-  auto getAnimationTimestamp = makeGetAnimationTimestamp();
-
-  auto setGestureStateFunction = makeSetGestureStateFunction(bridge);
-
-  auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
-
-  ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
-
-  auto registerSensorFunction = makeRegisterSensorFunction(reanimatedSensorContainer);
-
-  auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
-
-  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
-
-  auto subscribeForKeyboardEventsFunction = makeSubscribeForKeyboardEventsFunction(keyboardObserver);
-
-  auto unsubscribeFromKeyboardEventsFunction = makeUnsubscribeFromKeyboardEventsFunction(keyboardObserver);
-  // end keyboard events
-
-  PlatformDepMethodsHolder platformDepMethodsHolder = {
-      requestRender,
-      getAnimationTimestamp,
-      // This is a temporary solution to avoid making changes in the common C++ code
-      // and to prevent breaking the compilation on Android. It will be removed in another PR.
-      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
-      [](int _v1, bool _v2) {},
-      registerSensorFunction,
-      unregisterSensorFunction,
-      setGestureStateFunction,
-      subscribeForKeyboardEventsFunction,
-      unsubscribeFromKeyboardEventsFunction,
-      maybeFlushUIUpdatesQueueFunction,
-  };
-  return platformDepMethodsHolder;
-}
-
-PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
-    RCTModuleRegistry *moduleRegistry,
-    REANodesManager *nodesManager,
-    REAModule *reaModule)
+makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager, REAModule *reaModule)
 {
   auto requestRender = makeRequestRender(nodesManager);
 
@@ -196,7 +140,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
 
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
 
-  auto setGestureStateFunction = makeSetGestureStateFunctionBridgeless(moduleRegistry);
+  auto setGestureStateFunction = makeSetGestureStateFunction(moduleRegistry);
 
   REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
 
