@@ -1,7 +1,4 @@
-#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
-#import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -12,10 +9,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
-
-#ifndef NDEBUG
-#import <reanimated/apple/LayoutReanimation/REAScreensHelper.h>
-#endif
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>
@@ -99,22 +92,6 @@ GetAnimationTimestampFunction makeGetAnimationTimestamp()
   return getAnimationTimestamp;
 }
 
-ProgressLayoutAnimationFunction makeProgressLayoutAnimation(REAModule *reaModule)
-{
-  auto progressLayoutAnimation = [=](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool isSharedTransition) {
-    // noop
-  };
-  return progressLayoutAnimation;
-}
-
-EndLayoutAnimationFunction makeEndLayoutAnimation(REAModule *reaModule)
-{
-  auto endLayoutAnimation = [=](int tag, bool removeView) {
-    // noop
-  };
-  return endLayoutAnimation;
-}
-
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager)
 {
   auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
@@ -172,10 +149,6 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
 
   auto setGestureStateFunction = makeSetGestureStateFunction(bridge);
 
-  auto progressLayoutAnimation = makeProgressLayoutAnimation(reaModule);
-
-  auto endLayoutAnimation = makeEndLayoutAnimation(reaModule);
-
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
@@ -194,8 +167,10 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       getAnimationTimestamp,
-      progressLayoutAnimation,
-      endLayoutAnimation,
+      // This is a temporary solution to avoid making changes in the common C++ code
+      // and to prevent breaking the compilation on Android. It will be removed in another PR.
+      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
+      [](int _v1, bool _v2) {},
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -214,10 +189,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   auto requestRender = makeRequestRender(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
-
-  auto progressLayoutAnimation = makeProgressLayoutAnimation(reaModule);
-
-  auto endLayoutAnimation = makeEndLayoutAnimation(reaModule);
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
 
@@ -238,8 +209,10 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       getAnimationTimestamp,
-      progressLayoutAnimation,
-      endLayoutAnimation,
+      // This is a temporary solution to avoid making changes in the common C++ code
+      // and to prevent breaking the compilation on Android. It will be removed in another PR.
+      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
+      [](int _v1, bool _v2) {},
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,

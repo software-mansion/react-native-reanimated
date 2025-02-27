@@ -6,7 +6,6 @@
 #import <React/RCTUIManagerUtils.h>
 #import <rnreanimated/rnreanimated.h>
 
-#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 #import <reanimated/apple/REANodesManager.h>
 
 @interface REAModule : RCTEventEmitter <
@@ -16,6 +15,5 @@
                            RCTUIManagerObserver>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
-@property REAAnimationsManager *animationsManager;
 
 @end
