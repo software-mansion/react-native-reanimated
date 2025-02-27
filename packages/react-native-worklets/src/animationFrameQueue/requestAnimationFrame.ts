@@ -1,6 +1,6 @@
 'use strict';
 
-import { callMicrotasks } from 'react-native-worklets';
+import { callMicrotasks } from '../threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';
