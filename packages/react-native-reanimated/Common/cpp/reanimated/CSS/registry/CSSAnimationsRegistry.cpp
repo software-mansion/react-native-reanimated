@@ -7,8 +7,8 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 }
 
 bool CSSAnimationsRegistry::isEmpty() const {
-    return UpdatesRegistry::isEmpty() && registry_.empty() &&
-           runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::set(

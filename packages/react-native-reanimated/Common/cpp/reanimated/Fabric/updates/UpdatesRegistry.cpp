@@ -3,7 +3,7 @@
 namespace reanimated {
 
 bool UpdatesRegistry::isEmpty() const {
-    return updatesRegistry_.empty();
+  return updatesRegistry_.empty();
 }
 
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {

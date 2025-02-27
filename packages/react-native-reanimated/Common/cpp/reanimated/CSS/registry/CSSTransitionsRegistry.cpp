@@ -13,8 +13,8 @@ bool CSSTransitionsRegistry::hasUpdates() const {
 }
 
 bool CSSTransitionsRegistry::isEmpty() const {
-    return UpdatesRegistry::isEmpty() && registry_.empty() &&
-           runningTransitionTags_.empty();
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::add(

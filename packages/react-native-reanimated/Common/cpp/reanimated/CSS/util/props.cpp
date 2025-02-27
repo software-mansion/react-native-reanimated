@@ -130,7 +130,7 @@ ChangedProps getChangedProps(
   PropertyNames changedPropertyNames;
 
   for (const auto &propName : allowedProperties) {
-     auto [oldChangedProp, newChangedProp] =
+    auto [oldChangedProp, newChangedProp] =
         getChangedValueForProp(oldProps, newProps, propName);
 
     const auto hasOldChangedProp = !oldChangedProp.isNull();
