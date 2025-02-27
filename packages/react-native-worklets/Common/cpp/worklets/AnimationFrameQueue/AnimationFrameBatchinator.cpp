@@ -49,7 +49,7 @@ void AnimationFrameBatchinator::flush() {
     strongThis->flushRequested_ = false;
 
     auto &uiRuntime = *(strongThis->uiRuntime_);
-    for (auto &callback : callbacks) {
+    for (const auto &callback : callbacks) {
       runOnRuntimeGuarded(uiRuntime, *callback, timestampMs);
     }
   });

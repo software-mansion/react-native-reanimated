@@ -58,7 +58,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 #endif // TARGET_OS_OSX
   targetTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp);
 
-  for (auto callback : frameCallbacks) {
+  for (const auto &callback : frameCallbacks) {
     callback(targetTimestamp);
   }
 }
