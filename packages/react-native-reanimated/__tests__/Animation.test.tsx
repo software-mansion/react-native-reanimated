@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Button } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-hooks';
+import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
+import { Button, View } from 'react-native';
+
 import type { SharedValue } from '../src';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from '../src';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../src';
 import { getAnimatedStyle } from '../src/jestUtils';
 
 interface Props {
@@ -66,7 +67,7 @@ describe('Tests of animations', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const view = getByTestId('view');
     const button = getByTestId('button');
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
     fireEvent.press(button);
     jest.advanceTimersByTime(600);
@@ -91,7 +92,7 @@ describe('Tests of animations', () => {
     const view = getByTestId('view');
     const button = getByTestId('button');
 
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
 
     fireEvent.press(button);

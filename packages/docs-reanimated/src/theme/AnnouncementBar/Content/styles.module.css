@@ -52,24 +52,26 @@ a.link {
   grid-area: link;
   margin-left: auto;
   margin-right: 64px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 .linkTitle {
   color: var(--swm-white);
-  font-weight: 500;
+  font-weight: bold;
   text-wrap: nowrap;
   transition: all 0.2s ease-in-out;
 }
 
 .link:hover {
-  background-color: var(--swm-white);
-  border-color: var(--swm-navy-light-100);
+  background-color: var(--swm-blue-light-100);
+  border-color: var(--swm-blue-light-100);
   text-decoration: none;
 }
 
 .link:hover .linkTitle,
 .link:hover .linkArrow {
-  color: var(--swm-navy-light-100);
+  color: var(--swm-white);
 }
 
 .linkArrow {

@@ -1,5 +1,5 @@
 'use strict';
-import { runOnUIImmediately } from '../threads';
+import { runOnUIImmediately } from 'react-native-worklets';
 
 type CallbackDetails = {
   callback: (frameInfo: FrameInfo) => void;

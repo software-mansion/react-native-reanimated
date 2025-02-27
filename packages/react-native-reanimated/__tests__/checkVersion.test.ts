@@ -1,8 +1,8 @@
+import { version as packageVersion } from '../package.json';
 import {
   checkCppVersion,
   matchVersion,
 } from '../src/platform-specific/checkCppVersion';
-import { version as packageVersion } from '../package.json';
 
 describe('checkCppVersion', () => {
   beforeEach(() => {
@@ -24,7 +24,9 @@ describe('checkCppVersion', () => {
     jest.spyOn(console, 'warn').mockImplementation();
     delete global._REANIMATED_VERSION_CPP;
     checkCppVersion();
-    expect(console.warn).toBeCalled();
+    // TODO: Swap the following once version checking is restored.
+    // expect(console.warn).toBeCalled();
+    expect(console.warn).not.toBeCalled();
     jest.clearAllMocks();
   });
 });

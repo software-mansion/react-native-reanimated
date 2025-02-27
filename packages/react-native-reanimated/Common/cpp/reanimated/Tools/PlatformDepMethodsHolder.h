@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <folly/dynamic.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #endif
 
@@ -20,12 +21,8 @@ namespace reanimated {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using RemoveFromPropsRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
 using ObtainPropFunction = std::function<jsi::Value(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -56,7 +53,7 @@ using ObtainPropFunction =
 #endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
-    std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
+    std::function<void(std::function<void(const double)>)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -79,7 +76,7 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef RCT_NEW_ARCH_ENABLED
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+  // nothing
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;

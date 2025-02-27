@@ -1,11 +1,12 @@
 'use strict';
+import type { ShareableRef } from 'react-native-worklets';
+
 import type {
-  SensorType,
   SensorConfig,
+  SensorType,
+  SharedValue,
   Value3D,
   ValueRotation,
-  ShareableRef,
-  SharedValue,
 } from './commonTypes';
 import Sensor from './Sensor';
 

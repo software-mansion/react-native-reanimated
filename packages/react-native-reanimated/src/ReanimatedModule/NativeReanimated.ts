@@ -1,22 +1,37 @@
 'use strict';
+import type React from 'react';
 import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
+
+import type {
+  LayoutAnimationBatchItem,
+  ShadowNodeWrapper,
+  StyleProps,
   Value3D,
   ValueRotation,
-  ShareableRef,
-  LayoutAnimationBatchItem,
-  IReanimatedModule,
-  IWorkletsModule,
-  WorkletFunction,
 } from '../commonTypes';
+import type {
+  NormalizedCSSAnimationKeyframesConfig,
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../css/platform/native';
+import { ReanimatedError, registerReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric } from '../PlatformChecker';
-import type React from 'react';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 import { ReanimatedTurboModule } from '../specs';
-import { ReanimatedError } from '../errors';
-import { WorkletsModule } from '../worklets';
-import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
+import type {
+  IReanimatedModule,
+  ReanimatedModuleProxy,
+} from './reanimatedModuleProxy';
+
+const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -58,10 +73,20 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
+    if (!globalThis.RN$Bridgeless && !IS_WEB) {
+      throw new ReanimatedError(
+        'Reanimated 4 supports only the React Native New Architecture and web.'
+      );
+    }
     if (__DEV__) {
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
+    executeOnUIRuntimeSync(function initializeUI() {
+      'worklet';
+      registerReanimatedError();
+      setupRequestAnimationFrame();
+    })();
   }
 
   registerSensor(
@@ -104,19 +129,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     component: React.Component | undefined, // required on Fabric
     callback?: (result: T) => void
   ) {
-    let shadowNodeWrapper;
-    if (isFabric()) {
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        component as React.Component
-      );
-      return this.#reanimatedModuleProxy.getViewProp(
-        shadowNodeWrapper,
-        propName,
-        callback
-      );
-    }
-
-    return this.#reanimatedModuleProxy.getViewProp(viewTag, propName, callback);
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
+      component as React.Component
+    );
+    return this.#reanimatedModuleProxy.getViewProp(
+      shadowNodeWrapper,
+      propName,
+      callback
+    );
   }
 
   configureLayoutAnimationBatch(
@@ -156,5 +176,78 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  setViewStyle(viewTag: number, style: StyleProps) {
+    this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
+  }
+
+  removeViewStyle(viewTag: number) {
+    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  }
+
+  registerCSSKeyframes(
+    animationName: string,
+    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSKeyframes(
+      animationName,
+      keyframesConfig
+    );
+  }
+
+  unregisterCSSKeyframes(animationName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  }
+
+  registerCSSAnimations(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
+  ) {
+    this.#reanimatedModuleProxy.registerCSSAnimations(
+      shadowNodeWrapper,
+      animationConfigs
+    );
+  }
+
+  updateCSSAnimations(
+    animationId: number,
+    settingsUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
+  ) {
+    this.#reanimatedModuleProxy.updateCSSAnimations(
+      animationId,
+      settingsUpdates
+    );
+  }
+
+  unregisterCSSAnimations(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
+  }
+
+  registerCSSTransition(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    transitionConfig: NormalizedCSSTransitionConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSTransition(
+      shadowNodeWrapper,
+      transitionConfig
+    );
+  }
+
+  updateCSSTransition(
+    viewTag: number,
+    configUpdates: Partial<NormalizedCSSTransitionConfig>
+  ) {
+    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
+  }
+
+  unregisterCSSTransition(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
 }

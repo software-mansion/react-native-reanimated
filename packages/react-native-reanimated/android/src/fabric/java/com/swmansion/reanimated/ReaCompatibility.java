@@ -1,7 +1,6 @@
 package com.swmansion.reanimated;
 
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
@@ -21,7 +20,9 @@ class ReaCompatibility {
     }
   }
 
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    fabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
+  public void unregisterFabricEventListener(NodesManager nodesManager) {
+    if (fabricUIManager != null) {
+      fabricUIManager.getEventDispatcher().removeListener(nodesManager);
+    }
   }
 }

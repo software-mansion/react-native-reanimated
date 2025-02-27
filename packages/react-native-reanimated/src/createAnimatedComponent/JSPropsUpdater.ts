@@ -1,84 +1,25 @@
 'use strict';
-import { NativeEventEmitter, Platform } from 'react-native';
-import type { NativeModule } from 'react-native';
+import { runOnJS, runOnUIImmediately } from 'react-native-worklets';
+
 import { shouldBeUseWeb } from '../PlatformChecker';
-import type { StyleProps } from '../commonTypes';
-import { runOnJS, runOnUIImmediately } from '../threads';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
 } from './commonTypes';
-import NativeReanimatedModule from '../specs/NativeReanimatedModule';
-
-interface ListenerData {
-  viewTag: number;
-  props: StyleProps;
-}
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-class JSPropsUpdaterPaper implements IJSPropsUpdater {
-  private static _tagToComponentMapping = new Map();
-  private _reanimatedEventEmitter: NativeEventEmitter;
-
-  constructor() {
-    this._reanimatedEventEmitter = new NativeEventEmitter(
-      // NativeEventEmitter only uses this parameter on iOS and macOS.
-      Platform.OS === 'ios' || Platform.OS === 'macos'
-        ? (NativeReanimatedModule as unknown as NativeModule)
-        : undefined
-    );
-  }
-
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
-    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
-      const listener = (data: ListenerData) => {
-        const component = JSPropsUpdaterPaper._tagToComponentMapping.get(
-          data.viewTag
-        );
-        component?._updateFromNative(data.props);
-      };
-      this._reanimatedEventEmitter.addListener(
-        'onReanimatedPropsChange',
-        listener
-      );
-    }
-  }
-
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
-    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
-      this._reanimatedEventEmitter.removeAllListeners(
-        'onReanimatedPropsChange'
-      );
-    }
-  }
-}
-
-class JSPropsUpdaterFabric implements IJSPropsUpdater {
+class JSPropsUpdaterNative implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
   private static isInitialized = false;
 
   constructor() {
-    if (!JSPropsUpdaterFabric.isInitialized) {
+    if (!JSPropsUpdaterNative.isInitialized) {
       const updater = (viewTag: number, props: unknown) => {
         const component =
-          JSPropsUpdaterFabric._tagToComponentMapping.get(viewTag);
+          JSPropsUpdaterNative._tagToComponentMapping.get(viewTag);
         component?._updateFromNative(props);
       };
       runOnUIImmediately(() => {
@@ -87,7 +28,7 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
           runOnJS(updater)(viewTag, props);
         };
       })();
-      JSPropsUpdaterFabric.isInitialized = true;
+      JSPropsUpdaterNative.isInitialized = true;
     }
   }
 
@@ -97,11 +38,11 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    if (!JSPropsUpdaterFabric.isInitialized) {
+    if (!JSPropsUpdaterNative.isInitialized) {
       return;
     }
     const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
+    JSPropsUpdaterNative._tagToComponentMapping.set(viewTag, animatedComponent);
   }
 
   public removeOnJSPropsChangeListener(
@@ -110,11 +51,11 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    if (!JSPropsUpdaterFabric.isInitialized) {
+    if (!JSPropsUpdaterNative.isInitialized) {
       return;
     }
     const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
+    JSPropsUpdaterNative._tagToComponentMapping.delete(viewTag);
   }
 }
 
@@ -140,16 +81,13 @@ class JSPropsUpdaterWeb implements IJSPropsUpdater {
 
 type JSPropsUpdaterOptions =
   | typeof JSPropsUpdaterWeb
-  | typeof JSPropsUpdaterFabric
-  | typeof JSPropsUpdaterPaper;
+  | typeof JSPropsUpdaterNative;
 
 let JSPropsUpdater: JSPropsUpdaterOptions;
 if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
-} else if (global._IS_FABRIC) {
-  JSPropsUpdater = JSPropsUpdaterFabric;
 } else {
-  JSPropsUpdater = JSPropsUpdaterPaper;
+  JSPropsUpdater = JSPropsUpdaterNative;
 }
 
 export default JSPropsUpdater;

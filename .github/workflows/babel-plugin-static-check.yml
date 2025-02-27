@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/babel-plugin-static-check.yml'
-      - 'packages/react-native-reanimated/plugin/**'
+      - 'packages/react-native-worklets/plugin/**'
   merge_group:
     branches:
       - main
@@ -14,17 +14,21 @@ on:
       - main
     paths:
       - '.github/workflows/babel-plugin-static-check.yml'
-      - 'packages/react-native-reanimated/plugin/**'
+      - 'packages/react-native-worklets/plugin/**'
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  check:
+  babel-plugin-static-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:
-      group: plugin-${{ github.ref }}
+      group: babel-plugin-static-check-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      EXAMPLE_DIR: apps/fabric-example
+      WORKLETS_DIR: packages/react-native-worklets
+      PLUGIN_DIR: packages/react-native-worklets/plugin
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,8 +41,8 @@ jobs:
 
       - name: Install monorepo dependencies
         run: yarn install --immutable
-      - name: Build Reanimated
-        working-directory: packages/react-native-reanimated
+      - name: Build Worklets
+        working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn build
 
       - name: Diff
@@ -48,14 +52,16 @@ jobs:
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
       - name: Check types
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:plugin
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn type:check
       - name: Lint and format
-        working-directory: packages/react-native-reanimated
-        run: yarn lint:plugin
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn lint
       - name: Test
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn jest plugin
       - name: Check Example App bundling
-        working-directory: apps/paper-example
-        run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'
+        working-directory: ${{ env.EXAMPLE_DIR }}
+        run: |
+          yarn workspace react-native-reanimated build
+          yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'

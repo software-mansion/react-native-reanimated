@@ -1,0 +1,104 @@
+---
+sidebar_position: 3
+---
+
+# transitionDuration
+
+`transitionDuration` lets you specify the length of time the transition lasts. Defaults to `0`.
+
+import TransitionDurationBasic from '@site/src/examples/css-transitions/TransitionDurationBasic';
+import TransitionDurationBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDurationBasic';
+
+<InteractiveExample
+  src={TransitionDurationBasicSrc}
+  component={TransitionDurationBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        transitionProperty: 'fontSize',
+        // highlight-next-line
+        transitionDuration: 500,
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type TimeUnit = `${number}s` | `${number}ms` | number;
+
+type CSSTransitionDuration = TimeUnit | TimeUnit[];
+```
+
+</details>
+
+### Values
+
+#### `<time unit>`
+
+A value which is either:
+
+- A string which is a non-negative number followed by `s`. Represents a time in seconds.
+
+<Indent>
+
+```typescript
+transitionDuration: '3s';
+```
+
+</Indent>
+
+- A string which is a non-negative number followed by `ms`. Represents a time in milliseconds.
+
+<Indent>
+
+```typescript
+transitionDuration: '150ms';
+```
+
+</Indent>
+
+- A non-negative number which represents a time in milliseconds.
+
+<Indent>
+
+```typescript
+transitionDuration: 500;
+```
+
+</Indent>
+
+#### `<time unit[]>`
+
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](docs/next/css-transitions/transition-property#style-property-1).
+
+```typescript
+// highlight-next-line
+transitionDuration: ['3s', '150ms', 500];
+transitionProperty: ['width', 'transform', 'borderRadius'];
+```
+
+In the following example, it would take 3 seconds for the `width` property to transition, 100 milliseconds for the `transform`, and 500 milliseconds for the `borderRadius`.
+
+## Example
+
+import TransitionDuration from '@site/src/examples/css-transitions/TransitionDuration';
+import TransitionDurationSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionDuration';
+
+<InteractiveExample
+  src={TransitionDurationSrc}
+  component={TransitionDuration}
+/>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

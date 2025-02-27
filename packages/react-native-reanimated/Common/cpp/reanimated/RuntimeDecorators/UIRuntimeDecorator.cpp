@@ -8,7 +8,7 @@ using namespace worklets;
 void UIRuntimeDecorator::decorate(
     jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-    const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
+// nothing
 #else
     const ScrollToFunction scrollTo,
 #endif
@@ -22,12 +22,8 @@ void UIRuntimeDecorator::decorate(
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
     const EndLayoutAnimationFunction endLayoutAnimation,
     const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
-  uiRuntime.global().setProperty(uiRuntime, "_UI", true);
-
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(uiRuntime, "_updatePropsFabric", updateProps);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_removeFromPropsRegistry", removeFromPropsRegistry);
   jsi_utils::installJsiFunction(
       uiRuntime, "_dispatchCommandFabric", dispatchCommand);
   jsi_utils::installJsiFunction(uiRuntime, "_measureFabric", measure);

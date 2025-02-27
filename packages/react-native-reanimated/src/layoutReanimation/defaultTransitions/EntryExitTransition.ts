@@ -1,7 +1,7 @@
 'use strict';
-import { BaseAnimationBuilder } from '../animationBuilder';
+import { logger } from 'react-native-worklets';
+
 import { withSequence, withTiming } from '../../animation';
-import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -11,7 +11,8 @@ import type {
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
-import { logger } from '../../logger';
+import { BaseAnimationBuilder } from '../animationBuilder';
+import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
