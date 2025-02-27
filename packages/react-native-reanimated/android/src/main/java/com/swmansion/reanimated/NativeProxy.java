@@ -9,7 +9,6 @@ import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.Objects;
