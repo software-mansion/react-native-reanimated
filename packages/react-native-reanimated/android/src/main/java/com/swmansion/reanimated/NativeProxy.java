@@ -62,6 +62,28 @@ public class NativeProxy extends NativeProxyCommon {
       ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
 
+    mWorkletsModule =
+        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+    mContext = new WeakReference<>(context);
+    reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
+    keyboardAnimationManager = new KeyboardAnimationManager(mContext);
+    addDevMenuOption();
+
+    GestureHandlerStateManager tempHandlerStateManager;
+    try {
+      Class<NativeModule> gestureHandlerModuleClass =
+          (Class<NativeModule>)
+              Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
+      tempHandlerStateManager =
+          (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
+    } catch (ClassCastException | ClassNotFoundException e) {
+      tempHandlerStateManager = null;
+    }
+    gestureHandlerStateManager = tempHandlerStateManager;
+    mNodesManager =
+        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
+            .getNodesManager();
+
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
@@ -99,30 +121,6 @@ public class NativeProxy extends NativeProxyCommon {
 
   public void invalidate() {
     invalidateCpp();
-  }
-
-  protected NativeProxyCommon(ReactApplicationContext context) {
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
-    mContext = new WeakReference<>(context);
-    reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
-    keyboardAnimationManager = new KeyboardAnimationManager(mContext);
-    addDevMenuOption();
-
-    GestureHandlerStateManager tempHandlerStateManager;
-    try {
-      Class<NativeModule> gestureHandlerModuleClass =
-          (Class<NativeModule>)
-              Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
-      tempHandlerStateManager =
-          (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
-    } catch (ClassCastException | ClassNotFoundException e) {
-      tempHandlerStateManager = null;
-    }
-    gestureHandlerStateManager = tempHandlerStateManager;
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
   }
 
   protected native void installJSIBindings();
