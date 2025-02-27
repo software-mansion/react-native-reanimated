@@ -105,7 +105,6 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  // TODO: refactor to ref
   _setComponentRef = setAndForwardRef<Component | HTMLElement>({
     getForwardedRef: () =>
       this.props.forwardedRef as RefObject<
