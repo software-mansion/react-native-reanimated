@@ -1,32 +1,31 @@
 package com.swmansion.reanimated;
 
+import android.content.ContentResolver;
+import android.os.SystemClock;
+import android.provider.Settings;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback;
-import com.swmansion.reanimated.nativeProxy.EventHandler;
-import com.swmansion.reanimated.nativeProxy.SensorSetter;
-import com.swmansion.worklets.JSCallInvokerResolver;
-import com.swmansion.worklets.WorkletsModule;
-import java.util.Objects;
-
-import android.content.ContentResolver;
-import android.os.SystemClock;
-import android.provider.Settings;
-import com.facebook.react.bridge.NativeModule;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
+import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback;
+import com.swmansion.reanimated.nativeProxy.EventHandler;
+import com.swmansion.reanimated.nativeProxy.SensorSetter;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
+import com.swmansion.worklets.JSCallInvokerResolver;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 
 /**
  * @noinspection JavaJniMissingFunction
