@@ -1,6 +1,7 @@
 #import <React/RCTBridge+Private.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
@@ -18,6 +19,7 @@ using worklets::WorkletsModuleProxy;
 @end
 
 @implementation WorkletsModule {
+  AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
@@ -45,8 +47,19 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto jsCallInvoker = bridge.jsCallInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  animationFrameQueue_ = [AnimationFrameQueue new];
+  auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
+      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
+        [animationFrameQueue requestAnimationFrame:callback];
+      });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
+      rnRuntime,
+      valueUnpackerCodeStr,
+      jsQueue,
+      jsCallInvoker,
+      jsScheduler,
+      uiScheduler,
+      std::move(forwardedRequestAnimationFrame));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 
   return @YES;
@@ -54,6 +67,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
 - (void)invalidate
 {
+  [animationFrameQueue_ invalidate];
+
   // We have to destroy extra runtimes when invalidate is called. If we clean
   // it up later instead there's a chance the runtime will retain references
   // to invalidated memory and will crash on destruction.
