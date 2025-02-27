@@ -167,10 +167,6 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       getAnimationTimestamp,
-      // This is a temporary solution to avoid making changes in the common C++ code
-      // and to prevent breaking the compilation on Android. It will be removed in another PR.
-      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
-      [](int _v1, bool _v2) {},
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -209,10 +205,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       getAnimationTimestamp,
-      // This is a temporary solution to avoid making changes in the common C++ code
-      // and to prevent breaking the compilation on Android. It will be removed in another PR.
-      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
-      [](int _v1, bool _v2) {},
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,

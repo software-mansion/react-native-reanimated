@@ -143,7 +143,7 @@ void ReanimatedModuleProxy::init(
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
       [weakThis = weak_from_this()](
-          jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+          jsi::Runtime &rt, int tag, const jsi::Object &newStyle) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -215,8 +215,6 @@ void ReanimatedModuleProxy::init(
       progressLayoutAnimation,
       endLayoutAnimation,
 #else
-      platformDepMethodsHolder.progressLayoutAnimation,
-      platformDepMethodsHolder.endLayoutAnimation,
 #endif
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
@@ -452,16 +450,6 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
-    }
-    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
-        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
-      continue;
-    }
-    auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
-    if (sharedTransitionTag.isUndefined()) {
-      batch[i].config = nullptr;
-    } else {
-      batch[i].sharedTransitionTag = sharedTransitionTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);

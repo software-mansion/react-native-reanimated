@@ -57,7 +57,7 @@ using RequestRenderFunction =
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
-    std::function<void(jsi::Runtime &, int, jsi::Object, bool)>;
+    std::function<void(jsi::Runtime &, int, jsi::Object)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =
@@ -86,8 +86,6 @@ struct PlatformDepMethodsHolder {
   ObtainPropFunction obtainPropFunction;
 #endif
   GetAnimationTimestampFunction getAnimationTimestamp;
-  ProgressLayoutAnimationFunction progressLayoutAnimation;
-  EndLayoutAnimationFunction endLayoutAnimation;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;

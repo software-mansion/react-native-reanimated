@@ -15,14 +15,12 @@ const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<Record<string, unknown>>,
-  animationType: LayoutAnimationType
+  sharedValue: SharedValue<Record<string, unknown>>
 ): void {
   'worklet';
-  const isSharedTransition =
-    animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    global._notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
+    // @ts-ignore: remove after https://github.com/software-mansion/react-native-reanimated/pull/7116
+    global._notifyAboutProgress(tag, sharedValue.value);
   });
 }
 
@@ -96,7 +94,7 @@ function createLayoutAnimationManager(): {
           style.callback(finished === undefined ? false : finished);
       };
 
-      startObservingProgress(tag, value, type);
+      startObservingProgress(tag, value);
       value.value = animation;
     },
     stop(tag: number) {
