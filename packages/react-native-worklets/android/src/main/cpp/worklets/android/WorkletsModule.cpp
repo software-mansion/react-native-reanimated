@@ -5,15 +5,12 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-#include <functional>
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/fabric/Binding.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
+#include <functional>
 #include <utility>
 
 namespace worklets {
