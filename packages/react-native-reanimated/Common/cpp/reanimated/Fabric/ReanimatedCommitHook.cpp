@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
@@ -99,5 +97,3 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

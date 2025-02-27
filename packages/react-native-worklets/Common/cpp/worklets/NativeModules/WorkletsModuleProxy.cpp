@@ -2,10 +2,8 @@
 #include <string>
 #include <utility>
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>

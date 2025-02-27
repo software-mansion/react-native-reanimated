@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -26,5 +25,3 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     std::vector<Tag> &tagsToRemove);
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

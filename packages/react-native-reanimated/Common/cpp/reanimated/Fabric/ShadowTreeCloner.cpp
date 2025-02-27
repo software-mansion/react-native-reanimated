@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -106,5 +104,3 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
