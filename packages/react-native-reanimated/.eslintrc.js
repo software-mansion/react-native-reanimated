@@ -10,5 +10,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['lib, plugin'],
+  ignorePatterns: ['lib', 'plugin'],
 };

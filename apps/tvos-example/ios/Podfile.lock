@@ -1706,7 +1706,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNWorklets (from `../node_modules/react-native-worklets`)
+  - RNWorklets (from `../../../node_modules/react-native-worklets`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1848,7 +1848,7 @@ EXTERNAL SOURCES:
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNWorklets:
-    :path: "../node_modules/react-native-worklets"
+    :path: "../../../node_modules/react-native-worklets"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -1918,7 +1918,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: be4ae5b0ab2fcc7a26f9d1f3112b361649564fc7
   ReactCodegen: d92b8ace8f895b98583e4c8e435598f3b36d6df4
   ReactCommon: 6f652903c0e2db5459f031d2d2a65f3943cfb6c3
-  RNReanimated: cb1c8ce77f4c9f406fed443433a5fe338d1c9c05
+  RNReanimated: 8d57e65c552486ceb6e361a5dc292aeec686dc3b
+  RNWorklets: c478a6ad9c2656cd16841a34adefe8d6e2fe6ec2
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: ef409d2acea4e78ceb422d45fbed7f184c734a44
 
