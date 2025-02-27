@@ -1,6 +1,6 @@
 'use strict';
 
-import { createCustomError, registerCustomError } from './WorkletsResolver';
+import { createCustomError, registerCustomError } from 'react-native-worklets';
 
 export const ReanimatedError = createCustomError('Reanimated');
 

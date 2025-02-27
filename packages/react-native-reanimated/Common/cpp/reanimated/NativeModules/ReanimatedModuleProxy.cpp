@@ -61,6 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -68,8 +69,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-      synchronouslyUpdateUIPropsFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -117,17 +116,6 @@ void ReanimatedModuleProxy::init(
     }
 
     strongThis->animatedPropsRegistry_->update(rt, operations);
-  };
-
-  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
-                                     jsi::Runtime &rt,
-                                     const jsi::Value &viewTags) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->animatedPropsRegistry_->remove(rt, viewTags);
   };
 
   auto measure = [weakThis = weak_from_this()](
@@ -210,7 +198,6 @@ void ReanimatedModuleProxy::init(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      removeFromPropsRegistry,
       obtainProp,
       updateProps,
       measure,
@@ -436,7 +423,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
   auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
     auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    nativePropNames_.insert(name);
     animatablePropNames_.insert(name);
   }
 #else
@@ -559,6 +545,22 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
+void ReanimatedModuleProxy::registerCSSKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &animationName,
+    const jsi::Value &keyframesConfig) {
+  cssAnimationKeyframesRegistry_->add(
+      animationName.asString(rt).utf8(rt),
+      parseCSSAnimationKeyframesConfig(
+          rt, keyframesConfig, viewStylesRepository_));
+}
+
+void ReanimatedModuleProxy::unregisterCSSKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &animationName) {
+  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+}
+
 void ReanimatedModuleProxy::registerCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -573,12 +575,21 @@ void ReanimatedModuleProxy::registerCSSAnimations(
   const auto timestamp = getCssTimestamp();
 
   for (size_t i = 0; i < animationsCount; ++i) {
-    auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+    auto animationConfig =
+        animationConfigsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto animationName =
+        animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
+    const auto settings = parseCSSAnimationSettings(
+        rt, animationConfig.getProperty(rt, "settings"));
+    const auto &keyframesConfig =
+        cssAnimationKeyframesRegistry_->get(animationName);
+
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        parseCSSAnimationConfig(rt, animationConfig),
+        keyframesConfig,
+        settings,
         viewStylesRepository_,
         timestamp));
   }
@@ -644,18 +655,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
   cssTransitionsRegistry_->remove(viewTag.asNumber());
-}
-
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
-  for (const auto &[propName, propValue] : props.items()) {
-    bool isLayoutProp =
-        nativePropNames_.find(propName.asString()) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
@@ -841,34 +840,6 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  bool hasLayoutUpdates = false;
-#ifdef ANDROID
-  bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
-#else
-  bool hasPropsToRevert = false;
-#endif
-
-  if (!hasPropsToRevert) {
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      if (isThereAnyLayoutProp(props)) {
-        hasLayoutUpdates = true;
-        break;
-      }
-    }
-  }
-
-  if (!hasLayoutUpdates && !hasPropsToRevert) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    ReanimatedSystraceSection s(
-        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(tag, props);
-    }
-    return;
-  }
-
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
@@ -923,6 +894,7 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
     }
   }
+  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -933,8 +905,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode = cloneShadowTreeWithNewProps(
+                oldRootShadowNode, propsMap, tagsToRemove);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -961,6 +933,11 @@ void ReanimatedModuleProxy::commitUpdates(
     // (we don't know if the view is updated from outside of Reanimated
     // so we have to clear the entire cache)
     viewStylesRepository_->clearNodesCache();
+  }
+
+  if (!tagsToRemove.empty()) {
+    auto lock = updatesRegistryManager_->createLock();
+    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 
@@ -1071,6 +1048,37 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler());
   }
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+std::string format(bool b) {
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return std::string("");
+    }
+
+    std::string result = "";
+
+    result += "AnimatedPropsRegistry: " +
+        format(strongThis->animatedPropsRegistry_->isEmpty());
+    result += "\nCSSAnimationsRegistry: " +
+        format(strongThis->cssAnimationsRegistry_->isEmpty());
+    result += "\nCSSTransitionsRegistry: " +
+        format(strongThis->cssTransitionsRegistry_->isEmpty());
+    result += "\nStaticPropsRegistry: " +
+        format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
+
+    return result;
+  };
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 #endif // RCT_NEW_ARCH_ENABLED
 

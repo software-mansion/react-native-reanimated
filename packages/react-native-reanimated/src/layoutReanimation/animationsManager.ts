@@ -1,4 +1,6 @@
 'use strict';
+import { runOnUIImmediately } from 'react-native-worklets';
+
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type {
   LayoutAnimation,
@@ -8,7 +10,6 @@ import type {
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { makeMutableUI } from '../mutables';
-import { runOnUIImmediately } from '../WorkletsResolver';
 
 const TAG_OFFSET = 1e9;
 

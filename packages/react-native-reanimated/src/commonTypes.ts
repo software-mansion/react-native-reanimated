@@ -6,9 +6,10 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
+import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
-import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
+import type { EasingFunctionFactory } from './Easing';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -33,7 +34,7 @@ interface WindowDimensions {
 }
 
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 
 type FirstFrame =
@@ -119,7 +120,7 @@ export interface ILayoutAnimationBuilder {
 
 export interface BaseLayoutAnimationConfig {
   duration?: number;
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
   type?: AnimationFunction;
   damping?: number;
   dampingRatio?: number;
@@ -205,8 +206,6 @@ export interface StyleProps extends ViewStyle, TextStyle {
   originY?: number;
   [key: string]: any;
 }
-
-export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
 /**
  * A value that can be used both on the [JavaScript

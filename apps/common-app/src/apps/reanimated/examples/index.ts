@@ -32,6 +32,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FrameCallbackExample from './FrameCallbackExample';
+import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
@@ -157,6 +158,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
   },
+  ReactFreeze: {
+    icon: '❄️',
+    title: 'React freeze',
+    screen: FreezeExample,
+  },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
@@ -247,7 +253,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
-    missingOnFabric: true,
   },
   SetNativePropsExample: {
     icon: '🪄',
@@ -263,7 +268,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
-    missingOnFabric: true,
   },
 
   // Basic examples
@@ -272,7 +276,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
-    missingOnFabric: true,
   },
   AmountExample: {
     icon: '📈',
@@ -560,7 +563,6 @@ export const EXAMPLES: Record<string, Example> = {
   AnimatedTabBarExample: {
     title: 'Tab bar',
     screen: AnimatedTabBarExample,
-    missingOnFabric: true,
   },
   ChatHeadsExample: {
     title: 'Chat heads',

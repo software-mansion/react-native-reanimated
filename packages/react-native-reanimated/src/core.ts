@@ -1,4 +1,11 @@
 'use strict';
+import {
+  controlEdgeToEdgeValues,
+  isEdgeToEdge,
+} from 'react-native-is-edge-to-edge';
+import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -9,11 +16,9 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import type { WorkletFunction } from './WorkletsResolver';
-import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
@@ -25,8 +30,9 @@ export {
   runOnJS,
   runOnRuntime,
   runOnUI,
-} from './WorkletsResolver';
+} from 'react-native-worklets';
 
+const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
@@ -47,7 +53,7 @@ export function getViewProp<T>(
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
-  if (isFabric() && !component) {
+  if (!component) {
     throw new ReanimatedError(
       'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
@@ -116,12 +122,21 @@ export function subscribeForKeyboardEvents(
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
   }
+
+  if (__DEV__) {
+    controlEdgeToEdgeValues({
+      isStatusBarTranslucentAndroid: options.isStatusBarTranslucentAndroid,
+      isNavigationBarTranslucentAndroid:
+        options.isNavigationBarTranslucentAndroid,
+    });
+  }
+
   return ReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(
       handleAndFlushAnimationFrame as WorkletFunction
     ),
-    options.isStatusBarTranslucentAndroid ?? false,
-    options.isNavigationBarTranslucentAndroid ?? false
+    EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
+    EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
 }
 

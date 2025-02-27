@@ -1,5 +1,6 @@
 'use strict';
 import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { processColorsInProps } from '../Colors';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
@@ -8,13 +9,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import {
-  isChromeDebugger,
-  isFabric,
-  isJest,
-  shouldBeUseWeb,
-} from '../PlatformChecker';
-import { logger } from '../WorkletsResolver';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -36,7 +31,7 @@ type SetNativeProps = <T extends Component>(
  */
 export let setNativeProps: SetNativeProps;
 
-function setNativePropsFabric(
+function setNativePropsNative(
   animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
@@ -48,21 +43,6 @@ function setNativePropsFabric(
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
   global._updatePropsFabric!([{ shadowNodeWrapper, updates }]);
-}
-
-function setNativePropsPaper(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
-  updates: StyleProps
-) {
-  'worklet';
-  if (!_WORKLET) {
-    logger.warn('setNativeProps() can only be used on the UI runtime.');
-    return;
-  }
-  const tag = animatedRef() as number;
-  const name = (animatedRef as AnimatedRefOnUI).viewName.value;
-  processColorsInProps(updates);
-  global._updatePropsPaper!([{ tag, name, updates }]);
 }
 
 function setNativePropsJest() {
@@ -81,11 +61,7 @@ if (!shouldBeUseWeb()) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
-  if (isFabric()) {
-    setNativeProps = setNativePropsFabric as unknown as SetNativeProps;
-  } else {
-    setNativeProps = setNativePropsPaper as unknown as SetNativeProps;
-  }
+  setNativeProps = setNativePropsNative as unknown as SetNativeProps;
 } else if (isJest()) {
   setNativeProps = setNativePropsJest;
 } else if (isChromeDebugger()) {

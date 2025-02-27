@@ -1,5 +1,12 @@
 'use strict';
 import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { logger, WorkletsModule } from 'react-native-worklets';
+
+import type {
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -7,8 +14,8 @@ import type {
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
@@ -18,12 +25,6 @@ import {
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import type {
-  IWorkletsModule,
-  ShareableRef,
-  WorkletFunction,
-} from '../../WorkletsResolver';
-import { logger, WorkletsModule } from '../../WorkletsResolver';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -282,9 +283,27 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  registerCSSKeyframes(
+    _animationName: string,
+    _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSKeyframes` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSKeyframes(_animationName: string): void {
+    throw new ReanimatedError(
+      '`unregisterCSSKeyframes` is not available in JSReanimated.'
+    );
+  }
+
   registerCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    _animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimations` is not available in JSReanimated.'

@@ -21,7 +21,6 @@ CGFloat getUIAnimationDragCoefficient(void)
 CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimestamp)
 {
   static const auto MILLISECONDS_IN_SECOND = 1000;
-  currentTimestamp *= MILLISECONDS_IN_SECOND;
 #if TARGET_IPHONE_SIMULATOR
   static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
   static CGFloat previousDragCoef = getUIAnimationDragCoefficient();
@@ -34,10 +33,10 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
 
   const bool areSlowAnimationsEnabled = dragCoef != 1.f;
   if (areSlowAnimationsEnabled) {
-    return (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
-  } else {
-    return currentTimestamp;
+    currentTimestamp = (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
   }
+  currentTimestamp *= MILLISECONDS_IN_SECOND;
+  return currentTimestamp;
 #else // TARGET_IPHONE_SIMULATOR
   return currentTimestamp;
 #endif // TARGET_IPHONE_SIMULATOR

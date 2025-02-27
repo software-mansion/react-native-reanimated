@@ -58,8 +58,7 @@ react-native-reanimated-tests.js
 .settings/
 
 # plugin
-plugin/build/plugin.js.map
-plugin/types
+plugin/index.js.map
 
 # yarn
 **/.yarn/*
@@ -71,10 +70,3 @@ plugin/types
 
 # library bundle
 *.tgz
-
-# Worklets code (duplicated)
-apple/worklets
-Common/cpp/worklets
-android/src/worklets
-android/src/main/cpp/worklets
-src/worklets

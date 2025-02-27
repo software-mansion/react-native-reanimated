@@ -1,5 +1,6 @@
 'use strict';
 import { useEffect, useMemo, useRef } from 'react';
+import { callMicrotasks } from 'react-native-worklets';
 
 import type {
   AnimatedSensor,
@@ -13,7 +14,6 @@ import {
   SensorType,
 } from '../commonTypes';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
-import { callMicrotasks } from '../WorkletsResolver';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237

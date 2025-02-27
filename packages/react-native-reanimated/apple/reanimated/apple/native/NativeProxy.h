@@ -2,7 +2,6 @@
 
 #import <React/RCTEventDispatcher.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
@@ -25,15 +24,6 @@ void commonInit(
     REAModule *reaModule,
     jsi::Runtime &uiRuntime,
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-// nothing
-#else // RCT_NEW_ARCH_ENABLED
-void setupLayoutAnimationCallbacks(
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
-    std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy,
-    REAAnimationsManager *animationsManager);
-#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated
 

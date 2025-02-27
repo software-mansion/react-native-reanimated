@@ -24,10 +24,10 @@ class WorkletsModuleProxy
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::weak_ptr<std::function<void(std::function<void(const double)>)>>
-          &&requestAnimationFrame);
+      std::function<void(std::function<void(const double)>)>
+          &&forwardedRequestAnimationFrame);
 
-  ~WorkletsModuleProxy();
+  ~WorkletsModuleProxy() override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,

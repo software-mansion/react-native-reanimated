@@ -21,8 +21,8 @@ class AnimationFrameBatchinator
 
   AnimationFrameBatchinator(
       facebook::jsi::Runtime &uiRuntime,
-      std::weak_ptr<std::function<void(std::function<void(const double)>)>>
-          weakRequestAnimationFrame);
+      std::function<void(std::function<void(const double)>)>
+          &&forwardedRequestAnimationFrame);
 
  private:
   void flush();
@@ -32,8 +32,7 @@ class AnimationFrameBatchinator
   std::mutex callbacksMutex_{};
   std::atomic_bool flushRequested_{};
   facebook::jsi::Runtime *uiRuntime_;
-  std::weak_ptr<std::function<void(std::function<void(const double)>)>>
-      weakRequestAnimationFrame_;
+  std::function<void(std::function<void(const double)>)> requestAnimationFrame_;
 };
 
 } // namespace worklets

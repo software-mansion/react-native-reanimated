@@ -39,42 +39,33 @@ void AnimationFrameBatchinator::flush() {
     return;
   }
 
-  const auto requestAnimationFrame = weakRequestAnimationFrame_.lock();
-  if (!requestAnimationFrame) {
-    callbacks_.clear();
-    flushRequested_ = false;
-  }
+  requestAnimationFrame_([weakThis = weak_from_this()](double timestampMs) {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
 
-  requestAnimationFrame->operator()(
-      [weakThis = weak_from_this()](double timestampMs) {
-        const auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
+    auto callbacks = strongThis->pullCallbacks();
+    strongThis->flushRequested_ = false;
 
-        auto callbacks = strongThis->pullCallbacks();
-        strongThis->flushRequested_ = false;
-
-        auto &uiRuntime = *(strongThis->uiRuntime_);
-        for (auto &callback : callbacks) {
-          runOnRuntimeGuarded(uiRuntime, *callback, timestampMs);
-        }
-      });
+    auto &uiRuntime = *(strongThis->uiRuntime_);
+    for (const auto &callback : callbacks) {
+      runOnRuntimeGuarded(uiRuntime, *callback, timestampMs);
+    }
+  });
 }
 
 std::vector<std::shared_ptr<const facebook::jsi::Value>>
 AnimationFrameBatchinator::pullCallbacks() {
   std::lock_guard<std::mutex> lock(callbacksMutex_);
-  auto callbacks = std::move(callbacks_);
-  callbacks_.clear();
-  return callbacks;
+  return std::move(callbacks_);
 }
 
 AnimationFrameBatchinator::AnimationFrameBatchinator(
     facebook::jsi::Runtime &uiRuntime,
-    std::weak_ptr<std::function<void(std::function<void(const double)>)>>
-        weakRequestAnimationFrame)
+    std::function<void(std::function<void(const double)>)>
+        &&forwardedRequestAnimationFrame)
     : uiRuntime_(&uiRuntime),
-      weakRequestAnimationFrame_(std::move(weakRequestAnimationFrame)) {}
+      requestAnimationFrame_(std::move(forwardedRequestAnimationFrame)) {}
 
 } // namespace worklets

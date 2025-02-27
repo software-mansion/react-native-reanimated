@@ -13,6 +13,7 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
@@ -130,6 +131,13 @@ class ReanimatedModuleProxy
       const jsi::Value &viewStyle) override;
   void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
+  void registerCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &keyframesConfig) override;
+  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
+      override;
+
   void registerCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
@@ -213,12 +221,12 @@ class ReanimatedModuleProxy
   }
 
   void requestFlushRegistry();
+  std::function<std::string()> createRegistriesLeakCheck();
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(const folly::dynamic &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
@@ -248,13 +256,11 @@ class ReanimatedModuleProxy
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
-
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;

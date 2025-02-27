@@ -253,15 +253,15 @@ describe(normalizeCSSTransitionProperties, () => {
     });
   });
 
-  describe('when there is no transition property', () => {
+  describe('when there is no transitionProperty', () => {
     it('uses "all" as a default transition property', () => {
-      const config: CSSTransitionProperties = {};
+      const config: CSSTransitionProperties = { transitionDuration: '2s' };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: 'all',
         settings: {
           all: {
-            duration: 0,
+            duration: 2000,
             timingFunction: 'ease',
             delay: 0,
             allowDiscrete: false,
@@ -296,27 +296,6 @@ describe(normalizeCSSTransitionProperties, () => {
           transform: {
             duration: 1500,
             timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
-            delay: 0,
-            allowDiscrete: false,
-          },
-        },
-      });
-    });
-
-    it('ignores all transition settings before transition shorthand', () => {
-      const config: CSSTransitionProperties = {
-        transitionProperty: 'width',
-        transitionDuration: '5s',
-        transitionTimingFunction: 'ease-out',
-        transition: 'opacity 2s ease-in',
-      };
-
-      expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
-        settings: {
-          opacity: {
-            duration: 2000,
-            timingFunction: 'ease-in',
             delay: 0,
             allowDiscrete: false,
           },

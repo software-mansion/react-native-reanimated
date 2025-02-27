@@ -21,5 +21,6 @@ export type {
   CSSTransitionProperties,
   CSSTransitionProperty,
   CSSTransitionSettings,
+  CSSTransitionShorthand,
   CSSTransitionTimingFunction,
 } from './types';

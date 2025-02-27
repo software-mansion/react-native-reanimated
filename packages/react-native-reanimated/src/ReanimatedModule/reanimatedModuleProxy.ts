@@ -1,5 +1,7 @@
 'use strict';
 
+import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
@@ -8,11 +10,10 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
-import type { ShareableRef, WorkletFunction } from '../WorkletsResolver';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -61,9 +62,19 @@ export interface ReanimatedModuleProxy {
 
   removeViewStyle(viewTag: number): void;
 
+  registerCSSKeyframes(
+    animationName: string,
+    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ): void;
+
+  unregisterCSSKeyframes(animationName: string): void;
+
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ): void;
 
   updateCSSAnimations(

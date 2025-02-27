@@ -5,15 +5,12 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-#include <functional>
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/fabric/Binding.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
+#include <functional>
 #include <utility>
 
 namespace worklets {
@@ -31,12 +28,6 @@ WorkletsModule::WorkletsModule(
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      forwardedRequestAnimationFrame_(
-          std::make_shared<
-              std::function<void(std::function<void(const double)>)>>(
-              [this](std::function<void(const double)> &&callback) -> void {
-                requestAnimationFrame(std::move(callback));
-              })),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
           valueUnpackerCode,
@@ -44,7 +35,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           jsScheduler,
           uiScheduler,
-          forwardedRequestAnimationFrame_)) {
+          getForwardedRequestAnimationFrame())) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
@@ -72,14 +63,18 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
-void WorkletsModule::requestAnimationFrame(
-    std::function<void(const double)> callback) {
-  static const auto jRequestAnimationFrame =
-      getJniMethod<void(AnimationFrameCallback::javaobject)>(
-          "requestAnimationFrame");
-  jRequestAnimationFrame(
-      javaPart_.get(),
-      AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+std::function<void(std::function<void(const double)>)>
+WorkletsModule::getForwardedRequestAnimationFrame() {
+  return [javaPart =
+              javaPart_](std::function<void(const double)> &&callback) -> void {
+    static const auto jRequestAnimationFrame =
+        javaPart->getClass()
+            ->getMethod<void(AnimationFrameCallback::javaobject)>(
+                "requestAnimationFrame");
+    jRequestAnimationFrame(
+        javaPart.get(),
+        AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+  };
 }
 
 void WorkletsModule::invalidateCpp() {
