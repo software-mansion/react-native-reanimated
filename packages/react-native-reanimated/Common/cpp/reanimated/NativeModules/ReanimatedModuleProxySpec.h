@@ -114,7 +114,6 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void unregisterCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &viewTag) = 0;
-
 };
 
 } // namespace reanimated
