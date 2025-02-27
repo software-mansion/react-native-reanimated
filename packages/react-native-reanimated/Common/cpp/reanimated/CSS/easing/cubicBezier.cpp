@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/cubicBezier.h>
 
 namespace reanimated {
@@ -75,5 +74,3 @@ EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

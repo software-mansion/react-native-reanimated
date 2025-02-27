@@ -16,7 +16,6 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.systrace.Systrace;
-import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
@@ -36,14 +35,11 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private final WorkletsModule mWorkletsModule;
-  private final AnimationsManager mAnimationManager;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
   private final GuardedFrameCallback mChoreographerCallback;
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
-  private final ReactContext mContext;
-  private final UIManager mUIManager;
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -57,15 +53,7 @@ public class NodesManager implements EventDispatcherListener {
 
   private NativeProxy mNativeProxy;
 
-  public AnimationsManager getAnimationsManager() {
-    return mAnimationManager;
-  }
-
   public void invalidate() {
-    if (mAnimationManager != null) {
-      mAnimationManager.invalidate();
-    }
-
     if (mNativeProxy != null) {
       mNativeProxy.invalidate();
       mNativeProxy = null;
@@ -83,15 +71,13 @@ public class NodesManager implements EventDispatcherListener {
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
     mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
-    mAnimationManager.setAndroidUIScheduler(mWorkletsModule.getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
   }
 
   public NodesManager(ReactContext context, WorkletsModule workletsModule) {
-    mContext = context;
     mWorkletsModule = workletsModule;
-    mUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+    UIManager mUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
     assert mUIManager != null;
     mCustomEventNamesResolver = mUIManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
@@ -104,8 +90,6 @@ public class NodesManager implements EventDispatcherListener {
             onAnimationFrame(frameTimeNanos);
           }
         };
-
-    mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
 
   public void onHostPause() {

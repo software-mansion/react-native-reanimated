@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 
 #include <utility>
@@ -11,7 +10,6 @@ CSSAnimation::CSSAnimation(
     const unsigned index,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),
@@ -136,5 +134,3 @@ void CSSAnimation::updateSettings(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

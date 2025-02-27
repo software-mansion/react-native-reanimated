@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 namespace reanimated {
@@ -25,5 +24,3 @@ void CSSKeyframesRegistry::remove(const std::string &animationName) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

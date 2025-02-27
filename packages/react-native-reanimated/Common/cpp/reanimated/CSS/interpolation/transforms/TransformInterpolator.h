@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -85,5 +84,3 @@ using TransformInterpolators = TransformInterpolator::Interpolators;
 using TransformInterpolatorUpdateContext = TransformInterpolator::UpdateContext;
 
 } // namespace reanimated
-
-#endif

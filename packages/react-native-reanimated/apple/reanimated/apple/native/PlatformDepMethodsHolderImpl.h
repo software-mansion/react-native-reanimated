@@ -1,6 +1,5 @@
 #if __cplusplus
 
-#import <REAAnimationsManager.h>
 #import <REAKeyboardEventObserver.h>
 #import <REAModule.h>
 #import <REANodesManager.h>
@@ -24,9 +23,6 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
 SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();
-ProgressLayoutAnimationFunction makeProgressLayoutAnimation(
-    REAModule *reaModule);
-EndLayoutAnimationFunction makeEndLayoutAnimation(REAModule *reaModule);
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(
     REANodesManager *nodesManager);
 RegisterSensorFunction makeRegisterSensorFunction(

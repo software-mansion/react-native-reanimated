@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 #include <reanimated/CSS/util/interpolators.h>
@@ -40,5 +39,3 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

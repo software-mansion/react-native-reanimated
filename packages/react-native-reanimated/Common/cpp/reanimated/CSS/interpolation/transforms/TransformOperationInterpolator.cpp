@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 
 namespace reanimated {
@@ -64,5 +62,3 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
 }
 
 } // namespace reanimated
-
-#endif

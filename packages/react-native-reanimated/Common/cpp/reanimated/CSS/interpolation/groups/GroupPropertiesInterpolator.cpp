@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 
 namespace reanimated {
@@ -48,5 +47,3 @@ folly::dynamic GroupPropertiesInterpolator::interpolate(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

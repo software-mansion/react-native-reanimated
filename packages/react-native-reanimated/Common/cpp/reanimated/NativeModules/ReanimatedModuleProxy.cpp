@@ -107,17 +107,6 @@ void ReanimatedModuleProxy::init(
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
-  auto requestAnimationFrame = [weakThis = weak_from_this()](
-                                   jsi::Runtime &rt,
-                                   const jsi::Value &callback) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->requestAnimationFrame(rt, callback);
-  };
-
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [weakThis = weak_from_this()](
                          jsi::Runtime &rt, const jsi::Value &operations) {
@@ -220,7 +209,6 @@ void ReanimatedModuleProxy::init(
       platformDepMethodsHolder.measureFunction,
       platformDepMethodsHolder.dispatchCommandFunction,
 #endif
-      requestAnimationFrame,
       platformDepMethodsHolder.getAnimationTimestamp,
       platformDepMethodsHolder.setGestureStateFunction,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -495,14 +483,6 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
 }
 
-void ReanimatedModuleProxy::requestAnimationFrame(
-    jsi::Runtime &rt,
-    const jsi::Value &callback) {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::requestAnimationFrame");
-  frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
-  maybeRequestRender();
-}
-
 void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
@@ -605,13 +585,7 @@ void ReanimatedModuleProxy::registerCSSAnimations(
         cssAnimationKeyframesRegistry_->get(animationName);
 
     animations.emplace_back(std::make_shared<CSSAnimation>(
-        rt,
-        shadowNode,
-        i,
-        keyframesConfig,
-        settings,
-        viewStylesRepository_,
-        timestamp));
+        rt, shadowNode, i, keyframesConfig, settings, timestamp));
   }
 
   cssAnimationsRegistry_->set(shadowNode, std::move(animations), timestamp);

@@ -16,7 +16,6 @@ void UIRuntimeDecorator::decorate(
     const UpdatePropsFunction updateProps,
     const MeasureFunction measure,
     const DispatchCommandFunction dispatchCommand,
-    const RequestAnimationFrameFunction requestAnimationFrame,
     const GetAnimationTimestampFunction getAnimationTimestamp,
     const SetGestureStateFunction setGestureState,
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
@@ -47,8 +46,6 @@ void UIRuntimeDecorator::decorate(
       uiRuntime, "_obtainPropPaper", obtainPropFunction);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  jsi_utils::installJsiFunction(
-      uiRuntime, "requestAnimationFrame", requestAnimationFrame);
   jsi_utils::installJsiFunction(
       uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
 

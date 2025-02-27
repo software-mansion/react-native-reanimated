@@ -1,8 +1,5 @@
-#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
-#import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -13,12 +10,7 @@
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
-
-#ifndef NDEBUG
-#import <reanimated/apple/LayoutReanimation/REAScreensHelper.h>
-#endif
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTScheduler.h>

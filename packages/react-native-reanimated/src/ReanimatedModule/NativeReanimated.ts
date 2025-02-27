@@ -24,7 +24,6 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import { shouldBeUseWeb } from '../PlatformChecker';
-import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IReanimatedModule,
@@ -85,7 +84,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     executeOnUIRuntimeSync(function initializeUI() {
       'worklet';
       registerReanimatedError();
-      setupRequestAnimationFrame();
     })();
   }
 
