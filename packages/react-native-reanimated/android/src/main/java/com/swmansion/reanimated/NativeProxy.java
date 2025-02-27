@@ -38,7 +38,7 @@ import java.util.Objects;
 /**
  * @noinspection JavaJniMissingFunction
  */
-public class NativeProxy extends NativeProxyCommon {
+public class NativeProxy {
   static {
     SoLoader.loadLibrary("reanimated");
   }
