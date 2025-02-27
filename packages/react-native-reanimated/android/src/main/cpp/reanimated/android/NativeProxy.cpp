@@ -37,6 +37,7 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           getPlatformDependentMethods(),
           getIsReducedMotion())) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
   commonInit(fabricUIManager);
 }
 
