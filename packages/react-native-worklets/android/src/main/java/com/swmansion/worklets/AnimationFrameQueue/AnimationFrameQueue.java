@@ -77,7 +77,6 @@ public class AnimationFrameQueue {
   private void executeQueue(long frameTimeNanos) {
     double currentFrameTimeMs = calculateTimestamp(frameTimeNanos);
     if (currentFrameTimeMs <= lastFrameTimeMs) {
-      // TODO: Not sure if we should keep it.
       // It is possible for ChoreographerCallback to be executed twice within the same frame
       // due to frame drops. If this occurs, the additional callback execution should be ignored.
       mCallbackPosted.set(false);
