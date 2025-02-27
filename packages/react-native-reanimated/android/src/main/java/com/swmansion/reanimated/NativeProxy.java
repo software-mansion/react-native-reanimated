@@ -60,8 +60,6 @@ public class NativeProxy {
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
-    super(context);
-
     mWorkletsModule =
         Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
     mContext = new WeakReference<>(context);
