@@ -5,9 +5,6 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/fabric/Binding.h>
-#endif
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/WorkletsModule.h>
