@@ -108,6 +108,16 @@ inline jsi::Value apply(
   return std::apply(function, std::move(args));
 }
 
+// calls string-returning `function` with `args`,
+// and returns the string
+template <typename... Args>
+inline jsi::Value apply(
+    jsi::Runtime &rt,
+    std::function<std::string(Args...)> function,
+    std::tuple<Args...> args) {
+  return jsi::String::createFromUtf8(rt, std::apply(function, std::move(args)));
+}
+
 // calls void-returning `function` with `args`,
 // and returns `undefined`
 template <typename... Args>
@@ -129,6 +139,21 @@ jsi::HostFunctionType createHostFunction(Fun function) {
              const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(function, std::move(argz));
+  };
+}
+
+// returns a function with JSI calling convention
+// from a native function `function` returning a string
+template <typename... Args>
+jsi::HostFunctionType createHostFunction(
+    std::function<std::string(Args...)> function) {
+  return [function](
+             jsi::Runtime &rt,
+             const jsi::Value &,
+             const jsi::Value *args,
+             const size_t count) {
+    auto argz = getArgsForFunction(function, rt, args, count);
+    return apply(rt, function, std::move(argz));
   };
 }
 
