@@ -46,8 +46,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule,
-    bool isBridgeless)
+    WorkletsModule *workletsModule)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -58,7 +57,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
+      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
   commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);

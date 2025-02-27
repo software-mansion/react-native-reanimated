@@ -151,12 +151,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
-  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
 
   assert(jsiRuntime != nullptr);
 
   auto reanimatedModuleProxy =
-      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
+      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule);
 
   auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 
