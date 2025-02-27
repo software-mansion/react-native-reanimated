@@ -19,23 +19,14 @@ import java.util.Objects;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
-import com.facebook.jni.HybridData;
-import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
-import com.swmansion.reanimated.BuildConfig;
-import com.swmansion.reanimated.DevMenuUtils;
-import com.swmansion.reanimated.NodesManager;
-import com.swmansion.reanimated.ReanimatedModule;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
-import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
-import java.util.Objects;
 
 /**
  * @noinspection JavaJniMissingFunction
