@@ -221,8 +221,10 @@ function CubeWithEulerAngles() {
       multiplyInto(matrix, matrix, it);
       transformOrigin(matrix, origin);
 
+      matrix[11] = -1 / 1000; // Apply perspective
+
       return {
-        transform: [{ perspective: 1000 }, { matrix }],
+        transform: [{ matrix }],
         backgroundColor: sidesColors[i],
       };
     })
@@ -260,8 +262,10 @@ function CubeWithQuaternions() {
       const matrix = quaternionToMatrix(q);
       transformOrigin(matrix, origin);
 
+      matrix[11] = -1 / 1000; // Apply perspective
+
       return {
-        transform: [{ perspective: 1000 }, { matrix }],
+        transform: [{ matrix }],
         backgroundColor: sidesColors[i],
       };
     })

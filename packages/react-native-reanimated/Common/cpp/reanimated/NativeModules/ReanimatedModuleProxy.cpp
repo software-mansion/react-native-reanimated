@@ -129,17 +129,6 @@ void ReanimatedModuleProxy::init(
     strongThis->animatedPropsRegistry_->update(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
-                                     jsi::Runtime &rt,
-                                     const jsi::Value &viewTags) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->animatedPropsRegistry_->remove(rt, viewTags);
-  };
-
   auto measure = [weakThis = weak_from_this()](
                      jsi::Runtime &rt,
                      const jsi::Value &shadowNodeValue) -> jsi::Value {
@@ -220,7 +209,6 @@ void ReanimatedModuleProxy::init(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      removeFromPropsRegistry,
       obtainProp,
       updateProps,
       measure,
@@ -926,6 +914,7 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
     }
   }
+  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -936,8 +925,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode = cloneShadowTreeWithNewProps(
+                oldRootShadowNode, propsMap, tagsToRemove);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -964,6 +953,11 @@ void ReanimatedModuleProxy::commitUpdates(
     // (we don't know if the view is updated from outside of Reanimated
     // so we have to clear the entire cache)
     viewStylesRepository_->clearNodesCache();
+  }
+
+  if (!tagsToRemove.empty()) {
+    auto lock = updatesRegistryManager_->createLock();
+    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 
@@ -1074,6 +1068,37 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler());
   }
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+std::string format(bool b) {
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return std::string("");
+    }
+
+    std::string result = "";
+
+    result += "AnimatedPropsRegistry: " +
+        format(strongThis->animatedPropsRegistry_->isEmpty());
+    result += "\nCSSAnimationsRegistry: " +
+        format(strongThis->cssAnimationsRegistry_->isEmpty());
+    result += "\nCSSTransitionsRegistry: " +
+        format(strongThis->cssTransitionsRegistry_->isEmpty());
+    result += "\nStaticPropsRegistry: " +
+        format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
+
+    return result;
+  };
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 #endif // RCT_NEW_ARCH_ENABLED
 

@@ -42,10 +42,13 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
+  virtual void removeBatch(const std::vector<Tag> &tagsToRemove);
+  bool isEmpty();
+  virtual ~UpdatesRegistry() {}
 
  protected:
   mutable std::mutex mutex_;
-  std::unordered_set<Tag> tagsToRemove_;
+  RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
@@ -58,10 +61,8 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
-  RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
-  void runMarkedRemovals();
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
