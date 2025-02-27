@@ -38,7 +38,7 @@ public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
           new ReactModuleInfo(
               reactModule.name(),
               moduleClass.getName(),
-              true,
+              reactModule.canOverrideExistingModule(),
               reactModule.needsEagerInit(),
               reactModule.isCxxModule(),
               BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
