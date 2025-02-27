@@ -67,7 +67,7 @@ export default function NestedRotationExample() {
   const [modals, setModals] = React.useState(true);
 
   return (
-    <Context.Provider
+    <Context
       value={{
         blue,
         purple,
@@ -124,7 +124,7 @@ export default function NestedRotationExample() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </Context.Provider>
+    </Context>
   );
 }
 

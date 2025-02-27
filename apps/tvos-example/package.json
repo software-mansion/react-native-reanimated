@@ -38,6 +38,7 @@
     "node": ">=18"
   },
   "installConfig": {
+    "hoistingLimits": "workspaces",
     "selfReferences": false
   }
 }

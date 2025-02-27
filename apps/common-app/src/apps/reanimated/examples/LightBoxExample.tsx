@@ -76,7 +76,7 @@ type ListItemProps = {
 };
 function ListItem({ item, index, onPress }: ListItemProps) {
   // @ts-ignore FIXME)TS) createAnimatedComponent type
-  const ref = useRef<AnimatedImage>();
+  const ref = useRef<AnimatedImage>(null);
   const opacity = useSharedValue(1);
 
   const containerStyle = {

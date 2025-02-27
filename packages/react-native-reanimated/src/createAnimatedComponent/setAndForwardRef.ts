@@ -1,8 +1,8 @@
 'use strict';
+
+import { RefObject } from 'react';
+
 /** Imported from react-native */
-
-import type { MutableRefObject } from 'react';
-
 /* eslint-disable */
 /**
  * This is a helper function for when a component needs to be able to forward a
@@ -35,13 +35,11 @@ import type { MutableRefObject } from 'react';
  */
 /* eslint-enable */
 
-type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
-
 function setAndForwardRef<T>({
   getForwardedRef,
   setLocalRef,
 }: {
-  getForwardedRef: ForwardedRef<T>;
+  getForwardedRef: () => RefObject<T> | ((ref: T) => void);
   setLocalRef: (ref: T) => void;
 }): (ref: T) => void {
   return function forwardRef(ref: T) {
