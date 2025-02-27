@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 
 #include <utility>
@@ -136,5 +135,3 @@ void CSSAnimation::updateSettings(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

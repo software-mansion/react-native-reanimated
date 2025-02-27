@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 namespace reanimated {
@@ -99,5 +98,3 @@ void RecordPropertiesInterpolator::maybeCreateInterpolator(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

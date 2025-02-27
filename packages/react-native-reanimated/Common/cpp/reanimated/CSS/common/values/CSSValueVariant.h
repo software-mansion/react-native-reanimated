@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -276,5 +275,3 @@ class CSSValueVariant final : public CSSValue {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

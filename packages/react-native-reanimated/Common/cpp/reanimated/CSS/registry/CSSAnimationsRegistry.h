@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
@@ -71,5 +70,3 @@ class CSSAnimationsRegistry
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

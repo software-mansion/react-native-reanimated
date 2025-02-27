@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <string>
 
@@ -15,5 +14,3 @@ class KeyframeProgressProvider {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

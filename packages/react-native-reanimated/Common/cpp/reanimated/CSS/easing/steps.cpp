@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/steps.h>
 
 namespace reanimated {
@@ -12,5 +11,3 @@ EasingFunction steps(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

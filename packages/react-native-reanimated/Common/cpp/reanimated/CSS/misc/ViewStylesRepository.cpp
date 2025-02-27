@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 namespace reanimated {
@@ -163,5 +162,3 @@ folly::dynamic ViewStylesRepository::getPropertyValue(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
 namespace reanimated {
@@ -405,5 +404,3 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

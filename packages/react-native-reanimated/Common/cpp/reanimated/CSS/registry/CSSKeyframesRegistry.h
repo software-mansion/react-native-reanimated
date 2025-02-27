@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 
@@ -21,5 +20,3 @@ class CSSKeyframesRegistry {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

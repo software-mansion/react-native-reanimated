@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
@@ -104,5 +102,3 @@ template class CSSKeywordBase<CSSKeyword>;
 template class CSSKeywordBase<CSSDisplay>;
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

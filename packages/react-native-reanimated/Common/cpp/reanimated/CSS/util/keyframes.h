@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <jsi/jsi.h>
 #include <utility>
@@ -14,5 +13,3 @@ std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
     const jsi::Value &keyframes);
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

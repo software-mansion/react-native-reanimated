@@ -1,5 +1,3 @@
-#if RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
 namespace reanimated {
@@ -15,5 +13,3 @@ bool PropertyInterpolatorFactory::isDiscreteProperty() const {
 }
 
 } // namespace reanimated
-
-#endif

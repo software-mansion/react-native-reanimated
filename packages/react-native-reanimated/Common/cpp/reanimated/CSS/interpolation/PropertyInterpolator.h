@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
@@ -71,5 +70,3 @@ using InterpolatorFactoriesArray =
     std::vector<std::shared_ptr<PropertyInterpolatorFactory>>;
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

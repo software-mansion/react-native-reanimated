@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 
 namespace reanimated {
@@ -91,5 +90,3 @@ template struct DelayedItemComparator<CSSAnimationId>;
 template struct DelayedItemComparator<Tag>;
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
