@@ -127,10 +127,8 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(
-    RCTModuleRegistry *moduleRegistry,
-    REANodesManager *nodesManager,
-    REAModule *reaModule)
+PlatformDepMethodsHolder
+makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager, REAModule *reaModule)
 {
   auto requestRender = makeRequestRender(nodesManager);
 
