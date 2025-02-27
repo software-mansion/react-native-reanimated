@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
@@ -40,8 +39,6 @@ class TransitionPropertyProgressProvider final
   double getRemainingDelay(double timestamp) const;
   double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
-
-  bool isFirstUpdate() const override;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -87,5 +84,3 @@ class TransitionProgressProvider final {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

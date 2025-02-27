@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 namespace reanimated {
@@ -28,6 +27,11 @@ SurfaceId AnimatedPropsRegistry::update(
   return surfaceId;
 }
 
-} // namespace reanimated
+void AnimatedPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::unique_lock<std::mutex> l(mutex_);
+  for (const auto &tag : tagsToRemove) {
+    updatesRegistry_.erase(tag);
+  }
+}
 
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated

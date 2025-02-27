@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
 namespace reanimated {
@@ -11,6 +10,11 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 
 bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
+}
+
+bool CSSTransitionsRegistry::isEmpty() const {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::add(
@@ -49,11 +53,6 @@ void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
     runningTransitionTags_.erase(viewTag);
     registry_.erase(viewTag);
   }
-}
-
-bool CSSTransitionsRegistry::isEmpty() {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::updateSettings(
@@ -171,5 +170,3 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 
@@ -14,5 +13,3 @@ EasingFunction cubicBezier(double x1, double y1, double x2, double y2);
 EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig);
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

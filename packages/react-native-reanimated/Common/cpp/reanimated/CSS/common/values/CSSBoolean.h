@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
@@ -32,5 +31,3 @@ struct CSSBoolean : public CSSSimpleValue<CSSBoolean> {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

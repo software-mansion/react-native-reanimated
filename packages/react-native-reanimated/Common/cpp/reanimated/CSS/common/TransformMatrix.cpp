@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/TransformMatrix.h>
 
 namespace reanimated {
@@ -633,5 +632,3 @@ double TransformMatrix::determinant3x3(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

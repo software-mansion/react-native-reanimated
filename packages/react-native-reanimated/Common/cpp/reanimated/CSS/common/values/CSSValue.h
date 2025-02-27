@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
@@ -74,5 +73,3 @@ template <typename TCSSValue>
 concept CSSValueDerived = std::is_base_of_v<CSSValue, TCSSValue>;
 
 } // namespace reanimated
-
-#endif

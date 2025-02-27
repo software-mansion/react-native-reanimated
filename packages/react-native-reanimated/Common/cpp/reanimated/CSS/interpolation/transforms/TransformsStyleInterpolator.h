@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
@@ -97,5 +96,3 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
