@@ -102,17 +102,17 @@ public class NativeProxy {
 
   public native void performOperations();
 
+  protected native void installJSIBindings();
+
+  private native void invalidateCpp();
+
   protected HybridData getHybridData() {
     return mHybridData;
   }
 
-  private native void invalidateCpp();
-
   public void invalidate() {
     invalidateCpp();
   }
-
-  protected native void installJSIBindings();
 
   private void toggleSlowAnimations() {
     slowAnimationsEnabled = !slowAnimationsEnabled;
