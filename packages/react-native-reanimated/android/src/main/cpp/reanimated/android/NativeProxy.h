@@ -2,7 +2,6 @@
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <reanimated/android/JNIHelper.h>
 
 #include <worklets/android/WorkletsModule.h>
 
