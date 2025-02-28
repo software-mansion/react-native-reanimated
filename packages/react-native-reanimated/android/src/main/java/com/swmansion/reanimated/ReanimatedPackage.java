@@ -46,7 +46,7 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
           new ReactModuleInfo(
               reactModule.name(),
               moduleClass.getName(),
-              true, // override UIManagerModule
+              reactModule.canOverrideExistingModule(),
               reactModule.needsEagerInit(),
               reactModule.isCxxModule(),
               true));
