@@ -44,6 +44,18 @@ import {
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+export const LAYOUT_ANIMATION_SUPPORTED_PROPS = [
+  'originX',
+  'originY',
+  'width',
+  'height',
+  'borderRadius',
+  'globalOriginX',
+  'globalOriginY',
+  'opacity',
+  'transform',
+];
+
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(
     `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
