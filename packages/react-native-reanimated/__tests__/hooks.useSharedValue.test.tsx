@@ -1,10 +1,10 @@
 import React from 'react';
-import renderer from 'react-test-renderer';
+import renderer, { act } from 'react-test-renderer';
 
 import Animated, { useSharedValue } from '../src';
 
 describe('useSharedValue', () => {
-  it('retains value on rerender', () => {
+  it('retains value on rerender', async () => {
     // Given
     const initialValue = 0;
     const updatedValue = 1;
@@ -23,23 +23,31 @@ describe('useSharedValue', () => {
       return <Animated.View style={{ opacity }} />;
     }
 
-    // When rendering with initial value
-    const wrapper = renderer.create(
-      <TestComponent key="box" value={initialValue} />
-    );
+    let wrapper!: renderer.ReactTestRenderer;
 
+    // When rendering with initial value
+    await act(() => {
+      wrapper = renderer.create(
+        <TestComponent key="box" value={initialValue} />
+      );
+    });
+
+    const initialChild = wrapper.root.children[0];
     expect(
-      typeof wrapper.root.children[0] !== 'string'
-        ? wrapper.root.children[0].props.style.opacity
+      typeof initialChild !== 'string'
+        ? initialChild.props.style.opacity
         : false
     ).toBe(initialValue);
 
     // When rendering with updated value
-    wrapper.update(<TestComponent key="box" value={updatedValue} />);
+    await act(() => {
+      wrapper.update(<TestComponent key="box" value={updatedValue} />);
+    });
 
+    const updatedChild = wrapper.root.children[0];
     expect(
-      typeof wrapper.root.children[0] !== 'string'
-        ? wrapper.root.children[0].props.style.opacity
+      typeof updatedChild !== 'string'
+        ? updatedChild.props.style.opacity
         : false
     ).toBe(initialValue);
   });

@@ -3,12 +3,7 @@ import type {
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
 import { FlashList } from '@shopify/flash-list';
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import React, { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ListRenderItem as FlatListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
 import type { AnimatedProps } from 'react-native-reanimated';
@@ -17,6 +12,8 @@ import Animated, {
   scrollTo,
   useAnimatedRef,
 } from 'react-native-reanimated';
+
+import { componentWithRef } from '../reactUtils';
 
 const DATA = [...Array(100).keys()];
 
@@ -92,7 +89,7 @@ type ExampleProps = {
   animated: boolean;
 };
 
-const ScrollViewExample = forwardRef<Scrollable, ExampleProps>(
+const ScrollViewExample = componentWithRef<Scrollable, ExampleProps>(
   ({ animated }, ref) => {
     const aref = useAnimatedRef<Animated.ScrollView>();
 
@@ -121,7 +118,7 @@ const ScrollViewExample = forwardRef<Scrollable, ExampleProps>(
   }
 );
 
-const FlatListExample = forwardRef<Scrollable, ExampleProps>(
+const FlatListExample = componentWithRef<Scrollable, ExampleProps>(
   ({ animated }, ref) => {
     const aref = useAnimatedRef<Animated.FlatList<number>>();
 
@@ -154,7 +151,7 @@ const FlatListExample = forwardRef<Scrollable, ExampleProps>(
   }
 );
 
-const FlashListExample = forwardRef<Scrollable, ExampleProps>(
+const FlashListExample = componentWithRef<Scrollable, ExampleProps>(
   ({ animated }, ref) => {
     const aref = useAnimatedRef<FlashList<number>>();
 

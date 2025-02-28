@@ -6,6 +6,8 @@ import { createContext } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { IS_REACT_19 } from '../../reactUtils';
+
 const Stack = createNativeStackNavigator();
 
 const Context = createContext<{
@@ -66,8 +68,10 @@ export default function NestedRotationExample() {
   const [green, setGreen] = React.useState<string | undefined>('greenTag');
   const [modals, setModals] = React.useState(true);
 
+  const Provider = IS_REACT_19 ? Context : Context.Provider;
+
   return (
-    <Context.Provider
+    <Provider
       value={{
         blue,
         purple,
@@ -124,7 +128,7 @@ export default function NestedRotationExample() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </Context.Provider>
+    </Provider>
   );
 }
 

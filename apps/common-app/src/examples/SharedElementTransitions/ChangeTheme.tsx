@@ -17,6 +17,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { IS_REACT_19 } from '../../reactUtils';
+
 const Stack = createNativeStackNavigator();
 const Context = createContext({
   theme: true,
@@ -284,8 +286,10 @@ export default function ReducedMotionSharedExample() {
   const toggleDisabled = useCallback(() => setDisabled((d) => !d), []);
   const toggleModals = useCallback(() => setModals((m) => !m), []);
 
+  const Provider = IS_REACT_19 ? Context : Context.Provider;
+
   return (
-    <Context.Provider
+    <Provider
       value={{
         theme,
         disabled,
@@ -315,7 +319,7 @@ export default function ReducedMotionSharedExample() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </Context.Provider>
+    </Provider>
   );
 }
 

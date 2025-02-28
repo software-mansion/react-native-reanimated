@@ -28,7 +28,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.1.0",
     "react-native-screens": "4.5.0",
-    "react-native-svg": "15.11.1"
+    "react-native-svg": "15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -38,7 +38,7 @@
     "@react-native/eslint-config": "0.75.4",
     "@react-native/metro-config": "0.75.4",
     "@react-native/typescript-config": "0.75.4",
-    "@types/react": "^18.2.6",
+    "@types/react": "^19.0.10",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.6.3",
     "eslint": "^8.57.0",

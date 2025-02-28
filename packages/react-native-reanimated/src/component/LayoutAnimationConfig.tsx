@@ -9,7 +9,10 @@ import React, {
 } from 'react';
 
 import { setShouldAnimateExitingForTag } from '../core';
+import { isReact19 } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+
+const IS_REACT_19 = isReact19();
 
 export const SkipEnteringContext =
   createContext<React.MutableRefObject<boolean> | null>(null);
@@ -29,11 +32,11 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
     skipValueRef.current = false;
   }, [skipValueRef]);
 
-  return (
-    <SkipEnteringContext.Provider value={skipValueRef}>
-      {props.children}
-    </SkipEnteringContext.Provider>
-  );
+  const Provider = IS_REACT_19
+    ? SkipEnteringContext
+    : SkipEnteringContext.Provider;
+
+  return <Provider value={skipValueRef}>{props.children}</Provider>;
 }
 
 // skipExiting (unlike skipEntering) cannot be done by conditionally

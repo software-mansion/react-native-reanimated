@@ -1,4 +1,5 @@
 'use strict';
+import { version as reactVersion } from 'react';
 import { Platform } from 'react-native';
 
 // This type is necessary since some libraries tend to do a lib check
@@ -36,6 +37,10 @@ export function shouldBeUseWeb() {
 
 export function isFabric() {
   return !!(global as localGlobal)._IS_FABRIC;
+}
+
+export function isReact19() {
+  return reactVersion.startsWith('19.');
 }
 
 export function isWindowAvailable() {
