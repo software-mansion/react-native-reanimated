@@ -13,7 +13,7 @@ import type {
 } from '../commonTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { defineAnimation } from './util';
+import { defineAnimation, LAYOUT_ANIMATION_SUPPORTED_PROPS } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -191,6 +191,14 @@ export function withStyleAnimation(
               `Initial values for animation are missing for property ${currentEntry.path.join(
                 '.'
               )}`
+            );
+          }
+          if (
+            typeof currentEntry.path[0] === 'string' &&
+            !LAYOUT_ANIMATION_SUPPORTED_PROPS.includes(currentEntry.path[0])
+          ) {
+            logger.warn(
+              `'${currentEntry.path[0]}' property is not officially supported for layout animations. It may not work as expected.`
             );
           }
           setPath(animation.current, currentEntry.path, prevVal);
