@@ -7,7 +7,6 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
-#import <reanimated/apple/native/REAJSIUtils.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #import <React/RCTBridge+Private.h>
@@ -31,17 +30,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
-
-static NSSet *convertProps(jsi::Runtime &rt, const jsi::Value &props)
-{
-  NSMutableSet *propsSet = [[NSMutableSet alloc] init];
-  jsi::Array propsNames = props.asObject(rt).asArray(rt);
-  for (int i = 0; i < propsNames.size(rt); i++) {
-    NSString *propName = @(propsNames.getValueAtIndex(rt, i).asString(rt).utf8(rt).c_str());
-    [propsSet addObject:propName];
-  }
-  return propsSet;
-}
 
 SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleRegistry)
 {
