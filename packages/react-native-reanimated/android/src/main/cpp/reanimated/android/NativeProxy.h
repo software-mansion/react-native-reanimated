@@ -9,17 +9,12 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/fabric/JFabricUIManager.h>
-#include <react/jni/CxxModuleWrapper.h>
-#include <react/jni/JRuntimeExecutor.h>
-#include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace reanimated {
 

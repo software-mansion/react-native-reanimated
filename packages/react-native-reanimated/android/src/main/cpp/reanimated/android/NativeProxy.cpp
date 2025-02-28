@@ -3,18 +3,9 @@
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/NativeProxy.h>
 
-#include <worklets/Tools/ReanimatedJSIUtils.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
-#include <worklets/android/AndroidUIScheduler.h>
 
-#include <android/log.h>
-#include <fbjni/fbjni.h>
-#include <jsi/JSIDynamic.h>
-#include <jsi/jsi.h>
 #include <react/fabric/Binding.h>
-#include <react/jni/ReadableNativeArray.h>
-#include <react/jni/ReadableNativeMap.h>
 
 namespace reanimated {
 
