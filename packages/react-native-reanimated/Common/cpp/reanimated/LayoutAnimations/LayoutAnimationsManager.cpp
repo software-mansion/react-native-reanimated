@@ -35,7 +35,10 @@ void LayoutAnimationsManager::configureAnimationBatch(
     if (config == nullptr) {
       continue;
     }
-    sharedTransitionGroups_[sharedTransitionTag].push_back(tag);
+    auto &group = sharedTransitionGroups_[sharedTransitionTag];
+    if (std::find(group.begin(), group.end(), tag) == group.end()) {
+      group.push_back(tag);
+    }
     viewTagToSharedTag_[tag] = sharedTransitionTag;
     getConfigsForType(SHARED_ELEMENT_TRANSITION)[tag] = config;
     if (type == SHARED_ELEMENT_TRANSITION) {
