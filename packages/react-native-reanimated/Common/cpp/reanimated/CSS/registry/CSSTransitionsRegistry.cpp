@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
 namespace reanimated {
@@ -11,6 +10,11 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 
 bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
+}
+
+bool CSSTransitionsRegistry::isEmpty() const {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningTransitionTags_.empty();
 }
 
 void CSSTransitionsRegistry::add(
@@ -27,6 +31,9 @@ void CSSTransitionsRegistry::add(
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
+  if (updatesRegistry_.contains(viewTag)) {
+    return;
+  }
 
   removeFromUpdatesRegistry(viewTag);
 
@@ -34,6 +41,18 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
+}
+void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  for (const auto &viewTag : tagsToRemove) {
+    removeFromUpdatesRegistry(viewTag);
+
+    staticPropsRegistry_->removeObserver(viewTag);
+    delayedTransitionsManager_.remove(viewTag);
+    runningTransitionTags_.erase(viewTag);
+    registry_.erase(viewTag);
+  }
 }
 
 void CSSTransitionsRegistry::updateSettings(
@@ -151,5 +170,3 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

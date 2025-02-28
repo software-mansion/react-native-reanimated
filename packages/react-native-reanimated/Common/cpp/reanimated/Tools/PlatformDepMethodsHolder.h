@@ -1,32 +1,20 @@
 #pragma once
 
-#include <jsi/jsi.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <folly/dynamic.h>
+#include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
-#endif
 
 #include <string>
 #include <utility>
 #include <vector>
 
 using namespace facebook;
-
-#ifdef RCT_NEW_ARCH_ENABLED
 using namespace react;
-#endif
 
 namespace reanimated {
 
-#ifdef RCT_NEW_ARCH_ENABLED
-
-using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(Tag tag, const folly::dynamic &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using RemoveFromPropsRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
 using ObtainPropFunction = std::function<jsi::Value(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -38,23 +26,6 @@ using DispatchCommandFunction = std::function<void(
     const jsi::Value &argsValue)>;
 using MeasureFunction = std::function<
     jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
-
-#else
-
-using UpdatePropsFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using ScrollToFunction = std::function<void(int, double, double, bool)>;
-using DispatchCommandFunction = std::function<void(
-    jsi::Runtime &rt,
-    const int viewTag,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue)>;
-using MeasureFunction =
-    std::function<std::vector<std::pair<std::string, double>>(int)>;
-using ObtainPropFunction =
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
-
-#endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
@@ -79,16 +50,6 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
-#ifdef RCT_NEW_ARCH_ENABLED
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
-#else
-  UpdatePropsFunction updatePropsFunction;
-  ScrollToFunction scrollToFunction;
-  DispatchCommandFunction dispatchCommandFunction;
-  MeasureFunction measureFunction;
-  ConfigurePropsFunction configurePropsFunction;
-  ObtainPropFunction obtainPropFunction;
-#endif
   GetAnimationTimestampFunction getAnimationTimestamp;
   ProgressLayoutAnimationFunction progressLayoutAnimation;
   EndLayoutAnimationFunction endLayoutAnimation;

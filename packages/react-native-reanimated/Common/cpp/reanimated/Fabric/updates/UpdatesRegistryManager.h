@@ -1,6 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
@@ -35,7 +33,7 @@ class UpdatesRegistryManager {
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
-
+  void removeBatch(const std::vector<Tag> &tags);
   PropsMap collectProps();
 
 #ifdef ANDROID
@@ -63,5 +61,3 @@ class UpdatesRegistryManager {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

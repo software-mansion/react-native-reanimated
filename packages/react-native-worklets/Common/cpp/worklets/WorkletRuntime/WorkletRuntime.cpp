@@ -1,10 +1,23 @@
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
-#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
+#include <jsi/jsi.h>
+
+#include <memory>
+#include <utility>
+
+#if JS_RUNTIME_HERMES
+#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
+#elif JS_RUNTIME_V8
+#include <v8runtime/V8RuntimeFactory.h>
+#else
+#include <jsc/JSCRuntime.h>
+#endif // JS_RUNTIME
 
 namespace worklets {
 
@@ -38,16 +51,31 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(
-    jsi::Runtime &runtime,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
     const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
-  auto reanimatedRuntime = ReanimatedRuntime::make(runtime, jsQueue, name);
+  std::shared_ptr<jsi::Runtime> jsiRuntime;
+#if JS_RUNTIME_HERMES
+  (void)rnRuntime; // used only by V8
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+  jsiRuntime = std::make_shared<ReanimatedHermesRuntime>(
+      std::move(hermesRuntime), jsQueue, name);
+#elif JS_RUNTIME_V8
+  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+  config->enableInspector = false;
+  config->appName = name;
+  jsiRuntime = rnv8::createSharedV8Runtime(&rnRuntime, std::move(config));
+#else
+  (void)rnRuntime; // used only by V8
+  jsiRuntime = facebook::jsc::makeJSCRuntime();
+#endif
+
   if (supportsLocking) {
-    return std::make_shared<LockableRuntime>(reanimatedRuntime, runtimeMutex);
+    return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
   } else {
-    return reanimatedRuntime;
+    return jsiRuntime;
   }
 }
 

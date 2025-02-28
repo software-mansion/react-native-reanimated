@@ -1,5 +1,6 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
+#include <worklets/Tools/ReanimatedJSIUtils.h>
 
 namespace reanimated {
 
@@ -19,12 +20,16 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-  rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
-
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "_registriesLeakCheck",
+      reanimatedModuleProxy->createRegistriesLeakCheck());
+#endif // IS_REANIMATED_EXAMPLE_APP
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(

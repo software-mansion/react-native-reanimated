@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 namespace reanimated {
@@ -28,17 +27,11 @@ SurfaceId AnimatedPropsRegistry::update(
   return surfaceId;
 }
 
-void AnimatedPropsRegistry::remove(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
-  auto viewTagsArray = viewTags.asObject(rt).asArray(rt);
-
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    tagsToRemove_.insert(
-        static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
+void AnimatedPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::unique_lock<std::mutex> l(mutex_);
+  for (const auto &tag : tagsToRemove) {
+    updatesRegistry_.erase(tag);
   }
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

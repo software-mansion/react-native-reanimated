@@ -1,5 +1,11 @@
 'use strict';
 import type React from 'react';
+import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
 
 import type {
   LayoutAnimationBatchItem,
@@ -17,15 +23,8 @@ import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
-import { setupRequestAnimationFrame } from '../requestAnimationFrame';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
-import type {
-  IWorkletsModule,
-  ShareableRef,
-  WorkletFunction,
-} from '../WorkletsResolver';
-import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
@@ -73,7 +72,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!isFabric() && !IS_WEB) {
+    if (!globalThis.RN$Bridgeless && !IS_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
@@ -85,7 +84,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     executeOnUIRuntimeSync(function initializeUI() {
       'worklet';
       registerReanimatedError();
-      setupRequestAnimationFrame();
     })();
   }
 
@@ -129,19 +127,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     component: React.Component | undefined, // required on Fabric
     callback?: (result: T) => void
   ) {
-    let shadowNodeWrapper;
-    if (isFabric()) {
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        component as React.Component
-      );
-      return this.#reanimatedModuleProxy.getViewProp(
-        shadowNodeWrapper,
-        propName,
-        callback
-      );
-    }
-
-    return this.#reanimatedModuleProxy.getViewProp(viewTag, propName, callback);
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
+      component as React.Component
+    );
+    return this.#reanimatedModuleProxy.getViewProp(
+      shadowNodeWrapper,
+      propName,
+      callback
+    );
   }
 
   configureLayoutAnimationBatch(

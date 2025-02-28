@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 
@@ -154,5 +153,3 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
 #endif // NDEBUG
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/linear.h>
 
 namespace reanimated {
@@ -31,5 +30,3 @@ EasingFunction linear(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
@@ -33,7 +32,11 @@ using PropsToRevertMap = std::unordered_map<Tag, PropsToRevert>;
 
 class UpdatesRegistry {
  public:
+  virtual ~UpdatesRegistry() {}
+
   folly::dynamic get(Tag tag) const;
+
+  virtual bool isEmpty() const;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -42,10 +45,11 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
+  virtual void removeBatch(const std::vector<Tag> &tagsToRemove) = 0;
 
  protected:
   mutable std::mutex mutex_;
-  std::unordered_set<Tag> tagsToRemove_;
+  RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
@@ -58,10 +62,8 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
-  RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
-  void runMarkedRemovals();
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
@@ -71,5 +73,3 @@ class UpdatesRegistry {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,16 +1,17 @@
 'use strict';
-import type { Mutable } from './commonTypes';
-import { ReanimatedError } from './errors';
-import { shouldBeUseWeb } from './PlatformChecker';
-import { isFirstReactRender, isReactRendering } from './reactUtils';
-import { valueSetter } from './valueSetter';
 import {
   executeOnUIRuntimeSync,
   logger,
   makeShareableCloneRecursive,
   runOnUI,
   shareableMappingCache,
-} from './WorkletsResolver';
+} from 'react-native-worklets';
+
+import type { Mutable } from './commonTypes';
+import { ReanimatedError } from './errors';
+import { shouldBeUseWeb } from './PlatformChecker';
+import { isFirstReactRender, isReactRendering } from './reactUtils';
+import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

@@ -1,17 +1,16 @@
 'use strict';
 import type { Component } from 'react';
 import { useRef } from 'react';
-import type { FlatList, ScrollView } from 'react-native';
-import { Platform } from 'react-native';
-
-import type { ShadowNodeWrapper } from '../commonTypes';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { isFabric, isWeb } from '../PlatformChecker';
-import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+import type { FlatList } from 'react-native';
 import {
   makeShareableCloneRecursive,
   shareableMappingCache,
-} from '../WorkletsResolver';
+} from 'react-native-worklets';
+
+import type { ShadowNodeWrapper } from '../commonTypes';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { isWeb } from '../PlatformChecker';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 
@@ -19,19 +18,14 @@ const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
-  getScrollableNode?:
-    | ScrollView['getScrollableNode']
-    | FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (isFabric() && component.getNativeScrollRef) {
+  if (component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!isFabric() && component.getScrollableNode) {
-    return component.getScrollableNode();
   }
   return component;
 }
@@ -46,8 +40,7 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
 export function useAnimatedRef<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
-  const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
-  const viewName = useSharedValue<string | null>(null);
+  const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent>>();
 
@@ -57,30 +50,22 @@ export function useAnimatedRef<
     ) => {
       // enters when ref is set by attaching to a component
       if (component) {
-        const getTagValueFunction = isFabric()
-          ? getShadowNodeWrapperFromRef
-          : findNodeHandle;
-
         const getTagOrShadowNodeWrapper = () => {
           return IS_WEB
             ? getComponentOrScrollable(component)
-            : getTagValueFunction(getComponentOrScrollable(component));
+            : getShadowNodeWrapperFromRef(
+                getComponentOrScrollable(component) as Component
+              );
         };
 
-        tag.value = getTagOrShadowNodeWrapper();
+        tag.value = getTagOrShadowNodeWrapper() as ShadowNodeWrapper;
 
         // On Fabric we have to unwrap the tag from the shadow node wrapper
-        fun.getTag = isFabric()
-          ? () => findNodeHandle(getComponentOrScrollable(component))
-          : getTagOrShadowNodeWrapper;
+        // TODO: remove casting
+        fun.getTag = () =>
+          findNodeHandle(getComponentOrScrollable(component) as Component)!;
 
         fun.current = component;
-        // viewName is required only on iOS with Paper
-        if (Platform.OS === 'ios' && !isFabric()) {
-          viewName.value =
-            (component as MaybeScrollableComponent)?.viewConfig
-              ?.uiViewClassName || 'RCTView';
-        }
       }
       return tag.value;
     });
@@ -88,11 +73,9 @@ export function useAnimatedRef<
     fun.current = null;
 
     const animatedRefShareableHandle = makeShareableCloneRecursive({
-      __init: () => {
+      __init: (): AnimatedRefOnUI => {
         'worklet';
-        const f: AnimatedRefOnUI = () => tag.value;
-        f.viewName = viewName;
-        return f;
+        return () => tag.value;
       },
     });
     shareableMappingCache.set(fun, animatedRefShareableHandle);

@@ -1,5 +1,12 @@
 'use strict';
 import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { logger, WorkletsModule } from 'react-native-worklets';
+
+import type {
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -18,12 +25,6 @@ import {
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import type {
-  IWorkletsModule,
-  ShareableRef,
-  WorkletFunction,
-} from '../../WorkletsResolver';
-import { logger, WorkletsModule } from '../../WorkletsResolver';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 

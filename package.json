@@ -6,7 +6,7 @@
     "packages": [
       "packages/react-native-reanimated",
       "packages/eslint-plugin-reanimated",
-      "packages/react-native-reanimated/plugin",
+      "packages/react-native-worklets/plugin",
       "packages/react-native-worklets",
       "apps/common-app",
       "apps/fabric-example",
@@ -18,9 +18,9 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn workspaces foreach -A -p run build",
-    "lint": "yarn workspaces foreach -A -p run lint",
-    "format": "yarn workspaces foreach -A -p run format"
+    "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
+    "lint": "yarn workspaces foreach --all --parallel --topological-dev run lint",
+    "format": "yarn workspaces foreach --all --parallel --topological-dev run format"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

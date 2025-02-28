@@ -13,14 +13,14 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_WEB = isWeb();
+const IS_JEST = isJest();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -67,7 +67,6 @@ export default class AnimatedComponent<
     }
 
     let viewTag: number | typeof this._componentRef;
-    let viewName: string | null;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
     let viewConfig;
     let DOMElement: HTMLElement | null = null;
@@ -78,7 +77,6 @@ export default class AnimatedComponent<
       // TODO - implement a valid solution later on - this is a temporary fix
       viewTag = this._componentRef;
       DOMElement = this._componentDOMRef;
-      viewName = null;
       shadowNodeWrapper = null;
       viewConfig = null;
     } else {
@@ -96,13 +94,10 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag;
-      viewName = viewInfo.viewName;
       viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = isFabric()
-        ? getShadowNodeWrapperFromRef(this, hostInstance)
-        : null;
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
+    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }
@@ -155,8 +150,10 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    if (isFabric() || IS_WEB) {
-      this._CSSManager = new CSSManager(this._getViewInfo());
+    if (!IS_JEST) {
+      if (!this._CSSManager) {
+        this._CSSManager = new CSSManager(this._getViewInfo());
+      }
       this._CSSManager?.attach(this._cssStyle);
     }
   }

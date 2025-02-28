@@ -1,6 +1,8 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import type {
@@ -20,8 +22,6 @@ import { processBoxShadow } from '../processBoxShadow';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { WorkletFunction } from '../WorkletsResolver';
-import { isWorkletFunction } from '../WorkletsResolver';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,

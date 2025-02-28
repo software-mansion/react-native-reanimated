@@ -3,35 +3,23 @@ package com.swmansion.reanimated.nativeProxy;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
-import android.util.Log;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.DevMenuUtils;
-import com.swmansion.reanimated.NativeProxy;
 import com.swmansion.reanimated.NodesManager;
 import com.swmansion.reanimated.ReanimatedModule;
-import com.swmansion.reanimated.Utils;
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager;
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper;
-import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
-import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -71,6 +59,9 @@ public abstract class NativeProxyCommon {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
+    mNodesManager =
+        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
+            .getNodesManager();
   }
 
   protected native void installJSIBindings();
@@ -81,6 +72,7 @@ public abstract class NativeProxyCommon {
       firstUptime = SystemClock.uptimeMillis();
     }
     mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
+    mWorkletsModule.toggleSlowAnimations();
   }
 
   private void addDevMenuOption() {
@@ -125,31 +117,6 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
-  public void updateProps(int viewTag, Map<String, Object> props) {
-    mNodesManager.updateProps(viewTag, props);
-  }
-
-  @DoNotStrip
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
-  }
-
-  @DoNotStrip
-  public String obtainProp(int viewTag, String propName) {
-    return mNodesManager.obtainProp(viewTag, propName);
-  }
-
-  @DoNotStrip
-  public void scrollTo(int viewTag, double x, double y, boolean animated) {
-    mNodesManager.scrollTo(viewTag, x, y, animated);
-  }
-
-  @DoNotStrip
-  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
-    mNodesManager.dispatchCommand(viewTag, commandId, commandArgs);
-  }
-
-  @DoNotStrip
   public void setGestureState(int handlerTag, int newState) {
     if (gestureHandlerStateManager != null) {
       gestureHandlerStateManager.setGestureHandlerState(handlerTag, newState);
@@ -164,27 +131,6 @@ public abstract class NativeProxyCommon {
     } else {
       return SystemClock.uptimeMillis();
     }
-  }
-
-  @DoNotStrip
-  public float[] measure(int viewTag) {
-    return mNodesManager.measure(viewTag);
-  }
-
-  @DoNotStrip
-  public void configureProps(ReadableNativeArray uiProps, ReadableNativeArray nativeProps) {
-    Set<String> uiPropsSet = convertProps(uiProps);
-    Set<String> nativePropsSet = convertProps(nativeProps);
-    mNodesManager.configureProps(uiPropsSet, nativePropsSet);
-  }
-
-  private Set<String> convertProps(ReadableNativeArray props) {
-    Set<String> propsSet = new HashSet<>();
-    ArrayList<Object> propsList = props.toArrayList();
-    for (int i = 0; i < propsList.size(); i++) {
-      propsSet.add((String) propsList.get(i));
-    }
-    return propsSet;
   }
 
   @DoNotStrip
@@ -219,23 +165,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected abstract HybridData getHybridData();
-
-  public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
-    if (Utils.isChromeDebugger) {
-      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
-      return;
-    }
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
-
-    AnimationsManager animationsManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager()
-            .getAnimationsManager();
-
-    animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
-  }
 
   @DoNotStrip
   public boolean getIsReducedMotion() {

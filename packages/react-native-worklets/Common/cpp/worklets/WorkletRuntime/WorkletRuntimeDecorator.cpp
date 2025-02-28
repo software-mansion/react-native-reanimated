@@ -47,12 +47,9 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
+  // TODO: Remove _IS_FABRIC sometime in the future
+  // react-native-screens 4.9.0 depends on it
+  rt.global().setProperty(rt, "_IS_FABRIC", true);
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,

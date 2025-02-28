@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
@@ -142,5 +141,3 @@ struct LayoutAnimationsProxy
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

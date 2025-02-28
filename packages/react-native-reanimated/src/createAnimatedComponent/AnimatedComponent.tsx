@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { StyleProps } from '../commonTypes';
@@ -22,7 +21,7 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -97,8 +96,7 @@ export default class AnimatedComponent
     if (
       !entering ||
       getReducedMotionFromConfig(entering as CustomConfig) ||
-      skipEntering ||
-      !isFabric()
+      skipEntering
     ) {
       return;
     }
@@ -184,19 +182,6 @@ export default class AnimatedComponent
         this._componentDOMRef as ReanimatedHTMLElement,
         LayoutAnimationType.EXITING
       );
-    } else if (exiting && !IS_WEB && !isFabric()) {
-      const reduceMotionInExiting =
-        'getReduceMotion' in exiting &&
-        typeof exiting.getReduceMotion === 'function'
-          ? getReduceMotionFromConfig(exiting.getReduceMotion())
-          : getReduceMotionFromConfig();
-      if (!reduceMotionInExiting) {
-        updateLayoutAnimations(
-          this.getComponentViewTag(),
-          LayoutAnimationType.EXITING,
-          maybeBuild(exiting, this.props?.style, this._displayName)
-        );
-      }
     }
   }
 
@@ -208,9 +193,6 @@ export default class AnimatedComponent
       }
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
-      }
-      if (isFabric()) {
-        removeFromPropsRegistry(viewTag);
       }
     }
   }
@@ -230,8 +212,7 @@ export default class AnimatedComponent
     const prevAnimatedProps = this._animatedProps;
     this._animatedProps = this.props.animatedProps;
 
-    const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
-      this._getViewInfo();
+    const { viewTag, shadowNodeWrapper, viewConfig } = this._getViewInfo();
 
     // update UI props whitelist for this view
     const hasReanimated2Props =
@@ -264,7 +245,6 @@ export default class AnimatedComponent
     this._animatedStyles.forEach((style) => {
       style.viewDescriptors.add({
         tag: viewTag,
-        name: viewName,
         shadowNodeWrapper,
       });
       if (IS_JEST) {
@@ -292,7 +272,6 @@ export default class AnimatedComponent
     if (this.props.animatedProps?.viewDescriptors) {
       this.props.animatedProps.viewDescriptors.add({
         tag: viewTag as number,
-        name: viewName!,
         shadowNodeWrapper: shadowNodeWrapper!,
       });
     }
@@ -404,7 +383,7 @@ export default class AnimatedComponent
       if (sharedTransitionTag) {
         this._configureSharedTransition();
       }
-      if (exiting && isFabric()) {
+      if (exiting) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -417,15 +396,6 @@ export default class AnimatedComponent
             maybeBuild(exiting, this.props?.style, this._displayName)
           );
         }
-      }
-
-      const skipEntering = this.context?.current;
-      if (entering && !isFabric() && !skipEntering && !IS_WEB) {
-        updateLayoutAnimations(
-          tag,
-          LayoutAnimationType.ENTERING,
-          maybeBuild(entering, this.props?.style, this._displayName)
-        );
       }
     }
   }
@@ -467,8 +437,7 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    const nativeID =
-      skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
+    const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
 
     const jestProps = IS_JEST
       ? {

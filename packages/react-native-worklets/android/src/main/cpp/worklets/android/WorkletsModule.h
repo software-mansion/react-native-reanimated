@@ -1,11 +1,6 @@
 #pragma once
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/fabric/JFabricUIManager.h>
-#include <react/jni/JRuntimeExecutor.h>
-#include <react/renderer/scheduler/Scheduler.h>
-#endif // RCT_NEW_ARCH_ENABLED
-
+#include <fbjni/detail/References.h>
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -30,7 +25,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> /*jThis*/,
+      jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
@@ -47,6 +42,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
  private:
   explicit WorkletsModule(
+      jni::alias_ref<jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
@@ -56,7 +52,16 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   void invalidateCpp();
 
+  template <class Signature>
+  JMethod<Signature> getJniMethod(std::string const &methodName) {
+    return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
+  }
+
+  std::function<void(std::function<void(const double)>)>
+  getForwardedRequestAnimationFrame();
+
   friend HybridBase;
+  jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };

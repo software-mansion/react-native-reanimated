@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -19,10 +18,9 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
  public:
   JSIUpdates getJSIUpdates();
+
   SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
-  void remove(jsi::Runtime &rt, const jsi::Value &viewTags);
+  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
