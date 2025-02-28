@@ -1,10 +1,5 @@
 #import <worklets/Tools/UIScheduler.h>
 
-#import <React/RCTUIManager.h>
-#import <ReactCommon/CallInvoker.h>
-
-#import <memory>
-
 namespace worklets {
 
 using namespace facebook;

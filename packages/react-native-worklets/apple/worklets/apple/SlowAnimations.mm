@@ -1,5 +1,7 @@
 #import <QuartzCore/QuartzCore.h>
+
 #import <worklets/apple/SlowAnimations.h>
+
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif

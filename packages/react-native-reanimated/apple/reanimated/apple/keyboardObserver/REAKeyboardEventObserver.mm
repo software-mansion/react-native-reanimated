@@ -1,6 +1,9 @@
 #import <Foundation/Foundation.h>
-#import <React/RCTDefines.h>
-#import <React/RCTUIManager.h>
+
+#import <React/RCTAssert.h>
+#import <React/RCTBridgeConstants.h>
+#import <React/RCTUtils.h>
+
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIKit.h>
