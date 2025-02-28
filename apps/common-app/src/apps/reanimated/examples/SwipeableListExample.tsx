@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
 import {
   FlatList,
@@ -98,25 +98,32 @@ function ListItem({ item, onRemove }: ListItemProps) {
   const startX = useSharedValue(0);
   const translateX = useSharedValue(0);
 
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .onStart(() => {
-      startX.value = translateX.value;
-    })
-    .onUpdate((evt) => {
-      const nextTranslate = startX.value + evt.translationX;
-      translateX.value = Math.min(0, Math.max(nextTranslate, MAX_TRANSLATE));
-    })
-    .onEnd((evt) => {
-      if (evt.velocityX < -20) {
-        translateX.value = withSpring(
-          MAX_TRANSLATE,
-          springConfig(evt.velocityX)
-        );
-      } else {
-        translateX.value = withSpring(0, springConfig(evt.velocityX));
-      }
-    });
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([-10, 10])
+        .onStart(() => {
+          startX.value = translateX.value;
+        })
+        .onUpdate((evt) => {
+          const nextTranslate = startX.value + evt.translationX;
+          translateX.value = Math.min(
+            0,
+            Math.max(nextTranslate, MAX_TRANSLATE)
+          );
+        })
+        .onEnd((evt) => {
+          if (evt.velocityX < -20) {
+            translateX.value = withSpring(
+              MAX_TRANSLATE,
+              springConfig(evt.velocityX)
+            );
+          } else {
+            translateX.value = withSpring(0, springConfig(evt.velocityX));
+          }
+        }),
+    [startX, translateX]
+  );
 
   const styles = useAnimatedStyle(() => {
     if (isRemoving.value) {
