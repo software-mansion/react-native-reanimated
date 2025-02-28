@@ -44,11 +44,6 @@ using namespace reanimated;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
-+ (BOOL)requiresMainQueueSetup
-{
-  return YES;
-}
-
 - (void)invalidate
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
