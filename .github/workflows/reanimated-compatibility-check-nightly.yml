@@ -19,21 +19,16 @@ jobs:
         # Update it when dropping support for RN versions.
         react-native:
           [
-            { version: '0.74', architecture: 'Paper' },
-            { version: '0.74', architecture: 'Fabric' },
-            { version: '0.75', architecture: 'Paper' },
-            { version: '0.75', architecture: 'Fabric' },
-            { version: '0.76', architecture: 'Paper' },
-            { version: '0.76', architecture: 'Fabric' },
-            { version: '0.77', architecture: 'Paper' },
-            { version: '0.77', architecture: 'Fabric' },
+            { version: '0.74' },
+            { version: '0.75' },
+            { version: '0.76' },
+            { version: '0.77' },
           ]
       fail-fast: false
     env:
       APP_NAME: app
-      RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
     concurrency:
-      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native.version}}-${{matrix.platform}}-${{matrix.react-native.architecture}}-${{ matrix.mode }}-${{ github.ref }}
+      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native.version}}-${{matrix.platform}}-${{ matrix.mode }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Set up JDK 18

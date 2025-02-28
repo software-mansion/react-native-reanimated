@@ -16,14 +16,13 @@ jobs:
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        react-native-architecture: ['Paper', 'Fabric']
         platform: ['iOS', 'Android']
       fail-fast: false
     env:
       REACT_NATIVE_TAG: nightly
       APP_NAME: app
     concurrency:
-      group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      group: ${{ matrix.platform }}-react-native-nightly-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Setup Yarn
@@ -54,16 +53,12 @@ jobs:
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
-      - name: Install Paper Pods (iOS)
-        if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
-        working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
       - name: Install Fabric Pods (iOS)
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
+        if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
       - name: Setup Fabric (Android)
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
+        if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app (iOS)
