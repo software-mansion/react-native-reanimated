@@ -42,9 +42,7 @@ class LayoutAnimationsManager {
       const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
-#ifdef RCT_NEW_ARCH_ENABLED
   void transferConfigFromNativeID(const int nativeId, const int tag);
-#endif
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
@@ -52,10 +50,8 @@ class LayoutAnimationsManager {
 
   std::shared_ptr<JSLogger> jsLogger_;
 
-#ifdef RCT_NEW_ARCH_ENABLED
   std::unordered_map<int, std::shared_ptr<Shareable>>
       enteringAnimationsForNativeID_;
-#endif
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;

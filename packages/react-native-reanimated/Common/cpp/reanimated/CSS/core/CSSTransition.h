@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
@@ -49,5 +48,3 @@ class CSSTransition {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

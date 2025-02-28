@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/Quaternion.h>
 #include <reanimated/CSS/common/definitions.h>
@@ -102,5 +101,3 @@ class TransformMatrix {
 Vector4D operator*(const Vector4D &v, const TransformMatrix &m);
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

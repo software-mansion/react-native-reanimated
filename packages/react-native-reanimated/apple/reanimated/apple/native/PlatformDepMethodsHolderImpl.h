@@ -11,16 +11,11 @@
 namespace reanimated {
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(
-    RCTBridge *bridge,
-    REANodesManager *nodesManager,
-    REAModule *reaModule);
-PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
     REAModule *reaModule);
-SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
+SetGestureStateFunction makeSetGestureStateFunction(
     RCTModuleRegistry *moduleRegistry);
-SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(

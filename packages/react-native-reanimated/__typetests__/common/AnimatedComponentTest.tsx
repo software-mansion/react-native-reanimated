@@ -62,16 +62,12 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.Image
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         source={{ uri: undefined }}
       />
@@ -79,24 +75,18 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.ScrollView
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.FlatList
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         data={[]}
         renderItem={() => null}
@@ -105,8 +95,6 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
     </>

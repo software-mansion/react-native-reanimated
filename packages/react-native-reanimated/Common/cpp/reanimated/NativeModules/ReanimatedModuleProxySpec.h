@@ -31,11 +31,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   // views
   virtual jsi::Value getViewProp(
       jsi::Runtime &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
       const jsi::Value &shadowNodeWrapper,
-#else
-      const jsi::Value &viewTag,
-#endif
       const jsi::Value &propName,
       const jsi::Value &callback) = 0;
 
@@ -79,8 +75,6 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-
   // JS View style
   virtual void setViewStyle(
       jsi::Runtime &rt,
@@ -120,8 +114,6 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void unregisterCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &viewTag) = 0;
-
-#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated

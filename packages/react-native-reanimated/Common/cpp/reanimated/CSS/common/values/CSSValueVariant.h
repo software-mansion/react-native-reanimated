@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -109,7 +108,7 @@ class CSSValueVariant final : public CSSValue {
     }
   }
 
-  CSSValueVariant(const folly::dynamic &value) {
+  explicit CSSValueVariant(const folly::dynamic &value) {
     if (!tryConstruct(value)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
@@ -276,5 +275,3 @@ class CSSValueVariant final : public CSSValue {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

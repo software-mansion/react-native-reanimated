@@ -1,10 +1,14 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
 namespace reanimated {
 
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
+}
+
+bool CSSAnimationsRegistry::isEmpty() const {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::set(
@@ -272,11 +276,4 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   return hasUpdates;
 }
 
-bool CSSAnimationsRegistry::isEmpty() {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
-}
-
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

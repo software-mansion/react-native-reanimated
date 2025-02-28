@@ -1,8 +1,8 @@
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
+  LayoutAnimationsValues,
   LayoutAnimationType,
-  SharedTransitionAnimationsValues,
 } from 'react-native-reanimated';
 
 import { SyncUIRunner } from '../utils/SyncUIRunner';
@@ -25,8 +25,8 @@ export class WindowDimensionsMocker {
       const startLayoutAnimation: LayoutAnimationStartFunction = (
         tag: number,
         type: LayoutAnimationType,
-        _yogaValues: Partial<SharedTransitionAnimationsValues>,
-        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
+        _yogaValues: Partial<LayoutAnimationsValues>,
+        config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation,
       ) => {
         originalLayoutAnimationsManager.start(
           tag,

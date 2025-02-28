@@ -11,7 +11,6 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
 import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { SharedTransition } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -68,7 +67,6 @@ export default class AnimatedComponent
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
-  _sharedElementTransition: SharedTransition | null = null;
   _jsPropsUpdater = new JSPropsUpdater();
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
@@ -159,13 +157,6 @@ export default class AnimatedComponent
     this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
-    if (this.props.sharedTransitionTag) {
-      this._configureSharedTransition(true);
-    }
-    this._sharedElementTransition?.unregisterTransition(
-      this.getComponentViewTag(),
-      true
-    );
 
     const exiting = this.props.exiting;
 
@@ -289,12 +280,6 @@ export default class AnimatedComponent
     if (layout !== oldLayout) {
       this._configureLayoutTransition();
     }
-    if (
-      this.props.sharedTransitionTag !== undefined ||
-      prevProps.sharedTransitionTag !== undefined
-    ) {
-      this._configureSharedTransition();
-    }
     this._NativeEventsManager?.updateEvents(prevProps);
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -345,44 +330,15 @@ export default class AnimatedComponent
     );
   }
 
-  _configureSharedTransition(isUnmounting = false) {
-    if (IS_WEB) {
-      return;
-    }
-
-    const { sharedTransitionTag } = this.props;
-    if (!sharedTransitionTag) {
-      this._sharedElementTransition?.unregisterTransition(
-        this.getComponentViewTag(),
-        isUnmounting
-      );
-      this._sharedElementTransition = null;
-      return;
-    }
-    const sharedElementTransition =
-      this.props.sharedTransitionStyle ??
-      this._sharedElementTransition ??
-      new SharedTransition();
-    sharedElementTransition.registerTransition(
-      this.getComponentViewTag(),
-      sharedTransitionTag,
-      isUnmounting
-    );
-    this._sharedElementTransition = sharedElementTransition;
-  }
-
   _onSetLocalRef() {
     const tag = this.getComponentViewTag();
 
-    const { layout, entering, exiting, sharedTransitionTag } = this.props;
-    if (layout || entering || exiting || sharedTransitionTag) {
+    const { layout, entering, exiting } = this.props;
+    if (layout || entering || exiting) {
       if (!SHOULD_BE_USE_WEB) {
         enableLayoutAnimations(true, false);
       }
 
-      if (sharedTransitionTag) {
-        this._configureSharedTransition();
-      }
       if (exiting) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&

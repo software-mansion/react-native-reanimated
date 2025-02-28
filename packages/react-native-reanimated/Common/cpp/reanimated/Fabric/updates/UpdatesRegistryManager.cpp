@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 namespace reanimated {
@@ -132,5 +130,3 @@ void UpdatesRegistryManager::clearPropsToRevert(const SurfaceId surfaceId) {
 #endif
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

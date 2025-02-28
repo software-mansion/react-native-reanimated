@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/util/props.h>
 
 namespace reanimated {
@@ -131,7 +130,7 @@ ChangedProps getChangedProps(
   PropertyNames changedPropertyNames;
 
   for (const auto &propName : allowedProperties) {
-    const auto [oldChangedProp, newChangedProp] =
+    auto [oldChangedProp, newChangedProp] =
         getChangedValueForProp(oldProps, newProps, propName);
 
     const auto hasOldChangedProp = !oldChangedProp.isNull();
@@ -155,5 +154,3 @@ ChangedProps getChangedProps(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

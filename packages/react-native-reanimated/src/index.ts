@@ -53,11 +53,10 @@ export type {
   LayoutAnimation,
   LayoutAnimationFunction,
   LayoutAnimationStartFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues as LayoutAnimationsValues,
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,
-  SharedTransitionAnimationsValues,
   SharedValue,
   StyleProps,
   StylesOrDefault,
@@ -71,7 +70,6 @@ export {
   KeyboardState,
   ReduceMotion,
   SensorType,
-  SharedTransitionType,
 } from './commonTypes';
 export type { FlatListPropsWithLayout } from './component/FlatList';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
@@ -235,8 +233,6 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
-  // SET
-  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide

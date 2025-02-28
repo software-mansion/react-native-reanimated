@@ -1,14 +1,6 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -17,11 +9,15 @@
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
-#endif // RCT_NEW_ARCH_ENABLED
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
@@ -29,11 +25,8 @@
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/UIManager.h>
-#endif // RCT_NEW_ARCH_ENABLED
-
 #include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
 #include <string>
@@ -56,7 +49,6 @@ class ReanimatedModuleProxy
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const bool isBridgeless,
       const bool isReducedMotion);
 
   // We need this init method to initialize callbacks with
@@ -77,11 +69,7 @@ class ReanimatedModuleProxy
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
-#ifdef RCT_NEW_ARCH_ENABLED
       const jsi::Value &shadowNodeWrapper,
-#else
-      const jsi::Value &viewTag,
-#endif
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
@@ -117,7 +105,6 @@ class ReanimatedModuleProxy
     return jsLogger_;
   }
 
-#ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
   void maybeRunCSSLoop();
@@ -182,7 +169,6 @@ class ReanimatedModuleProxy
       jsi::Runtime &rt,
       const std::string &propName,
       const ShadowNode::Shared &shadowNode);
-#endif
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -207,10 +193,6 @@ class ReanimatedModuleProxy
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] inline bool isBridgeless() const {
-    return isBridgeless_;
-  }
-
   [[nodiscard]] inline bool isReducedMotion() const {
     return isReducedMotion_;
   }
@@ -226,13 +208,10 @@ class ReanimatedModuleProxy
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
-#ifdef RCT_NEW_ARCH_ENABLED
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);
-#endif // RCT_NEW_ARCH_ENABLED
 
-  const bool isBridgeless_;
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
@@ -248,7 +227,6 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 
-#ifdef RCT_NEW_ARCH_ENABLED
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
   double currentCssTimestamp_{0};
@@ -267,11 +245,6 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
-#else
-  const ObtainPropFunction obtainPropFunction_;
-  const ConfigurePropsFunction configurePropsPlatformFunction_;
-  const UpdatePropsFunction updatePropsFunction_;
-#endif
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

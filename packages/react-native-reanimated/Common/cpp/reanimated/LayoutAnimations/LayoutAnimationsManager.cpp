@@ -12,12 +12,10 @@ void LayoutAnimationsManager::configureAnimationBatch(
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
     const auto &[tag, type, config] = layoutAnimationConfig;
-#ifdef RCT_NEW_ARCH_ENABLED
     if (type == ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
-#endif
     if (config == nullptr) {
       getConfigsForType(type).erase(tag);
     } else {
@@ -99,7 +97,6 @@ void LayoutAnimationsManager::cancelLayoutAnimation(
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void LayoutAnimationsManager::transferConfigFromNativeID(
     const int nativeId,
     const int tag) {
@@ -110,7 +107,6 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
   }
   enteringAnimationsForNativeID_.erase(nativeId);
 }
-#endif
 
 std::unordered_map<int, std::shared_ptr<Shareable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {

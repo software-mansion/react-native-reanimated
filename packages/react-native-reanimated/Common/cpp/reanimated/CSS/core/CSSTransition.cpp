@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSTransition.h>
 
 namespace reanimated {
@@ -136,5 +135,3 @@ bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

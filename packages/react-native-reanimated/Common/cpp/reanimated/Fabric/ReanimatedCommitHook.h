@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
@@ -45,5 +44,3 @@ class ReanimatedCommitHook
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

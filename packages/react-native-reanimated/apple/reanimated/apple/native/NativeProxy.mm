@@ -44,21 +44,21 @@ static inline bool getIsReducedMotion()
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
-    RCTBridge *bridge,
+    RCTModuleRegistry *moduleRegistry,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule,
-    bool isBridgeless)
+    WorkletsModule *workletsModule)
 {
   auto nodesManager = reaModule.nodesManager;
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
-  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
+  PlatformDepMethodsHolder platformDepMethodsHolder =
+      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, reaModule);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
+      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
   commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);

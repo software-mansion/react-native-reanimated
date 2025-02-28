@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 namespace reanimated {
@@ -12,16 +11,12 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
 
 bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
-  for (const auto &[propName, propValue] : propertyValue.items()) {
+  return std::ranges::all_of(propertyValue.items(), [this](const auto &item) {
+    const auto &[propName, propValue] = item;
     const auto it = interpolators_.find(propName.getString());
-
-    if (it == interpolators_.end() ||
-        !it->second->equalsReversingAdjustedStartValue(propValue)) {
-      return false;
-    }
-  }
-
-  return true;
+    return it != interpolators_.end() &&
+        it->second->equalsReversingAdjustedStartValue(propValue);
+  });
 }
 
 void RecordPropertiesInterpolator::updateKeyframes(
@@ -99,5 +94,3 @@ void RecordPropertiesInterpolator::maybeCreateInterpolator(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

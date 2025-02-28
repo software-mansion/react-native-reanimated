@@ -5,7 +5,7 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
-  SharedTransitionAnimationsValues,
+  LayoutAnimationValues,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -19,7 +19,6 @@ function startObservingProgress(
 ): void {
   'worklet';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    // @ts-ignore: remove after https://github.com/software-mansion/react-native-reanimated/pull/7116
     global._notifyAboutProgress(tag, sharedValue.value);
   });
 }
@@ -47,19 +46,12 @@ function createLayoutAnimationManager(): {
       tag: number,
       type: LayoutAnimationType,
       /**
-       * CreateLayoutAnimationManager creates an animation manager for both
-       * Layout animations and Shared Transition Elements animations.
+       * CreateLayoutAnimationManager creates an animation manager for Layout
+       * animations.
        */
-      yogaValues: Partial<SharedTransitionAnimationsValues>,
-      config: (
-        arg: Partial<SharedTransitionAnimationsValues>
-      ) => LayoutAnimation
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
-      if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
-        global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
-        return;
-      }
-
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 

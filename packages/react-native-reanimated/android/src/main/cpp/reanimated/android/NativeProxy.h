@@ -2,7 +2,6 @@
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <reanimated/android/JNIHelper.h>
 
 #include <worklets/android/WorkletsModule.h>
 
@@ -150,7 +149,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 
@@ -227,7 +225,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 

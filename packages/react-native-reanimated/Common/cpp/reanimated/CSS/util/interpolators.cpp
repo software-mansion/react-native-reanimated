@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/util/interpolators.h>
 
 namespace reanimated {
@@ -35,5 +34,3 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
