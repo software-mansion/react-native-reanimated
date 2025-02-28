@@ -1,4 +1,3 @@
-#import <React/RCTBridge+Private.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>

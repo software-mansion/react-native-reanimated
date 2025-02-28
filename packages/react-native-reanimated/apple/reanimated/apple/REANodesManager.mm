@@ -1,16 +1,6 @@
-#import <React/RCTConvert.h>
-#import <reanimated/apple/READisplayLink.h>
-#import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REAUIKit.h>
 
-#import <React/RCTComponentViewRegistry.h>
-#import <React/RCTMountingManager.h>
-#import <React/RCTSurfacePresenter.h>
-#import <react/renderer/core/ShadowNode.h>
-#import <react/renderer/uimanager/UIManager.h>
-
-using namespace facebook::react;
+#import <React/RCTUtils.h>
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;

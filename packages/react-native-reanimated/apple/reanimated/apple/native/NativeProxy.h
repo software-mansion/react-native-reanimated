@@ -1,13 +1,9 @@
 #if __cplusplus
 
-#import <React/RCTEventDispatcher.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REAModule.h>
-#import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
-#import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+
 #import <worklets/apple/WorkletsModule.h>
-#import <memory>
 
 namespace reanimated {
 

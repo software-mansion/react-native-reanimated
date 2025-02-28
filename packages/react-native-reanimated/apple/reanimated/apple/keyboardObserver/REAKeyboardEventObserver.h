@@ -1,5 +1,3 @@
-#import <React/RCTEventDispatcher.h>
-
 typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
 
 @interface REAKeyboardEventObserver : NSObject

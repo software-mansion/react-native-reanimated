@@ -1,20 +1,12 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 
-#import <condition_variable>
-#import <mutex>
-
-#import <React/RCTCxxUtils.h>
-#import <React/RCTMessageThread.h>
-#import <React/RCTUtils.h>
-
 namespace facebook {
 namespace react {
 
 // Essentially the same as RCTMessageThread, but with public fields.
 struct WorkletsMessageThreadPublic {
-  // I don't know why we need three vtables (if you know then feel free to#import
-  // <worklets/apple/WorkletsMessageThread.h> explain it instead of this message), but this is what makes the casts
-  // in quitSynchronous() work correctly.
+  // I don't know why we need three vtables (if you know then feel free to explain it instead of this message),
+  // but this is what makes the casts in quitSynchronous() work correctly.
   void *vtable1;
   void *vtable2;
   void *vtable3;
