@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -27,6 +28,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule)
 {
+  REAAssertJavaScriptQueue();
+
   auto nodesManager = reaModule.nodesManager;
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
@@ -50,6 +53,8 @@ void commonInit(
     jsi::Runtime &uiRuntime,
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {
+  REAAssertJavaScriptQueue();
+
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
