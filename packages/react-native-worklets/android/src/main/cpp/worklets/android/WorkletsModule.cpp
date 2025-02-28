@@ -1,17 +1,8 @@
-#include <android/log.h>
-#include <fbjni/fbjni.h>
-#include <jsi/JSIDynamic.h>
-#include <jsi/jsi.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <react/jni/ReadableNativeArray.h>
-#include <react/jni/ReadableNativeMap.h>
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
-
-#include <functional>
-#include <utility>
 
 namespace worklets {
 
