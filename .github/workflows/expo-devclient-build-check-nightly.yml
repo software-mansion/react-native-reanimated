@@ -26,8 +26,6 @@ jobs:
       group: ${{ matrix.platform }}-expo-dev-client-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Check out reanimated repository
-        uses: actions/checkout@v4
       - name: Setup Java 17
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
