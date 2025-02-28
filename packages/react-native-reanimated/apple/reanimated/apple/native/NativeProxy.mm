@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -11,15 +12,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
-
-static inline bool getIsReducedMotion()
-{
-#if __has_include(<UIKit/UIAccessibility.h>)
-  return UIAccessibilityIsReduceMotionEnabled();
-#else
-  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif // __has_include(<UIKit/UIAccessibility.h>)
-}
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,

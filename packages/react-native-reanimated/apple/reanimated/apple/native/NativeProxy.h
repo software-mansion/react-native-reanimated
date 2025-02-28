@@ -7,8 +7,6 @@
 
 namespace reanimated {
 
-static inline bool getIsReducedMotion();
-
 std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
