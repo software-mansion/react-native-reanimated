@@ -1498,7 +1498,7 @@ PODS:
     - React-logger (= 0.77.0-0)
     - React-perflogger (= 0.77.0-0)
     - React-utils (= 0.77.0-0)
-  - RNReanimated (3.17.0):
+  - RNReanimated (3.17.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1519,10 +1519,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0)
-    - RNReanimated/worklets (= 3.17.0)
+    - RNReanimated/reanimated (= 3.17.1)
+    - RNReanimated/worklets (= 3.17.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0):
+  - RNReanimated/reanimated (3.17.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1543,9 +1543,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0)
+    - RNReanimated/reanimated/apple (= 3.17.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0):
+  - RNReanimated/reanimated/apple (3.17.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1567,7 +1567,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0):
+  - RNReanimated/worklets (3.17.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1588,9 +1588,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0)
+    - RNReanimated/worklets/apple (= 3.17.1)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0):
+  - RNReanimated/worklets/apple (3.17.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1893,7 +1893,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: be4ae5b0ab2fcc7a26f9d1f3112b361649564fc7
   ReactCodegen: d92b8ace8f895b98583e4c8e435598f3b36d6df4
   ReactCommon: 6f652903c0e2db5459f031d2d2a65f3943cfb6c3
-  RNReanimated: 61fce1f7271986fce22481fa897ce66ec7ebb659
+  RNReanimated: c81ef9c1a825371ccdcba302fd1ca2b16d9723f3
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: ef409d2acea4e78ceb422d45fbed7f184c734a44
 
