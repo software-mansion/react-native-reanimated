@@ -1,28 +1,7 @@
-#import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
-#import <reanimated/apple/READisplayLink.h>
-#import <reanimated/apple/REAModule.h>
-#import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REASlowAnimations.h>
-#import <reanimated/apple/RNGestureHandlerStateManager.h>
-#import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
-#import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
-
-#import <React/RCTBridge+Private.h>
-#import <React/RCTScheduler.h>
-#import <React/RCTSurfacePresenter.h>
-#import <react/renderer/core/ShadowNode.h>
-#import <react/renderer/uimanager/primitives.h>
-
-#import <React/RCTUIManager.h>
-
-#if TARGET_IPHONE_SIMULATOR
-#import <dlfcn.h>
-#endif
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;

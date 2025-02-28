@@ -1,28 +1,16 @@
-#import <React/RCTBridge+Private.h>
-
 #import <React/RCTCallInvoker.h>
-#import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
-#import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
-#import <React/RCTSurfacePresenterBridgeAdapter.h>
-#import <React/RCTSurfaceView.h>
+#import <React/RCTUIManagerUtils.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REAUIKit.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
-#import <worklets/Tools/ReanimatedJSIUtils.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/WorkletRuntime/WorkletRuntime.h>
 #import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #import <worklets/apple/WorkletsModule.h>
-
-#if __has_include(<UIKit/UIAccessibility.h>)
-#import <UIKit/UIAccessibility.h>
-#endif // __has_include(<UIKit/UIAccessibility.h>)
 
 using namespace facebook::react;
 using namespace reanimated;
