@@ -11,7 +11,7 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
 
-type LayoutAnimationsOptions =
+type LayoutAnimationOptions =
   | 'originX'
   | 'originY'
   | 'width'
@@ -20,12 +20,12 @@ type LayoutAnimationsOptions =
   | 'globalOriginX'
   | 'globalOriginY';
 
-type CurrentLayoutAnimationsValues = {
-  [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
+type CurrentLayoutAnimationValues = {
+  [K in LayoutAnimationOptions as `current${Capitalize<string & K>}`]: number;
 };
 
-type TargetLayoutAnimationsValues = {
-  [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
+type TargetLayoutAnimationValues = {
+  [K in LayoutAnimationOptions as `target${Capitalize<string & K>}`]: number;
 };
 
 interface WindowDimensions {
@@ -68,10 +68,10 @@ export type LayoutAnimation = {
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
-export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+export type EntryAnimationsValues = TargetLayoutAnimationValues &
   WindowDimensions;
 
-export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+export type ExitAnimationsValues = CurrentLayoutAnimationValues &
   WindowDimensions;
 
 export type EntryExitAnimationFunction =
@@ -81,8 +81,8 @@ export type EntryExitAnimationFunction =
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
 
-export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
-  TargetLayoutAnimationsValues &
+export type LayoutAnimationValues = CurrentLayoutAnimationValues &
+  TargetLayoutAnimationValues &
   WindowDimensions;
 
 export enum LayoutAnimationType {
@@ -92,14 +92,14 @@ export enum LayoutAnimationType {
 }
 
 export type LayoutAnimationFunction = (
-  targetValues: LayoutAnimationsValues
+  targetValues: LayoutAnimationValues
 ) => LayoutAnimation;
 
 export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
-  yogaValues: Partial<LayoutAnimationsValues>,
-  config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation
+  yogaValues: Partial<LayoutAnimationValues>,
+  config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
 ) => void;
 
 export interface ILayoutAnimationBuilder {

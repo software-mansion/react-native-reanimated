@@ -53,7 +53,7 @@ export type {
   LayoutAnimation,
   LayoutAnimationFunction,
   LayoutAnimationStartFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues as LayoutAnimationsValues,
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,

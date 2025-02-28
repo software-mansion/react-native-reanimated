@@ -5,7 +5,7 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -50,8 +50,8 @@ function createLayoutAnimationManager(): {
        * CreateLayoutAnimationManager creates an animation manager for Layout
        * animations.
        */
-      yogaValues: Partial<LayoutAnimationsValues>,
-      config: (arg: Partial<LayoutAnimationsValues>) => LayoutAnimation
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
       const style = config(yogaValues);
       let currentAnimation = style.animations;
