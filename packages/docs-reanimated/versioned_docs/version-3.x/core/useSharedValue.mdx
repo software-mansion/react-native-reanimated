@@ -1,0 +1,164 @@
+---
+sidebar_position: 1
+---
+
+# useSharedValue
+
+`useSharedValue` lets you define [shared values](/docs/fundamentals/glossary#shared-value) in your components.
+
+## Reference
+
+```javascript
+import { useSharedValue } from 'react-native-reanimated';
+
+function App() {
+  const sv = useSharedValue(100);
+
+  // read a shared value
+  console.log(sv.value);
+
+  // and modify it
+  sv.value += 50;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface SharedValue<Value = unknown> {
+  value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
+}
+
+function useSharedValue<Value>(initialValue: Value): SharedValue<Value>;
+```
+
+</details>
+
+### Arguments
+
+#### `initialValue`
+
+The value you want to store initially in the shared value. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
+
+### Returns
+
+`useSharedValue` returns a shared value initially set to the `initialValue`.
+
+You can access data stored in the shared value with either its `value` property or `get` and `set` methods.
+
+#### React Compiler support
+
+When working with the [React Compiler](https://react.dev/learn/react-compiler), you should refrain from accessing and modifying the `value` property directly. Instead, use the `get` and `set` methods. They're the alternative API for `useSharedValue`, compliant with the React Compiler standards.
+
+```javascript
+function App() {
+  const sv = useSharedValue(100);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return { width: sv.get() * 100 };
+  });
+
+  const handlePress = () => {
+    sv.set((value) => value + 1);
+  };
+}
+```
+
+## Example
+
+import SharedValue from '@site/src/examples/SharedValue';
+import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
+
+<InteractiveExample src={SharedValueSrc} component={SharedValue} showCode />
+
+## Remarks
+
+- Don't read or modify the value of a shared value during a component's render. Access to `value` property or calling `get`/`set` methods is a side-effect. Triggering side-effects during render [violates the Rules of React](https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render). All reads from and writes to a shared value should happen in relevant callbacks which aren't executed during render, i.e. in `useAnimatedStyle` or `useEffect` hooks.
+
+- When you change the `sv.value` Reanimated will update the styles and keep the shared value in sync between the threads. However, this won't trigger a typical React re-render because a shared value is a plain JavaScript object.
+
+- When you read the `sv.value` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), the thread will get blocked until the value is fetched from the [UI thread](/docs/fundamentals/glossary#ui-thread). In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+
+- When you change the `sv.value` the update will happen synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). On the other hand, on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) the update is asynchronous. This means when you try to immediately log the `value` after the change it will log the previously stored value.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue(100); // initially set 100
+
+  sv.value += 50; // changing value stored in a shared value
+
+  console.log(sv.value); // will still log 100
+}
+```
+
+</Indent>
+
+- Stay away from [destructuring assignment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) when working with shared values. While this is a completely valid JavaScript code it will make Reanimated unable to keep the reactivity of a shared value.
+
+<Indent>
+
+```javascript
+function App() {
+  let { value } = sv; // don't do this
+
+  console.log(value); // you can read the value just fine
+
+  value += 50; // but this won't update the styles
+}
+```
+
+</Indent>
+
+- When storing objects in a shared value, make sure to reassign an object instead of changing the properties individually.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue({ x: 0, y: 0 });
+
+  sv.value.x = 50; // Reanimated loses reactivity 🚨
+
+  sv.value = { x: 50, y: 0 }; // ✅
+}
+```
+
+</Indent>
+
+- When storing large arrays or complex objects in a shared value, you can use `.modify` method to alter the existing value instead of creating a new one.
+
+<Indent>
+
+```javascript
+function App() {
+  const sv = useSharedValue([1, 2, 3]);
+
+  sv.value.push(1000); // Reanimated loses reactivity 🚨
+
+  sv.value = [...sv.value, 1000]; // works, but creates a new copy ⚠️
+
+  sv.modify((value) => {
+    'worklet';
+    value.push(1000); // ✅
+    return value;
+  });
+}
+```
+
+</Indent>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

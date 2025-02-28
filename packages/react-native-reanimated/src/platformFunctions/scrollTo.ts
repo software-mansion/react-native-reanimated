@@ -1,18 +1,14 @@
 'use strict';
-import {
-  isChromeDebugger,
-  isFabric,
-  isJest,
-  shouldBeUseWeb,
-} from '../PlatformChecker';
-import { dispatchCommand } from './dispatchCommand';
+import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
+
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import type { Component } from 'react';
-import { logger } from '../logger';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { dispatchCommand } from './dispatchCommand';
 
 type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -34,7 +30,7 @@ type ScrollTo = <T extends Component>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToFabric(
+function scrollToNative(
   animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   x: number,
   y: number,
@@ -47,21 +43,6 @@ function scrollToFabric(
     'scrollTo',
     [x, y, animated]
   );
-}
-
-function scrollToPaper(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
-  x: number,
-  y: number,
-  animated: boolean
-) {
-  'worklet';
-  if (!_WORKLET) {
-    return;
-  }
-
-  const viewTag = animatedRef() as number;
-  global._scrollToPaper!(viewTag, x, y, animated);
 }
 
 function scrollToJest() {
@@ -80,11 +61,7 @@ if (!shouldBeUseWeb()) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
-  if (isFabric()) {
-    scrollTo = scrollToFabric as unknown as ScrollTo;
-  } else {
-    scrollTo = scrollToPaper as unknown as ScrollTo;
-  }
+  scrollTo = scrollToNative as unknown as ScrollTo;
 } else if (isJest()) {
   scrollTo = scrollToJest;
 } else if (isChromeDebugger()) {

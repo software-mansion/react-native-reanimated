@@ -1,8 +1,8 @@
 'use strict';
-import { useAnimatedStyle } from './useAnimatedStyle';
-import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
+import { useAnimatedStyle } from './useAnimatedStyle';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 

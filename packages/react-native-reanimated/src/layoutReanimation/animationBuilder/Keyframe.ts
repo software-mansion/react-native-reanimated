@@ -1,29 +1,30 @@
 'use strict';
-import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
-import type {
-  StyleProps,
-  EasingFunction,
-  TransformArrayItem,
-  AnimationFunction,
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
-  KeyframeProps,
-  MaybeInvalidKeyframeProps,
-  StylePropsWithArrayTransform,
-  ValidKeyframeProps,
-} from '../../commonTypes';
-import { ReduceMotion } from '../../commonTypes';
 import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import type {
+  AnimationFunction,
+  EasingFunction,
+  EntryExitAnimationFunction,
+  IEntryExitAnimationBuilder,
+  KeyframeProps,
+  MaybeInvalidKeyframeProps,
+  StyleProps,
+  StylePropsWithArrayTransform,
+  TransformArrayItem,
+  ValidKeyframeProps,
+} from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
+import { Easing } from '../../Easing';
 import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {
   duration: number;
   value: number | string;
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
@@ -36,6 +37,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   reduceMotionV: ReduceMotion = ReduceMotion.System;
   callbackV?: (finished: boolean) => void;
   definitions: MaybeInvalidKeyframeProps;
+  parsedAnimation?: EntryExitAnimationFunction;
 
   /*
     Keyframe definition should be passed in the constructor as the map
@@ -129,7 +131,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing?: EasingFunction;
+      easing?: EasingFunction | EasingFunctionFactory;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw new ReanimatedError(
@@ -232,7 +234,11 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
 
-    return () => {
+    if (this.parsedAnimation) {
+      return this.parsedAnimation;
+    }
+
+    this.parsedAnimation = () => {
       'worklet';
       const animations: StylePropsWithArrayTransform = {};
 
@@ -296,6 +302,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         callback,
       };
     };
+    return this.parsedAnimation;
   };
 }
 

@@ -5,7 +5,9 @@ file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
 file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/reanimated/*.cpp")
 
+find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
+find_package(react-native-worklets REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
@@ -29,7 +31,9 @@ endif()
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated worklets android)
+target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android)
+
+target_link_libraries(reanimated react-native-worklets::worklets)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
   target_link_libraries(reanimated ReactAndroid::reactnative)

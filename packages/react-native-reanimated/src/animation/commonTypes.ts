@@ -1,12 +1,12 @@
 'use strict';
 import type {
-  StyleProps,
   AnimatableValue,
-  AnimationObject,
-  Animation,
-  Timestamp,
-  AnimationCallback,
   AnimatedStyle,
+  Animation,
+  AnimationCallback,
+  AnimationObject,
+  StyleProps,
+  Timestamp,
 } from '../commonTypes';
 
 export interface HigherOrderAnimation {

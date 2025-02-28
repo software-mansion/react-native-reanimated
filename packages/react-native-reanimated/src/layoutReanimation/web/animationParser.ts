@@ -1,7 +1,7 @@
 'use strict';
 
-import { WebEasings } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
+import { WebEasings } from './Easing.web';
 
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
