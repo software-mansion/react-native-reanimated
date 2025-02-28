@@ -24,7 +24,6 @@ struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Shareable> config;
-  std::string sharedTransitionTag;
 };
 
 class LayoutAnimationsManager {
@@ -42,45 +41,24 @@ class LayoutAnimationsManager {
       const LayoutAnimationType type,
       const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
-  void clearSharedTransitionConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
-  int findPrecedingViewTagForTransition(const int tag);
-  const std::vector<int> &getSharedGroup(const int viewTag);
-#ifndef NDEBUG
-  std::string getScreenSharedTagPairString(
-      const int screenTag,
-      const std::string &sharedTag) const;
-  void checkDuplicateSharedTag(const int viewTag, const int screenTag);
-#endif
 
  private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
 
   std::shared_ptr<JSLogger> jsLogger_;
-#ifndef NDEBUG
-  // This set's function is to detect duplicate sharedTags on a single screen
-  // it contains strings in form: "reactScreenTag:sharedTag"
-  std::unordered_set<std::string> screenSharedTagSet_;
-  // And this map is to remove collected pairs on SET removal
-  std::unordered_map<int, std::string> viewsScreenSharedTagMap_;
-#endif
 
   std::unordered_map<int, std::shared_ptr<Shareable>>
       enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>>
-      sharedTransitionAnimations_;
-  std::unordered_set<int> ignoreProgressAnimationForTag_;
-  std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;
-  std::unordered_map<int, std::string> viewTagToSharedTag_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
   mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
-  // `layoutAnimations_`, `viewSharedValues_` and `shouldAnimateExitingForTag_`.
+  // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 
 } // namespace reanimated

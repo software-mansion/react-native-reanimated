@@ -19,8 +19,7 @@ function startObservingProgress(
 ): void {
   'worklet';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    // @ts-ignore: Temporary solution to avoid changes in C++ common code.
-    global._notifyAboutProgress(tag, sharedValue.value, false);
+    global._notifyAboutProgress(tag, sharedValue.value);
   });
 }
 

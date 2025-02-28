@@ -306,10 +306,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       getAnimationTimestamp,
-      // This is a temporary solution to avoid making changes in the common C++
-      // code. It will be removed in another PR.
-      [](jsi::Runtime &_v1, int _v2, const jsi::Object &_v3, bool _v4) {},
-      [](int _v1, bool _v2) {},
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
