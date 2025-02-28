@@ -27,9 +27,9 @@ export class AnimationUpdatesRecorder {
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => {
+      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>) => {
         recordLayoutAnimationUpdates(tag, value);
-        originalNotifyAboutProgress(tag, value, isSharedTransition);
+        originalNotifyAboutProgress(tag, value);
       };
     });
     return updatesContainer;

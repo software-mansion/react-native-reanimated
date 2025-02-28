@@ -127,9 +127,7 @@ declare global {
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
   var originalGetAnimationTimestamp: (() => number) | undefined;
   var originalUpdateProps: ((operations: Operation[]) => void) | undefined;
-  var originalNotifyAboutProgress:
-    | ((tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => void)
-    | undefined;
+  var originalNotifyAboutProgress: ((tag: number, value: Record<string, unknown>) => void) | undefined;
   var originalFlushAnimationFrame: ((frameTimestamp: number) => void) | undefined;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
@@ -137,7 +135,7 @@ declare global {
   var _registriesLeakCheck: () => string;
   var _updatePropsPaper: (operations: Operation[]) => void;
   var _updatePropsFabric: (operations: Operation[]) => void;
-  var _notifyAboutProgress: (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => void;
+  var _notifyAboutProgress: (tag: number, value: Record<string, unknown>) => void;
   var _obtainPropPaper: (viewTag: number, propName: string) => string;
   var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
