@@ -32,16 +32,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
       workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);
+  jsi::Runtime &uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
 
-  return reanimatedModuleProxy;
-}
-
-void commonInit(
-    REAModule *reaModule,
-    jsi::Runtime &uiRuntime,
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
-{
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
@@ -58,6 +50,8 @@ void commonInit(
       reanimatedModuleProxy->performOperations();
     }
   }];
+
+  return reanimatedModuleProxy;
 }
 
 } // namespace reanimated
