@@ -5,16 +5,13 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
+#import <React/RCTCallInvoker.h>
+
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
-@end
-
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
 @implementation WorkletsModule {
@@ -30,7 +27,7 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
-@synthesize moduleRegistry = _moduleRegistry;
+@synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -43,7 +40,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   });
 
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
-  auto jsCallInvoker = bridge.jsCallInvoker;
+  auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
