@@ -1,5 +1,6 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -12,15 +13,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
-
-static inline bool getIsReducedMotion()
-{
-#if __has_include(<UIKit/UIAccessibility.h>)
-  return UIAccessibilityIsReduceMotionEnabled();
-#else
-  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif // __has_include(<UIKit/UIAccessibility.h>)
-}
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
@@ -43,17 +35,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
       workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);
-
-  return reanimatedModuleProxy;
-}
-
-void commonInit(
-    REAModule *reaModule,
-    jsi::Runtime &uiRuntime,
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
-{
-  REAAssertJavaScriptQueue();
+  jsi::Runtime &uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
 
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
@@ -71,6 +53,8 @@ void commonInit(
       reanimatedModuleProxy->performOperations();
     }
   }];
+
+  return reanimatedModuleProxy;
 }
 
 } // namespace reanimated
