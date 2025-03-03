@@ -13,11 +13,6 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule);
 
-void commonInit(
-    REAModule *reaModule,
-    jsi::Runtime &uiRuntime,
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
-
 } // namespace reanimated
 
 #endif //__cplusplus
