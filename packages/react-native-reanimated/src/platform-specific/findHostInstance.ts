@@ -74,7 +74,7 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    (component as IAnimatedComponentInternal).hasAnimatedRef()
+    (component as IAnimatedComponentInternal)._hasAnimatedRef
       ? (component as IAnimatedComponentInternal)._componentRef
       : component
   );
