@@ -44,7 +44,7 @@ jobs:
       #     ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
       #     bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app
-        run: npx create-expo-app@latest ${{ env.APP_NAME }} -e with-new-arch
+        run: npx create-expo-app@latest ${{ env.APP_NAME }}
       - name: Load Expo tag
         working-directory: ${{ env.APP_NAME }}
         run: |
