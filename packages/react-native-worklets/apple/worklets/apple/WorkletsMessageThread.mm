@@ -1,3 +1,4 @@
+#import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 
 namespace facebook {
@@ -21,6 +22,7 @@ struct WorkletsMessageThreadPublic {
 // the app.
 void WorkletsMessageThread::quitSynchronous()
 {
+  AssertJavaScriptQueue();
   RCTMessageThread *rctThread = static_cast<RCTMessageThread *>(this);
   WorkletsMessageThreadPublic *rctThreadPublic = reinterpret_cast<WorkletsMessageThreadPublic *>(rctThread);
   rctThreadPublic->m_shutdown = true;
