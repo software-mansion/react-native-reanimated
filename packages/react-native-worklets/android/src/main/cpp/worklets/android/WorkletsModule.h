@@ -1,18 +1,12 @@
 #pragma once
 
-#include <fbjni/detail/References.h>
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <react/jni/CxxModuleWrapper.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <react/jni/WritableNativeMap.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/android/AndroidUIScheduler.h>
-
-#include <memory>
-#include <string>
 
 namespace worklets {
 

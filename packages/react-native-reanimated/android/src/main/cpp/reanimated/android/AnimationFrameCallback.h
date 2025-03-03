@@ -2,13 +2,15 @@
 
 #include <fbjni/fbjni.h>
 
-namespace worklets {
+namespace reanimated {
 
-class AnimationFrameCallback
-    : public facebook::jni::HybridClass<AnimationFrameCallback> {
+using namespace facebook;
+using namespace facebook::jni;
+
+class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/worklets/AnimationFrameCallback;";
+      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -24,9 +26,10 @@ class AnimationFrameCallback
  private:
   friend HybridBase;
 
-  explicit AnimationFrameCallback(std::function<void(const double)> callback)
+  explicit AnimationFrameCallback(std::function<void(double)> callback)
       : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
 };
-} // namespace worklets
+
+} // namespace reanimated

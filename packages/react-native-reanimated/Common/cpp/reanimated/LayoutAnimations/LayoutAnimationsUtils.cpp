@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 namespace reanimated {
@@ -87,5 +86,3 @@ bool MutationNode::isMutationMode() {
   return true;
 }
 } // namespace reanimated
-
-#endif

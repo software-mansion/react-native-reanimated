@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
@@ -26,11 +25,11 @@ class CSSTransitionsRegistry
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   bool hasUpdates() const;
+  bool isEmpty() const override;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag> &tagsToRemove) override;
-  bool isEmpty();
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
 
   void update(double timestamp);
@@ -53,5 +52,3 @@ class CSSTransitionsRegistry
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

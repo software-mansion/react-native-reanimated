@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
@@ -48,5 +47,3 @@ struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
 };
 
 } // namespace reanimated
-
-#endif

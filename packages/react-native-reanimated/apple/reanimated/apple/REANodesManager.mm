@@ -1,16 +1,8 @@
-#import <React/RCTConvert.h>
-#import <reanimated/apple/READisplayLink.h>
-#import <reanimated/apple/REAModule.h>
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REAUIKit.h>
 
-#import <React/RCTComponentViewRegistry.h>
-#import <React/RCTMountingManager.h>
-#import <React/RCTSurfacePresenter.h>
-#import <react/renderer/core/ShadowNode.h>
-#import <react/renderer/uimanager/UIManager.h>
-
-using namespace facebook::react;
+#import <React/RCTUIManagerUtils.h>
+#import <React/RCTUtils.h>
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
@@ -35,6 +27,9 @@ using namespace facebook::react;
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
+  // This method is called on the main queue during initialization or on the ShadowQueue during invalidation.
+  react_native_assert(RCTIsMainQueue() || RCTIsUIManagerQueue());
+
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;
@@ -49,6 +44,8 @@ using namespace facebook::react;
                                 bridge:(RCTBridge *)bridge
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
+  RCTAssertMainQueue();
+
   if ((self = [super init])) {
     _reanimatedModule = reanimatedModule;
     _onAnimationCallbacks = [NSMutableArray new];
@@ -65,6 +62,7 @@ using namespace facebook::react;
 
 - (void)invalidate
 {
+  RCTAssertUIManagerQueue();
   _eventHandler = nil;
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink invalidate];
@@ -73,32 +71,39 @@ using namespace facebook::react;
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb
 {
+  RCTAssertMainQueue();
   [_onAnimationCallbacks addObject:clb];
   [self startUpdatingOnAnimationFrame];
 }
 
 - (void)registerEventHandler:(REAEventHandler)eventHandler
 {
+  REAAssertJavaScriptQueue();
   _eventHandler = eventHandler;
 }
 
 - (void)registerPerformOperations:(REAPerformOperations)performOperations
 {
+  REAAssertJavaScriptQueue();
   _performOperations = performOperations;
 }
 
 - (void)startUpdatingOnAnimationFrame
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:NO];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:YES];
 }
 
 - (void)onAnimationFrame:(READisplayLink *)displayLink
 {
+  RCTAssertMainQueue();
+
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
@@ -118,11 +123,13 @@ using namespace facebook::react;
 
 - (void)performOperations
 {
+  RCTAssertMainQueue();
   _performOperations(); // calls ReanimatedModuleProxy::performOperations
 }
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
+  RCTAssertMainQueue();
   __weak REAEventHandler eventHandler = _eventHandler;
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^void() {
@@ -140,6 +147,7 @@ using namespace facebook::react;
 
 - (void)maybeFlushUIUpdatesQueue
 {
+  RCTAssertMainQueue();
   if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }

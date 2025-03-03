@@ -1,26 +1,18 @@
 #if __cplusplus
 
-#import <REAKeyboardEventObserver.h>
-#import <REAModule.h>
-#import <REANodesManager.h>
-#import <React/RCTEventDispatcher.h>
-#import <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#import <reanimated/apple/REAModule.h>
+#import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
-#import <memory>
 
 namespace reanimated {
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(
-    RCTBridge *bridge,
-    REANodesManager *nodesManager,
-    REAModule *reaModule);
-PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
     REAModule *reaModule);
-SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
+SetGestureStateFunction makeSetGestureStateFunction(
     RCTModuleRegistry *moduleRegistry);
-SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(

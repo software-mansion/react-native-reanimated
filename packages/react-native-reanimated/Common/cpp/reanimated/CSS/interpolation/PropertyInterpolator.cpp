@@ -1,13 +1,13 @@
-#if RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
+
+#include <utility>
 
 namespace reanimated {
 
 PropertyInterpolator::PropertyInterpolator(
-    const PropertyPath &propertyPath,
+    PropertyPath propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : propertyPath_(propertyPath),
+    : propertyPath_(std::move(propertyPath)),
       viewStylesRepository_(viewStylesRepository) {}
 
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
@@ -15,5 +15,3 @@ bool PropertyInterpolatorFactory::isDiscreteProperty() const {
 }
 
 } // namespace reanimated
-
-#endif

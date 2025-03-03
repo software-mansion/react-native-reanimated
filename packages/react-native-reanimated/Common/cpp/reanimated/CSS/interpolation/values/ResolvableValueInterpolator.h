@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSDimension.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
@@ -50,5 +49,3 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

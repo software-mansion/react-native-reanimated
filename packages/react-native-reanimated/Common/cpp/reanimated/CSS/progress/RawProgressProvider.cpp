@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 namespace reanimated {
@@ -45,5 +44,3 @@ void RawProgressProvider::update(const double timestamp) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

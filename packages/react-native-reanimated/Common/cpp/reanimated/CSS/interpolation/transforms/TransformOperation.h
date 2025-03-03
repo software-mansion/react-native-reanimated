@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/definitions.h>
@@ -214,5 +213,3 @@ struct MatrixOperation final
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

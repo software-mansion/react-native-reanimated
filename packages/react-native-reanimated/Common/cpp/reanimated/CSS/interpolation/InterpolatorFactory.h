@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
@@ -156,5 +155,3 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
         std::shared_ptr<TransformInterpolator>> &interpolators);
 
 } // namespace reanimated::Interpolators
-
-#endif // RCT_NEW_ARCH_ENABLED

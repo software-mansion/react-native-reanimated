@@ -82,6 +82,9 @@ export function withSequence(
           index < animations.length - 1 &&
           animations[index].reduceMotion
         ) {
+          if (typeof animations[index].callback === 'function') {
+            animations[index].callback?.(true);
+          }
           index++;
         }
 

@@ -1,14 +1,9 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
 #include <utility>
 
 namespace reanimated {
-
-template <typename TValue>
-CSSKeywordBase<TValue>::CSSKeywordBase() : value("") {}
 
 template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(const char *value) : value(value) {}
@@ -104,5 +99,3 @@ template class CSSKeywordBase<CSSKeyword>;
 template class CSSKeywordBase<CSSDisplay>;
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

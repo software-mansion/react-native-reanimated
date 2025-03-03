@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
@@ -867,5 +865,3 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

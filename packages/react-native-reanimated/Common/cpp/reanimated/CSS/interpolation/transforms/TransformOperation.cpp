@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 namespace reanimated {
@@ -276,7 +275,7 @@ std::string TransformOperationBase<
  */
 
 // Perspective
-PerspectiveOperation::PerspectiveOperation(double value)
+PerspectiveOperation::PerspectiveOperation(const double value)
     : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
 TransformOperationType PerspectiveOperation::type() const {
   return TransformOperationType::Perspective;
@@ -332,7 +331,7 @@ TransformMatrix RotateZOperation::toMatrix() const {
 }
 
 // Scale
-ScaleOperation::ScaleOperation(double value)
+ScaleOperation::ScaleOperation(const double value)
     : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
 TransformOperationType ScaleOperation::type() const {
   return TransformOperationType::Scale;
@@ -570,5 +569,3 @@ template struct TransformOperationBase<
     std::variant<TransformMatrix, TransformOperations>>;
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

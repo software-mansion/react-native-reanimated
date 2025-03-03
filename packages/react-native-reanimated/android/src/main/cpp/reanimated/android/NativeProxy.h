@@ -2,8 +2,6 @@
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <reanimated/android/JNIHelper.h>
-#include <reanimated/android/LayoutAnimations.h>
 
 #include <worklets/android/WorkletsModule.h>
 
@@ -11,47 +9,17 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/fabric/JFabricUIManager.h>
-#include <react/jni/CxxModuleWrapper.h>
-#include <react/jni/JRuntimeExecutor.h>
-#include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace reanimated {
 
 using namespace facebook;
 using namespace facebook::jni;
-
-class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
- public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
-
-  void onAnimationFrame(double timestampMs) {
-    callback_(timestampMs);
-  }
-
-  static void registerNatives() {
-    javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
-    });
-  }
-
- private:
-  friend HybridBase;
-
-  explicit AnimationFrameCallback(std::function<void(double)> callback)
-      : callback_(std::move(callback)) {}
-
-  std::function<void(double)> callback_;
-};
 
 class EventHandler : public HybridClass<EventHandler> {
  public:
@@ -151,8 +119,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 
@@ -166,7 +132,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
-  jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();
@@ -176,7 +141,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   PlatformDepMethodsHolder getPlatformDependentMethods();
-  void setupLayoutAnimations();
 
   double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(
@@ -203,12 +167,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jni::alias_ref<JString> eventName,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event);
-
-  void progressLayoutAnimation(
-      jsi::Runtime &rt,
-      int tag,
-      const jsi::Object &newProps,
-      bool isSharedTransition);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
@@ -237,13 +195,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      const bool isBridgeless,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
-
-  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-                      &fabricUIManager);
 
   void invalidateCpp();
 };

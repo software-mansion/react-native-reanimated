@@ -20,19 +20,16 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-  rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
-
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG
 
-#if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef IS_REANIMATED_EXAMPLE_APP
   jsi_utils::installJsiFunction(
       rnRuntime,
       "_registriesLeakCheck",
       reanimatedModuleProxy->createRegistriesLeakCheck());
-#endif // defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
+#endif // IS_REANIMATED_EXAMPLE_APP
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(

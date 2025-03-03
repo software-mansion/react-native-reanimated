@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/config/common.h>
 
 namespace reanimated {
@@ -16,5 +15,3 @@ double getDelay(jsi::Runtime &rt, const jsi::Object &config) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

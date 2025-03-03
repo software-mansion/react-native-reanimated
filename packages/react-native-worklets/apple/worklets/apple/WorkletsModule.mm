@@ -1,21 +1,19 @@
-#import <React/RCTBridge+Private.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
+#import <worklets/apple/AssertJavaScriptQueue.h>
+#import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
+
+#import <React/RCTCallInvoker.h>
 
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
-@end
-
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
 
 @implementation WorkletsModule {
@@ -28,15 +26,18 @@ using worklets::WorkletsModuleProxy;
 
 - (std::shared_ptr<WorkletsModuleProxy>)getWorkletsModuleProxy
 {
+  AssertJavaScriptQueue();
   return workletsModuleProxy_;
 }
 
-@synthesize moduleRegistry = _moduleRegistry;
+@synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
+  AssertJavaScriptQueue();
+
   auto *bridge = self.bridge;
   auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
@@ -44,7 +45,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   });
 
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
-  auto jsCallInvoker = bridge.jsCallInvoker;
+  auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
@@ -67,6 +68,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
 - (void)invalidate
 {
+  AssertTurboModuleManagerQueue();
+
   [animationFrameQueue_ invalidate];
 
   // We have to destroy extra runtimes when invalidate is called. If we clean

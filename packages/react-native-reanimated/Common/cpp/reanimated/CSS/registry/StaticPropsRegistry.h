@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <react/renderer/core/ShadowNode.h>
 
@@ -23,9 +22,9 @@ class StaticPropsRegistry {
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag> &tagsToRemove);
   bool isEmpty();
-  bool hasObservers(const Tag viewTag) const;
-  void setObserver(const Tag viewTag, PropsObserver observer);
-  void removeObserver(const Tag viewTag);
+  bool hasObservers(Tag viewTag) const;
+  void setObserver(Tag viewTag, PropsObserver observer);
+  void removeObserver(Tag viewTag);
 
  private:
   std::unordered_map<Tag, folly::dynamic> registry_;
@@ -38,5 +37,3 @@ class StaticPropsRegistry {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

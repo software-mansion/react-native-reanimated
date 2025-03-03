@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
@@ -49,9 +48,6 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
   double getGlobalProgress() const override {
     return applyAnimationDirection(rawProgress_.value_or(0));
   }
-  bool isFirstUpdate() const override {
-    return !previousRawProgress_.has_value();
-  }
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   AnimationProgressState getState(double timestamp) const;
   double getPauseTimestamp() const {
@@ -85,5 +81,3 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
