@@ -27,8 +27,7 @@
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
-  // This method is called on the JavaScript queue during initialization or on the ShadowQueue during invalidation.
-  react_native_assert(REAIsJavaScriptQueue() || RCTIsUIManagerQueue());
+  // This method is called on the JavaScript queue during initialization or on com.meta.react.turbomodulemanager.queue during invalidation.
 
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
@@ -62,7 +61,8 @@
 
 - (void)invalidate
 {
-  RCTAssertUIManagerQueue();
+  // Called on com.meta.react.turbomodulemanager.queue
+
   _eventHandler = nil;
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink invalidate];
