@@ -1548,7 +1548,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets
     - Yoga
-  - RNSVG (15.11.1):
+  - RNSVG (15.11.2):
     - React-Core
   - RNWorklets (0.1.0):
     - DoubleConversion

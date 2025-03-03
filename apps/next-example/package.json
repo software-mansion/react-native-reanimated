@@ -20,7 +20,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native-reanimated": "workspace:*",
-    "react-native-web": "0.19.11",
+    "react-native-web": "0.19.13",
     "react-native-worklets": "workspace:*"
   },
   "devDependencies": {

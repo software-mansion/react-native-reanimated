@@ -1834,7 +1834,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets
     - Yoga
-  - RNScreens (4.5.0):
+  - RNScreens (4.9.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1855,9 +1855,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.5.0)
+    - RNScreens/common (= 4.9.1)
     - Yoga
-  - RNScreens/common (4.5.0):
+  - RNScreens/common (4.9.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1879,7 +1879,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (4.9.0):
+  - RNSVG (15.11.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1899,9 +1899,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.9.0)
+    - RNSVG/common (= 15.11.2)
     - Yoga
-  - RNScreens/common (4.9.0):
+  - RNSVG/common (15.11.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2316,6 +2316,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: afd04ff05ebe0121a00c468a8a3c8080221cb14c
 
-PODFILE CHECKSUM: 4a9e0af2552a3fcd2303b56ad75e373f8bae65b9
+PODFILE CHECKSUM: 2fe755d630b6c1453c3775350c717aae7f9db6b3
 
 COCOAPODS: 1.15.2
