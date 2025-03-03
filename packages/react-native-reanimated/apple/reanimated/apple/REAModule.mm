@@ -147,10 +147,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   REAAssertJavaScriptQueue();
 
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  auto jsCallInvoker = _callInvoker.callInvoker;
-  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+  react_native_assert(workletsModule != nullptr);
 
-  assert(jsiRuntime != nullptr);
+  auto jsCallInvoker = _callInvoker.callInvoker;
+  react_native_assert(jsCallInvoker != nullptr);
+
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto reanimatedModuleProxy = reanimated::createReanimatedModule(self, _moduleRegistry, jsCallInvoker, workletsModule);
 
