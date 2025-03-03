@@ -44,12 +44,12 @@ jobs:
         run: yarn add @react-native-community/cli
       - name: Create app
         run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
-      # - name: Setup Yarn Modern in app
-      #   working-directory: ${{ env.APP_NAME }}
-      #   run: |
-      #     touch yarn.lock
-      #     yarn set version berry
-      #     yarn config set nodeLinker node-modules
+      - name: Setup Yarn Modern in app
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
