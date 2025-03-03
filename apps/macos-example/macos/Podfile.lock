@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.1.0):
+  - react-native-safe-area-context (5.2.0):
     - React-Core
   - React-nativeconfig (0.75.16)
   - React-NativeModulesApple (0.75.16):
@@ -1459,7 +1459,7 @@ PODS:
     - React-Core
   - RNCClipboard (1.16.1):
     - React-Core
-  - RNGestureHandler (2.22.0):
+  - RNGestureHandler (2.24.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1594,12 +1594,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets/worklets/apple (= 0.0.1)
     - Yoga
-  - RNWorklets/worklets/apple (0.0.1):
-    - DoubleConversion
-    - glog
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
+  - RNSVG (15.11.2):
     - React-Core
     - React-debug
     - React-Fabric
@@ -1863,7 +1858,7 @@ SPEC CHECKSUMS:
   React-logger: d2346d2c6056e50941ee0e91db9639188842fe34
   React-Mapbuffer: 42c1c6a2fcfc7993c96fd1540993ec5070fc870f
   React-microtasksnativemodule: 74040ecf5ffab05e7276a3c73bc6aa423e152c1b
-  react-native-safe-area-context: e134b241010ebe2aacdcea013565963d13826faa
+  react-native-safe-area-context: 3e33e7c43c8b74dba436a5a32651cb8d7064c740
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 89541f2dd4928c7a6e40a01a7771664e1ff61066
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147
@@ -1891,10 +1886,9 @@ SPEC CHECKSUMS:
   ReactCommon: 33aa3e538f80f05a4d91150f7d704f1accf9b2ec
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNCClipboard: ee059e6006b137e369caed5eb852b4aad9f5d886
-  RNGestureHandler: 8c8722468ee6ced80a0723943c894798d2613a81
-  RNReanimated: 39a985f46c54230da2419ae2f7bddb2bbab86315
-  RNSVG: 46769c92d1609e617dbf9326ad8a0cff912d0982
-  RNWorklets: df188f431088de801cf41f4c15338b10e872b29c
+  RNGestureHandler: f68a61f1a067b3768f970d3f9e8603745fc98e1c
+  RNReanimated: 39ca30c9ffc2362926229f6977ba6536c7bddea4
+  RNSVG: 7d403633772d39f695b8a1ccb64db8499e807dac
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 

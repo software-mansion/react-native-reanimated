@@ -704,16 +704,16 @@ void ReanimatedModuleProxy::performOperations() {
 
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch, false);
+      cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch, true);
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
+      cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
     shouldUpdateCssAnimations_ = false;
