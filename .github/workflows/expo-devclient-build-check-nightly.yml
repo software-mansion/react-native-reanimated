@@ -43,7 +43,7 @@ jobs:
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      - name: Create Expo app (Fabric)
+      - name: Create Expo app
         run: npx create-expo-app@latest ${{ env.APP_NAME }} -e with-new-arch
       - name: Load Expo tag
         working-directory: ${{ env.APP_NAME }}
@@ -57,6 +57,12 @@ jobs:
       - name: Setup configuration
         working-directory: ${{ env.APP_NAME }}
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
+      - name: Setup Yarn Modern in app
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
