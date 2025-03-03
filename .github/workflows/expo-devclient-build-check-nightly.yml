@@ -77,6 +77,7 @@ jobs:
         working-directory: ${{ env.APP_NAME }}/ios
         run: pod install
       - name: Install React Native
+        working-directory: ${{ env.APP_NAME }}
         run: yarn add @react-native-community/cli
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
