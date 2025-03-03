@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest' }}
     strategy:
@@ -28,6 +28,10 @@ jobs:
     steps:
       - name: Check out reanimated repository
         uses: actions/checkout@v4
+      - name: Setup Yarn
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
+        run: corepack enable && yarn set version stable
       - name: Setup Java 17
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
