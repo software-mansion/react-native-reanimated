@@ -2,6 +2,8 @@
 
 #include <fbjni/fbjni.h>
 
+#include <utility>
+
 namespace reanimated {
 
 using namespace facebook;
