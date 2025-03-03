@@ -66,6 +66,8 @@
     "android",
     "apple",
     "Common",
+    "scripts",
+    "plugin",
     "*.podspec",
     "react-native.config.js",
     "!apple/build",
