@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
@@ -25,10 +25,6 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Setup Yarn
-        # Sometimes `npx @react-native-community/cli init` fails at random.
-        # Pre-installing it with Yarn seems to improve stability.
-        run: corepack enable && yarn init
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
@@ -44,12 +40,6 @@ jobs:
         run: yarn add @react-native-community/cli
       - name: Create app
         run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
-      - name: Setup Yarn Modern in app
-        working-directory: ${{ env.APP_NAME }}
-        run: |
-          touch yarn.lock
-          yarn set version berry
-          yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
@@ -59,7 +49,7 @@ jobs:
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
+        run: bundle install && bundle exec pod install
       - name: Setup Fabric (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
