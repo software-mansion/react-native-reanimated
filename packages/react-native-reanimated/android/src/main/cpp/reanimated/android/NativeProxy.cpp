@@ -29,12 +29,6 @@ NativeProxy::NativeProxy(
           getPlatformDependentMethods(),
           getIsReducedMotion())) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
-  commonInit(fabricUIManager);
-}
-
-void NativeProxy::commonInit(
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        &fabricUIManager) {
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
   reanimatedModuleProxy_->initializeFabric(uiManager);
