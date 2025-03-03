@@ -27,7 +27,8 @@
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
-  // This method is called on the JavaScript queue during initialization or on com.meta.react.turbomodulemanager.queue during invalidation.
+  // This method is called on the JavaScript queue during initialization or on com.meta.react.turbomodulemanager.queue
+  // during invalidation.
 
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
