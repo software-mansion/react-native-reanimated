@@ -1548,7 +1548,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets
     - Yoga
-  - RNSVG (15.11.1):
+  - RNSVG (15.11.2):
     - React-Core
   - RNWorklets (0.0.1):
     - DoubleConversion
@@ -1594,7 +1594,12 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets/worklets/apple (= 0.0.1)
     - Yoga
-  - RNSVG (15.11.2):
+  - RNWorklets/worklets/apple (0.0.1):
+    - DoubleConversion
+    - glog
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
     - React-debug
     - React-Fabric
@@ -1887,11 +1892,12 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNCClipboard: ee059e6006b137e369caed5eb852b4aad9f5d886
   RNGestureHandler: f68a61f1a067b3768f970d3f9e8603745fc98e1c
-  RNReanimated: 39ca30c9ffc2362926229f6977ba6536c7bddea4
+  RNReanimated: 39a985f46c54230da2419ae2f7bddb2bbab86315
   RNSVG: 7d403633772d39f695b8a1ccb64db8499e807dac
+  RNWorklets: df188f431088de801cf41f4c15338b10e872b29c
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 
-PODFILE CHECKSUM: 8d50cc2acc9f6a6b1a12bd9106b86385ad72266f
+PODFILE CHECKSUM: 5f9524510c739a56992ca4307a447490ca50e21b
 
 COCOAPODS: 1.16.2

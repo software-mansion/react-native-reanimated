@@ -6539,13 +6539,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/invariant@npm:^2.2.35":
-  version: 2.2.37
-  resolution: "@types/invariant@npm:2.2.37"
-  checksum: 10/dd6ee07af8516d21c868f95fd96c601c50a231e69c2df69360cb491b5858c76cf9b5a646df166cb4197b5078ca824da3dd90d6142d01a3cefc1176c57278b129
-  languageName: node
-  linkType: hard
-
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0, @types/istanbul-lib-coverage@npm:^2.0.1":
   version: 2.0.6
   resolution: "@types/istanbul-lib-coverage@npm:2.0.6"
@@ -6661,15 +6654,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-test-renderer@npm:^17.0.0-0":
-  version: 17.0.9
-  resolution: "@types/react-test-renderer@npm:17.0.9"
-  dependencies:
-    "@types/react": "npm:^17"
-  checksum: 10/4d78a7c98cdfedc0d706df873a55534b70deab143b0403d0db1ca91d580a246322a4da4460862dd80d2a3452882cb40f4188efa358bd3468a93699a65ce5b089
-  languageName: node
-  linkType: hard
-
 "@types/react-test-renderer@npm:^18.0.0":
   version: 18.3.0
   resolution: "@types/react-test-renderer@npm:18.3.0"
@@ -6698,40 +6682,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^17":
-  version: 17.0.82
-  resolution: "@types/react@npm:17.0.82"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:^0.16"
-    csstype: "npm:^3.0.2"
-  checksum: 10/ff6827d45032b6efc9ae0b4e56b3ee708fd131595988a4aba205f4424267cea7a9e2a9d15138d6a26eb4bb8273880eaf1b942e3396bacf0ecff8cf223381d185
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^18.2.6":
-  version: 18.3.18
-  resolution: "@types/react@npm:18.3.18"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: 10/7fdd8b853e0d291d4138133f93f8d5c333da918e5804afcea61a923aab4bdfc9bb15eb21a5640959b452972b8715ddf10ffb12b3bd071898b9e37738636463f2
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^19.0.0":
+"@types/react@npm:^19.0.0, @types/react@npm:^19.0.10":
   version: 19.0.10
   resolution: "@types/react@npm:19.0.10"
   dependencies:
     csstype: "npm:^3.0.2"
   checksum: 10/10b592d212ebe4b4e0bd42a95c58af3d8dfcb8b3fa4b412d686c2ff8810d5dd3e3a30ebedb31d7b738e33a39c43503e24fe4e6ca8a21d842870043793f4eda98
-  languageName: node
-  linkType: hard
-
-"@types/scheduler@npm:^0.16":
-  version: 0.16.8
-  resolution: "@types/scheduler@npm:0.16.8"
-  checksum: 10/6c091b096daa490093bf30dd7947cd28e5b2cd612ec93448432b33f724b162587fed9309a0acc104d97b69b1d49a0f3fc755a62282054d62975d53d7fd13472d
   languageName: node
   linkType: hard
 
@@ -9190,7 +9146,7 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.2.0"
-    react-native-screens: "npm:4.9.0"
+    react-native-screens: "npm:4.9.1"
     react-native-svg: "npm:15.11.2"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
@@ -15303,7 +15259,6 @@ __metadata:
     react-native: "npm:0.75.4"
     react-native-macos: "npm:^0.75.13"
     react-native-reanimated: "workspace:*"
-    react-native-screens: "npm:4.9.0"
   languageName: unknown
   linkType: soft
 
@@ -16720,7 +16675,7 @@ __metadata:
     react: "npm:19.0.0"
     react-dom: "npm:19.0.0"
     react-native-reanimated: "workspace:*"
-    react-native-web: "npm:0.19.11"
+    react-native-web: "npm:0.19.13"
     react-native-worklets: "workspace:*"
     start-server-and-test: "npm:^2.0.1"
   languageName: unknown
@@ -18322,10 +18277,10 @@ __metadata:
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/preset-typescript": "npm:^7.16.7"
     "@babel/types": "npm:^7.20.0"
-    "@react-native/babel-preset": "npm:0.77.0"
-    "@react-native/eslint-config": "npm:0.77.0"
-    "@react-native/metro-config": "npm:0.77.0"
-    "@react-native/typescript-config": "npm:0.77.0"
+    "@react-native/babel-preset": "npm:0.78.0"
+    "@react-native/eslint-config": "npm:0.78.0"
+    "@react-native/metro-config": "npm:0.78.0"
+    "@react-native/typescript-config": "npm:0.78.0"
     "@testing-library/jest-native": "npm:^4.0.4"
     "@testing-library/react-hooks": "npm:^8.0.1"
     "@testing-library/react-native": "npm:^13.0.1"
@@ -18333,11 +18288,10 @@ __metadata:
     "@types/babel__generator": "npm:^7.6.4"
     "@types/babel__traverse": "npm:^7.14.2"
     "@types/convert-source-map": "npm:^2.0.0"
-    "@types/invariant": "npm:^2.2.35"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^18.0.0"
-    "@types/react": "npm:^19.0.0"
-    "@types/react-test-renderer": "npm:^17.0.0-0"
+    "@types/react": "npm:^19.0.10"
+    "@types/react-test-renderer": "npm:^19.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     "@typescript-eslint/parser": "npm:^6.19.0"
     "@typescript-eslint/rule-tester": "npm:^6.21.0"
@@ -18368,7 +18322,8 @@ __metadata:
     react-native: "npm:0.78.0"
     react-native-builder-bob: "npm:0.33.1"
     react-native-gesture-handler: "npm:2.24.0"
-    react-native-web: "npm:0.19.11"
+    react-native-is-edge-to-edge: "npm:1.1.6"
+    react-native-web: "npm:0.19.13"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.0.0"
     shelljs: "npm:^0.8.5"
@@ -18392,16 +18347,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.9.0":
-  version: 4.9.0
-  resolution: "react-native-screens@npm:4.9.0"
+"react-native-screens@npm:4.9.1":
+  version: 4.9.1
+  resolution: "react-native-screens@npm:4.9.1"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/705475d6f99acfcf4c2d8f011b2c453f412f882affef638dd2da33391a0d7401d10fe919d31f04fab8625b3aa3c33c39c3a6e685449bc47449856abafa02caec
+  checksum: 10/ba1e8f818de5b9e22ecb6e4467686c76742816cfdab999ce5564226481d4451a0314c73d7541a641133ef0c0e9f91b3aa4c4a67c931b17c127489e5fb5aef8e8
   languageName: node
   linkType: hard
 
@@ -18416,25 +18371,6 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/bab86df8fdd4f500ad3f242558726693b0409b5e9b2a97cb3e9b5c1dfdcef01fe73fd36f01926ef20b19f99928b6ab1fb9e942bbeb1308aab27aa0d6c4877a5e
-  languageName: node
-  linkType: hard
-
-"react-native-web@npm:0.19.11":
-  version: 0.19.11
-  resolution: "react-native-web@npm:0.19.11"
-  dependencies:
-    "@babel/runtime": "npm:^7.18.6"
-    "@react-native/normalize-colors": "npm:^0.74.1"
-    fbjs: "npm:^3.0.4"
-    inline-style-prefixer: "npm:^6.0.1"
-    memoize-one: "npm:^6.0.0"
-    nullthrows: "npm:^1.1.1"
-    postcss-value-parser: "npm:^4.2.0"
-    styleq: "npm:^0.1.3"
-  peerDependencies:
-    react: ^18.0.0
-    react-dom: ^18.0.0
-  checksum: 10/b0cb78af7bea4891a4766dde7a83a056aa27320d0be9d844a05d06b554e5457ff97b060e7eec7bd7e7510df9c98a1c0208148ea6de99c572749aab1327f9932b
   languageName: node
   linkType: hard
 
@@ -18464,7 +18400,7 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native/eslint-config": "npm:0.76.5"
     "@types/jest": "npm:^29.5.5"
-    "@types/react": "npm:^19.0.0"
+    "@types/react": "npm:^19.0.10"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     babel-plugin-reanimated: "workspace:*"
     clang-format-node: "npm:^1.3.1"
@@ -20922,7 +20858,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.77.0"
     "@react-native/metro-config": "npm:0.77.0"
     "@react-native/typescript-config": "npm:0.77.0"
-    "@types/react": "npm:^18.2.6"
+    "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
     eslint: "npm:^8.57.0"

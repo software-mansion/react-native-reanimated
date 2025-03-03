@@ -1,9 +1,9 @@
 'use strict';
 import type {
-  Component,
   ComponentClass,
   ComponentType,
   FunctionComponent,
+  Ref,
 } from 'react';
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
@@ -68,19 +68,10 @@ export function createAnimatedComponent(
     }
   }
 
-  const animatedComponent = ({
-    ref,
-    ...props
-  }: {
-    ref: React.Ref<Component>;
-    props: AnimatedComponentProps<InitialComponentProps>;
-  }) => {
-    return (
-      <AnimatedComponent
-        {...props}
-        {...(ref === null ? null : { forwardedRef: ref })}
-      />
-    );
+  const animatedComponent = (
+    props: AnimatedComponentProps & { ref: Ref<AnimatedComponent> }
+  ) => {
+    return <AnimatedComponent {...props} />;
   };
 
   animatedComponent.displayName =

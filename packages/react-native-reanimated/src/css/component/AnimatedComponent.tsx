@@ -106,10 +106,7 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = setAndForwardRef<Component | HTMLElement>({
-    getForwardedRef: () =>
-      this.props.forwardedRef as RefObject<
-        Component<Record<string, unknown>, Record<string, unknown>, unknown>
-      >,
+    getForwardedRef: () => this.props.ref as RefObject<Component>,
     setLocalRef: (ref) => {
       if (!ref) {
         // component has been unmounted
