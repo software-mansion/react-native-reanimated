@@ -53,12 +53,12 @@ jobs:
       - name: Setup configuration
         working-directory: ${{ env.APP_NAME }}
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
-      - name: Install Reanimated
-        working-directory: ${{ env.APP_NAME }}
-        run: npm install react-native-reanimated@nightly
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
+      - name: Install Reanimated
+        working-directory: ${{ env.APP_NAME }}
+        run: npm install react-native-reanimated@nightly
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
         run: npx expo prebuild
