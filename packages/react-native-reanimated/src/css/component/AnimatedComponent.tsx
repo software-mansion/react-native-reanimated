@@ -1,5 +1,5 @@
 'use strict';
-import type { ComponentProps, Ref, RefObject } from 'react';
+import type { ComponentProps, Ref } from 'react';
 import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
@@ -10,7 +10,6 @@ import type {
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
@@ -103,21 +102,28 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  _setComponentRef = setAndForwardRef<Component | HTMLElement>({
-    getForwardedRef: () => this.props.ref as RefObject<Component>,
-    setLocalRef: (ref) => {
-      if (!ref) {
-        // component has been unmounted
-        return;
-      }
-      if (ref !== this._componentRef) {
-        this._componentRef = this._resolveComponentRef(ref);
-        // if ref is changed, reset viewInfo
-        this._viewInfo = undefined;
-      }
-      this._onSetLocalRef();
-    },
-  });
+  _setComponentRef = (ref: Component | HTMLElement) => {
+    const forwardedRef = this.props.ref;
+    // Forward to user ref prop (if one has been specified)
+    if (typeof forwardedRef === 'function') {
+      // Handle function-based refs. String-based refs are handled as functions.
+      forwardedRef(ref);
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
+      // Handle createRef-based refs
+      forwardedRef.current = ref;
+    }
+
+    if (!ref) {
+      // component has been unmounted
+      return;
+    }
+    if (ref !== this._componentRef) {
+      this._componentRef = this._resolveComponentRef(ref);
+      // if ref is changed, reset viewInfo
+      this._viewInfo = undefined;
+    }
+    this._onSetLocalRef();
+  };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
     const componentRef = ref as AnimatedComponentRef;
