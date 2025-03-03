@@ -76,10 +76,12 @@ jobs:
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: pod install
+      - name: Install React Native
+        run: yarn add @react-native-community/cli
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: yarn react-native run-ios --terminal='Terminal'
+        run: yarn rnc-cli run-ios --terminal='Terminal'
       - name: Build app (Android)
         working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
