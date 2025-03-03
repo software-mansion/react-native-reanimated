@@ -56,14 +56,10 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - name: Install Fabric Pods (iOS)
+      - name: Install Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod install
-      - name: Setup Fabric (Android)
-        if: ${{ matrix.platform == 'Android' }}
-        working-directory: ${{ env.APP_NAME }}/android
-        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
