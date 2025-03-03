@@ -7,7 +7,7 @@ require Pod::Executable.execute_command('node', ['-p',
 
 require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
 
-ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'TVOSExample'
+ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
 
 platform :tvos, min_ios_version_supported
 prepare_react_native_project!
