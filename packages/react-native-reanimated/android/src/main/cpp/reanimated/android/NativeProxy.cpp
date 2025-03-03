@@ -1,6 +1,7 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
+#include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/NativeProxy.h>
 
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
