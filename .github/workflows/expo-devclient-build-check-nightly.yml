@@ -75,7 +75,7 @@ jobs:
       - name: Install pods
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
+        run: pod install
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
