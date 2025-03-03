@@ -11,7 +11,7 @@ export type ChildHandle = {
   toggleState: () => void;
 };
 
-type ChildProps = { ref: RefObject<ChildHandle> | null };
+type ChildProps = { ref: RefObject<ChildHandle | null> };
 
 const Child = ({ ref }: ChildProps) => {
   const [state, setState] = React.useState(0);

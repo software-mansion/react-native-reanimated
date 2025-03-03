@@ -45,8 +45,8 @@ void CSSTransitionsRegistry::updateSettings(
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
-    const auto &currentStyle = transition->getCurrentInterpolationStyle();
-    setInUpdatesRegistry(transition->getShadowNode(), currentStyle);
+    updateInUpdatesRegistry(
+        transition, transition->getCurrentInterpolationStyle());
   }
 }
 
@@ -138,8 +138,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
       const auto &transitionStartStyle = transition->run(
           changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
-
-      strongThis->setInUpdatesRegistry(shadowNode, transitionStartStyle);
+      strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }
   };
