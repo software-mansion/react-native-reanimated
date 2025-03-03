@@ -27,8 +27,8 @@
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
-  // This method is called on the main queue during initialization or on the ShadowQueue during invalidation.
-  react_native_assert(RCTIsMainQueue() || RCTIsUIManagerQueue());
+  // This method is called on the JavaScript queue during initialization or on the ShadowQueue during invalidation.
+  react_native_assert(REAIsJavaScriptQueue() || RCTIsUIManagerQueue());
 
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
@@ -44,7 +44,7 @@
                                 bridge:(RCTBridge *)bridge
                       surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
-  RCTAssertMainQueue();
+  REAAssertJavaScriptQueue();
 
   if ((self = [super init])) {
     _reanimatedModule = reanimatedModule;
