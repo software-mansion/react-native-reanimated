@@ -1,4 +1,5 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
@@ -19,6 +20,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     const std::shared_ptr<CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule)
 {
+  REAAssertJavaScriptQueue();
+
   auto nodesManager = reaModule.nodesManager;
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
