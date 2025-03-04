@@ -1,6 +1,7 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
+#include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/NativeProxy.h>
 
@@ -30,12 +31,6 @@ NativeProxy::NativeProxy(
           getPlatformDependentMethods(),
           getIsReducedMotion())) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
-  commonInit(fabricUIManager);
-}
-
-void NativeProxy::commonInit(
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        &fabricUIManager) {
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
   reanimatedModuleProxy_->initializeFabric(uiManager);
