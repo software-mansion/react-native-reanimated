@@ -1,10 +1,6 @@
 'use strict';
 
-import type {
-  WorkletBaseDev,
-  WorkletBaseRelease,
-  WorkletFunction,
-} from './workletTypes';
+import type { WorkletFunction } from './workletTypes';
 
 /**
  * This function allows you to determine if a given function is a worklet. It
@@ -33,8 +29,7 @@ import type {
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev,
->(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
+>(value: unknown): value is WorkletFunction<Args, ReturnValue> {
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
