@@ -1,5 +1,9 @@
 #import <worklets/apple/AnimationFrameQueue.h>
+#import <worklets/apple/AssertJavaScriptQueue.h>
+#import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
+
+#import <React/RCTAssert.h>
 
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
@@ -14,6 +18,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (instancetype)init
 {
+  AssertJavaScriptQueue();
   displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
 #if TARGET_OS_OSX
   // nothing
@@ -27,6 +32,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)requestAnimationFrame:(std::function<void(double)>)callback
 {
+  RCTAssertMainQueue();
   {
     std::lock_guard<std::mutex> lock(callbacksMutex_);
     frameCallbacks_.push_back(callback);
@@ -36,6 +42,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)invalidate
 {
+  AssertTurboModuleManagerQueue();
   [displayLink_ invalidate];
 }
 
@@ -43,11 +50,14 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)scheduleQueueExecution
 {
+  RCTAssertMainQueue();
   [displayLink_ setPaused:FALSE];
 }
 
 - (void)executeQueue:(WorkletsDisplayLink *)displayLink
 {
+  RCTAssertMainQueue();
+
   auto frameCallbacks = [self pullCallbacks];
   [displayLink_ setPaused:TRUE];
 
@@ -65,6 +75,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (std::vector<std::function<void(double)>>)pullCallbacks
 {
+  RCTAssertMainQueue();
   std::lock_guard<std::mutex> lock(callbacksMutex_);
   return std::move(frameCallbacks_);
 }
