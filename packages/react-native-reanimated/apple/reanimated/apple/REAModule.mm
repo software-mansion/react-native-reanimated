@@ -1,10 +1,10 @@
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#import <React/RCTUIManagerUtils.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/native/NativeProxy.h>
@@ -35,21 +35,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
-  RCTAssertUIManagerQueue();
+  REAAssertTurboModuleManagerQueue();
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
   [super invalidate];
-}
-
-- (dispatch_queue_t)methodQueue
-{
-  REAAssertJavaScriptQueue();
-
-  // This module needs to be on the same queue as the UIManager to avoid
-  // having to lock `_operations` and `_preOperations` since `uiManagerWillPerformMounting`
-  // will be called from that queue.
-  return RCTGetUIManagerQueue();
 }
 
 - (std::shared_ptr<UIManager>)getUIManager
