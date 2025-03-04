@@ -33,12 +33,6 @@ using namespace reanimated;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
-+ (BOOL)requiresMainQueueSetup
-{
-  REAAssertJavaScriptQueue();
-  return YES;
-}
-
 - (void)invalidate
 {
   RCTAssertUIManagerQueue();
@@ -50,7 +44,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (dispatch_queue_t)methodQueue
 {
-  RCTAssertMainQueue();
+  REAAssertJavaScriptQueue();
 
   // This module needs to be on the same queue as the UIManager to avoid
   // having to lock `_operations` and `_preOperations` since `uiManagerWillPerformMounting`
@@ -106,13 +100,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
-  RCTAssertMainQueue();
+  REAAssertJavaScriptQueue();
   _surfacePresenter = surfacePresenter;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
 {
-  RCTAssertMainQueue();
+  REAAssertJavaScriptQueue();
   [super setBridge:bridge];
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
