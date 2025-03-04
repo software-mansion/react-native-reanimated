@@ -50,6 +50,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    reactContext.assertOnJSQueueThread();
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
@@ -58,6 +59,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
+    context.assertOnJSQueueThread();
+  
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
