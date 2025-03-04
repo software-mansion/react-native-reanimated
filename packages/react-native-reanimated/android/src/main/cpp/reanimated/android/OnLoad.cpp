@@ -1,5 +1,7 @@
 #include <fbjni/fbjni.h>
 
+#include <reanimated/android/AnimationFrameCallback.h>
+#include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 
