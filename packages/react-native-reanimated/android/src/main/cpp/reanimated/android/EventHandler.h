@@ -5,6 +5,8 @@
 #include <fbjni/fbjni.h>
 #include <react/jni/WritableNativeMap.h>
 
+#include <utility>
+
 namespace reanimated {
 
 using namespace facebook;
