@@ -26,7 +26,7 @@ on:
         type: string
 
 jobs:
-  build:
+  npm-reanimated-package-build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     permissions:
