@@ -30,8 +30,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     ReactApplicationContext reactCtx = getReactApplicationContext();
     reactCtx.assertOnJSQueueThread();
     reactCtx.addLifecycleEventListener(this);
-    mUnsubscribe =
-        Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
+    mUnsubscribe = () -> reactCtx.removeLifecycleEventListener(this);
   }
 
   @Override
