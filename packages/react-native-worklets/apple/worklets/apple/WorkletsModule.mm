@@ -38,8 +38,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   AssertJavaScriptQueue();
 
-  auto *bridge = self.bridge;
-  auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
