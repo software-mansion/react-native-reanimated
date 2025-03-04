@@ -6,19 +6,12 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.swmansion.worklets.WorkletsModule;
-import java.util.ArrayList;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener {
-
-  private interface UIThreadOperation {
-    void execute(NodesManager nodesManager);
-  }
-
-  private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
   private @Nullable NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
   private Runnable mUnsubscribe = () -> {};
