@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
@@ -44,7 +45,7 @@ public class NodesManager implements EventDispatcherListener {
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
-  private ReaCompatibility compatibility;
+  private FabricUIManager mFabricUIManager;
   private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
@@ -59,8 +60,8 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProxy = null;
     }
 
-    if (compatibility != null) {
-      compatibility.unregisterFabricEventListener(this);
+    if (mFabricUIManager != null) {
+      mFabricUIManager.getEventDispatcher().removeListener(this);
     }
 
     if (mUnsubscribe != null) {
@@ -71,8 +72,10 @@ public class NodesManager implements EventDispatcherListener {
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
     mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
-    compatibility = new ReaCompatibility(reactApplicationContext);
-    compatibility.registerFabricEventListener(this);
+    mFabricUIManager =
+        (FabricUIManager)
+            UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.FABRIC);
+    mFabricUIManager.getEventDispatcher().addListener(this);
   }
 
   public NodesManager(ReactContext context, WorkletsModule workletsModule) {
