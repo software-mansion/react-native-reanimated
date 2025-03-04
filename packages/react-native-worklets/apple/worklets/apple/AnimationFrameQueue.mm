@@ -1,5 +1,6 @@
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
+#import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
 
 #import <React/RCTAssert.h>
@@ -41,7 +42,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)invalidate
 {
-  // Called on com.meta.react.turbomodulemanager.queue
+  AssertTurboModuleManagerQueue();
   [displayLink_ invalidate];
 }
 

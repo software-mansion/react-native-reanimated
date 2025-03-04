@@ -2,6 +2,7 @@
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
+#import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
@@ -37,8 +38,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   AssertJavaScriptQueue();
 
-  auto *bridge = self.bridge;
-  auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
@@ -67,7 +70,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
 - (void)invalidate
 {
-  // Called on com.meta.react.turbomodulemanager.queue
+  AssertTurboModuleManagerQueue();
 
   [animationFrameQueue_ invalidate];
 

@@ -1,4 +1,5 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 
 #import <React/RCTUIManagerUtils.h>
@@ -27,8 +28,8 @@
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
-  // This method is called on the JavaScript queue during initialization or on com.meta.react.turbomodulemanager.queue
-  // during invalidation.
+  // This method is called on the JavaScript queue during initialization or on the ShadowQueue during invalidation.
+  react_native_assert(REAIsJavaScriptQueue() || REAIsTurboModuleManagerQueue());
 
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
