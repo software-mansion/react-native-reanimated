@@ -2,7 +2,6 @@
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 
-#import <React/RCTUIManagerUtils.h>
 #import <React/RCTUtils.h>
 
 @implementation REANodesManager {

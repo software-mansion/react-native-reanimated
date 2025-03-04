@@ -1,7 +1,6 @@
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#import <React/RCTUIManagerUtils.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
