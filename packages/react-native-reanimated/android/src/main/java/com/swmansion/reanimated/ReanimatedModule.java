@@ -1,16 +1,10 @@
 package com.swmansion.reanimated;
 
 import android.util.Log;
-import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.UIManager;
-import com.facebook.react.bridge.UIManagerListener;
-import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.uimanager.UIManagerHelper;
-import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -18,43 +12,7 @@ import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
-    implements LifecycleEventListener, UIManagerListener {
-
-  public void didDispatchMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didScheduleMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void willDispatchViewUpdates(@NonNull UIManager uiManager) {
-    // This method is called for the interface of UIManagerListener on Fabric.
-    // The below function with the same name won't be called.
-    if (mOperations.isEmpty()) {
-      return;
-    }
-    final ArrayList<UIThreadOperation> operations = mOperations;
-    mOperations = new ArrayList<>();
-    if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager) uiManager)
-          .addUIBlock(
-              uiBlockViewResolver -> {
-                NodesManager nodesManager = getNodesManager();
-                for (UIThreadOperation operation : operations) {
-                  operation.execute(nodesManager);
-                }
-              });
-    } else {
-      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
-    }
-  }
-
-  public void willMountItems(@NonNull UIManager uiManager) {}
+    implements LifecycleEventListener {
 
   private interface UIThreadOperation {
     void execute(NodesManager nodesManager);
@@ -79,17 +37,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
     reactCtx.assertOnJSQueueThread();
-
-    UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
-    if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-      mUnsubscribe =
-          Utils.combineRunnables(
-              mUnsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
-    } else {
-      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
-    }
-
     reactCtx.addLifecycleEventListener(this);
     mUnsubscribe =
         Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
