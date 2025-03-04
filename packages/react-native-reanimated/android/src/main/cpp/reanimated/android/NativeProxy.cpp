@@ -3,6 +3,7 @@
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
 #include <reanimated/android/EventHandler.h>
+#include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
