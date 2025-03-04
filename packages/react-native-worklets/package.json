@@ -66,6 +66,8 @@
     "android",
     "apple",
     "Common",
+    "scripts/worklets_utils.rb",
+    "plugin/index.js",
     "*.podspec",
     "react-native.config.js",
     "!apple/build",
