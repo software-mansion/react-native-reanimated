@@ -30,7 +30,6 @@ import {
   ReduceMotion,
   SensorType,
   setUpTests,
-  SharedTransitionType,
   withReanimatedTimer,
 } from './index';
 
@@ -418,10 +417,6 @@ const layoutReanimation = {
   JumpingTransition: new BaseAnimationMock(),
   CurvedTransition: new BaseAnimationMock(),
   EntryExitTransition: new BaseAnimationMock(),
-  // combineTransitions: ADD ME IF NEEDED
-  // SET
-  // SharedTransition: ADD ME IF NEEDED
-  SharedTransitionType,
 };
 
 const isSharedValue = {

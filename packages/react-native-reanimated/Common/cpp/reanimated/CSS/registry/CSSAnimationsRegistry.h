@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
@@ -23,12 +22,14 @@ class CSSAnimationsRegistry
       std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
 
   bool hasUpdates() const;
+  bool isEmpty() const override;
 
   void set(
       const ShadowNode::Shared &shadowNode,
       std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
   void remove(Tag viewTag);
+  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
   void updateSettings(
       Tag viewTag,
       const SettingsUpdates &settingsUpdates,
@@ -69,5 +70,3 @@ class CSSAnimationsRegistry
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

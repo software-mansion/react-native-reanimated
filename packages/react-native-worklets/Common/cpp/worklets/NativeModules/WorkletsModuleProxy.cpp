@@ -1,9 +1,9 @@
+#include <memory>
 #include <string>
+#include <utility>
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -26,7 +26,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::function<void(std::function<void(const double)>)>
+        &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
@@ -38,11 +40,17 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsScheduler,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode_)) {
-  UIRuntimeDecorator::decorate(uiWorkletRuntime_->getJSIRuntime());
+          valueUnpackerCode_)),
+      animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
+          uiWorkletRuntime_->getJSIRuntime(),
+          std::move(forwardedRequestAnimationFrame))) {
+  UIRuntimeDecorator::decorate(
+      uiWorkletRuntime_->getJSIRuntime(),
+      animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  animationFrameBatchinator_.reset();
   jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
 }

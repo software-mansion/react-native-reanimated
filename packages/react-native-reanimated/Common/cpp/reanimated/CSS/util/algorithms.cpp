@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/util/algorithms.h>
 
 namespace reanimated {
@@ -9,5 +8,3 @@ size_t firstSmallerOrEqual(const double x, const std::vector<double> &arr) {
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -8,9 +8,9 @@ import type { AnimatedRef } from '../hook/commonTypes';
 export function measure<T extends Component>(
   animatedRef: AnimatedRef<T>
 ): MeasuredDimensions | null {
-  const element = animatedRef() as HTMLElement | -1;
+  const element = animatedRef() as HTMLElement | null;
 
-  if (element === -1) {
+  if (!element) {
     logger.warn(
       `The view with tag ${element} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );

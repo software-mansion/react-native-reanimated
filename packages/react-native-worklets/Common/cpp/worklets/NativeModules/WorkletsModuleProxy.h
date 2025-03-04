@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
+
 #include <memory>
 #include <string>
 
@@ -21,9 +23,11 @@ class WorkletsModuleProxy
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      std::function<void(std::function<void(const double)>)>
+          &&forwardedRequestAnimationFrame);
 
-  ~WorkletsModuleProxy();
+  ~WorkletsModuleProxy() override;
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -73,6 +77,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

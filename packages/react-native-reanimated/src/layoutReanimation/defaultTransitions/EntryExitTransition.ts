@@ -7,7 +7,7 @@ import type {
   AnimationObject,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues,
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
@@ -123,7 +123,7 @@ export class EntryExitTransition
                   exitingValues.animations[prop],
                   withTiming(
                     Object.keys(values).includes(prop)
-                      ? values[prop as keyof LayoutAnimationsValues]
+                      ? values[prop as keyof LayoutAnimationValues]
                       : exitingValues.initialValues[prop],
                     { duration: 0 }
                   ),

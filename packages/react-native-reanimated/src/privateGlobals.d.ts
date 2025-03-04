@@ -14,7 +14,6 @@ import type {
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
-import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
@@ -29,9 +28,9 @@ declare global {
   var _log: (value: unknown) => void;
   var _notifyAboutProgress: (
     tag: number,
-    value: Record<string, unknown>,
-    isSharedTransition: boolean
+    value: Record<string, unknown>
   ) => void;
+  var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _updatePropsPaper:
@@ -53,7 +52,6 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper:
     | ((viewTag: number | null) => MeasuredDimensions)
     | undefined;
@@ -79,7 +77,6 @@ declare global {
   var __sensorContainer: SensorContainer;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
-  var ProgressTransitionRegister: ProgressTransitionRegister;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
   var _obtainPropPaper: (viewTag: number, propName: string) => string;

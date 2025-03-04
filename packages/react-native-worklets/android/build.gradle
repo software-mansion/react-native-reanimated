@@ -1,12 +1,6 @@
-import com.android.Version
-import org.apache.tools.ant.filters.ReplaceTokens
-import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
-
-import javax.inject.Inject
-import java.nio.file.Files
 import java.nio.file.Paths
+import org.apache.tools.ant.taskdefs.condition.Os
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -72,7 +66,6 @@ def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def REANIMATED_PROFILING = safeAppExtGet("enableReanimatedProfiling", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -257,8 +250,6 @@ android {
     sourceSets {
         main {
             java {
-                srcDirs += "src/worklets/main"
-
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
                     srcDirs += "src/worklets/paper"
                 }
@@ -308,9 +299,9 @@ dependencies {
     }
 }
 
-afterEvaluate {
-    preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
 
+afterEvaluate {
     if (JS_RUNTIME == "v8") {
         def buildTasks = tasks.findAll({ task ->
             !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })

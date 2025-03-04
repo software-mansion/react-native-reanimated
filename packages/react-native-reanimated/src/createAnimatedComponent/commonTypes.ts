@@ -10,10 +10,7 @@ import type {
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { ViewConfig } from '../ConfigHelper';
-import type {
-  BaseAnimationBuilder,
-  SharedTransition,
-} from '../layoutReanimation';
+import type { BaseAnimationBuilder } from '../layoutReanimation';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
@@ -23,7 +20,6 @@ export interface AnimatedProps extends Record<string, unknown> {
 
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
-  viewName: string | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
   viewConfig: ViewConfig;
   DOMElement?: HTMLElement | null;
@@ -89,8 +85,6 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | Keyframe
   ) &
     LayoutAnimationStaticContext;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
 };
 
 export interface AnimatedComponentRef extends Component {
@@ -110,7 +104,6 @@ export interface IAnimatedComponentInternal {
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _sharedElementTransition: SharedTransition | null;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
@@ -119,8 +112,8 @@ export interface IAnimatedComponentInternal {
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
   /**
-   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
-   * It is not related to event handling.
+   * Used for Layout Animations and Animated Styles. It is not related to event
+   * handling.
    */
   getComponentViewTag: () => number;
   hasAnimatedRef: () => boolean;

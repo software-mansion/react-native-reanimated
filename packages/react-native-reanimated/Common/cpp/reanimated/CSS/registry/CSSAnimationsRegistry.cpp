@@ -1,10 +1,14 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
 namespace reanimated {
 
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
+}
+
+bool CSSAnimationsRegistry::isEmpty() const {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
+      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::set(
@@ -31,6 +35,17 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
 
   registry_.erase(viewTag);
+}
+
+void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  for (const auto &viewTag : tagsToRemove) {
+    removeViewAnimations(viewTag);
+    removeFromUpdatesRegistry(viewTag);
+
+    registry_.erase(viewTag);
+  }
 }
 
 void CSSAnimationsRegistry::updateSettings(
@@ -262,5 +277,3 @@ bool CSSAnimationsRegistry::addStyleUpdates(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

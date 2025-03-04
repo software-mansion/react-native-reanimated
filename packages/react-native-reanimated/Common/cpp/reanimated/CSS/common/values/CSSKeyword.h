@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
@@ -16,7 +15,7 @@ class CSSKeywordBase : public CSSSimpleValue<TValue> {
  public:
   static constexpr bool is_discrete_value = true;
 
-  CSSKeywordBase();
+  CSSKeywordBase() = default;
   explicit CSSKeywordBase(const char *value);
   explicit CSSKeywordBase(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSKeywordBase(const folly::dynamic &value);
@@ -60,5 +59,3 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

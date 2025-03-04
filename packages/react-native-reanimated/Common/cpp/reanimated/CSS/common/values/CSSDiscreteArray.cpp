@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
@@ -120,5 +118,3 @@ std::ostream &operator<<(
 template struct CSSDiscreteArray<CSSKeyword>;
 
 } // namespace reanimated
-
-#endif

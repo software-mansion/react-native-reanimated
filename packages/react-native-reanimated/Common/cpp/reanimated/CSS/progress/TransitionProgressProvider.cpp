@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
@@ -55,10 +54,6 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
     return TransitionProgressState::Finished;
   }
   return TransitionProgressState::Running;
-}
-
-bool TransitionPropertyProgressProvider::isFirstUpdate() const {
-  return !previousRawProgress_.has_value();
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
@@ -221,5 +216,3 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

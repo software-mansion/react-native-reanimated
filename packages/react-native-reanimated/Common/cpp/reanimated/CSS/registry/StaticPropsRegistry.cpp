@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 
 namespace reanimated {
@@ -34,6 +33,16 @@ void StaticPropsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
+void StaticPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  for (const auto &tag : tagsToRemove) {
+    registry_.erase(tag);
+  }
+}
+
+bool StaticPropsRegistry::isEmpty() {
+  return registry_.empty() && observers_.empty();
+}
+
 bool StaticPropsRegistry::hasObservers(const Tag viewTag) const {
   return observers_.find(viewTag) != observers_.end();
 }
@@ -59,5 +68,3 @@ void StaticPropsRegistry::notifyObservers(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

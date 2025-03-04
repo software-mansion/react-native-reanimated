@@ -7,9 +7,8 @@ module.exports = {
       plugins: ['reanimated'],
       rules: {
         'reanimated/use-reanimated-error': 'error',
-        'reanimated/use-worklets-resolver': 'error',
       },
     },
   ],
-  ignorePatterns: ['lib, plugin'],
+  ignorePatterns: ['lib', 'plugin'],
 };

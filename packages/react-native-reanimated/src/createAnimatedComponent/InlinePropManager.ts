@@ -142,7 +142,7 @@ export class InlinePropManager implements IInlinePropManager {
       if (!this._inlinePropsViewDescriptors) {
         this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
 
-        const { viewTag, viewName, shadowNodeWrapper, viewConfig } = viewInfo;
+        const { viewTag, shadowNodeWrapper, viewConfig } = viewInfo;
 
         if (Object.keys(newInlineProps).length && viewConfig) {
           adaptViewConfig(viewConfig);
@@ -150,7 +150,6 @@ export class InlinePropManager implements IInlinePropManager {
 
         this._inlinePropsViewDescriptors.add({
           tag: viewTag as number,
-          name: viewName!,
           shadowNodeWrapper: shadowNodeWrapper!,
         });
       }

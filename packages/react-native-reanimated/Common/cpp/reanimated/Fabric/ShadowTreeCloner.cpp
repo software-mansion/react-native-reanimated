@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -68,7 +66,8 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap) {
+    const PropsMap &propsMap,
+    std::vector<Tag> &tagsToRemove) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
@@ -78,6 +77,11 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 
     for (auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);
+      if (ancestors.empty()) {
+        // no ancestors means that there is no shadowNode from
+        // this family in the ShadowTree - we can safely cleanup the registry
+        tagsToRemove.push_back(family->getTag());
+      }
 
       for (const auto &[parentNode, index] :
            std::ranges::reverse_view(ancestors)) {
@@ -100,5 +104,3 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

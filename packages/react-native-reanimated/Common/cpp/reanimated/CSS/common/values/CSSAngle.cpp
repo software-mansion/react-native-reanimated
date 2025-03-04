@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/values/CSSAngle.h>
 
 namespace reanimated {
@@ -87,5 +86,3 @@ std::ostream &operator<<(std::ostream &os, const CSSAngle &angleValue) {
 #endif // NDEBUG
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

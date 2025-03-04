@@ -1,5 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
@@ -80,8 +78,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
-
+    std::vector<Tag> tagsToRemove;
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap, tagsToRemove);
+    if (!tagsToRemove.empty()) {
+      updatesRegistryManager_->removeBatch(tagsToRemove);
+    }
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
@@ -96,5 +97,3 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

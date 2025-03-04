@@ -5,7 +5,7 @@ import { withStyleAnimation } from '../animation/styleAnimation';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
-  SharedTransitionAnimationsValues,
+  LayoutAnimationValues,
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -15,14 +15,11 @@ const TAG_OFFSET = 1e9;
 
 function startObservingProgress(
   tag: number,
-  sharedValue: SharedValue<Record<string, unknown>>,
-  animationType: LayoutAnimationType
+  sharedValue: SharedValue<Record<string, unknown>>
 ): void {
   'worklet';
-  const isSharedTransition =
-    animationType === LayoutAnimationType.SHARED_ELEMENT_TRANSITION;
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    global._notifyAboutProgress(tag, sharedValue.value, isSharedTransition);
+    global._notifyAboutProgress(tag, sharedValue.value);
   });
 }
 
@@ -49,19 +46,12 @@ function createLayoutAnimationManager(): {
       tag: number,
       type: LayoutAnimationType,
       /**
-       * CreateLayoutAnimationManager creates an animation manager for both
-       * Layout animations and Shared Transition Elements animations.
+       * CreateLayoutAnimationManager creates an animation manager for Layout
+       * animations.
        */
-      yogaValues: Partial<SharedTransitionAnimationsValues>,
-      config: (
-        arg: Partial<SharedTransitionAnimationsValues>
-      ) => LayoutAnimation
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
-      if (type === LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS) {
-        global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
-        return;
-      }
-
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 
@@ -96,7 +86,7 @@ function createLayoutAnimationManager(): {
           style.callback(finished === undefined ? false : finished);
       };
 
-      startObservingProgress(tag, value, type);
+      startObservingProgress(tag, value);
       value.value = animation;
     },
     stop(tag: number) {

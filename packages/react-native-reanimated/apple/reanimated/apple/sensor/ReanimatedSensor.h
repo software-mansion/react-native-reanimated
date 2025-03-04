@@ -1,6 +1,7 @@
 #if !TARGET_OS_TV && !TARGET_OS_OSX
 #import <CoreMotion/CoreMotion.h>
 #endif
+
 #import <reanimated/apple/sensor/ReanimatedSensorType.h>
 
 @interface ReanimatedSensor : NSObject {

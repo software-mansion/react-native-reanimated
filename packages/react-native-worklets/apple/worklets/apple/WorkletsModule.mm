@@ -1,9 +1,13 @@
-#import <React/RCTBridge+Private.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/apple/AnimationFrameQueue.h>
+#import <worklets/apple/AssertJavaScriptQueue.h>
+#import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
+
+#import <React/RCTCallInvoker.h>
 
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
@@ -12,12 +16,8 @@ using worklets::WorkletsModuleProxy;
 - (void *)runtime;
 @end
 
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
-@end
-
 @implementation WorkletsModule {
+  AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
@@ -26,27 +26,43 @@ using worklets::WorkletsModuleProxy;
 
 - (std::shared_ptr<WorkletsModuleProxy>)getWorkletsModuleProxy
 {
+  AssertJavaScriptQueue();
   return workletsModuleProxy_;
 }
 
-@synthesize moduleRegistry = _moduleRegistry;
+@synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-  auto *bridge = self.bridge;
-  auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
+  AssertJavaScriptQueue();
+
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
 
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
-  auto jsCallInvoker = bridge.jsCallInvoker;
+  auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  animationFrameQueue_ = [AnimationFrameQueue new];
+  auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
+      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
+        [animationFrameQueue requestAnimationFrame:callback];
+      });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
+      rnRuntime,
+      valueUnpackerCodeStr,
+      jsQueue,
+      jsCallInvoker,
+      jsScheduler,
+      uiScheduler,
+      std::move(forwardedRequestAnimationFrame));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 
   return @YES;
@@ -54,6 +70,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
 - (void)invalidate
 {
+  AssertTurboModuleManagerQueue();
+
+  [animationFrameQueue_ invalidate];
+
   // We have to destroy extra runtimes when invalidate is called. If we clean
   // it up later instead there's a chance the runtime will retain references
   // to invalidated memory and will crash on destruction.

@@ -1,7 +1,10 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 namespace reanimated {
+
+bool UpdatesRegistry::isEmpty() const {
+  return updatesRegistry_.empty();
+}
 
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -27,8 +30,6 @@ void UpdatesRegistry::flushUpdates(
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
     updatesBatch.emplace_back(shadowNode, std::move(props));
   }
-  // Remove all tags scheduled for removal
-  runMarkedRemovals();
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
@@ -96,14 +97,6 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   }
 }
 
-void UpdatesRegistry::runMarkedRemovals() {
-  auto copiedTagsToRemove = std::move(tagsToRemove_);
-  for (const auto tag : copiedTagsToRemove) {
-    updatesRegistry_.erase(tag);
-  }
-  tagsToRemove_.clear();
-}
-
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {
@@ -163,5 +156,3 @@ void UpdatesRegistry::updatePropsToRevert(
 #endif
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
