@@ -10,8 +10,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
-public class ReanimatedModule extends NativeReanimatedModuleSpec
-    implements LifecycleEventListener {
+public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
   private @Nullable NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
   private Runnable mUnsubscribe = () -> {};
