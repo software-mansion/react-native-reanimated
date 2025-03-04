@@ -71,6 +71,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    reactApplicationContext.assertOnJSQueueThread();
     mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
     mFabricUIManager =
         (FabricUIManager)
@@ -79,6 +80,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public NodesManager(ReactContext context, WorkletsModule workletsModule) {
+    context.assertOnJSQueueThread();
+
     mWorkletsModule = workletsModule;
     UIManager mUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
     assert mUIManager != null;
@@ -127,12 +130,15 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void performOperations() {
+    UiThreadUtil.assertOnUiThread();
     if (mNativeProxy != null) {
       mNativeProxy.performOperations();
     }
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
+    UiThreadUtil.assertOnUiThread();
+
     try {
       if (BuildConfig.REANIMATED_PROFILING) {
         Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");

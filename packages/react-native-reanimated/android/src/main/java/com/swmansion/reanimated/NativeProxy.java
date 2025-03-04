@@ -8,6 +8,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -52,6 +53,8 @@ public class NativeProxy {
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
+    context.assertOnJSQueueThread();
+
     mWorkletsModule =
         Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
     mContext = new WeakReference<>(context);
@@ -130,6 +133,7 @@ public class NativeProxy {
 
   @DoNotStrip
   public void requestRender(AnimationFrameCallback callback) {
+    UiThreadUtil.assertOnUiThread();
     mNodesManager.postOnAnimation(callback);
   }
 
@@ -223,6 +227,7 @@ public class NativeProxy {
 
   @DoNotStrip
   void maybeFlushUIUpdatesQueue() {
+    UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }

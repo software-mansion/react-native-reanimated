@@ -69,6 +69,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    reactContext.assertOnJSQueueThread();
     mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
   }
 
@@ -79,6 +80,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   @Override
   public void initialize() {
     ReactApplicationContext reactCtx = getReactApplicationContext();
+    reactCtx.assertOnJSQueueThread();
 
     UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
     if (uiManager instanceof FabricUIManager) {
@@ -143,6 +145,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
+    getReactApplicationContext().assertOnJSQueueThread();
+
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
     Utils.isChromeDebugger =
