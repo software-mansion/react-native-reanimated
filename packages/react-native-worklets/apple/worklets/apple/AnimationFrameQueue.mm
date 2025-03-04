@@ -32,7 +32,6 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)requestAnimationFrame:(std::function<void(double)>)callback
 {
-  RCTAssertMainQueue();
   {
     std::lock_guard<std::mutex> lock(callbacksMutex_);
     frameCallbacks_.push_back(callback);
@@ -50,7 +49,6 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)scheduleQueueExecution
 {
-  RCTAssertMainQueue();
   [displayLink_ setPaused:FALSE];
 }
 
