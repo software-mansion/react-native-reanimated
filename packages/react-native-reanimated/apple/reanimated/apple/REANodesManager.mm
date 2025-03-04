@@ -63,7 +63,7 @@
 
 - (void)invalidate
 {
-  // Called on com.meta.react.turbomodulemanager.queue
+  REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {

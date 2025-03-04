@@ -5,6 +5,7 @@
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/native/NativeProxy.h>
@@ -35,7 +36,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
-  // Called on com.meta.react.turbomodulemanager.queue
+  REAAssertTurboModuleManagerQueue();
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
