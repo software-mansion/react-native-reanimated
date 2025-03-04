@@ -60,7 +60,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
     context.assertOnJSQueueThread();
-  
+
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
