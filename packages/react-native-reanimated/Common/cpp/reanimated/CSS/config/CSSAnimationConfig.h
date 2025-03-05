@@ -25,11 +25,6 @@ struct CSSAnimationSettings {
   AnimationPlayState playState;
 };
 
-struct CSSAnimationConfig {
-  std::string animationName;
-  CSSAnimationSettings settings;
-};
-
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
   std::optional<EasingFunction> easingFunction;
@@ -52,12 +47,22 @@ CSSAnimationSettings parseCSSAnimationSettings(
     jsi::Runtime &rt,
     const jsi::Value &settings);
 
-CSSAnimationConfig parseCSSAnimationConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
-
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
     jsi::Runtime &rt,
     const jsi::Value &partialSettings);
+
+std::vector<std::string> parseAnimationNames(
+    jsi::Runtime &rt,
+    const jsi::Value &animationNames);
+
+std::unordered_map<std::string, std::shared_ptr<CSSAnimation>>
+parseNewAnimations(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const jsi::Value &newSettings,
+    double timestamp);
+
+std::unordered_map<std::string, PartialCSSAnimationSettings>
+parseSettingsUpdates(jsi::Runtime &rt, const jsi::Value &settingsUpdates);
 
 } // namespace reanimated

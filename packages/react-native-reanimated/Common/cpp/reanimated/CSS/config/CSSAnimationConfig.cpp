@@ -101,4 +101,65 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   return result;
 }
 
+std::vector<std::string> parseAnimationNames(
+    jsi::Runtime &rt,
+    const jsi::Value &animationNames) {
+  std::vector<std::string> result;
+
+  const auto &namesArray = animationNames.asArray(rt);
+  const auto animationNamesCount = namesArray.size(rt);
+  result.reserve(animationNamesCount);
+
+  for (size_t i = 0; i < animationNamesCount; i++) {
+    result.push_back(namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+  }
+
+  return result;
+}
+
+std::unordered_map<std::string, std::shared_ptr<CSSAnimation>>
+parseNewAnimations(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const jsi::Value &newSettings,
+    double timestamp) {
+  std::unordered_map<std::string, std::shared_ptr<CSSAnimation>> result;
+
+  const auto &newSettingsObj = newSettings.asObject(rt);
+  const auto &animationNames = newSettingsObj.getPropertyNames(rt);
+  const auto animationNamesCount = animationNames.size(rt);
+  result.reserve(animationNamesCount);
+
+  for (size_t i = 0; i < animationNamesCount; i++) {
+    const auto &name =
+        animationNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto &settings = newSettingsObj.getProperty(rt, name.c_str());
+    const auto &parsedSettings = parseCSSAnimationSettings(rt, settings);
+    const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(name);
+
+    result[name] = std::make_shared<CSSAnimation>(
+        rt, shadowNode, name, keyframesConfig, parsedSettings, timestamp);
+  }
+
+  return result;
+}
+
+std::unordered_map<std::string, PartialCSSAnimationSettings>
+parseSettingsUpdates(jsi::Runtime &rt, const jsi::Value &settingsUpdates) {
+  std::unordered_map<std::string, PartialCSSAnimationSettings> result;
+
+  const auto &settingsUpdatesObj = settingsUpdates.asObject(rt);
+  const auto &names = settingsUpdatesObj.getPropertyNames(rt);
+  const auto namesCount = names.size(rt);
+  result.reserve(namesCount);
+
+  for (size_t i = 0; i < namesCount; i++) {
+    const auto &name = names.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto &settings = settingsUpdatesObj.getProperty(rt, name.c_str());
+    result[name] = parsePartialCSSAnimationSettings(rt, settings);
+  }
+
+  return result;
+}
+
 } // namespace reanimated

@@ -42,6 +42,7 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
 }
+
 void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   std::lock_guard<std::mutex> lock{mutex_};
 
