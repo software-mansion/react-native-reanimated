@@ -1,5 +1,4 @@
 #import <React/RCTEventDispatcherProtocol.h>
-#import <React/RCTSurfacePresenterStub.h>
 
 #import <reanimated/apple/READisplayLink.h>
 
@@ -14,9 +13,7 @@ typedef void (^REAPerformOperations)();
 
 @property (nonatomic, weak, nullable) REAModule *reanimatedModule;
 
-- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
-                                bridge:(RCTBridge *)bridge
-                      surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
+- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule;
 - (void)invalidate;
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
