@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
   private @Nullable NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
-  private Runnable mUnsubscribe = () -> {};
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -27,10 +26,9 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
 
   @Override
   public void initialize() {
-    ReactApplicationContext reactCtx = getReactApplicationContext();
-    reactCtx.assertOnJSQueueThread();
-    reactCtx.addLifecycleEventListener(this);
-    mUnsubscribe = () -> reactCtx.removeLifecycleEventListener(this);
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    reactContext.assertOnJSQueueThread();
+    reactContext.addLifecycleEventListener(this);
   }
 
   @Override
@@ -100,6 +98,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
       mNodesManager.invalidate();
     }
 
-    mUnsubscribe.run();
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    reactContext.removeLifecycleEventListener(this);
   }
 }
