@@ -44,7 +44,7 @@ import {
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-export const LAYOUT_ANIMATION_SUPPORTED_PROPS = [
+const LAYOUT_ANIMATION_SUPPORTED_PROPS = [
   'originX',
   'originY',
   'width',
@@ -55,6 +55,11 @@ export const LAYOUT_ANIMATION_SUPPORTED_PROPS = [
   'opacity',
   'transform',
 ];
+
+export function isValidLayoutAnimationProp(prop: string) {
+  'worklet';
+  return LAYOUT_ANIMATION_SUPPORTED_PROPS.includes(prop);
+}
 
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(

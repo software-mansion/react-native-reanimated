@@ -14,7 +14,7 @@ import type {
 import { logger } from '../logger';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { defineAnimation, LAYOUT_ANIMATION_SUPPORTED_PROPS } from './util';
+import { defineAnimation, isValidLayoutAnimationProp } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -196,7 +196,7 @@ export function withStyleAnimation(
           }
           if (
             typeof currentEntry.path[0] === 'string' &&
-            !LAYOUT_ANIMATION_SUPPORTED_PROPS.includes(currentEntry.path[0])
+            !isValidLayoutAnimationProp(currentEntry.path[0].trim())
           ) {
             logger.warn(
               `'${currentEntry.path[0]}' property is not officially supported for layout animations. It may not work as expected.`
