@@ -98,7 +98,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   REAAssertJavaScriptQueue();
   [super setBridge:bridge];
-  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
+  _nodesManager = [[REANodesManager alloc] initWithModule:self];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
