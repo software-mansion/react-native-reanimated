@@ -42,17 +42,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [super invalidate];
 }
 
-- (std::shared_ptr<UIManager>)getUIManager
-{
-  REAAssertJavaScriptQueue();
-
-  react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  react_native_assert(scheduler != nil && "_surfacePresenter.scheduler is nil");
-  react_native_assert(scheduler.uiManager != nil && "_surfacePresenter.scheduler.uiManager is nil");
-  return scheduler.uiManager;
-}
-
 - (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
 {
   REAAssertJavaScriptQueue();
@@ -150,7 +139,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
-  const auto &uiManager = [self getUIManager];
+
+  react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  react_native_assert(scheduler != nil && "_surfacePresenter.scheduler is nil");
+  react_native_assert(scheduler.uiManager != nil && "_surfacePresenter.scheduler.uiManager is nil");
+  const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   reanimatedModuleProxy->initializeFabric(uiManager);
 
