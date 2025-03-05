@@ -316,17 +316,18 @@ export default class AnimatedComponent
     }
 
     const layout = this.props.layout;
-    if (!layout || getReducedMotionFromConfig(layout as CustomConfig)) {
+    if (layout && getReducedMotionFromConfig(layout as CustomConfig)) {
       return;
     }
     updateLayoutAnimations(
       this.getComponentViewTag(),
       LayoutAnimationType.LAYOUT,
-      maybeBuild(
-        layout,
-        undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-        this._displayName
-      )
+      layout &&
+        maybeBuild(
+          layout,
+          undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+          this._displayName
+        )
     );
   }
 
