@@ -145,7 +145,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto reanimatedModuleProxy = reanimated::createReanimatedModule(self, _moduleRegistry, jsCallInvoker, workletsModule);
 
-  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime()->getJSIRuntime();
+  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
