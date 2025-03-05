@@ -3,12 +3,13 @@
 namespace reanimated {
 
 bool CSSAnimationsRegistry::hasUpdates() const {
-  return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
+  return !runningAnimationIndicesMap_.empty() ||
+      !delayedAnimationsManager_.empty() || !animationsToRevertSet_.empty();
 }
 
 bool CSSAnimationsRegistry::isEmpty() const {
   return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
+      runningAnimationIndicesMap_.empty() && animationsToRevertSet_.empty();
 }
 
 void CSSAnimationsRegistry::set(
@@ -80,6 +81,22 @@ void CSSAnimationsRegistry::updateSettings(
   }
 }
 
+void CSSAnimationsRegistry::collectProps(PropsMap &propsMap) {
+  // Apply current styles for reverted animations
+  for (const auto &animation : revertedAnimationsSet_) {
+    LOG(INFO) << "Collect props for reverted animation for tag: "
+              << animation->getShadowNode()->getTag();
+    collectNodeProps(
+        propsMap, animation->getShadowNode(), animation->getResetStyle());
+  }
+  // Collect latest updates from the updates registry
+  UpdatesRegistry::collectProps(propsMap);
+}
+
+void CSSAnimationsRegistry::cleanupOnMount() {
+  // revertedAnimationsSet_.clear();
+}
+
 void CSSAnimationsRegistry::update(const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
@@ -89,15 +106,15 @@ void CSSAnimationsRegistry::update(const double timestamp) {
   handleAnimationsToRevert(timestamp);
 
   // Iterate over active animations and update them
-  for (auto it = runningAnimationsMap_.begin();
-       it != runningAnimationsMap_.end();) {
+  for (auto it = runningAnimationIndicesMap_.begin();
+       it != runningAnimationIndicesMap_.end();) {
     const auto viewTag = it->first;
     const std::vector<unsigned> animationIndices = {
         it->second.begin(), it->second.end()};
     updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
-    if (runningAnimationsMap_.at(viewTag).empty()) {
-      it = runningAnimationsMap_.erase(it);
+    if (runningAnimationIndicesMap_.at(viewTag).empty()) {
+      it = runningAnimationIndicesMap_.erase(it);
     } else {
       ++it;
     }
@@ -139,11 +156,13 @@ void CSSAnimationsRegistry::updateViewAnimations(
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
-        // properties from the style in the registry as it may be overridden
-        // by the next animation. Instead, we are creating the new style
-        // object without reverted (finished without forwards fill mode)
-        // animations.
-        animationsToRevertMap_[viewTag].insert(animationIndex);
+        // properties from the updates registry as they will be overriden
+        // by the next react commit which may happen late in the future.
+        // Instead, we are committing current style values of properties
+        // that were reverted during the animation.
+        LOG(INFO) << "Add animation to animationsToRevertSet_ for tag: "
+                  << animation->getShadowNode()->getTag();
+        animationsToRevertSet_.insert(animation);
       }
     }
 
@@ -151,13 +170,16 @@ void CSSAnimationsRegistry::updateViewAnimations(
       hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
-      runningAnimationsMap_[viewTag].erase(animationIndex);
+      runningAnimationIndicesMap_[viewTag].erase(animationIndex);
     }
   }
 
   if (hasUpdates) {
     addUpdatesToBatch(shadowNode, result);
   }
+
+  LOG(INFO) << "CSSAnimationsRegistry::updateViewAnimations: View tag: "
+            << shadowNode->getTag() << " result: " << result;
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(
@@ -179,7 +201,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   } else {
     // Otherwise, activate the animation immediately
     const auto [viewTag, animationIndex] = id;
-    runningAnimationsMap_[viewTag].insert(animationIndex);
+    runningAnimationIndicesMap_[viewTag].insert(animationIndex);
   }
 }
 
@@ -192,7 +214,7 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
   for (const auto &animation : it->second) {
     delayedAnimationsManager_.remove(animation->getId());
   }
-  runningAnimationsMap_.erase(viewTag);
+  runningAnimationIndicesMap_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::applyViewAnimationsStyle(
@@ -244,16 +266,27 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
     // Add only these animations which weren't removed in the meantime
     if (registry_.find(viewTag) != registry_.end() &&
         registry_.at(viewTag).size() > animationIndex) {
-      runningAnimationsMap_[viewTag].insert(animationIndex);
+      runningAnimationIndicesMap_[viewTag].insert(animationIndex);
     }
   }
 }
 
 void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
-  for (const auto &[viewTag, _] : animationsToRevertMap_) {
-    applyViewAnimationsStyle(viewTag, timestamp);
+  for (const auto &animation : animationsToRevertSet_) {
+    applyViewAnimationsStyle(animation->getShadowNode()->getTag(), timestamp);
+    // We need to store all reverted animations in order to override invalid
+    // values in the React commit.
+    // React may commit its own changes during the CSS animation, thus it will
+    // read current animation values from the updates registry. After the
+    // animation is finished, React will still use these values from one of its
+    // previous commits, which is not a valid behavior. To fix this, we have to
+    // override values committed by React by values stored in the
+    // StaticPropsRegistry (obtained via the resetStyle method call)
+    LOG(INFO) << "Add reverted animation for tag: "
+              << animation->getShadowNode()->getTag();
+    revertedAnimationsSet_.insert(animation);
   }
-  animationsToRevertMap_.clear();
+  animationsToRevertSet_.clear();
 }
 
 bool CSSAnimationsRegistry::addStyleUpdates(

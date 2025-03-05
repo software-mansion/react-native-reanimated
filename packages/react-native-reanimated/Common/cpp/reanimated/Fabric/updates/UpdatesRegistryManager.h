@@ -35,6 +35,7 @@ class UpdatesRegistryManager {
   void cancelCommitAfterPause();
   void removeBatch(const std::vector<Tag> &tags);
   PropsMap collectProps();
+  void cleanupOnMount();
 
 #ifdef ANDROID
   bool hasPropsToRevert();

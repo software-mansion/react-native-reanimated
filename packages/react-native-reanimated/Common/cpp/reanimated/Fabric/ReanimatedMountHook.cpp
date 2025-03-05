@@ -42,6 +42,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
   if (updatesRegistryManager_->shouldCommitAfterPause()) {
     requestFlush_();
   }
+  updatesRegistryManager_->cleanupOnMount();
 }
 
 } // namespace reanimated

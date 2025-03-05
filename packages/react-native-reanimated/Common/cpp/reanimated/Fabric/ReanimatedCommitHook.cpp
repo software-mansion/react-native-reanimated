@@ -63,6 +63,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // the updates registry manager
+    LOG(INFO)
+      << "ReanimatedCommitHook::shadowTreeWillCommit: Commit from Reanimated";
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
     return newRootShadowNode;
@@ -74,6 +76,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   RootShadowNode::Unshared rootNode = newRootShadowNode;
 
   {
+    LOG(INFO)
+        << "ReanimatedCommitHook::shadowTreeWillCommit: Commit from React";
     auto lock = updatesRegistryManager_->createLock();
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();

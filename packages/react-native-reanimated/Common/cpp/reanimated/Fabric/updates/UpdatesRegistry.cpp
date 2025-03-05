@@ -35,17 +35,27 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
-    const auto &[shadowNode, props] = pair;
-    auto &family = shadowNode->getFamily();
-    auto it = propsMap.find(&family);
+    collectNodeProps(propsMap, pair.first, pair.second);
+  }
+}
 
-    if (it == propsMap.cend()) {
-      auto propsVector = std::vector<RawProps>{};
-      propsVector.emplace_back(RawProps(props));
-      propsMap.emplace(&family, propsVector);
-    } else {
-      it->second.push_back(RawProps(props));
-    }
+void UpdatesRegistry::cleanupOnMount() {
+  // noop - can be overridden by subclasses
+}
+
+void UpdatesRegistry::collectNodeProps(
+    PropsMap &propsMap,
+    const ShadowNode::Shared &shadowNode,
+    const folly::dynamic &props) {
+  auto &family = shadowNode->getFamily();
+  auto it = propsMap.find(&family);
+
+  if (it == propsMap.cend()) {
+    auto propsVector = std::vector<RawProps>{};
+    propsVector.emplace_back(RawProps(props));
+    propsMap.emplace(&family, propsVector);
+  } else {
+    it->second.push_back(RawProps(props));
   }
 }
 

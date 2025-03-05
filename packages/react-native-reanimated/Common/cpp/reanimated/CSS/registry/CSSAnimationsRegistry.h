@@ -35,20 +35,23 @@ class CSSAnimationsRegistry
       const SettingsUpdates &settingsUpdates,
       double timestamp);
 
+  void collectProps(PropsMap &propsMap) override;
+  void cleanupOnMount() override;
+
   void update(double timestamp);
 
  private:
+  using AnimationsSet = std::unordered_set<std::shared_ptr<CSSAnimation>>;
   using Registry =
       std::unordered_map<Tag, std::vector<std::shared_ptr<CSSAnimation>>>;
-  using RunningAnimationsMap = std::unordered_map<Tag, std::set<unsigned>>;
-  using AnimationsToRevertMap =
-      std::unordered_map<Tag, std::unordered_set<unsigned>>;
+  using AnimationIndicesMap = std::unordered_map<Tag, std::set<unsigned>>;
 
   Registry registry_;
 
-  RunningAnimationsMap runningAnimationsMap_;
-  AnimationsToRevertMap animationsToRevertMap_;
+  AnimationIndicesMap runningAnimationIndicesMap_;
   DelayedItemsManager<CSSAnimationId> delayedAnimationsManager_;
+  AnimationsSet animationsToRevertSet_;
+  AnimationsSet revertedAnimationsSet_;
 
   void updateViewAnimations(
       Tag viewTag,
