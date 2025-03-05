@@ -298,27 +298,19 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  registerCSSAnimations(
+  applyCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationConfigs: {
-      name: string;
-      settings: NormalizedSingleCSSAnimationSettings;
-    }[]
-  ): void {
+    _animationUpdates: {
+      animationNames?: string[];
+      newSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
+      settingsUpdates?: Record<
+        string,
+        Partial<NormalizedSingleCSSAnimationSettings>
+      >;
+    }
+  ) {
     throw new ReanimatedError(
-      '`registerCSSAnimations` is not available in JSReanimated.'
-    );
-  }
-
-  updateCSSAnimations(
-    _viewTag: number,
-    _settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[]
-  ): void {
-    throw new ReanimatedError(
-      '`updateCSSAnimations` is not available in JSReanimated.'
+      '`applyCSSAnimations` is not available in JSReanimated.'
     );
   }
 

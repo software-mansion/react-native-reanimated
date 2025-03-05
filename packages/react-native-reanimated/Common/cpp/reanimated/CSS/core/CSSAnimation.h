@@ -12,19 +12,17 @@
 
 namespace reanimated {
 
-using CSSAnimationId = std::pair<Tag, unsigned>;
-
 class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
-      unsigned index,
+      const std::string &name,
       const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 
-  CSSAnimationId getId() const;
+  const std::string &getName() const;
   ShadowNode::Shared getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
@@ -46,7 +44,7 @@ class CSSAnimation {
       double timestamp);
 
  private:
-  const unsigned index_;
+  const std::string name_;
   const ShadowNode::Shared shadowNode_;
   AnimationFillMode fillMode_;
 

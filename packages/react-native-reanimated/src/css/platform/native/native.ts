@@ -34,24 +34,18 @@ export function unregisterCSSKeyframes(animationName: string) {
 
 // View animations
 
-export function registerCSSAnimations(
+export function applyCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
-  animationConfigs: {
-    name: string;
-    settings: NormalizedSingleCSSAnimationSettings;
-  }[]
+  animationUpdates: {
+    animationNames?: string[];
+    newSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
+    settingsUpdates?: Record<
+      string,
+      Partial<NormalizedSingleCSSAnimationSettings>
+    >;
+  }
 ) {
-  ReanimatedModule.registerCSSAnimations(shadowNodeWrapper, animationConfigs);
-}
-
-export function updateCSSAnimations(
-  viewTag: number,
-  settingsUpdates: {
-    index: number;
-    settings: Partial<NormalizedSingleCSSAnimationSettings>;
-  }[]
-) {
-  ReanimatedModule.updateCSSAnimations(viewTag, settingsUpdates);
+  ReanimatedModule.applyCSSAnimations(shadowNodeWrapper, animationUpdates);
 }
 
 export function unregisterCSSAnimations(viewTag: number) {

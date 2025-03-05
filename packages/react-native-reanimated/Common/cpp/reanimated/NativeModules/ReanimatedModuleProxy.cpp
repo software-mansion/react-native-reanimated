@@ -469,60 +469,28 @@ void ReanimatedModuleProxy::unregisterCSSKeyframes(
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
 }
 
-void ReanimatedModuleProxy::registerCSSAnimations(
+void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &animationConfigs) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    const jsi::Value &animationUpdates) {
+  const auto &animationUpdatesObj = animationUpdates.asObject(rt);
+  const auto &animationNames = parseAnimationNames(
+      rt, animationUpdatesObj.getProperty(rt, "animationNames"));
+  const auto &newSettings = parseNewAnimations(
+      rt,
+      shadowNodeWrapper,
+      animationUpdatesObj.getProperty(rt, "newSettings"),
+      getCssTimestamp());
+  const auto &settingsUpdates = parseSettingsUpdates(
+      rt, animationUpdatesObj.getProperty(rt, "settingsUpdates"));
 
-  const auto animationConfigsArray = animationConfigs.asObject(rt).asArray(rt);
-  const auto animationsCount = animationConfigsArray.size(rt);
-
-  std::vector<std::shared_ptr<CSSAnimation>> animations;
-  animations.reserve(animationsCount);
-  const auto timestamp = getCssTimestamp();
-
-  for (size_t i = 0; i < animationsCount; ++i) {
-    auto animationConfig =
-        animationConfigsArray.getValueAtIndex(rt, i).asObject(rt);
-    const auto animationName =
-        animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
-    const auto settings = parseCSSAnimationSettings(
-        rt, animationConfig.getProperty(rt, "settings"));
-    const auto &keyframesConfig =
-        cssAnimationKeyframesRegistry_->get(animationName);
-
-    animations.emplace_back(std::make_shared<CSSAnimation>(
-        rt, shadowNode, i, keyframesConfig, settings, timestamp));
-  }
-
-  cssAnimationsRegistry_->set(shadowNode, std::move(animations), timestamp);
-  maybeRunCSSLoop();
-}
-
-void ReanimatedModuleProxy::updateCSSAnimations(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &settingsUpdates) {
-  const auto settingsUpdatesArray = settingsUpdates.asObject(rt).asArray(rt);
-  const auto settingsUpdatesCount = settingsUpdatesArray.size(rt);
-
-  std::vector<std::pair<unsigned, PartialCSSAnimationSettings>> updates;
-  updates.reserve(settingsUpdatesCount);
-
-  for (size_t i = 0; i < settingsUpdatesCount; ++i) {
-    auto settingsUpdate =
-        settingsUpdatesArray.getValueAtIndex(rt, i).asObject(rt);
-    const auto animationIndex = settingsUpdate.getProperty(rt, "index");
-    const auto settings = settingsUpdate.getProperty(rt, "settings");
-    updates.emplace_back(
-        animationIndex.asNumber(),
-        parsePartialCSSAnimationSettings(rt, settings));
-  }
-
-  cssAnimationsRegistry_->updateSettings(
-      viewTag.asNumber(), updates, getCssTimestamp());
-  maybeRunCSSLoop();
+  cssAnimationsRegistry_->apply(
+      rt,
+      shadowNodeWrapper,
+      animationNames,
+      newSettings,
+      settingsUpdates,
+      getCssTimestamp());
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {

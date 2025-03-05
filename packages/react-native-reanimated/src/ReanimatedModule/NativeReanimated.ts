@@ -198,29 +198,20 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
   }
 
-  registerCSSAnimations(
+  applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: {
-      name: string;
-      settings: NormalizedSingleCSSAnimationSettings;
-    }[]
+    animationUpdates: {
+      animationNames?: string[];
+      newSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
+      settingsUpdates?: Record<
+        string,
+        Partial<NormalizedSingleCSSAnimationSettings>
+      >;
+    }
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimations(
+    this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
-      animationConfigs
-    );
-  }
-
-  updateCSSAnimations(
-    animationId: number,
-    settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[]
-  ) {
-    this.#reanimatedModuleProxy.updateCSSAnimations(
-      animationId,
-      settingsUpdates
+      animationUpdates
     );
   }
 

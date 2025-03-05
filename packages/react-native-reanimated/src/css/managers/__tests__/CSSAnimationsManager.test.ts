@@ -2,11 +2,7 @@
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import { CSSKeyframesRuleImpl } from '../../models';
 import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
-import {
-  registerCSSAnimations,
-  unregisterCSSAnimations,
-  updateCSSAnimations,
-} from '../../platform/native/native';
+import { unregisterCSSAnimations } from '../../platform/native/native';
 import type {
   CSSAnimationProperties,
   ExistingCSSAnimationProperties,
