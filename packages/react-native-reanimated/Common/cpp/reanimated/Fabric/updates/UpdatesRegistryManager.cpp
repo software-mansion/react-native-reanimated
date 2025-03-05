@@ -48,6 +48,12 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
+void UpdatesRegistryManager::cleanupOnMount() {
+  for (auto &registry : registries_) {
+    registry->cleanupOnMount();
+  }
+}
+
 void UpdatesRegistryManager::removeBatch(const std::vector<Tag> &tags) {
   for (auto &registry : registries_) {
     registry->removeBatch(tags);

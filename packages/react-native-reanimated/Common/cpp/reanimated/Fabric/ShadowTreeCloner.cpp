@@ -36,6 +36,15 @@ Props::Shared mergeProps(
 #endif
 
   for (const auto &props : propsVector) {
+    const ViewProps &viewProps =
+        static_cast<const ViewProps &>(*shadowNode.getProps());
+    LOG(INFO) << "ShadowTreeCloner::mergeProps: View tag: "
+              << shadowNode.getTag()
+              << " Props: " << (props.operator folly::dynamic())
+              << " Node width: "
+              << viewProps.yogaStyle.dimension(yoga::Dimension::Width)
+                     .value()
+                     .unwrap();
     newProps = shadowNode.getComponentDescriptor().cloneProps(
         propsParserContext, newProps, RawProps(props));
   }

@@ -44,12 +44,18 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(UpdatesBatch &updatesBatch);
-  void collectProps(PropsMap &propsMap);
+  virtual void collectProps(PropsMap &propsMap);
+  virtual void cleanupOnMount();
   virtual void removeBatch(const std::vector<Tag> &tagsToRemove) = 0;
 
  protected:
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
+
+  void collectNodeProps(
+      PropsMap &propsMap,
+      const ShadowNode::Shared &shadowNode,
+      const folly::dynamic &props);
 
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
