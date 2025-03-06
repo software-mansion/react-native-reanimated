@@ -46,7 +46,6 @@ public class NodesManager implements EventDispatcherListener {
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
   private FabricUIManager mFabricUIManager;
-  private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -62,11 +61,6 @@ public class NodesManager implements EventDispatcherListener {
 
     if (mFabricUIManager != null) {
       mFabricUIManager.getEventDispatcher().removeListener(this);
-    }
-
-    if (mUnsubscribe != null) {
-      mUnsubscribe.run();
-      mUnsubscribe = null;
     }
   }
 
