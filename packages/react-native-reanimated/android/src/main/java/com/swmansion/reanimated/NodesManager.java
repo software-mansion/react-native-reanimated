@@ -72,7 +72,7 @@ public class NodesManager implements EventDispatcherListener {
 
   public void initWithContext(ReactApplicationContext reactApplicationContext) {
     reactApplicationContext.assertOnJSQueueThread();
-    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
+    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule, this);
     mFabricUIManager =
         (FabricUIManager)
             UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.FABRIC);

@@ -45,6 +45,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   }
 
   public NodesManager getNodesManager() {
+    // This method is called from react-native-gesture-handler.
     return mNodesManager;
   }
 
