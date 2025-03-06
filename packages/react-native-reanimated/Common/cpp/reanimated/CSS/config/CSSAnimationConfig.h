@@ -35,34 +35,19 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings);
+using CSSAnimationSettingsMap =
+    std::unordered_map<size_t, CSSAnimationSettings>;
+using CSSAnimationSettingsUpdatesMap =
+    std::unordered_map<size_t, PartialCSSAnimationSettings>;
 
-AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &settings);
+struct CSSAnimationUpdates {
+  std::optional<std::vector<std::string>> animationNames;
+  CSSAnimationSettingsMap newAnimationSettings;
+  CSSAnimationSettingsUpdatesMap settingsUpdates;
+};
 
-AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &settings);
-
-AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings);
-
-CSSAnimationSettings parseCSSAnimationSettings(
+CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
-    const jsi::Value &settings);
-
-PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &partialSettings);
-
-std::vector<std::string> parseAnimationNames(
-    jsi::Runtime &rt,
-    const jsi::Value &animationNames);
-
-std::unordered_map<std::string, std::shared_ptr<CSSAnimation>>
-parseNewAnimations(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const jsi::Value &newSettings,
-    double timestamp);
-
-std::unordered_map<std::string, PartialCSSAnimationSettings>
-parseSettingsUpdates(jsi::Runtime &rt, const jsi::Value &settingsUpdates);
+    const jsi::Value &config);
 
 } // namespace reanimated

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
@@ -14,9 +15,9 @@
 
 namespace reanimated {
 
-using AnimationsMap =
-    std::unordered_map<std::string, std::shared_ptr<CSSAnimation>>;
-using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
+using CSSAnimationsMap =
+    std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
+using CSSAnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
 class CSSAnimationsRegistry
     : public UpdatesRegistry,
@@ -31,10 +32,9 @@ class CSSAnimationsRegistry
   void apply(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::vector<std::string> &animationNames,
-      const AnimationsMap &addedAnimations,
-      const std::unordered_map<std::string, PartialCSSAnimationSettings>
-          &settingsUpdates,
+      const std::optional<std::vector<std::string>> &animationNames,
+      const CSSAnimationsMap &newAnimations,
+      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag> &tagsToRemove) override;
@@ -42,33 +42,41 @@ class CSSAnimationsRegistry
   void update(double timestamp);
 
  private:
-  using Registry = std::unordered_map<Tag, AnimationsVector>;
+  using AnimationToIndexMap =
+      std::unordered_map<std::shared_ptr<CSSAnimation>, unsigned>;
   using RunningAnimationIndicesMap =
       std::unordered_map<Tag, std::set<unsigned>>;
   using AnimationsToRevertMap =
       std::unordered_map<Tag, std::unordered_set<unsigned>>;
+  struct RegistryEntry {
+    const CSSAnimationsVector animationsVector;
+    const AnimationToIndexMap animationToIndexMap;
+  };
+
+  using Registry = std::unordered_map<Tag, RegistryEntry>;
 
   Registry registry_;
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
-  DelayedItemsManager<std::pair<Tag, unsigned>> delayedAnimationsManager_;
+  DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
-  AnimationsVector getAnimationsVector(
-      Tag viewTag,
-      const std::vector<std::string> &animationNames,
-      const AnimationsMap &addedAnimations) const;
+  CSSAnimationsVector buildCSSAnimationsVector(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const std::optional<std::vector<std::string>> &animationNames,
+      const std::optional<CSSAnimationsMap> &newAnimations) const;
+  AnimationToIndexMap buildAnimationToIndexMap(
+      const CSSAnimationsVector &animationsVector) const;
   void updateAnimationSettings(
-      const AnimationsVector &animationsVector,
-      const std::unordered_map<std::string, PartialCSSAnimationSettings>
-          &settingsUpdates,
+      const CSSAnimationsVector &animationsVector,
+      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
   void updateViewAnimations(
       Tag viewTag,
       const std::vector<unsigned> &animationIndices,
-      double timestamp,
-      bool addToBatch);
+      double timestamp);
   void scheduleOrActivateAnimation(
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
