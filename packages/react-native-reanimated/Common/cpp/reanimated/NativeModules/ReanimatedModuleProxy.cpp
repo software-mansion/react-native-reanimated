@@ -473,24 +473,43 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
-  const auto &animationUpdatesObj = animationUpdates.asObject(rt);
-  const auto &animationNames = parseAnimationNames(
-      rt, animationUpdatesObj.getProperty(rt, "animationNames"));
-  const auto &newSettings = parseNewAnimations(
-      rt,
-      shadowNodeWrapper,
-      animationUpdatesObj.getProperty(rt, "newSettings"),
-      getCssTimestamp());
-  const auto &settingsUpdates = parseSettingsUpdates(
-      rt, animationUpdatesObj.getProperty(rt, "settingsUpdates"));
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto timestamp = getCssTimestamp();
+  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
+
+  CSSAnimationsMap newAnimations;
+
+  if (!updates.newAnimationSettings.empty()) {
+    // animationNames always exists when newAnimationSettings is not empty
+    const auto animationNames = updates.animationNames.value();
+    const auto animationNamesCount = animationNames.size();
+
+    for (const auto &[index, settings] : updates.newAnimationSettings) {
+      if (index >= animationNamesCount) {
+        throw std::invalid_argument(
+            "[Reanimated] index is out of bounds of animationNames");
+      }
+
+      const auto &name = animationNames[index];
+//      const auto animation = std::make_shared<CSSAnimation>(
+//          rt,
+//          shadowNode,
+//          std::move(name),
+//          cssAnimationKeyframesRegistry_->get(name),
+//          settings,
+//          timestamp);
+//
+//      newAnimations.emplace(index, animation);
+    }
+  }
 
   cssAnimationsRegistry_->apply(
       rt,
-      shadowNodeWrapper,
-      animationNames,
-      newSettings,
-      settingsUpdates,
-      getCssTimestamp());
+      shadowNode,
+      updates.animationNames,
+      std::move(newAnimations),
+      updates.settingsUpdates,
+      timestamp);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {

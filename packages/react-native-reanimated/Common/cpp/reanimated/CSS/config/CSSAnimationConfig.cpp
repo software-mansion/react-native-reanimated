@@ -106,57 +106,90 @@ std::vector<std::string> parseAnimationNames(
     const jsi::Value &animationNames) {
   std::vector<std::string> result;
 
-  const auto &namesArray = animationNames.asArray(rt);
+  const auto &namesArray = animationNames.asObject(rt).asArray(rt);
   const auto animationNamesCount = namesArray.size(rt);
   result.reserve(animationNamesCount);
 
   for (size_t i = 0; i < animationNamesCount; i++) {
-    result.push_back(namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    result.emplace_back(
+        namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
 
   return result;
 }
 
-std::unordered_map<std::string, std::shared_ptr<CSSAnimation>>
-parseNewAnimations(
+template <typename T>
+std::unordered_map<size_t, T> parseHelper(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const jsi::Value &newSettings,
-    double timestamp) {
-  std::unordered_map<std::string, std::shared_ptr<CSSAnimation>> result;
+    const jsi::Object &settingsObj,
+    std::function<T(jsi::Runtime &, const jsi::Value &)> parseFunction) {
+  std::unordered_map<size_t, T> result;
 
-  const auto &newSettingsObj = newSettings.asObject(rt);
-  const auto &animationNames = newSettingsObj.getPropertyNames(rt);
-  const auto animationNamesCount = animationNames.size(rt);
-  result.reserve(animationNamesCount);
+  const auto animationIndices = settingsObj.getPropertyNames(rt);
+  const auto animationIndicesCount = animationIndices.size(rt);
+  result.reserve(animationIndicesCount);
 
-  for (size_t i = 0; i < animationNamesCount; i++) {
-    const auto &name =
-        animationNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto &settings = newSettingsObj.getProperty(rt, name.c_str());
-    const auto &parsedSettings = parseCSSAnimationSettings(rt, settings);
-    const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(name);
-
-    result[name] = std::make_shared<CSSAnimation>(
-        rt, shadowNode, name, keyframesConfig, parsedSettings, timestamp);
+  for (size_t i = 0; i < animationIndicesCount; i++) {
+    const auto &animationIndex = animationIndices.getValueAtIndex(rt, i);
+    const auto animationIndexValue = animationIndex.asNumber();
+    const auto &animationSettings =
+        settingsObj.getProperty(rt, animationIndex.toString(rt));
+    result[animationIndexValue] = parseFunction(rt, animationSettings);
   }
 
   return result;
 }
 
-std::unordered_map<std::string, PartialCSSAnimationSettings>
-parseSettingsUpdates(jsi::Runtime &rt, const jsi::Value &settingsUpdates) {
-  std::unordered_map<std::string, PartialCSSAnimationSettings> result;
+CSSAnimationSettingsMap parseNewAnimationSettings(
+    jsi::Runtime &rt,
+    const std::vector<std::string> &animationNames,
+    const jsi::Value &newSettings) {
+  return parseHelper<CSSAnimationSettings>(
+      rt,
+      newSettings.asObject(rt),
+      [&](jsi::Runtime &rt, const jsi::Value &settings) {
+        return parseCSSAnimationSettings(rt, settings);
+      });
+}
 
-  const auto &settingsUpdatesObj = settingsUpdates.asObject(rt);
-  const auto &names = settingsUpdatesObj.getPropertyNames(rt);
-  const auto namesCount = names.size(rt);
-  result.reserve(namesCount);
+CSSAnimationSettingsUpdatesMap parseSettingsUpdates(
+    jsi::Runtime &rt,
+    const jsi::Value &settingsUpdates) {
+  return parseHelper<PartialCSSAnimationSettings>(
+      rt,
+      settingsUpdates.asObject(rt),
+      [](jsi::Runtime &rt, const jsi::Value &settings) {
+        return parsePartialCSSAnimationSettings(rt, settings);
+      });
+}
 
-  for (size_t i = 0; i < namesCount; i++) {
-    const auto &name = names.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto &settings = settingsUpdatesObj.getProperty(rt, name.c_str());
-    result[name] = parsePartialCSSAnimationSettings(rt, settings);
+CSSAnimationUpdates parseCSSAnimationUpdates(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto &configObj = config.asObject(rt);
+
+  CSSAnimationUpdates result;
+
+  if (configObj.hasProperty(rt, "animationNames")) {
+    const auto animationNames =
+        parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
+    result.animationNames = std::move(animationNames);
+
+    if (configObj.hasProperty(rt, "newAnimationSettings")) {
+      result.newAnimationSettings = parseNewAnimationSettings(
+          rt,
+          animationNames,
+          configObj.getProperty(rt, "newAnimationSettings"));
+    }
+  } else if (configObj.hasProperty(rt, "newAnimationSettings")) {
+    throw std::invalid_argument(
+        "[Reanimated] animationNames is required when newAnimationSettings is "
+        "present in the animation updates config");
+  }
+
+  if (configObj.hasProperty(rt, "settingsUpdates")) {
+    result.settingsUpdates =
+        parseSettingsUpdates(rt, configObj.getProperty(rt, "settingsUpdates"));
   }
 
   return result;

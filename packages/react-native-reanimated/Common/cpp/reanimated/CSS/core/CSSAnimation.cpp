@@ -7,11 +7,11 @@ namespace reanimated {
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
-    const std::string &name,
+    std::string &&name,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
-    : name_(name),
+    : name_(std::move(name)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
       progressProvider_(std::make_shared<AnimationProgressProvider>(

@@ -2,91 +2,73 @@
 
 namespace reanimated {
 
-template <typename TIdentifier>
-DelayedItem<TIdentifier>::DelayedItem(double timestamp, TIdentifier id)
-    : timestamp(timestamp), id(id) {}
+template <typename TValue>
+DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value)
+    : timestamp(timestamp), value(value) {}
 
-#ifndef NDEBUG
-
-template <typename TIdentifier>
-std::ostream &operator<<(
-    std::ostream &os,
-    const DelayedItem<TIdentifier> &item) {
-  os << "DelayedItem(" << item.timestamp << ", " << item.id << ")";
-  return os;
+template <typename TValue>
+bool DelayedItemComparator<TValue>::operator()(
+    const DelayedItem<TValue> &lhs,
+    const DelayedItem<TValue> &rhs) const {
+  return lhs.timestamp < rhs.timestamp;
 }
 
-#endif // NDEBUG
-
-template <typename TIdentifier>
-bool DelayedItemComparator<TIdentifier>::operator()(
-    const DelayedItem<TIdentifier> &lhs,
-    const DelayedItem<TIdentifier> &rhs) const {
-  if (lhs.timestamp != rhs.timestamp) {
-    return lhs.timestamp < rhs.timestamp;
-  }
-  return lhs.id < rhs.id;
-}
-
-template <typename TIdentifier>
-void DelayedItemsManager<TIdentifier>::add(
+template <typename TValue>
+void DelayedItemsManager<TValue>::add(
     const double timestamp,
-    const TIdentifier id) {
-  auto result = items_.emplace(timestamp, id);
+    const TValue value) {
+  auto result = itemsSet_.emplace(timestamp, value);
   if (result.second) {
-    itemMap_[result.first->id] = result.first;
+    itemsMap_[result.first->value] = result.first;
   }
 }
 
-template <typename TIdentifier>
-typename DelayedItemsManager<TIdentifier>::Item
-DelayedItemsManager<TIdentifier>::pop() {
-  if (items_.empty()) {
+template <typename TValue>
+typename DelayedItemsManager<TValue>::Item DelayedItemsManager<TValue>::pop() {
+  if (itemsSet_.empty()) {
     throw std::runtime_error("[Reanimated] No delayed items available to pop");
   }
-  auto it = items_.begin();
+  auto it = itemsSet_.begin();
   Item result = std::move(*it);
-  itemMap_.erase(it->id);
-  items_.erase(it);
+  itemsMap_.erase(it->value);
+  itemsSet_.erase(it);
   return result;
 }
 
-template <typename TIdentifier>
-bool DelayedItemsManager<TIdentifier>::remove(const TIdentifier &id) {
-  auto mapIt = itemMap_.find(id);
-  if (mapIt != itemMap_.end()) {
-    items_.erase(mapIt->second);
-    itemMap_.erase(mapIt);
-    return true;
+template <typename TValue>
+bool DelayedItemsManager<TValue>::remove(const TValue value) {
+  auto it = itemsMap_.find(value);
+
+  if (it == itemsMap_.end()) {
+    return false;
   }
-  return false;
+
+  itemsSet_.erase(it->second);
+  itemsMap_.erase(it);
+  return true;
 }
 
-template <typename TIdentifier>
-const typename DelayedItemsManager<TIdentifier>::Item &
-DelayedItemsManager<TIdentifier>::top() const {
-  if (items_.empty()) {
+template <typename TValue>
+const typename DelayedItemsManager<TValue>::Item &
+DelayedItemsManager<TValue>::top() const {
+  if (itemsSet_.empty()) {
     throw std::runtime_error("[Reanimated] No delayed items available");
   }
-  return *items_.begin();
+  return *itemsSet_.begin();
 }
 
-template <typename TIdentifier>
-bool DelayedItemsManager<TIdentifier>::empty() const {
-  return items_.empty();
+template <typename TValue>
+bool DelayedItemsManager<TValue>::empty() const {
+  return itemsSet_.empty();
 }
 
-template <typename TIdentifier>
-size_t DelayedItemsManager<TIdentifier>::size() const {
-  return items_.size();
+template <typename TValue>
+size_t DelayedItemsManager<TValue>::size() const {
+  return itemsSet_.size();
 }
 
 // Declare the types that will be used in the DelayedItemsManager class
-template class DelayedItemsManager<CSSAnimationId>;
+template class DelayedItemsManager<std::shared_ptr<CSSAnimation>>;
 template class DelayedItemsManager<Tag>;
-template struct DelayedItem<CSSAnimationId>;
-template struct DelayedItem<Tag>;
-template struct DelayedItemComparator<CSSAnimationId>;
-template struct DelayedItemComparator<Tag>;
 
 } // namespace reanimated
