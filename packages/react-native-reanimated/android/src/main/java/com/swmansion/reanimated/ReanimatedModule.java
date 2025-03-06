@@ -48,6 +48,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     // do nothing
   }
 
+  public NodesManager getNodesManager() {
+    return mNodesManager;
+  }
+
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
