@@ -64,7 +64,11 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule();
+      if (!ReanimatedTurboModule?.installTurboModule()) {
+        // Race condition on OTA updates etc.
+        this.#reanimatedModuleProxy = null!;
+        return;
+      }
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
