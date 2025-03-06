@@ -12,6 +12,7 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -35,6 +36,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
+  private AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
@@ -85,11 +87,15 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   }
 
   public void invalidate() {
-    // We have to destroy extra runtimes when invalidate is called. If we clean
-    // it up later instead there's a chance the runtime will retain references
-    // to invalidated memory and will crash on its destruction.
-    invalidateCpp();
-
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      // We have to destroy extra runtimes when invalidate is called. If we clean
+      // it up later instead there's a chance the runtime will retain references
+      // to invalidated memory and will crash on its destruction.
+      invalidateCpp();
+    }
     mAndroidUIScheduler.deactivate();
   }
 

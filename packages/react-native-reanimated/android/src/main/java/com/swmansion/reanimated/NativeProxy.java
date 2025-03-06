@@ -27,6 +27,7 @@ import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -46,6 +47,7 @@ public class NativeProxy {
   private boolean slowAnimationsEnabled = false;
   private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
+  private AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @DoNotStrip
   @SuppressWarnings("unused")
@@ -114,7 +116,12 @@ public class NativeProxy {
   }
 
   public void invalidate() {
-    invalidateCpp();
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      invalidateCpp();
+    }
   }
 
   private void toggleSlowAnimations() {
