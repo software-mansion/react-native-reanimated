@@ -27,16 +27,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
 
   @Override
   public void onHostPause() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostPause();
-    }
+    mNodesManager.onHostPause();
   }
 
   @Override
   public void onHostResume() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostResume();
-    }
+    mNodesManager.onHostResume();
   }
 
   @Override
@@ -69,11 +65,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @Override
   public void invalidate() {
     super.invalidate();
-
-    if (mNodesManager != null) {
-      mNodesManager.invalidate();
-    }
-
+    mNodesManager.invalidate();
     ReactApplicationContext reactContext = getReactApplicationContext();
     reactContext.removeLifecycleEventListener(this);
   }
