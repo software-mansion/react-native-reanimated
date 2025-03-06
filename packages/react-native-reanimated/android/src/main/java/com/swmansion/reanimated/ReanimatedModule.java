@@ -1,12 +1,10 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.swmansion.worklets.WorkletsModule;
-import java.util.Objects;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
