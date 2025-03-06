@@ -8,8 +8,6 @@ import java.util.Map;
 
 public class Utils {
 
-  public static boolean isChromeDebugger = false;
-
   public static Map<String, Integer> processMapping(ReadableMap style) {
     ReadableMapKeySetIterator iter = style.keySetIterator();
     HashMap<String, Integer> mapping = new HashMap<>();

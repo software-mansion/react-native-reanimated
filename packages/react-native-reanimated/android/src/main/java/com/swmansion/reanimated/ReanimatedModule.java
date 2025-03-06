@@ -57,22 +57,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
-
-    // When debugging in chrome the JS context is not available.
-    // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger =
-        Objects.requireNonNull(getReactApplicationContext().getJavaScriptContextHolder()).get()
-            == 0;
-
-    if (!Utils.isChromeDebugger) {
-      mNodesManager.initWithContext(getReactApplicationContext());
-      return true;
-    } else {
-      Log.w(
-          "[REANIMATED]",
-          "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
-      return false;
-    }
+    mNodesManager.initWithContext(getReactApplicationContext());
+    return true;
   }
 
   @ReactMethod
