@@ -18,10 +18,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     mNodesManager = new NodesManager(reactContext, mWorkletsModule);
   }
 
-  public WorkletsModule getWorkletsModule() {
-    return mWorkletsModule;
-  }
-
   @Override
   public void initialize() {
     ReactApplicationContext reactContext = getReactApplicationContext();
