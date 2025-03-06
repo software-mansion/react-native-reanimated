@@ -55,8 +55,7 @@ public class NativeProxy {
       ReactApplicationContext context, WorkletsModule workletsModule) {
     context.assertOnJSQueueThread();
 
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
