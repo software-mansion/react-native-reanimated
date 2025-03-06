@@ -11,13 +11,14 @@ import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
-  private @Nullable NodesManager mNodesManager;
+  private final NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
     mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
+    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
   }
 
   public WorkletsModule getWorkletsModule() {
@@ -50,12 +51,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     // do nothing
   }
 
-  /*package*/
   public NodesManager getNodesManager() {
-    if (mNodesManager == null) {
-      mNodesManager = new NodesManager(getReactApplicationContext(), mWorkletsModule);
-    }
-
     return mNodesManager;
   }
 
@@ -70,7 +66,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
             == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext());
+      mNodesManager.initWithContext(getReactApplicationContext());
       return true;
     } else {
       Log.w(
