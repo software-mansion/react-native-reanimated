@@ -36,10 +36,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
 
-  public AndroidUIScheduler getAndroidUIScheduler() {
-    return mAndroidUIScheduler;
-  }
-
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       long jsContext,
