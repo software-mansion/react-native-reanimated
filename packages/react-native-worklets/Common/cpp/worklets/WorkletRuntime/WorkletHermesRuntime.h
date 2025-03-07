@@ -101,18 +101,18 @@ struct WorkletsReentrancyCheck {
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
 // template class that is a subclass of DecoratedRuntime which is also a
 // template class that then inherits its template, which in this case is
-// jsi::Runtime. So the inheritance is: ReanimatedHermesRuntime ->
+// jsi::Runtime. So the inheritance is: WorkletHermesRuntime ->
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
-class ReanimatedHermesRuntime
+class WorkletHermesRuntime
     : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
-  ReanimatedHermesRuntime(
+   WorkletHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
-  ~ReanimatedHermesRuntime();
+  ~WorkletHermesRuntime();
 
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
