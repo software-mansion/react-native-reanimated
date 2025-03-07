@@ -56,6 +56,7 @@ public abstract class WorkletsMessageQueueThreadBase implements MessageQueueThre
       mIsFinished.set(messageQueueThread, true);
       mIsFinished.setAccessible(false);
     } catch (NoSuchFieldException | IllegalAccessException e) {
+      //noinspection CallToPrintStackTrace
       e.printStackTrace();
     }
   }

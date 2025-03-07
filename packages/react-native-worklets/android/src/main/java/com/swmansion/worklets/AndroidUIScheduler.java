@@ -7,8 +7,14 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public class AndroidUIScheduler {
 
+  /**
+   * @noinspection FieldCanBeLocal
+   */
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
@@ -18,11 +24,11 @@ public class AndroidUIScheduler {
 
   private final Runnable mUIThreadRunnable =
       () -> {
-        /**
-         * This callback is called on the UI thread, but the module is invalidated on the JS thread.
-         * Therefore we must synchronize for reloads. Without synchronization the cpp part gets torn
-         * down while the UI thread is still executing it, leading to crashes.
-         */
+        /// This callback is called on the UI thread, but the module is invalidated on the JS
+        // thread.
+        /// Therefore we must synchronize for reloads. Without synchronization the cpp part gets
+        // torn
+        /// down while the UI thread is still executing it, leading to crashes.
         synchronized (mActive) {
           if (mActive.get()) {
             triggerUI();
@@ -41,6 +47,9 @@ public class AndroidUIScheduler {
 
   public native void invalidate();
 
+  /**
+   * @noinspection unused
+   */
   @DoNotStrip
   private void scheduleTriggerOnUI() {
     UiThreadUtil.runOnUiThread(

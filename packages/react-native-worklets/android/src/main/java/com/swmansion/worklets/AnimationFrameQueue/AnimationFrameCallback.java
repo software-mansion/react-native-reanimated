@@ -1,4 +1,4 @@
-package com.swmansion.worklets;
+package com.swmansion.worklets.AnimationFrameQueue;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -9,6 +9,9 @@ import com.facebook.proguard.annotations.DoNotStrip;
 @DoNotStrip
 public class AnimationFrameCallback {
 
+  /**
+   * @noinspection FieldCanBeLocal, unused
+   */
   @DoNotStrip private final HybridData mHybridData;
 
   @DoNotStrip

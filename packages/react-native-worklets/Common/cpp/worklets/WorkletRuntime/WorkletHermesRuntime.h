@@ -108,7 +108,7 @@ struct WorkletsReentrancyCheck {
 class WorkletHermesRuntime
     : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
-   WorkletHermesRuntime(
+  WorkletHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
