@@ -18,15 +18,16 @@ public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
   @Override
   public NativeModule getModule(
       @NonNull String name, @NonNull ReactApplicationContext reactContext) {
-    return switch (name) {
-      case WorkletsModule.NAME -> new WorkletsModule(reactContext);
-      default -> null;
-    };
+    return name.equals(WorkletsModule.NAME) ? new WorkletsModule(reactContext) : null;
   }
 
+  /**
+   * @noinspection rawtypes, unchecked
+   */
+  @NonNull
   @Override
   public ReactModuleInfoProvider getReactModuleInfoProvider() {
-    Class<? extends NativeModule>[] moduleList = new Class[] {WorkletsModule.class};
+    Class[] moduleList = new Class[] {WorkletsModule.class};
 
     final Map<String, ReactModuleInfo> reactModuleInfoMap = new HashMap<>();
     for (Class<? extends NativeModule> moduleClass : moduleList) {

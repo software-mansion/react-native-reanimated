@@ -11,6 +11,8 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
+import com.swmansion.worklets.AnimationFrameQueue.AnimationFrameCallback;
+import com.swmansion.worklets.AnimationFrameQueue.AnimationFrameQueue;
 import java.util.Objects;
 
 /**
