@@ -32,7 +32,7 @@ void CSSTransitionsRegistry::add(
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  if (updatesRegistry_.contains(viewTag)) {
+  if (!updatesRegistry_.contains(viewTag)) {
     handleRemove(viewTag);
   }
 }

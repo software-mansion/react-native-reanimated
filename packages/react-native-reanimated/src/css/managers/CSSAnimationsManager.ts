@@ -69,7 +69,6 @@ export default class CSSAnimationsManager {
         return;
       }
 
-      console.log('animationUpdates', animationUpdates);
       applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
     }
   }
@@ -149,7 +148,6 @@ export default class CSSAnimationsManager {
     return animations.reduceRight<Record<string, ProcessedAnimation[]>>(
       (acc, animation) => {
         const name = animation.keyframesRule.name;
-        console.log('name', name);
         if (!acc[name]) {
           acc[name] = [animation];
         } else {

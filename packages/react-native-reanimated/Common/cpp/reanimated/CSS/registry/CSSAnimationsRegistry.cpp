@@ -38,10 +38,19 @@ void CSSAnimationsRegistry::apply(
           buildAnimationToIndexMap(animationsVector)});
   runningAnimationIndicesMap_[viewTag].clear();
 
+  std::vector<size_t> updatedIndices;
+  for (const auto &[index, _] : newAnimations) {
+    updatedIndices.push_back(index);
+  }
+  for (const auto &[index, _] : settingsUpdates) {
+    updatedIndices.push_back(index);
+  }
+
   updateAnimationSettings(animationsVector, settingsUpdates, timestamp);
   for (size_t i = 0; i < animationsVector.size(); ++i) {
     scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
   }
+  updateViewAnimations(viewTag, updatedIndices, timestamp, false);
   applyViewAnimationsStyle(viewTag, timestamp);
 }
 
@@ -70,9 +79,9 @@ void CSSAnimationsRegistry::update(const double timestamp) {
   for (auto it = runningAnimationIndicesMap_.begin();
        it != runningAnimationIndicesMap_.end();) {
     const auto viewTag = it->first;
-    const std::vector<unsigned> animationIndices = {
+    const std::vector<size_t> animationIndices = {
         it->second.begin(), it->second.end()};
-    updateViewAnimations(viewTag, animationIndices, timestamp);
+    updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
     if (runningAnimationIndicesMap_.at(viewTag).empty()) {
       it = runningAnimationIndicesMap_.erase(it);
@@ -101,46 +110,42 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
   CSSAnimationsVector animationsVector;
   const auto &animationNamesVector = animationNames.value();
   const auto animationNamesSize = animationNamesVector.size();
-  animationsVector.resize(animationNamesSize);
+  animationsVector.reserve(animationNamesSize);
 
-  // Add new animations to the vector
-  if (newAnimations.has_value()) {
-    for (const auto &[animationIndex, animation] : newAnimations.value()) {
-      animationsVector[animationIndex] = animation;
-    }
-  }
+  std::unordered_map<std::string, CSSAnimationsVector> oldAnimationsMap;
+  CSSAnimationsMap emptyAnimationsMap;
+  const auto &newAnimationsMap = newAnimations.value_or(emptyAnimationsMap);
 
-  // Fill in remaining slots with animations from the registry
   if (registryIt != registry_.end()) {
     const auto &oldAnimations = registryIt->second.animationsVector;
-    std::unordered_map<std::string, CSSAnimationsVector> oldAnimationsMap;
 
     // Fill the map while maintaining reverse order (for quick pop from the end)
     for (auto it = oldAnimations.rbegin(); it != oldAnimations.rend(); ++it) {
       oldAnimationsMap[(*it)->getName()].emplace_back(*it);
     }
+  }
 
-    // Fill empty slots with matching animations
-    for (size_t i = 0; i < animationNamesSize; ++i) {
-      if (animationsVector[i] != nullptr) {
-        continue;
-      }
+  for (size_t i = 0; i < animationNamesSize; ++i) {
+    const auto &newAnimationIt = newAnimationsMap.find(i);
+    if (newAnimationIt != newAnimationsMap.end()) {
+      animationsVector.emplace_back(newAnimationIt->second);
+      continue;
+    }
 
-      const auto &name = animationNamesVector[i];
-      auto animationIt = oldAnimationsMap.find(name);
+    const auto &name = animationNamesVector[i];
+    const auto &oldAnimationIt = oldAnimationsMap.find(name);
 
-      if (animationIt == oldAnimationsMap.end()) {
-        throw std::runtime_error(
-            "[Reanimated] There is no animation with name " + name +
-            " available to use at index " + std::to_string(i));
-      }
+    if (oldAnimationIt == oldAnimationsMap.end()) {
+      throw std::runtime_error(
+          "[Reanimated] There is no animation with name " + name +
+          " available to use at index " + std::to_string(i));
+    }
 
-      animationsVector[i] = animationIt->second.back();
-      animationIt->second.pop_back();
+    animationsVector.emplace_back(oldAnimationIt->second.back());
+    oldAnimationIt->second.pop_back();
 
-      if (animationIt->second.empty()) {
-        oldAnimationsMap.erase(animationIt);
-      }
+    if (oldAnimationIt->second.empty()) {
+      oldAnimationsMap.erase(oldAnimationIt);
     }
   }
 
@@ -180,8 +185,9 @@ void CSSAnimationsRegistry::handleRemove(Tag viewTag) {
 
 void CSSAnimationsRegistry::updateViewAnimations(
     const Tag viewTag,
-    const std::vector<unsigned> &animationIndices,
-    const double timestamp) {
+    const std::vector<size_t> &animationIndices,
+    const double timestamp,
+    const bool addToBatch) {
   folly::dynamic result = folly::dynamic::object;
   ShadowNode::Shared shadowNode = nullptr;
   bool hasUpdates = false;
@@ -202,8 +208,8 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
       // mode
-      if (!animation->hasForwardsFillMode()) {
-        // We also have to manually commit style values
+      if (addToBatch && !animation->hasForwardsFillMode()) {
+        //  We also have to manually commit style values
         // reverting the changes applied by the animation.
         hasUpdates =
             addStyleUpdates(result, animation->getResetStyle(), false) ||
@@ -219,7 +225,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
       }
     }
 
-    if (!updatesAddedToBatch) {
+    if (addToBatch && !updatesAddedToBatch) {
       hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
@@ -241,6 +247,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   delayedAnimationsManager_.remove(animation);
 
   const auto startTimestamp = animation->getStartTimestamp(timestamp);
+
   if (startTimestamp > timestamp) {
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
@@ -283,13 +290,14 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-      style = animation->getBackwardsFillStyle();
-    } else if (currentState == AnimationProgressState::Finished) {
+    if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
         style = animation->getForwardsFillStyle();
       }
+    } else if (
+        startTimestamp == timestamp ||
+        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+      style = animation->getBackwardsFillStyle();
     } else if (currentState != AnimationProgressState::Pending) {
       style = animation->getCurrentInterpolationStyle();
     }
