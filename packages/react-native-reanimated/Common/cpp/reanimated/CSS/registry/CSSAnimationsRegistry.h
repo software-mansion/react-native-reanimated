@@ -61,7 +61,7 @@ class CSSAnimationsRegistry
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
-  CSSAnimationsVector buildCSSAnimationsVector(
+  CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const std::optional<std::vector<std::string>> &animationNames,
@@ -73,6 +73,7 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
+  void handleRemove(Tag viewTag);
   void updateViewAnimations(
       Tag viewTag,
       const std::vector<unsigned> &animationIndices,

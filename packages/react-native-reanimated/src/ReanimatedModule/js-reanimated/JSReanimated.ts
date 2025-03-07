@@ -14,9 +14,9 @@ import type {
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
 import {
@@ -300,14 +300,7 @@ class JSReanimated implements IReanimatedModule {
 
   applyCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationUpdates: {
-      animationNames?: string[];
-      newSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
-      settingsUpdates?: Record<
-        string,
-        Partial<NormalizedSingleCSSAnimationSettings>
-      >;
-    }
+    _animationUpdates: CSSAnimationUpdates
   ) {
     throw new ReanimatedError(
       '`applyCSSAnimations` is not available in JSReanimated.'

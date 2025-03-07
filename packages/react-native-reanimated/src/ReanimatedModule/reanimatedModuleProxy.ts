@@ -10,9 +10,9 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
@@ -71,14 +71,7 @@ export interface ReanimatedModuleProxy {
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationUpdates: {
-      animationNames?: string[];
-      newSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
-      settingsUpdates?: Record<
-        string,
-        Partial<NormalizedSingleCSSAnimationSettings>
-      >;
-    }
+    animationUpdates: CSSAnimationUpdates
   ): void;
 
   unregisterCSSAnimations(viewTag: number): void;
