@@ -121,9 +121,24 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
+/**
+ * Currently on iOS React Native can go into a non-fatal race condition
+ * on a double reload. Double reload can happen during an OTA update,
+ * when an app is reloaded immediately after evaluating the bundle.
+ * We need to bail on it without throwing exceptions.
+ */
+- (BOOL)hasReactNativeFailedReload
+{
+  return [_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   REAAssertJavaScriptQueue();
+
+  if ([self hasReactNativeFailedReload]) {
+    return @NO;
+  }
 
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   auto jsCallInvoker = _callInvoker.callInvoker;
@@ -131,10 +146,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(self.bridge != nullptr);
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
-  
-  if(![workletsModule getWorkletsModuleProxy]) {
-    return @FALSE;
-  }
 
   auto reanimatedModuleProxy = reanimated::createReanimatedModule(self, _moduleRegistry, jsCallInvoker, workletsModule);
 
