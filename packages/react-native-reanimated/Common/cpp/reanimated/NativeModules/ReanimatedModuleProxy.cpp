@@ -36,7 +36,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     : ReanimatedModuleProxySpec(jsCallInvoker),
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
-      valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
