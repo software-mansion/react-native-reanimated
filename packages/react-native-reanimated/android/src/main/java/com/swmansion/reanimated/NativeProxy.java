@@ -84,11 +84,6 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
-
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
-    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
