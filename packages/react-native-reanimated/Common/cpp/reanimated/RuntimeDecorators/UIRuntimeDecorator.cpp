@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <worklets/Tools/JSIUtils.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 namespace reanimated {
 

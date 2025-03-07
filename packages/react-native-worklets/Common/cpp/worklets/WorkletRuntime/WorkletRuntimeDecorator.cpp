@@ -1,7 +1,7 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
-#include <worklets/Tools/JSIUtils.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
