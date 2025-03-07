@@ -12,7 +12,7 @@ export default function AnimationDuration() {
     <ExampleScreen
       animation={{
         animationDuration: '3s',
-        animationFillMode: 'backwards',
+        animationFillMode: 'forwards',
         animationName: {
           from: {
             width: 0,
@@ -47,7 +47,8 @@ export default function AnimationDuration() {
                 variant="inlineCode">
                 animationDirection
               </Text>
-              properties.
+              properties. In this example, the width of the box is set to 0 in
+              the style object and to 100% in the last animation frame.
             </>
           ),
           items: [{ animationDuration: '0s', label: '0s (default)' }],
@@ -68,6 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.sm,
+    width: 0,
   },
   wrapper: {
     backgroundColor: colors.primaryLight,

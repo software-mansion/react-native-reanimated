@@ -1,15 +1,16 @@
 'use strict';
+import { ANIMATION_NAME_PREFIX } from '../constants';
 import type {
   CSSAnimationKeyframes,
   CSSKeyframesRule,
   PlainStyle,
 } from '../types';
 
-let currentAnimationID = 0;
-
 export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   implements CSSKeyframesRule
 {
+  private static currentAnimationID = 0;
+
   // TODO - change cssRules prop to match specification
   private readonly cssRules_: CSSAnimationKeyframes<S>;
   private readonly cssText_: string;
@@ -40,6 +41,6 @@ export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   }
 
   static generateNextKeyframeName() {
-    return `REA-CSS-${currentAnimationID++}`;
+    return `${ANIMATION_NAME_PREFIX}${CSSKeyframesRuleBase.currentAnimationID++}`;
   }
 }

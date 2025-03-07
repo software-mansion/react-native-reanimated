@@ -45,3 +45,12 @@ export type NormalizedSingleCSSAnimationSettings = {
   fillMode: CSSAnimationFillMode;
   playState: CSSAnimationPlayState;
 };
+
+export type CSSAnimationUpdates = {
+  animationNames?: string[];
+  newAnimationSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
+  settingsUpdates?: Record<
+    string,
+    Partial<NormalizedSingleCSSAnimationSettings>
+  >;
+};

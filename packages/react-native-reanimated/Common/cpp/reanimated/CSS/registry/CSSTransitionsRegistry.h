@@ -45,6 +45,7 @@ class CSSTransitionsRegistry
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
+  void handleRemove(Tag viewTag);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);

@@ -125,14 +125,10 @@ class ReanimatedModuleProxy
   void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
       override;
 
-  void registerCSSAnimations(
+  void applyCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationConfigs) override;
-  void updateCSSAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &settingsUpdates) override;
+      const jsi::Value &animationUpdates) override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
   void registerCSSTransition(

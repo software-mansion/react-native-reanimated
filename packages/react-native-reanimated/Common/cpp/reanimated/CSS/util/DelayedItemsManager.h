@@ -2,49 +2,43 @@
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <functional>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
-#ifndef NDEBUG
-#include <iostream>
-#endif // NDEBUG
-
 namespace reanimated {
 
-template <typename TIdentifier>
+template <typename TValue>
 struct DelayedItem {
   const double timestamp;
-  const TIdentifier id;
+  const TValue value;
 
-  DelayedItem(double timestamp, TIdentifier id);
-
-#ifndef NDEBUG
-  friend std::ostream &operator<<(std::ostream &os, const DelayedItem &item);
-#endif // NDEBUG
+  DelayedItem(double timestamp, TValue value);
 };
 
-template <typename TIdentifier>
+template <typename TValue>
 struct DelayedItemComparator {
   bool operator()(
-      const DelayedItem<TIdentifier> &lhs,
-      const DelayedItem<TIdentifier> &rhs) const;
+      const DelayedItem<TValue> &lhs,
+      const DelayedItem<TValue> &rhs) const;
 };
 
-template <typename TIdentifier>
+template <typename TValue>
 class DelayedItemsManager {
-  using Item = DelayedItem<TIdentifier>;
-  using ItemSet = std::set<Item, DelayedItemComparator<TIdentifier>>;
-  using ItemMap = std::unordered_map<TIdentifier, typename ItemSet::iterator>;
+  using Item = DelayedItem<TValue>;
+  using ItemSet = std::set<Item, DelayedItemComparator<TValue>>;
+  using ItemMap = std::unordered_map<TValue, typename ItemSet::iterator>;
 
-  ItemSet items_;
-  ItemMap itemMap_;
+  ItemSet itemsSet_;
+  ItemMap itemsMap_;
 
  public:
-  void add(double timestamp, TIdentifier id);
+  void add(double timestamp, TValue value);
   Item pop();
-  bool remove(const TIdentifier &id);
+  bool remove(TValue value);
   const Item &top() const;
   bool empty() const;
   size_t size() const;
