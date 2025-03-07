@@ -26,9 +26,9 @@ export default function App() {
 
   if (nuked) {
     return (
-      <NukeContext.Provider value={() => setNuked(false)}>
+      <NukeContext value={() => setNuked(false)}>
         <LeakCheck />
-      </NukeContext.Provider>
+      </NukeContext>
     );
   }
 
@@ -41,7 +41,7 @@ export default function App() {
   }
 
   return (
-    <NukeContext.Provider value={() => setNuked(true)}>
+    <NukeContext value={() => setNuked(true)}>
       <SafeAreaProvider>
         <GestureHandlerRootView style={flex.fill}>
           <NavigationContainer
@@ -78,7 +78,7 @@ export default function App() {
           </NavigationContainer>
         </GestureHandlerRootView>
       </SafeAreaProvider>
-    </NukeContext.Provider>
+    </NukeContext>
   );
 }
 

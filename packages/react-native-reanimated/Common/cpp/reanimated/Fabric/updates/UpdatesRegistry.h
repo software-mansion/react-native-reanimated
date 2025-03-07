@@ -43,7 +43,7 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(UpdatesBatch &updatesBatch);
   void collectProps(PropsMap &propsMap);
   virtual void removeBatch(const std::vector<Tag> &tagsToRemove) = 0;
 
@@ -63,7 +63,7 @@ class UpdatesRegistry {
  private:
   UpdatesBatch updatesBatch_;
 
-  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
