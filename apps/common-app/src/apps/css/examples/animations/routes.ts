@@ -3,7 +3,6 @@
 import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 import { IS_WEB } from '@/utils';
 
-import routeCards from './routeCards';
 import {
   animatedProperties,
   animationSettings,
@@ -470,7 +469,7 @@ const othersRoutes = {
 const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
-    CardComponent: routeCards.AnimatedPropertiesCard,
+    // CardComponent: routeCards.AnimatedPropertiesCard,
     flatten: true,
     routes: {
       LayoutAndPositioning: {
@@ -493,7 +492,7 @@ const routes = {
   },
   AnimationSettings: {
     name: 'Animation Settings',
-    CardComponent: routeCards.AnimationSettingsCard,
+    // CardComponent: routeCards.AnimationSettingsCard,
     routes: {
       Duration: {
         name: 'Duration',
@@ -527,7 +526,7 @@ const routes = {
   },
   Miscellaneous: {
     name: 'Miscellaneous',
-    CardComponent: routeCards.MiscellaneousCard,
+    // CardComponent: routeCards.MiscellaneousCard,
     routes: {
       ChangingAnimation: {
         name: 'Changing Animation',
@@ -549,7 +548,7 @@ const routes = {
   },
   RealWorldExamples: {
     name: 'Real World Examples',
-    CardComponent: routeCards.RealWorldExamplesCard,
+    // CardComponent: routeCards.RealWorldExamplesCard,
     routes: {
       SpinnersAndLoaders: {
         name: 'Spinners and Loaders',
@@ -575,7 +574,7 @@ const routes = {
   },
   TestExamples: {
     name: 'Test Examples',
-    CardComponent: routeCards.TestExamplesCard,
+    // CardComponent: routeCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',

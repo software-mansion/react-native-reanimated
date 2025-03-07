@@ -118,23 +118,23 @@ std::vector<std::string> parseAnimationNames(
   return result;
 }
 
-template <typename T>
-std::unordered_map<size_t, T> parseHelper(
+template <typename TResult>
+std::unordered_map<size_t, TResult> parseHelper(
     jsi::Runtime &rt,
     const jsi::Object &settingsObj,
-    std::function<T(jsi::Runtime &, const jsi::Value &)> parseFunction) {
-  std::unordered_map<size_t, T> result;
+    std::function<TResult(jsi::Runtime &, const jsi::Value &)> parseFunction) {
+  std::unordered_map<size_t, TResult> result;
 
   const auto animationIndices = settingsObj.getPropertyNames(rt);
   const auto animationIndicesCount = animationIndices.size(rt);
   result.reserve(animationIndicesCount);
 
   for (size_t i = 0; i < animationIndicesCount; i++) {
-    const auto &animationIndex = animationIndices.getValueAtIndex(rt, i);
-    const auto animationIndexValue = animationIndex.asNumber();
-    const auto &animationSettings =
-        settingsObj.getProperty(rt, animationIndex.toString(rt));
-    result[animationIndexValue] = parseFunction(rt, animationSettings);
+    const auto &indexStr = animationIndices.getValueAtIndex(rt, i).toString(rt);
+    const auto &animationSettings = settingsObj.getProperty(rt, indexStr);
+
+    const auto index = std::stoul(indexStr.utf8(rt));
+    result[index] = parseFunction(rt, animationSettings);
   }
 
   return result;
