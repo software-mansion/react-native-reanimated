@@ -31,11 +31,11 @@ using namespace facebook::hermes::inspector_modern;
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
-struct ReanimatedReentrancyCheck {
+struct WorkletsReentrancyCheck {
   // This is effectively a very subtle and complex assert, so only
   // include it in builds which would include asserts.
 #ifndef NDEBUG
-  ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
+  WorkletsReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {
     std::thread::id this_id = std::this_thread::get_id();
@@ -106,7 +106,7 @@ struct ReanimatedReentrancyCheck {
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
 class ReanimatedHermesRuntime
-    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
+    : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
@@ -116,7 +116,7 @@ class ReanimatedHermesRuntime
 
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
-  ReanimatedReentrancyCheck reentrancyCheck_;
+  WorkletsReentrancyCheck reentrancyCheck_;
 #if HERMES_ENABLE_DEBUGGER
   chrome::DebugSessionToken debugToken_;
 #endif // HERMES_ENABLE_DEBUGGER

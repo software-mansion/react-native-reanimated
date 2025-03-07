@@ -56,7 +56,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
-    : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)) {
