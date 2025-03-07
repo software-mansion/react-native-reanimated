@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <functional>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
