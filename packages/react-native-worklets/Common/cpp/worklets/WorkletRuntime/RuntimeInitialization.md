@@ -67,7 +67,7 @@ worklet hashes. Running in release mode prevents this.
 2. Enable debugging on the runtime object
 
 This is done by creating an adapter (`HermesExecutorRuntimeAdapter` inside of
-`ReanimatedHermesRuntime.cpp`) which holds the runtime and allows the debugger
+`WorkletHermesRuntime.cpp`) which holds the runtime and allows the debugger
 to communicate with it. The adapter is managed by a `Connection` (`ConnectionDemux`)
 object, but this is not important in our case. We just have to make a call
 to `facebook::hermes::inspector::chrome::enableDebugging()` and pass the adapter

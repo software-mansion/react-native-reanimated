@@ -1,4 +1,4 @@
-#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
@@ -52,11 +52,11 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
 
 #endif // HERMES_ENABLE_DEBUGGER
 
-ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+WorkletHermesRuntime::WorkletHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
-    : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)) {
@@ -96,7 +96,7 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
 #endif // NDEBUG
 }
 
-ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
+WorkletHermesRuntime::~WorkletHermesRuntime() {
 #if HERMES_ENABLE_DEBUGGER
   // We have to disable debugging before the runtime is destroyed.
   chrome::disableDebugging(debugToken_);

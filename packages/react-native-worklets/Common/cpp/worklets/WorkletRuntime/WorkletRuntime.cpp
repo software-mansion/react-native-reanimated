@@ -12,7 +12,7 @@
 #include <utility>
 
 #if JS_RUNTIME_HERMES
-#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
 #else
@@ -60,7 +60,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 #if JS_RUNTIME_HERMES
   (void)rnRuntime; // used only by V8
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<ReanimatedHermesRuntime>(
+  jsiRuntime = std::make_shared<WorkletHermesRuntime>(
       std::move(hermesRuntime), jsQueue, name);
 #elif JS_RUNTIME_V8
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
