@@ -16,6 +16,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     reactContext.assertOnJSQueueThread();
     mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
     mNodesManager = new NodesManager(reactContext, mWorkletsModule);
+    mNodesManager.initWithContext(reactContext);
+    // TODO: merge initWithContext into NodesManager constructor
   }
 
   @Override
@@ -48,7 +50,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
-    mNodesManager.initWithContext(getReactApplicationContext());
+    mNodesManager.getNativeProxy().installJSIBindings();
+    if (BuildConfig.DEBUG) {
+      mNodesManager.getNativeProxy().checkCppVersion();
+    }
     return true;
   }
 
