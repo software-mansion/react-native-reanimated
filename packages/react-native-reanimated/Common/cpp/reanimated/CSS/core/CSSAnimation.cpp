@@ -7,7 +7,7 @@ namespace reanimated {
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
-    std::string &&name,
+    std::string name,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
