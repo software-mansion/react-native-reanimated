@@ -29,6 +29,7 @@ android/build
 local.properties
 android/src/main/JNILibs/
 android/.cxx
+android/.kotlin
 
 # node.js
 node_modules/

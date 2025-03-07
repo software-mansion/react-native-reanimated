@@ -50,10 +50,6 @@ class WorkletsModuleProxy
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) override;
 
-  [[nodiscard]] inline std::string getValueUnpackerCode() const {
-    return valueUnpackerCode_;
-  }
-
   [[nodiscard]] inline std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;
   }
