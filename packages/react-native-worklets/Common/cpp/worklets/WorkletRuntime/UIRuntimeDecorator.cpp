@@ -1,4 +1,4 @@
-#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/Tools/JSIUtils.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <utility>
