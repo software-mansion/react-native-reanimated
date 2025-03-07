@@ -129,7 +129,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (BOOL)hasReactNativeFailedReload
 {
-  return [_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+  return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
