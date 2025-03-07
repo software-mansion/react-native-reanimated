@@ -114,12 +114,12 @@ jsi::Value WorkletRuntime::executeSync(
     const jsi::Value &worklet) const {
   assert(
       supportsLocking_ &&
-      ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
+      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       worklet,
-      "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
+      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
   auto result = runGuarded(shareableWorklet);
@@ -176,7 +176,7 @@ void scheduleOnRuntime(
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       shareableWorkletValue,
-      "[Reanimated] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 

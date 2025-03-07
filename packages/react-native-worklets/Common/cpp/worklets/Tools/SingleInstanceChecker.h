@@ -30,9 +30,9 @@ class SingleInstanceChecker {
     if (!condition) {
 #ifdef ANDROID
       __android_log_print(
-          ANDROID_LOG_WARN, "Reanimated", "%s", message.c_str());
+          ANDROID_LOG_WARN, "Worklets", "%s", message.c_str());
 #else
-      std::cerr << "[Reanimated] " << message << std::endl;
+      std::cerr << "[Worklets] " << message << std::endl;
 #endif
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
@@ -58,7 +58,7 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
   instanceCount_++;
   assertWithMessage(
       instanceCount_ <= 2,
-      "[Reanimated] More than two instances of " + className +
+      "[Worklets] More than two instances of " + className +
           " present. This may indicate a memory leak due to a retain cycle.");
 }
 
