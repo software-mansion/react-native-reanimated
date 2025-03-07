@@ -24,7 +24,7 @@ class CSSAnimationsRegistry
       std::enable_shared_from_this<CSSAnimationsRegistry> {
  public:
   using SettingsUpdates =
-      std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
+      std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
   bool hasUpdates() const;
   bool isEmpty() const override;
@@ -43,11 +43,10 @@ class CSSAnimationsRegistry
 
  private:
   using AnimationToIndexMap =
-      std::unordered_map<std::shared_ptr<CSSAnimation>, unsigned>;
-  using RunningAnimationIndicesMap =
-      std::unordered_map<Tag, std::set<unsigned>>;
+      std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
+  using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
   using AnimationsToRevertMap =
-      std::unordered_map<Tag, std::unordered_set<unsigned>>;
+      std::unordered_map<Tag, std::unordered_set<size_t>>;
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
@@ -76,8 +75,9 @@ class CSSAnimationsRegistry
   void handleRemove(Tag viewTag);
   void updateViewAnimations(
       Tag viewTag,
-      const std::vector<unsigned> &animationIndices,
-      double timestamp);
+      const std::vector<size_t> &animationIndices,
+      double timestamp,
+      bool addToBatch);
   void scheduleOrActivateAnimation(
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,

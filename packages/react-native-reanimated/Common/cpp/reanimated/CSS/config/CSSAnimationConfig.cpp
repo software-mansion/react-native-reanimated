@@ -181,10 +181,6 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
           animationNames,
           configObj.getProperty(rt, "newAnimationSettings"));
     }
-  } else if (configObj.hasProperty(rt, "newAnimationSettings")) {
-    throw std::invalid_argument(
-        "[Reanimated] animationNames is required when newAnimationSettings is "
-        "present in the animation updates config");
   }
 
   if (configObj.hasProperty(rt, "settingsUpdates")) {

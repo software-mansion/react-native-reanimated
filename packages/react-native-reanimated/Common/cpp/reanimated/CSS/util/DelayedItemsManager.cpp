@@ -10,6 +10,10 @@ template <typename TValue>
 bool DelayedItemComparator<TValue>::operator()(
     const DelayedItem<TValue> &lhs,
     const DelayedItem<TValue> &rhs) const {
+  if (lhs.timestamp == rhs.timestamp) {
+    // Use address comparison as a tiebreaker when timestamps are equal
+    return std::less<const TValue *>{}(&lhs.value, &rhs.value);
+  }
   return lhs.timestamp < rhs.timestamp;
 }
 
