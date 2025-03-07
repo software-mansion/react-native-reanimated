@@ -3,7 +3,6 @@
 namespace reanimated {
 
 bool CSSAnimationsRegistry::hasUpdates() const {
-    LOG(INFO) << "Has updates: " << runningAnimationIndicesMap_.empty() << " " << delayedAnimationsManager_.empty() << " " << animationsToRevertMap_.empty();
   return !runningAnimationIndicesMap_.empty() ||
       !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
 }
@@ -31,16 +30,17 @@ void CSSAnimationsRegistry::apply(
     return;
   }
 
+  registry_.erase(viewTag);
   registry_.emplace(
       viewTag,
       RegistryEntry{
-          animationsVector, buildAnimationToIndexMap(animationsVector)});
+          std::move(animationsVector),
+          buildAnimationToIndexMap(animationsVector)});
   runningAnimationIndicesMap_[viewTag].clear();
 
   updateAnimationSettings(animationsVector, settingsUpdates, timestamp);
-  for (const auto &animation : animationsVector) {
-    LOG(INFO) << "scheduling animation: " << animation->getName();
-    scheduleOrActivateAnimation(animation, timestamp);
+  for (size_t i = 0; i < animationsVector.size(); ++i) {
+    scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
   }
   applyViewAnimationsStyle(viewTag, timestamp);
 }
@@ -230,11 +230,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
   if (hasUpdates) {
     addUpdatesToBatch(shadowNode, result);
   }
-
-  LOG(INFO) << "Update view tag: " << viewTag << " result: " << result;
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(
+    const size_t animationIndex,
     const std::shared_ptr<CSSAnimation> &animation,
     const double timestamp) {
   // Remove the animation from delayed (if it is already added to
@@ -249,13 +248,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
       delayedAnimationsManager_.add(startTimestamp, animation);
     }
   } else {
-    // TODO - improve
-    // Find animation index in the vector
     const auto viewTag = animation->getShadowNode()->getTag();
-    const auto &animationsVector = registry_[viewTag].animationsVector;
-    const auto animationIndex =
-        std::find(animationsVector.begin(), animationsVector.end(), animation) -
-        animationsVector.begin();
     runningAnimationIndicesMap_[viewTag].insert(animationIndex);
   }
 }

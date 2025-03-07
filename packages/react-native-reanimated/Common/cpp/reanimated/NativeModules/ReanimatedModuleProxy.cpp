@@ -509,6 +509,8 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       std::move(newAnimations),
       updates.settingsUpdates,
       timestamp);
+
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {

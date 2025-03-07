@@ -79,6 +79,7 @@ class CSSAnimationsRegistry
       const std::vector<unsigned> &animationIndices,
       double timestamp);
   void scheduleOrActivateAnimation(
+      size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
   void removeViewAnimations(Tag viewTag);

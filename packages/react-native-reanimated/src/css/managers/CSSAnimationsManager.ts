@@ -58,10 +58,19 @@ export default class CSSAnimationsManager {
     this.registerKeyframes(processedAnimations);
 
     const animationUpdates = this.getAnimationUpdates(processedAnimations);
+    this.attachedAnimations = processedAnimations;
 
     if (animationUpdates) {
+      if (
+        animationUpdates.animationNames &&
+        animationUpdates.animationNames.length === 0
+      ) {
+        this.detach();
+        return;
+      }
+
+      console.log('animationUpdates', animationUpdates);
       applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
-      this.attachedAnimations = processedAnimations;
     }
   }
 
@@ -140,6 +149,7 @@ export default class CSSAnimationsManager {
     return animations.reduceRight<Record<string, ProcessedAnimation[]>>(
       (acc, animation) => {
         const name = animation.keyframesRule.name;
+        console.log('name', name);
         if (!acc[name]) {
           acc[name] = [animation];
         } else {
@@ -163,7 +173,8 @@ export default class CSSAnimationsManager {
       Partial<NormalizedSingleCSSAnimationSettings>
     > = {};
 
-    let animationsArrayChanged = false;
+    let animationsArrayChanged =
+      this.attachedAnimations.length !== processedAnimations.length;
     let hasNewAnimations = false;
     let hasSettingsUpdates = false;
 
@@ -184,7 +195,7 @@ export default class CSSAnimationsManager {
         normalizedSettings
       );
 
-      if (updates) {
+      if (Object.keys(updates).length > 0) {
         hasSettingsUpdates = true;
         settingsUpdates[i] = updates;
       }
@@ -208,7 +219,6 @@ export default class CSSAnimationsManager {
     }
 
     if (hasNewAnimations || hasSettingsUpdates || animationsArrayChanged) {
-      console.log('result', result);
       return result;
     }
 
