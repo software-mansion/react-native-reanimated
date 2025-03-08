@@ -8,31 +8,30 @@ namespace reanimated::css {
 
 class CSSAnimation {
  public:
-  using ProgressProvider = std::shared_ptr<AnimationProgressProviderBase>;
-
   CSSAnimation(
-      jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
       std::string name,
-      const CSSKeyframesConfig &keyframesConfig,
-      const AnimationFillMode fillMode,
-      double timestamp);
+      ShadowNode::Shared shadowNode,
+      AnimationFillMode fillMode,
+      const std::shared_ptr<AnimationStyleInterpolator> &styleInterpolator,
+      const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
   const std::string &getName() const;
   ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<AnimationProgressProviderBase> getProgressProvider() const;
 
+  bool isReversed() const;
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  folly::dynamic getBackwardsFillStyle(
-      const ProgressProvider &progressProvider) const;
-  folly::dynamic getForwardsFillStyle(
-      const ProgressProvider &progressProvider) const;
+  folly::dynamic getBackwardsFillStyle() const;
+  folly::dynamic getForwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void setFillMode(AnimationFillMode fillMode);
+  void setProgressProvider(
+      const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
-  folly::dynamic interpolate(const ProgressProvider &progressProvider) const;
+  folly::dynamic getCurrentFrame() const;
 
  private:
   const std::string name_;
@@ -40,6 +39,9 @@ class CSSAnimation {
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  std::shared_ptr<AnimationProgressProviderBase> progressProvider_;
 };
+
+using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
 } // namespace reanimated::css

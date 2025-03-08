@@ -38,7 +38,7 @@ class DelayedItemsManager {
  public:
   void add(double timestamp, TValue value);
   Item pop();
-  bool remove(TValue value);
+  bool erase(TValue value);
   const Item &top() const;
   bool empty() const;
   size_t size() const;
