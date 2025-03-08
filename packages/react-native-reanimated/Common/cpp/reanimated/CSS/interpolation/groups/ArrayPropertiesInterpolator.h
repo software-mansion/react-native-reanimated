@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <memory>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
@@ -37,4 +37,4 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
   void resizeInterpolators(size_t valuesCount);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

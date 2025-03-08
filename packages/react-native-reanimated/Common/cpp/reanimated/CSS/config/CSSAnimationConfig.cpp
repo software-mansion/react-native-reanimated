@@ -1,6 +1,6 @@
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
   return settings.getProperty(rt, "iterationCount").asNumber();
@@ -191,4 +191,4 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

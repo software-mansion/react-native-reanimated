@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSBoolean::CSSBoolean() : value(false) {}
 
@@ -45,4 +45,4 @@ std::ostream &operator<<(std::ostream &os, const CSSBoolean &boolValue) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename TValue>
 DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value)
@@ -75,4 +75,4 @@ size_t DelayedItemsManager<TValue>::size() const {
 template class DelayedItemsManager<std::shared_ptr<CSSAnimation>>;
 template class DelayedItemsManager<Tag>;
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSTransition::CSSTransition(
     ShadowNode::Shared shadowNode,
@@ -134,4 +134,4 @@ bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
   return propertySettings.value().allowDiscrete;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

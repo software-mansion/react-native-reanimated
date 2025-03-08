@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct CSSTransitionPropertySettings {
   double duration;
@@ -47,4 +47,4 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &partialConfig);
 
-} // namespace reanimated
+} // namespace reanimated::css

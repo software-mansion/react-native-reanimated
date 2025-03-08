@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
@@ -20,4 +20,4 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const InterpolatorFactoriesArray &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-} // namespace reanimated
+} // namespace reanimated::css

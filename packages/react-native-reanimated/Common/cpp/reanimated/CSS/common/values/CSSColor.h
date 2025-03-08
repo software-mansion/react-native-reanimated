@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -48,4 +48,4 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 
 inline const CSSColor CSSColor::Transparent(ColorType::Transparent);
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -11,7 +11,7 @@
 #include <utility>
 #include <variant>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -274,4 +274,4 @@ class CSSValueVariant final : public CSSValue {
   }
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

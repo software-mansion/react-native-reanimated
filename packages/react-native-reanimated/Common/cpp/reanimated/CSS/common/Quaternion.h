@@ -6,7 +6,7 @@
 #include <iostream>
 #endif // NDEBUG
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct Quaternion {
   double x, y, z, w;
@@ -22,4 +22,4 @@ struct Quaternion {
   Quaternion interpolate(double progress, const Quaternion &other) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

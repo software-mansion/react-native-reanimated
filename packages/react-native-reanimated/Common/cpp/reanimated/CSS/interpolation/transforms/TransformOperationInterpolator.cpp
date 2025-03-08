@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 PerspectiveOperation
 TransformOperationInterpolator<PerspectiveOperation>::interpolate(
@@ -61,4 +61,4 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
   return std::get<TransformMatrix>(matrixOperation.value);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

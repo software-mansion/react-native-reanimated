@@ -6,7 +6,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class TransformInterpolator {
  public:
@@ -83,4 +83,4 @@ class TransformInterpolatorBase : public TransformInterpolator {
 using TransformInterpolators = TransformInterpolator::Interpolators;
 using TransformInterpolatorUpdateContext = TransformInterpolator::UpdateContext;
 
-} // namespace reanimated
+} // namespace reanimated::css

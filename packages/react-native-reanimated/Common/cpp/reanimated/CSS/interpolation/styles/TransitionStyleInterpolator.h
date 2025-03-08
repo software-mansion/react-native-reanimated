@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class TransitionStyleInterpolator {
  public:
@@ -46,4 +46,4 @@ class TransitionStyleInterpolator {
       const MapInterpolatorsCallback &callback) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

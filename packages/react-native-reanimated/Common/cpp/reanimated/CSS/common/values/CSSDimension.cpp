@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/values/CSSDimension.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSDimension::CSSDimension() : value(0), isRelative(false) {}
 
@@ -142,4 +142,4 @@ std::ostream &operator<<(std::ostream &os, const CSSDimension &dimension) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
+} // namespace reanimated::css

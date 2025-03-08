@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const InterpolatorFactoriesRecord &factories,
@@ -92,4 +92,4 @@ void RecordPropertiesInterpolator::maybeCreateInterpolator(
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

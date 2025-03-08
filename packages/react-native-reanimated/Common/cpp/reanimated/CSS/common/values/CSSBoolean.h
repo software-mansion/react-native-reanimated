@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct CSSBoolean : public CSSSimpleValue<CSSBoolean> {
   bool value;
@@ -30,4 +30,4 @@ struct CSSBoolean : public CSSSimpleValue<CSSBoolean> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

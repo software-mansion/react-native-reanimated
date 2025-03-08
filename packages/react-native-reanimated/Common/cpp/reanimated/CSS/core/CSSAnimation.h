@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSAnimation {
  public:
@@ -52,4 +52,4 @@ class CSSAnimation {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

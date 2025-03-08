@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
@@ -38,4 +38,4 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   PropertyInterpolatorsRecord interpolators_;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

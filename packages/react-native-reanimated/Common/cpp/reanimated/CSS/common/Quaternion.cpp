@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/Quaternion.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 bool Quaternion::operator==(const Quaternion &other) const {
   return x == other.x && y == other.y && z == other.z && w == other.w;
@@ -52,4 +52,4 @@ Quaternion Quaternion::interpolate(const double t, const Quaternion &other)
       copy.w * scale + other.w * invscale};
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

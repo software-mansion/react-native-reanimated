@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 AnimationProgressProvider::AnimationProgressProvider(
     const double timestamp,
@@ -164,4 +164,4 @@ double AnimationProgressProvider::applyAnimationDirection(
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

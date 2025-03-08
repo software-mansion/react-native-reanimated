@@ -1,6 +1,6 @@
 #include <reanimated/CSS/easing/steps.h>
 
-namespace reanimated {
+namespace reanimated::css {
 EasingFunction steps(
     const std::vector<double> &pointsX,
     const std::vector<double> &pointsY) {
@@ -10,4 +10,4 @@ EasingFunction steps(
   };
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

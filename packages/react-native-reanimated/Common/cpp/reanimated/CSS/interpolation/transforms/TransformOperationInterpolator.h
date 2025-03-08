@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename TOperation>
 concept ResolvableOperation = requires(TOperation operation) {
@@ -120,4 +120,4 @@ class TransformOperationInterpolator<TOperation>
   }
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

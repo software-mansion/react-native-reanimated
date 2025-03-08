@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 constexpr std::array<const char *, 13> transformOperationStrings = {
     "perspective",
@@ -568,4 +568,4 @@ template struct TransformOperationBase<CSSDimension>;
 template struct TransformOperationBase<
     std::variant<TransformMatrix, TransformOperations>>;
 
-} // namespace reanimated
+} // namespace reanimated::css

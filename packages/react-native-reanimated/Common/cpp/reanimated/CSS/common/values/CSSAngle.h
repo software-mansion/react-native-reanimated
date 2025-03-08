@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -35,4 +35,4 @@ struct CSSAngle : public CSSSimpleValue<CSSAngle> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

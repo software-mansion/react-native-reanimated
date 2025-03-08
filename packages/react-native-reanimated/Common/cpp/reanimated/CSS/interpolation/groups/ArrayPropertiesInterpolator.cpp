@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const InterpolatorFactoriesArray &factories,
@@ -97,4 +97,4 @@ void ArrayPropertiesInterpolator::resizeInterpolators(size_t valuesCount) {
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/util/props.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 bool isDiscreteProperty(const std::string &propName) {
   const auto it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
@@ -153,4 +153,4 @@ ChangedProps getChangedProps(
       std::move(changedPropertyNames)};
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

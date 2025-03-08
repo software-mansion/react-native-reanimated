@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
     std::make_shared<MatrixOperation>(TransformMatrix::Identity())};
@@ -403,4 +403,4 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

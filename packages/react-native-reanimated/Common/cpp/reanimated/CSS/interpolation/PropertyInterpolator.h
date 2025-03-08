@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class PropertyInterpolator {
  public:
@@ -69,4 +69,4 @@ using PropertyInterpolatorsArray =
 using InterpolatorFactoriesArray =
     std::vector<std::shared_ptr<PropertyInterpolatorFactory>>;
 
-} // namespace reanimated
+} // namespace reanimated::css

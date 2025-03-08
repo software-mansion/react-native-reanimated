@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct ChangedProps {
   const folly::dynamic oldProps;
@@ -31,4 +31,4 @@ ChangedProps getChangedProps(
     const folly::dynamic &newProps,
     const PropertyNames &allowedProperties);
 
-} // namespace reanimated
+} // namespace reanimated::css

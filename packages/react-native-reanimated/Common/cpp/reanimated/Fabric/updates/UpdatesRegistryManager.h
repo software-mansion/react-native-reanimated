@@ -11,6 +11,8 @@
 
 namespace reanimated {
 
+using namespace css;
+
 class UpdatesRegistryManager {
  public:
   UpdatesRegistryManager();

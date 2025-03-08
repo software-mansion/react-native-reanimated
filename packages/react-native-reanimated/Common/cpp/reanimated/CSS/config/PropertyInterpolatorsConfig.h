@@ -12,9 +12,7 @@
 
 #include <vector>
 
-namespace reanimated {
-
-using namespace Interpolators;
+namespace reanimated::css {
 
 const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
   // Local constants
@@ -301,4 +299,4 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
   };
 }();
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/util/keyframes.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
     jsi::Runtime &rt,
@@ -49,4 +49,4 @@ std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

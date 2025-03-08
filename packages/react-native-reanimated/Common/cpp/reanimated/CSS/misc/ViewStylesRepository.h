@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
@@ -61,4 +61,4 @@ class ViewStylesRepository {
       const PropertyPath &propertyPath);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

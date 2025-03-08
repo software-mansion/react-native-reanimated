@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSKeyframesRegistry {
  public:
@@ -19,4 +19,4 @@ class CSSKeyframesRegistry {
   std::unordered_map<std::string, CSSKeyframesConfig> registry_;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct DecomposedTransformMatrix {
   Vector3D scale;
@@ -100,4 +100,4 @@ class TransformMatrix {
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix &m);
 
-} // namespace reanimated
+} // namespace reanimated::css

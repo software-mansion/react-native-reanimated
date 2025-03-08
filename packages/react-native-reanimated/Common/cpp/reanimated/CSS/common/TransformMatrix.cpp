@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/TransformMatrix.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 DecomposedTransformMatrix DecomposedTransformMatrix::interpolate(
     const double progress,
@@ -631,4 +631,4 @@ double TransformMatrix::determinant3x3(
       (a * f * h);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

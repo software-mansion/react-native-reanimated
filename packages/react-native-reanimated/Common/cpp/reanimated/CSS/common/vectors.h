@@ -9,7 +9,7 @@
 #include <iostream>
 #endif // NDEBUG
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct Vector3D {
   std::array<double, 3> vec;
@@ -53,4 +53,4 @@ struct Vector4D {
   Vector4D interpolate(double progress, const Vector4D &other) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css
