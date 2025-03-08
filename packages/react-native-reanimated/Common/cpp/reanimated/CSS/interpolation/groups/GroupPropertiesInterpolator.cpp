@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
     const PropertyPath &propertyPath,
@@ -46,4 +46,4 @@ folly::dynamic GroupPropertiesInterpolator::interpolate(
       });
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

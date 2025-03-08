@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
@@ -109,4 +109,4 @@ folly::dynamic TransitionStyleInterpolator::mapInterpolators(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

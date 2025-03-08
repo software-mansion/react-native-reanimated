@@ -1,6 +1,6 @@
 #include <reanimated/CSS/config/common.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "duration").asNumber();
@@ -14,4 +14,4 @@ double getDelay(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "delay").asNumber();
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

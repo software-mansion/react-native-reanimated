@@ -18,7 +18,7 @@
 #include <iostream>
 #endif // NDEBUG
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
@@ -212,4 +212,4 @@ struct MatrixOperation final
   TransformMatrix toMatrix() const override;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

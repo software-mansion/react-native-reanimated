@@ -1,6 +1,6 @@
 #include <reanimated/CSS/easing/cubicBezier.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double sampleCurveX(const double t, const double x1, const double x2) {
   return 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t;
@@ -73,4 +73,4 @@ EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
   return cubicBezier(x1, y1, x2, y2);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

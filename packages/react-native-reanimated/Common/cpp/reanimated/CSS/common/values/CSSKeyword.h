@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -58,4 +58,4 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
+} // namespace reanimated::css
