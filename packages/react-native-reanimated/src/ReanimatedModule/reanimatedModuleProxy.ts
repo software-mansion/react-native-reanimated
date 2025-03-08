@@ -53,7 +53,7 @@ export interface ReanimatedModuleProxy {
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
-  commitCSSUpdates(_updates: AnyCSSUpdate[]): void;
+  commitCSSUpdates(updates: AnyCSSUpdate[]): void;
 }
 
 export interface IReanimatedModule

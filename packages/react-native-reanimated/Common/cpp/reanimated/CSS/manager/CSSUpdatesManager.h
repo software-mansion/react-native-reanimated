@@ -18,53 +18,30 @@ class CSSUpdatesManager {
       const std::shared_ptr<CSSTransitionsRegistry> &cssTransitionsRegistry,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  bool commit(jsi::Runtime &rt, const jsi::Value &updates);
+  bool commit(
+      jsi::Runtime &rt,
+      const jsi::Value &timestamp,
+      const jsi::Value &updates);
 
  private:
-  using UpdateHandler =
-      std::function<bool(jsi::Runtime &, const jsi::Object &)>;
-  const std::unordered_map<std::string, UpdateHandler> updateHandlers_;
-
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  bool setViewStyle(
+  bool setViewStyle(jsi::Runtime &rt, const jsi::Object &payload);
+  void removeViewStyle(jsi::Runtime &rt, const jsi::Object &payload);
+  void registerCSSKeyframes(jsi::Runtime &rt, const jsi::Object &payload);
+  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Object &payload);
+  void applyCSSAnimations(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &viewStyle);
-
-  bool removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
-
-  bool registerCSSKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &animationName,
-      const jsi::Value &keyframesConfig);
-
-  bool unregisterCSSKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &animationName);
-
-  bool applyCSSAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationUpdates);
-
-  bool unregisterCSSAnimations(const jsi::Value &viewTag);
-
-  bool registerCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &transitionConfig);
-
-  bool updateCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &configUpdates);
-
-  bool unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
+      const jsi::Object &payload,
+      double timestamp);
+  void unregisterCSSAnimations(jsi::Runtime &rt, const jsi::Object &payload);
+  void registerCSSTransition(jsi::Runtime &rt, const jsi::Object &payload);
+  void updateCSSTransition(jsi::Runtime &rt, const jsi::Object &payload);
+  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Object &payload);
 };
 
 } // namespace reanimated

@@ -12,79 +12,46 @@ CSSUpdatesManager::CSSUpdatesManager(
       cssAnimationKeyframesRegistry_(cssAnimationKeyframesRegistry),
       cssAnimationsRegistry_(cssAnimationsRegistry),
       cssTransitionsRegistry_(cssTransitionsRegistry),
-      viewStylesRepository_(viewStylesRepository),
-      updateHandlers_(
-          {{"setViewStyle",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-              return setViewStyle(
-                  rt,
-                  obj.getProperty(rt, "viewTag"),
-                  obj.getProperty(rt, "style"));
-            }},
-           {"removeViewStyle",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return removeViewStyle(rt, obj.getProperty(rt, "viewTag"));
-            }},
-           {"registerCSSKeyframes",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return registerCSSKeyframes(
-                  rt,
-                  obj.getProperty(rt, "animationName"),
-                  obj.getProperty(rt, "keyframesConfig"));
-            }},
-           {"unregisterCSSKeyframes",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return unregisterCSSKeyframes(rt, obj.getProperty(rt, "animationName"));
-            }},
-           {"applyCSSAnimations",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return applyCSSAnimations(
-                  rt,
-                  obj.getProperty(rt, "shadowNodeWrapper"),
-                  obj.getProperty(rt, "animationUpdates"));
-            }},
-           {"unregisterCSSAnimations",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return unregisterCSSAnimations(obj.getProperty(rt, "viewTag"));
-            }},
-           {"registerCSSTransition",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return registerCSSTransition(
-                  rt,
-                  obj.getProperty(rt, "shadowNodeWrapper"),
-                  obj.getProperty(rt, "transitionConfig"));
-            }},
-           {"updateCSSTransition",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return updateCSSTransition(
-                  rt,
-                  obj.getProperty(rt, "viewTag"),
-                  obj.getProperty(rt, "configUpdates"));
-            }},
-           {"unregisterCSSTransition",
-            [this](jsi::Runtime &rt, const jsi::Object &obj) {
-                return  unregisterCSSTransition(rt, obj.getProperty(rt, "viewTag"));
-            }}}) {}
+      viewStylesRepository_(viewStylesRepository) {}
 
-bool CSSUpdatesManager::commit(jsi::Runtime &rt, const jsi::Value &updates) {
+bool CSSUpdatesManager::commit(
+    jsi::Runtime &rt,
+    const jsi::Value &timestamp,
+    const jsi::Value &updates) {
+  const auto timestampValue = timestamp.asNumber();
   const auto &updatesArray = updates.asObject(rt).asArray(rt);
   const auto &updatesArraySize = updatesArray.size(rt);
+
   auto shouldRunCSSLoop = false;
 
   for (size_t i = 0; i < updatesArraySize; i++) {
     const auto &update = updatesArray.getValueAtIndex(rt, i);
-    const auto &updateType = update.asObject(rt).getProperty(rt, "type");
+    const auto &updateType =
+        update.asObject(rt).getProperty(rt, "type").asString(rt).utf8(rt);
+    const auto &payload =
+        update.asObject(rt).getProperty(rt, "payload").asObject(rt);
 
-    const auto it = updateHandlers_.find(updateType.asString(rt).utf8(rt));
-    if (it == updateHandlers_.end()) {
-      throw std::invalid_argument(
-          "[Reanimated] Unknown CSS update type: " +
-          updateType.asString(rt).utf8(rt));
-    }
-
-    const auto result = it->second(rt, update.asObject(rt));
-    if (result) {
+    if (updateType == "setViewStyle") {
+      shouldRunCSSLoop = setViewStyle(rt, payload);
+    } else if (updateType == "removeViewStyle") {
+      removeViewStyle(rt, payload);
+    } else if (updateType == "registerCSSKeyframes") {
+      registerCSSKeyframes(rt, payload);
+    } else if (updateType == "unregisterCSSKeyframes") {
+      unregisterCSSKeyframes(rt, payload);
+    } else if (updateType == "applyCSSAnimations") {
+      applyCSSAnimations(rt, payload, timestampValue);
       shouldRunCSSLoop = true;
+    } else if (updateType == "unregisterCSSAnimations") {
+      unregisterCSSAnimations(rt, payload);
+    } else if (updateType == "registerCSSTransition") {
+      registerCSSTransition(rt, payload);
+      shouldRunCSSLoop = true;
+    } else if (updateType == "updateCSSTransition") {
+      updateCSSTransition(rt, payload);
+      shouldRunCSSLoop = true;
+    } else if (updateType == "unregisterCSSTransition") {
+      unregisterCSSTransition(rt, payload);
     }
   }
 
@@ -93,48 +60,51 @@ bool CSSUpdatesManager::commit(jsi::Runtime &rt, const jsi::Value &updates) {
 
 bool CSSUpdatesManager::setViewStyle(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
+    const jsi::Object &payload) {
+  const auto viewTag = payload.getProperty(rt, "viewTag").asNumber();
+  const auto viewStyle = payload.getProperty(rt, "viewStyle");
 
-  return staticPropsRegistry_->hasObservers(tag);
+  staticPropsRegistry_->set(rt, viewTag, viewStyle);
+
+  return staticPropsRegistry_->hasObservers(viewTag);
 }
 
-bool CSSUpdatesManager::removeViewStyle(
+void CSSUpdatesManager::removeViewStyle(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
+    const jsi::Object &payload) {
+  const auto viewTag = payload.getProperty(rt, "viewTag").asNumber();
 
-  return false;
+  staticPropsRegistry_->remove(viewTag);
 }
 
-bool CSSUpdatesManager::registerCSSKeyframes(
+void CSSUpdatesManager::registerCSSKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &animationName,
-    const jsi::Value &keyframesConfig) {
+    const jsi::Object &payload) {
+  const auto animationName = payload.getProperty(rt, "animationName");
+  const auto keyframesConfig = payload.getProperty(rt, "keyframesConfig");
+
   cssAnimationKeyframesRegistry_->add(
       animationName.asString(rt).utf8(rt),
       parseCSSAnimationKeyframesConfig(
           rt, keyframesConfig, viewStylesRepository_));
-
-  return false;
 }
 
-bool CSSUpdatesManager::unregisterCSSKeyframes(
+void CSSUpdatesManager::unregisterCSSKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &animationName) {
+    const jsi::Object &payload) {
+  const auto animationName = payload.getProperty(rt, "animationName");
+
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
-
-  return false;
 }
 
-bool CSSUpdatesManager::applyCSSAnimations(
+void CSSUpdatesManager::applyCSSAnimations(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &animationUpdates) {
+    const jsi::Object &payload,
+    const double timestamp) {
+  const auto shadowNodeWrapper = payload.getProperty(rt, "shadowNodeWrapper");
+  const auto animationUpdates = payload.getProperty(rt, "animationUpdates");
+
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
   CSSAnimationsMap newAnimations;
@@ -170,20 +140,22 @@ bool CSSUpdatesManager::applyCSSAnimations(
       std::move(newAnimations),
       updates.settingsUpdates,
       timestamp);
-
-  return true;
 }
 
-bool CSSUpdatesManager::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  cssAnimationsRegistry_->remove(viewTag.asNumber());
-
-  return false;
-}
-
-bool CSSUpdatesManager::registerCSSTransition(
+void CSSUpdatesManager::unregisterCSSAnimations(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionConfig) {
+    const jsi::Object &payload) {
+  const auto viewTag = payload.getProperty(rt, "viewTag").asNumber();
+
+  cssAnimationsRegistry_->remove(viewTag);
+}
+
+void CSSUpdatesManager::registerCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Object &payload) {
+  const auto shadowNodeWrapper = payload.getProperty(rt, "shadowNodeWrapper");
+  const auto transitionConfig = payload.getProperty(rt, "transitionConfig");
+
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
@@ -192,26 +164,24 @@ bool CSSUpdatesManager::registerCSSTransition(
       viewStylesRepository_);
 
   cssTransitionsRegistry_->add(transition);
-
-  return true;
 }
 
-bool CSSUpdatesManager::updateCSSTransition(
+void CSSUpdatesManager::updateCSSTransition(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &configUpdates) {
+    const jsi::Object &payload) {
+  const auto viewTag = payload.getProperty(rt, "viewTag").asNumber();
+  const auto configUpdates = payload.getProperty(rt, "configUpdates");
+
   cssTransitionsRegistry_->updateSettings(
-      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
-
-  return true;
+      viewTag, parsePartialCSSTransitionConfig(rt, configUpdates));
 }
 
-bool CSSUpdatesManager::unregisterCSSTransition(
+void CSSUpdatesManager::unregisterCSSTransition(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  cssTransitionsRegistry_->remove(viewTag.asNumber());
+    const jsi::Object &payload) {
+  const auto viewTag = payload.getProperty(rt, "viewTag").asNumber();
 
-  return false;
+  cssTransitionsRegistry_->remove(viewTag);
 }
 
 } // namespace reanimated

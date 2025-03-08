@@ -1,8 +1,9 @@
 'use strict';
 import type { CSSKeyframesRuleImpl } from '../models';
 import {
-  registerCSSKeyframes,
-  unregisterCSSKeyframes,
+  cssUpdatesQueue,
+  registerCSSKeyframesUpdate,
+  unregisterCSSKeyframesUpdate,
 } from '../platform/native';
 
 /**
@@ -35,9 +36,11 @@ export default class CSSKeyframesRegistry {
       });
       // Register animation keyframes only if they are not already registered
       // (when they are added for the first time)
-      registerCSSKeyframes(
-        keyframesRule.name,
-        keyframesRule.normalizedKeyframesConfig
+      cssUpdatesQueue.add(
+        registerCSSKeyframesUpdate(
+          keyframesRule.name,
+          keyframesRule.normalizedKeyframesConfig
+        )
       );
     }
   }
@@ -55,7 +58,7 @@ export default class CSSKeyframesRegistry {
       this.registry_.delete(animationName);
       // Unregister animation keyframes if there are no more references to them
       // (no more views that have an animation with this name)
-      unregisterCSSKeyframes(animationName);
+      cssUpdatesQueue.add(unregisterCSSKeyframesUpdate(animationName));
     }
   }
 }

@@ -4,10 +4,6 @@ import { ANIMATION_NAME_PREFIX } from '../../constants';
 import { CSSKeyframesRuleImpl } from '../../models';
 import CSSKeyframesRuleBase from '../../models/CSSKeyframesRuleBase';
 import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
-import {
-  applyCSSAnimations,
-  unregisterCSSAnimations,
-} from '../../platform/native/updatesQueue';
 import type { CSSAnimationProperties } from '../../types';
 import type { ProcessedAnimation } from '../CSSAnimationsManager';
 import CSSAnimationsManager from '../CSSAnimationsManager';
@@ -15,10 +11,7 @@ import CSSAnimationsManager from '../CSSAnimationsManager';
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
 jest.mock('../../platform/native/native.ts', () => ({
-  applyCSSAnimations: jest.fn(),
-  unregisterCSSAnimations: jest.fn(),
-  registerCSSKeyframes: jest.fn(),
-  unregisterCSSKeyframes: jest.fn(),
+  commitCSSUpdates: jest.fn(),
 }));
 
 describe('CSSAnimationsManager', () => {

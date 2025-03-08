@@ -394,7 +394,7 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
 void ReanimatedModuleProxy::commitCSSUpdates(
     jsi::Runtime &rt,
     const jsi::Value &updates) {
-  if (cssUpdatesManager_->commit(rt, updates)) {
+  if (cssUpdatesManager_->commit(rt, getCssTimestamp(), updates)) {
     maybeRunCSSLoop();
   }
 }
@@ -589,6 +589,7 @@ void ReanimatedModuleProxy::performOperations() {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
     auto lock = updatesRegistryManager_->createLock();
+    auto timestamp = getAnimationTimestamp_();
 
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
