@@ -197,7 +197,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
-    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
+    if (animation->getState(timestamp) == AnimationTimeProgressState::Pending) {
       animation->run(timestamp);
     }
 
@@ -205,7 +205,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
 
-    if (newState == AnimationProgressState::Finished) {
+    if (newState == AnimationTimeProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
       // mode
       if (addToBatch && !animation->hasForwardsFillMode()) {
@@ -228,7 +228,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (addToBatch && !updatesAddedToBatch) {
       hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
-    if (newState != AnimationProgressState::Running) {
+    if (newState != AnimationTimeProgressState::Running) {
       runningAnimationIndicesMap_[viewTag].erase(animationIndex);
     }
   }
@@ -251,7 +251,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   if (startTimestamp > timestamp) {
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
-    if (animation->getState(timestamp) != AnimationProgressState::Paused) {
+    if (animation->getState(timestamp) != AnimationTimeProgressState::Paused) {
       delayedAnimationsManager_.add(startTimestamp, animation);
     }
   } else {
@@ -290,7 +290,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (currentState == AnimationProgressState::Finished) {
+    if (currentState == AnimationTimeProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
         style = animation->getForwardsFillStyle();
       }
@@ -298,7 +298,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
         startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
       style = animation->getBackwardsFillStyle();
-    } else if (currentState != AnimationProgressState::Pending) {
+    } else if (currentState != AnimationTimeProgressState::Pending) {
       style = animation->getCurrentInterpolationStyle();
     }
 

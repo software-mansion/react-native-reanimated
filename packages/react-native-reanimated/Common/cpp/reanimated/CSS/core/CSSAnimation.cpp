@@ -14,7 +14,7 @@ CSSAnimation::CSSAnimation(
     : name_(std::move(name)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
-      progressProvider_(std::make_shared<AnimationProgressProvider>(
+      progressProvider_(std::make_shared<AnimationTimeProgressProvider>(
           timestamp,
           settings.duration,
           settings.delay,
@@ -40,9 +40,9 @@ double CSSAnimation::getStartTimestamp(const double timestamp) const {
   return progressProvider_->getStartTimestamp(timestamp);
 }
 
-AnimationProgressState CSSAnimation::getState(double timestamp) const {
-  return progressProvider_->getState(timestamp);
-}
+// AnimationTimeProgressState CSSAnimation::getState(double timestamp) const {
+//   return progressProvider_->getState(timestamp);
+// }
 
 bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
@@ -80,7 +80,7 @@ folly::dynamic CSSAnimation::getResetStyle() const {
 
 void CSSAnimation::run(const double timestamp) {
   if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Finished) {
+      AnimationTimeProgressState::Finished) {
     return;
   }
   progressProvider_->play(timestamp);
@@ -94,7 +94,7 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
   // add this check to make sure that animation doesn't start with the negative
   // progress)
   if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Pending) {
+      AnimationTimeProgressState::Pending) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 

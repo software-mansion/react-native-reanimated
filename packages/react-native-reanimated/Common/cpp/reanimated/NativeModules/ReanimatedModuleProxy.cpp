@@ -611,6 +611,9 @@ bool ReanimatedModuleProxy::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
 
+  LOG(INFO) << "ReanimatedModuleProxy::handleRawEvent: " << eventType << " "
+            << tag;
+
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
     return false;
   }

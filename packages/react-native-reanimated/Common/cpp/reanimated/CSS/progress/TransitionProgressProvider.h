@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
-#include <reanimated/CSS/progress/RawProgressProvider.h>
+#include <reanimated/CSS/progress/RawTimeProgressProvider.h>
 #include <reanimated/CSS/util/props.h>
 
 #include <limits>
@@ -20,7 +20,7 @@ enum class TransitionProgressState { Pending, Running, Finished };
 
 class TransitionPropertyProgressProvider final
     : public KeyframeProgressProvider,
-      public RawProgressProvider {
+      public RawTimeProgressProvider {
  public:
   TransitionPropertyProgressProvider(
       double timestamp,

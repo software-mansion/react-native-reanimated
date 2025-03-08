@@ -6,9 +6,9 @@
 
 namespace reanimated {
 
-class RawProgressProvider {
+class RawTimeProgressProvider {
  public:
-  RawProgressProvider(double timestamp, double duration, double delay);
+  RawTimeProgressProvider(double timestamp, double duration, double delay);
 
   void setDuration(double duration);
   void setDelay(double delay);

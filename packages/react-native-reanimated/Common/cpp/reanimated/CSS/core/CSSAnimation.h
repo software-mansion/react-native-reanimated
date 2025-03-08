@@ -3,7 +3,7 @@
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
+#include <reanimated/CSS/progress/AnimationTimeProgressProvider.h>
 
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@ class CSSAnimation {
   ShadowNode::Shared getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
-  AnimationProgressState getState(double timestamp) const;
+  AnimationTimeProgressState getState(double timestamp) const;
   bool isReversed() const;
 
   bool hasForwardsFillMode() const;
@@ -48,7 +48,7 @@ class CSSAnimation {
   const ShadowNode::Shared shadowNode_;
   AnimationFillMode fillMode_;
 
-  std::shared_ptr<AnimationProgressProvider> progressProvider_;
+  std::shared_ptr<AnimationTimeProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 

@@ -9,7 +9,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     const EasingFunction &easingFunction)
-    : RawProgressProvider(timestamp, duration, delay),
+    : RawTimeProgressProvider(timestamp, duration, delay),
       easingFunction_(easingFunction) {}
 
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
@@ -18,7 +18,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double delay,
     const EasingFunction &easingFunction,
     const double reversingShorteningFactor)
-    : RawProgressProvider(timestamp, duration, delay),
+    : RawTimeProgressProvider(timestamp, duration, delay),
       easingFunction_(easingFunction),
       reversingShorteningFactor_(reversingShorteningFactor) {}
 
