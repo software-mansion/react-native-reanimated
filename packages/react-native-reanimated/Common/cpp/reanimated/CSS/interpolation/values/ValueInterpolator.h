@@ -125,8 +125,8 @@ class ValueInterpolator : public PropertyInterpolator {
     const auto toIndex = getToKeyframeIndex(progressProvider);
     const auto fromIndex = toIndex - 1;
 
-    const auto &fromKeyframe = keyframes_.at(fromIndex);
-    const auto &toKeyframe = keyframes_.at(toIndex);
+    const auto &fromKeyframe = keyframes_[fromIndex];
+    const auto &toKeyframe = keyframes_[toIndex];
 
     std::optional<ValueType> fromValue = fromKeyframe.value;
     std::optional<ValueType> toValue = toKeyframe.value;
