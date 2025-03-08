@@ -50,7 +50,7 @@ void CSSTransitionsRegistry::updateSettings(
     const PartialCSSTransitionConfig &config) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  const auto &transition = registry_.at(viewTag);
+  const auto &transition = registry_[viewTag];
   transition->updateSettings(config);
 
   // Replace style overrides with the new ones if transition properties were
@@ -71,7 +71,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   for (auto it = runningTransitionTags_.begin();
        it != runningTransitionTags_.end();) {
     const auto &viewTag = *it;
-    const auto &transition = registry_.at(viewTag);
+    const auto &transition = registry_[viewTag];
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
@@ -141,7 +141,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       return;
     }
 
-    const auto &transition = strongThis->registry_.at(viewTag);
+    const auto &transition = strongThis->registry_[viewTag];
     const auto allowedProperties =
         transition->getAllowedProperties(oldProps, newProps);
 

@@ -36,7 +36,7 @@ void RecordPropertiesInterpolator::updateKeyframes(
         rt, jsi::PropNameID::forUtf8(rt, propertyName));
 
     maybeCreateInterpolator(propertyName);
-    interpolators_.at(propertyName)->updateKeyframes(rt, propertyKeyframes);
+    interpolators_[propertyName]->updateKeyframes(rt, propertyKeyframes);
   }
 }
 
@@ -64,11 +64,10 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
 
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-    interpolators_.at(propertyName)
-        ->updateKeyframesFromStyleChange(
-            oldStyleObject.getDefault(propertyName, empty),
-            newStyleObject.getDefault(propertyName, empty),
-            lastUpdateObject.getDefault(propertyName, empty));
+    interpolators_[propertyName]->updateKeyframesFromStyleChange(
+        oldStyleObject.getDefault(propertyName, empty),
+        newStyleObject.getDefault(propertyName, empty),
+        lastUpdateObject.getDefault(propertyName, empty));
   }
 }
 
