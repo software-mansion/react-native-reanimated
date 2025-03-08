@@ -6,18 +6,9 @@ import type {
 } from 'react-native-worklets';
 import { logger, WorkletsModule } from 'react-native-worklets';
 
-import type {
-  ShadowNodeWrapper,
-  StyleProps,
-  Value3D,
-  ValueRotation,
-} from '../../commonTypes';
+import type { Value3D, ValueRotation } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
-import type {
-  CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
-} from '../../css/platform/native';
+import type { AnyCSSUpdate } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
 import {
   isChromeDebugger,
@@ -273,67 +264,9 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  setViewStyle(_viewTag: number, _style: StyleProps): void {
-    throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
-  }
-
-  removeViewStyle(_viewTag: number): void {
+  commitCSSUpdates(_updates: AnyCSSUpdate[]) {
     throw new ReanimatedError(
-      'removeViewStyle is not available in JSReanimated.'
-    );
-  }
-
-  registerCSSKeyframes(
-    _animationName: string,
-    _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void {
-    throw new ReanimatedError(
-      '`registerCSSKeyframes` is not available in JSReanimated.'
-    );
-  }
-
-  unregisterCSSKeyframes(_animationName: string): void {
-    throw new ReanimatedError(
-      '`unregisterCSSKeyframes` is not available in JSReanimated.'
-    );
-  }
-
-  applyCSSAnimations(
-    _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationUpdates: CSSAnimationUpdates
-  ) {
-    throw new ReanimatedError(
-      '`applyCSSAnimations` is not available in JSReanimated.'
-    );
-  }
-
-  unregisterCSSAnimations(_viewTag: number): void {
-    throw new ReanimatedError(
-      '`unregisterCSSAnimations` is not available in JSReanimated.'
-    );
-  }
-
-  registerCSSTransition(
-    _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: NormalizedCSSTransitionConfig
-  ): void {
-    throw new ReanimatedError(
-      '`registerCSSTransition` is not available in JSReanimated.'
-    );
-  }
-
-  updateCSSTransition(
-    _viewTag: number,
-    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
-  ): void {
-    throw new ReanimatedError(
-      '`updateCSSTransition` is not available in JSReanimated.'
-    );
-  }
-
-  unregisterCSSTransition(_viewTag: number): void {
-    throw new ReanimatedError(
-      '`unregisterCSSTransition` is not available in JSReanimated.'
+      'commitCSSUpdates is not available in JSReanimated.'
     );
   }
 }

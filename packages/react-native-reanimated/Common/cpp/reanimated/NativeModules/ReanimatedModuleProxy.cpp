@@ -61,6 +61,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
+      cssUpdatesManager_(std::make_shared<CSSUpdatesManager>(
+          staticPropsRegistry_,
+          cssAnimationKeyframesRegistry_,
+          cssAnimationsRegistry_,
+          cssTransitionsRegistry_,
+          viewStylesRepository_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -385,6 +391,14 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
       viewTag.asNumber(), shouldAnimate.getBool());
 }
 
+void ReanimatedModuleProxy::commitCSSUpdates(
+    jsi::Runtime &rt,
+    const jsi::Value &updates) {
+  if (cssUpdatesManager_->commit(rt, updates)) {
+    maybeRunCSSLoop();
+  }
+}
+
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(
     const std::string &eventName,
     const int emitterReactTag) {
@@ -434,118 +448,6 @@ void ReanimatedModuleProxy::unregisterSensor(
 
 void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
-}
-
-void ReanimatedModuleProxy::setViewStyle(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
-}
-
-void ReanimatedModuleProxy::removeViewStyle(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
-}
-
-void ReanimatedModuleProxy::registerCSSKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &animationName,
-    const jsi::Value &keyframesConfig) {
-  cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, viewStylesRepository_));
-}
-
-void ReanimatedModuleProxy::unregisterCSSKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &animationName) {
-  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
-}
-
-void ReanimatedModuleProxy::applyCSSAnimations(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &animationUpdates) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
-  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
-
-  CSSAnimationsMap newAnimations;
-
-  if (!updates.newAnimationSettings.empty()) {
-    // animationNames always exists when newAnimationSettings is not empty
-    const auto animationNames = updates.animationNames.value();
-    const auto animationNamesCount = animationNames.size();
-
-    for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationNamesCount) {
-        throw std::invalid_argument(
-            "[Reanimated] index is out of bounds of animationNames");
-      }
-
-      const auto &name = animationNames[index];
-      const auto animation = std::make_shared<CSSAnimation>(
-          rt,
-          shadowNode,
-          name,
-          cssAnimationKeyframesRegistry_->get(name),
-          settings,
-          timestamp);
-
-      newAnimations.emplace(index, animation);
-    }
-  }
-
-  cssAnimationsRegistry_->apply(
-      rt,
-      shadowNode,
-      updates.animationNames,
-      std::move(newAnimations),
-      updates.settingsUpdates,
-      timestamp);
-
-  maybeRunCSSLoop();
-}
-
-void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  cssAnimationsRegistry_->remove(viewTag.asNumber());
-}
-
-void ReanimatedModuleProxy::registerCSSTransition(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionConfig) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
-  auto transition = std::make_shared<CSSTransition>(
-      std::move(shadowNode),
-      parseCSSTransitionConfig(rt, transitionConfig),
-      viewStylesRepository_);
-
-  cssTransitionsRegistry_->add(transition);
-  maybeRunCSSLoop();
-}
-
-void ReanimatedModuleProxy::updateCSSTransition(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &configUpdates) {
-  cssTransitionsRegistry_->updateSettings(
-      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
-  maybeRunCSSLoop();
-}
-
-void ReanimatedModuleProxy::unregisterCSSTransition(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(

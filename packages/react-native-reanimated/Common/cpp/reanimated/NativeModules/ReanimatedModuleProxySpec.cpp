@@ -121,93 +121,13 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(setViewStyle)(
+static jsi::Value REANIMATED_SPEC_PREFIX(commitCSSUpdates)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->setViewStyle(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(removeViewStyle)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->removeViewStyle(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSKeyframes)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSKeyframes(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(applyCSSAnimations)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->applyCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSAnimations(std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSTransition)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSTransition(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSTransition)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->updateCSSTransition(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSTransition)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSTransition(rt, std::move(args[0]));
+      ->commitCSSUpdates(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -239,27 +159,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
 
-  methodMap_["setViewStyle"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};
-  methodMap_["removeViewStyle"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(removeViewStyle)};
-
-  methodMap_["registerCSSKeyframes"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
-  methodMap_["unregisterCSSKeyframes"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
-
-  methodMap_["applyCSSAnimations"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
-  methodMap_["unregisterCSSAnimations"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
-
-  methodMap_["registerCSSTransition"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSTransition)};
-  methodMap_["updateCSSTransition"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
-  methodMap_["unregisterCSSTransition"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
+  methodMap_["commitCSSUpdates"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(commitCSSUpdates)};
 }
 
 } // namespace reanimated

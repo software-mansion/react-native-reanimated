@@ -3,6 +3,7 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/manager/CSSUpdatesManager.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
@@ -112,35 +113,7 @@ class ReanimatedModuleProxy
 
   void performOperations();
 
-  void setViewStyle(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &viewStyle) override;
-  void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
-
-  void registerCSSKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &animationName,
-      const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
-      override;
-
-  void applyCSSAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationUpdates) override;
-  void unregisterCSSAnimations(const jsi::Value &viewTag) override;
-
-  void registerCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &transitionConfig) override;
-  void updateCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &configUpdates) override;
-  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag)
-      override;
+  void commitCSSUpdates(jsi::Runtime &rt, const jsi::Value &updates) override;
 
   void cssLoopCallback(const double /*timestampMs*/);
 
@@ -234,6 +207,7 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  const std::shared_ptr<CSSUpdatesManager> cssUpdatesManager_;
 
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps

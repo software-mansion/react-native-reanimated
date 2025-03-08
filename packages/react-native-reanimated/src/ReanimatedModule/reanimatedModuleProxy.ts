@@ -5,15 +5,10 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
-  StyleProps,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import type {
-  CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+import type { AnyCSSUpdate } from '../css/platform/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -58,35 +53,7 @@ export interface ReanimatedModuleProxy {
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
-  setViewStyle(viewTag: number, style: StyleProps): void;
-
-  removeViewStyle(viewTag: number): void;
-
-  registerCSSKeyframes(
-    animationName: string,
-    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void;
-
-  unregisterCSSKeyframes(animationName: string): void;
-
-  applyCSSAnimations(
-    shadowNodeWrapper: ShadowNodeWrapper,
-    animationUpdates: CSSAnimationUpdates
-  ): void;
-
-  unregisterCSSAnimations(viewTag: number): void;
-
-  registerCSSTransition(
-    shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ): void;
-
-  updateCSSTransition(
-    viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
-  ): void;
-
-  unregisterCSSTransition(viewTag: number): void;
+  commitCSSUpdates(_updates: AnyCSSUpdate[]): void;
 }
 
 export interface IReanimatedModule

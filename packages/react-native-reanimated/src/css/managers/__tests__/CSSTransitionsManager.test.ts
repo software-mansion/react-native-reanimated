@@ -5,7 +5,7 @@ import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../../platform/native/native';
+} from '../../platform/native/updatesQueue';
 import type { CSSTransitionProperties } from '../../types';
 import CSSTransitionsManager from '../CSSTransitionsManager';
 

@@ -7,7 +7,7 @@ import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
-} from '../../platform/native/native';
+} from '../../platform/native/updatesQueue';
 import type { CSSAnimationProperties } from '../../types';
 import type { ProcessedAnimation } from '../CSSAnimationsManager';
 import CSSAnimationsManager from '../CSSAnimationsManager';

@@ -2,14 +2,13 @@
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type { NormalizedCSSTransitionConfig } from '../platform/native';
 import {
+  cssUpdatesQueue,
   getNormalizedCSSTransitionConfigUpdates,
   normalizeCSSTransitionProperties,
+  registerCSSTransitionUpdate,
+  unregisterCSSTransitionUpdate,
+  updateCSSTransitionUpdate,
 } from '../platform/native';
-import {
-  registerCSSTransition,
-  unregisterCSSTransition,
-  updateCSSTransition,
-} from '../platform/native/native';
 import type { CSSTransitionProperties } from '../types';
 
 export default class CSSTransitionsManager {
@@ -25,14 +24,16 @@ export default class CSSTransitionsManager {
 
   private attachTransition(transitionConfig: NormalizedCSSTransitionConfig) {
     if (!this.transitionConfig) {
-      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
+      cssUpdatesQueue.add(
+        registerCSSTransitionUpdate(this.shadowNodeWrapper, transitionConfig)
+      );
       this.transitionConfig = transitionConfig;
     }
   }
 
   detach() {
     if (this.transitionConfig) {
-      unregisterCSSTransition(this.viewTag);
+      cssUpdatesQueue.add(unregisterCSSTransitionUpdate(this.viewTag));
       this.transitionConfig = null;
     }
   }
@@ -58,7 +59,9 @@ export default class CSSTransitionsManager {
 
       if (Object.keys(configUpdates).length > 0) {
         this.transitionConfig = transitionConfig;
-        updateCSSTransition(this.viewTag, configUpdates);
+        cssUpdatesQueue.add(
+          updateCSSTransitionUpdate(this.viewTag, configUpdates)
+        );
       }
     } else {
       this.attachTransition(transitionConfig);

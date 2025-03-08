@@ -6,11 +6,12 @@ import type {
   NormalizedSingleCSSAnimationSettings,
 } from '../platform/native';
 import {
-  applyCSSAnimations,
+  applyCSSAnimationsUpdate,
   createSingleCSSAnimationProperties,
+  cssUpdatesQueue,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
-  unregisterCSSAnimations,
+  unregisterCSSAnimationsUpdate,
 } from '../platform/native';
 import { CSSKeyframesRegistry } from '../registry';
 import type {
@@ -37,7 +38,7 @@ export default class CSSAnimationsManager {
 
   detach() {
     if (this.attachedAnimations.length > 0) {
-      unregisterCSSAnimations(this.viewTag);
+      cssUpdatesQueue.add(unregisterCSSAnimationsUpdate(this.viewTag));
       this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
         CSSAnimationsManager.animationKeyframesRegistry.remove(
           name,
@@ -69,7 +70,9 @@ export default class CSSAnimationsManager {
         return;
       }
 
-      applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
+      cssUpdatesQueue.add(
+        applyCSSAnimationsUpdate(this.shadowNodeWrapper, animationUpdates)
+      );
     }
   }
 
