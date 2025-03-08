@@ -83,7 +83,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
         it->second.begin(), it->second.end()};
     updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
-    if (runningAnimationIndicesMap_.at(viewTag).empty()) {
+    if (runningAnimationIndicesMap_[viewTag].empty()) {
       it = runningAnimationIndicesMap_.erase(it);
     } else {
       ++it;
@@ -352,7 +352,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   bool hasUpdates = false;
   for (const auto &[propertyName, propertyValue] : updates.items()) {
     if (shouldOverride || !target.count(propertyName) ||
-        target.at(propertyName).isNull()) {
+        target[propertyName].isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;
     }

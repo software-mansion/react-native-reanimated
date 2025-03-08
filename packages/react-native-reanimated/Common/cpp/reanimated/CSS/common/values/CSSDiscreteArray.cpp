@@ -40,7 +40,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
   values.reserve(array.size());
 
   for (size_t i = 0; i < array.size(); i++) {
-    values.emplace_back(array.at(i));
+    values.emplace_back(array[i]);
   }
 }
 
