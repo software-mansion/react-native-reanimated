@@ -3,8 +3,9 @@ import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import {
-  removeViewStyle,
-  setViewStyle,
+  cssUpdatesQueue,
+  removeViewStyleUpdate,
+  setViewStyleUpdate,
   styleBuilder,
 } from '../platform/native';
 import type { CSSStyle } from '../types';
@@ -43,7 +44,7 @@ export default class CSSManager {
     // changes and treat styles as initial, thus we need to set them before
     // attaching transition and animation
     if (isMount && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
+      cssUpdatesQueue.add(setViewStyleUpdate(this.viewTag, normalizedStyle));
     }
 
     this.cssTransitionsManager.update(transitionProperties);
@@ -53,12 +54,12 @@ export default class CSSManager {
     // the transition or animation config, and then - set the style (which may
     // trigger the transition)
     if (!isMount && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
+      cssUpdatesQueue.add(setViewStyleUpdate(this.viewTag, normalizedStyle));
     }
   }
 
   detach(): void {
     this.cssTransitionsManager.detach();
-    removeViewStyle(this.viewTag);
+    cssUpdatesQueue.add(removeViewStyleUpdate(this.viewTag));
   }
 }

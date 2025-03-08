@@ -9,16 +9,10 @@ import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
 
 import type {
   LayoutAnimationBatchItem,
-  ShadowNodeWrapper,
-  StyleProps,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
-import type {
-  CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+import type { AnyCSSUpdate } from '../css/platform/native';
 import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
@@ -176,60 +170,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  setViewStyle(viewTag: number, style: StyleProps) {
-    this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
-  }
-
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
-  }
-
-  registerCSSKeyframes(
-    animationName: string,
-    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSKeyframes(
-      animationName,
-      keyframesConfig
-    );
-  }
-
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
-  }
-
-  applyCSSAnimations(
-    shadowNodeWrapper: ShadowNodeWrapper,
-    animationUpdates: CSSAnimationUpdates
-  ) {
-    this.#reanimatedModuleProxy.applyCSSAnimations(
-      shadowNodeWrapper,
-      animationUpdates
-    );
-  }
-
-  unregisterCSSAnimations(viewTag: number) {
-    this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
-  }
-
-  registerCSSTransition(
-    shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSTransition(
-      shadowNodeWrapper,
-      transitionConfig
-    );
-  }
-
-  updateCSSTransition(
-    viewTag: number,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
-  ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
-  }
-
-  unregisterCSSTransition(viewTag: number) {
-    this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  commitCSSUpdates(updates: AnyCSSUpdate[]) {
+    this.#reanimatedModuleProxy.commitCSSUpdates(updates);
   }
 }
