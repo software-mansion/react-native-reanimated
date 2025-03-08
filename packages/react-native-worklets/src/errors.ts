@@ -45,10 +45,10 @@ export function registerCustomError<TName extends string>(
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
 export function registerWorkletStackDetails(
-  hash: number,
+  hash: string,
   stackDetails: WorkletStackDetails
 ) {
-  _workletStackDetails.set(hash, stackDetails);
+  _workletStackDetails.set(Number(hash), stackDetails);
 }
 
 function getBundleOffset(error: Error): [string, number, number] {
