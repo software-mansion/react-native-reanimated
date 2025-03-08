@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename... AllowedTypes>
 class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
@@ -48,4 +48,4 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
   std::string relativeProperty_;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

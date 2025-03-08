@@ -1,6 +1,6 @@
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
     jsi::Runtime &rt,
@@ -48,4 +48,4 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
       getKeyframeTimingFunctions(rt, configObj)};
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

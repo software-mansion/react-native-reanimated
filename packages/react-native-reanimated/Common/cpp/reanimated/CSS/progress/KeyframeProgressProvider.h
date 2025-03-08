@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class KeyframeProgressProvider {
  public:
@@ -12,4 +12,4 @@ class KeyframeProgressProvider {
       const = 0;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

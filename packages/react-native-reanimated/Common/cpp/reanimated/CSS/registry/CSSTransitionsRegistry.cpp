@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -167,4 +167,4 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
   };
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

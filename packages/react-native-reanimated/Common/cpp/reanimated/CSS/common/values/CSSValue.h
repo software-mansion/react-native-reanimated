@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 
@@ -72,4 +72,4 @@ concept Discrete = requires {
 template <typename TCSSValue>
 concept CSSValueDerived = std::is_base_of_v<CSSValue, TCSSValue>;
 
-} // namespace reanimated
+} // namespace reanimated::css

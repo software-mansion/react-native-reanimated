@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationIndicesMap_.empty() ||
@@ -361,4 +361,4 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   return hasUpdates;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

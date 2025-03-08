@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 const CSSKeyframesConfig &CSSKeyframesRegistry::get(
     const std::string &animationName) const {
@@ -23,4 +23,4 @@ void CSSKeyframesRegistry::remove(const std::string &animationName) {
   registry_.erase(animationName);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

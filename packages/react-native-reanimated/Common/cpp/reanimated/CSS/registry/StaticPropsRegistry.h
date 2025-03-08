@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
@@ -36,4 +36,4 @@ class StaticPropsRegistry {
       const folly::dynamic &newProps);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css
