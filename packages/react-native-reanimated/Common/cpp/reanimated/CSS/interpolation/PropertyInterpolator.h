@@ -3,7 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/common/KeyframeProgressProvider.h>
 
 #include <memory>
 #include <string>

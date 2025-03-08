@@ -3,7 +3,8 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
-#include <reanimated/CSS/progress/TransitionProgressProvider.h>
+#include <reanimated/CSS/progress/transition/TransitionProgressProvider.h>
+#include <reanimated/CSS/util/props.h>
 
 #include <memory>
 #include <string>

@@ -1,6 +1,4 @@
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
-
-#include <utility>
+#include <reanimated/CSS/progress/animation/AnimationProgressProvider.h>
 
 namespace reanimated::css {
 
@@ -12,7 +10,7 @@ AnimationProgressProvider::AnimationProgressProvider(
     const AnimationDirection direction,
     EasingFunction easingFunction,
     const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
-    : RawProgressProvider(timestamp, duration, delay),
+    : TimeProgressProviderBase(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
       easingFunction_(std::move(easingFunction)),
@@ -83,7 +81,7 @@ void AnimationProgressProvider::play(const double timestamp) {
 }
 
 void AnimationProgressProvider::resetProgress() {
-  RawProgressProvider::resetProgress();
+  TimeProgressProviderBase::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
 }

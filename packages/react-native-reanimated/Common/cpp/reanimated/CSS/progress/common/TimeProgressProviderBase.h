@@ -1,14 +1,16 @@
 #pragma once
 
+#include <reanimated/CSS/progress/common/KeyframeProgressProvider.h>
+
 #include <chrono>
 #include <optional>
 #include <utility>
 
 namespace reanimated::css {
 
-class RawProgressProvider {
+class TimeProgressProviderBase : public KeyframeProgressProvider {
  public:
-  RawProgressProvider(double timestamp, double duration, double delay);
+  TimeProgressProviderBase(double timestamp, double duration, double delay);
 
   void setDuration(double duration);
   void setDelay(double delay);
