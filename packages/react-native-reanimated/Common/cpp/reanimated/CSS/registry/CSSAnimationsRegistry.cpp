@@ -39,14 +39,14 @@ void CSSAnimationsRegistry::apply(
   runningAnimationIndicesMap_[viewTag].clear();
 
   std::vector<size_t> updatedIndices;
-  for (const auto &[index, _] : newAnimations) {
+  for (const auto &[index, animation] : newAnimations) {
     updatedIndices.push_back(index);
   }
   for (const auto &[index, _] : settingsUpdates) {
     updatedIndices.push_back(index);
   }
 
-  updateAnimationSettings(animationsVector, settingsUpdates, timestamp);
+  updateSettings(animationsVector, settingsUpdates, timestamp);
   for (size_t i = 0; i < animationsVector.size(); ++i) {
     scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
   }
@@ -164,15 +164,38 @@ CSSAnimationsRegistry::buildAnimationToIndexMap(
   return animationToIndexMap;
 }
 
-void CSSAnimationsRegistry::updateAnimationSettings(
+void CSSAnimationsRegistry::updateSettings(
     const CSSAnimationsVector &animationsVector,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     const double timestamp) {
-  for (size_t i = 0; i < animationsVector.size(); ++i) {
-    const auto &animation = animationsVector[i];
-    const auto it = settingsUpdates.find(i);
-    if (it != settingsUpdates.end()) {
-      animation->updateSettings(it->second, timestamp);
+  for (const auto &[index, settings] : settingsUpdates) {
+    const auto &animation = animationsVector[index];
+    const auto &progressProvider = animationProgressProvidersMap_[animation];
+
+    if (settings.duration.has_value()) {
+      progressProvider->setDuration(settings.duration.value());
+    }
+    if (settings.easingFunction.has_value()) {
+      progressProvider->setEasingFunction(settings.easingFunction.value());
+    }
+    if (settings.delay.has_value()) {
+      progressProvider->setDelay(settings.delay.value());
+    }
+    if (settings.iterationCount.has_value()) {
+      progressProvider->setIterationCount(settings.iterationCount.value());
+    }
+    if (settings.direction.has_value()) {
+      progressProvider->setDirection(settings.direction.value());
+    }
+    if (settings.fillMode.has_value()) {
+      animation->setFillMode(settings.fillMode.value());
+    }
+    if (settings.playState.has_value()) {
+      if (settings.playState.value() == AnimationPlayState::Paused) {
+        progressProvider->pause(timestamp);
+      } else {
+        progressProvider->play(timestamp);
+      }
     }
   }
 }
@@ -194,16 +217,20 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   for (const auto animationIndex : animationIndices) {
     const auto &animation = registry_[viewTag].animationsVector[animationIndex];
+    const auto &progressProvider = animationProgressProvidersMap_[animation];
+
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
-    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
-      animation->run(timestamp);
+    if (progressProvider->getState(timestamp) ==
+        AnimationProgressState::Pending) {
+      progressProvider->play(timestamp);
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp);
-    const auto newState = animation->getState(timestamp);
+    progressProvider->update(timestamp);
+    const auto updates = animation->interpolate(progressProvider);
+    const auto newState = progressProvider->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
@@ -246,12 +273,14 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   // delayed animations)
   delayedAnimationsManager_.remove(animation);
 
-  const auto startTimestamp = animation->getStartTimestamp(timestamp);
+  const auto &progressProvider = animationProgressProvidersMap_[animation];
+  const auto startTimestamp = progressProvider->getStartTimestamp(timestamp);
 
   if (startTimestamp > timestamp) {
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
-    if (animation->getState(timestamp) != AnimationProgressState::Paused) {
+    if (progressProvider->getState(timestamp) !=
+        AnimationProgressState::Paused) {
       delayedAnimationsManager_.add(startTimestamp, animation);
     }
   } else {
@@ -268,6 +297,7 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
 
   for (const auto &animation : it->second.animationsVector) {
     delayedAnimationsManager_.remove(animation);
+    animationProgressProvidersMap_.erase(animation);
   }
   runningAnimationIndicesMap_.erase(viewTag);
 }
@@ -286,20 +316,21 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
   ShadowNode::Shared shadowNode = nullptr;
 
   for (const auto &animation : it->second.animationsVector) {
-    const auto startTimestamp = animation->getStartTimestamp(timestamp);
+    const auto &progressProvider = animationProgressProvidersMap_[animation];
+    const auto startTimestamp = progressProvider->getStartTimestamp(timestamp);
 
     folly::dynamic style;
-    const auto &currentState = animation->getState(timestamp);
+    const auto &currentState = progressProvider->getState(timestamp);
     if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardsFillStyle();
+        style = animation->getForwardsFillStyle(progressProvider);
       }
     } else if (
         startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-      style = animation->getBackwardsFillStyle();
+      style = animation->getBackwardsFillStyle(progressProvider);
     } else if (currentState != AnimationProgressState::Pending) {
-      style = animation->getCurrentInterpolationStyle();
+      style = animation->interpolate(progressProvider);
     }
 
     if (!shadowNode) {

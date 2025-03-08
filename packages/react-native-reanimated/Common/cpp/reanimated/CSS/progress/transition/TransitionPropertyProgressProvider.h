@@ -12,7 +12,8 @@ namespace reanimated::css {
 enum class TransitionProgressState { Pending, Running, Finished };
 
 class TransitionPropertyProgressProvider final
-    : public TimeProgressProviderBase {
+    : public KeyframeProgressProvider,
+      public TimeProgressProviderBase {
  public:
   TransitionPropertyProgressProvider(
       double timestamp,

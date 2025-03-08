@@ -1,8 +1,8 @@
-#include <reanimated/CSS/progress/animation/AnimationProgressProvider.h>
+#include <reanimated/CSS/progress/animation/AnimationTimeProgressProvider.h>
 
 namespace reanimated::css {
 
-AnimationProgressProvider::AnimationProgressProvider(
+AnimationTimeProgressProvider::AnimationTimeProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
@@ -10,46 +10,18 @@ AnimationProgressProvider::AnimationProgressProvider(
     const AnimationDirection direction,
     EasingFunction easingFunction,
     const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
-    : TimeProgressProviderBase(timestamp, duration, delay),
-      iterationCount_(iterationCount),
-      direction_(direction),
-      easingFunction_(std::move(easingFunction)),
-      keyframeEasingFunctions_(keyframeEasingFunctions) {}
+    : AnimationProgressProviderBase(
+          iterationCount,
+          direction,
+          std::move(easingFunction),
+          keyframeEasingFunctions),
+      TimeProgressProviderBase(timestamp, duration, delay) {}
 
-AnimationProgressState AnimationProgressProvider::getState(
-    const double timestamp) const {
-  if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
-  }
-  if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::Paused;
-  }
-  if (!rawProgress_.has_value()) {
-    return AnimationProgressState::Pending;
-  }
-  const auto rawProgress = rawProgress_.value();
-  if (rawProgress >= 1) {
-    return AnimationProgressState::Finished;
-  }
-  return AnimationProgressState::Running;
+double AnimationTimeProgressProvider::getGlobalProgress() const {
+  return applyAnimationDirection(rawProgress_.value_or(0));
 }
 
-double AnimationProgressProvider::getTotalPausedTime(
-    const double timestamp) const {
-  return pauseTimestamp_ > 0
-      ? (totalPausedTime_ + (timestamp - pauseTimestamp_))
-      : totalPausedTime_;
-}
-
-double AnimationProgressProvider::getStartTimestamp(
-    const double timestamp) const {
-  // Start timestamp is the timestamp when the first animation keyframe
-  // should be applied (it depends on the animation delay and the total
-  // time when the animation was paused)
-  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
-}
-
-double AnimationProgressProvider::getKeyframeProgress(
+double AnimationTimeProgressProvider::getKeyframeProgress(
     const double fromOffset,
     const double toOffset) const {
   if (fromOffset == toOffset) {
@@ -69,24 +41,61 @@ double AnimationProgressProvider::getKeyframeProgress(
   return easingFunction_(keyframeProgress);
 }
 
-void AnimationProgressProvider::pause(const double timestamp) {
+AnimationProgressState AnimationTimeProgressProvider::getState(
+    const double timestamp) const {
+  if (shouldFinish(timestamp)) {
+    return AnimationProgressState::Finished;
+  }
+  if (pauseTimestamp_ > 0) {
+    return AnimationProgressState::Paused;
+  }
+  if (!rawProgress_.has_value()) {
+    return AnimationProgressState::Pending;
+  }
+  const auto rawProgress = rawProgress_.value();
+  if (rawProgress >= 1) {
+    return AnimationProgressState::Finished;
+  }
+  return AnimationProgressState::Running;
+}
+
+double AnimationTimeProgressProvider::getPauseTimestamp() const {
+  return pauseTimestamp_;
+}
+
+double AnimationTimeProgressProvider::getTotalPausedTime(
+    const double timestamp) const {
+  return pauseTimestamp_ > 0
+      ? (totalPausedTime_ + (timestamp - pauseTimestamp_))
+      : totalPausedTime_;
+}
+
+double AnimationTimeProgressProvider::getStartTimestamp(
+    const double timestamp) const {
+  // Start timestamp is the timestamp when the first animation keyframe
+  // should be applied (it depends on the animation delay and the total
+  // time when the animation was paused)
+  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
+}
+
+void AnimationTimeProgressProvider::pause(const double timestamp) {
   pauseTimestamp_ = timestamp;
 }
 
-void AnimationProgressProvider::play(const double timestamp) {
+void AnimationTimeProgressProvider::play(const double timestamp) {
   if (pauseTimestamp_ > 0) {
     totalPausedTime_ += timestamp - pauseTimestamp_;
   }
   pauseTimestamp_ = 0;
 }
 
-void AnimationProgressProvider::resetProgress() {
+void AnimationTimeProgressProvider::resetProgress() {
   TimeProgressProviderBase::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
 }
 
-bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
+bool AnimationTimeProgressProvider::shouldFinish(const double timestamp) const {
   if (iterationCount_ == 0) {
     return true;
   }
@@ -97,7 +106,7 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
   return elapsedDuration >= duration_ * iterationCount_;
 }
 
-std::optional<double> AnimationProgressProvider::calculateRawProgress(
+std::optional<double> AnimationTimeProgressProvider::calculateRawProgress(
     const double timestamp) {
   const double currentIterationElapsedTime = timestamp -
       (creationTimestamp_ + delay_ + previousIterationsDuration_ +
@@ -120,7 +129,7 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(
   return iterationProgress;
 }
 
-double AnimationProgressProvider::updateIterationProgress(
+double AnimationTimeProgressProvider::updateIterationProgress(
     const double currentIterationElapsedTime) {
   if (duration_ == 0) {
     return 1;
@@ -148,7 +157,7 @@ double AnimationProgressProvider::updateIterationProgress(
   return progress - deltaIterations;
 }
 
-double AnimationProgressProvider::applyAnimationDirection(
+double AnimationTimeProgressProvider::applyAnimationDirection(
     const double progress) const {
   switch (direction_) {
     case AnimationDirection::Normal:

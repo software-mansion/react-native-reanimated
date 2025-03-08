@@ -8,7 +8,7 @@
 
 namespace reanimated::css {
 
-class TimeProgressProviderBase : public KeyframeProgressProvider {
+class TimeProgressProviderBase {
  public:
   TimeProgressProviderBase(double timestamp, double duration, double delay);
 

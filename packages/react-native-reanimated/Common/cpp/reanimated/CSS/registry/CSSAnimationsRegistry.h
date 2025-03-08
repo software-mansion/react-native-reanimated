@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/progress/animation/AnimationTimeProgressProvider.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -48,6 +49,10 @@ class CSSAnimationsRegistry
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
   using AnimationsToRevertMap =
       std::unordered_map<Tag, std::unordered_set<size_t>>;
+  using AnimationProgressProvidersMap = std::unordered_map<
+      std::shared_ptr<CSSAnimation>,
+      std::shared_ptr<AnimationTimeProgressProvider>>;
+
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
@@ -60,6 +65,7 @@ class CSSAnimationsRegistry
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+  AnimationProgressProvidersMap animationProgressProvidersMap_;
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
@@ -68,7 +74,7 @@ class CSSAnimationsRegistry
       const std::optional<CSSAnimationsMap> &newAnimations) const;
   AnimationToIndexMap buildAnimationToIndexMap(
       const CSSAnimationsVector &animationsVector) const;
-  void updateAnimationSettings(
+  void updateSettings(
       const CSSAnimationsVector &animationsVector,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
