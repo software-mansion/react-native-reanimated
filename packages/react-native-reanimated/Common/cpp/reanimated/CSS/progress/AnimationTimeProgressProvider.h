@@ -4,23 +4,23 @@
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
-#include <reanimated/CSS/progress/RawProgressProvider.h>
+#include <reanimated/CSS/progress/RawTimeProgressProvider.h>
 
 #include <memory>
 
 namespace reanimated {
 
-enum class AnimationProgressState {
+enum class AnimationTimeProgressState {
   Pending, // When the animation is waiting for the delay to pass
   Running,
   Paused,
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider,
-                                        public RawProgressProvider {
+class AnimationTimeProgressProvider final : public KeyframeProgressProvider,
+                                            public RawTimeProgressProvider {
  public:
-  AnimationProgressProvider(
+  AnimationTimeProgressProvider(
       double timestamp,
       double duration,
       double delay,
@@ -49,7 +49,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
     return applyAnimationDirection(rawProgress_.value_or(0));
   }
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
-  AnimationProgressState getState(double timestamp) const;
+  AnimationTimeProgressState getState(double timestamp) const;
   double getPauseTimestamp() const {
     return pauseTimestamp_;
   }
