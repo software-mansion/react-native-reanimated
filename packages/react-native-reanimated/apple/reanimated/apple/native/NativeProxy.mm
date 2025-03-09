@@ -26,8 +26,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, reaModule);
+  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
