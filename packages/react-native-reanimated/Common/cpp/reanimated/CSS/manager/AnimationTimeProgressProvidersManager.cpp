@@ -1,14 +1,14 @@
-#include <reanimated/CSS/manager/AnimationsTimeProgressManager.h>
+#include <reanimated/CSS/manager/AnimationTimeProgressProvidersManager.h>
 
 namespace reanimated::css {
 
-bool AnimationsTimeProgressManager::empty() const {
+bool AnimationTimeProgressProvidersManager::empty() const {
   return runningProgressProviders_.empty() &&
       recentlyUpdatedProgressProviders_.empty() &&
       delayedProgressProvidersManager_.empty();
 }
 
-void AnimationsTimeProgressManager::run(
+void AnimationTimeProgressProvidersManager::run(
     const ProviderShared &progressProvider,
     const double timestamp) {
   // Remove progress provider in order to properly re-add it later
@@ -29,7 +29,7 @@ void AnimationsTimeProgressManager::run(
   }
 }
 
-void AnimationsTimeProgressManager::updateAndRun(
+void AnimationTimeProgressProvidersManager::updateAndRun(
     const ProviderShared &progressProvider,
     const PartialCSSAnimationSettings &settings,
     const double timestamp) {
@@ -59,13 +59,13 @@ void AnimationsTimeProgressManager::updateAndRun(
   run(progressProvider, timestamp);
 }
 
-void AnimationsTimeProgressManager::erase(
+void AnimationTimeProgressProvidersManager::erase(
     const ProviderShared &progressProvider) {
   runningProgressProviders_.erase(progressProvider);
   delayedProgressProvidersManager_.erase(progressProvider);
 }
 
-void AnimationsTimeProgressManager::update(const double timestamp) {
+void AnimationTimeProgressProvidersManager::update(const double timestamp) {
   // Activate all delayed progress providers that should start now
   activateDelayedProviders(timestamp);
 
@@ -81,7 +81,7 @@ void AnimationsTimeProgressManager::update(const double timestamp) {
   }
 }
 
-void AnimationsTimeProgressManager::activateDelayedProviders(
+void AnimationTimeProgressProvidersManager::activateDelayedProviders(
     const double timestamp) {
   while (!delayedProgressProvidersManager_.empty() &&
          delayedProgressProvidersManager_.top().timestamp <= timestamp) {

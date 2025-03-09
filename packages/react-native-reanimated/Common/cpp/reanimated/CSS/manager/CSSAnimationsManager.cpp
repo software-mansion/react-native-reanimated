@@ -1,17 +1,21 @@
-#include <reanimated/CSS/manager/AnimationsManager.h>
+#include <reanimated/CSS/manager/CSSAnimationsManager.h>
 
 namespace reanimated::css {
 
-AnimationsManager::AnimationsManager(
+CSSAnimationsManager::CSSAnimationsManager(
     const std::shared_ptr<CSSAnimationsRegistry> &animationsRegistry,
     const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    const std::shared_ptr<AnimationsTimeProgressManager> &timeProgressManager)
+    const std::shared_ptr<AnimationTimeProgressProvidersManager>
+        &timeProgressProvidersManager)
     : animationsRegistry_(animationsRegistry),
       keyframesRegistry_(keyframesRegistry),
-      timeProgressManager_(timeProgressManager) {}
+      timeProgressProvidersManager_(timeProgressProvidersManager) {}
 
-void AnimationsManager::apply(
-    jsi::Runtime &rt,
+bool CSSAnimationsManager::hasUpdates() const {
+  return !timeProgressProvidersManager_->empty();
+}
+
+void CSSAnimationsManager::apply(
     const ShadowNode::Shared &shadowNode,
     const CSSAnimationUpdates &updates,
     double timestamp) {
@@ -21,7 +25,6 @@ void AnimationsManager::apply(
   // Build or get animations vector
   if (updates.animationNames.has_value()) {
     animationsVector = buildAnimationsVector(
-        rt,
         shadowNode,
         updates.animationNames,
         updates.newAnimationSettings,
@@ -50,20 +53,21 @@ void AnimationsManager::apply(
   animationsRegistry_->set(viewTag, std::move(animationsVector));
 }
 
-void AnimationsManager::remove(const Tag viewTag) {
+void CSSAnimationsManager::remove(const Tag viewTag) {
   if (!animationsRegistry_->has(viewTag)) {
     return;
   }
 
   const auto &animations = animationsRegistry_[viewTag];
   for (const auto &animation : animations) {
-    timeProgressManager_->erase(animation->getProgressProvider());
+    timeProgressProvidersManager_->erase(animation->getProgressProvider());
   }
   animationsRegistry_->remove(viewTag);
 }
 
-std::shared_ptr<CSSAnimation> AnimationsManager::createAnimation(
-    jsi::Runtime &rt,
+void CSSAnimationsManager::flushUpdates(UpdatesBatch &updatesBatch) {}
+
+std::shared_ptr<CSSAnimation> CSSAnimationsManager::createAnimation(
     const ShadowNode::Shared &shadowNode,
     const std::string &name,
     const CSSAnimationSettings &settings,
@@ -82,7 +86,7 @@ std::shared_ptr<CSSAnimation> AnimationsManager::createAnimation(
 }
 
 std::shared_ptr<AnimationProgressProviderBase>
-AnimationsManager::createProgressProvider(
+CSSAnimationsManager::createProgressProvider(
     const CSSAnimationSettings &settings,
     const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions,
     const double timestamp) const {
@@ -96,22 +100,21 @@ AnimationsManager::createProgressProvider(
       settings.easingFunction,
       keyframeEasingFunctions);
 
-  timeProgressManager_->run(progressProvider, timestamp);
+  timeProgressProvidersManager_->run(progressProvider, timestamp);
 
   return progressProvider;
 }
 
-void AnimationsManager::updateAnimationSettings(
+void CSSAnimationsManager::updateAnimationSettings(
     std::shared_ptr<CSSAnimation> &animation,
     const PartialCSSAnimationSettings &settings,
     const double timestamp) const {
   // TODO: Change this once we have more progress provider types
-  timeProgressManager_->updateAndRun(
+  timeProgressProvidersManager_->updateAndRun(
       animation->getProgressProvider(), settings, timestamp);
 }
 
-AnimationsVector AnimationsManager::buildAnimationsVector(
-    jsi::Runtime &rt,
+AnimationsVector CSSAnimationsManager::buildAnimationsVector(
     const ShadowNode::Shared &shadowNode,
     const std::optional<std::vector<std::string>> &animationNames,
     const CSSAnimationSettingsMap &newAnimationSettings,
@@ -128,7 +131,6 @@ AnimationsVector AnimationsManager::buildAnimationsVector(
     const auto &settingsIt = newAnimationSettings.find(index);
     if (settingsIt != newAnimationSettings.end()) {
       result.emplace_back(createAnimation(
-          rt,
           shadowNode,
           animationNamesVector[index],
           settingsIt->second,
@@ -157,7 +159,7 @@ AnimationsVector AnimationsManager::buildAnimationsVector(
   return result;
 }
 
-AnimationVectorsMap &AnimationsManager::getViewAnimationsMap(
+AnimationVectorsMap &CSSAnimationsManager::getViewAnimationsMap(
     const Tag viewTag) const {
   AnimationVectorsMap result;
 

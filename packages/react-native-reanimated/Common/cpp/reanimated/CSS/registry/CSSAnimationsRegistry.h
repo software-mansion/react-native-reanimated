@@ -9,7 +9,7 @@
 
 namespace reanimated::css {
 
-class AnimationsRegistry final : public UpdatesRegistry {
+class CSSAnimationsRegistry final : public UpdatesRegistry {
  public:
   AnimationsVector &operator[](Tag viewTag) const;
 

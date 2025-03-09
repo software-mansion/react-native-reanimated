@@ -9,7 +9,7 @@
 
 namespace reanimated::css {
 
-class AnimationsTimeProgressManager final {
+class AnimationTimeProgressProvidersManager final {
  public:
   using ProviderShared = std::shared_ptr<AnimationTimeProgressProvider>;
 

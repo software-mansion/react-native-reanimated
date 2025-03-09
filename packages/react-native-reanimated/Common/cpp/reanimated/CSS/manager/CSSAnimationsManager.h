@@ -1,26 +1,29 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/manager/AnimationsTimeProgressManager.h>
+#include <reanimated/CSS/manager/AnimationTimeProgressProvidersManager.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 namespace reanimated::css {
 
-class AnimationsManager final {
+class CSSAnimationsManager final {
  public:
-  AnimationsManager(
+  CSSAnimationsManager(
       const std::shared_ptr<CSSAnimationsRegistry> &animationsRegistry,
       const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-      const std::shared_ptr<AnimationsTimeProgressManager>
-          &timeProgressManager);
+      const std::shared_ptr<AnimationTimeProgressProvidersManager>
+          &timeProgressProvidersManager);
+
+  bool hasUpdates() const;
 
   void apply(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const CSSAnimationUpdates &updates,
       double timestamp);
   void remove(Tag viewTag);
+
+  void flushUpdates(UpdatesBatch &updatesBatch);
 
  private:
   using AnimationVectorsMap = std::unordered_map<std::string, AnimationsVector>;
@@ -29,10 +32,10 @@ class AnimationsManager final {
 
   std::shared_ptr<CSSAnimationsRegistry> animationsRegistry_;
   std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
-  std::shared_ptr<AnimationsTimeProgressManager> timeProgressManager_;
+  std::shared_ptr<AnimationTimeProgressProvidersManager>
+      timeProgressProvidersManager_;
 
   std::shared_ptr<CSSAnimation> createAnimation(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const std::string &name,
       const CSSAnimationSettings &settings,
@@ -47,7 +50,6 @@ class AnimationsManager final {
       double timestamp) const;
 
   AnimationsVector buildAnimationsVector(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const std::optional<std::vector<std::string>> &animationNames,
       const CSSAnimationSettingsMap &newAnimationSettings,

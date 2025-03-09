@@ -1,39 +1,41 @@
-#include <reanimated/CSS/registry/AnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
 namespace reanimated::css {
 
-AnimationsVector &AnimationsRegistry::operator[](Tag viewTag) const {
+AnimationsVector &CSSAnimationsRegistry::operator[](Tag viewTag) const {
   return registry_[viewTag];
 }
 
-bool AnimationsRegistry::has(const Tag viewTag) const {
+bool CSSAnimationsRegistry::has(const Tag viewTag) const {
   return registry_.find(viewTag) != registry_.end();
 }
 
-AnimationsVector &AnimationsRegistry::at(const Tag viewTag) const {
+AnimationsVector &CSSAnimationsRegistry::at(const Tag viewTag) const {
   return registry_.at(viewTag);
 }
 
-std::shared_ptr<CSSAnimation> &AnimationsRegistry::at(
+std::shared_ptr<CSSAnimation> &CSSAnimationsRegistry::at(
     const Tag viewTag,
     const size_t index) const {
   return registry_.at(viewTag).at(index);
 }
 
-void AnimationsRegistry::set(const Tag viewTag, AnimationsVector &&animations) {
+void CSSAnimationsRegistry::set(
+    const Tag viewTag,
+    AnimationsVector &&animations) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   registry_[viewTag] = std::move(animations);
   applyViewAnimationsStyle(viewTag, timestamp); // TODO - fix
 }
 
-void AnimationsRegistry::remove(const Tag viewTag) {
+void CSSAnimationsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   handleRemove(viewTag);
 }
 
-void AnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   for (const auto &viewTag : tagsToRemove) {
@@ -41,7 +43,7 @@ void AnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   }
 }
 
-void AnimationsRegistry::applyViewAnimationsStyle(
+void CSSAnimationsRegistry::applyViewAnimationsStyle(
     const Tag viewTag,
     const double timestamp) {
   // TODO - fix
@@ -85,7 +87,7 @@ void AnimationsRegistry::applyViewAnimationsStyle(
   setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 
-void AnimationsRegistry::handleRemove(const Tag viewTag) {
+void CSSAnimationsRegistry::handleRemove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
 }

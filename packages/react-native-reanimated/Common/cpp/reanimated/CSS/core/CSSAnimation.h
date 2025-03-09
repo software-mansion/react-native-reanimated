@@ -11,7 +11,6 @@ class CSSAnimation {
   CSSAnimation(
       std::string name,
       ShadowNode::Shared shadowNode,
-      AnimationFillMode fillMode,
       const std::shared_ptr<AnimationStyleInterpolator> &styleInterpolator,
       const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
@@ -19,19 +18,11 @@ class CSSAnimation {
   ShadowNode::Shared getShadowNode() const;
   std::shared_ptr<AnimationProgressProviderBase> getProgressProvider() const;
 
-  bool isReversed() const;
-  bool hasForwardsFillMode() const;
-  bool hasBackwardsFillMode() const;
-
-  folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getForwardsFillStyle() const;
-  folly::dynamic getResetStyle() const;
-
-  void setFillMode(AnimationFillMode fillMode);
   void setProgressProvider(
       const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
   folly::dynamic getCurrentFrame() const;
+  folly::dynamic getResetStyle() const;
 
  private:
   const std::string name_;
