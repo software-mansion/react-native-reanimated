@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/common/KeyframeProgressProvider.h>
 
 #include <memory>
 

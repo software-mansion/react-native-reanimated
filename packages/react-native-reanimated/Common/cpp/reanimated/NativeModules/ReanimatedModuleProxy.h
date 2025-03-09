@@ -3,6 +3,8 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/manager/AnimationTimeProgressProvidersManager.h>
+#include <reanimated/CSS/manager/CSSAnimationsManager.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
@@ -233,6 +235,9 @@ class ReanimatedModuleProxy
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  const std::shared_ptr<AnimationTimeProgressProvidersManager>
+      cssAnimationsTimeProgressProvidersManager_;
+  const std::shared_ptr<CSSAnimationsManager> cssAnimationsManager_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 

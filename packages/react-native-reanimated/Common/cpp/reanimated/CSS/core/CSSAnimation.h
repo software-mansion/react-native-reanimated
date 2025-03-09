@@ -1,55 +1,38 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
-
-#include <memory>
-#include <string>
-#include <unordered_set>
-#include <utility>
+#include <reanimated/CSS/progress/animation/AnimationProgressProviderBase.h>
 
 namespace reanimated::css {
 
 class CSSAnimation {
  public:
   CSSAnimation(
-      jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
       std::string name,
-      const CSSKeyframesConfig &keyframesConfig,
-      const CSSAnimationSettings &settings,
-      double timestamp);
+      ShadowNode::Shared shadowNode,
+      const std::shared_ptr<AnimationStyleInterpolator> &styleInterpolator,
+      const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
   const std::string &getName() const;
   ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<AnimationProgressProviderBase> getProgressProvider() const;
 
-  double getStartTimestamp(double timestamp) const;
-  AnimationProgressState getState(double timestamp) const;
-  bool isReversed() const;
+  void setProgressProvider(
+      const std::shared_ptr<AnimationProgressProviderBase> &progressProvider);
 
-  bool hasForwardsFillMode() const;
-  bool hasBackwardsFillMode() const;
-
-  folly::dynamic getCurrentInterpolationStyle() const;
-  folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getForwardsFillStyle() const;
+  folly::dynamic getCurrentFrame() const;
   folly::dynamic getResetStyle() const;
-
-  void run(double timestamp);
-  folly::dynamic update(double timestamp);
-  void updateSettings(
-      const PartialCSSAnimationSettings &updatedSettings,
-      double timestamp);
 
  private:
   const std::string name_;
   const ShadowNode::Shared shadowNode_;
   AnimationFillMode fillMode_;
 
-  std::shared_ptr<AnimationProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  std::shared_ptr<AnimationProgressProviderBase> progressProvider_;
 };
+
+using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
 } // namespace reanimated::css

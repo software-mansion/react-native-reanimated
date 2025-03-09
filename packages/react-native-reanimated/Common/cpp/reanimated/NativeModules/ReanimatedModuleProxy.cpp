@@ -55,6 +55,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      cssAnimationsTimeProgressProvidersManager(
+          std::make_shared<AnimationTimeProgressProvidersManager>()),
+      cssAnimationsManager_(std::make_shared<CSSAnimationsManager>(
+          cssAnimationsRegistry_,
+          cssAnimationKeyframesRegistry_,
+          cssAnimationsTimeProgressProvidersManager)),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
@@ -473,44 +479,10 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
-  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
-
-  CSSAnimationsMap newAnimations;
-
-  if (!updates.newAnimationSettings.empty()) {
-    // animationNames always exists when newAnimationSettings is not empty
-    const auto animationNames = updates.animationNames.value();
-    const auto animationNamesCount = animationNames.size();
-
-    for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationNamesCount) {
-        throw std::invalid_argument(
-            "[Reanimated] index is out of bounds of animationNames");
-      }
-
-      const auto &name = animationNames[index];
-      const auto animation = std::make_shared<CSSAnimation>(
-          rt,
-          shadowNode,
-          name,
-          cssAnimationKeyframesRegistry_->get(name),
-          settings,
-          timestamp);
-
-      newAnimations.emplace(index, animation);
-    }
-  }
-
-  cssAnimationsRegistry_->apply(
-      rt,
-      shadowNode,
-      updates.animationNames,
-      std::move(newAnimations),
-      updates.settingsUpdates,
-      timestamp);
-
+  cssAnimationsManager_->apply(
+      shadowNodeFromValue(rt, shadowNodeWrapper),
+      parseCSSAnimationUpdates(rt, animationUpdates),
+      getCssTimestamp());
   maybeRunCSSLoop();
 }
 
@@ -631,7 +603,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
 
 void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
   shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() ||
+  if (cssAnimationsManager_->hasUpdates() ||
       cssTransitionsRegistry_->hasUpdates()
 #ifdef ANDROID
       || updatesRegistryManager_->hasPropsToRevert()
@@ -701,7 +673,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
+      cssAnimationsTimeProgressProvidersManager_->update(currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
     }
 

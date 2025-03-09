@@ -11,7 +11,7 @@ bool DelayedItemComparator<TValue>::operator()(
     const DelayedItem<TValue> &lhs,
     const DelayedItem<TValue> &rhs) const {
   if (lhs.timestamp == rhs.timestamp) {
-    // Use address comparison as a tiebreaker when timestamps are equal
+    // Use address comparison when timestamps are equal
     return std::less<const TValue *>{}(&lhs.value, &rhs.value);
   }
   return lhs.timestamp < rhs.timestamp;
@@ -40,7 +40,7 @@ typename DelayedItemsManager<TValue>::Item DelayedItemsManager<TValue>::pop() {
 }
 
 template <typename TValue>
-bool DelayedItemsManager<TValue>::remove(const TValue value) {
+bool DelayedItemsManager<TValue>::erase(const TValue value) {
   auto it = itemsMap_.find(value);
 
   if (it == itemsMap_.end()) {
