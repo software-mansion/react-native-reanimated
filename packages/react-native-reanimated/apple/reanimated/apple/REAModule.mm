@@ -132,7 +132,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto reanimatedModuleProxy = reanimated::createReanimatedModule(self, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModule(self, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
 
   auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 
