@@ -40,12 +40,11 @@
   });
 }
 
-- (nonnull instancetype)initWithModule:(ReanimatedModule *)reanimatedModule
+- (nonnull instancetype)init
 {
   REAAssertJavaScriptQueue();
 
   if ((self = [super init])) {
-    _reanimatedModule = reanimatedModule;
     _onAnimationCallbacks = [NSMutableArray new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
