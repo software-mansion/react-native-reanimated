@@ -12,6 +12,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -37,6 +38,12 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
   }
+
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
@@ -69,11 +76,15 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   }
 
   public void invalidate() {
-    // We have to destroy extra runtimes when invalidate is called. If we clean
-    // it up later instead there's a chance the runtime will retain references
-    // to invalidated memory and will crash on its destruction.
-    invalidateCpp();
-
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      // We have to destroy extra runtimes when invalidate is called. If we clean
+      // it up later instead there's a chance the runtime will retain references
+      // to invalidated memory and will crash on its destruction.
+      invalidateCpp();
+    }
     mAndroidUIScheduler.deactivate();
   }
 
