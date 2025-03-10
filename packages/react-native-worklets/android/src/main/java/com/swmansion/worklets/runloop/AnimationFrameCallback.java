@@ -1,18 +1,14 @@
-package com.swmansion.worklets.AnimationFrameQueue;
+package com.swmansion.worklets.runloop;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
-@DoNotStrip
+@SuppressWarnings("JavaJniMissingFunction")
 public class AnimationFrameCallback {
 
-  /**
-   * @noinspection FieldCanBeLocal, unused
-   */
-  @DoNotStrip private final HybridData mHybridData;
+  @DoNotStrip
+  @SuppressWarnings({"FieldCanBeLocal", "unused"})
+  private final HybridData mHybridData;
 
   @DoNotStrip
   private AnimationFrameCallback(HybridData hybridData) {

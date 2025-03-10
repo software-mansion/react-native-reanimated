@@ -21,9 +21,7 @@ public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
     return name.equals(WorkletsModule.NAME) ? new WorkletsModule(reactContext) : null;
   }
 
-  /**
-   * @noinspection rawtypes, unchecked
-   */
+  @SuppressWarnings({"rawtypes, unchecked"})
   @NonNull
   @Override
   public ReactModuleInfoProvider getReactModuleInfoProvider() {

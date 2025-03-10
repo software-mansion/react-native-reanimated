@@ -11,13 +11,11 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
-import com.swmansion.worklets.AnimationFrameQueue.AnimationFrameCallback;
-import com.swmansion.worklets.AnimationFrameQueue.AnimationFrameQueue;
+import com.swmansion.worklets.runloop.AnimationFrameCallback;
+import com.swmansion.worklets.runloop.AnimationFrameQueue;
 import java.util.Objects;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
+@SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {

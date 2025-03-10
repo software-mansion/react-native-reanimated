@@ -49,6 +49,7 @@ public abstract class WorkletsMessageQueueThreadBase implements MessageQueueThre
   // We don't want to quit the main looper (which is what MessageQueueThreadImpl would have done),
   // but we still want to prevent anything else from executing.
   @Override
+  @SuppressWarnings("CallToPrintStackTrace")
   public void quitSynchronous() {
     try {
       Field mIsFinished = messageQueueThread.getClass().getDeclaredField("mIsFinished");
@@ -56,7 +57,6 @@ public abstract class WorkletsMessageQueueThreadBase implements MessageQueueThre
       mIsFinished.set(messageQueueThread, true);
       mIsFinished.setAccessible(false);
     } catch (NoSuchFieldException | IllegalAccessException e) {
-      //noinspection CallToPrintStackTrace
       e.printStackTrace();
     }
   }
