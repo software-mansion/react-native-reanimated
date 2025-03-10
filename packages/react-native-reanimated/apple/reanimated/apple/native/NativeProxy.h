@@ -7,7 +7,7 @@
 
 namespace reanimated {
 
-std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
+std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModuleProxy(
     REANodesManager *nodesManager,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
