@@ -80,6 +80,10 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
 
+      - name: Assert PACKAGE_NAME
+        if: ${{ env.PACKAGE_NAME == 'PLACEHOLDER' }}
+        run: exit 1 # This should never happen.
+
       - name: Upload npm package to GitHub
         uses: actions/upload-artifact@v4
         with:
