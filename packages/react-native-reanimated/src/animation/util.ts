@@ -44,21 +44,23 @@ import {
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const LAYOUT_ANIMATION_SUPPORTED_PROPS = [
-  'originX',
-  'originY',
-  'width',
-  'height',
-  'borderRadius',
-  'globalOriginX',
-  'globalOriginY',
-  'opacity',
-  'transform',
-];
+const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
+  originX: true,
+  originY: true,
+  width: true,
+  heigth: true,
+  borderRadius: true,
+  globalOriginX: true,
+  globalOriginY: true,
+  opacity: true,
+  transform: true,
+};
+
+type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
 
 export function isValidLayoutAnimationProp(prop: string) {
   'worklet';
-  return LAYOUT_ANIMATION_SUPPORTED_PROPS.includes(prop);
+  return (prop as LayoutAnimationProp) in LAYOUT_ANIMATION_SUPPORTED_PROPS;
 }
 
 if (__DEV__ && ReducedMotionManager.jsValue) {
