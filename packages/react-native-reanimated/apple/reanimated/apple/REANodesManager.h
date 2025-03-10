@@ -2,8 +2,6 @@
 
 #import <reanimated/apple/READisplayLink.h>
 
-@class ReanimatedModule;
-
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REAEventHandler)(id<RCTEvent> event);
 typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
@@ -11,9 +9,7 @@ typedef void (^REAPerformOperations)();
 
 @interface REANodesManager : NSObject
 
-@property (nonatomic, weak, nullable) ReanimatedModule *reanimatedModule;
-
-- (nonnull instancetype)initWithModule:(ReanimatedModule *)reanimatedModule;
+- (nonnull instancetype)init;
 - (void)invalidate;
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
