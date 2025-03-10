@@ -115,7 +115,7 @@ public class NativeProxy {
     return mHybridData;
   }
 
-  public void invalidate() {
+  protected void invalidate() {
     if (mInvalidated.getAndSet(true)) {
       return;
     }
