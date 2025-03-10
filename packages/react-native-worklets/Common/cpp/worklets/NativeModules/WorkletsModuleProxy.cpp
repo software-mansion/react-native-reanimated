@@ -115,7 +115,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       true /* supportsLocking */,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, initializer, "[Reanimated] Initializer must be a worklet.");
+      rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }

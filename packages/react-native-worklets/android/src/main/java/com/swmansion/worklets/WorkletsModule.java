@@ -11,12 +11,12 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
+import com.swmansion.worklets.runloop.AnimationFrameCallback;
+import com.swmansion.worklets.runloop.AnimationFrameQueue;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
+@SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
@@ -36,16 +36,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
    * cost us much to add synchronization for extra safety.
    */
   private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
-
-  public AndroidUIScheduler getAndroidUIScheduler() {
-    return mAndroidUIScheduler;
-  }
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(

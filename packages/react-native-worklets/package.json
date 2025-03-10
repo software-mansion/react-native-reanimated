@@ -1,7 +1,13 @@
 {
   "name": "react-native-worklets",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The React Native multithreading library",
+  "keywords": [
+    "react-native",
+    "react",
+    "native",
+    "worklets"
+  ],
   "scripts": {
     "build": "bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",

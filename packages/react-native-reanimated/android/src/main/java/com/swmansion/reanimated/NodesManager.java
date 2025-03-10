@@ -2,7 +2,6 @@ package com.swmansion.reanimated;
 
 import android.os.SystemClock;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
@@ -35,7 +34,6 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
-  private final WorkletsModule mWorkletsModule;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
   private final ReactChoreographer mReactChoreographer;
   private final GuardedFrameCallback mChoreographerCallback;
@@ -46,7 +44,6 @@ public class NodesManager implements EventDispatcherListener {
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
   private FabricUIManager mFabricUIManager;
-  private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -63,29 +60,14 @@ public class NodesManager implements EventDispatcherListener {
     if (mFabricUIManager != null) {
       mFabricUIManager.getEventDispatcher().removeListener(this);
     }
-
-    if (mUnsubscribe != null) {
-      mUnsubscribe.run();
-      mUnsubscribe = null;
-    }
   }
 
-  public void initWithContext(ReactApplicationContext reactApplicationContext) {
-    reactApplicationContext.assertOnJSQueueThread();
-    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
-    mFabricUIManager =
-        (FabricUIManager)
-            UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.FABRIC);
-    mFabricUIManager.getEventDispatcher().addListener(this);
-  }
-
-  public NodesManager(ReactContext context, WorkletsModule workletsModule) {
+  public NodesManager(ReactApplicationContext context, WorkletsModule workletsModule) {
     context.assertOnJSQueueThread();
 
-    mWorkletsModule = workletsModule;
-    UIManager mUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
-    assert mUIManager != null;
-    mCustomEventNamesResolver = mUIManager::resolveCustomDirectEventName;
+    UIManager uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+    assert uiManager != null;
+    mCustomEventNamesResolver = uiManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
 
     mReactChoreographer = ReactChoreographer.getInstance();
@@ -96,6 +78,10 @@ public class NodesManager implements EventDispatcherListener {
             onAnimationFrame(frameTimeNanos);
           }
         };
+
+    mNativeProxy = new NativeProxy(context, workletsModule, this);
+    mFabricUIManager = (FabricUIManager) uiManager;
+    mFabricUIManager.getEventDispatcher().addListener(this);
   }
 
   public void onHostPause() {

@@ -59,11 +59,10 @@ public class NativeProxy {
   private final HybridData mHybridData;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, WorkletsModule workletsModule) {
+      ReactApplicationContext context, WorkletsModule workletsModule, NodesManager nodesManager) {
     context.assertOnJSQueueThread();
 
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -80,9 +79,7 @@ public class NativeProxy {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
+    mNodesManager = nodesManager;
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -94,11 +91,6 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
-
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
-    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
