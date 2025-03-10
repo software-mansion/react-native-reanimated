@@ -25,8 +25,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   auto nodesManager = reaModule.nodesManager;
 
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, reaModule);
+  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 

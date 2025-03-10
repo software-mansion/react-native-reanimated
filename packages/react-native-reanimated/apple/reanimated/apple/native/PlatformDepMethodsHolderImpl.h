@@ -9,8 +9,7 @@ namespace reanimated {
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(
     RCTModuleRegistry *moduleRegistry,
-    REANodesManager *nodesManager,
-    REAModule *reaModule);
+    REANodesManager *nodesManager);
 SetGestureStateFunction makeSetGestureStateFunction(
     RCTModuleRegistry *moduleRegistry);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
