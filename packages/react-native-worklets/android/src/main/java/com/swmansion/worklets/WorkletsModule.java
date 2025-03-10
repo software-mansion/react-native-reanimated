@@ -36,6 +36,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
+
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
    * cost us much to add synchronization for extra safety.
