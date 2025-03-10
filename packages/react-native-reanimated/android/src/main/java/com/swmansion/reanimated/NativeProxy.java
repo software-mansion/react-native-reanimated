@@ -8,6 +8,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -51,9 +52,10 @@ public class NativeProxy {
   private final HybridData mHybridData;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, WorkletsModule workletsModule) {
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+      ReactApplicationContext context, WorkletsModule workletsModule, NodesManager nodesManager) {
+    context.assertOnJSQueueThread();
+
+    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -70,9 +72,7 @@ public class NativeProxy {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
+    mNodesManager = nodesManager;
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -84,11 +84,6 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
-
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
-    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -130,6 +125,7 @@ public class NativeProxy {
 
   @DoNotStrip
   public void requestRender(AnimationFrameCallback callback) {
+    UiThreadUtil.assertOnUiThread();
     mNodesManager.postOnAnimation(callback);
   }
 
@@ -223,6 +219,7 @@ public class NativeProxy {
 
   @DoNotStrip
   void maybeFlushUIUpdatesQueue() {
+    UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }

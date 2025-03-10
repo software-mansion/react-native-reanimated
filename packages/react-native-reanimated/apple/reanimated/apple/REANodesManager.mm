@@ -41,8 +41,6 @@
 }
 
 - (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
-                                bridge:(RCTBridge *)bridge
-                      surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   REAAssertJavaScriptQueue();
 

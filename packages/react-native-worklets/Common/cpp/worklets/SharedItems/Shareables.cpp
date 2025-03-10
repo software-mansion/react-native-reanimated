@@ -110,7 +110,7 @@ jsi::Value makeShareableClone(
         std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
     throw std::runtime_error(
-        "[Reanimated] Attempted to convert an unsupported value type.");
+        "[Worklets] Attempted to convert an unsupported value type.");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
@@ -125,7 +125,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
       return object.getHostObject<ShareableJSRef>(rt)->value();
     }
     throw std::runtime_error(
-        "[Reanimated] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
+        "[Worklets] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
@@ -319,7 +319,7 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
       return jsi::Value(data_.number);
     default:
       throw std::runtime_error(
-          "[Reanimated] Attempted to convert object that's not of a scalar type.");
+          "[Worklets] Attempted to convert object that's not of a scalar type.");
   }
 }
 

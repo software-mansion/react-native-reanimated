@@ -6,11 +6,7 @@
 
 #import <reanimated/apple/REANodesManager.h>
 
-@interface REAModule : RCTEventEmitter <
-                           NativeReanimatedModuleSpec,
-                           RCTCallInvokerModule,
-                           RCTEventDispatcherObserver,
-                           RCTUIManagerObserver>
+@interface REAModule : RCTEventEmitter <NativeReanimatedModuleSpec, RCTCallInvokerModule, RCTEventDispatcherObserver>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 

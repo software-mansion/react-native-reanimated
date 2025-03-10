@@ -15,19 +15,15 @@ using namespace facebook;
 using namespace react;
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
-    REAModule *reaModule,
+    REANodesManager *nodesManager,
     RCTModuleRegistry *moduleRegistry,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule)
 {
   REAAssertJavaScriptQueue();
 
-  auto nodesManager = reaModule.nodesManager;
-
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, reaModule);
+  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
@@ -37,7 +33,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   jsi::Runtime &uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
 
-  [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
+  [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
@@ -48,7 +44,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   }];
 
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
-  [reaModule.nodesManager registerPerformOperations:^() {
+  [nodesManager registerPerformOperations:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       reanimatedModuleProxy->performOperations();
     }

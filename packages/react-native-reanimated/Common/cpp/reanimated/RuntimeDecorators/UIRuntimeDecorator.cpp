@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 namespace reanimated {
 
@@ -30,8 +30,22 @@ void UIRuntimeDecorator::decorate(
       uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
 
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+
+  const auto microtaskQueueFinalizers =
+      uiRuntime.global()
+          .getProperty(uiRuntime, "_microtaskQueueFinalizers")
+          .asObject(uiRuntime)
+          .asArray(uiRuntime);
+
+  microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
+      .callWithThis(
+          uiRuntime,
+          microtaskQueueFinalizers,
+          jsi::Function::createFromHostFunction(
+              uiRuntime,
+              jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
+              0,
+              jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_obtainPropFabric", obtainPropFunction);

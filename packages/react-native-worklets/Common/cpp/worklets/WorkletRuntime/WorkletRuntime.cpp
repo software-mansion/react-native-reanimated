@@ -12,7 +12,7 @@
 #include <utility>
 
 #if JS_RUNTIME_HERMES
-#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
+#include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
 #elif JS_RUNTIME_V8
 #include <v8runtime/V8RuntimeFactory.h>
 #else
@@ -60,7 +60,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 #if JS_RUNTIME_HERMES
   (void)rnRuntime; // used only by V8
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<ReanimatedHermesRuntime>(
+  jsiRuntime = std::make_shared<WorkletHermesRuntime>(
       std::move(hermesRuntime), jsQueue, name);
 #elif JS_RUNTIME_V8
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
@@ -114,12 +114,12 @@ jsi::Value WorkletRuntime::executeSync(
     const jsi::Value &worklet) const {
   assert(
       supportsLocking_ &&
-      ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
+      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       worklet,
-      "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
+      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
   auto result = runGuarded(shareableWorklet);
@@ -176,7 +176,7 @@ void scheduleOnRuntime(
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       shareableWorkletValue,
-      "[Reanimated] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 
