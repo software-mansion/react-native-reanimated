@@ -25,6 +25,12 @@ public class NativeProxy extends NativeProxyCommon {
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
+
   @OptIn(markerClass = FrameworkAPI.class)
   public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
@@ -63,8 +69,13 @@ public class NativeProxy extends NativeProxyCommon {
 
   private native void invalidateCpp();
 
-  public void invalidate() {
-    invalidateCpp();
+  protected void invalidate() {
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      invalidateCpp();
+    }
   }
 
   public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
