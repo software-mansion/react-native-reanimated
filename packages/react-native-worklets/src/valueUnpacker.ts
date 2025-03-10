@@ -4,10 +4,6 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './workletFunction';
 import type { WorkletFunction } from './workletTypes';
 
-interface ObjectToUnpack extends WorkletFunction {
-  _recur: unknown;
-}
-
 function valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
@@ -50,9 +46,9 @@ function valueUnpacker(
         // eslint-disable-next-line no-eval
         workletFun = eval('(' + initData.code + '\n)');
       }
-      workletsCache.set(workletHash, workletFun);
+      workletsCache.set(workletHash, workletFun!);
     }
-    const functionInstance = workletFun.bind(objectToUnpack);
+    const functionInstance = workletFun!.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
   } else if (objectToUnpack.__init !== undefined) {
@@ -79,6 +75,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       )}".`
     );
   }
+}
+
+interface ObjectToUnpack extends WorkletFunction {
+  _recur: unknown;
 }
 
 type ValueUnpacker = WorkletFunction<

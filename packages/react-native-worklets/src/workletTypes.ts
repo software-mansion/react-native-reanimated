@@ -43,7 +43,7 @@ interface WorkletInitData {
 
 export interface WorkletProps {
   __closure: WorkletClosure;
-  __workletHash: string;
+  __workletHash: number;
   __initData: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
