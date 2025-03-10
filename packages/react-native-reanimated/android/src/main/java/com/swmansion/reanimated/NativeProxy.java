@@ -47,7 +47,12 @@ public class NativeProxy {
   private boolean slowAnimationsEnabled = false;
   private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
-  private AtomicBoolean mInvalidated = new AtomicBoolean(false);
+
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @DoNotStrip
   @SuppressWarnings("unused")
