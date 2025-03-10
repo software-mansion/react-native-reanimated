@@ -40,7 +40,7 @@
   });
 }
 
-- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
+- (nonnull instancetype)initWithModule:(ReanimatedModule *)reanimatedModule
 {
   REAAssertJavaScriptQueue();
 

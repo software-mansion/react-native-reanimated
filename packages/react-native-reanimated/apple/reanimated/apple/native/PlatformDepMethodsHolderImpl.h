@@ -1,7 +1,7 @@
 #if __cplusplus
 
-#import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
