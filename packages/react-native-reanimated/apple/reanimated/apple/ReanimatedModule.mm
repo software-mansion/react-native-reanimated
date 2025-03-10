@@ -37,7 +37,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   REAAssertTurboModuleManagerQueue();
 
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
   [super invalidate];
 }
