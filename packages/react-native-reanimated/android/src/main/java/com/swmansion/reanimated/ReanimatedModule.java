@@ -16,8 +16,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     reactContext.assertOnJSQueueThread();
     mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
     mNodesManager = new NodesManager(reactContext, mWorkletsModule);
-    mNodesManager.initWithContext(reactContext);
-    // TODO: merge initWithContext into NodesManager constructor
   }
 
   @Override

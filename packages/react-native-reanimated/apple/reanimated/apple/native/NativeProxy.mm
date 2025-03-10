@@ -17,14 +17,13 @@ using namespace react;
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule)
 {
   REAAssertJavaScriptQueue();
 
   auto nodesManager = reaModule.nodesManager;
-
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
