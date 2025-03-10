@@ -16,6 +16,7 @@ import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -24,6 +25,12 @@ public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
+
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
@@ -72,8 +79,13 @@ public class NativeProxy extends NativeProxyCommon {
 
   private native void invalidateCpp();
 
-  public void invalidate() {
-    invalidateCpp();
+  protected void invalidate() {
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      invalidateCpp();
+    }
   }
 
   public static NativeMethodsHolder createNativeMethodsHolder(
