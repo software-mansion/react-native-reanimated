@@ -13,7 +13,6 @@ export interface ICSSTransitionsManager {
 }
 
 export interface ICSSManager {
-  attach(style: CSSStyle): void;
   update(style: CSSStyle | null): void;
   unmountCleanup(): void;
 }

@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/hooks/ReanimatedMountHook.h>
+#include <reanimated/Fabric/hook/ReanimatedMountHook.h>
 
 namespace reanimated {
 

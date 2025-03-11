@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
 
 namespace reanimated {
 

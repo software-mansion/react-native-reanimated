@@ -1,10 +1,10 @@
-#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/Fabric/registry/UpdatesRegistryManager.h>
 
 namespace reanimated {
 
 UpdatesRegistryManager::UpdatesRegistryManager() = default;
 
-std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
+std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
@@ -46,13 +46,6 @@ PropsMap UpdatesRegistryManager::collectProps() {
     registry->collectProps(propsMap);
   }
   return propsMap;
-}
-
-void UpdatesRegistryManager::removeBatch(const std::vector<Tag> &tags) {
-  LOG(INFO) << "Removing batch of tags: " << folly::join(", ", tags);
-  for (auto &registry : registries_) {
-    registry->removeBatch(tags);
-  }
 }
 
 #ifdef ANDROID

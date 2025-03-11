@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/hooks/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/hook/ReanimatedCommitHook.h>
 
 namespace reanimated {
 
@@ -66,18 +66,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   RootShadowNode::Unshared rootNode = newRootShadowNode;
 
   {
-    auto lock = updatesRegistryManager_->createLock();
+    auto lock = updatesRegistryManager_->lock();
 
     updatesRegistryManager_->cancelCommitAfterPause();
     PropsMap propsMap = updatesRegistryManager_->collectProps();
 
-    std::vector<Tag> tagsToRemove;
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap, tagsToRemove);
-
-    if (!tagsToRemove.empty()) {
-      updatesRegistryManager_->removeBatch(tagsToRemove);
-      staticPropsRegistry_->removeBatch(tagsToRemove);
-    }
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
 
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not

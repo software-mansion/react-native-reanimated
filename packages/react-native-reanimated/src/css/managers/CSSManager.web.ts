@@ -19,10 +19,6 @@ export default class CSSManager implements ICSSManager {
     this.transitionsManager = new CSSTransitionsManager(this.element);
   }
 
-  attach(style: CSSStyle): void {
-    this.update(style);
-  }
-
   update(style: CSSStyle): void {
     const [animationConfig, transitionConfig] =
       filterCSSAndStyleProperties(style);

@@ -4,7 +4,7 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
-#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+#include <reanimated/Fabric/registry/UpdatesRegistry.h>
 
 #include <memory>
 #include <set>
@@ -38,7 +38,6 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
 
   void update(double timestamp);
 
@@ -73,7 +72,6 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
-  void handleRemove(Tag viewTag);
   void updateViewAnimations(
       Tag viewTag,
       const std::vector<size_t> &animationIndices,

@@ -20,8 +20,6 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto animationsVector =
       buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
@@ -56,29 +54,12 @@ void CSSAnimationsRegistry::apply(
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  handleRemove(viewTag);
-}
-
-void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  LOG(INFO) << "Removing batch of tags: " << folly::join(", ", tagsToRemove);
-
-  for (const auto &viewTag : tagsToRemove) {
-    handleRemove(viewTag);
-  }
-
-  std::vector<Tag> remainingTags;
-  for (const auto &pair : registry_) {
-    remainingTags.push_back(pair.first);
-  }
-  LOG(INFO) << "Remaining tags: " << folly::join(", ", remainingTags);
+  removeViewAnimations(viewTag);
+  removeFromUpdatesRegistry(viewTag);
+  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted
@@ -184,12 +165,6 @@ void CSSAnimationsRegistry::updateAnimationSettings(
       animation->updateSettings(it->second, timestamp);
     }
   }
-}
-
-void CSSAnimationsRegistry::handleRemove(Tag viewTag) {
-  removeViewAnimations(viewTag);
-  removeFromUpdatesRegistry(viewTag);
-  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::updateViewAnimations(

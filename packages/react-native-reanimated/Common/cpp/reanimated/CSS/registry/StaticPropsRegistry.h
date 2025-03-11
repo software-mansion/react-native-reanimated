@@ -20,7 +20,6 @@ class StaticPropsRegistry {
   folly::dynamic get(Tag viewTag) const;
   bool has(Tag viewTag) const;
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove);
   bool isEmpty() const;
 
   bool hasObservers(Tag viewTag) const;

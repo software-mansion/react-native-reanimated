@@ -8,12 +8,12 @@
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/ReanimatedCommitHook.h>
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ReanimatedMountHook.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
-#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/Fabric/ShadowTree/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTree/ReanimatedMountHook.h>
+#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
+#include <reanimated/Fabric/hook/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/registry/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/registry/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
@@ -116,6 +116,7 @@ class ReanimatedModuleProxy
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &viewStyle) override;
+  void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,

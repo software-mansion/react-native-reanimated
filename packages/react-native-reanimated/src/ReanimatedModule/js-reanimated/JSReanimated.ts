@@ -277,6 +277,12 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
 
+  removeViewStyle(_viewTag: number): void {
+    throw new ReanimatedError(
+      'removeViewStyle is not available in JSReanimated.'
+    );
+  }
+
   registerCSSKeyframes(
     _animationName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig

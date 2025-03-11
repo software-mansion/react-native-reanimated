@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+#include <reanimated/Fabric/registry/UpdatesRegistry.h>
 
 #include <react/renderer/uimanager/UIManager.h>
 
@@ -20,7 +20,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   JSIUpdates getJSIUpdates();
 
   SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
+  void remove(const Tag tag);
 };
 
 } // namespace reanimated

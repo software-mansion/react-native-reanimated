@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/registry/AnimatedPropsRegistry.h>
 
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>

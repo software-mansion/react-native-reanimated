@@ -4,7 +4,7 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
-#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+#include <reanimated/Fabric/registry/UpdatesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
@@ -29,7 +29,6 @@ class CSSTransitionsRegistry
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
 
   void update(double timestamp);
@@ -45,7 +44,6 @@ class CSSTransitionsRegistry
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
-  void handleRemove(Tag viewTag);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);

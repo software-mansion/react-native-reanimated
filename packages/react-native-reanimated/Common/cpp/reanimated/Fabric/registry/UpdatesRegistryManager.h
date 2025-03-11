@@ -1,8 +1,8 @@
 #pragma once
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
+#include <reanimated/Fabric/registry/UpdatesRegistry.h>
 
 #include <memory>
 #include <unordered_map>
@@ -20,7 +20,7 @@ class UpdatesRegistryManager {
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 #endif
 
-  std::lock_guard<std::mutex> createLock() const;
+  std::lock_guard<std::mutex> lock() const;
 
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)
@@ -33,7 +33,6 @@ class UpdatesRegistryManager {
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
-  void removeBatch(const std::vector<Tag> &tags);
   PropsMap collectProps();
 
 #ifdef ANDROID
