@@ -193,12 +193,13 @@ export function withStyleAnimation(
               )}`
             );
           }
+          const propName = currentEntry.path[0];
           if (
-            typeof currentEntry.path[0] === 'string' &&
-            !isValidLayoutAnimationProp(currentEntry.path[0].trim())
+            typeof propName === 'string' &&
+            !isValidLayoutAnimationProp(propName.trim())
           ) {
             logger.warn(
-              `'${currentEntry.path[0]}' property is not officially supported for layout animations. It may not work as expected.`
+              `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
             );
           }
           setPath(animation.current, currentEntry.path, prevVal);
