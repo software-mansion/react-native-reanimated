@@ -46,6 +46,7 @@ export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
+  animatedProps: MutableRefObject<any>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
@@ -53,6 +54,10 @@ export const updatePropsJestWrapper = (
   });
   animatedStyle.current.value = {
     ...animatedStyle.current.value,
+    ...updates,
+  };
+  animatedProps.current.value = {
+    ...animatedProps.current.value,
     ...updates,
   };
 

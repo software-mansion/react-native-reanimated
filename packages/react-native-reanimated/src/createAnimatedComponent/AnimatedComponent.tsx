@@ -67,6 +67,7 @@ export default class AnimatedComponent
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
+  jestAnimatedProps: { value: AnimatedProps } = { value: {} };
   _jsPropsUpdater = new JSPropsUpdater();
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
@@ -87,6 +88,7 @@ export default class AnimatedComponent
 
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
+      this.jestAnimatedProps = { value: {} };
     }
 
     const entering = this.props.entering;
@@ -200,8 +202,9 @@ export default class AnimatedComponent
   }
 
   _attachAnimatedStyles() {
+    const animatedProps = this.props.animatedProps;
     const prevAnimatedProps = this._animatedProps;
-    this._animatedProps = this.props.animatedProps;
+    this._animatedProps = animatedProps;
 
     const { viewTag, shadowNodeWrapper, viewConfig } = this._getViewInfo();
 
@@ -231,6 +234,15 @@ export default class AnimatedComponent
           }
         }
       }
+    }
+
+    if (animatedProps && IS_JEST) {
+      this.jestAnimatedProps.value = {
+        ...this.jestAnimatedProps.value,
+        ...animatedProps?.initial?.value,
+      };
+      // @ts-ignore
+      animatedProps.jestAnimatedStyle.current = this.jestAnimatedProps;
     }
 
     this._animatedStyles.forEach((style) => {
@@ -373,6 +385,7 @@ export default class AnimatedComponent
 
     if (IS_JEST) {
       filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
+      filteredProps.jestAnimatedProps = this.jestAnimatedProps;
     }
 
     // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
@@ -400,6 +413,7 @@ export default class AnimatedComponent
       ? {
           jestInlineStyle: this.props.style,
           jestAnimatedStyle: this.jestAnimatedStyle,
+          jestAnimatedProps: this.jestAnimatedProps,
         }
       : {};
 
