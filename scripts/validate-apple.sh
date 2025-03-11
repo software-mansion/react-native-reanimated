@@ -14,3 +14,8 @@ if grep -Rn apple -e '^#import <RNReanimated\/'; then
     echo 'Found `#import <RNReanimated/...>` in `apple/` directory. Convert it to `#import <reanimated/...>`, e.g. `#import <reanimated/apple/ReanimatedModule.h>`.'
     exit 1
 fi
+
+if grep -Rn apple -e '^#import <RNWorklets\/'; then
+    echo 'Found `#import <RNWorklets/...>` in `apple/` directory. Convert it to `#import <worklets/...>`, e.g. `#import <worklets/apple/WorkletsModule.h>`.'
+    exit 1
+fi
