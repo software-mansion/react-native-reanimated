@@ -1,4 +1,4 @@
-name: clang-tidy lint [Nightly]
+name: Lint clang-tidy [Nightly]
 on:
   pull_request:
     paths:
@@ -7,6 +7,6 @@ on:
     - cron: '37 19 * * *'
 
 jobs:
-  clang-tidy-lint-nightly:
+  lint-clang-tidy-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    uses: ./.github/workflows/clang-tidy-lint.yml
+    uses: ./.github/workflows/lint-clang-tidy.yml

@@ -49,3 +49,9 @@ jobs:
       - name: Find circular dependencies
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn circular-dependency-check
+      - name: Check use strict
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn use-strict-check
+      - name: Run jest unit tests
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn test

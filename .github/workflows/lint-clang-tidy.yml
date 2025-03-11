@@ -1,18 +1,18 @@
-name: clang-tidy lint
+name: Lint clang-tidy
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     paths:
-      - '.github/workflows/reanimated-clang-tidy-lint.yml'
+      - '.github/workflows/lint-clang-tidy.yml'
   pull_request:
     paths:
-      - '.github/workflows/reanimated-clang-tidy-lint.yml'
+      - '.github/workflows/lint-clang-tidy.yml'
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  clang-tidy-lint:
+  lint-clang-tidy:
     if: github.repository == 'software-mansion/react-native-reanimated'
     concurrency:
       group: ${{github.workflow}}-${{ github.ref }}
