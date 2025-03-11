@@ -27,6 +27,7 @@ import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -46,6 +47,12 @@ public class NativeProxy {
   private boolean slowAnimationsEnabled = false;
   private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
+
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @DoNotStrip
   @SuppressWarnings("unused")
@@ -105,8 +112,13 @@ public class NativeProxy {
     return mHybridData;
   }
 
-  public void invalidate() {
-    invalidateCpp();
+  protected void invalidate() {
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      invalidateCpp();
+    }
   }
 
   private void toggleSlowAnimations() {

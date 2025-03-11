@@ -5,8 +5,8 @@
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
-#import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Tools/SingleInstanceChecker.h>
@@ -20,10 +20,10 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
-@implementation REAModule {
+@implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
 #ifndef NDEBUG
-  SingleInstanceChecker<REAModule> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
 }
@@ -37,7 +37,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   REAAssertTurboModuleManagerQueue();
 
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [_nodesManager invalidate];
   [super invalidate];
 }
@@ -87,7 +86,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   REAAssertJavaScriptQueue();
   [super setBridge:bridge];
-  _nodesManager = [[REANodesManager alloc] initWithModule:self];
+  _nodesManager = [[REANodesManager alloc] init];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
@@ -133,7 +132,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto reanimatedModuleProxy =
-      reanimated::createReanimatedModule(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
+      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
 
   auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 

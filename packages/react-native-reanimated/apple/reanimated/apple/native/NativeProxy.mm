@@ -14,7 +14,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
+std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     REANodesManager *nodesManager,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
