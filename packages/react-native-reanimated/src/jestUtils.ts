@@ -5,9 +5,9 @@ import type { ReactTestInstance } from 'react-test-renderer';
 
 import type {
   AnimatedComponentProps,
+  AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
-  AnimatedProps,
 } from './createAnimatedComponent/commonTypes';
 import { ReanimatedError } from './errors';
 import type { DefaultStyle } from './hook/commonTypes';

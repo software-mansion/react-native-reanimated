@@ -1,13 +1,12 @@
-import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
 import { Button, View } from 'react-native';
-
 import Animated, {
-  useSharedValue,
   useAnimatedProps,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Svg, Circle } from 'react-native-svg';
+import { Circle, Svg } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 // const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

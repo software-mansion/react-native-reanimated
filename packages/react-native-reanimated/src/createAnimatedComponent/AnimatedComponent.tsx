@@ -241,8 +241,9 @@ export default class AnimatedComponent
         ...this.jestAnimatedProps.value,
         ...animatedProps?.initial?.value,
       };
-      // @ts-ignore
-      animatedProps.jestAnimatedStyle.current = this.jestAnimatedProps;
+      // @ts-ignore It tells jestAnimatedValues is unknown yet it's part of animatedProps
+      // TODO: fix this somewhat in the future
+      animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
     }
 
     this._animatedStyles.forEach((style) => {
@@ -262,7 +263,7 @@ export default class AnimatedComponent
           ...this.jestAnimatedStyle.value,
           ...style.initial.value,
         };
-        style.jestAnimatedStyle.current = this.jestAnimatedStyle;
+        style.jestAnimatedValues.current = this.jestAnimatedStyle;
       }
     });
 

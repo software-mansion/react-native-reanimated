@@ -45,19 +45,14 @@ if (shouldBeUseWeb()) {
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
-  animatedStyle: MutableRefObject<AnimatedStyle<any>>,
-  animatedProps: MutableRefObject<any>,
+  animatedValues: MutableRefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
     adapter(updates);
   });
-  animatedStyle.current.value = {
-    ...animatedStyle.current.value,
-    ...updates,
-  };
-  animatedProps.current.value = {
-    ...animatedProps.current.value,
+  animatedValues.current.value = {
+    ...animatedValues.current.value,
     ...updates,
   };
 
