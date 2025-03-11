@@ -147,15 +147,13 @@ export default class AnimatedComponent<
     this._updateStyles(this.props);
 
     if (!IS_JEST) {
-      if (!this._CSSManager) {
-        this._CSSManager = new CSSManager(this._getViewInfo());
-      }
-      this._CSSManager?.attach(this._cssStyle);
+      this._CSSManager ??= new CSSManager(this._getViewInfo());
+      this._CSSManager.attach(this._cssStyle);
     }
   }
 
   componentWillUnmount() {
-    this._CSSManager?.detach();
+    this._CSSManager?.unmountCleanup();
   }
 
   shouldComponentUpdate(nextProps: P) {

@@ -18,6 +18,7 @@ class ReanimatedCommitHook
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
 
   ~ReanimatedCommitHook() noexcept override;
@@ -36,6 +37,7 @@ class ReanimatedCommitHook
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
   SurfaceId currentMaxSurfaceId_ = -1;

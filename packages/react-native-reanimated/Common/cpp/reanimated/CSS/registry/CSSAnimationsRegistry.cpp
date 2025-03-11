@@ -8,8 +8,9 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 }
 
 bool CSSAnimationsRegistry::isEmpty() const {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationIndicesMap_.empty() && animationsToRevertMap_.empty();
+  // The registry is empty if has no registered animations and no updates
+  // stored in the updates registry
+  return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
 void CSSAnimationsRegistry::apply(

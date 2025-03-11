@@ -13,10 +13,6 @@ export function setViewStyle(viewTag: number, style: StyleProps) {
   ReanimatedModule.setViewStyle(viewTag, style);
 }
 
-export function removeViewStyle(viewTag: number) {
-  ReanimatedModule.removeViewStyle(viewTag);
-}
-
 // ANIMATIONS
 
 // Keyframes

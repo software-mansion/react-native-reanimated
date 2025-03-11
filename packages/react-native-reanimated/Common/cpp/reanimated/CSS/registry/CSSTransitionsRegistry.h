@@ -24,8 +24,8 @@ class CSSTransitionsRegistry
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
-  bool hasUpdates() const;
   bool isEmpty() const override;
+  bool hasUpdates() const;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);

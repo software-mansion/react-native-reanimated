@@ -10,9 +10,9 @@ import {
   unregisterCSSTransition,
   updateCSSTransition,
 } from '../platform/native/native';
-import type { CSSTransitionProperties } from '../types';
+import type { CSSTransitionProperties, ICSSTransitionsManager } from '../types';
 
-export default class CSSTransitionsManager {
+export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
@@ -21,20 +21,6 @@ export default class CSSTransitionsManager {
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
-  }
-
-  private attachTransition(transitionConfig: NormalizedCSSTransitionConfig) {
-    if (!this.transitionConfig) {
-      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
-      this.transitionConfig = transitionConfig;
-    }
-  }
-
-  detach() {
-    if (this.transitionConfig) {
-      unregisterCSSTransition(this.viewTag);
-      this.transitionConfig = null;
-    }
   }
 
   update(transitionProperties: CSSTransitionProperties | null): void {
@@ -61,7 +47,25 @@ export default class CSSTransitionsManager {
         updateCSSTransition(this.viewTag, configUpdates);
       }
     } else {
-      this.attachTransition(transitionConfig);
+      this.attach(transitionConfig);
+    }
+  }
+
+  unmountCleanup(): void {
+    // noop
+  }
+
+  private attach(transitionConfig: NormalizedCSSTransitionConfig) {
+    if (!this.transitionConfig) {
+      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
+      this.transitionConfig = transitionConfig;
+    }
+  }
+
+  private detach() {
+    if (this.transitionConfig) {
+      unregisterCSSTransition(this.viewTag);
+      this.transitionConfig = null;
     }
   }
 }

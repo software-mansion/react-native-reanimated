@@ -825,6 +825,7 @@ void ReanimatedModuleProxy::commitUpdates(
   if (!tagsToRemove.empty()) {
     auto lock = updatesRegistryManager_->createLock();
     updatesRegistryManager_->removeBatch(tagsToRemove);
+    staticPropsRegistry_->removeBatch(tagsToRemove);
   }
 }
 
@@ -914,7 +915,10 @@ void ReanimatedModuleProxy::initializeFabric(
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+      uiManager_,
+      updatesRegistryManager_,
+      staticPropsRegistry_,
+      layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

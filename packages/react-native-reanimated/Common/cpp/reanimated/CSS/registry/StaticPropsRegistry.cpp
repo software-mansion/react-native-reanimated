@@ -39,8 +39,8 @@ void StaticPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   }
 }
 
-bool StaticPropsRegistry::isEmpty() {
-  return registry_.empty() && observers_.empty();
+bool StaticPropsRegistry::isEmpty() const {
+  return registry_.empty();
 }
 
 bool StaticPropsRegistry::hasObservers(const Tag viewTag) const {

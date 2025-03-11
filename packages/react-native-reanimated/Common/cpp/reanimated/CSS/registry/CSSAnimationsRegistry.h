@@ -27,8 +27,8 @@ class CSSAnimationsRegistry
   using SettingsUpdates =
       std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
-  bool hasUpdates() const;
   bool isEmpty() const override;
+  bool hasUpdates() const;
 
   void apply(
       jsi::Runtime &rt,

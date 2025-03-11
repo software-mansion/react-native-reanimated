@@ -8,13 +8,14 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : getCurrentTimestamp_(getCurrentTimestamp),
       staticPropsRegistry_(staticPropsRegistry) {}
 
-bool CSSTransitionsRegistry::hasUpdates() const {
-  return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
+bool CSSTransitionsRegistry::isEmpty() const {
+  // The registry is empty if has no registered animations and no updates
+  // stored in the updates registry
+  return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
-bool CSSTransitionsRegistry::isEmpty() const {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningTransitionTags_.empty();
+bool CSSTransitionsRegistry::hasUpdates() const {
+  return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
 void CSSTransitionsRegistry::add(
@@ -32,9 +33,7 @@ void CSSTransitionsRegistry::add(
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  if (!updatesRegistry_.contains(viewTag)) {
-    handleRemove(viewTag);
-  }
+  handleRemove(viewTag);
 }
 
 void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {

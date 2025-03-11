@@ -21,7 +21,8 @@ class StaticPropsRegistry {
   bool has(Tag viewTag) const;
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag> &tagsToRemove);
-  bool isEmpty();
+  bool isEmpty() const;
+
   bool hasObservers(Tag viewTag) const;
   void setObserver(Tag viewTag, PropsObserver observer);
   void removeObserver(Tag viewTag);

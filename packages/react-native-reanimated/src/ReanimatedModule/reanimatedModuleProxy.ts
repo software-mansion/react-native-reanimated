@@ -60,8 +60,6 @@ export interface ReanimatedModuleProxy {
 
   setViewStyle(viewTag: number, style: StyleProps): void;
 
-  removeViewStyle(viewTag: number): void;
-
   registerCSSKeyframes(
     animationName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig

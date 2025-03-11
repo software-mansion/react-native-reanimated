@@ -16,6 +16,7 @@ import { CSSKeyframesRegistry } from '../registry';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
+  ICSSAnimationsManager,
 } from '../types';
 
 export type ProcessedAnimation = {
@@ -23,7 +24,7 @@ export type ProcessedAnimation = {
   keyframesRule: CSSKeyframesRuleImpl;
 };
 
-export default class CSSAnimationsManager {
+export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
@@ -33,19 +34,6 @@ export default class CSSAnimationsManager {
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
-  }
-
-  detach() {
-    if (this.attachedAnimations.length > 0) {
-      unregisterCSSAnimations(this.viewTag);
-      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
-      });
-      this.attachedAnimations = [];
-    }
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -70,6 +58,34 @@ export default class CSSAnimationsManager {
       }
 
       applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
+    }
+  }
+
+  unmountCleanup(): void {
+    // unmountCleanup is called from componentWillUnmount, which may not
+    // necessarily mean that the component will be removed from the ShadowTree.
+    // This callback is also called when the component is freezed but not removed.
+    // Because of that, we clean up animations attached to the node when the node
+    // is removed from the ShadowTree.
+    //
+    // In this cleanup function we only remove animation keyframes from the keyframes
+    // registry because they cannot be cleaned up in the CPP code. Cleaning them up
+    // is safe, because all already created animations store a shared pointer to the
+    // keyframes object used by the animation. Keyframes will be added back to the
+    // CPP keyframes registry when the animation is attached again if they were
+    // removed from the registry.
+    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+      CSSAnimationsManager.animationKeyframesRegistry.remove(
+        name,
+        this.viewTag
+      );
+    });
+  }
+
+  private detach() {
+    if (this.attachedAnimations.length > 0) {
+      unregisterCSSAnimations(this.viewTag);
+      this.attachedAnimations = [];
     }
   }
 
