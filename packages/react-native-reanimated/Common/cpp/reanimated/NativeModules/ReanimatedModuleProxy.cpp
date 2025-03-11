@@ -788,7 +788,6 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
     }
   }
-  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -799,8 +798,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(
-                oldRootShadowNode, propsMap, tagsToRemove);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.

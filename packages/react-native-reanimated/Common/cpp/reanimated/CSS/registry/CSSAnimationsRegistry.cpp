@@ -25,7 +25,7 @@ void CSSAnimationsRegistry::apply(
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    handleRemove(viewTag);
+    remove(viewTag);
     return;
   }
 

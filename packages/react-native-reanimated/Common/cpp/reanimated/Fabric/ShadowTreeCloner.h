@@ -25,7 +25,6 @@ using ChildrenMap =
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap,
-    std::vector<Tag> &tagsToRemove);
+    const PropsMap &propsMap);
 
 } // namespace reanimated

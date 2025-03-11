@@ -148,7 +148,7 @@ export default class AnimatedComponent<
 
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(this._getViewInfo());
-      this._CSSManager.attach(this._cssStyle);
+      this._CSSManager.update(this._cssStyle);
     }
   }
 

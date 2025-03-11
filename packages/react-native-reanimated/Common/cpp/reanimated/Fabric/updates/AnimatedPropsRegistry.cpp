@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/registry/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 namespace reanimated {
 

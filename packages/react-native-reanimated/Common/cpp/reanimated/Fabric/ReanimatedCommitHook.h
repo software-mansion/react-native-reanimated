@@ -3,9 +3,9 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
-#include <reanimated/Fabric/ShadowTree/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
-#include <reanimated/Fabric/registry/UpdatesRegistryManager.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 

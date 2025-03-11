@@ -1,8 +1,8 @@
 #pragma once
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
-#include <reanimated/Fabric/registry/UpdatesRegistry.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
 #include <unordered_map>

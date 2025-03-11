@@ -4,7 +4,7 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
-#include <reanimated/Fabric/registry/UpdatesRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>

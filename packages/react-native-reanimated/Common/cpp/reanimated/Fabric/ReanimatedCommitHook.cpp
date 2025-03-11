@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/hook/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
 
 namespace reanimated {
 

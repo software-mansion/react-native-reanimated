@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/Fabric/registry/UpdatesRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <react/renderer/uimanager/UIManager.h>
 

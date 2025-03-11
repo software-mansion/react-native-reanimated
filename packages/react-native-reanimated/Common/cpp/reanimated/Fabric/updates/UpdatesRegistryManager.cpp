@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/registry/UpdatesRegistryManager.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 namespace reanimated {
 

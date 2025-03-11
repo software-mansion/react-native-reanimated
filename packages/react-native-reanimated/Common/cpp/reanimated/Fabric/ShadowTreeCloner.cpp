@@ -1,4 +1,4 @@
-#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 namespace reanimated {
 
@@ -62,8 +62,7 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap,
-    std::vector<Tag> &tagsToRemove) {
+    const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
@@ -76,7 +75,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
       if (ancestors.empty()) {
         // no ancestors means that there is no shadowNode from
         // this family in the ShadowTree - we can safely cleanup the registry
-        tagsToRemove.push_back(family->getTag());
+        // TODO: implement this properly
       }
 
       for (const auto &[parentNode, index] :

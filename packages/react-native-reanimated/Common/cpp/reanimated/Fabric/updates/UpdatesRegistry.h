@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/Fabric/ShadowTree/ShadowTreeCloner.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
