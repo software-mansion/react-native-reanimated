@@ -1,27 +1,27 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
+  AnimatableValue,
   Animation,
   AnimationCallback,
-  AnimatableValue,
   Timestamp,
 } from '../commonTypes';
 import type {
-  SpringConfig,
-  SpringAnimation,
-  InnerSpringAnimation,
-  SpringConfigInner,
   DefaultSpringConfig,
+  InnerSpringAnimation,
+  SpringAnimation,
+  SpringConfig,
+  SpringConfigInner,
 } from './springUtils';
 import {
-  initialCalculations,
   calculateNewMassToMatchDuration,
-  underDampedSpringCalculations,
+  checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
+  initialCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
-  checkIfConfigIsValid,
+  underDampedSpringCalculations,
 } from './springUtils';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(

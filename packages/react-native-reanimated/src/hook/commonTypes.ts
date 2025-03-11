@@ -1,27 +1,26 @@
 'use strict';
 import type { Component, MutableRefObject } from 'react';
 import type {
-  AnimatedPropsAdapterFunction,
-  ShadowNodeWrapper,
-  SharedValue,
-  WorkletFunction,
-  AnimatedStyle,
-} from '../commonTypes';
-import type {
   ImageStyle,
+  NativeScrollEvent,
   NativeSyntheticEvent,
   TextStyle,
   ViewStyle,
-  NativeScrollEvent,
 } from 'react-native';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { WorkletFunction } from 'react-native-worklets';
+
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedStyle,
+  ShadowNodeWrapper,
+} from '../commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export type DependencyList = Array<unknown> | undefined;
 
 export interface Descriptor {
   tag: number | ReanimatedHTMLElement;
-  name: string;
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
@@ -40,12 +39,6 @@ export type AnimatedRefOnJS = AnimatedRef<Component>;
 /** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
-  /**
-   * @remarks
-   *   `viewName` is required only on iOS with Paper and it's value is null on
-   *   other platforms.
-   */
-  viewName: SharedValue<string | null>;
 };
 
 type ReanimatedPayload = {

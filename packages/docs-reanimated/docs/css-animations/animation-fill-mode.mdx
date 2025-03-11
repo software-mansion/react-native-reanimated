@@ -1,0 +1,95 @@
+---
+sidebar_position: 7
+---
+
+# animationFillMode
+
+`animationFillMode` lets you specify how the computed styles will be persisted before the animation runs and after it finishes. Defaults to `none`.
+
+import AnimationFillModeBasic from '@site/src/examples/css-animations/AnimationFillModeBasic';
+import AnimationFillModeBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationFillModeBasic';
+
+<InteractiveExample
+  src={AnimationFillModeBasicSrc}
+  component={AnimationFillModeBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        animationName: {
+          '100%': {
+            transform: [{ translateX: 100 }],
+          },
+        },
+        animationDuration: '300ms',
+        // highlight-next-line
+        animationFillMode: 'forwards',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
+
+animationFillMode: CSSAnimationFillMode | CSSAnimationFillMode[];
+```
+
+</details>
+
+### Values
+
+#### `none`
+
+After the animation finishes the styles computed from keyframes are discarded.
+
+#### `forwards`
+
+Persists the last keyframe of an animation.
+
+#### `backwards`
+
+Persists the first keyframe of an animation.
+
+#### `both`
+
+Styles computed from both from first and last keyframes are persisted.
+
+#### `<animation fill mode[]>`
+
+An array of animation fill mode values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/next/css-animations/animation-name).
+
+```javascript
+// highlight-next-line
+animationFillMode: ['forwards', 'backwards', 'none'];
+animationName: [bounceIn, move, slide];
+```
+
+In the following example, `bounceIn` animation would persist the last keyframe of an animation, `move` would persist the first keyframe, and `slide` would discard the computed styles.
+
+## Remarks
+
+- The retained computed style also depends on the `animationDirection` and `animationIterationCount` properties.
+
+- The `forwards` and `both` fill mode options may not work correctly when combined with fractional `animationIterationCount`, particularly when relative units are used, and those relative values change after the animation ends.
+
+<Indent>
+
+For instance, if a child view's size depends on its parent's size and the parent resizes after the animation ends, the child view may not reflect this change. This issue occurs when keyframes use a mix of relative (e.g., percentage-based) and absolute (numeric) units. Once the animation completes, the view retains the size from the last calculated keyframe and does not update according to the new parent size.
+
+In such cases, the view remains static instead of adapting to the updated size as expected.
+
+</Indent>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

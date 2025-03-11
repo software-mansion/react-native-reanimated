@@ -1,70 +1,22 @@
 'use strict';
 
 import './publicGlobals';
+
 import * as Animated from './Animated';
 
 export default Animated;
 
-export { configureReanimatedLogger } from './ConfigHelper';
-export { LogLevel as ReanimatedLogLevel } from './logger';
-export type { WorkletRuntime } from './core';
-export {
-  runOnJS,
-  runOnUI,
-  createWorkletRuntime,
-  runOnRuntime,
-  makeMutable,
-  makeShareableCloneRecursive,
-  isReanimated3,
-  isConfigured,
-  enableLayoutAnimations,
-  getViewProp,
-  executeOnUIRuntimeSync,
-} from './core';
 export type {
-  GestureHandlers,
-  AnimatedRef,
-  DerivedValue,
-  ScrollHandler,
-  ScrollHandlers,
-  ScrollHandlerProcessed,
-  FrameCallback,
-  ScrollEvent,
-  EventHandler,
-  EventHandlerProcessed,
-  UseHandlerContext,
-  ReanimatedEvent,
-} from './hook';
-export {
-  useAnimatedProps,
-  useEvent,
-  useHandler,
-  useWorkletCallback,
-  useSharedValue,
-  useReducedMotion,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  useAnimatedReaction,
-  useAnimatedRef,
-  useAnimatedScrollHandler,
-  useDerivedValue,
-  useAnimatedSensor,
-  useFrameCallback,
-  useAnimatedKeyboard,
-  useScrollViewOffset,
-  useComposedEventHandler,
-} from './hook';
-export type {
+  DecayAnimation,
   DelayAnimation,
   RepeatAnimation,
   SequenceAnimation,
-  StyleLayoutAnimation,
-  WithTimingConfig,
-  TimingAnimation,
-  WithSpringConfig,
   SpringAnimation,
+  StyleLayoutAnimation,
+  TimingAnimation,
   WithDecayConfig,
-  DecayAnimation,
+  WithSpringConfig,
+  WithTimingConfig,
 } from './animation';
 export {
   cancelAnimation,
@@ -77,117 +29,200 @@ export {
   withSpring,
   withTiming,
 } from './animation';
-export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
-export { Extrapolation, interpolate, clamp } from './interpolation';
+export type { ParsedColorArray } from './Colors';
+export { convertToRGBA, isColor, processColor } from './Colors';
 export type {
-  InterpolationOptions,
+  AnimatableValue,
+  AnimatableValueObject,
+  AnimatedKeyboardInfo,
+  AnimatedKeyboardOptions,
+  AnimatedSensor,
+  AnimatedStyle,
+  AnimatedTransform,
+  AnimateStyle,
+  Animation,
+  AnimationCallback,
+  AnimationObject,
+  BaseLayoutAnimationConfig,
+  EasingFunction,
+  EntryAnimationsValues,
+  EntryExitAnimationFunction,
+  ExitAnimationsValues,
+  IEntryExitAnimationBuilder,
+  ILayoutAnimationBuilder,
+  LayoutAnimation,
+  LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
+  LayoutAnimationValues as LayoutAnimationsValues,
+  LayoutAnimationType,
+  MeasuredDimensions,
+  SensorConfig,
+  SharedValue,
+  StyleProps,
+  StylesOrDefault,
+  TransformArrayItem,
+  Value3D,
+  ValueRotation,
+} from './commonTypes';
+export {
+  InterfaceOrientation,
+  IOSReferenceFrame,
+  KeyboardState,
+  ReduceMotion,
+  SensorType,
+} from './commonTypes';
+export type { FlatListPropsWithLayout } from './component/FlatList';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
+export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
+export { PerformanceMonitor } from './component/PerformanceMonitor';
+export { ReducedMotionConfig } from './component/ReducedMotionConfig';
+export type { AnimatedScrollViewProps } from './component/ScrollView';
+export { configureReanimatedLogger } from './ConfigHelper';
+export {
+  createWorkletRuntime,
+  enableLayoutAnimations,
+  executeOnUIRuntimeSync,
+  getViewProp,
+  isConfigured,
+  isReanimated3,
+  makeMutable,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './core';
+export * from './css';
+export type {
+  EasingFactoryFn,
+  EasingFn,
+  EasingFunctionFactory,
+} from './Easing';
+export { Easing } from './Easing';
+export type { FrameInfo } from './frameCallback';
+export type {
+  Adaptable,
+  AdaptTransforms,
+  AnimatedProps,
+  AnimatedStyleProp,
+  AnimateProps,
+  TransformStyleTypes,
+} from './helperTypes';
+export type {
+  AnimatedRef,
+  DerivedValue,
+  EventHandler,
+  EventHandlerProcessed,
+  FrameCallback,
+  GestureHandlers,
+  ReanimatedEvent,
+  ScrollEvent,
+  ScrollHandler,
+  ScrollHandlerProcessed,
+  ScrollHandlers,
+  UseHandlerContext,
+} from './hook';
+export {
+  useAnimatedGestureHandler,
+  useAnimatedKeyboard,
+  useAnimatedProps,
+  useAnimatedReaction,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useAnimatedSensor,
+  useAnimatedStyle,
+  useComposedEventHandler,
+  useDerivedValue,
+  useEvent,
+  useFrameCallback,
+  useHandler,
+  useReducedMotion,
+  useScrollViewOffset,
+  useSharedValue,
+  useWorkletCallback,
+} from './hook';
+export type {
   InterpolateConfig,
-  InterpolateRGB,
   InterpolateHSV,
+  InterpolateRGB,
+  InterpolationOptions,
 } from './interpolateColor';
 export {
+  ColorSpace,
   /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
-  ColorSpace,
   interpolateColor,
   useInterpolateConfig,
 } from './interpolateColor';
-export type {
-  EasingFn,
-  EasingFunctionFactory,
-  EasingFactoryFn,
-} from './Easing';
-export { Easing } from './Easing';
-export type { ComponentCoords } from './platformFunctions';
+export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
+export { clamp, Extrapolation, interpolate } from './interpolation';
+export { isSharedValue } from './isSharedValue';
 export {
-  measure,
-  dispatchCommand,
-  scrollTo,
-  setGestureState,
-  setNativeProps,
-  getRelativeCoords,
-} from './platformFunctions';
-export type { ParsedColorArray } from './Colors';
-export { isColor, processColor, convertToRGBA } from './Colors';
-export { createAnimatedPropAdapter } from './PropAdapters';
+  advanceAnimationByFrame,
+  advanceAnimationByTime,
+  getAnimatedStyle,
+  setUpTests,
+  withReanimatedTimer,
+} from './jestUtils';
 export {
   BaseAnimationBuilder,
-  ComplexAnimationBuilder,
-  Keyframe,
-  // Flip
-  FlipInXUp,
-  FlipInYLeft,
-  FlipInXDown,
-  FlipInYRight,
-  FlipInEasyX,
-  FlipInEasyY,
-  FlipOutXUp,
-  FlipOutYLeft,
-  FlipOutXDown,
-  FlipOutYRight,
-  FlipOutEasyX,
-  FlipOutEasyY,
-  // Stretch
-  StretchInX,
-  StretchInY,
-  StretchOutX,
-  StretchOutY,
-  // Fade
-  FadeIn,
-  FadeInRight,
-  FadeInLeft,
-  FadeInUp,
-  FadeInDown,
-  FadeOut,
-  FadeOutRight,
-  FadeOutLeft,
-  FadeOutUp,
-  FadeOutDown,
-  // Slide
-  SlideInRight,
-  SlideInLeft,
-  SlideOutRight,
-  SlideOutLeft,
-  SlideInUp,
-  SlideInDown,
-  SlideOutUp,
-  SlideOutDown,
-  // Zoom
-  ZoomIn,
-  ZoomInRotate,
-  ZoomInLeft,
-  ZoomInRight,
-  ZoomInUp,
-  ZoomInDown,
-  ZoomInEasyUp,
-  ZoomInEasyDown,
-  ZoomOut,
-  ZoomOutRotate,
-  ZoomOutLeft,
-  ZoomOutRight,
-  ZoomOutUp,
-  ZoomOutDown,
-  ZoomOutEasyUp,
-  ZoomOutEasyDown,
   // Bounce
   BounceIn,
   BounceInDown,
-  BounceInUp,
   BounceInLeft,
   BounceInRight,
+  BounceInUp,
   BounceOut,
   BounceOutDown,
-  BounceOutUp,
   BounceOutLeft,
   BounceOutRight,
+  BounceOutUp,
+  combineTransition,
+  ComplexAnimationBuilder,
+  CurvedTransition,
+  EntryExitTransition,
+  // Fade
+  FadeIn,
+  FadeInDown,
+  FadeInLeft,
+  FadeInRight,
+  FadeInUp,
+  FadeOut,
+  FadeOutDown,
+  FadeOutLeft,
+  FadeOutRight,
+  FadeOutUp,
+  FadingTransition,
+  FlipInEasyX,
+  FlipInEasyY,
+  FlipInXDown,
+  // Flip
+  FlipInXUp,
+  FlipInYLeft,
+  FlipInYRight,
+  FlipOutEasyX,
+  FlipOutEasyY,
+  FlipOutXDown,
+  FlipOutXUp,
+  FlipOutYLeft,
+  FlipOutYRight,
+  JumpingTransition,
+  Keyframe,
+  // Transitions
+  Layout,
+  LightSpeedInLeft,
   // Lightspeed
   LightSpeedInRight,
-  LightSpeedInLeft,
-  LightSpeedOutRight,
   LightSpeedOutLeft,
+  LightSpeedOutRight,
+  LinearTransition,
   // Pinwheel
   PinwheelIn,
   PinwheelOut,
+  // Roll
+  RollInLeft,
+  RollInRight,
+  RollOutLeft,
+  RollOutRight,
   // Rotate
   RotateInDownLeft,
   RotateInDownRight,
@@ -197,98 +232,63 @@ export {
   RotateOutDownRight,
   RotateOutUpLeft,
   RotateOutUpRight,
-  // Roll
-  RollInLeft,
-  RollInRight,
-  RollOutLeft,
-  RollOutRight,
-  // Transitions
-  Layout,
-  LinearTransition,
-  FadingTransition,
   SequencedTransition,
-  JumpingTransition,
-  CurvedTransition,
-  EntryExitTransition,
-  combineTransition,
-  // SET
-  SharedTransition,
+  SlideInDown,
+  SlideInLeft,
+  // Slide
+  SlideInRight,
+  SlideInUp,
+  SlideOutDown,
+  SlideOutLeft,
+  SlideOutRight,
+  SlideOutUp,
+  // Stretch
+  StretchInX,
+  StretchInY,
+  StretchOutX,
+  StretchOutY,
+  // Zoom
+  ZoomIn,
+  ZoomInDown,
+  ZoomInEasyDown,
+  ZoomInEasyUp,
+  ZoomInLeft,
+  ZoomInRight,
+  ZoomInRotate,
+  ZoomInUp,
+  ZoomOut,
+  ZoomOutDown,
+  ZoomOutEasyDown,
+  ZoomOutEasyUp,
+  ZoomOutLeft,
+  ZoomOutRight,
+  ZoomOutRotate,
+  ZoomOutUp,
 } from './layoutReanimation';
-export { isSharedValue } from './isSharedValue';
-export type {
-  StyleProps,
-  SharedValue,
-  AnimatableValueObject,
-  AnimatableValue,
-  AnimationObject,
-  SensorConfig,
-  Animation,
-  AnimatedSensor,
-  AnimationCallback,
-  Value3D,
-  ValueRotation,
-  AnimatedKeyboardInfo,
-  AnimatedKeyboardOptions,
-  MeasuredDimensions,
-  EasingFunction,
-  AnimatedTransform,
-  TransformArrayItem,
-  AnimateStyle,
-  AnimatedStyle,
-  StylesOrDefault,
-  LayoutAnimation,
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  EntryExitAnimationFunction,
-  LayoutAnimationsValues,
-  LayoutAnimationFunction,
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-  ILayoutAnimationBuilder,
-  IEntryExitAnimationBuilder,
-  BaseLayoutAnimationConfig,
-} from './commonTypes';
-export {
-  SensorType,
-  IOSReferenceFrame,
-  InterfaceOrientation,
-  KeyboardState,
-  ReduceMotion,
-  isWorkletFunction,
-  SharedTransitionType,
-} from './commonTypes';
-export type { FrameInfo } from './frameCallback';
-export { getUseOfValueInStyleWarning } from './pluginUtils';
-export {
-  withReanimatedTimer,
-  advanceAnimationByTime,
-  advanceAnimationByFrame,
-  setUpTests,
-  getAnimatedStyle,
-} from './jestUtils';
-export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
-export { PerformanceMonitor } from './component/PerformanceMonitor';
-export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
-export { ReducedMotionConfig } from './component/ReducedMotionConfig';
-export type {
-  Adaptable,
-  AdaptTransforms,
-  AnimateProps,
-  AnimatedProps,
-  TransformStyleTypes,
-  AnimatedStyleProp,
-} from './helperTypes';
-export type { AnimatedScrollViewProps } from './component/ScrollView';
-export type { FlatListPropsWithLayout } from './component/FlatList';
 export { startMapper, stopMapper } from './mappers';
+export type { ComponentCoords } from './platformFunctions';
 export {
-  startScreenTransition,
-  finishScreenTransition,
-  ScreenTransition,
-} from './screenTransition';
+  dispatchCommand,
+  getRelativeCoords,
+  measure,
+  scrollTo,
+  setGestureState,
+  setNativeProps,
+} from './platformFunctions';
+export { getUseOfValueInStyleWarning } from './pluginUtils';
+export { createAnimatedPropAdapter } from './PropAdapters';
 export type {
   AnimatedScreenTransition,
   GoBackGesture,
   ScreenTransitionConfig,
 } from './screenTransition';
+export {
+  finishScreenTransition,
+  ScreenTransition,
+  startScreenTransition,
+} from './screenTransition';
+export type { WorkletRuntime } from 'react-native-worklets';
+export {
+  isWorkletFunction,
+  LogLevel as ReanimatedLogLevel,
+} from 'react-native-worklets';

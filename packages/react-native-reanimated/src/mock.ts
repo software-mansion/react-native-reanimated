@@ -1,37 +1,37 @@
 /* eslint-disable n/no-callback-literal */
 'use strict';
 
+import {
+  Animated as AnimatedRN,
+  Image as ImageRN,
+  processColor as processColorRN,
+  Text as TextRN,
+  View as ViewRN,
+} from 'react-native';
+
 import type {
-  WithSpringConfig,
-  WithTimingConfig,
-  WithDecayConfig,
   AnimatableValue,
   AnimationCallback,
   EventHandler,
   EventHandlerProcessed,
+  WithDecayConfig,
+  WithSpringConfig,
+  WithTimingConfig,
 } from './index';
 import {
-  IOSReferenceFrame,
+  advanceAnimationByFrame,
+  advanceAnimationByTime,
+  ColorSpace,
+  Extrapolation,
+  getAnimatedStyle,
   InterfaceOrientation,
+  IOSReferenceFrame,
   KeyboardState,
   ReduceMotion,
   SensorType,
-  ColorSpace,
-  Extrapolation,
-  SharedTransitionType,
-  withReanimatedTimer,
-  advanceAnimationByTime,
-  advanceAnimationByFrame,
   setUpTests,
-  getAnimatedStyle,
+  withReanimatedTimer,
 } from './index';
-import {
-  View as ViewRN,
-  Text as TextRN,
-  Image as ImageRN,
-  Animated as AnimatedRN,
-  processColor as processColorRN,
-} from 'react-native';
 
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
@@ -320,7 +320,7 @@ const core = {
 const layoutReanimation = {
   BaseAnimationBuilder: new BaseAnimationMock(),
   ComplexAnimationBuilder: new BaseAnimationMock(),
-  Keyframe: new BaseAnimationMock(),
+  Keyframe: BaseAnimationMock,
   // Flip
   FlipInXUp: new BaseAnimationMock(),
   FlipInYLeft: new BaseAnimationMock(),
@@ -417,10 +417,6 @@ const layoutReanimation = {
   JumpingTransition: new BaseAnimationMock(),
   CurvedTransition: new BaseAnimationMock(),
   EntryExitTransition: new BaseAnimationMock(),
-  // combineTransitions: ADD ME IF NEEDED
-  // SET
-  // SharedTransition: ADD ME IF NEEDED
-  SharedTransitionType,
 };
 
 const isSharedValue = {

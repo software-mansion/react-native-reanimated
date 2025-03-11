@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
-import { View, ScrollView, FlatList } from 'react-native';
+import { FlatList, ScrollView, View } from 'react-native';
+
 import Animated from '../..';
 
 function AnimatedComponentPropsTest() {
@@ -61,16 +62,12 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.Image
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         source={{ uri: undefined }}
       />
@@ -78,24 +75,18 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.ScrollView
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.FlatList
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         data={[]}
         renderItem={() => null}
@@ -104,8 +95,6 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
     </>

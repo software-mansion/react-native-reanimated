@@ -1,5 +1,24 @@
 'use strict';
 
+import { logger } from 'react-native-worklets';
+
+import { LayoutAnimationType } from '../../commonTypes';
+import type {
+  AnimatedComponentProps,
+  LayoutAnimationStaticContext,
+} from '../../createAnimatedComponent/commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { Keyframe } from '../animationBuilder';
+import type { TransitionData } from './animationParser';
+import { makeElementVisible } from './componentStyle';
+import {
+  getProcessedConfig,
+  handleExitingAnimation,
+  handleLayoutTransition,
+  maybeModifyStyleForKeyframe,
+  setElementAnimation,
+} from './componentUtils';
 import type {
   AnimationConfig,
   AnimationNames,
@@ -8,29 +27,11 @@ import type {
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
-import type {
-  AnimatedComponentProps,
-  LayoutAnimationStaticContext,
-} from '../../createAnimatedComponent/commonTypes';
 import {
   createAnimationWithInitialValues,
   createCustomKeyFrameAnimation,
 } from './createAnimation';
-import {
-  getProcessedConfig,
-  handleExitingAnimation,
-  handleLayoutTransition,
-  maybeModifyStyleForKeyframe,
-  setElementAnimation,
-} from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
-import type { TransitionData } from './animationParser';
-import { Keyframe } from '../animationBuilder';
-import { makeElementVisible } from './componentStyle';
-import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
-import { LayoutAnimationType } from '../../commonTypes';
-import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -233,9 +234,11 @@ export function tryActivateLayoutTransition<
     ?.presetName;
   const exitingAnimation = (props.layout as CustomConfig).exitingV?.presetName;
 
+  const deltaX = (snapshot.width - rect.width) / 2;
+  const deltaY = (snapshot.height - rect.height) / 2;
   const transitionData: TransitionData = {
-    translateX: snapshot.x - rect.x,
-    translateY: snapshot.y - rect.y,
+    translateX: snapshot.x - rect.x + deltaX,
+    translateY: snapshot.y - rect.y + deltaY,
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false

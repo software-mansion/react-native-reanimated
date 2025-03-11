@@ -3,7 +3,6 @@
 
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
-import { isFabric } from '../PlatformChecker';
 
 type HostInstanceFabric = {
   __internalInstanceHandle?: Record<string, unknown>;
@@ -43,26 +42,15 @@ function resolveFindHostInstance_DEPRECATED() {
   if (findHostInstance_DEPRECATED !== undefined) {
     return;
   }
-  if (isFabric()) {
-    try {
-      const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
-      // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
-      // access it first, then fallback on named export
-      findHostInstance_DEPRECATED =
-        ReactFabric?.default?.findHostInstance_DEPRECATED ??
-        ReactFabric?.findHostInstance_DEPRECATED;
-    } catch (e) {
-      throw new ReanimatedError(
-        'Failed to resolve findHostInstance_DEPRECATED'
-      );
-    }
-  } else {
-    const ReactNative = require('react-native/Libraries/Renderer/shims/ReactNative');
+  try {
+    const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
     // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
     // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
-      ReactNative?.default?.findHostInstance_DEPRECATED ??
-      ReactNative?.findHostInstance_DEPRECATED;
+      ReactFabric?.default?.findHostInstance_DEPRECATED ??
+      ReactFabric?.findHostInstance_DEPRECATED;
+  } catch (e) {
+    throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }
 
@@ -79,10 +67,15 @@ export function findHostInstance(
   }
 
   resolveFindHostInstance_DEPRECATED();
-  // Fabric implementation of findHostInstance_DEPRECATED doesn't accept a ref as an argument
+  /*
+    The Fabric implementation of `findHostInstance_DEPRECATED` requires a React ref as an argument
+    rather than a native ref. If a component implements the `getAnimatableRef` method, it must use 
+    the ref provided by this method. It is the component's responsibility to ensure that this is 
+    a valid React ref.
+  */
   return findHostInstance_DEPRECATED(
-    isFabric()
-      ? component
-      : (component as IAnimatedComponentInternal)._componentRef
+    (component as IAnimatedComponentInternal)._hasAnimatedRef
+      ? (component as IAnimatedComponentInternal)._componentRef
+      : component
   );
 }

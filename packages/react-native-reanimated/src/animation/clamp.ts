@@ -1,18 +1,19 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
+import type {
+  AnimatableValue,
+  Animation,
+  AnimationObject,
+  ReduceMotion,
+  Timestamp,
+} from '../commonTypes';
+import type { ClampAnimation } from './commonTypes';
 import {
   defineAnimation,
   getReduceMotionForAnimation,
   recognizePrefixSuffix,
 } from './util';
-import type {
-  Animation,
-  Timestamp,
-  AnimatableValue,
-  AnimationObject,
-  ReduceMotion,
-} from '../commonTypes';
-import type { ClampAnimation } from './commonTypes';
-import { logger } from '../logger';
 
 type withClampType = <T extends number | string>(
   config: {

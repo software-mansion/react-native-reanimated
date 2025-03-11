@@ -1,11 +1,47 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <ranges>
 #include <utility>
 
 namespace reanimated {
+
+Props::Shared mergeProps(
+    const ShadowNode &shadowNode,
+    const PropsMap &propsMap,
+    const ShadowNodeFamily &family) {
+  ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
+
+  const auto it = propsMap.find(&family);
+
+  if (it == propsMap.end()) {
+    return ShadowNodeFragment::propsPlaceholder();
+  }
+
+  PropsParserContext propsParserContext{
+      shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+  const auto &propsVector = it->second;
+  auto newProps = shadowNode.getProps();
+
+#ifdef ANDROID
+  if (propsVector.size() > 1) {
+    folly::dynamic newPropsDynamic = folly::dynamic::object;
+    for (const auto &props : propsVector) {
+      newPropsDynamic = folly::dynamic::merge(
+          props.operator folly::dynamic(), newPropsDynamic);
+    }
+    return shadowNode.getComponentDescriptor().cloneProps(
+        propsParserContext, newProps, RawProps(newPropsDynamic));
+  }
+#endif
+
+  for (const auto &props : propsVector) {
+    newProps = shadowNode.getComponentDescriptor().cloneProps(
+        propsParserContext, newProps, RawProps(props));
+  }
+
+  return newProps;
+}
 
 ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     const ShadowNode &shadowNode,
@@ -13,7 +49,6 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     const PropsMap &propsMap) {
   const auto family = &shadowNode.getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
-  const auto propsIt = propsMap.find(family);
   auto children = shadowNode.getChildren();
 
   if (affectedChildrenIt != childrenMap.end()) {
@@ -23,44 +58,42 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     }
   }
 
-  Props::Shared newProps = nullptr;
-
-  if (propsIt != propsMap.end()) {
-    PropsParserContext propsParserContext{
-        shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
-    newProps = shadowNode.getProps();
-    for (const auto &props : propsIt->second) {
-      newProps = shadowNode.getComponentDescriptor().cloneProps(
-          propsParserContext, newProps, RawProps(props));
-    }
-  }
-
-  const auto result = shadowNode.clone(
-      {newProps ? newProps : ShadowNodeFragment::propsPlaceholder(),
+  return shadowNode.clone(
+      {mergeProps(shadowNode, propsMap, *family),
        std::make_shared<ShadowNode::ListOfShared>(children),
        shadowNode.getState()});
-
-  return result;
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap) {
+    const PropsMap &propsMap,
+    std::vector<Tag> &tagsToRemove) {
+  ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
+
   ChildrenMap childrenMap;
 
-  for (auto &[family, _] : propsMap) {
-    const auto ancestors = family->getAncestors(oldRootNode);
+  {
+    ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
 
-    for (const auto &[parentNode, index] :
-         std::ranges::reverse_view(ancestors)) {
-      const auto parentFamily = &parentNode.get().getFamily();
-      auto &affectedChildren = childrenMap[parentFamily];
-
-      if (affectedChildren.contains(index)) {
-        continue;
+    for (auto &[family, _] : propsMap) {
+      const auto ancestors = family->getAncestors(oldRootNode);
+      if (ancestors.empty()) {
+        // no ancestors means that there is no shadowNode from
+        // this family in the ShadowTree - we can safely cleanup the registry
+        tagsToRemove.push_back(family->getTag());
       }
 
-      affectedChildren.insert(index);
+      for (const auto &[parentNode, index] :
+           std::ranges::reverse_view(ancestors)) {
+        const auto parentFamily = &parentNode.get().getFamily();
+        auto &affectedChildren = childrenMap[parentFamily];
+
+        if (affectedChildren.contains(index)) {
+          continue;
+        }
+
+        affectedChildren.insert(index);
+      }
     }
   }
 
@@ -71,5 +104,3 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 }
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

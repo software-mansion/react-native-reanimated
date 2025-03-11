@@ -12024,10 +12024,15 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.15.0-nightly-20240722-a15e0edec:
-  version "3.15.0-nightly-20240722-a15e0edec"
-  resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.15.0-nightly-20240722-a15e0edec.tgz#015086fc2be672da4ceb8999ba58687918b09592"
-  integrity sha512-jAeN0/Q/GSG7gPLeKHe2Yk7XCx718L+42SXHSfT0dgcXrIzKENq3Pfn9rj9j2B7XVA8YPOAkUmQ6telB9WDHOA==
+react-native-is-edge-to-edge@1.1.6:
+  version "1.1.6"
+  resolved "https://registry.npmjs.org/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.6.tgz#69ec13f70d76e9245e275eed4140d0873a78f902"
+  integrity sha512-1pHnFTlBahins6UAajXUqeCOHew9l9C2C8tErnpGC3IyLJzvxD+TpYAixnCbrVS52f7+NvMttbiSI290XfwN0w==
+
+react-native-reanimated@4.0.0-nightly-20250224-c288e54a2:
+  version "4.0.0-nightly-20250224-c288e54a2"
+  resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-4.0.0-nightly-20250224-c288e54a2.tgz#2d81f8acc6b8831ab37c6b8a833db1ae16e6bf90"
+  integrity sha512-v+i4vBNfITF2fcpAFp731w59cBsLZsZJ3+6QwPPoevVl6BySbEyctn7BU/XSrXuNnPK0rWiYYQ+U8LUsZMSoBQ==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"
@@ -12040,6 +12045,7 @@ react-native-reanimated@^3.15.0-nightly-20240722-a15e0edec:
     "@babel/preset-typescript" "^7.16.7"
     convert-source-map "^2.0.0"
     invariant "^2.2.4"
+    react-native-is-edge-to-edge "1.1.6"
 
 react-native-svg@15.4.0:
   version "15.4.0"
@@ -12879,9 +12885,9 @@ serialize-error@^2.1.0:
   integrity sha512-ghgmKt5o4Tly5yEG/UJp8qTd0AN7Xalw4XBtDEKP655B699qMEtra1WlXeE6WIvdEG481JvRxULKsInq/iNysw==
 
 serialize-javascript@^6.0.0, serialize-javascript@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-6.0.1.tgz#b206efb27c3da0b0ab6b52f48d170b7996458e5c"
-  integrity sha512-owoXEFjWRllis8/M1Q+Cw5k8ZH40e3zhp/ovX+Xr/vi1qj6QesbyXXViFbpNvWvPNAD62SutwEXavefrLJWj7w==
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-6.0.2.tgz#defa1e055c83bf6d59ea805d8da862254eb6a6c2"
+  integrity sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==
   dependencies:
     randombytes "^2.1.0"
 

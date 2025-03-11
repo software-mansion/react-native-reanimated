@@ -1,5 +1,6 @@
 'use strict';
-import type { WorkletFunction } from '../commonTypes';
+import type { WorkletFunction } from 'react-native-worklets';
+
 import { ReanimatedError } from '../errors';
 import type { DependencyList } from './commonTypes';
 

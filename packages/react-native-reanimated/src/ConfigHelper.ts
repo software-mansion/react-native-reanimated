@@ -1,10 +1,11 @@
 'use strict';
-import { PropsAllowlists } from './propsAllowlists';
+import type { LoggerConfig } from 'react-native-worklets';
+import { updateLoggerConfig } from 'react-native-worklets';
+
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { updateLoggerConfig } from './logger';
-import type { LoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { PropsAllowlists } from './propsAllowlists';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
