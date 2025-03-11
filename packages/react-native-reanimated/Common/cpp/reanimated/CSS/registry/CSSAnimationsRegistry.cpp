@@ -64,9 +64,17 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
 void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   std::lock_guard<std::mutex> lock{mutex_};
 
+  LOG(INFO) << "Removing batch of tags: " << folly::join(", ", tagsToRemove);
+
   for (const auto &viewTag : tagsToRemove) {
     handleRemove(viewTag);
   }
+
+  std::vector<Tag> remainingTags;
+  for (const auto &pair : registry_) {
+    remainingTags.push_back(pair.first);
+  }
+  LOG(INFO) << "Remaining tags: " << folly::join(", ", remainingTags);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {

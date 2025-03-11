@@ -49,6 +49,7 @@ PropsMap UpdatesRegistryManager::collectProps() {
 }
 
 void UpdatesRegistryManager::removeBatch(const std::vector<Tag> &tags) {
+  LOG(INFO) << "Removing batch of tags: " << folly::join(", ", tags);
   for (auto &registry : registries_) {
     registry->removeBatch(tags);
   }

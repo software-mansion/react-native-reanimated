@@ -1,14 +1,4 @@
-#include <reanimated/Fabric/ReanimatedCommitHook.h>
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#include <reanimated/Tools/ReanimatedSystraceSection.h>
-
-#include <react/renderer/core/ComponentDescriptor.h>
-
-#include <unordered_map>
-#include <vector>
-
-using namespace facebook::react;
+#include <reanimated/Fabric/hooks/ReanimatedCommitHook.h>
 
 namespace reanimated {
 

@@ -7,6 +7,7 @@ import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
+  unregisterCSSKeyframes,
 } from '../../platform/native/native';
 import type { CSSAnimationProperties } from '../../types';
 import type { ProcessedAnimation } from '../CSSAnimationsManager';
@@ -148,8 +149,8 @@ describe('CSSAnimationsManager', () => {
       });
     });
 
-    describe('detach', () => {
-      it('detaches all animations attached to the view', () => {
+    describe('unmountCleanup', () => {
+      it('removes only animation keyframes from the keyframes registry', () => {
         const attachedAnimations: ProcessedAnimation[] = [
           {
             keyframesRule: new CSSKeyframesRuleImpl({
@@ -169,14 +170,24 @@ describe('CSSAnimationsManager', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (manager as any).attachedAnimations = attachedAnimations;
 
-        manager.detach();
+        manager.unmountCleanup();
 
-        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimations).toHaveBeenCalledWith(viewTag);
+        expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(2);
+        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
+          1,
+          attachedAnimations[0].keyframesRule.name
+        );
+        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
+          2,
+          attachedAnimations[1].keyframesRule.name
+        );
 
+        // Animations should be still attached because call to unmountCleanup
+        // doesn't necessarily mean that the component will be removed.
+        // We handle this animations cleanup in the CPP implementation.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((manager as any).attachedAnimations).toEqual([]);
-
+        expect((manager as any).attachedAnimations).toEqual(attachedAnimations);
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(applyCSSAnimations).not.toHaveBeenCalled();
       });
     });

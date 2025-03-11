@@ -446,12 +446,6 @@ void ReanimatedModuleProxy::setViewStyle(
   }
 }
 
-void ReanimatedModuleProxy::removeViewStyle(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
-}
-
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,

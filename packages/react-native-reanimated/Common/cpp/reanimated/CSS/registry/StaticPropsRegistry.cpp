@@ -34,9 +34,16 @@ void StaticPropsRegistry::remove(const Tag viewTag) {
 }
 
 void StaticPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
+  LOG(INFO) << "Removing batch of tags: " << folly::join(", ", tagsToRemove);
   for (const auto &tag : tagsToRemove) {
     registry_.erase(tag);
   }
+
+  std::vector<Tag> remainingTags;
+  for (const auto &pair : registry_) {
+    remainingTags.push_back(pair.first);
+  }
+  LOG(INFO) << "Remaining tags: " << folly::join(", ", remainingTags) << "\n\n";
 }
 
 bool StaticPropsRegistry::isEmpty() const {

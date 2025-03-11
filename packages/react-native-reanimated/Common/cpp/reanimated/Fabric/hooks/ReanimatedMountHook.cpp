@@ -1,6 +1,4 @@
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ReanimatedMountHook.h>
-#include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <reanimated/Fabric/hooks/ReanimatedMountHook.h>
 
 namespace reanimated {
 

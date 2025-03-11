@@ -3,10 +3,14 @@
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
+
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 using namespace facebook;

@@ -116,7 +116,6 @@ class ReanimatedModuleProxy
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &viewStyle) override;
-  void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,

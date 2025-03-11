@@ -1,11 +1,17 @@
 #pragma once
 
-#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
-
+#include <react/renderer/core/ComponentDescriptor.h>
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include <reanimated/Fabric/ShadowTree/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
+
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 using namespace facebook::react;
 

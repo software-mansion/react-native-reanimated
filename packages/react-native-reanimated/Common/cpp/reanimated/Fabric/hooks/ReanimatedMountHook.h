@@ -1,9 +1,11 @@
 #pragma once
 
+#include <react/renderer/uimanager/UIManagerMountHook.h>
+
+#include <reanimated/Fabric/ShadowTree/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-
-#include <react/renderer/uimanager/UIManagerMountHook.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
 
