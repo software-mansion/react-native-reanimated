@@ -76,9 +76,6 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 
     for (auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);
-      if (ancestors.empty()) {
-        // TODO
-      }
 
       for (const auto &[parentNode, index] :
            std::ranges::reverse_view(ancestors)) {

@@ -46,12 +46,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-#ifdef ANDROID
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-#else
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-#endif
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
@@ -449,10 +445,9 @@ void ReanimatedModuleProxy::setViewStyle(
 void ReanimatedModuleProxy::maybeRemoveFromRegistries(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
-  // TODO
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
   LOG(INFO) << "maybeRemoveFromRegistries: " << shadowNode->getTag();
+  updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(

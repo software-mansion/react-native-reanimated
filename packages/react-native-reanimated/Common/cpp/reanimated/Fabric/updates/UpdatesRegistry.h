@@ -34,9 +34,9 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
-  folly::dynamic get(Tag tag) const;
-
   virtual bool isEmpty() const;
+  folly::dynamic get(Tag tag) const;
+  virtual void remove(Tag tag) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;

@@ -5,6 +5,11 @@ namespace reanimated {
 bool CSSAnimationsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
+  std::stringstream ss;
+  for (const auto &pair : registry_) {
+    ss << pair.first << ", ";
+  }
+  LOG(INFO) << "CSSAnimationsRegistry remaining tags: " << ss.str();
   return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
@@ -27,7 +32,7 @@ void CSSAnimationsRegistry::apply(
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-//    handleRemove(viewTag);
+    //    handleRemove(viewTag);
     return;
   }
 
@@ -57,6 +62,7 @@ void CSSAnimationsRegistry::apply(
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
+  LOG(INFO) << "CSSAnimationsRegistry::remove " << viewTag;
 
   removeViewAnimations(viewTag);
   removeFromUpdatesRegistry(viewTag);

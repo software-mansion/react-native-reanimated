@@ -28,8 +28,8 @@ class CSSTransitionsRegistry
   bool hasUpdates() const;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
-  void remove(Tag viewTag);
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void remove(Tag viewTag) override;
 
   void update(double timestamp);
 

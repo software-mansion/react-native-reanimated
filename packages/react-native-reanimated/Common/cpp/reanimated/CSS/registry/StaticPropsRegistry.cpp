@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <sstream>
 
 namespace reanimated {
 
@@ -30,10 +31,16 @@ bool StaticPropsRegistry::has(const Tag viewTag) const {
 }
 
 void StaticPropsRegistry::remove(const Tag viewTag) {
+  LOG(INFO) << "StaticPropsRegistry::remove " << viewTag;
   registry_.erase(viewTag);
 }
 
 bool StaticPropsRegistry::isEmpty() const {
+  std::stringstream ss;
+  for (const auto &pair : registry_) {
+    ss << pair.first << ", ";
+  }
+  LOG(INFO) << "StaticPropsRegistry remaining tags: " << ss.str();
   return registry_.empty();
 }
 

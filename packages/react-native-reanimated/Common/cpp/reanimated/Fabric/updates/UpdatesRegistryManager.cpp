@@ -2,7 +2,9 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager() = default;
+UpdatesRegistryManager::UpdatesRegistryManager(
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
   return std::lock_guard<std::mutex>{mutex_};
@@ -40,6 +42,33 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
+void UpdatesRegistryManager::markNodeAsRemovable(
+    const ShadowNode::Shared &shadowNode) {
+  removableShadowNodes_.emplace_back(shadowNode);
+}
+
+void UpdatesRegistryManager::handleNodeRemovals(
+    const RootShadowNode &rootShadowNode) {
+  const auto nodesCopy = removableShadowNodes_;
+  for (const auto &shadowNode : nodesCopy) {
+    const auto &family = shadowNode->getFamily();
+    const auto &ancestors = family.getAncestors(rootShadowNode);
+
+    // Skip if the node hasn't been removed
+    if (!ancestors.empty()) {
+      continue;
+    }
+
+    const auto tag = shadowNode->getTag();
+    for (auto &registry : registries_) {
+      registry->remove(tag);
+    }
+    staticPropsRegistry_->remove(tag);
+  }
+
+  removableShadowNodes_.clear();
+}
+
 PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
   for (auto &registry : registries_) {
@@ -49,10 +78,6 @@ PropsMap UpdatesRegistryManager::collectProps() {
 }
 
 #ifdef ANDROID
-
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
 
 bool UpdatesRegistryManager::hasPropsToRevert() {
   for (auto &registry : registries_) {

@@ -11,6 +11,11 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 bool CSSTransitionsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
+  std::stringstream ss;
+  for (const auto &pair : registry_) {
+    ss << pair.first << ", ";
+  }
+  LOG(INFO) << "CSSTransitionsRegistry remaining tags: " << ss.str();
   return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
@@ -32,6 +37,8 @@ void CSSTransitionsRegistry::add(
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
+
+  LOG(INFO) << "CSSTransitionsRegistry::remove " << viewTag;
 
   removeFromUpdatesRegistry(viewTag);
   staticPropsRegistry_->removeObserver(viewTag);

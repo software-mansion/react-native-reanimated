@@ -37,7 +37,7 @@ class CSSAnimationsRegistry
       const CSSAnimationsMap &newAnimations,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
-  void remove(Tag viewTag);
+  void remove(Tag viewTag) override;
 
   void update(double timestamp);
 

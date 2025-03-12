@@ -27,4 +27,9 @@ SurfaceId AnimatedPropsRegistry::update(
   return surfaceId;
 }
 
+void AnimatedPropsRegistry::remove(const Tag tag) {
+  LOG(INFO) << "AnimatedPropsRegistry::remove " << tag;
+  updatesRegistry_.erase(tag);
+}
+
 } // namespace reanimated
