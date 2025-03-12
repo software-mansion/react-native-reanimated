@@ -21,6 +21,10 @@ using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 using RegistryMap =
     std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
+using ValidNodeCallback = std::function<void(
+    const ShadowNodeFamily *family,
+    const ShadowNodeFamily::AncestorList &ancestors)>;
+
 #ifdef ANDROID
 struct PropsToRevert {
   ShadowNode::Shared shadowNode;
@@ -38,6 +42,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
 
   folly::dynamic get(Tag tag) const;
+  virtual void remove(const Tag tag) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -46,7 +51,6 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  virtual void remove(const Tag tag) = 0;
 
  protected:
   mutable std::mutex mutex_;

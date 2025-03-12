@@ -62,18 +62,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    // unmountCleanup is called from componentWillUnmount, which may not
-    // necessarily mean that the component will be removed from the ShadowTree.
-    // This callback is also called when the component is freezed but not removed.
-    // Because of that, we clean up animations attached to the node when the node
-    // is removed from the ShadowTree.
-    //
-    // In this cleanup function we only remove animation keyframes from the keyframes
-    // registry because they cannot be cleaned up in the CPP code. Cleaning them up
-    // is safe, because all already created animations store a shared pointer to the
-    // keyframes object used by the animation. Keyframes will be added back to the
-    // CPP keyframes registry when the animation is attached again if they were
-    // removed from the registry.
+    // Unregister keyframes usage by the view (it is necessary to clean up
+    // keyframes from the CPP registry once all views that use them are unmounted)
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
       CSSAnimationsManager.animationKeyframesRegistry.remove(
         name,

@@ -71,12 +71,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
 
     for (auto &[family, _] : propsMap) {
-      const auto ancestors = family->getAncestors(oldRootNode);
-      if (ancestors.empty()) {
-        // no ancestors means that there is no shadowNode from
-        // this family in the ShadowTree - we can safely cleanup the registry
-        // TODO: implement this properly
-      }
+      const auto &ancestors = family->getAncestors(oldRootNode);
 
       for (const auto &[parentNode, index] :
            std::ranges::reverse_view(ancestors)) {

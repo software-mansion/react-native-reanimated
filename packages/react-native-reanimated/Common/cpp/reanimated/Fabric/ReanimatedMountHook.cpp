@@ -34,11 +34,16 @@ void ReanimatedMountHook::shadowTreeDidMount(
     return;
   }
 
-  // When commit from React Native has finished, we reset the skip commit flag
-  // in order to allow Reanimated to commit its tree
-  updatesRegistryManager_->unpauseReanimatedCommits();
-  if (updatesRegistryManager_->shouldCommitAfterPause()) {
-    requestFlush_();
+  {
+    // updatesRegistryManager_->lock();
+    // updatesRegistryManager_->applyRemovals(*rootShadowNode);
+
+    // When commit from React Native has finished, we reset the skip commit flag
+    // in order to allow Reanimated to commit its tree
+    updatesRegistryManager_->unpauseReanimatedCommits();
+    if (updatesRegistryManager_->shouldCommitAfterPause()) {
+      requestFlush_();
+    }
   }
 }
 

@@ -3,7 +3,7 @@ import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import {
-  removeViewStyle,
+  markNodeAsRemovable,
   setViewStyle,
   styleBuilder,
 } from '../platform/native';
@@ -14,6 +14,7 @@ import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager implements ICSSManager {
   private readonly viewTag: number;
+  private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
 
@@ -24,6 +25,8 @@ export default class CSSManager implements ICSSManager {
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewTag = tag;
+    this.shadowNodeWrapper = wrapper;
+
     this.cssAnimationsManager = new CSSAnimationsManager(wrapper, tag);
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
 
@@ -33,6 +36,7 @@ export default class CSSManager implements ICSSManager {
   }
 
   update(style: CSSStyle): void {
+    this.isMounted = true;
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
     const normalizedStyle = styleBuilder.buildFrom(filteredStyle);
@@ -59,6 +63,6 @@ export default class CSSManager implements ICSSManager {
     this.isMounted = false;
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
-    removeViewStyle(this.viewTag);
+    markNodeAsRemovable(this.shadowNodeWrapper);
   }
 }

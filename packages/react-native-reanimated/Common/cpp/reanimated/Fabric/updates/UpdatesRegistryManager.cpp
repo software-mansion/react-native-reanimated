@@ -2,7 +2,9 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager() = default;
+UpdatesRegistryManager::UpdatesRegistryManager(
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
@@ -13,7 +15,7 @@ void UpdatesRegistryManager::addRegistry(
   if (!registry) {
     throw std::invalid_argument("[Reanimated] Registry cannot be null");
   }
-  registries_.push_back(registry);
+  updatesRegistries_.emplace_back(registry);
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
@@ -40,9 +42,33 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
+void UpdatesRegistryManager::markAsRemovable(
+    const ShadowNode::Shared &shadowNode) {
+  removableNodes_.emplace_back(shadowNode);
+}
+
+void UpdatesRegistryManager::applyRemovals(const RootShadowNode &oldRootNode) {
+  for (const auto &node : removableNodes_) {
+    const auto &family = node->getFamily();
+    const auto &ancestors = family.getAncestors(oldRootNode);
+
+    if (!ancestors.empty()) {
+      continue;
+    }
+
+    const auto tag = node->getTag();
+    for (auto &registry : updatesRegistries_) {
+      registry->remove(tag);
+    }
+    staticPropsRegistry_->remove(tag);
+  }
+
+  removableNodes_.clear();
+}
+
 PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
-  for (auto &registry : registries_) {
+  for (auto &registry : updatesRegistries_) {
     registry->collectProps(propsMap);
   }
   return propsMap;
@@ -50,12 +76,8 @@ PropsMap UpdatesRegistryManager::collectProps() {
 
 #ifdef ANDROID
 
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
-
 bool UpdatesRegistryManager::hasPropsToRevert() {
-  for (auto &registry : registries_) {
+  for (auto &registry : updatesRegistries_) {
     if (registry->hasPropsToRevert()) {
       return true;
     }
@@ -81,7 +103,7 @@ void UpdatesRegistryManager::addToPropsMap(
 
 void UpdatesRegistryManager::collectPropsToRevertBySurface(
     std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
-  for (const auto &registry : registries_) {
+  for (const auto &registry : updatesRegistries_) {
     registry->collectPropsToRevert(propsToRevertMap_);
   }
 

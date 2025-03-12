@@ -46,12 +46,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-#ifdef ANDROID
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-#else
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-#endif
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
@@ -446,16 +442,20 @@ void ReanimatedModuleProxy::setViewStyle(
   }
 }
 
-void ReanimatedModuleProxy::removeViewStyle(
+void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
+    const jsi::Value &shadowNodeWrapper) {
+  return;
+  auto lock = updatesRegistryManager_->lock();
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  updatesRegistryManager_->markAsRemovable(shadowNode);
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
+  return;
   cssAnimationKeyframesRegistry_->add(
       animationName.asString(rt).utf8(rt),
       parseCSSAnimationKeyframesConfig(
@@ -472,6 +472,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
+  return;
   auto lock = cssAnimationsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
@@ -515,6 +516,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
+  return;
   auto lock = cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
@@ -523,6 +525,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
+  return;
   auto lock = cssTransitionsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
@@ -539,6 +542,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
+  return;
   auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->updateSettings(
       viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
@@ -548,6 +552,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
+  return;
   auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
@@ -696,7 +701,6 @@ void ReanimatedModuleProxy::performOperations() {
       currentCssTimestamp_ = getAnimationTimestamp_();
 
       // Update CSS transitions and flush updates
-      auto lock = cssTransitionsRegistry_->lock();
       cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(updatesBatch, false);
     }
@@ -706,7 +710,6 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
-      auto lock = cssAnimationsRegistry_->lock();
       cssAnimationsRegistry_->update(currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
     }
@@ -821,11 +824,6 @@ void ReanimatedModuleProxy::commitUpdates(
       }
 #endif
     });
-
-    // Clear the entire cache after the commit
-    // (we don't know if the view is updated from outside of Reanimated
-    // so we have to clear the entire cache)
-    viewStylesRepository_->clearNodesCache();
   }
 }
 

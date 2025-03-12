@@ -131,13 +131,13 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setViewStyle)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(removeViewStyle)(
+static jsi::Value REANIMATED_SPEC_PREFIX(markNodeAsRemovable)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->removeViewStyle(rt, std::move(args[0]));
+      ->markNodeAsRemovable(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -241,8 +241,9 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["setViewStyle"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};
-  methodMap_["removeViewStyle"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(removeViewStyle)};
+
+  methodMap_["markNodeAsRemovable"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
 
   methodMap_["registerCSSKeyframes"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
