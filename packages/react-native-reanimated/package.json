@@ -13,7 +13,7 @@
     "lint": "yarn lint:js && yarn lint:common && yarn lint:android && yarn lint:apple",
     "lint:js": "eslint src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:android": "../../scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
-    "lint:common": "../../scripts/validate-common.sh && ./scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
+    "lint:common": "../../scripts/validate-common.sh && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
     "lint:clang-tidy": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs ../../scripts/clang-tidy-lint.sh",
     "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
@@ -32,7 +32,7 @@
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
-    "use-strict-check": "node ./scripts/validate-use-strict.js",
+    "use-strict-check": "node ../../scripts/validate-use-strict.js",
     "prepack": "cp ../../README.md ./README.md",
     "postpack": "rm ./README.md"
   },
