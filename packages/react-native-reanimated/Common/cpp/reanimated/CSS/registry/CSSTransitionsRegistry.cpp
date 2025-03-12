@@ -31,27 +31,17 @@ void CSSTransitionsRegistry::add(
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
-  if (updatesRegistry_.contains(viewTag)) {
-    return;
+
+  if (!updatesRegistry_.contains(viewTag)) {
+    handleRemove(viewTag);
   }
-
-  removeFromUpdatesRegistry(viewTag);
-
-  staticPropsRegistry_->removeObserver(viewTag);
-  delayedTransitionsManager_.remove(viewTag);
-  runningTransitionTags_.erase(viewTag);
-  registry_.erase(viewTag);
 }
+
 void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   for (const auto &viewTag : tagsToRemove) {
-    removeFromUpdatesRegistry(viewTag);
-
-    staticPropsRegistry_->removeObserver(viewTag);
-    delayedTransitionsManager_.remove(viewTag);
-    runningTransitionTags_.erase(viewTag);
-    registry_.erase(viewTag);
+    handleRemove(viewTag);
   }
 }
 
@@ -104,12 +94,20 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   }
 }
 
+void CSSTransitionsRegistry::handleRemove(Tag viewTag) {
+  removeFromUpdatesRegistry(viewTag);
+
+  staticPropsRegistry_->removeObserver(viewTag);
+  delayedTransitionsManager_.remove(viewTag);
+  runningTransitionTags_.erase(viewTag);
+  registry_.erase(viewTag);
+}
+
 void CSSTransitionsRegistry::activateDelayedTransitions(
     const double timestamp) {
   while (!delayedTransitionsManager_.empty() &&
          delayedTransitionsManager_.top().timestamp <= timestamp) {
-    const auto &delayedTransition = delayedTransitionsManager_.pop();
-    const auto viewTag = delayedTransition.id;
+    const auto [_, viewTag] = delayedTransitionsManager_.pop();
 
     // Add only these transitions which weren't removed in the meantime
     if (registry_.find(viewTag) != registry_.end()) {

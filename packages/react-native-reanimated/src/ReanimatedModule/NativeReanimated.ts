@@ -15,9 +15,9 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
 import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -198,29 +198,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
   }
 
-  registerCSSAnimations(
+  applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: {
-      name: string;
-      settings: NormalizedSingleCSSAnimationSettings;
-    }[]
+    animationUpdates: CSSAnimationUpdates
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimations(
+    this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
-      animationConfigs
-    );
-  }
-
-  updateCSSAnimations(
-    animationId: number,
-    settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[]
-  ) {
-    this.#reanimatedModuleProxy.updateCSSAnimations(
-      animationId,
-      settingsUpdates
+      animationUpdates
     );
   }
 
