@@ -14,16 +14,5 @@ packageJson.version = newVersion;
 const newPackageJson = JSON.stringify(packageJson, null, 2) + '\n';
 fs.writeFileSync(packageJsonPath, newPackageJson, 'utf-8');
 
-const jsVersionPath = path.resolve(
-  __dirname,
-  '../src/platform-specific/jsVersion.ts'
-);
-const before = fs.readFileSync(jsVersionPath, 'utf-8');
-const after = before.replace(
-  /jsVersion = '(.*)';/g,
-  `jsVersion = '${newVersion}';`
-);
-fs.writeFileSync(jsVersionPath, after, 'utf-8');
-
 // Log the current version so it can be restored if needed.
 console.log(currentVersion);

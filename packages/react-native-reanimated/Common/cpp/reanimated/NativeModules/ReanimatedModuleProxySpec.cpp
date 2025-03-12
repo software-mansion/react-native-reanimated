@@ -161,23 +161,13 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSAnimations)(
+static jsi::Value REANIMATED_SPEC_PREFIX(applyCSSAnimations)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSAnimations)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->updateCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
+      ->applyCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -259,10 +249,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["unregisterCSSKeyframes"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
-  methodMap_["registerCSSAnimations"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSAnimations)};
-  methodMap_["updateCSSAnimations"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSAnimations)};
+  methodMap_["applyCSSAnimations"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
   methodMap_["unregisterCSSAnimations"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
 
