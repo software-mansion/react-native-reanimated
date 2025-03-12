@@ -2,6 +2,12 @@
   "name": "react-native-reanimated",
   "version": "4.0.0-beta.2",
   "description": "More powerful alternative to Animated library for React Native.",
+  "keywords": [
+    "react-native",
+    "react",
+    "native",
+    "reanimated"
+  ],
   "scripts": {
     "test": "jest",
     "lint": "yarn lint:js && yarn lint:common && yarn lint:android && yarn lint:apple",
@@ -93,7 +99,7 @@
     "@babel/core": "^7.0.0-0",
     "react": "*",
     "react-native": "*",
-    "react-native-worklets": "0.0.1"
+    "react-native-worklets": "0.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",

@@ -31,11 +31,11 @@ using namespace facebook::hermes::inspector_modern;
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/hermes/executor/HermesExecutorFactory.cpp
-struct ReanimatedReentrancyCheck {
+struct WorkletsReentrancyCheck {
   // This is effectively a very subtle and complex assert, so only
   // include it in builds which would include asserts.
 #ifndef NDEBUG
-  ReanimatedReentrancyCheck() : tid(std::thread::id()), depth(0) {}
+  WorkletsReentrancyCheck() : tid(std::thread::id()), depth(0) {}
 
   void before() {
     std::thread::id this_id = std::this_thread::get_id();
@@ -61,13 +61,13 @@ struct ReanimatedReentrancyCheck {
       // Returns true if tid and expected were the same.  If they
       // were, then the stored tid referred to no thread, and we
       // atomically saved this thread's tid.  Now increment depth.
-      assert(depth == 0 && "[Reanimated] No thread id, but depth != 0");
+      assert(depth == 0 && "[Worklets] No thread id, but depth != 0");
       ++depth;
     } else if (expected == this_id) {
       // If the stored tid referred to a thread, expected was set to
       // that value.  If that value is this thread's tid, that's ok,
       // just increment depth again.
-      assert(depth != 0 && "[Reanimated] Thread id was set, but depth == 0");
+      assert(depth != 0 && "[Worklets] Thread id was set, but depth == 0");
       ++depth;
     } else {
       // The stored tid was some other thread.  This indicates a bad
@@ -81,13 +81,13 @@ struct ReanimatedReentrancyCheck {
   void after() {
     assert(
         tid.load(std::memory_order_relaxed) == std::this_thread::get_id() &&
-        "[Reanimated] No thread id in after()");
+        "[Worklets] No thread id in after()");
     if (--depth == 0) {
       // If we decremented depth to zero, store no-thread into tid.
       std::thread::id expected = std::this_thread::get_id();
       bool didWrite = tid.compare_exchange_strong(
           expected, std::thread::id(), std::memory_order_relaxed);
-      assert(didWrite && "[Reanimated] Decremented to zero, but no tid write");
+      assert(didWrite && "[Worklets] Decremented to zero, but no tid write");
     }
   }
 
@@ -101,22 +101,22 @@ struct ReanimatedReentrancyCheck {
 // This is in fact a subclass of jsi::Runtime! WithRuntimeDecorator is a
 // template class that is a subclass of DecoratedRuntime which is also a
 // template class that then inherits its template, which in this case is
-// jsi::Runtime. So the inheritance is: ReanimatedHermesRuntime ->
+// jsi::Runtime. So the inheritance is: WorkletHermesRuntime ->
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
-class ReanimatedHermesRuntime
-    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
+class WorkletHermesRuntime
+    : public jsi::WithRuntimeDecorator<WorkletsReentrancyCheck> {
  public:
-  ReanimatedHermesRuntime(
+  WorkletHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
-  ~ReanimatedHermesRuntime();
+  ~WorkletHermesRuntime();
 
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
-  ReanimatedReentrancyCheck reentrancyCheck_;
+  WorkletsReentrancyCheck reentrancyCheck_;
 #if HERMES_ENABLE_DEBUGGER
   chrome::DebugSessionToken debugToken_;
 #endif // HERMES_ENABLE_DEBUGGER

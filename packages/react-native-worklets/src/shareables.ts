@@ -13,7 +13,6 @@ import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
-  WorkletFunctionDev,
 } from './workletTypes';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
@@ -270,15 +269,15 @@ function cloneWorklet<T extends WorkletFunction>(
     //     }
     registerWorkletStackDetails(
       value.__workletHash,
-      (value as WorkletFunctionDev).__stackDetails!
+      (value as WorkletFunction).__stackDetails!
     );
   }
-  if ((value as WorkletFunctionDev).__stackDetails) {
+  if ((value as WorkletFunction).__stackDetails) {
     // `Error` type of value cannot be copied to the UI thread, so we
     // remove it after we handled it in dev mode or delete it to ignore it in production mode.
     // Not removing this would cause an infinite loop in production mode and it just
     // seems more elegant to handle it this way.
-    delete (value as WorkletFunctionDev).__stackDetails;
+    delete (value as WorkletFunction).__stackDetails;
   }
   // to save on transferring static __initData field of worklet structure
   // we request shareable value to persist its UI counterpart. This means

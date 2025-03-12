@@ -18131,7 +18131,7 @@ __metadata:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.0.1
+    react-native-worklets: 0.1.0
   languageName: unknown
   linkType: soft
 

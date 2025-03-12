@@ -1,12 +1,10 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.swmansion.worklets.WorkletsModule;
-import java.util.Objects;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
@@ -20,10 +18,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     mNodesManager = new NodesManager(reactContext, mWorkletsModule);
   }
 
-  public WorkletsModule getWorkletsModule() {
-    return mWorkletsModule;
-  }
-
   @Override
   public void initialize() {
     ReactApplicationContext reactContext = getReactApplicationContext();
@@ -33,16 +27,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
 
   @Override
   public void onHostPause() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostPause();
-    }
+    mNodesManager.onHostPause();
   }
 
   @Override
   public void onHostResume() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostResume();
-    }
+    mNodesManager.onHostResume();
   }
 
   @Override
@@ -51,28 +41,18 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   }
 
   public NodesManager getNodesManager() {
+    // This method is called from react-native-gesture-handler.
     return mNodesManager;
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
-
-    // When debugging in chrome the JS context is not available.
-    // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger =
-        Objects.requireNonNull(getReactApplicationContext().getJavaScriptContextHolder()).get()
-            == 0;
-
-    if (!Utils.isChromeDebugger) {
-      mNodesManager.initWithContext(getReactApplicationContext());
-      return true;
-    } else {
-      Log.w(
-          "[REANIMATED]",
-          "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
-      return false;
+    mNodesManager.getNativeProxy().installJSIBindings();
+    if (BuildConfig.DEBUG) {
+      mNodesManager.getNativeProxy().checkCppVersion();
     }
+    return true;
   }
 
   @ReactMethod
@@ -88,11 +68,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @Override
   public void invalidate() {
     super.invalidate();
-
-    if (mNodesManager != null) {
-      mNodesManager.invalidate();
-    }
-
+    mNodesManager.invalidate();
     ReactApplicationContext reactContext = getReactApplicationContext();
     reactContext.removeLifecycleEventListener(this);
   }

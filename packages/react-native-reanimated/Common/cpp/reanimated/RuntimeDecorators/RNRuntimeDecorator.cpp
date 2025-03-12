@@ -1,6 +1,6 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
-#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 namespace reanimated {
 

@@ -1,7 +1,7 @@
 #if __cplusplus
 
-#import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
@@ -9,8 +9,7 @@ namespace reanimated {
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(
     RCTModuleRegistry *moduleRegistry,
-    REANodesManager *nodesManager,
-    REAModule *reaModule);
+    REANodesManager *nodesManager);
 SetGestureStateFunction makeSetGestureStateFunction(
     RCTModuleRegistry *moduleRegistry);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);

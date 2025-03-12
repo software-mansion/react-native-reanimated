@@ -2,9 +2,9 @@
 import type { ShadowNodeWrapper, StyleProps } from '../../../commonTypes';
 import { ReanimatedModule } from '../../../ReanimatedModule';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
 } from './types';
 
 // COMMON
@@ -34,24 +34,11 @@ export function unregisterCSSKeyframes(animationName: string) {
 
 // View animations
 
-export function registerCSSAnimations(
+export function applyCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
-  animationConfigs: {
-    name: string;
-    settings: NormalizedSingleCSSAnimationSettings;
-  }[]
+  animationUpdates: CSSAnimationUpdates
 ) {
-  ReanimatedModule.registerCSSAnimations(shadowNodeWrapper, animationConfigs);
-}
-
-export function updateCSSAnimations(
-  viewTag: number,
-  settingsUpdates: {
-    index: number;
-    settings: Partial<NormalizedSingleCSSAnimationSettings>;
-  }[]
-) {
-  ReanimatedModule.updateCSSAnimations(viewTag, settingsUpdates);
+  ReanimatedModule.applyCSSAnimations(shadowNodeWrapper, animationUpdates);
 }
 
 export function unregisterCSSAnimations(viewTag: number) {

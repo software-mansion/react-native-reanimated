@@ -47,18 +47,22 @@ public class NativeProxy {
   private boolean slowAnimationsEnabled = false;
   private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
-  private AtomicBoolean mInvalidated = new AtomicBoolean(false);
+
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, WorkletsModule workletsModule) {
+      ReactApplicationContext context, WorkletsModule workletsModule, NodesManager nodesManager) {
     context.assertOnJSQueueThread();
 
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -75,9 +79,7 @@ public class NativeProxy {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
+    mNodesManager = nodesManager;
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -89,11 +91,6 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
-
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
-    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -115,7 +112,7 @@ public class NativeProxy {
     return mHybridData;
   }
 
-  public void invalidate() {
+  protected void invalidate() {
     if (mInvalidated.getAndSet(true)) {
       return;
     }
