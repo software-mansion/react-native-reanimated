@@ -1,7 +1,3 @@
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -15,6 +11,10 @@
 #endif // __ANDROID__
 
 #include <jsi/jsi.h>
+
+#include <memory>
+#include <string>
+#include <utility>
 
 using namespace facebook;
 
