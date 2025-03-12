@@ -117,29 +117,4 @@ describe('CSSTransitionsManager', () => {
       expect(updateCSSTransition).not.toHaveBeenCalled();
     });
   });
-
-  describe('detach', () => {
-    it('detaches transition if there is existing transition', () => {
-      const transitionProperties: CSSTransitionProperties = {
-        transitionProperty: 'opacity',
-      };
-
-      manager.update(transitionProperties);
-      expect(registerCSSTransition).toHaveBeenCalledTimes(1);
-      expect(unregisterCSSTransition).not.toHaveBeenCalled();
-      expect(updateCSSTransition).not.toHaveBeenCalled();
-
-      manager.detach();
-      expect(registerCSSTransition).toHaveBeenCalledTimes(1);
-      expect(unregisterCSSTransition).toHaveBeenCalledTimes(1);
-      expect(updateCSSTransition).not.toHaveBeenCalled();
-    });
-
-    it("doesn't call detach if there is no existing transition", () => {
-      manager.detach();
-      expect(registerCSSTransition).not.toHaveBeenCalled();
-      expect(unregisterCSSTransition).not.toHaveBeenCalled();
-      expect(updateCSSTransition).not.toHaveBeenCalled();
-    });
-  });
 });

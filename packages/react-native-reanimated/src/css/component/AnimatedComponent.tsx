@@ -16,6 +16,7 @@ import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
+import { maybeRemoveFromRegistries } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
@@ -147,15 +148,20 @@ export default class AnimatedComponent<
     this._updateStyles(this.props);
 
     if (!IS_JEST) {
-      if (!this._CSSManager) {
-        this._CSSManager = new CSSManager(this._getViewInfo());
-      }
-      this._CSSManager?.attach(this._cssStyle);
+      this._CSSManager ??= new CSSManager(this._getViewInfo());
+      this._CSSManager?.update(this._cssStyle);
     }
   }
 
   componentWillUnmount() {
-    this._CSSManager?.detach();
+    if (!IS_JEST && this._CSSManager) {
+      this._CSSManager.unmountCleanup();
+    }
+
+    const wrapper = this._viewInfo?.shadowNodeWrapper;
+    if (!SHOULD_BE_USE_WEB && wrapper) {
+      maybeRemoveFromRegistries(wrapper);
+    }
   }
 
   shouldComponentUpdate(nextProps: P) {
