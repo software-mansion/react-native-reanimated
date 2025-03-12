@@ -51,8 +51,15 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertSingleReanimatedInstance();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule();
+    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
+      if (!ReanimatedTurboModule.installTurboModule()) {
+        // This path means that React Native has failed on reload.
+        // We don't want to throw any errors to not mislead the users
+        // that the problem is related to Reanimated.
+        // We install a DummyReanimatedModuleProxy instead.
+        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+        return;
+      }
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -180,5 +187,40 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
+  }
+}
+
+class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
+  scheduleOnUI(): void {}
+  executeOnUIRuntimeSync() {
+    return null!;
+  }
+
+  createWorkletRuntime() {
+    return null!;
+  }
+
+  scheduleOnRuntime(): void {}
+  configureLayoutAnimationBatch(): void {}
+  setShouldAnimateExitingForTag(): void {}
+  enableLayoutAnimations(): void {}
+  configureProps(): void {}
+  subscribeForKeyboardEvents(): number {
+    return -1;
+  }
+
+  unsubscribeFromKeyboardEvents(): void {}
+  registerSensor(): number {
+    return -1;
+  }
+
+  unregisterSensor(): void {}
+  registerEventHandler(): number {
+    return -1;
+  }
+
+  unregisterEventHandler(): void {}
+  getViewProp() {
+    return null!;
   }
 }
