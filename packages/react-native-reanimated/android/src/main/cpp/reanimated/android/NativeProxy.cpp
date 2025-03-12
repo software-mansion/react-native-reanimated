@@ -309,9 +309,4 @@ void NativeProxy::invalidateCpp() {
   reanimatedModuleProxy_.reset();
 }
 
-void NativeProxy::invalidateCpp() {
-  layoutAnimations_->cthis()->invalidate();
-  reanimatedModuleProxy_.reset();
-}
-
 } // namespace reanimated

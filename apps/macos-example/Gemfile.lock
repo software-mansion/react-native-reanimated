@@ -15,9 +15,8 @@ GEM
       i18n (>= 1.6, < 2)
       logger (>= 1.4.2)
       minitest (>= 5.1)
-      mutex_m
       securerandom (>= 0.3)
-      tzinfo (~> 2.0)
+      tzinfo (~> 2.0, >= 2.0.5)
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     algoliasearch (1.27.5)
@@ -83,7 +82,6 @@ GEM
     logger (1.6.5)
     minitest (5.25.4)
     molinillo (0.8.0)
-    mutex_m (0.3.0)
     nanaimo (0.4.0)
     nap (1.1.0)
     netrc (0.11.0)

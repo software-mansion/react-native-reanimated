@@ -3,7 +3,6 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
   SensorConfig,
-  ShareableRef,
   SharedValue,
   Value3D,
   ValueRotation,

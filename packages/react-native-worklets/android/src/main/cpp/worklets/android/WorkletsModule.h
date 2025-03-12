@@ -19,7 +19,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> /*jThis*/,
+      jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,

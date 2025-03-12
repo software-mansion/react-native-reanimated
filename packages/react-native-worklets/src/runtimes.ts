@@ -1,8 +1,8 @@
 'use strict';
+
 import { setupCallGuard, setupConsole } from './initializers';
 import { registerLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { ReanimatedModule } from './ReanimatedModule';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,

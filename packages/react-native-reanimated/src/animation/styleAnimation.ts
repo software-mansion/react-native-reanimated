@@ -11,10 +11,9 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { defineAnimation, isValidLayoutAnimationProp } from './util';
+import { defineAnimation } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -192,14 +191,6 @@ export function withStyleAnimation(
               `Initial values for animation are missing for property ${currentEntry.path.join(
                 '.'
               )}`
-            );
-          }
-          if (
-            typeof currentEntry.path[0] === 'string' &&
-            !isValidLayoutAnimationProp(currentEntry.path[0].trim())
-          ) {
-            logger.warn(
-              `'${currentEntry.path[0]}' property is not officially supported for layout animations. It may not work as expected.`
             );
           }
           setPath(animation.current, currentEntry.path, prevVal);
