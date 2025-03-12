@@ -27,8 +27,8 @@ class CSSAnimationsRegistry
   using SettingsUpdates =
       std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
-  bool hasUpdates() const;
   bool isEmpty() const override;
+  bool hasUpdates() const;
 
   void apply(
       jsi::Runtime &rt,
@@ -38,7 +38,6 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
 
   void update(double timestamp);
 
@@ -73,7 +72,6 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
-  void handleRemove(Tag viewTag);
   void updateViewAnimations(
       Tag viewTag,
       const std::vector<size_t> &animationIndices,

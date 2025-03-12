@@ -446,10 +446,13 @@ void ReanimatedModuleProxy::setViewStyle(
   }
 }
 
-void ReanimatedModuleProxy::removeViewStyle(
+void ReanimatedModuleProxy::maybeRemoveFromRegistries(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
+    const jsi::Value &shadowNodeWrapper) {
+  // TODO
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+
+  LOG(INFO) << "maybeRemoveFromRegistries: " << shadowNode->getTag();
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(
@@ -781,7 +784,6 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
     }
   }
-  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -792,8 +794,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(
-                oldRootShadowNode, propsMap, tagsToRemove);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -815,16 +817,6 @@ void ReanimatedModuleProxy::commitUpdates(
       }
 #endif
     });
-
-    // Clear the entire cache after the commit
-    // (we don't know if the view is updated from outside of Reanimated
-    // so we have to clear the entire cache)
-    viewStylesRepository_->clearNodesCache();
-  }
-
-  if (!tagsToRemove.empty()) {
-    auto lock = updatesRegistryManager_->createLock();
-    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 

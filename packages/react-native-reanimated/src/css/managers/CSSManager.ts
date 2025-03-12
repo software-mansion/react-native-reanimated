@@ -2,11 +2,7 @@
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import {
-  removeViewStyle,
-  setViewStyle,
-  styleBuilder,
-} from '../platform/native';
+import { setViewStyle, styleBuilder } from '../platform/native';
 import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager';
@@ -59,6 +55,6 @@ export default class CSSManager {
 
   detach(): void {
     this.cssTransitionsManager.detach();
-    removeViewStyle(this.viewTag);
+    // removeViewStyle(this.viewTag);
   }
 }

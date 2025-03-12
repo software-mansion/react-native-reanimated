@@ -277,9 +277,9 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
 
-  removeViewStyle(_viewTag: number): void {
+  maybeRemoveFromRegistries(_shadowNodeWrapper: ShadowNodeWrapper): void {
     throw new ReanimatedError(
-      'removeViewStyle is not available in JSReanimated.'
+      'maybeRemoveFromRegistries is not available in JSReanimated.'
     );
   }
 

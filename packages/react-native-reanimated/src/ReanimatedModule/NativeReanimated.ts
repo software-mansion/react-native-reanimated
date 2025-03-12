@@ -187,8 +187,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  maybeRemoveFromRegistries(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.maybeRemoveFromRegistries(shadowNodeWrapper);
   }
 
   registerCSSKeyframes(

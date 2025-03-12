@@ -27,11 +27,4 @@ SurfaceId AnimatedPropsRegistry::update(
   return surfaceId;
 }
 
-void AnimatedPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
-  std::unique_lock<std::mutex> l(mutex_);
-  for (const auto &tag : tagsToRemove) {
-    updatesRegistry_.erase(tag);
-  }
-}
-
 } // namespace reanimated

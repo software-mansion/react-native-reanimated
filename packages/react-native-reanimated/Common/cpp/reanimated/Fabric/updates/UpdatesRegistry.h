@@ -45,7 +45,6 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  virtual void removeBatch(const std::vector<Tag> &tagsToRemove) = 0;
 
  protected:
   mutable std::mutex mutex_;

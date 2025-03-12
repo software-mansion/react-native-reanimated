@@ -2,14 +2,15 @@
 
 namespace reanimated {
 
+bool CSSAnimationsRegistry::isEmpty() const {
+  // The registry is empty if has no registered animations and no updates
+  // stored in the updates registry
+  return UpdatesRegistry::isEmpty() && registry_.empty();
+}
+
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationIndicesMap_.empty() ||
       !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
-}
-
-bool CSSAnimationsRegistry::isEmpty() const {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationIndicesMap_.empty() && animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::apply(
@@ -26,7 +27,7 @@ void CSSAnimationsRegistry::apply(
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    handleRemove(viewTag);
+//    handleRemove(viewTag);
     return;
   }
 
@@ -57,15 +58,9 @@ void CSSAnimationsRegistry::apply(
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  handleRemove(viewTag);
-}
-
-void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  for (const auto &viewTag : tagsToRemove) {
-    handleRemove(viewTag);
-  }
+  removeViewAnimations(viewTag);
+  removeFromUpdatesRegistry(viewTag);
+  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {
@@ -175,12 +170,6 @@ void CSSAnimationsRegistry::updateAnimationSettings(
       animation->updateSettings(it->second, timestamp);
     }
   }
-}
-
-void CSSAnimationsRegistry::handleRemove(Tag viewTag) {
-  removeViewAnimations(viewTag);
-  removeFromUpdatesRegistry(viewTag);
-  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::updateViewAnimations(
