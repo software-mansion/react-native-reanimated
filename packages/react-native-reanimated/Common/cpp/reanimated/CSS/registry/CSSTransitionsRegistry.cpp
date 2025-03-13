@@ -11,10 +11,6 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 bool CSSTransitionsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
-  std::stringstream ss;
-  for (const auto &pair : registry_) {
-    ss << pair.first << ", ";
-  }
   return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
