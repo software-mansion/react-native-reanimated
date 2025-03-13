@@ -1,4 +1,6 @@
 name: Reanimated compatibility check [Nightly]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
