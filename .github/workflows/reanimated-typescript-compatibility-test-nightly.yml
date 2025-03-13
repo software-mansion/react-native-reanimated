@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         # TODO: Fetch versions from common source.
-        react-native-version: ['0.74', '0.75', '0.76', nightly]
+        react-native-version: ['0.76', '0.77', 0'78', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}

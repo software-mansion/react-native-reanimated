@@ -1,4 +1,6 @@
 name: Reanimated Common validation
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
     branches:
