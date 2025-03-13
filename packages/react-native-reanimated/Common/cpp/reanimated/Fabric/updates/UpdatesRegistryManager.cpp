@@ -72,11 +72,6 @@ void UpdatesRegistryManager::handleNodeRemovals(
     staticPropsRegistry_->remove(tag);
     it = removableShadowNodes_.erase(it);
   }
-
-  LOG(INFO) << "Remaining removable nodes: " << removableShadowNodes_.size();
-  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
-    LOG(INFO) << "Remaining removable node: " << tag;
-  }
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {
