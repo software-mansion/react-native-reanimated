@@ -44,7 +44,7 @@ export default class AnimatedComponent<
   _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
-  _isMounted: boolean = false;
+  _willUnmount: boolean = false;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -149,7 +149,11 @@ export default class AnimatedComponent<
     this._updateStyles(this.props);
 
     const viewTag = this._viewInfo?.viewTag;
-    if (!SHOULD_BE_USE_WEB && typeof viewTag === 'number') {
+    if (
+      !SHOULD_BE_USE_WEB &&
+      this._willUnmount &&
+      typeof viewTag === 'number'
+    ) {
       unmarkNodeAsRemovable(viewTag);
     }
 
@@ -157,6 +161,8 @@ export default class AnimatedComponent<
       this._CSSManager ??= new CSSManager(this._getViewInfo());
       this._CSSManager?.update(this._cssStyle);
     }
+
+    this._willUnmount = false;
   }
 
   componentWillUnmount() {
@@ -168,6 +174,8 @@ export default class AnimatedComponent<
     if (!SHOULD_BE_USE_WEB && wrapper) {
       markNodeAsRemovable(wrapper);
     }
+
+    this._willUnmount = true;
   }
 
   shouldComponentUpdate(nextProps: P) {
