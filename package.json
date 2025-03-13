@@ -19,8 +19,10 @@
   "private": true,
   "scripts": {
     "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
-    "lint": "yarn workspaces foreach --all --parallel --topological-dev run lint",
-    "format": "yarn workspaces foreach --all --parallel --topological-dev run format"
+    "format": "format:root && format:workspaces",
+    "format:root": "prettier --write --list-different .github",
+    "format:workspaces": "yarn workspaces foreach --all --parallel --topological-dev run format",
+    "lint": "yarn workspaces foreach --all --parallel --topological-dev run lint"
   },
   "devDependencies": {
     "@types/shelljs": "^0.8.15",
