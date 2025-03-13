@@ -446,7 +446,6 @@ void ReanimatedModuleProxy::maybeRemoveFromRegistries(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  LOG(INFO) << "maybeRemoveFromRegistries: " << shadowNode->getTag();
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 

@@ -28,7 +28,6 @@ SurfaceId AnimatedPropsRegistry::update(
 }
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
-  LOG(INFO) << "AnimatedPropsRegistry::remove " << tag;
   updatesRegistry_.erase(tag);
 }
 

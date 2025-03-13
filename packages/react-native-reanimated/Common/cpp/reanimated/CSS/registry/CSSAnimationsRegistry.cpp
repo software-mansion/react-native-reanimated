@@ -9,7 +9,6 @@ bool CSSAnimationsRegistry::isEmpty() const {
   for (const auto &pair : registry_) {
     ss << pair.first << ", ";
   }
-  LOG(INFO) << "CSSAnimationsRegistry remaining tags: " << ss.str();
   return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 

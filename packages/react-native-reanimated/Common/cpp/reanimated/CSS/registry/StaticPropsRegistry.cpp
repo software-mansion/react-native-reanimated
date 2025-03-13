@@ -31,7 +31,6 @@ bool StaticPropsRegistry::has(const Tag viewTag) const {
 }
 
 void StaticPropsRegistry::remove(const Tag viewTag) {
-  LOG(INFO) << "StaticPropsRegistry::remove " << viewTag;
   registry_.erase(viewTag);
 }
 
@@ -40,7 +39,6 @@ bool StaticPropsRegistry::isEmpty() const {
   for (const auto &pair : registry_) {
     ss << pair.first << ", ";
   }
-  LOG(INFO) << "StaticPropsRegistry remaining tags: " << ss.str();
   return registry_.empty();
 }
 

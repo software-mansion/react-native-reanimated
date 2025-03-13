@@ -160,7 +160,6 @@ export default class AnimatedComponent<
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
     if (!SHOULD_BE_USE_WEB && wrapper) {
-      console.log('maybeRemoveFromRegistries', this._viewInfo?.viewTag);
       maybeRemoveFromRegistries(wrapper);
     }
   }

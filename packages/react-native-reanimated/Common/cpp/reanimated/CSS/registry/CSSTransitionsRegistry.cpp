@@ -15,7 +15,6 @@ bool CSSTransitionsRegistry::isEmpty() const {
   for (const auto &pair : registry_) {
     ss << pair.first << ", ";
   }
-  LOG(INFO) << "CSSTransitionsRegistry remaining tags: " << ss.str();
   return UpdatesRegistry::isEmpty() && registry_.empty();
 }
 
