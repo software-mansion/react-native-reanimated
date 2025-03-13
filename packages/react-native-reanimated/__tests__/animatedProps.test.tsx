@@ -13,7 +13,7 @@ Animated.addWhitelistedNativeProps({ text: true });
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-export default function AnimatedComponent({ isCustom }: { isCustom: boolean }) {
+export default function AnimatedComponent() {
   const r = useSharedValue(20);
   const width = useSharedValue(20);
 
@@ -36,22 +36,17 @@ export default function AnimatedComponent({ isCustom }: { isCustom: boolean }) {
   return (
     <View>
       <Svg>
-        {!isCustom ? (
-          //  This doesn't work - it has no jest styles :/ 👇
-          <AnimatedCircle
-            cx="50%"
-            cy="50%"
-            fill="#b58df1"
-            testID={'circle'}
-            animatedProps={animatedProps}
-          />
-        ) : (
-          // This works - it has jestAnimatedProps and jestAnimatedStyles on component 👇
-          <AnimatedTextInput
-            testID={'text'}
-            animatedProps={textAnimatedProps}
-          />
-        )}
+        // This doesn't work - it has no jest styles :/ 👇
+        <AnimatedCircle
+          cx="50%"
+          cy="50%"
+          fill="#b58df1"
+          testID={'circle'}
+          animatedProps={animatedProps}
+        />
+        // This works - it has jestAnimatedProps and jestAnimatedStyles on
+        component 👇
+        <AnimatedTextInput testID={'text'} animatedProps={textAnimatedProps} />
       </Svg>
 
       <Button testID={'button'} onPress={handlePress} title="Click me" />
