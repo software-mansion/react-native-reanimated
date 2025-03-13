@@ -55,17 +55,17 @@ jobs:
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: npm install react-native-reanimated@nightly
+        run: npm install --force react-native-reanimated@nightly
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
-        run: npm install react-native-worklets@nightly
+        run: npm install --forcereact-native-worklets@nightly
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
         run: npx expo prebuild
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: yarn react-native run-ios --terminal='Terminal'
+        run: npx expo build:ios --no-bundler
       - name: Build app (Android)
         working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
