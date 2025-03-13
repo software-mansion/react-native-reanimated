@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct TransformKeyframe {
   const double fromOffset;
@@ -95,4 +95,4 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

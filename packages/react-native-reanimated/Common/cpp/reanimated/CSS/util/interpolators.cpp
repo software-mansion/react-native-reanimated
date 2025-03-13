@@ -1,6 +1,6 @@
 #include <reanimated/CSS/util/interpolators.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
@@ -33,4 +33,4 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
       newPath, viewStylesRepository);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

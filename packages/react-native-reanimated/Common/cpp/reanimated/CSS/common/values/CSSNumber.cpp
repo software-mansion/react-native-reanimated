@@ -1,7 +1,7 @@
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase() : value(0) {}
@@ -102,4 +102,4 @@ template struct CSSNumberBase<CSSShadowRadiusAndroid, double>;
 
 #endif
 
-} // namespace reanimated
+} // namespace reanimated::css

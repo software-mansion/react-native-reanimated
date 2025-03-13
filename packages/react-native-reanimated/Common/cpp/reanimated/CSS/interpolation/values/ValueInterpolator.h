@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct ValueInterpolatorUpdateContext {
   const ShadowNode::Shared &node;
@@ -202,4 +202,4 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -3,7 +3,7 @@
 
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(const char *value) : value(value) {}
@@ -98,4 +98,4 @@ std::ostream &operator<<(std::ostream &os, const CSSDisplay &displayValue) {
 template class CSSKeywordBase<CSSKeyword>;
 template class CSSKeywordBase<CSSDisplay>;
 
-} // namespace reanimated
+} // namespace reanimated::css

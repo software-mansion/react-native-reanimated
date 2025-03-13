@@ -37,6 +37,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace css;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 

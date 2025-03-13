@@ -1,6 +1,6 @@
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
@@ -99,4 +99,4 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

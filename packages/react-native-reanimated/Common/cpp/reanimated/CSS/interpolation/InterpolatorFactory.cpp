@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
-namespace reanimated::Interpolators {
+namespace reanimated::css {
 
 class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
@@ -131,4 +131,4 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
       std::make_shared<TransformInterpolators>(result));
 }
 
-} // namespace reanimated::Interpolators
+} // namespace reanimated::css
