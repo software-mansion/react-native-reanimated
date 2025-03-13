@@ -11,17 +11,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  run:
+  url-validation-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Install monorepo node dependencies
         run: yarn install
-      - name: Install node-fetch 2
-        working-directory: packages/react-native-reanimated
-        run: yarn add node-fetch@2
 
       - name: Validate urls
-        run: node packages/react-native-reanimated/scripts/validate-urls.js
+        run: node scripts/validate-urls.js
