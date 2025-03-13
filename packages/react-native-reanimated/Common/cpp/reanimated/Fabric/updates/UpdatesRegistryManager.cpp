@@ -44,7 +44,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 
 void UpdatesRegistryManager::markNodeAsRemovable(
     const ShadowNode::Shared &shadowNode) {
-  removableShadowNodes_.emplace_back(shadowNode);
+  removableShadowNodes_.insert(shadowNode);
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(
@@ -64,9 +64,8 @@ void UpdatesRegistryManager::handleNodeRemovals(
       registry->remove(tag);
     }
     staticPropsRegistry_->remove(tag);
+    removableShadowNodes_.erase(shadowNode);
   }
-
-  removableShadowNodes_.clear();
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {
