@@ -7,6 +7,8 @@
 ### Nightly CI state
 
 [![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
+[![NPM Worklets publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml)
+[![Lint clang-tidy [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 [![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
 [![Static framework Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml)
 [![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
