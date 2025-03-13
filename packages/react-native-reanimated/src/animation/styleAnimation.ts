@@ -186,22 +186,23 @@ export function withStyleAnimation(
           if (prevAnimation && !prevVal) {
             prevVal = (prevAnimation as any).current;
           }
-          if (prevVal === undefined) {
-            logger.warn(
-              `Initial values for animation are missing for property ${currentEntry.path.join(
-                '.'
-              )}`
-            );
-          }
-          const propName = currentEntry.path[0];
-          if (
-            __DEV__ &&
-            typeof propName === 'string' &&
-            !isValidLayoutAnimationProp(propName.trim())
-          ) {
-            logger.warn(
-              `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
-            );
+          if (__DEV__) {
+            if (prevVal === undefined) {
+              logger.warn(
+                `Initial values for animation are missing for property ${currentEntry.path.join(
+                  '.'
+                )}`
+              );
+            }
+            const propName = currentEntry.path[0];
+            if (
+              typeof propName === 'string' &&
+              !isValidLayoutAnimationProp(propName.trim())
+            ) {
+              logger.warn(
+                `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
+              );
+            }
           }
           setPath(animation.current, currentEntry.path, prevVal);
           let currentAnimation: AnimationObject;
