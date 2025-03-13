@@ -11935,10 +11935,15 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^4.0.0-beta.2:
-  version "4.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0-beta.2.tgz#0891e2edde885cdbc01bcabc05e1961ec6b26ba3"
-  integrity sha512-2dugFWc2CmNeymk1q7UFwArCUc5si8mo/Rjcik0+zXkvmL+d2EQ2Nplymd9qijNWXK0J5SDjG+93cpxRx+2gKg==
+react-native-is-edge-to-edge@1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.6.tgz#69ec13f70d76e9245e275eed4140d0873a78f902"
+  integrity sha512-1pHnFTlBahins6UAajXUqeCOHew9l9C2C8tErnpGC3IyLJzvxD+TpYAixnCbrVS52f7+NvMttbiSI290XfwN0w==
+
+react-native-reanimated@4.0.0-nightly-20250313-d623d8c53:
+  version "4.0.0-nightly-20250313-d623d8c53"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0-nightly-20250313-d623d8c53.tgz#e21118f1ce7d6ff060593072aaf9faa561ac7433"
+  integrity sha512-6hsRKXrYHeKxR3yMloYUCD54WS3zPs7Q7vhnNi30xI0XLvq41I5F9XjH5AViodvY3p2KKufVmwSU79p1zmlsbQ==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"
