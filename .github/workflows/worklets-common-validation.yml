@@ -1,19 +1,19 @@
-name: Reanimated Common validation
+name: Worklets Common validation
 on:
   push:
     branches:
       - main
     paths:
-      - '.github/workflows/reanimated-common-validation.yml'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
-      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
-      - 'packages/react-native-reanimated/Common/cpp/**'
+      - '.github/workflows/worklets-common-validation.yml'
+      - 'packages/react-native-worklets/scripts/cpplint.sh'
+      - 'packages/react-native-worklets/scripts/validate-includes.sh'
+      - 'packages/react-native-worklets/Common/cpp/**'
   pull_request:
     paths:
-      - '.github/workflows/reanimated-common-validation.yml'
-      - 'packages/react-native-reanimated/scripts/cpplint.sh'
-      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
-      - 'packages/react-native-reanimated/Common/cpp/**'
+      - '.github/workflows/worklets-common-validation.yml'
+      - 'packages/react-native-worklets/scripts/cpplint.sh'
+      - 'packages/react-native-worklets/scripts/validate-includes.sh'
+      - 'packages/react-native-worklets/Common/cpp/**'
   merge_group:
     branches:
       - main
@@ -21,15 +21,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  reanimated-common-validation:
+  worklets-common-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
+      WORKLETS_DIR: packages/react-native-worklets
       PYTHON_VERSION: 3.13
-      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
@@ -43,5 +42,5 @@ jobs:
         run: yarn install --immutable
 
       - name: Lint Common
-        working-directory: ${{ env.REANIMATED_DIR }}
+        working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn lint:common

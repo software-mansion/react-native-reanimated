@@ -36,8 +36,10 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
       - name: Build Worklets package
-        working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn build
+        run: yarn workspace react-native-worklets build
+      - name: Build Reanimated package
+        # Needed for types for TypeScript checks in Example Apps
+        run: yarn workspace react-native-reanimated build
 
       # Checks
       - name: Check TypeScript types
@@ -49,3 +51,9 @@ jobs:
       - name: Find circular dependencies
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn circular-dependency-check
+      - name: Check use strict
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn use-strict-check
+      - name: Run Jest unit tests
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn test
