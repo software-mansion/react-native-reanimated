@@ -95,7 +95,6 @@ jobs:
         run: mv ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} .
 
       - name: Publish npm package
-        working-directory: ${{ env.WORKLETS_DIR }}
         run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
