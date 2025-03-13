@@ -37,7 +37,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
   }
 
   {
-    auto lock = updatesRegistryManager_->createLock();
+    auto lock = updatesRegistryManager_->lock();
     updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
 
     // When commit from React Native has finished, we reset the skip commit flag

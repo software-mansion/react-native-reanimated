@@ -16,7 +16,7 @@ class UpdatesRegistryManager {
   explicit UpdatesRegistryManager(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
-  std::lock_guard<std::mutex> createLock() const;
+  std::lock_guard<std::mutex> lock() const;
 
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)

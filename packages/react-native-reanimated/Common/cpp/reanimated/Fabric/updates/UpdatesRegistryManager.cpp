@@ -6,7 +6,7 @@ UpdatesRegistryManager::UpdatesRegistryManager(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
 
-std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
+std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 

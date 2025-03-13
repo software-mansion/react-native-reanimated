@@ -25,8 +25,6 @@ bool CSSTransitionsRegistry::hasUpdates() const {
 
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto &shadowNode = transition->getShadowNode();
   const auto viewTag = shadowNode->getTag();
 
@@ -36,10 +34,6 @@ void CSSTransitionsRegistry::add(
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  LOG(INFO) << "CSSTransitionsRegistry::remove " << viewTag;
-
   removeFromUpdatesRegistry(viewTag);
   staticPropsRegistry_->removeObserver(viewTag);
   delayedTransitionsManager_.remove(viewTag);
@@ -50,8 +44,6 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 void CSSTransitionsRegistry::updateSettings(
     const Tag viewTag,
     const PartialCSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto &transition = registry_[viewTag];
   transition->updateSettings(config);
 
@@ -64,8 +56,6 @@ void CSSTransitionsRegistry::updateSettings(
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 

@@ -34,6 +34,8 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
+  std::lock_guard<std::mutex> lock() const;
+
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   virtual void remove(Tag tag) = 0;
