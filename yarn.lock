@@ -16472,7 +16472,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-  "natural-compare-lite@npm:^1.4.0":
+"natural-compare-lite@npm:^1.4.0":
   version: 1.4.0
   resolution: "natural-compare-lite@npm:1.4.0"
   checksum: 10/5222ac3986a2b78dd6069ac62cbb52a7bf8ffc90d972ab76dfe7b01892485d229530ed20d0c62e79a6b363a663b273db3bde195a1358ce9e5f779d4453887225

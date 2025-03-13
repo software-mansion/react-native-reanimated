@@ -82,7 +82,6 @@ GEM
     logger (1.6.5)
     minitest (5.25.4)
     molinillo (0.8.0)
-    mutex_m (0.3.0)
     nanaimo (0.4.0)
     nap (1.1.0)
     netrc (0.11.0)
