@@ -191,7 +191,6 @@ export default class AnimatedComponent<
   }
 
   render(props?: ComponentProps<AnyComponent>) {
-    console.log('render');
     const { ChildComponent } = this;
 
     const platformProps = Platform.select({
