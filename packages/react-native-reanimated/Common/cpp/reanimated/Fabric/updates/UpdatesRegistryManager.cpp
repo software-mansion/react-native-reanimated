@@ -44,18 +44,24 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 
 void UpdatesRegistryManager::markNodeAsRemovable(
     const ShadowNode::Shared &shadowNode) {
-  removableShadowNodes_.insert(shadowNode);
+  removableShadowNodes_[shadowNode->getTag()] = shadowNode;
+}
+
+void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
+  removableShadowNodes_.erase(viewTag);
 }
 
 void UpdatesRegistryManager::handleNodeRemovals(
     const RootShadowNode &rootShadowNode) {
-  const auto nodesCopy = removableShadowNodes_;
-  for (const auto &shadowNode : nodesCopy) {
+  for (auto it = removableShadowNodes_.begin();
+       it != removableShadowNodes_.end();) {
+    const auto &shadowNode = it->second;
     const auto &family = shadowNode->getFamily();
     const auto &ancestors = family.getAncestors(rootShadowNode);
 
     // Skip if the node hasn't been removed
     if (!ancestors.empty()) {
+      ++it;
       continue;
     }
 
@@ -64,7 +70,12 @@ void UpdatesRegistryManager::handleNodeRemovals(
       registry->remove(tag);
     }
     staticPropsRegistry_->remove(tag);
-    removableShadowNodes_.erase(shadowNode);
+    it = removableShadowNodes_.erase(it);
+  }
+
+  LOG(INFO) << "Remaining removable nodes: " << removableShadowNodes_.size();
+  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
+    LOG(INFO) << "Remaining removable node: " << tag;
   }
 }
 

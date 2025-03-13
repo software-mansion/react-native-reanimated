@@ -131,13 +131,23 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setViewStyle)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(maybeRemoveFromRegistries)(
+static jsi::Value REANIMATED_SPEC_PREFIX(markNodeAsRemovable)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->maybeRemoveFromRegistries(rt, std::move(args[0]));
+      ->markNodeAsRemovable(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unmarkNodeAsRemovable(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -242,8 +252,10 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["setViewStyle"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};
 
-  methodMap_["maybeRemoveFromRegistries"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(maybeRemoveFromRegistries)};
+  methodMap_["markNodeAsRemovable"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
+  methodMap_["unmarkNodeAsRemovable"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
 
   methodMap_["registerCSSKeyframes"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};

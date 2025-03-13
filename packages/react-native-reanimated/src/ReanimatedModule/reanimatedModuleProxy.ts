@@ -60,7 +60,8 @@ export interface ReanimatedModuleProxy {
 
   setViewStyle(viewTag: number, style: StyleProps): void;
 
-  maybeRemoveFromRegistries(shadowNodeWrapper: ShadowNodeWrapper): void;
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
+  unmarkNodeAsRemovable(viewTag: number): void;
 
   registerCSSKeyframes(
     animationName: string,

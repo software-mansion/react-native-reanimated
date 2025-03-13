@@ -13,7 +13,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
-  private isMounted: boolean = false;
+  private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewConfig, viewTag }: ViewInfo) {
     const tag = (this.viewTag = viewTag as number);
@@ -28,31 +28,30 @@ export default class CSSManager implements ICSSManager {
   }
 
   update(style: CSSStyle): void {
-    this.isMounted = true;
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
     const normalizedStyle = styleBuilder.buildFrom(filteredStyle);
 
-    // If the update is called during component mount, we won't recognize style
-    // changes and treat styles as initial, thus we need to set them before
-    // attaching transition and animation
-    if (!this.isMounted && normalizedStyle) {
+    // If the update is called during the first css style update, we won't
+    // trigger CSS transitions and set styles before attaching CSS transitions
+    if (this.isFirstUpdate && normalizedStyle) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
     this.cssTransitionsManager.update(transitionProperties);
     this.cssAnimationsManager.update(animationProperties);
 
-    // If the update is called during component mount, we want to first - update
-    // the transition or animation config, and then - set the style (which may
-    // trigger the transition)
-    if (this.isMounted && normalizedStyle) {
+    // If the current update is not the fist one, we want to update CSS
+    // animations and transitions first and update the style then to make
+    // sure that the new transition is fired with new settings (like duration)
+    if (!this.isFirstUpdate && normalizedStyle) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
+
+    this.isFirstUpdate = false;
   }
 
   unmountCleanup(): void {
-    this.isMounted = false;
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
   }

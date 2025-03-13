@@ -16,7 +16,7 @@ import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
-import { maybeRemoveFromRegistries } from '../platform/native';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
@@ -44,6 +44,7 @@ export default class AnimatedComponent<
   _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
+  _isMounted: boolean = false;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -147,6 +148,11 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
+    const viewTag = this._viewInfo?.viewTag;
+    if (!SHOULD_BE_USE_WEB && typeof viewTag === 'number') {
+      unmarkNodeAsRemovable(viewTag);
+    }
+
     if (!IS_JEST) {
       this._CSSManager ??= new CSSManager(this._getViewInfo());
       this._CSSManager?.update(this._cssStyle);
@@ -160,11 +166,12 @@ export default class AnimatedComponent<
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
     if (!SHOULD_BE_USE_WEB && wrapper) {
-      maybeRemoveFromRegistries(wrapper);
+      markNodeAsRemovable(wrapper);
     }
   }
 
   shouldComponentUpdate(nextProps: P) {
+    console.log('should update');
     this._updateStyles(nextProps);
 
     if (this._CSSManager) {
@@ -176,6 +183,7 @@ export default class AnimatedComponent<
   }
 
   render(props?: ComponentProps<AnyComponent>) {
+    console.log('render');
     const { ChildComponent } = this;
 
     const platformProps = Platform.select({

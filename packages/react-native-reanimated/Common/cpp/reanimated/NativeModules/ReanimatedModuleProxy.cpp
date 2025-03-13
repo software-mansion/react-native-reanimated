@@ -442,11 +442,17 @@ void ReanimatedModuleProxy::setViewStyle(
   }
 }
 
-void ReanimatedModuleProxy::maybeRemoveFromRegistries(
+void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
+}
+
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(

@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -32,6 +31,7 @@ class UpdatesRegistryManager {
   void cancelCommitAfterPause();
 
   void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
 
@@ -46,7 +46,7 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  std::unordered_set<ShadowNode::Shared> removableShadowNodes_;
+  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
