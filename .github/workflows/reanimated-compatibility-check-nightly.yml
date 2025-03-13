@@ -50,7 +50,7 @@ jobs:
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
+        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern in app
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
