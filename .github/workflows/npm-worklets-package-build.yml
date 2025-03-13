@@ -90,9 +90,12 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: '${{env.WORKLETS_DIR}}/${{ env.PACKAGE_NAME }}'
 
+      - name: Move package to monorepo root
+        # Running `--provenance` in the workspace breaks.
+        run: mv ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} .
+
       - name: Publish npm package
-        working-directory: ${{ env.WORKLETS_DIR }}
         run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.WORKLETS_NODE_AUTH_TOKEN }}
