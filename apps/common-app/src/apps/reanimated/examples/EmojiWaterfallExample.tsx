@@ -67,14 +67,14 @@ function EmojiWaterfallProvider({ children }: React.PropsWithChildren) {
   };
 
   return (
-    <EmojiWaterfallContext.Provider value={{ startAnimation }}>
+    <EmojiWaterfallContext value={{ startAnimation }}>
       {children}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {[...Array(count)].map((_, i) => (
           <Emoji emoji={emoji} progress={progress} key={i} />
         ))}
       </View>
-    </EmojiWaterfallContext.Provider>
+    </EmojiWaterfallContext>
   );
 }
 

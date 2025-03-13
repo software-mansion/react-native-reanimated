@@ -1,7 +1,7 @@
 import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
-import type { Component } from 'react';
+import type { RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
@@ -9,6 +9,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   Extrapolation,
@@ -45,13 +46,13 @@ type ActiveExampleImage = {
   y: number;
   targetHeight: number;
   targetWidth: number;
-  sv: Animated.SharedValue<number>;
+  sv: SharedValue<number>;
 };
 
 type onItemPressFn = (
-  imageRef: React.MutableRefObject<Component>,
+  imageRef: RefObject<Image | null>,
   item: ExampleImage,
-  sv: Animated.SharedValue<number>
+  sv: SharedValue<number>
 ) => void;
 
 type ImageListProps = {
@@ -74,9 +75,9 @@ type ListItemProps = {
   index: number;
   onPress: onItemPressFn;
 };
+
 function ListItem({ item, index, onPress }: ListItemProps) {
-  // @ts-ignore FIXME)TS) createAnimatedComponent type
-  const ref = useRef<AnimatedImage>();
+  const ref = useRef<Image>(null);
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -245,9 +246,9 @@ export default function LightBoxExample() {
   );
 
   function onItemPress(
-    imageRef: React.MutableRefObject<Component>,
+    imageRef: RefObject<Image | null>,
     item: ExampleImage,
-    sv: Animated.SharedValue<number>
+    sv: SharedValue<number>
   ) {
     imageRef.current?.measure?.((_x, _y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {

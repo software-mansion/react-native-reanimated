@@ -45,7 +45,7 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(UpdatesBatch &updatesBatch);
   void collectProps(PropsMap &propsMap);
 
  protected:
@@ -64,7 +64,7 @@ class UpdatesRegistry {
  private:
   UpdatesBatch updatesBatch_;
 
-  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

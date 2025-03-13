@@ -10,7 +10,7 @@ const escape = require('escape-string-regexp');
 
 const root = path.resolve(__dirname, '../..');
 
-const modules = ['react-native'];
+const modules = ['react-native', 'react'];
 
 /** @type {import('@react-native/metro-config').MetroConfig} */
 const config = {
