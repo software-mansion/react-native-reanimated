@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/static-framework-reanimated-build-nightly.yml
+      - .github/workflows/static-framework-reanimated-build-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-14
     concurrency:
-      group: ios-static-framework-${{ github.ref }}
+      group: static-framework-reanimated-build-check-nightly-${{ github.ref }}
       cancel-in-progress: true
     env:
       APP_NAME: app
