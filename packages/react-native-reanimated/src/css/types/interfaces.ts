@@ -1,3 +1,4 @@
+'use strict';
 import type { ExistingCSSAnimationProperties } from './animation';
 import type { CSSStyle } from './props';
 import type { CSSTransitionProperties } from './transition';
