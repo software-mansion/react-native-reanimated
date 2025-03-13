@@ -21,6 +21,8 @@ jobs:
         # Update it when dropping support for RN versions.
         react-native:
           [
+            { version: '0.75', architecture: 'Paper' },
+            { version: '0.75', architecture: 'Fabric' },
             { version: '0.76', architecture: 'Paper' },
             { version: '0.76', architecture: 'Fabric' },
             { version: '0.77', architecture: 'Paper' },
