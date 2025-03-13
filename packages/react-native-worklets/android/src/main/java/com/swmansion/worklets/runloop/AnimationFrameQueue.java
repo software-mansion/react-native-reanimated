@@ -1,4 +1,4 @@
-package com.swmansion.worklets;
+package com.swmansion.worklets.runloop;
 
 import android.os.SystemClock;
 import com.facebook.react.bridge.ReactApplicationContext;

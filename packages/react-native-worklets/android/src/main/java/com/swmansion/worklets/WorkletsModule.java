@@ -11,11 +11,12 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
+import com.swmansion.worklets.runloop.AnimationFrameCallback;
+import com.swmansion.worklets.runloop.AnimationFrameQueue;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
+@SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
@@ -36,9 +37,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
 
-  public AndroidUIScheduler getAndroidUIScheduler() {
-    return mAndroidUIScheduler;
-  }
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
@@ -50,6 +53,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    reactContext.assertOnJSQueueThread();
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
@@ -58,6 +62,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
+    context.assertOnJSQueueThread();
+
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
@@ -82,11 +88,15 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   }
 
   public void invalidate() {
-    // We have to destroy extra runtimes when invalidate is called. If we clean
-    // it up later instead there's a chance the runtime will retain references
-    // to invalidated memory and will crash on its destruction.
-    invalidateCpp();
-
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      // We have to destroy extra runtimes when invalidate is called. If we clean
+      // it up later instead there's a chance the runtime will retain references
+      // to invalidated memory and will crash on its destruction.
+      invalidateCpp();
+    }
     mAndroidUIScheduler.deactivate();
   }
 

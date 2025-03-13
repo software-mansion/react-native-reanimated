@@ -31,46 +31,27 @@ export type WorkletStackDetails = [
 
 type WorkletClosure = Record<string, unknown>;
 
-interface WorkletInitDataCommon {
+interface WorkletInitData {
   code: string;
+  /** Only in dev builds. */
+  location?: string;
+  /** Only in dev builds. */
+  sourceMap?: string;
+  /** Only in dev builds. */
+  version?: string;
 }
 
-type WorkletInitDataRelease = WorkletInitDataCommon;
-
-interface WorkletInitDataDev extends WorkletInitDataCommon {
-  location: string;
-  sourceMap: string;
-  version: string;
-}
-
-interface WorkletBaseCommon {
+export interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-}
-
-export interface WorkletBaseRelease extends WorkletBaseCommon {
-  __initData: WorkletInitDataRelease;
-}
-
-export interface WorkletBaseDev extends WorkletBaseCommon {
-  __initData: WorkletInitDataDev;
+  __initData: WorkletInitData;
+  /** Only for Handles. */
+  __init?: () => unknown;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
 }
 
-export type WorkletFunctionDev<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
-
-type WorkletFunctionRelease<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
-
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> =
-  | WorkletFunctionDev<Args, ReturnValue>
-  | WorkletFunctionRelease<Args, ReturnValue>;
+> = ((...args: Args) => ReturnValue) & WorkletProps;

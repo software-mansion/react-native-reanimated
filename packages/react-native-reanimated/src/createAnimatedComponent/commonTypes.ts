@@ -104,6 +104,7 @@ export interface IAnimatedComponentInternal {
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
+  _hasAnimatedRef: boolean;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
@@ -116,7 +117,6 @@ export interface IAnimatedComponentInternal {
    * handling.
    */
   getComponentViewTag: () => number;
-  hasAnimatedRef: () => boolean;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

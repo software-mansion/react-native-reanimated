@@ -15,9 +15,9 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
 import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -63,8 +63,15 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertSingleReanimatedInstance();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule();
+    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
+      if (!ReanimatedTurboModule.installTurboModule()) {
+        // This path means that React Native has failed on reload.
+        // We don't want to throw any errors to not mislead the users
+        // that the problem is related to Reanimated.
+        // We install a DummyReanimatedModuleProxy instead.
+        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+        return;
+      }
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -198,29 +205,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
   }
 
-  registerCSSAnimations(
+  applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: {
-      name: string;
-      settings: NormalizedSingleCSSAnimationSettings;
-    }[]
+    animationUpdates: CSSAnimationUpdates
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimations(
+    this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
-      animationConfigs
-    );
-  }
-
-  updateCSSAnimations(
-    animationId: number,
-    settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[]
-  ) {
-    this.#reanimatedModuleProxy.updateCSSAnimations(
-      animationId,
-      settingsUpdates
+      animationUpdates
     );
   }
 
@@ -247,5 +238,41 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  }
+}
+
+class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
+  configureLayoutAnimationBatch(): void {}
+  setShouldAnimateExitingForTag(): void {}
+  enableLayoutAnimations(): void {}
+  configureProps(): void {}
+  subscribeForKeyboardEvents(): number {
+    return -1;
+  }
+
+  unsubscribeFromKeyboardEvents(): void {}
+  setViewStyle(): void {}
+  removeViewStyle(): void {}
+  registerCSSKeyframes(): void {}
+  unregisterCSSKeyframes(): void {}
+  applyCSSAnimations(): void {}
+  registerCSSAnimations(): void {}
+  updateCSSAnimations(): void {}
+  unregisterCSSAnimations(): void {}
+  registerCSSTransition(): void {}
+  updateCSSTransition(): void {}
+  unregisterCSSTransition(): void {}
+  registerSensor(): number {
+    return -1;
+  }
+
+  unregisterSensor(): void {}
+  registerEventHandler(): number {
+    return -1;
+  }
+
+  unregisterEventHandler(): void {}
+  getViewProp() {
+    return null!;
   }
 }

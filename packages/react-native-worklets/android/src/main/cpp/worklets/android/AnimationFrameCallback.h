@@ -8,7 +8,7 @@ class AnimationFrameCallback
     : public facebook::jni::HybridClass<AnimationFrameCallback> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/worklets/AnimationFrameCallback;";
+      "Lcom/swmansion/worklets/runloop/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);

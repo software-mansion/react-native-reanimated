@@ -1,0 +1,98 @@
+name: NPM Worklets package build
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_call:
+    inputs:
+      option:
+        required: false
+        type: string
+      ref:
+        required: false
+        type: string
+      publish_on_npm:
+        required: false
+        type: boolean
+    secrets:
+      NODE_AUTH_TOKEN:
+        required: false
+  workflow_dispatch:
+    inputs:
+      option:
+        required: false
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  npm-worklets-package-build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
+      WORKLETS_DIR: packages/react-native-worklets
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - name: Clear annotations
+        run: .github/workflows/helper/clear-annotations.sh
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        working-directory: ${{ env.WORKLETS_DIR }}
+        id: build
+        run: >-
+          ./createNPMPackage.sh ${{ inputs.option }}
+
+      - name: Check if any node_modules were packed
+        working-directory: ${{ env.WORKLETS_DIR }}
+        id: node_modules
+        run: >-
+          ! grep --silent -E "node_modules/.+" build.log
+
+      - name: Show build log
+        working-directory: ${{ env.WORKLETS_DIR }}
+        if: failure() && steps.build.outcome == 'failure'
+        run: >-
+          cat build.log
+
+      - name: Show packed node_modules
+        working-directory: ${{ env.WORKLETS_DIR }}
+        if: failure() && steps.node_modules.outcome == 'failure'
+        run: >-
+          ! grep -E "node_modules/.+" build.log
+
+      - name: Add package name to env
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-worklets-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+
+      - name: Assert PACKAGE_NAME
+        if: ${{ env.PACKAGE_NAME == 'PLACEHOLDER' }}
+        run: exit 1 # This should never happen.
+
+      - name: Upload npm package to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: '${{env.WORKLETS_DIR}}/${{ env.PACKAGE_NAME }}'
+
+      - name: Publish npm package
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: npm publish $PACKAGE_NAME --tag nightly --provenance
+        if: ${{ inputs.publish_on_npm }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

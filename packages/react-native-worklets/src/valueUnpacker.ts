@@ -5,10 +5,10 @@ import { isWorkletFunction } from './workletFunction';
 import type { WorkletFunction } from './workletTypes';
 
 function valueUnpacker(
-  objectToUnpack: any,
+  objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string
-): any {
+): unknown {
   'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
@@ -29,9 +29,9 @@ function valueUnpacker(
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(
           '(' + initData.code + '\n)',
-          initData.location,
-          initData.sourceMap
-        ) as (...args: any[]) => any;
+          initData.location!,
+          initData.sourceMap!
+        );
       } else if (global.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
         // can pass source url when evaluating the worklet. Now, instead of using
@@ -40,17 +40,15 @@ function valueUnpacker(
         workletFun = global.evalWithSourceUrl(
           '(' + initData.code + '\n)',
           `worklet_${workletHash}`
-        ) as (...args: any[]) => any;
+        );
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + initData.code + '\n)') as (
-          ...args: any[]
-        ) => any;
+        workletFun = eval('(' + initData.code + '\n)');
       }
-      workletsCache.set(workletHash, workletFun);
+      workletsCache.set(workletHash, workletFun!);
     }
-    const functionInstance = workletFun.bind(objectToUnpack);
+    const functionInstance = workletFun!.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
     return functionInstance;
   } else if (objectToUnpack.__init !== undefined) {
@@ -79,9 +77,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 }
 
+interface ObjectToUnpack extends WorkletFunction {
+  _recur: unknown;
+}
+
 type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: any, category?: string],
-  any
+  [objectToUnpack: unknown, category?: string],
+  unknown
 >;
 
 if (__DEV__ && !shouldBeUseWeb()) {

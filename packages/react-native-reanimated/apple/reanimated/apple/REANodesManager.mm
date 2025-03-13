@@ -1,3 +1,5 @@
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 
 #import <React/RCTUtils.h>
@@ -25,6 +27,9 @@
 
 - (void)useDisplayLinkOnMainQueue:(CADisplayLinkOperation)displayLinkOperation
 {
+  // This method is called on the JavaScript queue during initialization or on the ShadowQueue during invalidation.
+  react_native_assert(REAIsJavaScriptQueue() || REAIsTurboModuleManagerQueue());
+
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^{
     __typeof__(self) strongSelf = weakSelf;
@@ -35,12 +40,11 @@
   });
 }
 
-- (nonnull instancetype)initWithModule:(REAModule *)reanimatedModule
-                                bridge:(RCTBridge *)bridge
-                      surfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
+- (nonnull instancetype)init
 {
+  REAAssertJavaScriptQueue();
+
   if ((self = [super init])) {
-    _reanimatedModule = reanimatedModule;
     _onAnimationCallbacks = [NSMutableArray new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
@@ -55,6 +59,8 @@
 
 - (void)invalidate
 {
+  REAAssertTurboModuleManagerQueue();
+
   _eventHandler = nil;
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
     [displayLink invalidate];
@@ -63,32 +69,39 @@
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb
 {
+  RCTAssertMainQueue();
   [_onAnimationCallbacks addObject:clb];
   [self startUpdatingOnAnimationFrame];
 }
 
 - (void)registerEventHandler:(REAEventHandler)eventHandler
 {
+  REAAssertJavaScriptQueue();
   _eventHandler = eventHandler;
 }
 
 - (void)registerPerformOperations:(REAPerformOperations)performOperations
 {
+  REAAssertJavaScriptQueue();
   _performOperations = performOperations;
 }
 
 - (void)startUpdatingOnAnimationFrame
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:NO];
 }
 
 - (void)stopUpdatingOnAnimationFrame
 {
+  RCTAssertMainQueue();
   [[self getDisplayLink] setPaused:YES];
 }
 
 - (void)onAnimationFrame:(READisplayLink *)displayLink
 {
+  RCTAssertMainQueue();
+
   NSArray<REAOnAnimationCallback> *callbacks = _onAnimationCallbacks;
   _onAnimationCallbacks = [NSMutableArray new];
 
@@ -108,11 +121,13 @@
 
 - (void)performOperations
 {
+  RCTAssertMainQueue();
   _performOperations(); // calls ReanimatedModuleProxy::performOperations
 }
 
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
+  RCTAssertMainQueue();
   __weak REAEventHandler eventHandler = _eventHandler;
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^void() {
@@ -130,6 +145,7 @@
 
 - (void)maybeFlushUIUpdatesQueue
 {
+  RCTAssertMainQueue();
   if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }

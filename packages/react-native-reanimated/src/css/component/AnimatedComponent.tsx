@@ -53,10 +53,6 @@ export default class AnimatedComponent<
     return this._getViewInfo().viewTag as number;
   }
 
-  hasAnimatedRef() {
-    return this._hasAnimatedRef;
-  }
-
   _onSetLocalRef() {
     // noop - can be overridden in subclasses
   }

@@ -8,6 +8,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -26,6 +27,7 @@ import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -46,14 +48,21 @@ public class NativeProxy {
   private final int ANIMATIONS_DRAG_FACTOR = 10;
   protected String cppVersion = null;
 
+  /**
+   * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
+   * cost us much to add synchronization for extra safety.
+   */
+  private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
+
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, WorkletsModule workletsModule) {
-    mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+      ReactApplicationContext context, WorkletsModule workletsModule, NodesManager nodesManager) {
+    context.assertOnJSQueueThread();
+
+    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -70,9 +79,7 @@ public class NativeProxy {
       tempHandlerStateManager = null;
     }
     gestureHandlerStateManager = tempHandlerStateManager;
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
+    mNodesManager = nodesManager;
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -84,11 +91,6 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
-
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
-    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -110,8 +112,13 @@ public class NativeProxy {
     return mHybridData;
   }
 
-  public void invalidate() {
-    invalidateCpp();
+  protected void invalidate() {
+    if (mInvalidated.getAndSet(true)) {
+      return;
+    }
+    if (mHybridData != null && mHybridData.isValid()) {
+      invalidateCpp();
+    }
   }
 
   private void toggleSlowAnimations() {
@@ -130,6 +137,7 @@ public class NativeProxy {
 
   @DoNotStrip
   public void requestRender(AnimationFrameCallback callback) {
+    UiThreadUtil.assertOnUiThread();
     mNodesManager.postOnAnimation(callback);
   }
 
@@ -223,6 +231,7 @@ public class NativeProxy {
 
   @DoNotStrip
   void maybeFlushUIUpdatesQueue() {
+    UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
       mNodesManager.performOperations();
     }

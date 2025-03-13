@@ -1,4 +1,6 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
@@ -12,27 +14,16 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-static inline bool getIsReducedMotion()
-{
-#if __has_include(<UIKit/UIAccessibility.h>)
-  return UIAccessibilityIsReduceMotionEnabled();
-#else
-  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif // __has_include(<UIKit/UIAccessibility.h>)
-}
-
-std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
-    REAModule *reaModule,
+std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
+    REANodesManager *nodesManager,
     RCTModuleRegistry *moduleRegistry,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule)
 {
-  auto nodesManager = reaModule.nodesManager;
+  REAAssertJavaScriptQueue();
 
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, reaModule);
+  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
@@ -40,17 +31,9 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
       workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);
+  jsi::Runtime &uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
 
-  return reanimatedModuleProxy;
-}
-
-void commonInit(
-    REAModule *reaModule,
-    jsi::Runtime &uiRuntime,
-    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
-{
-  [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
+  [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
@@ -61,11 +44,13 @@ void commonInit(
   }];
 
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
-  [reaModule.nodesManager registerPerformOperations:^() {
+  [nodesManager registerPerformOperations:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       reanimatedModuleProxy->performOperations();
     }
   }];
+
+  return reanimatedModuleProxy;
 }
 
 } // namespace reanimated

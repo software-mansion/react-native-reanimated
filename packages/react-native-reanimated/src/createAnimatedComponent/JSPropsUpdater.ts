@@ -1,5 +1,5 @@
 'use strict';
-import { runOnJS, runOnUIImmediately } from 'react-native-worklets';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type {
@@ -22,7 +22,7 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
           JSPropsUpdaterNative._tagToComponentMapping.get(viewTag);
         component?._updateFromNative(props);
       };
-      runOnUIImmediately(() => {
+      runOnUI(() => {
         'worklet';
         global.updateJSProps = (viewTag: number, props: unknown) => {
           runOnJS(updater)(viewTag, props);

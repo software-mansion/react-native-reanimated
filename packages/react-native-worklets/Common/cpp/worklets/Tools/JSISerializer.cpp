@@ -330,7 +330,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     return stringifyObject(object);
   }
 
-  throw std::runtime_error("[Reanimated] Unsupported value type.");
+  throw std::runtime_error("[Worklets] Unsupported value type.");
 }
 
 std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {

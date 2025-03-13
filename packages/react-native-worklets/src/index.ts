@@ -28,7 +28,6 @@ export {
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
-  runOnUIImmediately,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
@@ -36,7 +35,6 @@ export { WorkletsModule } from './WorkletsModule';
 export type {
   ShareableRef,
   WorkletFunction,
-  WorkletFunctionDev,
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';

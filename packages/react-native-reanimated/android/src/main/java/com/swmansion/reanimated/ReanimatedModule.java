@@ -1,112 +1,38 @@
 package com.swmansion.reanimated;
 
-import android.util.Log;
-import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.UIManager;
-import com.facebook.react.bridge.UIManagerListener;
-import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.uimanager.UIManagerHelper;
-import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.UIManagerModuleListener;
-import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.worklets.WorkletsModule;
-import java.util.ArrayList;
-import java.util.Objects;
-import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
-public class ReanimatedModule extends NativeReanimatedModuleSpec
-    implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
-
-  public void didDispatchMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void didScheduleMountItems(@NonNull UIManager uiManager) {
-    // Keep: Required for UIManagerListener
-  }
-
-  public void willDispatchViewUpdates(@NonNull UIManager uiManager) {
-    // This method is called for the interface of UIManagerListener on Fabric.
-    // The below function with the same name won't be called.
-    if (mOperations.isEmpty()) {
-      return;
-    }
-    final ArrayList<UIThreadOperation> operations = mOperations;
-    mOperations = new ArrayList<>();
-    if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager) uiManager)
-          .addUIBlock(
-              uiBlockViewResolver -> {
-                NodesManager nodesManager = getNodesManager();
-                for (UIThreadOperation operation : operations) {
-                  operation.execute(nodesManager);
-                }
-              });
-    } else {
-      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
-    }
-  }
-
-  public void willMountItems(@NonNull UIManager uiManager) {}
-
-  private interface UIThreadOperation {
-    void execute(NodesManager nodesManager);
-  }
-
-  private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
-  private @Nullable NodesManager mNodesManager;
+public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
+  private final NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
-  private Runnable mUnsubscribe = () -> {};
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    reactContext.assertOnJSQueueThread();
     mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
-  }
-
-  public WorkletsModule getWorkletsModule() {
-    return mWorkletsModule;
+    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
   }
 
   @Override
   public void initialize() {
-    ReactApplicationContext reactCtx = getReactApplicationContext();
-
-    UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
-    if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-      mUnsubscribe =
-          Utils.combineRunnables(
-              mUnsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
-    } else {
-      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
-    }
-
-    reactCtx.addLifecycleEventListener(this);
-    mUnsubscribe =
-        Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    reactContext.assertOnJSQueueThread();
+    reactContext.addLifecycleEventListener(this);
   }
 
   @Override
   public void onHostPause() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostPause();
-    }
+    mNodesManager.onHostPause();
   }
 
   @Override
   public void onHostResume() {
-    if (mNodesManager != null) {
-      mNodesManager.onHostResume();
-    }
+    mNodesManager.onHostResume();
   }
 
   @Override
@@ -114,50 +40,19 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     // do nothing
   }
 
-  @Override
-  public void willDispatchViewUpdates(final UIManagerModule uiManager) {
-    // This method is called for the interface of UIManagerModuleListener on
-    // Paper. The below function with the same name won't be called.
-    if (mOperations.isEmpty()) {
-      return;
-    }
-    final ArrayList<UIThreadOperation> operations = mOperations;
-    mOperations = new ArrayList<>();
-    uiManager.addUIBlock(
-        nativeViewHierarchyManager -> {
-          NodesManager nodesManager = getNodesManager();
-          for (UIThreadOperation operation : operations) {
-            operation.execute(nodesManager);
-          }
-        });
-  }
-
-  /*package*/
   public NodesManager getNodesManager() {
-    if (mNodesManager == null) {
-      mNodesManager = new NodesManager(getReactApplicationContext(), mWorkletsModule);
-    }
-
+    // This method is called from react-native-gesture-handler.
     return mNodesManager;
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
-    // When debugging in chrome the JS context is not available.
-    // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger =
-        Objects.requireNonNull(getReactApplicationContext().getJavaScriptContextHolder()).get()
-            == 0;
-
-    if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext());
-      return true;
-    } else {
-      Log.w(
-          "[REANIMATED]",
-          "Unable to create Reanimated Native Module. You can ignore this message if you are using Chrome Debugger now.");
-      return false;
+    getReactApplicationContext().assertOnJSQueueThread();
+    mNodesManager.getNativeProxy().installJSIBindings();
+    if (BuildConfig.DEBUG) {
+      mNodesManager.getNativeProxy().checkCppVersion();
     }
+    return true;
   }
 
   @ReactMethod
@@ -173,11 +68,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   @Override
   public void invalidate() {
     super.invalidate();
-
-    if (mNodesManager != null) {
-      mNodesManager.invalidate();
-    }
-
-    mUnsubscribe.run();
+    mNodesManager.invalidate();
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    reactContext.removeLifecycleEventListener(this);
   }
 }

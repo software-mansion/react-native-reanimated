@@ -1,11 +1,12 @@
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
-#import <React/RCTUIManagerUtils.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#import <reanimated/apple/REAModule.h>
+#import <reanimated/apple/REAAssertJavaScriptQueue.h>
+#import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Tools/SingleInstanceChecker.h>
@@ -19,10 +20,10 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
-@implementation REAModule {
+@implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
 #ifndef NDEBUG
-  SingleInstanceChecker<REAModule> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
 }
@@ -32,35 +33,18 @@ using namespace reanimated;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
-+ (BOOL)requiresMainQueueSetup
-{
-  return YES;
-}
-
 - (void)invalidate
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  REAAssertTurboModuleManagerQueue();
+
   [_nodesManager invalidate];
   [super invalidate];
 }
 
-- (dispatch_queue_t)methodQueue
-{
-  // This module needs to be on the same queue as the UIManager to avoid
-  // having to lock `_operations` and `_preOperations` since `uiManagerWillPerformMounting`
-  // will be called from that queue.
-  return RCTGetUIManagerQueue();
-}
-
-- (std::shared_ptr<UIManager>)getUIManager
-{
-  react_native_assert(_surfacePresenter != nil);
-  RCTScheduler *scheduler = [_surfacePresenter scheduler];
-  return scheduler.uiManager;
-}
-
 - (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
 {
+  REAAssertJavaScriptQueue();
+
   std::weak_ptr<ReanimatedModuleProxy> reanimatedModuleProxyWeak = reanimatedModuleProxy;
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   __weak __typeof__(self) weakSelf = self;
@@ -94,13 +78,15 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
+  REAAssertJavaScriptQueue();
   _surfacePresenter = surfacePresenter;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
 {
+  REAAssertJavaScriptQueue();
   [super setBridge:bridge];
-  _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
+  _nodesManager = [[REANodesManager alloc] init];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
@@ -134,23 +120,46 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
+/**
+ * Currently on iOS React Native can go into a non-fatal race condition
+ * on a double reload. Double reload can happen during an OTA update,
+ * when an app is reloaded immediately after evaluating the bundle.
+ * We need to bail on it without throwing exceptions.
+ */
+- (BOOL)hasReactNativeFailedReload
+{
+  return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
+  REAAssertJavaScriptQueue();
+
+  if ([self hasReactNativeFailedReload]) {
+    return @NO;
+  }
+
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   auto jsCallInvoker = _callInvoker.callInvoker;
-  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  assert(jsiRuntime != nullptr);
+  react_native_assert(self.bridge != nullptr);
+  react_native_assert(self.bridge.runtime != nullptr);
+  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto reanimatedModuleProxy = reanimated::createReanimatedModule(self, _moduleRegistry, jsCallInvoker, workletsModule);
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
 
   auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 
-  jsi::Runtime &rnRuntime = *jsiRuntime;
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
-  const auto &uiManager = [self getUIManager];
+
+  react_native_assert(_surfacePresenter != nil && "_surfacePresenter is nil");
+  RCTScheduler *scheduler = [_surfacePresenter scheduler];
+  react_native_assert(scheduler != nil && "_surfacePresenter.scheduler is nil");
+  react_native_assert(scheduler.uiManager != nil && "_surfacePresenter.scheduler.uiManager is nil");
+  const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   reanimatedModuleProxy->initializeFabric(uiManager);
 
@@ -160,6 +169,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
+  REAAssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
 

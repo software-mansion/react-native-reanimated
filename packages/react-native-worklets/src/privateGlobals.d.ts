@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 'use strict';
 
@@ -8,12 +7,14 @@ import type { callGuardDEV } from './initializers';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 
 declare global {
-  var __workletsCache: Map<string, any>;
-  var __handleCache: WeakMap<object, any>;
+  var __workletsCache: Map<number, () => unknown>;
+  var __handleCache: WeakMap<object, unknown>;
   var evalWithSourceMap:
-    | ((js: string, sourceURL: string, sourceMap: string) => any)
+    | ((js: string, sourceURL: string, sourceMap: string) => () => unknown)
     | undefined;
-  var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
+  var evalWithSourceUrl:
+    | ((js: string, sourceURL: string) => () => unknown)
+    | undefined;
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy | undefined;
   var _WORKLET: boolean | undefined;
@@ -22,7 +23,6 @@ declare global {
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
   var __callMicrotasks: () => void;
-  var _maybeFlushUIUpdatesQueue: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var __ErrorUtils: {
@@ -38,5 +38,5 @@ declare global {
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
   ) => void;
-  var RN$Bridgeless: boolean | undefined;
+  var _microtaskQueueFinalizers: (() => void)[];
 }

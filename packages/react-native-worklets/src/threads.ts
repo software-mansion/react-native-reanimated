@@ -23,6 +23,7 @@ export function setupMicrotasks() {
   global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
+  global._microtaskQueueFinalizers = [];
 
   global.__callMicrotasks = () => {
     if (isExecutingMicrotasksQueue) {
@@ -35,7 +36,7 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
-      global._maybeFlushUIUpdatesQueue();
+      global._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
     } finally {
       isExecutingMicrotasksQueue = false;
     }
@@ -152,35 +153,6 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
         'worklet';
         const result = worklet(...args);
         return makeShareableCloneOnUIRecursive(result);
-      })
-    );
-  };
-}
-
-// @ts-expect-error Check `runOnUI` overload above.
-export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): WorkletFunction<Args, ReturnValue>;
-/** Schedule a worklet to execute on the UI runtime skipping batching mechanism. */
-export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
-  worklet: WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new WorkletsError(
-      '`runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      '`runOnUIImmediately` can only be used with worklets.'
-    );
-  }
-  return (...args) => {
-    WorkletsModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        worklet(...args);
       })
     );
   };
