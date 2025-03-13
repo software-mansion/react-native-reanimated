@@ -42,7 +42,7 @@ export function useAnimatedRef<
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
-  const ref = useRef<AnimatedRef<TComponent>>(null);
+  const ref = useRef<AnimatedRef<TComponent>>();
 
   if (!ref.current) {
     const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
