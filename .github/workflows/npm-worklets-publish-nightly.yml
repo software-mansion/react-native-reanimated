@@ -2,10 +2,6 @@ name: NPM Worklets publish [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      # TEMPORARY
-      - '.github/workflows/npm-worklets-publish-nightly.yml'
   schedule:
     - cron: '27 23 * * *' # at 23:27 every day
   workflow_dispatch:
