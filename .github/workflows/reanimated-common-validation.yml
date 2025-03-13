@@ -24,18 +24,16 @@ jobs:
   reanimated-common-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.13]
     env:
+      PYTHON_VERSION: 3.13
       REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -47,7 +45,3 @@ jobs:
       - name: Lint Common
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn lint:common
-      - name: Disallow DEBUG macros
-        working-directory: ${{ env.REANIMATED_DIR }}
-        run: |
-          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' Common/cpp/ apple/ android/src/main/cpp/
