@@ -1,4 +1,6 @@
 name: Reanimated compatibility check [Nightly]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
@@ -8,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
@@ -17,23 +19,12 @@ jobs:
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
-        react-native:
-          [
-            { version: '0.74', architecture: 'Paper' },
-            { version: '0.74', architecture: 'Fabric' },
-            { version: '0.75', architecture: 'Paper' },
-            { version: '0.75', architecture: 'Fabric' },
-            { version: '0.76', architecture: 'Paper' },
-            { version: '0.76', architecture: 'Fabric' },
-            { version: '0.77', architecture: 'Paper' },
-            { version: '0.77', architecture: 'Fabric' },
-          ]
+        react-native-version: ['0.78']
       fail-fast: false
     env:
       APP_NAME: app
-      RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
     concurrency:
-      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native.version}}-${{matrix.platform}}-${{matrix.react-native.architecture}}-${{ matrix.mode }}-${{ github.ref }}
+      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native-version}}-${{matrix.platform}}-${{ matrix.mode }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Set up JDK 18
@@ -59,7 +50,7 @@ jobs:
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
+        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern in app
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
@@ -67,6 +58,9 @@ jobs:
           touch yarn.lock
           yarn set version berry
           yarn config set nodeLinker node-modules
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
@@ -74,10 +68,6 @@ jobs:
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod update
-      - name: Setup Fabric (Android)
-        if: ${{ matrix.platform == 'Android' && matrix.react-native.architecture == 'Fabric' }}
-        working-directory: ${{ env.APP_NAME }}/android
-        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
