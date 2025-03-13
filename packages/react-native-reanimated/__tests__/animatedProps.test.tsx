@@ -65,7 +65,7 @@ describe('animatedProps', () => {
   });
 
   test('custom prop', () => {
-    const { getByTestId } = render(<AnimatedComponent isCustom={true} />);
+    const { getByTestId } = render(<AnimatedComponent />);
     const circle = getByTestId('circle');
     const button = getByTestId('button');
 
@@ -75,9 +75,10 @@ describe('animatedProps', () => {
     jest.advanceTimersByTime(100);
 
     expect(circle).toHaveAnimatedProps({ r: 30 });
+    expect(circle).toHaveAnimatedStyle({ width: 100 });
   });
   test('normal prop', () => {
-    const { getByTestId } = render(<AnimatedComponent isCustom={false} />);
+    const { getByTestId } = render(<AnimatedComponent />);
     const textInput = getByTestId('text');
     const button = getByTestId('button');
 
