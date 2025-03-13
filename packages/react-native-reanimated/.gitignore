@@ -67,6 +67,3 @@ plugin/index.js.map
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-
-# library bundle
-*.tgz

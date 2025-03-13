@@ -1,4 +1,4 @@
-name: NPM Reanimated publish [Nightly]
+name: NPM Worklets publish [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  npm-reanimated-publish-nightly:
+  npm-worklets-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    uses: ./.github/workflows/npm-reanimated-package-build.yml
+    uses: ./.github/workflows/npm-worklets-package-build.yml
     with:
       option: --nightly
       publish_on_npm: true
