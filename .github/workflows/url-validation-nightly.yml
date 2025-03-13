@@ -15,6 +15,10 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'yarn'
       - name: Checkout repository
         uses: actions/checkout@v4
 
