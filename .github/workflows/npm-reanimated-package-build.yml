@@ -90,8 +90,11 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: '${{env.REANIMATED_DIR}}/${{ env.PACKAGE_NAME }}'
 
+      - name: Move package to monorepo root
+        # Running `--provenance` in the workspace breaks.
+        run: mv ${{ env.REANIMATED_DIR }}/${{ env.PACKAGE_NAME }} .
+
       - name: Publish npm package
-        working-directory: ${{ env.REANIMATED_DIR }}
         run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
