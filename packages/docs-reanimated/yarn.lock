@@ -11980,6 +11980,11 @@ react-native-web@^0.18.12:
     postcss-value-parser "^4.2.0"
     styleq "^0.1.2"
 
+"react-native-worklets@workspace:*":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.1.0.tgz#bb39986ce2e5228d37dd1acd79d330b6d56f55bb"
+  integrity sha512-+SlJfWlclW8T2W9l5q9EuDhurHk6OKc3892yQNrNgeJr7vBEYdHEpjyHsQR4nnpfSt13nzB5OZrL4OAD1sQnWw==
+
 react-native@^0.71.4:
   version "0.71.4"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.71.4.tgz#f03f600efe68f745d19454ab17f9c1a9ef304790"

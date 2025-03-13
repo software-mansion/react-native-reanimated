@@ -48,7 +48,8 @@
     "react-native-web": "^0.18.12",
     "source-map": "^0.7.4",
     "source-map-loader": "^4.0.1",
-    "usehooks-ts": "^2.9.1"
+    "usehooks-ts": "^2.9.1",
+    "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^2.4.3",
