@@ -195,6 +195,7 @@ export function withStyleAnimation(
           }
           const propName = currentEntry.path[0];
           if (
+            __DEV__ &&
             typeof propName === 'string' &&
             !isValidLayoutAnimationProp(propName.trim())
           ) {
