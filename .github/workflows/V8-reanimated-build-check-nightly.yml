@@ -13,7 +13,8 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    # Disable V8 CI for now
+    if: github.repository == 'software-mansion/react-native-reanimated' && false
     runs-on: ubuntu-latest
     concurrency:
       group: build-v8-${{ github.ref }}

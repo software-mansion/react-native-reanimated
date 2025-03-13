@@ -3,6 +3,7 @@
  */
 'use strict';
 
+// @ts-ignore BoxShadowValue isn't available in RN 0.75
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 
 import type { StyleProps } from '.';

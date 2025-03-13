@@ -1,4 +1,6 @@
 name: Reanimated compatibility check [Nightly]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
@@ -19,14 +21,14 @@ jobs:
         # Update it when dropping support for RN versions.
         react-native:
           [
-            { version: '0.74', architecture: 'Paper' },
-            { version: '0.74', architecture: 'Fabric' },
             { version: '0.75', architecture: 'Paper' },
             { version: '0.75', architecture: 'Fabric' },
             { version: '0.76', architecture: 'Paper' },
             { version: '0.76', architecture: 'Fabric' },
             { version: '0.77', architecture: 'Paper' },
             { version: '0.77', architecture: 'Fabric' },
+            { version: '0.78', architecture: 'Paper' },
+            { version: '0.78', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
