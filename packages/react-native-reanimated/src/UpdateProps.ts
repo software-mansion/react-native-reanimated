@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
-import { runOnUIImmediately } from 'react-native-worklets';
+import { runOnUI } from 'react-native-worklets';
 
 import { processColorsInProps } from './Colors';
 import type {
@@ -107,7 +107,7 @@ if (shouldBeUseWeb()) {
     },
   });
 } else {
-  runOnUIImmediately(() => {
+  runOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
