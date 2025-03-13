@@ -78,7 +78,10 @@ folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
   folly::dynamic result = folly::dynamic::object;
 
   for (const auto &[propertyName, interpolator] : interpolators_) {
-    result[propertyName] = callback(*interpolator);
+    const auto value = callback(*interpolator);
+    if (!value.isNull()) {
+      result[propertyName] = value;
+    }
   }
 
   return result;
