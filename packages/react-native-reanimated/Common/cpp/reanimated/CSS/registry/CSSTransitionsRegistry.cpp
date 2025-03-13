@@ -41,13 +41,6 @@ void CSSTransitionsRegistry::updateSettings(
     const PartialCSSTransitionConfig &config) {
   const auto &transition = registry_[viewTag];
   transition->updateSettings(config);
-
-  // Replace style overrides with the new ones if transition properties were
-  // updated (we want to keep overrides only for transitioned properties)
-  if (config.properties.has_value()) {
-    updateInUpdatesRegistry(
-        transition, transition->getCurrentInterpolationStyle());
-  }
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
@@ -62,7 +55,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode(), updates);
+      updatesBatch_.emplace_back(shadowNode, updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -136,9 +129,8 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates =
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
-      const auto &transitionStartStyle = transition->run(
+      transition->run(
           changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
-      strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }
   };

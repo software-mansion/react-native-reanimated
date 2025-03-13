@@ -76,7 +76,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   {
     auto lock = updatesRegistryManager_->lock();
 
-    PropsMap propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);

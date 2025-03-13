@@ -23,14 +23,13 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic getCurrentInterpolationStyle() const;
   TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  folly::dynamic run(
+  void run(
       const ChangedProps &changedProps,
       const folly::dynamic &lastUpdateValue,
       double timestamp);

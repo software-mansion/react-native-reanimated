@@ -74,14 +74,6 @@ void UpdatesRegistryManager::handleNodeRemovals(
   }
 }
 
-PropsMap UpdatesRegistryManager::collectProps() {
-  PropsMap propsMap;
-  for (auto &registry : registries_) {
-    registry->collectProps(propsMap);
-  }
-  return propsMap;
-}
-
 #ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {

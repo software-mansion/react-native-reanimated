@@ -776,12 +776,13 @@ void ReanimatedModuleProxy::commitUpdates(
 
   if (shouldFlushRegistry_) {
     shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
-    for (auto const &[family, props] : propsMap) {
-      const auto surfaceId = family->getSurfaceId();
-      auto &propsVector = propsMapBySurface[surfaceId][family];
-      propsVector.insert(propsVector.end(), props.begin(), props.end());
-    }
+    // TODO
+    // const auto propsMap = updatesRegistryManager_->collectProps();
+    // for (auto const &[family, props] : propsMap) {
+    //   const auto surfaceId = family->getSurfaceId();
+    //   auto &propsVector = propsMapBySurface[surfaceId][family];
+    //   propsVector.insert(propsVector.end(), props.begin(), props.end());
+    // }
   } else {
     for (auto const &[shadowNode, props] : updatesBatch) {
       SurfaceId surfaceId = shadowNode->getSurfaceId();

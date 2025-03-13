@@ -49,8 +49,6 @@ void CSSAnimationsRegistry::apply(
   for (size_t i = 0; i < animationsVector.size(); ++i) {
     scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
   }
-  updateViewAnimations(viewTag, updatedIndices, timestamp, false);
-  applyViewAnimationsStyle(viewTag, timestamp);
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
@@ -218,7 +216,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(shadowNode, result);
+    updatesBatch_.emplace_back(shadowNode, result);
   }
 }
 
@@ -254,47 +252,6 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
     delayedAnimationsManager_.remove(animation);
   }
   runningAnimationIndicesMap_.erase(viewTag);
-}
-
-void CSSAnimationsRegistry::applyViewAnimationsStyle(
-    const Tag viewTag,
-    const double timestamp) {
-  const auto it = registry_.find(viewTag);
-  // Remove the style from the registry if there are no animations for the view
-  if (it == registry_.end() || it->second.animationsVector.empty()) {
-    removeFromUpdatesRegistry(viewTag);
-    return;
-  }
-
-  folly::dynamic updatedStyle = folly::dynamic::object;
-  ShadowNode::Shared shadowNode = nullptr;
-
-  for (const auto &animation : it->second.animationsVector) {
-    const auto startTimestamp = animation->getStartTimestamp(timestamp);
-
-    folly::dynamic style;
-    const auto &currentState = animation->getState(timestamp);
-    if (currentState == AnimationProgressState::Finished) {
-      if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardsFillStyle();
-      }
-    } else if (
-        startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-      style = animation->getBackwardsFillStyle();
-    } else if (currentState != AnimationProgressState::Pending) {
-      style = animation->getCurrentInterpolationStyle();
-    }
-
-    if (!shadowNode) {
-      shadowNode = animation->getShadowNode();
-    }
-    if (style.isObject()) {
-      updatedStyle.update(style);
-    }
-  }
-
-  setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
