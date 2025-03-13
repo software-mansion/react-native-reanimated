@@ -32,7 +32,7 @@ module.exports = function (api) {
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
   } else {
-    plugins.push('react-native-reanimated/plugin');
+    plugins.push('react-native-worklets/plugin');
   }
 
   return {

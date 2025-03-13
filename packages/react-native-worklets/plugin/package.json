@@ -24,7 +24,7 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "build": "yarn tsc && yarn bundle && yarn format && cp -f index.js index.js.map ../../react-native-reanimated/plugin",
+    "build": "yarn tsc && yarn bundle && yarn format",
     "bundle": "node bundle.js",
     "format": "prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
