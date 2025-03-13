@@ -12,19 +12,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  expo-devclient-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest' }}
     strategy:
       matrix:
-        react-native-architecture: ['Paper', 'Fabric']
         platform: ['iOS', 'Android']
       fail-fast: false
     env:
       APP_NAME: ExpoApp
       EXPO_TAG: latest
     concurrency:
-      group: ${{ matrix.platform }}-expo-dev-client-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      group: ${{ matrix.platform }}-expo-dev-client-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out reanimated repository
@@ -40,12 +39,8 @@ jobs:
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      - name: Create Expo app (Paper)
-        if: ${{ matrix.react-native-architecture == 'Paper' }}
+      - name: Create Expo app
         run: npx create-expo-app@latest ${{ env.APP_NAME }}
-      - name: Create Expo app (Fabric)
-        if: ${{ matrix.react-native-architecture == 'Fabric' }}
-        run: npx create-expo-app@latest ${{ env.APP_NAME }} -e with-new-arch
       - name: Load Expo tag
         working-directory: ${{ env.APP_NAME }}
         run: |
@@ -61,13 +56,16 @@ jobs:
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: npm install react-native-reanimated@nightly
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: npm install react-native-worklets@nightly
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
         run: npx expo prebuild
       - name: Install pods
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
+        run: bundle install && bundle exec pod update
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
