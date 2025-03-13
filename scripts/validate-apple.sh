@@ -25,7 +25,7 @@ if grep -Rn apple -e "^(#if DEBUG|#ifdef DEBUG)"; then
     exit 1
 fi
 
-if grep -Rn apple -e "/^#ifndef(?! NDEBUG)"; then
+if grep -Rn apple -e "^#ifndef(?! NDEBUG)"; then
     echo 'Found `#ifndef` in `apple/` directory. Use `#ifdef ... #else` instead.'
     exit 1
 fi

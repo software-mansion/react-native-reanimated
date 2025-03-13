@@ -10,7 +10,7 @@ if grep -Rn android/src/main/cpp -e "^(#if DEBUG|#ifdef DEBUG)"; then
     exit 1
 fi
 
-if grep -Rn android/src/main/cpp -e "/^#ifndef(?! NDEBUG)"; then
+if grep -Rn android/src/main/cpp -e "^#ifndef(?! NDEBUG)"; then
     echo 'Found `#ifndef` in `android/` directory. Use `#ifdef ... #else` instead.'
     exit 1
 fi
