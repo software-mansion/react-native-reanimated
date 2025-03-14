@@ -30,7 +30,7 @@ AnimationProgressState AnimationProgressProvider::getState(
     return AnimationProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
-  if (rawProgress >= 1) {
+  if (rawProgress > 1) {
     return AnimationProgressState::Finished;
   }
   return AnimationProgressState::Running;
@@ -96,7 +96,7 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
     return false;
   }
   const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
-  return elapsedDuration >= duration_ * iterationCount_;
+  return elapsedDuration > duration_ * iterationCount_;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(

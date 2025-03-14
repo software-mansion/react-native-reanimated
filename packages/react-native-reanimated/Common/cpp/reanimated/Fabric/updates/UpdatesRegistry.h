@@ -18,8 +18,6 @@ using namespace facebook;
 using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
-using RegistryMap =
-    std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
@@ -36,35 +34,17 @@ class UpdatesRegistry {
 
   std::lock_guard<std::mutex> lock() const;
 
-  virtual bool isEmpty() const;
-  folly::dynamic get(Tag tag) const;
+  virtual bool isEmpty() const = 0;
   virtual void remove(Tag tag) = 0;
+  virtual UpdatesBatch collectUpdates(double timestamp) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch);
-  void collectProps(PropsMap &propsMap);
-
  protected:
   mutable std::mutex mutex_;
-  RegistryMap updatesRegistry_;
-
-  void addUpdatesToBatch(
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
-  folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
-  void setInUpdatesRegistry(
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
-  void removeFromUpdatesRegistry(Tag tag);
-
- private:
-  UpdatesBatch updatesBatch_;
-
-  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
