@@ -2,9 +2,11 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager() = default;
+UpdatesRegistryManager::UpdatesRegistryManager(
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry) {}
 
-std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
+std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
@@ -40,6 +42,38 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
+void UpdatesRegistryManager::markNodeAsRemovable(
+    const ShadowNode::Shared &shadowNode) {
+  removableShadowNodes_[shadowNode->getTag()] = shadowNode;
+}
+
+void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
+  removableShadowNodes_.erase(viewTag);
+}
+
+void UpdatesRegistryManager::handleNodeRemovals(
+    const RootShadowNode &rootShadowNode) {
+  for (auto it = removableShadowNodes_.begin();
+       it != removableShadowNodes_.end();) {
+    const auto &shadowNode = it->second;
+    const auto &family = shadowNode->getFamily();
+    const auto &ancestors = family.getAncestors(rootShadowNode);
+
+    // Skip if the node hasn't been removed
+    if (!ancestors.empty()) {
+      ++it;
+      continue;
+    }
+
+    const auto tag = shadowNode->getTag();
+    for (auto &registry : registries_) {
+      registry->remove(tag);
+    }
+    staticPropsRegistry_->remove(tag);
+    it = removableShadowNodes_.erase(it);
+  }
+}
+
 PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
   for (auto &registry : registries_) {
@@ -48,17 +82,7 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
-void UpdatesRegistryManager::removeBatch(const std::vector<Tag> &tags) {
-  for (auto &registry : registries_) {
-    registry->removeBatch(tags);
-  }
-}
-
 #ifdef ANDROID
-
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
 
 bool UpdatesRegistryManager::hasPropsToRevert() {
   for (auto &registry : registries_) {
