@@ -124,6 +124,12 @@ class ReanimatedModuleProxy
 
   void performOperations();
 
+  void markNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper) override;
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag)
+      override;
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,

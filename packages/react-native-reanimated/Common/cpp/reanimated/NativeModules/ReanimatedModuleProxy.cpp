@@ -615,6 +615,19 @@ bool ReanimatedModuleProxy::isThereAnyLayoutProp(
   return false;
 }
 
+void ReanimatedModuleProxy::markNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  propsRegistry_->markNodeAsRemovable(shadowNode);
+}
+
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  propsRegistry_->unmarkNodeAsRemovable(viewTag.asNumber());
+}
+
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -798,7 +811,6 @@ void ReanimatedModuleProxy::performOperations() {
     react_native_assert(family->getSurfaceId() == surfaceId);
     propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
   }
-  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -809,8 +821,8 @@ void ReanimatedModuleProxy::performOperations() {
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(
-                oldRootShadowNode, propsMap, tagsToRemove);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -826,20 +838,6 @@ void ReanimatedModuleProxy::performOperations() {
            false,
            /* .mountSynchronously = */ true});
     });
-  }
-}
-
-void ReanimatedModuleProxy::removeFromPropsRegistry(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
-  auto array = viewTags.asObject(rt).asArray(rt);
-  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
-    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
-  }
-
-  if (!tagsToRemove.empty()) {
-    auto lock = updatesRegistryManager_->createLock();
-    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 

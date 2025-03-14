@@ -94,6 +94,14 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
+
+  // Cleanup
+  virtual void markNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper) = 0;
+  virtual void unmarkNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag) = 0;
 };
 
 } // namespace reanimated
