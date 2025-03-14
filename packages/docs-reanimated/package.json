@@ -54,7 +54,7 @@
     "@docusaurus/module-type-aliases": "^2.4.3",
     "@tsconfig/docusaurus": "^1.0.7",
     "copy-webpack-plugin": "^11.0.0",
-    "esbuild": "^0.20.2",
+    "esbuild": "^0.25.0",
     "esbuild-register": "^3.5.0",
     "eslint-plugin-mdx": "^2.2.0",
     "prettier": "^2.8.4",
