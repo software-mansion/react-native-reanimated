@@ -133,9 +133,9 @@ declare global {
   var __frameTimestamp: number | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _registriesLeakCheck: () => string;
-  var _updatePropsFabric: (operations: Operation[]) => void;
+  var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (tag: number, value: Record<string, unknown>) => void;
-  var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;

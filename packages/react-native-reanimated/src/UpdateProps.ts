@@ -83,7 +83,7 @@ function createUpdatePropsManager() {
       });
     },
     flush(this: void) {
-      global._updatePropsFabric!(operations);
+      global._updateProps!(operations);
       operations.length = 0;
     },
   };
