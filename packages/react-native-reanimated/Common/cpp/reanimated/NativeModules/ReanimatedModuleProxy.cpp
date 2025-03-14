@@ -693,24 +693,13 @@ void ReanimatedModuleProxy::performOperations() {
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
-    auto lock = updatesRegistryManager_->lock();
-
     if (shouldUpdateCssAnimations_) {
+      updatesRegistryManager_->lock();
       currentCssTimestamp_ = getAnimationTimestamp_();
-      cssAnimationsRegistry_->lock();
-      // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
-    }
-
-    // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch);
-
-    if (shouldUpdateCssAnimations_) {
-      cssTransitionsRegistry_->lock();
-      // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch);
+      updatesBatch =
+          cssAnimationsRegistry_->collectUpdates(currentCssTimestamp_);
+    } else {
+      updatesBatch = animatedPropsRegistry_->collectUpdates();
     }
 
     shouldUpdateCssAnimations_ = false;

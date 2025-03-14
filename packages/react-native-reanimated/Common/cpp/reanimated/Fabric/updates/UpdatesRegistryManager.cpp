@@ -74,16 +74,27 @@ void UpdatesRegistryManager::handleNodeRemovals(
   }
 }
 
-#ifdef ANDROID
+UpdatesBatch UpdatesRegistryManager::collectUpdates(const double timestamp) {
+  UpdatesBatch result;
 
-bool UpdatesRegistryManager::hasPropsToRevert() {
-  for (auto &registry : registries_) {
-    if (registry->hasPropsToRevert()) {
-      return true;
-    }
+  for (const auto &registry : registries_) {
+    registry->lock();
+    const auto updates = registry->collectUpdates(timestamp);
+    result.insert(result.end(), updates.begin(), updates.end());
   }
-  return false;
+
+  return result;
 }
+
+PropsMap UpdatesRegistryManager::getCurrentPropsMap(const double timestamp) {
+  PropsMap propsMap;
+
+  // TODO
+
+  return propsMap;
+}
+
+#ifdef ANDROID
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,

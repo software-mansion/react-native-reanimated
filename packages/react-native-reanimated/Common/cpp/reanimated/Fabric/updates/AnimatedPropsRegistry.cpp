@@ -6,6 +6,20 @@ JSIUpdates AnimatedPropsRegistry::getJSIUpdates() {
   return std::move(jsiUpdates_);
 }
 
+bool AnimatedPropsRegistry::isEmpty() const {
+  return registry_.empty();
+}
+
+folly::dynamic AnimatedPropsRegistry::get(const Tag viewTag) const {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  auto it = registry_.find(viewTag);
+  if (it == registry_.cend()) {
+    return nullptr;
+  }
+  return it->second.second;
+}
+
 SurfaceId AnimatedPropsRegistry::update(
     jsi::Runtime &rt,
     const jsi::Value &operations) {
@@ -28,7 +42,30 @@ SurfaceId AnimatedPropsRegistry::update(
 }
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
-  updatesRegistry_.erase(tag);
+  registry_.erase(tag);
+}
+
+// This method is needed to ensure that types are compatible
+UpdatesBatch AnimatedPropsRegistry::collectUpdates(double) {
+  return collectUpdates();
+}
+
+UpdatesBatch AnimatedPropsRegistry::collectUpdates() {
+  auto result = std::move(updatesBatch_);
+  updatesBatch_.clear();
+
+  for (auto &[shadowNode, props] : result) {
+    const auto tag = shadowNode->getTag();
+    auto it = registry_.find(tag);
+
+    if (it == registry_.cend()) {
+      registry_[tag] = std::make_pair(shadowNode, props);
+    } else {
+      it->second.second.update(props);
+    }
+  }
+
+  return result;
 }
 
 } // namespace reanimated

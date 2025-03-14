@@ -6,32 +6,6 @@ std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
-bool UpdatesRegistry::isEmpty() const {
-  return updatesRegistry_.empty();
-}
-
-folly::dynamic UpdatesRegistry::get(const Tag tag) const {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto it = updatesRegistry_.find(tag);
-  if (it == updatesRegistry_.cend()) {
-    return nullptr;
-  }
-  return it->second.second;
-}
-
-void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto copiedUpdatesBatch = std::move(updatesBatch_);
-  updatesBatch_.clear();
-
-  // Flush the updates to the updatesBatch used to apply current changes
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
-  }
-}
-
 #ifdef ANDROID
 
 bool UpdatesRegistry::hasPropsToRevert() const {

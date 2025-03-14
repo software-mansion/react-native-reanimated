@@ -34,20 +34,17 @@ class UpdatesRegistry {
 
   std::lock_guard<std::mutex> lock() const;
 
-  virtual bool isEmpty() const;
-  folly::dynamic get(Tag tag) const;
+  virtual bool isEmpty() const = 0;
   virtual void remove(Tag tag) = 0;
+  virtual UpdatesBatch collectUpdates(double timestamp) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch);
-
  protected:
   mutable std::mutex mutex_;
-  UpdatesBatch updatesBatch_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
