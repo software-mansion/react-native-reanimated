@@ -230,6 +230,15 @@ task assertMinimalReactNativeVersionTask {
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
+task assertNewArchitectureEnabledTask {
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
+    doFirst {
+        throw new GradleException("[Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
+
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
