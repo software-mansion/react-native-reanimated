@@ -58,3 +58,9 @@ def assert_minimal_react_native_version(config)
     raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
   end
 end
+
+def assert_new_architecture_enabled(new_arch_enabled)
+  if !new_arch_enabled
+    raise "[Reanimated] Reanimated requires new architecture to be enabled. Please set `RCT_NEW_ARCH_ENABLED=1` in your environment."
+  end
+end
