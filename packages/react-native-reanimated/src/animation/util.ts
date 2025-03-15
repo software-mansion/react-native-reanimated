@@ -44,6 +44,25 @@ import {
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
+  originX: true,
+  originY: true,
+  width: true,
+  heigth: true,
+  borderRadius: true,
+  globalOriginX: true,
+  globalOriginY: true,
+  opacity: true,
+  transform: true,
+};
+
+type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
+
+export function isValidLayoutAnimationProp(prop: string) {
+  'worklet';
+  return (prop as LayoutAnimationProp) in LAYOUT_ANIMATION_SUPPORTED_PROPS;
+}
+
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(
     `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
