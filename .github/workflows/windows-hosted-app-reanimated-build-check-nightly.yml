@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  windows-hosted-app-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: windows-latest
     concurrency:
@@ -33,7 +33,7 @@ jobs:
       - name: Install React Native
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern in app
         working-directory: ${{ env.APP_NAME }}
         run: |
@@ -46,6 +46,9 @@ jobs:
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Build Android App
         working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain
