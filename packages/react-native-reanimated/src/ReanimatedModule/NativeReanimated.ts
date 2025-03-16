@@ -187,8 +187,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
+  }
+
+  unmarkNodeAsRemovable(viewTag: number) {
+    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
   registerCSSKeyframes(
@@ -252,7 +256,8 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
 
   unsubscribeFromKeyboardEvents(): void {}
   setViewStyle(): void {}
-  removeViewStyle(): void {}
+  markNodeAsRemovable(): void {}
+  unmarkNodeAsRemovable(): void {}
   registerCSSKeyframes(): void {}
   unregisterCSSKeyframes(): void {}
   applyCSSAnimations(): void {}

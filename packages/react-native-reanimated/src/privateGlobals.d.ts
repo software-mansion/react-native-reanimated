@@ -33,7 +33,7 @@ declare global {
   var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _updatePropsFabric:
+  var _updateProps:
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
@@ -42,10 +42,10 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _measureFabric:
+  var _measure:
     | ((shadowNodeWrapper: ShadowNodeWrapper | null) => MeasuredDimensions)
     | undefined;
-  var _dispatchCommandFabric:
+  var _dispatchCommand:
     | ((
         shadowNodeWrapper: ShadowNodeWrapper,
         commandName: string,
@@ -60,7 +60,7 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
-  var _obtainPropFabric: (
+  var _obtainProp: (
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;

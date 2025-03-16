@@ -8,6 +8,9 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/android/AndroidUIScheduler.h>
 
+#include <memory>
+#include <string>
+
 namespace worklets {
 
 using namespace facebook;

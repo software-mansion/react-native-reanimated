@@ -17,13 +17,14 @@ import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
 } from '../types';
+import type { ICSSAnimationsManager } from '../types/interfaces';
 
-export type ProcessedAnimation = {
+type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
   keyframesRule: CSSKeyframesRuleImpl;
 };
 
-export default class CSSAnimationsManager {
+export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
@@ -35,19 +36,6 @@ export default class CSSAnimationsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  detach() {
-    if (this.attachedAnimations.length > 0) {
-      unregisterCSSAnimations(this.viewTag);
-      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
-      });
-      this.attachedAnimations = [];
-    }
-  }
-
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
@@ -55,7 +43,7 @@ export default class CSSAnimationsManager {
     }
 
     const processedAnimations = this.processAnimations(animationProperties);
-    this.registerKeyframes(processedAnimations);
+    this.registerKeyframesUsage(processedAnimations);
 
     const animationUpdates = this.getAnimationUpdates(processedAnimations);
     this.attachedAnimations = processedAnimations;
@@ -73,7 +61,19 @@ export default class CSSAnimationsManager {
     }
   }
 
-  private registerKeyframes(processedAnimations: ProcessedAnimation[]) {
+  unmountCleanup(): void {
+    this.unregisterKeyframesUsage();
+  }
+
+  private detach() {
+    if (this.attachedAnimations.length > 0) {
+      unregisterCSSAnimations(this.viewTag);
+      this.unregisterKeyframesUsage();
+      this.attachedAnimations = [];
+    }
+  }
+
+  private registerKeyframesUsage(processedAnimations: ProcessedAnimation[]) {
     const newAnimationNames = new Set();
 
     // Register keyframes for all new animations
@@ -94,6 +94,17 @@ export default class CSSAnimationsManager {
           this.viewTag
         );
       }
+    });
+  }
+
+  private unregisterKeyframesUsage() {
+    // Unregister keyframes usage by the view (it is necessary to clean up
+    // keyframes from the CPP registry once all views that use them are unmounted)
+    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+      CSSAnimationsManager.animationKeyframesRegistry.remove(
+        name,
+        this.viewTag
+      );
     });
   }
 

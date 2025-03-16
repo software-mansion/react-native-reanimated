@@ -24,13 +24,12 @@ class CSSTransitionsRegistry
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
-  bool hasUpdates() const;
   bool isEmpty() const override;
+  bool hasUpdates() const;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
-  void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void remove(Tag viewTag) override;
 
   void update(double timestamp);
 
@@ -45,7 +44,6 @@ class CSSTransitionsRegistry
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
-  void handleRemove(Tag viewTag);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);

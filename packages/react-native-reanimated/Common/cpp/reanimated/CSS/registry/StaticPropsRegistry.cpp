@@ -33,13 +33,7 @@ void StaticPropsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void StaticPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
-  for (const auto &tag : tagsToRemove) {
-    registry_.erase(tag);
-  }
-}
-
-bool StaticPropsRegistry::isEmpty() {
+bool StaticPropsRegistry::isEmpty() const {
   return registry_.empty() && observers_.empty();
 }
 

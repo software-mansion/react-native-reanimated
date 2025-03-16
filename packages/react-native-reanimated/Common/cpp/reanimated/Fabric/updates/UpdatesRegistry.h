@@ -34,9 +34,11 @@ class UpdatesRegistry {
  public:
   virtual ~UpdatesRegistry() {}
 
-  folly::dynamic get(Tag tag) const;
+  std::lock_guard<std::mutex> lock() const;
 
   virtual bool isEmpty() const;
+  folly::dynamic get(Tag tag) const;
+  virtual void remove(Tag tag) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -45,7 +47,6 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  virtual void removeBatch(const std::vector<Tag> &tagsToRemove) = 0;
 
  protected:
   mutable std::mutex mutex_;

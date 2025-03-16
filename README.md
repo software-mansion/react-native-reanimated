@@ -14,9 +14,11 @@
 [![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
 [![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
 [![Reanimated TypeScript compatibility test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml)
-[![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml)
 [![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
+
+<!-- TODO: Restore badge once V8 is supported. -->
+<!-- [![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml) -->
 
 ## Installation
 

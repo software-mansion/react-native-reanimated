@@ -19,7 +19,7 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 }
 
 void ReanimatedMountHook::shadowTreeDidMount(
-    RootShadowNode::Shared const &rootShadowNode,
+    const RootShadowNode::Shared &rootShadowNode,
     double) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
@@ -36,11 +36,16 @@ void ReanimatedMountHook::shadowTreeDidMount(
     return;
   }
 
-  // When commit from React Native has finished, we reset the skip commit flag
-  // in order to allow Reanimated to commit its tree
-  updatesRegistryManager_->unpauseReanimatedCommits();
-  if (updatesRegistryManager_->shouldCommitAfterPause()) {
-    requestFlush_();
+  {
+    auto lock = updatesRegistryManager_->lock();
+    updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
+
+    // When commit from React Native has finished, we reset the skip commit flag
+    // in order to allow Reanimated to commit its tree
+    updatesRegistryManager_->unpauseReanimatedCommits();
+    if (updatesRegistryManager_->shouldCommitAfterPause()) {
+      requestFlush_();
+    }
   }
 }
 
