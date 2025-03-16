@@ -1,5 +1,6 @@
 name: Static framework Reanimated build check [Nightly]
 env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
@@ -19,6 +20,9 @@ jobs:
       cancel-in-progress: true
     env:
       APP_NAME: app
+    strategy:
+      matrix:
+        frameworks: [static, dynamic]
     steps:
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
@@ -43,9 +47,9 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - name: Install Pods
+      - name: Install ${{matrix.frameworks}} Pods
         working-directory: ${{env.APP_NAME}}/ios
-        run: export USE_FRAMEWORKS=static && bundle install && bundle exec pod update
+        run: export USE_FRAMEWORKS=${{matrix.frameworks}} && bundle install && bundle exec pod update
       - name: Build app
         working-directory: ${{env.APP_NAME}}/ios
         run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -scheme ${{env.APP_NAME}} -configuration Debug -destination 'generic/platform=iOS Simulator' build | xcpretty
