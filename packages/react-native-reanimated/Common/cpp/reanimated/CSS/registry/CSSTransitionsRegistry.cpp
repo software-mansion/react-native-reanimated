@@ -176,4 +176,4 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   setInUpdatesRegistry(shadowNode, filteredUpdates);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css
