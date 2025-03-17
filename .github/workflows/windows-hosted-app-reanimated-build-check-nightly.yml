@@ -20,12 +20,6 @@ jobs:
     env:
       APP_NAME: app
     steps:
-      # Setup VM
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          cache: 'yarn'
-          node-version: '22'
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,7 +27,6 @@ jobs:
           java-version: '17'
       - uses: seanmiddleditch/gha-setup-ninja@master
 
-      # Setup app
       - name:
           Setup Yarn
           # Sometimes `npx @react-native-community/cli init` fails at random.
@@ -59,7 +52,6 @@ jobs:
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
 
-      # Test
       - name: Build Android App
         working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain
