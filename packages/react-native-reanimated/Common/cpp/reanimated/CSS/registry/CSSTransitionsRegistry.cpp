@@ -177,4 +177,3 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
 }
 
 } // namespace reanimated
-
