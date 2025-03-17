@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 
@@ -25,4 +25,4 @@ EasingFunction createEasingFunction(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);
 
-} // namespace reanimated
+} // namespace reanimated::css

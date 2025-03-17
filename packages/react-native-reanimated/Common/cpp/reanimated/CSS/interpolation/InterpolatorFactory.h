@@ -16,7 +16,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace reanimated::Interpolators {
+namespace reanimated::css {
 
 // Template class implementations
 template <typename... AllowedTypes>
@@ -154,4 +154,4 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
         std::string,
         std::shared_ptr<TransformInterpolator>> &interpolators);
 
-} // namespace reanimated::Interpolators
+} // namespace reanimated::css

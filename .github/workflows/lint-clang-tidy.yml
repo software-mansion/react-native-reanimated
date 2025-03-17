@@ -1,0 +1,34 @@
+name: Lint clang-tidy
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  push:
+    paths:
+      - '.github/workflows/lint-clang-tidy.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/lint-clang-tidy.yml'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  lint-clang-tidy:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    concurrency:
+      group: ${{github.workflow}}-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+      - name: Build Worklets package
+        run: yarn workspace react-native-worklets build
+      - name: Build Reanimated package
+        run: yarn workspace react-native-reanimated build
+
+      - name: Clang-tidy lint Worklets
+        run: yarn workspace react-native-worklets lint:clang-tidy
+      - name: Clang-tidy lint Reanimated
+        run: yarn workspace react-native-reanimated lint:clang-tidy

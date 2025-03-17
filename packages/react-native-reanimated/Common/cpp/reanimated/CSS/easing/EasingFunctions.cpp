@@ -1,6 +1,6 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 inline const std::unordered_map<std::string, EasingFunction>
     PREDEFINED_EASING_MAP = {
@@ -71,4 +71,4 @@ EasingFunction createParametrizedEasingFunction(
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

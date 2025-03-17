@@ -1,6 +1,6 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 // TransitionPropertyProgressProvider
 
@@ -215,4 +215,4 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       newReversingShorteningFactor);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

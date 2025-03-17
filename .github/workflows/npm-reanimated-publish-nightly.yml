@@ -7,11 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-build-workflow-rea-v3:
+  npm-reanimated-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/npm-reanimated-package-build.yml
     with:
       option: --nightly
       publish_on_npm: true
-    secrets:
-      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+    secrets: inherit

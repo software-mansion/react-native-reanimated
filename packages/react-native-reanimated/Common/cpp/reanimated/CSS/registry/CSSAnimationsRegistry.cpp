@@ -1,15 +1,16 @@
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
+
+bool CSSAnimationsRegistry::isEmpty() const {
+  // The registry is empty if has no registered animations and no updates
+  // stored in the updates registry
+  return UpdatesRegistry::isEmpty() && registry_.empty();
+}
 
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationIndicesMap_.empty() ||
       !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
-}
-
-bool CSSAnimationsRegistry::isEmpty() const {
-  return UpdatesRegistry::isEmpty() && registry_.empty() &&
-      runningAnimationIndicesMap_.empty() && animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::apply(
@@ -19,14 +20,12 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto animationsVector =
       buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
-    handleRemove(viewTag);
+    remove(viewTag);
     return;
   }
 
@@ -55,21 +54,12 @@ void CSSAnimationsRegistry::apply(
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  handleRemove(viewTag);
-}
-
-void CSSAnimationsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  for (const auto &viewTag : tagsToRemove) {
-    handleRemove(viewTag);
-  }
+  removeViewAnimations(viewTag);
+  removeFromUpdatesRegistry(viewTag);
+  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted
@@ -83,7 +73,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
         it->second.begin(), it->second.end()};
     updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
-    if (runningAnimationIndicesMap_.at(viewTag).empty()) {
+    if (runningAnimationIndicesMap_[viewTag].empty()) {
       it = runningAnimationIndicesMap_.erase(it);
     } else {
       ++it;
@@ -175,12 +165,6 @@ void CSSAnimationsRegistry::updateAnimationSettings(
       animation->updateSettings(it->second, timestamp);
     }
   }
-}
-
-void CSSAnimationsRegistry::handleRemove(Tag viewTag) {
-  removeViewAnimations(viewTag);
-  removeFromUpdatesRegistry(viewTag);
-  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::updateViewAnimations(
@@ -352,7 +336,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   bool hasUpdates = false;
   for (const auto &[propertyName, propertyValue] : updates.items()) {
     if (shouldOverride || !target.count(propertyName) ||
-        target.at(propertyName).isNull()) {
+        target[propertyName].isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;
     }
@@ -361,4 +345,4 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   return hasUpdates;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

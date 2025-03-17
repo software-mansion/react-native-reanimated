@@ -63,8 +63,15 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertSingleReanimatedInstance();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule();
+    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
+      if (!ReanimatedTurboModule.installTurboModule()) {
+        // This path means that React Native has failed on reload.
+        // We don't want to throw any errors to not mislead the users
+        // that the problem is related to Reanimated.
+        // We install a DummyReanimatedModuleProxy instead.
+        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+        return;
+      }
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -180,8 +187,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
+  }
+
+  unmarkNodeAsRemovable(viewTag: number) {
+    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
   registerCSSKeyframes(
@@ -231,5 +242,42 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  }
+}
+
+class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
+  configureLayoutAnimationBatch(): void {}
+  setShouldAnimateExitingForTag(): void {}
+  enableLayoutAnimations(): void {}
+  configureProps(): void {}
+  subscribeForKeyboardEvents(): number {
+    return -1;
+  }
+
+  unsubscribeFromKeyboardEvents(): void {}
+  setViewStyle(): void {}
+  markNodeAsRemovable(): void {}
+  unmarkNodeAsRemovable(): void {}
+  registerCSSKeyframes(): void {}
+  unregisterCSSKeyframes(): void {}
+  applyCSSAnimations(): void {}
+  registerCSSAnimations(): void {}
+  updateCSSAnimations(): void {}
+  unregisterCSSAnimations(): void {}
+  registerCSSTransition(): void {}
+  updateCSSTransition(): void {}
+  unregisterCSSTransition(): void {}
+  registerSensor(): number {
+    return -1;
+  }
+
+  unregisterSensor(): void {}
+  registerEventHandler(): number {
+    return -1;
+  }
+
+  unregisterEventHandler(): void {}
+  getViewProp() {
+    return null!;
   }
 }

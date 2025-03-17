@@ -15,6 +15,7 @@ import type {
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
 } from '../types';
+import type { ICSSAnimationsManager } from '../types/interfaces';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
@@ -29,7 +30,7 @@ type ProcessedAnimation = {
 
 type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
-export default class CSSAnimationsManager {
+export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
 
   // Keys are processed keyframes
@@ -39,10 +40,6 @@ export default class CSSAnimationsManager {
     configureWebCSSAnimations();
 
     this.element = element;
-  }
-
-  attach(animationProperties: ExistingCSSAnimationProperties | null) {
-    this.update(animationProperties);
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null) {
@@ -93,7 +90,11 @@ export default class CSSAnimationsManager {
     this.setElementAnimations(animationNames, animationSettings);
   }
 
-  detach() {
+  unmountCleanup(): void {
+    // noop
+  }
+
+  private detach() {
     const attachedAnimations = Object.values(this.attachedAnimations);
 
     if (attachedAnimations.length === 0) {

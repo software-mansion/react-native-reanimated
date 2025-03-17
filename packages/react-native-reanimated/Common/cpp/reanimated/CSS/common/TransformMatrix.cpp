@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/TransformMatrix.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 DecomposedTransformMatrix DecomposedTransformMatrix::interpolate(
     const double progress,
@@ -54,7 +54,7 @@ TransformMatrix::TransformMatrix(const folly::dynamic &array) {
   }
 
   for (size_t i = 0; i < 16; ++i) {
-    matrix_[i / 4][i % 4] = array.at(i).getDouble();
+    matrix_[i / 4][i % 4] = array[i].getDouble();
   }
 }
 
@@ -631,4 +631,4 @@ double TransformMatrix::determinant3x3(
       (a * f * h);
 }
 
-} // namespace reanimated
+} // namespace reanimated::css
