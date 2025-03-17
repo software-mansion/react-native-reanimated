@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class TransitionProgressState { Pending, Running, Finished };
 
@@ -83,4 +83,4 @@ class TransitionProgressProvider final {
       const TransitionPropertyProgressProvider &existingProgressProvider);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

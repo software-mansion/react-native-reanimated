@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSTransitionsRegistry
     : public UpdatesRegistry,
@@ -53,4 +53,4 @@ class CSSTransitionsRegistry
       const folly::dynamic &updates);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

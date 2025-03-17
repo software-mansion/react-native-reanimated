@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
@@ -133,4 +133,4 @@ void CSSAnimation::updateSettings(
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

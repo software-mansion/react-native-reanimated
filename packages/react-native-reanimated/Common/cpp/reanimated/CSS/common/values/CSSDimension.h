@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
   double value;
@@ -40,4 +40,4 @@ struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

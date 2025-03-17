@@ -1,6 +1,12 @@
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
+
+bool CSSAnimationsRegistry::isEmpty() const {
+  // The registry is empty if has no registered animations and no updates
+  // stored in the updates registry
+  return UpdatesRegistry::isEmpty() && registry_.empty();
+}
 
 bool CSSAnimationsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
@@ -345,4 +351,4 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   return hasUpdates;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

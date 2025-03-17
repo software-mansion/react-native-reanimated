@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const directoryPath = path.join(__dirname, '../src');
-const fileTypes = ['.js', '.ts', '.tsx'];
+const directoryPath = path.join(process.cwd(), 'src');
+const fileTypes = ['.js', '.jsx', '.ts', '.tsx'];
 
 let isMissingUseStrictDetected = false;
 
+/** @param {string} dirPath */
 function validateFiles(dirPath) {
   fs.readdirSync(dirPath).forEach((file) => {
     const filePath = path.join(dirPath, file);

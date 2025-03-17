@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -177,3 +177,4 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
 }
 
 } // namespace reanimated
+

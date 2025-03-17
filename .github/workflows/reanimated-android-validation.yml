@@ -28,13 +28,11 @@ jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.13]
     concurrency:
       group: validate-java-${{ github.ref }}
       cancel-in-progress: true
     env:
+      PYTHON_VERSION: 3.13
       REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: checkout
@@ -49,10 +47,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'yarn'
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip

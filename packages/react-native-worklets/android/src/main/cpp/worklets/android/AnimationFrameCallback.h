@@ -2,6 +2,8 @@
 
 #include <fbjni/fbjni.h>
 
+#include <utility>
+
 namespace worklets {
 
 class AnimationFrameCallback

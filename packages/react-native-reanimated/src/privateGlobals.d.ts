@@ -33,17 +33,7 @@ declare global {
   var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _updatePropsPaper:
-    | ((
-        operations: {
-          tag: number;
-          name: string | null;
-          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-          updates: StyleProps | AnimatedStyle<any>;
-        }[]
-      ) => void)
-    | undefined;
-  var _updatePropsFabric:
+  var _updateProps:
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
@@ -52,19 +42,10 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _measurePaper:
-    | ((viewTag: number | null) => MeasuredDimensions)
-    | undefined;
-  var _measureFabric:
+  var _measure:
     | ((shadowNodeWrapper: ShadowNodeWrapper | null) => MeasuredDimensions)
     | undefined;
-  var _scrollToPaper:
-    | ((viewTag: number, x: number, y: number, animated: boolean) => void)
-    | undefined;
-  var _dispatchCommandPaper:
-    | ((viewTag: number, commandName: string, args: Array<unknown>) => void)
-    | undefined;
-  var _dispatchCommandFabric:
+  var _dispatchCommand:
     | ((
         shadowNodeWrapper: ShadowNodeWrapper,
         commandName: string,
@@ -79,8 +60,7 @@ declare global {
   var UpdatePropsManager: UpdatePropsManager;
   var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
-  var _obtainPropPaper: (viewTag: number, propName: string) => string;
-  var _obtainPropFabric: (
+  var _obtainProp: (
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;

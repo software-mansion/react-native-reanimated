@@ -175,6 +175,11 @@ export default class AnimatedComponent<
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
     if (!SHOULD_BE_USE_WEB && wrapper) {
+      // Mark node as removable on the native (C++) side, but only actually remove it
+      // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
+      // animations/transitions/props while handling cases where the node might be
+      // remounted (e.g., when frozen) after componentWillUnmount is called.
+
       markNodeAsRemovable(wrapper);
     }
 

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 RawProgressProvider::RawProgressProvider(
     const double timestamp,
@@ -43,4 +43,4 @@ void RawProgressProvider::update(const double timestamp) {
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

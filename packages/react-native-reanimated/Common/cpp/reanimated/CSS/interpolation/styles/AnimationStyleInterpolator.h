@@ -5,7 +5,7 @@
 
 #include <memory>
 
-namespace reanimated {
+namespace reanimated::css {
 
 // We can just re-use the logic from the RecordPropertiesInterpolator class as
 // interpolating multiple properties from the view style during animation is the
@@ -20,4 +20,4 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
             viewStylesRepository) {}
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -6,6 +6,7 @@ $config = find_config()
 assert_minimal_react_native_version($config)
 
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+assert_new_architecture_enabled($new_arch_enabled)
 is_release = ENV['PRODUCTION'] == '1'
 
 folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32"

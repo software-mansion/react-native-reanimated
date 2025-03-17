@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <typename TValue>
 struct DelayedItem {
@@ -44,4 +44,4 @@ class DelayedItemsManager {
   size_t size() const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

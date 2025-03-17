@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using CSSAnimationsMap =
     std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
@@ -92,4 +92,4 @@ class CSSAnimationsRegistry
       bool shouldOverride);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

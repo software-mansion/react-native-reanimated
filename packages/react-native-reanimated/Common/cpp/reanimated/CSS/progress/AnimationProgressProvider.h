@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class AnimationProgressState {
   Pending, // When the animation is waiting for the delay to pass
@@ -80,4 +80,4 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
   double applyAnimationDirection(double iterationProgress) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

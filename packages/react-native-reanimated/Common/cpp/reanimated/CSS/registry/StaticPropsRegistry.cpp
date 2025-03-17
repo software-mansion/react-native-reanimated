@@ -1,6 +1,6 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 void StaticPropsRegistry::set(
     jsi::Runtime &rt,
@@ -61,4 +61,4 @@ void StaticPropsRegistry::notifyObservers(
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

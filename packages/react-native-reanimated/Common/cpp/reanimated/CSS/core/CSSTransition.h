@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSTransition {
  public:
@@ -48,4 +48,4 @@ class CSSTransition {
   bool isAllowedProperty(const std::string &propertyName) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

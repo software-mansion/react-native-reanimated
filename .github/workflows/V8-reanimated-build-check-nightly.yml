@@ -13,7 +13,8 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    # TODO: Reenable once V8 is supported.
+    if: github.repository == 'software-mansion/react-native-reanimated' && false
     runs-on: ubuntu-latest
     concurrency:
       group: build-v8-${{ github.ref }}

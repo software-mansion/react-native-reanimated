@@ -15,7 +15,7 @@ export class AnimationUpdatesRecorder {
 
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
-      const originalUpdateProps = global._updatePropsFabric;
+      const originalUpdateProps = global._updateProps;
       global.originalUpdateProps = originalUpdateProps;
 
       const mockedUpdateProps = (operations: Operation[]) => {
@@ -23,7 +23,7 @@ export class AnimationUpdatesRecorder {
         originalUpdateProps(operations);
       };
 
-      global._updatePropsFabric = mockedUpdateProps;
+      global._updateProps = mockedUpdateProps;
 
       const originalNotifyAboutProgress = global._notifyAboutProgress;
       global.originalNotifyAboutProgress = originalNotifyAboutProgress;
@@ -39,7 +39,7 @@ export class AnimationUpdatesRecorder {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
-        global._updatePropsFabric = global.originalUpdateProps;
+        global._updateProps = global.originalUpdateProps;
         global.originalUpdateProps = undefined;
       }
       if (global.originalNotifyAboutProgress) {

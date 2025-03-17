@@ -1760,7 +1760,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.2):
+  - RNReanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1782,10 +1782,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.2)
+    - RNReanimated/reanimated (= 4.0.0-beta.3)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.2):
+  - RNReanimated/reanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1807,10 +1807,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.2)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.3)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.2):
+  - RNReanimated/reanimated/apple (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
