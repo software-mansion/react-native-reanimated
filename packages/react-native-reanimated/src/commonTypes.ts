@@ -416,7 +416,7 @@ type MaybeSharedValue<Value> =
       ? SharedValueDisableContravariance<Value>
       : never);
 
-type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
+type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
   ?
       | SharedValueDisableContravariance<Item[]>
       | (MaybeSharedValueRecursive<Item> | Item)[]
