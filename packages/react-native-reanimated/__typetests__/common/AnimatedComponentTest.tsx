@@ -10,11 +10,9 @@ import type { AnimatedStyle } from '../..';
 import Animated from '../..';
 
 function AnimatedStyleRecursiveReadonlyArrayTest() {
-  type TestStyleProp<T> =
-    | T
-    | ReadonlyArray<TestStyleProp<T>>
+  type TestStyleProp<T> = T | ReadonlyArray<TestStyleProp<T>>;
 
-  const style: AnimatedStyle<TestStyleProp<ViewStyle>> = {}
+  const style: AnimatedStyle<TestStyleProp<ViewStyle>> = {};
 }
 
 function AnimatedComponentPropsTest() {
