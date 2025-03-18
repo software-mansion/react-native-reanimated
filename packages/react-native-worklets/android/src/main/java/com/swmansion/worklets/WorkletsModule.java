@@ -64,7 +64,14 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var context = getReactApplicationContext();
     context.assertOnJSQueueThread();
 
-    var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
+    var jsContextHolder = context.getJavaScriptContextHolder();
+    if(jsContextHolder == null) {
+      // The `contextHolder` should never be null.
+      // This is a workaround for a bug in RN.
+      return false;
+    }
+    var jsContext = jsContextHolder.get();
+
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
