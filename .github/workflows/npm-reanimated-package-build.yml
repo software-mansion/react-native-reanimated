@@ -35,7 +35,7 @@ jobs:
     env:
       PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
       TAG: PLACEHOLDER # Will be reassigned later on.
-      REANIMATED_DIR: packages/react-native-reanimated'
+      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: Check out
         uses: actions/checkout@v4
