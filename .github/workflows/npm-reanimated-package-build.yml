@@ -33,9 +33,10 @@ jobs:
       contents: read
       id-token: write
     env:
+      REANIMATED_DIR: packages/react-native-reanimated
       PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
       TAG: PLACEHOLDER # Will be reassigned later on.
-      REANIMATED_DIR: packages/react-native-reanimated
+      REANIMATED_VERSION: PLACEHOLDER # Will be reassigned later on.
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -56,6 +57,7 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: |
           VERSION=$(jq -r '.version' package.json)
+          echo "REANIMATED_VERSION=$VERSION" >> $GITHUB_ENV
           if [[ $VERSION == 3.* ]]; then
             echo "TAG=reanimated3-nightly" >> $GITHUB_ENV
           elif [[ $VERSION == 4.* ]]; then
@@ -67,6 +69,15 @@ jobs:
       - name: Assert TAG
         if: ${{ inputs.publish_on_npm && env.TAG == 'PLACEHOLDER' }}
         run: exit 1 # This should never happen.
+      - name: Bump version for Reanimated 3 nightly release
+        if: ${{ inputs.publish_on_npm && env.TAG == 'reanimated3-nightly' }}
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: |
+          VERSION=${{ env.REANIMATED_VERSION }}
+          MAJOR=$(echo $VERSION | awk -F. '{print $1}')
+          MINOR=$(echo $VERSION | awk -F. '{print $2}')
+          NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+          node ./scripts/set-reanimated-version.js $NEW_VERSION
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
