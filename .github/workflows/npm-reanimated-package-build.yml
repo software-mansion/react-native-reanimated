@@ -126,7 +126,7 @@ jobs:
         run: mv ${{ env.REANIMATED_DIR }}/${{ env.PACKAGE_NAME }} .
 
       - name: Publish npm package
-        run: npm publish $PACKAGE_NAME --dry-run --tag ${{env.TAG}} --provenance
+        run: npm publish $PACKAGE_NAME --tag ${{env.TAG}} --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
