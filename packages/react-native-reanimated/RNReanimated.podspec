@@ -5,7 +5,7 @@ reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json"
 $config = find_config()
 assert_minimal_react_native_version($config)
 
-$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
 assert_new_architecture_enabled($new_arch_enabled)
 is_release = ENV['PRODUCTION'] == '1'
 
