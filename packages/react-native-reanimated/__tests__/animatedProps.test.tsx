@@ -36,7 +36,7 @@ export default function AnimatedComponent() {
   return (
     <View>
       <Svg>
-        // This doesn't work - it has no jest styles :/ 👇
+        // This won't work - SVG has guard for props they pass to a component 👇
         <AnimatedCircle
           cx="50%"
           cy="50%"
@@ -44,11 +44,10 @@ export default function AnimatedComponent() {
           testID={'circle'}
           animatedProps={animatedProps}
         />
-        // This works - it has jestAnimatedProps and jestAnimatedStyles on
-        component 👇
-        <AnimatedTextInput testID={'text'} animatedProps={textAnimatedProps} />
       </Svg>
-
+      // This works - it has jestAnimatedProps and jestAnimatedStyles on
+      component 👇
+      <AnimatedTextInput testID={'text'} animatedProps={textAnimatedProps} />
       <Button testID={'button'} onPress={handlePress} title="Click me" />
     </View>
   );
@@ -64,19 +63,13 @@ describe('animatedProps', () => {
     jest.useRealTimers();
   });
 
-  test.skip('custom prop', () => {
+  test('SVG component cannot be tested', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const circle = getByTestId('circle');
-    const button = getByTestId('button');
 
-    expect(circle).toHaveAnimatedProps({ r: 20 });
-
-    fireEvent.press(button);
-    jest.advanceTimersByTime(100);
-
-    expect(circle).toHaveAnimatedProps({ r: 30 });
+    expect(circle).toHaveAnimatedProps({});
   });
-  test('normal prop', () => {
+  test('Custom animated component', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const textInput = getByTestId('text');
     const button = getByTestId('button');

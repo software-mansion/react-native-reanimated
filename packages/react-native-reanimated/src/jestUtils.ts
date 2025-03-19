@@ -80,7 +80,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
   if (Array.isArray(jestInlineStyles)) {
     for (const obj of jestInlineStyles) {
-      if ('jestAnimatedStyle' in obj) {
+      if ('jestAnimatedValues' in obj) {
         continue;
       }
 
