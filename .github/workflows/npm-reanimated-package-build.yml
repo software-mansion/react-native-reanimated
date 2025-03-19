@@ -34,7 +34,8 @@ jobs:
       id-token: write
     env:
       PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
-      REANIMATED_DIR: packages/react-native-reanimated
+      TAG: PLACEHOLDER # Will be reassigned later on.
+      REANIMATED_DIR: packages/react-native-reanimated'
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -44,10 +45,28 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'yarn'
           registry-url: https://registry.npmjs.org/
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
+
+      - name: Determine release tag
+        if: ${{ inputs.publish_on_npm }}
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          if [[ $VERSION == 3.* ]]; then
+            echo "TAG=reanimated3-nightly" >> $GITHUB_ENV
+          elif [[ $VERSION == 4.* ]]; then
+            echo "TAG=nightly" >> $GITHUB_ENV
+          else
+            echo "There's no nightly release tag for version: $VERSION"
+            exit 1
+          fi
+      - name: Assert TAG
+        if: ${{ inputs.publish_on_npm && env.TAG == 'PLACEHOLDER' }}
+        run: exit 1 # This should never happen.
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
@@ -95,7 +114,7 @@ jobs:
         run: mv ${{ env.REANIMATED_DIR }}/${{ env.PACKAGE_NAME }} .
 
       - name: Publish npm package
-        run: npm publish $PACKAGE_NAME --tag nightly --provenance
+        run: npm publish $PACKAGE_NAME --dry-run --tag ${{env.TAG}} --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
