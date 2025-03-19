@@ -69,6 +69,10 @@ jobs:
       - name: Assert TAG
         if: ${{ inputs.publish_on_npm && env.TAG == 'PLACEHOLDER' }}
         run: exit 1 # This should never happen.
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
       - name: Bump version for Reanimated 3 nightly release
         if: ${{ inputs.publish_on_npm && env.TAG == 'reanimated3-nightly' }}
         working-directory: ${{ env.REANIMATED_DIR }}
@@ -78,9 +82,6 @@ jobs:
           MINOR=$(echo $VERSION | awk -F. '{print $2}')
           NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
           node ./scripts/set-reanimated-version.js $NEW_VERSION
-
-      - name: Install monorepo node dependencies
-        run: yarn install --immutable
 
       - name: Build package
         working-directory: ${{ env.REANIMATED_DIR }}
