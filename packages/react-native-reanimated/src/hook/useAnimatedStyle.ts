@@ -16,6 +16,7 @@ import type {
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
 import { makeShareable, startMapper, stopMapper } from '../core';
+import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { processBoxShadow } from '../processBoxShadow';
@@ -307,7 +308,7 @@ function jestStyleUpdater(
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  animatedStyle: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: MutableRefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[]
 ): void {
   'worklet';
@@ -362,7 +363,12 @@ function jestStyleUpdater(
     });
 
     if (Object.keys(updates).length) {
-      updatePropsJestWrapper(viewDescriptors, updates, animatedStyle, adapters);
+      updatePropsJestWrapper(
+        viewDescriptors,
+        updates,
+        animatedValues,
+        adapters
+      );
     }
 
     if (!allFinished) {
@@ -388,7 +394,12 @@ function jestStyleUpdater(
   state.last = newValues;
 
   if (!shallowEqual(oldValues, newValues)) {
-    updatePropsJestWrapper(viewDescriptors, newValues, animatedStyle, adapters);
+    updatePropsJestWrapper(
+      viewDescriptors,
+      newValues,
+      animatedValues,
+      adapters
+    );
   }
 }
 
@@ -443,14 +454,16 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   dependencies?: DependencyList | null
 ): Style;
 
-export function useAnimatedStyle<Style extends DefaultStyle>(
+export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   updater:
     | WorkletFunction<[], Style>
     | ((() => Style) & Record<string, unknown>),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
-): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
+):
+  | AnimatedStyleHandle<Style | AnimatedProps>
+  | JestAnimatedStyleHandle<Style | AnimatedProps> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
@@ -477,7 +490,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const areAnimationsActive = useSharedValue<boolean>(true);
-  const jestAnimatedStyle = useRef<Style>({} as Style);
+  const jestAnimatedValues = useRef<Style | AnimatedProps>(
+    {} as Style | AnimatedProps
+  );
 
   // build dependencies
   if (!dependencies) {
@@ -534,7 +549,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           updater,
           remoteState,
           areAnimationsActive,
-          jestAnimatedStyle,
+          jestAnimatedValues,
           adaptersArray
         );
       };
@@ -567,12 +582,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   checkSharedValueUsage(initial.value);
 
   const animatedStyleHandle = useRef<
-    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
+    | AnimatedStyleHandle<Style | AnimatedProps>
+    | JestAnimatedStyleHandle<Style | AnimatedProps>
+    | null
   >(null);
 
   if (!animatedStyleHandle.current) {
     animatedStyleHandle.current = isJest()
-      ? { viewDescriptors, initial, jestAnimatedStyle }
+      ? { viewDescriptors, initial, jestAnimatedValues }
       : { viewDescriptors, initial };
   }
 
