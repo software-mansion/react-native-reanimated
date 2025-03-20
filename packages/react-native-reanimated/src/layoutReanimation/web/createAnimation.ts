@@ -83,9 +83,9 @@ export function createAnimationWithInitialValues(
   const firstAnimationStep = animationStyle['0'];
 
   const { transform, ...rest } = initialValues;
+  const transformWithPx = addPxToTransform(transform as TransformType);
 
   if (transform) {
-    const transformWithPx = addPxToTransform(transform as TransformType);
     // If there was no predefined transform, we can simply assign transform from `initialValues`.
     if (!firstAnimationStep.transform) {
       firstAnimationStep.transform = transformWithPx;

@@ -68,11 +68,11 @@ const styles = css.create({
           width: 20,
         },
       }),
-      css.keyframes({
+      {
         to: {
           backgroundColor: 'red',
         },
-      }),
+      },
     ],
     animationTimingFunction: 'linear',
     backgroundColor: 'gold',

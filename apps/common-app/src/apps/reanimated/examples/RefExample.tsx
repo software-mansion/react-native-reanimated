@@ -11,9 +11,9 @@ export type ChildHandle = {
   toggleState: () => void;
 };
 
-type ChildProps = { ref: RefObject<ChildHandle> };
+type ChildProps = { ref: RefObject<ChildHandle | null> };
 
-const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {
+const Child = ({ ref }: ChildProps) => {
   const [state, setState] = React.useState(0);
 
   const toggleState = () => {
@@ -27,7 +27,7 @@ const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {
   });
 
   return <View style={[styles.child, { width: size, height: size }]} />;
-});
+};
 
 export default function RefExample() {
   const x = useSharedValue(0);

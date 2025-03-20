@@ -42,7 +42,7 @@ function assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts 
 export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedValue, comparisonModeUnknown) => {
   const comparisonMode: ComparisonMode =
     typeof comparisonModeUnknown === 'string' && comparisonModeUnknown in ComparisonMode
-      ? (comparisonModeUnknown as ComparisonMode)
+      ? comparisonModeUnknown
       : ComparisonMode.AUTO;
 
   const isEqual = getComparator(comparisonMode);
