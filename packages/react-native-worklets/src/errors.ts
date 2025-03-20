@@ -33,7 +33,7 @@ export function registerCustomError<TName extends string>(
   name: TName
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error(
       '[Worklets] registerCustomError() must be called on a Worklet runtime'

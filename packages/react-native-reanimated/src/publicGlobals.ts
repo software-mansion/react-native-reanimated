@@ -1,5 +1,6 @@
 'use strict';
 /* eslint-disable no-var */
+/* eslint-disable reanimated/use-global-this */
 export {};
 
 declare global {
@@ -13,6 +14,7 @@ declare global {
    * code shouldn't depend on it, we keep it here mainly for backward
    * compatibility for our users.
    */
+
   var _WORKLET: boolean | undefined;
 
   /**

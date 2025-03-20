@@ -35,7 +35,7 @@ function dispatchCommandNative(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return;
   }
 

@@ -7,6 +7,7 @@ module.exports = {
       plugins: ['reanimated'],
       rules: {
         'reanimated/use-worklets-error': 'error',
+        'reanimated/use-global-this': 'error',
       },
     },
   ],

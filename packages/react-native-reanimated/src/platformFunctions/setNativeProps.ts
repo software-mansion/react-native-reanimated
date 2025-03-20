@@ -36,7 +36,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
