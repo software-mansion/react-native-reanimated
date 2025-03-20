@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, Ref } from 'react';
+import type { Component, MutableRefObject, Ref } from 'react';
 
 import type {
   EntryExitAnimationFunction,
@@ -64,6 +64,7 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  jestAnimatedValues?: MutableRefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder
