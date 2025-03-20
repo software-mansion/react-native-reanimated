@@ -3,7 +3,7 @@ import {
   executeOnUIRuntimeSync,
   logger,
   makeShareableCloneRecursive,
-  runOnUI,
+  scheduleOnUI,
   shareableMappingCache,
 } from 'react-native-worklets';
 
@@ -161,9 +161,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.value = newValue;
-      })();
+      });
     },
 
     get _value(): Value {
@@ -178,9 +178,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     modify: (modifier, forceUpdate = true) => {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.modify(modifier, forceUpdate);
-      })();
+      });
     },
     addListener: () => {
       throw new ReanimatedError(

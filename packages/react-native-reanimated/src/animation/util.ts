@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import { isWorkletFunction, logger, runOnUI } from 'react-native-worklets';
+import { isWorkletFunction, logger, scheduleOnUI } from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
 import {
@@ -565,10 +565,10 @@ function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   if (_WORKLET) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    })();
+    });
   }
 }
 
