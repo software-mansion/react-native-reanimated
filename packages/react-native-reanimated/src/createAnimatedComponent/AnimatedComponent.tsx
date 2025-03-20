@@ -242,8 +242,8 @@ export default class AnimatedComponent
         ...animatedProps?.initial?.value,
       };
 
-      if (animatedProps?.jestAnimatedValues?.current) {
-        animatedProps.jestAnimatedValues.current = this.jestAnimatedProps.value;
+      if (animatedProps?.jestAnimatedValues) {
+        animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
       }
     }
 
