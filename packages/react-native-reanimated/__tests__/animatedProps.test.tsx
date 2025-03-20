@@ -8,10 +8,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Circle, Svg } from 'react-native-svg';
 
-Animated.addWhitelistedNativeProps({ text: true });
+const animationDuration = 100;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+Animated.addWhitelistedNativeProps({ r: true });
+
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+Animated.addWhitelistedNativeProps({ text: true });
 
 export default function AnimatedComponent() {
   const r = useSharedValue(20);
@@ -23,7 +26,7 @@ export default function AnimatedComponent() {
   };
 
   const animatedProps = useAnimatedProps(() => ({
-    r: withTiming(r.value, { duration: 100 }),
+    r: withTiming(r.value, { duration: animationDuration }),
   }));
 
   const textAnimatedProps = useAnimatedProps(() => {
@@ -77,7 +80,7 @@ describe('animatedProps', () => {
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 20' });
 
     fireEvent.press(button);
-    jest.advanceTimersByTime(100);
+    jest.advanceTimersByTime(animationDuration);
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
   });
