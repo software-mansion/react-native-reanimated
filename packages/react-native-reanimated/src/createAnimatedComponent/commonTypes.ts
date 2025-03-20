@@ -107,6 +107,7 @@ export interface IAnimatedComponentInternal {
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
+  jestAnimatedProps: { value: AnimatedProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
   _jsPropsUpdater: IJSPropsUpdater;
