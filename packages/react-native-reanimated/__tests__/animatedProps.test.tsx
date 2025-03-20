@@ -39,7 +39,7 @@ export default function AnimatedComponent() {
   return (
     <View>
       <Svg>
-        // This won't work - SVG has guard for props they pass to a component 👇
+        // SVG components strip our jest props and cannot be tested
         <AnimatedCircle
           cx="50%"
           cy="50%"
@@ -48,8 +48,6 @@ export default function AnimatedComponent() {
           animatedProps={animatedProps}
         />
       </Svg>
-      // This works - it has jestAnimatedProps and jestAnimatedStyles on
-      component 👇
       <AnimatedTextInput testID={'text'} animatedProps={textAnimatedProps} />
       <Button testID={'button'} onPress={handlePress} title="Click me" />
     </View>
