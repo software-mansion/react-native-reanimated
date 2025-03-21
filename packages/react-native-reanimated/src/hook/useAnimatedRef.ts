@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, ForwardRefExoticComponent, PropsWithRef } from 'react';
+import type { Component, FC, ComponentPropsWithRef } from 'react';
 import { useRef } from 'react';
 import type { FlatList } from 'react-native';
 import {
@@ -37,9 +37,9 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
  *   component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
-// TODO: any
 export function useAnimatedRef<
-  T extends Component | ForwardRefExoticComponent<PropsWithRef<unknown>>,
+  // TODO: theu unknown shouldnt be here but it throws an error when it is, although the refs work perfectly fine
+  T extends Component | FC<ComponentPropsWithRef<any>> | unknown,
 >(): AnimatedRef<T> {
   const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
@@ -50,9 +50,9 @@ export function useAnimatedRef<
       // enters when ref is set by attaching to a component
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
-          // TODO: this was only to poc passing functional component, this tyes should be fixed i think
           return IS_WEB
-            ? getComponentOrScrollable(
+            ? // TODO: this was only to poc passing functional component, this tyes should be fixed i think
+              getComponentOrScrollable(
                 component as unknown as MaybeScrollableComponent
               )
             : getShadowNodeWrapperFromRef(

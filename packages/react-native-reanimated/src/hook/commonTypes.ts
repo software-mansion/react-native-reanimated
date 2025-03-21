@@ -1,9 +1,9 @@
 'use strict';
 import type {
   Component,
-  ForwardRefExoticComponent,
+  ComponentPropsWithRef,
+  FC,
   MutableRefObject,
-  PropsWithRef,
 } from 'react';
 import type {
   ImageStyle,
@@ -30,7 +30,7 @@ export interface Descriptor {
 }
 
 export interface AnimatedRef<
-  T extends Component | ForwardRefExoticComponent<PropsWithRef<unknown>>,
+  T extends Component | FC<ComponentPropsWithRef<any>> | unknown,
 > {
   (component?: T):
     | number // Paper
