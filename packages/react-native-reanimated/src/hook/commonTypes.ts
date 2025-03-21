@@ -1,5 +1,10 @@
 'use strict';
-import type { Component, MutableRefObject } from 'react';
+import type {
+  Component,
+  ComponentPropsWithRef,
+  FC,
+  MutableRefObject,
+} from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -24,7 +29,9 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export interface AnimatedRef<T extends Component> {
+export interface AnimatedRef<
+  T extends Component | FC<ComponentPropsWithRef<any>> | unknown,
+> {
   (component?: T):
     | number // Paper
     | ShadowNodeWrapper // Fabric

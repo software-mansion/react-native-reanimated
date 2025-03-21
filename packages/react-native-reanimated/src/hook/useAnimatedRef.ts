@@ -1,5 +1,5 @@
 'use strict';
-import type { Component } from 'react';
+import type { Component, FC, ComponentPropsWithRef } from 'react';
 import { useRef } from 'react';
 import type { FlatList } from 'react-native';
 import {
@@ -38,23 +38,27 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export function useAnimatedRef<
-  TComponent extends Component,
->(): AnimatedRef<TComponent> {
+  // TODO: theu unknown shouldnt be here but it throws an error when it is, although the refs work perfectly fine
+  T extends Component | FC<ComponentPropsWithRef<any>> | unknown,
+>(): AnimatedRef<T> {
   const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
-  const ref = useRef<AnimatedRef<TComponent>>();
+  const ref = useRef<AnimatedRef<T>>();
 
   if (!ref.current) {
-    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
-      component
-    ) => {
+    const fun: AnimatedRef<T> = <AnimatedRef<T>>((component) => {
       // enters when ref is set by attaching to a component
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
           return IS_WEB
-            ? getComponentOrScrollable(component)
+            ? // TODO: this was only to poc passing functional component, this tyes should be fixed i think
+              getComponentOrScrollable(
+                component as unknown as MaybeScrollableComponent
+              )
             : getShadowNodeWrapperFromRef(
-                getComponentOrScrollable(component) as Component
+                getComponentOrScrollable(
+                  component as unknown as MaybeScrollableComponent
+                ) as Component
               );
         };
 
@@ -63,7 +67,11 @@ export function useAnimatedRef<
         // On Fabric we have to unwrap the tag from the shadow node wrapper
         // TODO: remove casting
         fun.getTag = () =>
-          findNodeHandle(getComponentOrScrollable(component) as Component)!;
+          findNodeHandle(
+            getComponentOrScrollable(
+              component as unknown as MaybeScrollableComponent
+            ) as Component
+          )!;
 
         fun.current = component;
       }
