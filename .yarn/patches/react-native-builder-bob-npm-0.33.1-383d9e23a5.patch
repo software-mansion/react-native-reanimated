@@ -1,57 +1,9 @@
 diff --git a/babel-preset.js b/babel-preset.js
-index 44820fabc6eeaceffbf17277238b58f45e091fc7..f88c30f85c8706cb9577baa5b8ffcf9c8693b133 100644
+index 44820fabc6eeaceffbf17277238b58f45e091fc7..a8272b8a2a0eeb8a36dac001486b1cf698bca433 100644
 --- a/babel-preset.js
 +++ b/babel-preset.js
-@@ -1,6 +1,6 @@
- /* eslint-disable import/no-commonjs */
- 
--const browserslist = require('browserslist');
-+const browserslist = require("browserslist");
- 
- /**
-  * Babel preset for React Native Builder Bob
-@@ -9,48 +9,41 @@ const browserslist = require('browserslist');
-  * @param {'automatic' | 'classic'} options.jsxRuntime - Which JSX runtime to use, defaults to 'automatic'
-  */
- module.exports = function (api, options, cwd) {
--  const cjs = options.modules === 'commonjs';
-+  const cjs = options.modules === "commonjs";
- 
-   return {
-     presets: [
-       [
--        require.resolve('@babel/preset-env'),
-+        require.resolve("@babel/preset-env"),
-         {
-           targets: browserslist.findConfig(cwd) || {
-             browsers: [
--              '> 1%',
--              'chrome 109',
--              'edge 124',
--              'firefox 127',
--              'safari 17.4',
--              'not dead',
--              'not ie <= 11',
--              'not op_mini all',
--              'not android <= 4.4',
--              'not samsung <= 4',
-+              "> 1%",
-+              "chrome 109",
-+              "edge 124",
-+              "firefox 127",
-+              "safari 17.4",
-+              "not dead",
-+              "not ie <= 11",
-+              "not op_mini all",
-+              "not android <= 4.4",
-+              "not samsung <= 4",
-             ],
--            node: '18',
-+            node: "18",
-           },
-           useBuiltIns: false,
--          modules: cjs ? 'commonjs' : false,
-+          modules: cjs ? "commonjs" : false,
+@@ -35,13 +35,6 @@ module.exports = function (api, options, cwd) {
+           modules: cjs ? 'commonjs' : false,
          },
        ],
 -      [
@@ -61,20 +13,6 @@ index 44820fabc6eeaceffbf17277238b58f45e091fc7..f88c30f85c8706cb9577baa5b8ffcf9c
 -            options.jsxRuntime !== undefined ? options.jsxRuntime : 'automatic',
 -        },
 -      ],
--      require.resolve('@babel/preset-typescript'),
--      require.resolve('@babel/preset-flow'),
-+      require.resolve("@babel/preset-typescript"),
-+      require.resolve("@babel/preset-flow"),
-     ],
-     plugins: [
--      require.resolve('@babel/plugin-transform-strict-mode'),
-+      require.resolve("@babel/plugin-transform-strict-mode"),
-       [
--        require.resolve('./lib/babel'),
-+        require.resolve("./lib/babel"),
-         {
--          extension: options.esm ? 'js' : undefined,
-+          extension: options.esm ? "js" : undefined,
-         },
-       ],
+       require.resolve('@babel/preset-typescript'),
+       require.resolve('@babel/preset-flow'),
      ],
