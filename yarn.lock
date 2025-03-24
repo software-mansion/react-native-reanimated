@@ -17997,7 +17997,7 @@ __metadata:
 
 "react-native-builder-bob@patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch":
   version: 0.33.1
-  resolution: "react-native-builder-bob@patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch::version=0.33.1&hash=7b39e9"
+  resolution: "react-native-builder-bob@patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch::version=0.33.1&hash=3ba1d2"
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@babel/plugin-transform-strict-mode": "npm:^7.24.7"
@@ -18023,7 +18023,7 @@ __metadata:
     yargs: "npm:^17.5.1"
   bin:
     bob: bin/bob
-  checksum: 10/9dd78836c462939ca37fd2e2da43b99e429963a42e7524ff16ea54f56c0ae11e1856db3d4b7411bc0432fe3e72bd4f00ec2b90f87c5b853bbd76c70ea204bd58
+  checksum: 10/b30c3a39640fe9bfbd1a7dc950212e39af1c049abf43d8e7a7210bbbbb29404873e3e1f2910f56cd346cc450ef8337afc75a3d109cb6d077a46a4f507bbad8a6
   languageName: node
   linkType: hard
 
