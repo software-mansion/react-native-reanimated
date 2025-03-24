@@ -2,7 +2,7 @@
 
 yarn install --immutable
 
-if [ $# -gt 1 ]; then
+if [ $# -ge 1 ]; then
   if ! CURRENT_VERSION=$(node scripts/set-worklets-version.js "$@"); then
     exit 1
   fi
@@ -12,7 +12,7 @@ yarn build
 
 npm pack
 
-if [ $# -gt 1 ]; then
+if [ $# -ge 1 ]; then
   node scripts/set-worklets-version.js "$CURRENT_VERSION" >/dev/null
 fi
 
