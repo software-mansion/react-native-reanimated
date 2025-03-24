@@ -39,11 +39,11 @@ void CSSTransitionsRegistry::updateSettings(
   registry_[viewTag]->updateSettings(config);
 }
 
-UpdatesBatch CSSTransitionsRegistry::update(const double timestamp) {
+Updates CSSTransitionsRegistry::getFrameUpdates(const double timestamp) {
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 
-  UpdatesBatch updatesBatch;
+  Updates result;
 
   // Iterate over active transitions and update them
   for (auto it = runningTransitionTags_.begin();
@@ -51,10 +51,10 @@ UpdatesBatch CSSTransitionsRegistry::update(const double timestamp) {
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
 
-    const auto &updates = transition->update(timestamp);
+    auto &updates = transition->update(timestamp);
     const auto &shadowNode = transition->getShadowNode();
     if (!updates.empty()) {
-      updatesBatch.emplace_back(shadowNode, updates);
+      result[shadowNode->getTag()] = {shadowNode, std::move(updates)};
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -72,7 +72,14 @@ UpdatesBatch CSSTransitionsRegistry::update(const double timestamp) {
     }
   }
 
-  return updatesBatch;
+  return result;
+}
+
+Updates CSSTransitionsRegistry::getAllUpdates(const double timestamp) {
+  // CSS transitions don't have fill mode, so we can return the same result as
+  // for frame updates as if transition is not running, then there are no style
+  // updates to apply
+  return getFrameUpdates(timestamp);
 }
 
 void CSSTransitionsRegistry::activateDelayedTransitions(

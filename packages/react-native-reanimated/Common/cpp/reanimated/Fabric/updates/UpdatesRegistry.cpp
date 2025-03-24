@@ -6,10 +6,6 @@ std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
-bool UpdatesRegistry::isEmpty() const {
-  return updatesRegistry_.empty();
-}
-
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   std::lock_guard<std::mutex> lock{mutex_};
 

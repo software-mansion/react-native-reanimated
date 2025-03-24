@@ -39,12 +39,14 @@ class CSSAnimationsRegistry
       double timestamp);
   void remove(Tag viewTag) override;
 
-  UpdatesBatch update(double timestamp);
+  Updates getFrameUpdates(double timestamp) override;
+  Updates getAllUpdates(double timestamp) override;
 
  private:
   using AnimationToIndexMap =
       std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
+  using AnimationUpdates = std::pair<ShadowNode::Shared, folly::dynamic>;
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
@@ -69,10 +71,8 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
-  std::pair<ShadowNode::Shared, folly::dynamic> updateViewAnimations(
-      Tag viewTag,
-      const std::vector<size_t> &animationIndices,
-      double timestamp);
+  AnimationUpdates updateRunningViewAnimations(Tag viewTag, double timestamp);
+  AnimationUpdates updateAllViewAnimations(Tag viewTag, double timestamp);
   void scheduleOrActivateAnimation(
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,

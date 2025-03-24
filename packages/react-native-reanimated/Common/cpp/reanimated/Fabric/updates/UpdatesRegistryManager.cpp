@@ -74,12 +74,37 @@ void UpdatesRegistryManager::handleNodeRemovals(
   }
 }
 
-PropsMap UpdatesRegistryManager::collectProps() {
-  PropsMap propsMap;
+Updates UpdatesRegistryManager::getFrameUpdates(double timestamp) {
+  Updates result;
   for (auto &registry : registries_) {
-    registry->collectProps(propsMap);
+    mergeUpdates(result, registry->getFrameUpdates(timestamp));
   }
-  return propsMap;
+  return result;
+}
+
+Updates UpdatesRegistryManager::getAllUpdates(double timestamp) {
+  Updates result;
+  for (auto &registry : registries_) {
+    mergeUpdates(result, registry->getAllUpdates(timestamp));
+  }
+  return result;
+}
+
+void UpdatesRegistryManager::mergeUpdates(
+    Updates &target,
+    const Updates &updates) {
+  for (const auto &[key, updatePair] : updates) {
+    const auto tag = updatePair.first->getTag();
+
+    auto it = target.find(tag);
+    if (it != target.end()) {
+      it->first.second.update(updatePair->second);
+    } else {
+      result[tag] = updatePair;
+    }
+  }
+
+  return result;
 }
 
 #ifdef ANDROID

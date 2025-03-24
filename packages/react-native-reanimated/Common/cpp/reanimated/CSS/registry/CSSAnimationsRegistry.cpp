@@ -62,23 +62,20 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-UpdatesBatch CSSAnimationsRegistry::update(const double timestamp) {
+Updates CSSAnimationsRegistry::getFrameUpdates(const double timestamp) {
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
 
-  UpdatesBatch updatesBatch;
+  Updates result;
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationIndicesMap_.begin();
        it != runningAnimationIndicesMap_.end();) {
     const auto viewTag = it->first;
-    const auto &animationsVector = registry_.at(viewTag).animationsVector;
+    const auto &updatesPair = updateRunningViewAnimations(viewTag, timestamp);
 
-    const auto &[shadowNode, updates] =
-        updateViewAnimations(animationsVector, it->second, timestamp);
-
-    if (!updates.empty()) {
-      updatesBatch.emplace_back(shadowNode, std::move(updates));
+    if (!updatesPair.second.empty()) {
+      result[viewTag] = updatesPair;
     }
 
     if (runningAnimationIndicesMap_[viewTag].empty()) {
@@ -88,7 +85,24 @@ UpdatesBatch CSSAnimationsRegistry::update(const double timestamp) {
     }
   }
 
-  return updatesBatch;
+  return result;
+}
+
+Updates CSSAnimationsRegistry::getAllUpdates(const double timestamp) {
+  // Activate all delayed animations that should start now
+  activateDelayedAnimations(timestamp);
+
+  Updates updates;
+
+  for (const auto &[viewTag, _] : registry_) {
+    const auto &updatesPair = updateAllViewAnimations(viewTag, timestamp);
+
+    if (!updatesPair.second.empty()) {
+      result[viewTag] = updatesPair;
+    }
+  }
+
+  return updates;
 }
 
 CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
@@ -177,19 +191,17 @@ void CSSAnimationsRegistry::updateAnimationSettings(
   }
 }
 
-std::pair<ShadowNode::Shared, folly::dynamic>
-CSSAnimationsRegistry::updateViewAnimations(
+AnimationUpdates CSSAnimationsRegistry::updateRunningViewAnimations(
     const Tag viewTag,
-    const std::vector<size_t> &animationIndices,
     const double timestamp) {
   folly::dynamic viewAnimationUpdates = folly::dynamic::object();
+  const auto &animationsVector = registry_[viewTag].animationsVector;
 
   ShadowNode::Shared shadowNode;
 
   for (auto it = runningAnimationIndices.begin();
        it != runningAnimationIndices.end();) {
-    const auto runningAnimationIndex = *it;
-    const auto &animation = animationsVector[runningAnimationIndex];
+    const auto &animation = animationsVector[it->first];
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
@@ -206,6 +218,36 @@ CSSAnimationsRegistry::updateViewAnimations(
       it = runningAnimationIndices.erase(it);
     } else {
       ++it;
+    }
+  }
+
+  return {shadowNode, viewAnimationUpdates};
+}
+
+AnimationUpdates CSSAnimationsRegistry::updateAllViewAnimations(
+    const Tag viewTag,
+    const double timestamp) {
+  folly::dynamic viewAnimationUpdates = folly::dynamic::object();
+  const auto &animationsVector = registry_[viewTag].animationsVector;
+
+  ShadowNode::Shared shadowNode;
+
+  for (size_t i = 0; i < animationsVector.size(); ++i) {
+    const auto &animation = animationsVector[i];
+    if (!shadowNode) {
+      shadowNode = animation->getShadowNode();
+    }
+    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
+      animation->run(timestamp);
+    }
+
+    const auto currentUpdates = animation->update(timestamp);
+    if (!currentUpdates.empty()) {
+      viewAnimationUpdates.update(currentUpdates);
+    }
+
+    if (animation->getState(timestamp) == AnimationProgressState::Running) {
+      runningAnimationIndicesMap_[viewTag].insert(i);
     }
   }
 
