@@ -31,7 +31,7 @@ class CSSTransitionsRegistry
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
   void remove(Tag viewTag) override;
 
-  void update(double timestamp);
+  UpdatesBatch update(double timestamp);
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
@@ -48,9 +48,6 @@ class CSSTransitionsRegistry
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
-  void updateInUpdatesRegistry(
-      const std::shared_ptr<CSSTransition> &transition,
-      const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css

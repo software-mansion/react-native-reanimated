@@ -39,14 +39,12 @@ class CSSAnimationsRegistry
       double timestamp);
   void remove(Tag viewTag) override;
 
-  void update(double timestamp);
+  UpdatesBatch update(double timestamp);
 
  private:
   using AnimationToIndexMap =
       std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
-  using AnimationsToRevertMap =
-      std::unordered_map<Tag, std::unordered_set<size_t>>;
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
@@ -57,7 +55,6 @@ class CSSAnimationsRegistry
   Registry registry_;
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
-  AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
   CSSAnimationsVector buildAnimationsVector(
@@ -72,24 +69,15 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
-  void updateViewAnimations(
+  std::pair<ShadowNode::Shared, folly::dynamic> updateViewAnimations(
       Tag viewTag,
       const std::vector<size_t> &animationIndices,
-      double timestamp,
-      bool addToBatch);
+      double timestamp);
   void scheduleOrActivateAnimation(
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
-  void removeViewAnimations(Tag viewTag);
-  void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
-  void handleAnimationsToRevert(double timestamp);
-
-  static bool addStyleUpdates(
-      folly::dynamic &target,
-      const folly::dynamic &updates,
-      bool shouldOverride);
 };
 
 } // namespace reanimated::css

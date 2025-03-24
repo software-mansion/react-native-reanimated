@@ -55,7 +55,6 @@ class UpdatesRegistry {
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);
-  folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);

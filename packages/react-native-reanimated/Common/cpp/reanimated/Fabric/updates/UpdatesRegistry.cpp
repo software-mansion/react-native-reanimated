@@ -69,14 +69,6 @@ void UpdatesRegistry::setInUpdatesRegistry(
   updatesRegistry_[tag] = std::make_pair(shadowNode, props);
 }
 
-folly::dynamic UpdatesRegistry::getUpdatesFromRegistry(const Tag tag) const {
-  auto it = updatesRegistry_.find(tag);
-  if (it == updatesRegistry_.cend()) {
-    return folly::dynamic();
-  }
-  return it->second.second;
-}
-
 void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 #ifdef ANDROID
   updatePropsToRevert(tag);

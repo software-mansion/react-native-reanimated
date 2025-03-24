@@ -14,14 +14,15 @@ CSSAnimation::CSSAnimation(
     : name_(std::move(name)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
-      progressProvider_(std::make_shared<AnimationProgressProvider>(
-          timestamp,
-          settings.duration,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          settings.easingFunction,
-          keyframesConfig.keyframeEasingFunctions)),
+      progressProvider_(
+          std::make_shared<AnimationProgressProvider>(
+              timestamp,
+              settings.duration,
+              settings.delay,
+              settings.iterationCount,
+              settings.direction,
+              settings.easingFunction,
+              keyframesConfig.keyframeEasingFunctions)),
       styleInterpolator_(keyframesConfig.styleInterpolator) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
@@ -60,10 +61,6 @@ bool CSSAnimation::hasBackwardsFillMode() const {
       fillMode_ == AnimationFillMode::Both;
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
-}
-
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue()
                       : styleInterpolator_->getFirstKeyframeValue();
@@ -72,10 +69,6 @@ folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
 folly::dynamic CSSAnimation::getForwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
                       : styleInterpolator_->getLastKeyframeValue();
-}
-
-folly::dynamic CSSAnimation::getResetStyle() const {
-  return styleInterpolator_->getResetStyle(shadowNode_);
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -88,14 +81,13 @@ void CSSAnimation::run(const double timestamp) {
 
 folly::dynamic CSSAnimation::update(const double timestamp) {
   progressProvider_->update(timestamp);
+  const auto currentState = progressProvider_->getState(timestamp);
 
-  // Check if the animation has not started yet because of the delay
-  // (In general, it shouldn't be activated until the delay has passed but we
-  // add this check to make sure that animation doesn't start with the negative
-  // progress)
-  if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Pending) {
+  if (currentState == AnimationProgressState::Pending) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
+  }
+  if (currentState == AnimationProgressState::Finished) {
+    return hasForwardsFillMode() ? getForwardsFillStyle() : folly::dynamic();
   }
 
   return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
