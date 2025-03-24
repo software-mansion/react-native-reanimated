@@ -19,8 +19,8 @@
   "private": true,
   "scripts": {
     "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
-    "format": "format:root && format:workspaces",
-    "format:root": "prettier --write --list-different .github",
+    "format": "yarn format:root && yarn format:workspaces",
+    "format:root": "prettier --write --list-different .github scripts",
     "format:workspaces": "yarn workspaces foreach --all --parallel --topological-dev run format",
     "lint": "yarn workspaces foreach --all --parallel --topological-dev run lint"
   },
