@@ -4,6 +4,8 @@ import { createCustomError, registerCustomError } from './errors';
 
 export const WorkletsError = createCustomError('Worklets');
 
+globalThis.WorkletsError = WorkletsError;
+
 // To capture it in a the registering worklet's closure.
 const WorkletsErrorConstructor = WorkletsError;
 

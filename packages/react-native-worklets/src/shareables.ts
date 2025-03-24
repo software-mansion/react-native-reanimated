@@ -513,11 +513,32 @@ export function makeShareableCloneOnUIRecursive<T>(
   }
   // eslint-disable-next-line @typescript-eslint/no-shadow
   function cloneRecursive(value: T): FlatShareableRef<T> {
+    _log('cloneRecursive');
+    _log(value);
     if (
       (typeof value === 'object' && value !== null) ||
       typeof value === 'function'
     ) {
+      // console.log('funkcjon');
+      _log('objekt');
+      const shareableMappingCache = global.__shareableMappingCache as WeakMap<
+        any,
+        any
+      >;
+      _log('cache check');
+      _log(shareableMappingCache.has(value));
+      const cached = shareableMappingCache.has(value)
+        ? shareableMappingCache.get(value)
+        : undefined;
+      _log(cached);
+      if (cached !== undefined) {
+        _log('fetched');
+        _log(cached);
+        _log('from cache');
+        return cached as FlatShareableRef<T>;
+      }
       if (isHostObject(value)) {
+        _log('host');
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
         return global._makeShareableClone(
@@ -526,12 +547,17 @@ export function makeShareableCloneOnUIRecursive<T>(
         ) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
+        _log('remotele');
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
         // call `_makeShareableClone`.
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
+        _log('array');
+        for (const element of value) {
+          _log(element);
+        }
         return global._makeShareableClone(
           value.map(cloneRecursive),
           undefined
@@ -539,10 +565,12 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
+        _log(key);
         toAdapt[key] = cloneRecursive(element);
       }
       return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
+    _log('returning undefined');
     return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);

@@ -154,6 +154,23 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_scheduleWorkletOnJS",
+      [jsScheduler](jsi::Runtime &rt, const jsi::Value &shareable) {
+        auto worklet = extractShareableOrThrow<ShareableWorklet>(
+            rt,
+            shareable,
+            "[Worklets] Only worklets can be scheduled to run on JS.");
+
+        jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+          auto fun =
+              worklet->toJSValue(rnRuntime).asObject(rnRuntime).asFunction(
+                  rnRuntime);
+          fun.call(rnRuntime);
+        });
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleOnRuntime",
       [](jsi::Runtime &rt,
          const jsi::Value &workletRuntimeValue,

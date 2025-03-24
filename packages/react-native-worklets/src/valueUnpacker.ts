@@ -7,16 +7,16 @@ import type { WorkletFunction } from './workletTypes';
 function valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
-  remoteFunctionName?: string
+  remoteFunctionName?: string,
+  shareable?: any
 ): unknown {
   'worklet';
-  let workletsCache = global.__workletsCache;
-  let handleCache = global.__handleCache;
-  if (workletsCache === undefined) {
-    // init
-    workletsCache = global.__workletsCache = new Map();
-    handleCache = global.__handleCache = new WeakMap();
-  }
+  const workletsCache = global.__workletsCache;
+  const handleCache = global.__handleCache;
+  const shareableMappingCache = global.__shareableMappingCache as WeakMap<
+    any,
+    any
+  >;
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     let workletFun = workletsCache.get(workletHash);
@@ -50,6 +50,21 @@ function valueUnpacker(
     }
     const functionInstance = workletFun!.bind(objectToUnpack);
     objectToUnpack._recur = functionInstance;
+    (functionInstance as WorkletFunction).__workletHash = workletHash;
+    (functionInstance as WorkletFunction).__initData =
+      objectToUnpack.__initData;
+    (functionInstance as WorkletFunction).__closure = objectToUnpack.__closure;
+    // globalThis._log(globalThis);
+    if (_WORKLET) {
+      _log('VALUE UNPACKER CACHING');
+      _log(shareable);
+      shareableMappingCache.set(functionInstance, shareable);
+      _log(shareableMappingCache.get(functionInstance));
+      _log(functionInstance);
+    }
+    // Line below crashes.
+    // shareableMappingCache.set(shareable, shareable);
+
     return functionInstance;
   } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
@@ -76,6 +91,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 }
+
+globalThis.__valueUnpacker = valueUnpacker;
 
 interface ObjectToUnpack extends WorkletFunction {
   _recur: unknown;

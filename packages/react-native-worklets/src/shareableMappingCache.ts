@@ -27,6 +27,15 @@ const cache = SHOULD_BE_USE_WEB
   ? null
   : new WeakMap<object, ShareableRef | symbol>();
 
+if (!SHOULD_BE_USE_WEB) {
+  globalThis.__shareableMappingCache = cache;
+  globalThis.__shareableMappingFlag = shareableMappingFlag;
+}
+
+// const cache = globalThis.__shareableMappingCache;
+
+// const shareableMappingFlag = globalThis.__shareableMappingFlag;
+
 export const shareableMappingCache = SHOULD_BE_USE_WEB
   ? {
       set() {

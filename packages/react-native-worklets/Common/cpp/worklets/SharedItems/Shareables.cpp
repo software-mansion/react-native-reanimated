@@ -251,7 +251,11 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
       "ShareableWorklet doesn't have `__workletHash` property");
   jsi::Value obj = ShareableObject::toJSValue(rt);
   return getValueUnpacker(rt).call(
-      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
+      rt,
+      obj,
+      jsi::String::createFromAscii(rt, "Worklet"),
+      jsi::Value::undefined(),
+      ShareableJSRef::newHostObject(rt, shared_from_this()));
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {

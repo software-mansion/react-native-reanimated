@@ -16,7 +16,7 @@ export {
   registerLoggerConfig,
   updateLoggerConfig,
 } from './logger';
-export { scheduleOnUI } from './publicApi';
+export { scheduleOnUI, worklet } from './publicApi';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
