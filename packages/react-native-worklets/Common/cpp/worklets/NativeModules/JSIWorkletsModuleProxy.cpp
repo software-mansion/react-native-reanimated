@@ -4,6 +4,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
@@ -104,6 +105,17 @@ inline jsi::Value reportFatalErrorOnJS(
   return jsi::Value::undefined();
 }
 
+inline jsi::Value makeSynchronizable(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (value.isNumber()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<double>>(value.asNumber());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  }
+  return jsi::Value::undefined();
+}
+
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
@@ -173,6 +185,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableSet"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -410,6 +424,17 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeSerializableObject(
               rt, args[0].getObject(rt), args[1].getBool(), args[2]);
         });
+  }
+
+  if (name == "makeSynchronizable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) { return makeSynchronizable(rt, args[0]); });
   }
 
   if (name == "makeShareableWorklet") {

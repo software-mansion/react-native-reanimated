@@ -17,6 +17,7 @@ export {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
+export { makeSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
@@ -29,6 +30,7 @@ export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
   ShareableRef,
+  SynchronizableRef,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,

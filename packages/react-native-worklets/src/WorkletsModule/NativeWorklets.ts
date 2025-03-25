@@ -4,7 +4,11 @@ import { WorkletsTurboModule } from '../specs';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type {
+  HostSynchronizableRef,
+  ShareableRef,
+  WorkletRuntime,
+} from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -140,6 +144,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       worklet,
       shouldPersistRemote
     );
+  }
+
+  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.makeSynchronizable(value);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

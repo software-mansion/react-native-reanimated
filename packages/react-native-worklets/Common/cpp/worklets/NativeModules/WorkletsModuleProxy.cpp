@@ -3,7 +3,9 @@
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
