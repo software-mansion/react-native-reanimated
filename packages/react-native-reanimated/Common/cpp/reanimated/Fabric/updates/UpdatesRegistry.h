@@ -17,7 +17,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using Updates =
+using NodeWithPropsMap =
     std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
@@ -39,8 +39,8 @@ class UpdatesRegistry {
   virtual bool isEmpty() const = 0;
   virtual void remove(Tag tag) = 0;
 
-  virtual Updates getFrameUpdates(double timestamp) = 0;
-  virtual Updates getAllProps(double timestamp) = 0;
+  virtual NodeWithPropsMap getFrameUpdates(double timestamp) = 0;
+  virtual NodeWithPropsMap getAllProps(double timestamp) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -57,7 +57,7 @@ class UpdatesRegistry {
 #endif
 
  private:
-  void mergeUpdates(Updates &target, const Updates &updates);
+  void mergeUpdates(NodeWithPropsMap &target, const NodeWithPropsMap &updates);
 };
 
 } // namespace reanimated

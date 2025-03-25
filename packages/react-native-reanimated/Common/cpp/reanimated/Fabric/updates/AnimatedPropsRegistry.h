@@ -21,13 +21,13 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   void add(jsi::Runtime &rt, const jsi::Value &operations);
   void remove(Tag tag) override;
 
-  Updates getFrameUpdates(double timestamp) override;
-  Updates getAllUpdates(double timestamp) override;
+  NodeWithPropsMap getFrameUpdates(double timestamp) override;
+  NodeWithPropsMap getAllProps(double timestamp) override;
 
  private:
   JSIUpdates jsiUpdates_;
-  Updates currentBatch_;
-  Updates allUpdates_;
+  NodeWithPropsMap currentBatch_;
+  NodeWithPropsMap allUpdates_;
 };
 
 } // namespace reanimated

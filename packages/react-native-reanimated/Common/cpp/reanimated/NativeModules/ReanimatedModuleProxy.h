@@ -115,7 +115,7 @@ class ReanimatedModuleProxy
 
   void setViewStyle(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
+      const jsi::Value &shadowNodeWrapper,
       const jsi::Value &viewStyle) override;
 
   void markNodeAsRemovable(

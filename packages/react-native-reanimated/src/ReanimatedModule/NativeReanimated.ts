@@ -183,8 +183,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  setViewStyle(viewTag: number, style: StyleProps) {
-    this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
+  setViewStyle(shadowNodeWrapper: ShadowNodeWrapper, style: StyleProps) {
+    this.#reanimatedModuleProxy.setViewStyle(shadowNodeWrapper, style);
   }
 
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {

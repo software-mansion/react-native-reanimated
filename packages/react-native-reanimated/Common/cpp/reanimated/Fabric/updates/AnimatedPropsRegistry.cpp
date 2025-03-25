@@ -36,11 +36,11 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
 }
 
-Updates AnimatedPropsRegistry::getFrameUpdates(double timestamp) {
-  return std::exchange(updatesBatch_, Updates{});
+NodeWithPropsMap AnimatedPropsRegistry::getFrameUpdates(double timestamp) {
+  return std::exchange(updatesBatch_, NodeWithPropsMap{});
 }
 
-Updates AnimatedPropsRegistry::getAllUpdates(double timestamp) {
+NodeWithPropsMap AnimatedPropsRegistry::getAllProps(double timestamp) {
   return updatesRegistry_;
 }
 

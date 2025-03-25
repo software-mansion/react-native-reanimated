@@ -50,12 +50,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -286,9 +288,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -433,11 +436,11 @@ void ReanimatedModuleProxy::cleanupSensors() {
 
 void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag,
+    const jsi::Value &shadowNodeWrapper,
     const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  staticPropsRegistry_->set(rt, shadowNode, viewStyle);
+  if (staticPropsRegistry_->hasObservers(shadowNode->getTag())) {
     maybeRunCSSLoop();
   }
 }

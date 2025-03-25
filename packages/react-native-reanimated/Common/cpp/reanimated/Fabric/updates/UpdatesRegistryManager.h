@@ -36,8 +36,8 @@ class UpdatesRegistryManager {
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
 
-  Updates getFrameUpdates(double timestamp);
-  Updates getAllUpdates(double timestamp);
+  NodeWithPropsMap getFrameUpdates(double timestamp);
+  NodeWithPropsMap getAllProps(double timestamp);
 
 #ifdef ANDROID
   bool hasPropsToRevert();

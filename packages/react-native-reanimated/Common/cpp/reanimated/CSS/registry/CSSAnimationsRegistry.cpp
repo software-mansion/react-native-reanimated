@@ -62,11 +62,12 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-Updates CSSAnimationsRegistry::getFrameUpdates(const double timestamp) {
+NodeWithPropsMap CSSAnimationsRegistry::getFrameUpdates(
+    const double timestamp) {
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
 
-  Updates result;
+  NodeWithPropsMap result;
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationIndicesMap_.begin();
@@ -88,11 +89,11 @@ Updates CSSAnimationsRegistry::getFrameUpdates(const double timestamp) {
   return result;
 }
 
-Updates CSSAnimationsRegistry::getAllUpdates(const double timestamp) {
+NodeWithPropsMap CSSAnimationsRegistry::getAllProps(const double timestamp) {
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
 
-  Updates updates;
+  NodeWithPropsMap updates;
 
   for (const auto &[viewTag, _] : registry_) {
     const auto &updatesPair = updateAllViewAnimations(viewTag, timestamp);

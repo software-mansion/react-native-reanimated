@@ -31,8 +31,8 @@ class CSSTransitionsRegistry
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
   void remove(Tag viewTag) override;
 
-  Updates getFrameUpdates(double timestamp) override;
-  Updates getAllUpdates(double timestamp) override;
+  NodeWithPropsMap getFrameUpdates(double timestamp) override;
+  NodeWithPropsMap getAllProps(double timestamp) override;
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;

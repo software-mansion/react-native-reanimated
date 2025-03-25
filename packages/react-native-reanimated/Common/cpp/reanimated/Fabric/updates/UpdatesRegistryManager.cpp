@@ -74,25 +74,25 @@ void UpdatesRegistryManager::handleNodeRemovals(
   }
 }
 
-Updates UpdatesRegistryManager::getFrameUpdates(double timestamp) {
-  Updates result;
+NodeWithPropsMap UpdatesRegistryManager::getFrameUpdates(double timestamp) {
+  NodeWithPropsMap result;
   for (auto &registry : registries_) {
     mergeUpdates(result, registry->getFrameUpdates(timestamp));
   }
   return result;
 }
 
-Updates UpdatesRegistryManager::getAllUpdates(double timestamp) {
-  Updates result;
+NodeWithPropsMap UpdatesRegistryManager::getAllProps(double timestamp) {
+  NodeWithPropsMap result;
   for (auto &registry : registries_) {
-    mergeUpdates(result, registry->getAllUpdates(timestamp));
+    mergeUpdates(result, registry->getAllProps(timestamp));
   }
   return result;
 }
 
 void UpdatesRegistryManager::mergeUpdates(
-    Updates &target,
-    const Updates &updates) {
+    NodeWithPropsMap &target,
+    const NodeWithPropsMap &updates) {
   for (const auto &[key, updatePair] : updates) {
     const auto tag = updatePair.first->getTag();
 

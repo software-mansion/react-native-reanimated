@@ -78,7 +78,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   // JS View style
   virtual void setViewStyle(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
+      const jsi::Value &shadowNodeWrapper,
       const jsi::Value &viewStyle) = 0;
 
   // Cleanup

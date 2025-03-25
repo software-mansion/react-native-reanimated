@@ -39,11 +39,12 @@ void CSSTransitionsRegistry::updateSettings(
   registry_[viewTag]->updateSettings(config);
 }
 
-Updates CSSTransitionsRegistry::getFrameUpdates(const double timestamp) {
+NodeWithPropsMap CSSTransitionsRegistry::getFrameUpdates(
+    const double timestamp) {
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 
-  Updates result;
+  NodeWithPropsMap result;
 
   // Iterate over active transitions and update them
   for (auto it = runningTransitionTags_.begin();
@@ -75,7 +76,7 @@ Updates CSSTransitionsRegistry::getFrameUpdates(const double timestamp) {
   return result;
 }
 
-Updates CSSTransitionsRegistry::getAllUpdates(const double timestamp) {
+NodeWithPropsMap CSSTransitionsRegistry::getAllProps(const double timestamp) {
   // CSS transitions don't have fill mode, so we can return the same result as
   // for frame updates as if transition is not running, then there are no style
   // updates to apply
