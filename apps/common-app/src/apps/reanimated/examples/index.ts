@@ -117,6 +117,7 @@ import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
+import SynchronizableExample from './SynchronizableExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
@@ -151,6 +152,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+  },
+  Synchronizable: {
+    icon: '🔄',
+    title: 'Synchronizable',
+    screen: SynchronizableExample,
   },
   ReactFreeze: {
     icon: '❄️',
