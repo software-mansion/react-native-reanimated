@@ -2,6 +2,7 @@
 
 #include <ReactCommon/CallInvoker.h>
 #include <ReactCommon/TurboModule.h>
+#include <jsi/jsi.h>
 #include <memory>
 
 using namespace facebook;
@@ -21,6 +22,10 @@ class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) = 0;
+
+  virtual jsi::Value makeSynchronizable(
+      jsi::Runtime &rt,
+      const jsi::Value &value) = 0;
 
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;

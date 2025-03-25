@@ -4,7 +4,11 @@
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
 import { isJest } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type {
+  ShareableRef,
+  SynchronizableRef,
+  WorkletRuntime,
+} from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
@@ -23,6 +27,12 @@ class JSWorklets implements IWorkletsModule {
   makeShareableClone<TValue>(): ShareableRef<TValue> {
     throw new WorkletsError(
       'makeShareableClone should never be called in JSWorklets.'
+    );
+  }
+
+  makeSynchronizable<TValue>(): SynchronizableRef<TValue> {
+    throw new WorkletsError(
+      'makeSynchronizable should never be called in JSWorklets.'
     );
   }
 

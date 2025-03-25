@@ -13,6 +13,18 @@ export type ShareableRef<T = unknown> = {
   __hostObjectShareableJSRef: T;
 };
 
+export type SynchronizableRef<TValue = unknown> = {
+  // TODO: TSDOC
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setDirty(value: TValue): void;
+  setBlocking(value: TValue): void;
+  // TODO: Consider hiding lock and unlock from the public API and
+  // instead allow to use functions for setting values.
+  lock(): void;
+  unlock(): void;
+};
+
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
 export type FlatShareableRef<T> =

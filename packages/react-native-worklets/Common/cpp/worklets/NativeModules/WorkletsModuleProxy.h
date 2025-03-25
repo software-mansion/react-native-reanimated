@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -34,6 +35,9 @@ class WorkletsModuleProxy
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
+
+  jsi::Value makeSynchronizable(jsi::Runtime &rt, const jsi::Value &value)
+      override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 

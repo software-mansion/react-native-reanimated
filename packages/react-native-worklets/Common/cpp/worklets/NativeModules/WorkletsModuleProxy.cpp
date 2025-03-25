@@ -3,6 +3,7 @@
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -64,6 +65,18 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
   // confusion.
   return worklets::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
+}
+
+jsi::Value WorkletsModuleProxy::makeSynchronizable(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (value.isNumber()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<double>>(value.asNumber());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  }
+  // TODO: Use jslogger here to log the error.
+  return jsi::Value::undefined();
 }
 
 void WorkletsModuleProxy::scheduleOnUI(
