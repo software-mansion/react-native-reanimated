@@ -6,82 +6,19 @@ std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
-folly::dynamic UpdatesRegistry::get(const Tag tag) const {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto it = updatesRegistry_.find(tag);
-  if (it == updatesRegistry_.cend()) {
-    return nullptr;
-  }
-  return it->second.second;
-}
-
-void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto copiedUpdatesBatch = std::move(updatesBatch_);
-  updatesBatch_.clear();
-
-  // Store all updates in the registry for later use in the commit hook
-  flushUpdatesToRegistry(copiedUpdatesBatch);
-  // Flush the updates to the updatesBatch used to apply current changes
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
-  }
-}
-
-void UpdatesRegistry::collectProps(PropsMap &propsMap) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto copiedRegistry = updatesRegistry_;
-  for (const auto &[tag, pair] : copiedRegistry) {
-    const auto &[shadowNode, props] = pair;
-    auto &family = shadowNode->getFamily();
-    auto it = propsMap.find(&family);
-
-    if (it == propsMap.cend()) {
-      auto propsVector = std::vector<RawProps>{};
-      propsVector.emplace_back(RawProps(props));
-      propsMap.emplace(&family, propsVector);
-    } else {
-      it->second.push_back(RawProps(props));
-    }
-  }
-}
-
-void UpdatesRegistry::addUpdatesToBatch(
+void addToPropsMap(
+    PropsMap &propsMap,
     const ShadowNode::Shared &shadowNode,
     const folly::dynamic &props) {
-  updatesBatch_.emplace_back(shadowNode, props);
-}
+  const auto &family = shadowNode->getFamily();
+  const auto it = propsMap.find(&family);
 
-void UpdatesRegistry::setInUpdatesRegistry(
-    const ShadowNode::Shared &shadowNode,
-    const folly::dynamic &props) {
-  const auto tag = shadowNode->getTag();
-#ifdef ANDROID
-  updatePropsToRevert(tag, &props);
-#endif
-  updatesRegistry_[tag] = std::make_pair(shadowNode, props);
-}
-
-void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
-#ifdef ANDROID
-  updatePropsToRevert(tag);
-#endif
-  updatesRegistry_.erase(tag);
-}
-
-void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
-  for (auto &[shadowNode, props] : updatesBatch) {
-    const auto tag = shadowNode->getTag();
-    auto it = updatesRegistry_.find(tag);
-
-    if (it == updatesRegistry_.cend()) {
-      updatesRegistry_[tag] = std::make_pair(shadowNode, props);
-    } else {
-      it->second.second.update(props);
-    }
+  if (it == propsMap.cend()) {
+    auto propsVector = std::vector<RawProps>{};
+    propsVector.emplace_back(props);
+    propsMap.emplace(&family, propsVector);
+  } else {
+    it->second.emplace_back(props);
   }
 }
 

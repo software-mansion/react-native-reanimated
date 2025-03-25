@@ -39,14 +39,13 @@ class CSSAnimationsRegistry
       double timestamp);
   void remove(Tag viewTag) override;
 
-  NodeWithPropsMap getFrameUpdates(double timestamp) override;
-  NodeWithPropsMap getAllProps(double timestamp) override;
+  void flushFrameUpdates(PropsBatch &updatesBatch, double timestamp) override;
+  void collectAllProps(PropsMap &propsMap, double timestamp) override;
 
  private:
   using AnimationToIndexMap =
       std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
-  using AnimationUpdates = std::pair<ShadowNode::Shared, folly::dynamic>;
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
@@ -71,8 +70,18 @@ class CSSAnimationsRegistry
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
 
-  AnimationUpdates updateRunningViewAnimations(Tag viewTag, double timestamp);
-  AnimationUpdates updateAllViewAnimations(Tag viewTag, double timestamp);
+  NodeWithPropsPair updateRunningViewAnimations(
+      const CSSAnimationsVector &animationsVector,
+      std::set<size_t> &runningAnimationIndices,
+      double timestamp);
+  NodeWithPropsPair updateAllViewAnimations(
+      const CSSAnimationsVector &animationsVector,
+      double timestamp);
+  void processAnimation(
+      const std::shared_ptr<CSSAnimation> &animation,
+      double timestamp,
+      ShadowNode::Shared &shadowNode,
+      folly::dynamic &updates);
   void scheduleOrActivateAnimation(
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,

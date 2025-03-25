@@ -61,6 +61,10 @@ bool CSSAnimation::hasBackwardsFillMode() const {
       fillMode_ == AnimationFillMode::Both;
 }
 
+folly::dynamic CSSAnimation::getResetStyle() const {
+  return styleInterpolator_->getResetStyle(shadowNode_);
+}
+
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue()
                       : styleInterpolator_->getFirstKeyframeValue();

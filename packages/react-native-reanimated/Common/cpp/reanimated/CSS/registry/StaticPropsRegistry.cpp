@@ -3,18 +3,18 @@
 namespace reanimated::css {
 
 void StaticPropsRegistry::set(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const jsi::Value &props) {
-  if (props.isNull() || props.isUndefined()) {
-    remove(viewTag);
-  } else {
-    const auto newProps = dynamicFromValue(rt, props);
-    if (has(viewTag)) {
-      notifyObservers(viewTag, get(viewTag), newProps);
-    }
-    registry_[viewTag] = newProps;
+    const ShadowNode::Shared &shadowNode,
+    const folly::dynamic &props) {
+  const auto tag = shadowNode->getTag();
+  if (props.empty()) {
+    remove(tag);
+    return;
   }
+
+  if (has(tag)) {
+    notifyObservers(tag, get(tag), props);
+  }
+  registry_[tag] = {shadowNode, props};
 }
 
 folly::dynamic StaticPropsRegistry::get(const Tag viewTag) const {
@@ -22,7 +22,7 @@ folly::dynamic StaticPropsRegistry::get(const Tag viewTag) const {
   if (it == registry_.end()) {
     return nullptr;
   }
-  return it->second;
+  return it->second.second;
 }
 
 bool StaticPropsRegistry::has(const Tag viewTag) const {
@@ -49,6 +49,13 @@ void StaticPropsRegistry::setObserver(
 
 void StaticPropsRegistry::removeObserver(const Tag viewTag) {
   observers_.erase(viewTag);
+}
+
+void StaticPropsRegistry::collectAllProps(PropsMap &propsMap) {
+  for (const auto &[viewTag, pair] : registry_) {
+    const auto &[shadowNode, props] = pair;
+    addToPropsMap(propsMap, shadowNode, props);
+  }
 }
 
 void StaticPropsRegistry::notifyObservers(

@@ -39,7 +39,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using PropsBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
@@ -208,7 +208,7 @@ class ReanimatedModuleProxy
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void commitUpdates(jsi::Runtime &rt, const PropsBatch &updatesBatch);
 
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,

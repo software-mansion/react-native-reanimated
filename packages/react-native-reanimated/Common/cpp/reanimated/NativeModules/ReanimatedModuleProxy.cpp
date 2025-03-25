@@ -93,7 +93,9 @@ void ReanimatedModuleProxy::init(
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto &registry = strongThis->animatedPropsRegistry_;
+    registry->lock();
+    registry->update(rt, operations);
   };
 
   auto measure = [weakThis = weak_from_this()](

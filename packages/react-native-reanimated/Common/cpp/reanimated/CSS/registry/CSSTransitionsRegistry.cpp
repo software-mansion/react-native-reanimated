@@ -39,12 +39,33 @@ void CSSTransitionsRegistry::updateSettings(
   registry_[viewTag]->updateSettings(config);
 }
 
-NodeWithPropsMap CSSTransitionsRegistry::getFrameUpdates(
+void CSSTransitionsRegistry::flushFrameUpdates(
+    PropsBatch &updatesBatch,
+    const double timestamp) {
+  handleUpdate(
+      [&](const ShadowNode::Shared &shadowNode, const folly::dynamic &props) {
+        updatesBatch.emplace_back(shadowNode, props);
+      },
+      timestamp);
+}
+
+void CSSTransitionsRegistry::collectAllProps(
+    PropsMap &propsMap,
+    const double timestamp) {
+  // We can reuse the same logic as for the frame update because transitions
+  // have no fill mode, so they affect the view style only when they are running
+  handleUpdate(
+      [&](const ShadowNode::Shared &shadowNode, const folly::dynamic &props) {
+        addToPropsMap(propsMap, shadowNode, props);
+      },
+      timestamp);
+}
+
+void CSSTransitionsRegistry::handleUpdate(
+    const UpdateHandler &handler,
     const double timestamp) {
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
-
-  NodeWithPropsMap result;
 
   // Iterate over active transitions and update them
   for (auto it = runningTransitionTags_.begin();
@@ -52,14 +73,10 @@ NodeWithPropsMap CSSTransitionsRegistry::getFrameUpdates(
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
 
-    auto &updates = transition->update(timestamp);
-    const auto &shadowNode = transition->getShadowNode();
-    if (!updates.empty()) {
-      result[shadowNode->getTag()] = {shadowNode, std::move(updates)};
-    }
+    handler(transition->getShadowNode(), transition->update(timestamp));
 
-    // We remove transition from running and schedule it when animation of one
-    // of properties has finished and the other one is still delayed
+    // We remove transition from running and schedule it when animation of
+    // one of properties has finished and the other one is still delayed
     const auto &minDelay = transition->getMinDelay(timestamp);
     if (minDelay > 0) {
       delayedTransitionsManager_.add(
@@ -72,15 +89,6 @@ NodeWithPropsMap CSSTransitionsRegistry::getFrameUpdates(
       ++it;
     }
   }
-
-  return result;
-}
-
-NodeWithPropsMap CSSTransitionsRegistry::getAllProps(const double timestamp) {
-  // CSS transitions don't have fill mode, so we can return the same result as
-  // for frame updates as if transition is not running, then there are no style
-  // updates to apply
-  return getFrameUpdates(timestamp);
 }
 
 void CSSTransitionsRegistry::activateDelayedTransitions(

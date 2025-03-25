@@ -34,6 +34,7 @@ class CSSAnimation {
 
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getForwardsFillStyle() const;
+  folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
   folly::dynamic update(double timestamp);

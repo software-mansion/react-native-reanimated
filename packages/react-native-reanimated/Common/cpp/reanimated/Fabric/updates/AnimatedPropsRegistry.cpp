@@ -7,7 +7,7 @@ JSIUpdates AnimatedPropsRegistry::getJSIUpdates() {
 }
 
 bool AnimatedPropsRegistry::isEmpty() const {
-  return updatesRegistry_.empty();
+  return registry_.empty();
 }
 
 void AnimatedPropsRegistry::add(
@@ -22,26 +22,51 @@ void AnimatedPropsRegistry::add(
     const auto tag = shadowNode->getTag();
     const jsi::Value &updates = item.getProperty(rt, "updates");
 
-    jsiUpdates_.emplace_back(tag, std::make_unique<jsi::Value>(rt, updates));
-
-    if (updatesRegistry_.find(tag) == updatesRegistry_.end()) {
-      updatesRegistry_[tag] = {shadowNode, jsi::dynamicFromValue(rt, updates)};
-    } else {
-      updatesRegistry_[tag].second.update(jsi::dynamicFromValue(rt, updates));
-    }
+    updatesBatch_.emplace_back(shadowNode, jsi::dynamicFromValue(rt, updates));
+    jsiUpdates_.emplace_back(
+        shadowNode->getTag(), std::make_unique<jsi::Value>(rt, updates));
   }
 }
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
-  updatesRegistry_.erase(tag);
+  registry_.erase(tag);
 }
 
-NodeWithPropsMap AnimatedPropsRegistry::getFrameUpdates(double timestamp) {
-  return std::exchange(updatesBatch_, NodeWithPropsMap{});
+void AnimatedPropsRegistry::flushFrameUpdates(
+    PropsBatch &updatesBatch,
+    double) {
+  // Store all updates from the batch in the registry for later usage
+  addUpdatesToRegistry();
+
+  updatesBatch.insert(
+      updatesBatch.end(),
+      std::make_move_iterator(updatesBatch_.begin()),
+      std::make_move_iterator(updatesBatch_.end()));
+  updatesBatch_.clear();
+};
+
+void AnimatedPropsRegistry::collectAllProps(PropsMap &propsMap, double) {
+  addUpdatesToRegistry();
+  updatesBatch_.clear();
+
+  for (const auto &[_, pair] : registry_) {
+    const auto &[shadowNode, props] = pair;
+    addToPropsMap(propsMap, shadowNode, props);
+  };
 }
 
-NodeWithPropsMap AnimatedPropsRegistry::getAllProps(double timestamp) {
-  return updatesRegistry_;
+void AnimatedPropsRegistry::addUpdatesToRegistry() {
+  for (const auto &update : updatesBatch_) {
+    const auto &[shadowNode, props] = update;
+    const auto tag = shadowNode->getTag();
+
+    const auto it = registry_.find(tag);
+    if (it == registry_.end()) {
+      registry_.emplace(tag, update);
+    } else {
+      it->second.second.update(props);
+    }
+  }
 }
 
 } // namespace reanimated

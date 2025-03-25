@@ -17,8 +17,14 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using NodeWithPropsMap =
-    std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
+using NodeWithPropsPair = std::pair<ShadowNode::Shared, folly::dynamic>;
+using NodeWithPropsRegistry = std::unordered_map<Tag, NodeWithPropsPair>;
+using PropsBatch = std::vector<NodeWithPropsPair>;
+
+void addToPropsMap(
+    PropsMap &propsMap,
+    const ShadowNode::Shared &shadowNode,
+    const folly::dynamic &props);
 
 #ifdef ANDROID
 struct PropsToRevert {
@@ -35,12 +41,13 @@ class UpdatesRegistry {
 
   std::lock_guard<std::mutex> lock() const;
 
-  folly::dynamic get(Tag tag) const;
   virtual bool isEmpty() const = 0;
   virtual void remove(Tag tag) = 0;
 
-  virtual NodeWithPropsMap getFrameUpdates(double timestamp) = 0;
-  virtual NodeWithPropsMap getAllProps(double timestamp) = 0;
+  virtual void flushFrameUpdates(
+      PropsBatch &updatesBatch,
+      double timestamp) = 0;
+  virtual void collectAllProps(PropsMap &propsMap, double timestamp) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
@@ -55,9 +62,6 @@ class UpdatesRegistry {
 
   void updatePropsToRevert(Tag tag, const folly::dynamic *newProps = nullptr);
 #endif
-
- private:
-  void mergeUpdates(NodeWithPropsMap &target, const NodeWithPropsMap &updates);
 };
 
 } // namespace reanimated
