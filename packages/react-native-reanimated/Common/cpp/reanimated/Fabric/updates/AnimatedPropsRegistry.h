@@ -19,10 +19,11 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
   bool isEmpty() const override;
   void add(jsi::Runtime &rt, const jsi::Value &operations);
+  folly::dynamic get(Tag tag) const;
   void remove(Tag tag) override;
 
-  void flushFrameUpdates(PropsBatch &updatesBatch, double) override;
-  void collectAllProps(PropsMap &propsMap, double) override;
+  void flushFrameUpdates(PropsBatch &updatesBatch);
+  void collectAllProps(PropsMap &propsMa);
 
  private:
   JSIUpdates jsiUpdates_;

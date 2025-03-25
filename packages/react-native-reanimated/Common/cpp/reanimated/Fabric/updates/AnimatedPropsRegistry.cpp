@@ -28,13 +28,19 @@ void AnimatedPropsRegistry::add(
   }
 }
 
+folly::dynamic AnimatedPropsRegistry::get(const Tag tag) const {
+  const auto it = registry_.find(tag);
+  if (it == registry_.end()) {
+    return nullptr;
+  }
+  return it->second.second;
+}
+
 void AnimatedPropsRegistry::remove(const Tag tag) {
   registry_.erase(tag);
 }
 
-void AnimatedPropsRegistry::flushFrameUpdates(
-    PropsBatch &updatesBatch,
-    double) {
+void AnimatedPropsRegistry::flushFrameUpdates(PropsBatch &updatesBatch) {
   // Store all updates from the batch in the registry for later usage
   addUpdatesToRegistry();
 
@@ -45,7 +51,7 @@ void AnimatedPropsRegistry::flushFrameUpdates(
   updatesBatch_.clear();
 };
 
-void AnimatedPropsRegistry::collectAllProps(PropsMap &propsMap, double) {
+void AnimatedPropsRegistry::collectAllProps(PropsMap &propsMap) {
   addUpdatesToRegistry();
   updatesBatch_.clear();
 

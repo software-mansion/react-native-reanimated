@@ -39,8 +39,8 @@ class CSSAnimationsRegistry
       double timestamp);
   void remove(Tag viewTag) override;
 
-  void flushFrameUpdates(PropsBatch &updatesBatch, double timestamp) override;
-  void collectAllProps(PropsMap &propsMap, double timestamp) override;
+  void flushFrameUpdates(PropsBatch &updatesBatch, double timestamp);
+  void collectAllProps(PropsMap &propsMap, double timestamp);
 
  private:
   using AnimationToIndexMap =

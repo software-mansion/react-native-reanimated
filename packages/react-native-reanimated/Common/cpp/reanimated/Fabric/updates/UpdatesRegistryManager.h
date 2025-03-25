@@ -1,8 +1,13 @@
 #pragma once
+
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
+#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <memory>
 #include <unordered_map>
@@ -16,13 +21,13 @@ using namespace css;
 class UpdatesRegistryManager {
  public:
   explicit UpdatesRegistryManager(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+      const std::shared_ptr<CSSTransitionsRegistry> &cssTransitionsRegistry,
+      const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry,
+      const std::shared_ptr<CSSAnimationsRegistry> &cssAnimationsRegistry,
+      const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   std::lock_guard<std::mutex> lock() const;
-
-  // TODO - ensure that other sublibraries can easily hook into this registry
-  // manager (e.g. add priority to registries)
-  void addRegistry(const std::shared_ptr<UpdatesRegistry> &registry);
 
   void pauseReanimatedCommits();
   bool shouldReanimatedSkipCommit();
@@ -36,8 +41,8 @@ class UpdatesRegistryManager {
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
 
-  NodeWithPropsMap getFrameUpdates(double timestamp);
-  NodeWithPropsMap getAllProps(double timestamp);
+  PropsBatch getFrameUpdates(double timestamp, bool updateCssAnimations);
+  PropsMap getAllProps();
 
 #ifdef ANDROID
   bool hasPropsToRevert();
@@ -51,8 +56,12 @@ class UpdatesRegistryManager {
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
   std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
-  std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
+
+  const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

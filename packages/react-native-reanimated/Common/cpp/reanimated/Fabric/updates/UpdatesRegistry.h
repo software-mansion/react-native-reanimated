@@ -44,11 +44,6 @@ class UpdatesRegistry {
   virtual bool isEmpty() const = 0;
   virtual void remove(Tag tag) = 0;
 
-  virtual void flushFrameUpdates(
-      PropsBatch &updatesBatch,
-      double timestamp) = 0;
-  virtual void collectAllProps(PropsMap &propsMap, double timestamp) = 0;
-
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);

@@ -3,19 +3,19 @@
 namespace reanimated {
 
 UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+    const std::shared_ptr<CSSTransitionsRegistry> &cssTransitionsRegistry,
+    const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry,
+    const std::shared_ptr<CSSAnimationsRegistry> &cssAnimationsRegistry,
+    const GetAnimationTimestampFunction &getCurrentTimestamp)
+    : staticPropsRegistry_(staticPropsRegistry),
+      cssTransitionsRegistry_(cssTransitionsRegistry),
+      animatedPropsRegistry_(animatedPropsRegistry),
+      cssAnimationsRegistry_(cssAnimationsRegistry),
+      getCurrentTimestamp_(getCurrentTimestamp) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
-}
-
-void UpdatesRegistryManager::addRegistry(
-    const std::shared_ptr<UpdatesRegistry> &registry) {
-  if (!registry) {
-    throw std::invalid_argument("[Reanimated] Registry cannot be null");
-  }
-  registries_.push_back(registry);
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
@@ -66,42 +66,57 @@ void UpdatesRegistryManager::handleNodeRemovals(
     }
 
     const auto tag = shadowNode->getTag();
-    for (auto &registry : registries_) {
-      registry->remove(tag);
-    }
     staticPropsRegistry_->remove(tag);
+    cssTransitionsRegistry_->remove(tag);
+    animatedPropsRegistry_->remove(tag);
+    cssAnimationsRegistry_->remove(tag);
     it = removableShadowNodes_.erase(it);
   }
 }
 
-NodeWithPropsMap UpdatesRegistryManager::getFrameUpdates(double timestamp) {
-  NodeWithPropsMap result;
-  for (auto &registry : registries_) {
-    mergeUpdates(result, registry->getFrameUpdates(timestamp));
+PropsBatch UpdatesRegistryManager::getFrameUpdates(
+    const double timestamp,
+    const bool updateCssAnimations) {
+  PropsBatch result;
+
+  if (updateCssAnimations) {
+    cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->flushFrameUpdates(result, timestamp);
   }
+  {
+    animatedPropsRegistry_->lock();
+    animatedPropsRegistry_->flushFrameUpdates(result);
+  }
+  if (updateCssAnimations) {
+    cssAnimationsRegistry_->lock();
+    cssAnimationsRegistry_->flushFrameUpdates(result, timestamp);
+  }
+
   return result;
 }
 
-NodeWithPropsMap UpdatesRegistryManager::getAllProps(double timestamp) {
-  NodeWithPropsMap result;
-  for (auto &registry : registries_) {
-    mergeUpdates(result, registry->getAllProps(timestamp));
+PropsMap UpdatesRegistryManager::getAllProps() {
+  PropsMap result;
+
+  // We need to include static props as well because commit from JS may
+  // happen during the animation and JS tree may have invalid node properties
+  // referring to the intermediate state of the animation.
+  // In order to fix this issue, we add all static props to the result to
+  // make sure that latest props are always used.
+  staticPropsRegistry_->collectAllProps(result);
+
+  const auto timestamp = getCurrentTimestamp_();
+  {
+    cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->collectAllProps(result, timestamp);
   }
-  return result;
-}
-
-void UpdatesRegistryManager::mergeUpdates(
-    NodeWithPropsMap &target,
-    const NodeWithPropsMap &updates) {
-  for (const auto &[key, updatePair] : updates) {
-    const auto tag = updatePair.first->getTag();
-
-    auto it = target.find(tag);
-    if (it != target.end()) {
-      it->first.second.update(updatePair->second);
-    } else {
-      result[tag] = updatePair;
-    }
+  {
+    animatedPropsRegistry_->lock();
+    animatedPropsRegistry_->collectAllProps(result);
+  }
+  {
+    cssAnimationsRegistry_->lock();
+    cssAnimationsRegistry_->collectAllProps(result, timestamp);
   }
 
   return result;

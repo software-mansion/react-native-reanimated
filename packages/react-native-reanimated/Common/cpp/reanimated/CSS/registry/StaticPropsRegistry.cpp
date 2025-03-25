@@ -6,6 +6,7 @@ void StaticPropsRegistry::set(
     const ShadowNode::Shared &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
+
   if (props.empty()) {
     remove(tag);
     return;
