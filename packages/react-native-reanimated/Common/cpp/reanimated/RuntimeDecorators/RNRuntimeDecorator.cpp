@@ -41,6 +41,41 @@ void RNRuntimeDecorator::decorate(
       rnRuntime,
       "__reanimatedModuleProxy",
       jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
+
+  const auto mapPrototype = rnRuntime.global()
+                                .getProperty(rnRuntime, "Map")
+                                .asObject(rnRuntime)
+                                .asFunction(rnRuntime);
+
+  rnRuntime.global().setProperty(
+      rnRuntime, "__workletsCache", mapPrototype.callAsConstructor(rnRuntime));
+
+  const auto weakMapPrototype = rnRuntime.global()
+                                    .getProperty(rnRuntime, "WeakMap")
+                                    .asObject(rnRuntime)
+                                    .asFunction(rnRuntime);
+
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      "__handleCache",
+      weakMapPrototype.callAsConstructor(rnRuntime));
+
+  //   rnRuntime.global().setProperty(
+  //       rnRuntime,
+  //       "__shareableMappingCache",
+  //       weakMapPrototype.callAsConstructor(rnRuntime));
+
+  //   const auto symbolPrototype = rnRuntime.global()
+  //                                    .getProperty(rnRuntime, "Symbol")
+  //                                    .asObject(rnRuntime)
+  //                                    .asFunction(rnRuntime);
+
+  //   rnRuntime.global().setProperty(
+  //       rnRuntime,
+  //       "__shareableMappingFlag",
+  //       symbolPrototype.call(
+  //           rnRuntime,
+  //           jsi::String::createFromAscii(rnRuntime, "shareable flag")));
 }
 
 } // namespace reanimated

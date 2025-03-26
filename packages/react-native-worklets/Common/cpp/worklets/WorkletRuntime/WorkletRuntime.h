@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include <glog/logging.h>
+
 using namespace facebook;
 using namespace react;
 
@@ -39,6 +41,23 @@ class WorkletRuntime : public jsi::HostObject,
     jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
         rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+  }
+
+  template <typename TShareable>
+  void runStructGuarded(RefWithValue<TShareable> strut) const {
+    jsi::Runtime &rt = *runtime_;
+    auto func = strut.value->toJSValue(rt);
+    auto valueUnpacker = getValueUnpacker(rt);
+    std::shared_ptr<Shareable> shareableRef =
+        std::dynamic_pointer_cast<Shareable>(strut.shareableRef);
+    LOG(INFO) << "UNPACKING";
+    auto unpacked = valueUnpacker.call(
+        rt,
+        func,
+        jsi::String::createFromAscii(rt, "Worklet"),
+        jsi::Value::undefined(),
+        ShareableJSRef::newHostObject(rt, shareableRef));
+    unpacked.asObject(rt).asFunction(rt).call(rt);
   }
 
   void runAsyncGuarded(

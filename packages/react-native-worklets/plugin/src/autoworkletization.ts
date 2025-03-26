@@ -43,8 +43,10 @@ const reanimatedFunctionHooks = new Set([
   // scheduling functions
   'runOnUI',
   'executeOnUIRuntimeSync',
+  'scheduleOnUI',
 ]);
 
+// TODO: DRY
 const reanimatedFunctionArgsToWorkletize = new Map([
   ['useAnimatedGestureHandler', [0]],
   ['useFrameCallback', [0]],
@@ -61,6 +63,7 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['withRepeat', [3]],
   ['runOnUI', [0]],
   ['executeOnUIRuntimeSync', [0]],
+  ['scheduleOnUI', [0]],
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 

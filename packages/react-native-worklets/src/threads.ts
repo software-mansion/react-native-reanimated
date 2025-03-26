@@ -13,7 +13,11 @@ const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** An array of [worklet, args] pairs. */
-let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
+export const _runOnUIQueue: Array<
+  [WorkletFunction<unknown[], unknown>, unknown[]]
+> = [];
+
+globalThis._runOnUIQueue = _runOnUIQueue;
 
 export function setupMicrotasks() {
   'worklet';
@@ -79,10 +83,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => void;
 
+globalThis.__WorkletsModule = WorkletsModule;
+
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
-  'worklet';
+  // 'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
@@ -102,7 +108,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // that's not possible, and hence in Jest environment instead of using scheduling
       // mechanism we just schedule the work ommiting the queue. This is ok for the
       // uses that we currently have but may not be ok for future tests that we write.
-      WorkletsModule.scheduleOnUI(
+      globalThis.__WorkletsModule.scheduleOnUI(
         makeShareableCloneRecursive(() => {
           'worklet';
           worklet(...args);
@@ -122,9 +128,9 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     _runOnUIQueue.push([worklet as WorkletFunction, args]);
     if (_runOnUIQueue.length === 1) {
       queueMicrotask(() => {
-        const queue = _runOnUIQueue;
-        _runOnUIQueue = [];
-        WorkletsModule.scheduleOnUI(
+        const queue = Array.from(_runOnUIQueue);
+        _runOnUIQueue.length = 0;
+        globalThis.__WorkletsModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
             // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -209,17 +215,27 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
           : (fun as () => ReturnValue)
       );
   }
+  _log('runOnJS');
+  _log(fun);
+  _log(typeof fun);
   if (isWorkletFunction<Args, ReturnValue>(fun)) {
+    // console.log('worklet');
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
+    _log('run worklet on JS');
+    _log('runOnJS cache check');
+    _log(globalThis.__shareableMappingCache.has(fun));
 
-    return (...args) =>
-      runOnJS(runWorkletOnJS<Args, ReturnValue>)(
-        fun as WorkletFunction<Args, ReturnValue>,
-        ...args
-      );
+    // return (...args) =>
+    //   runOnJS(runWorkletOnJS<Args, ReturnValue>)(
+    //     fun as WorkletFunction<Args, ReturnValue>,
+    //     ...args
+    //   );
+    return () =>
+      globalThis._scheduleWorkletOnJS(makeShareableCloneOnUIRecursive(fun));
   }
   if ((fun as FunDevRemote).__remoteFunction) {
+    // console.log('remote');
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
@@ -227,20 +243,22 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     fun = (fun as FunDevRemote).__remoteFunction;
   }
 
+  // console.log('nuttin');
+  // console.log(Object.keys(fun));
+
   const scheduleOnJS =
     typeof fun === 'function'
       ? global._scheduleHostFunctionOnJS
       : global._scheduleRemoteFunctionOnJS;
+
+  _log('scheduleOnJSHOSTFUNCTION');
 
   return (...args) => {
     scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0
-        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
-        : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
 }

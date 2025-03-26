@@ -145,6 +145,12 @@ jsi::Value makeShareableClone(
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
+template <typename TShareable>
+struct RefWithValue {
+  std::shared_ptr<ShareableJSRef> shareableRef;
+  std::shared_ptr<TShareable> value;
+};
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
@@ -236,12 +242,15 @@ class ShareableArrayBuffer : public Shareable {
   const std::vector<uint8_t> data_;
 };
 
-class ShareableWorklet : public ShareableObject {
+class ShareableWorklet : public ShareableObject,
+                         public std::enable_shared_from_this<ShareableWorklet> {
  public:
   ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
       : ShareableObject(rt, worklet) {
     valueType_ = WorkletType;
   }
+
+  // std::shared_ptr<ShareableJSRef> workletRef;
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };

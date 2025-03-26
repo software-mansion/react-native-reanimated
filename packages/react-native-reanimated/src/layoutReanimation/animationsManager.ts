@@ -1,5 +1,5 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type {
@@ -99,10 +99,10 @@ function createLayoutAnimationManager(): {
   };
 }
 
-runOnUI(() => {
+scheduleOnUI(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
-})();
+});
 
 export type LayoutAnimationsManager = ReturnType<
   typeof createLayoutAnimationManager
