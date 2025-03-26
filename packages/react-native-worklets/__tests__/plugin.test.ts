@@ -1643,7 +1643,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
@@ -1663,7 +1663,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1679,7 +1679,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
@@ -1698,7 +1698,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1719,7 +1719,7 @@ describe('babel plugin', () => {
           runOnJS(func)();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
