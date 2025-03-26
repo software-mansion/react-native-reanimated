@@ -276,10 +276,6 @@ export function createAnimatedComponent(
       return this._getViewInfo().viewTag as number;
     }
 
-    hasAnimatedRef() {
-      return this._hasAnimatedRef;
-    }
-
     _detachStyles() {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1 && this._styles !== null) {
