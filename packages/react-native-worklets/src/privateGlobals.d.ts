@@ -1,3 +1,4 @@
+/* eslint-disable reanimated/use-global-this */
 /* eslint-disable no-var */
 'use strict';
 
