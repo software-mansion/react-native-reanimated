@@ -54,7 +54,7 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): FunctionExpression {
+): { workletFactory: FunctionExpression; closureVariables: Identifier[] } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -92,7 +92,7 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -110,7 +110,7 @@ export function makeWorkletFactory(
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    variables,
+    closureVariables,
     workletName,
     transformed.map
   );
@@ -118,13 +118,13 @@ export function makeWorkletFactory(
   const workletHash = hash(funString);
 
   let lineOffset = 1;
-  if (variables.length > 0) {
+  if (closureVariables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
     // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
-    lineOffset -= variables.length + 2;
+    lineOffset -= closureVariables.length + 2;
   }
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
@@ -213,7 +213,7 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          variables.map((variable) =>
+          closureVariables.map((variable) =>
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -294,9 +294,13 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const newFun = functionExpression(undefined, [], blockStatement(statements));
+  const newFun = functionExpression(
+    identifier(workletName + 'Factory'),
+    closureVariables,
+    blockStatement(statements)
+  );
 
-  return newFun;
+  return { workletFactory: newFun, closureVariables };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {

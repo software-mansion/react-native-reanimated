@@ -21,7 +21,7 @@ exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
     var bar = 'worklet';
@@ -42,7 +42,7 @@ exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from wo
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
     return x + 2;
@@ -62,7 +62,7 @@ exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from wo
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
     return x + 2;
@@ -142,7 +142,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on kn
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-FadeIn.withCallback(function () {
+FadeIn.withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build after');
@@ -162,7 +162,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on kn
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-new FadeIn().withCallback(function () {
+new FadeIn().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build after');
@@ -182,7 +182,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on kn
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-FadeIn.build().withCallback(function () {
+FadeIn.build().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build before');
@@ -202,7 +202,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on kn
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-new FadeIn().build().withCallback(function () {
+new FadeIn().build().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build before');
@@ -222,7 +222,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on lo
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-FadeIn.build().duration().withCallback(function () {
+FadeIn.build().duration().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build');
@@ -242,7 +242,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on lo
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-new FadeIn().build().duration().withCallback(function () {
+new FadeIn().build().duration().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with build');
@@ -262,7 +262,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on un
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-FadeIn.withCallback(function () {
+FadeIn.withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with AmogusIn after');
@@ -282,7 +282,7 @@ exports[`babel plugin for Layout Animations workletizes callback functions on un
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-new FadeIn().withCallback(function () {
+new FadeIn().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn with AmogusIn after');
@@ -302,7 +302,7 @@ exports[`babel plugin for Layout Animations workletizes unchained callback funct
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-FadeIn.withCallback(function () {
+FadeIn.withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn');
@@ -322,7 +322,7 @@ exports[`babel plugin for Layout Animations workletizes unchained callback funct
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-new FadeIn().withCallback(function () {
+new FadeIn().withCallback(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     console.log('FadeIn');
@@ -344,7 +344,7 @@ var _worklet_14005565322850_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function () {
     var _ref = (0, _asyncToGenerator2.default)(function* () {
@@ -371,7 +371,7 @@ var _worklet_14005565322850_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function () {
     var _ref = (0, _asyncToGenerator2.default)(function* () {
@@ -401,7 +401,7 @@ var _worklet_2294411833184_init_data = {
 };
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
-  this.bar = function () {
+  this.bar = function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1(x) {
       return x + 2;
@@ -425,20 +425,20 @@ var _worklet_8889327806636_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var Foo = (0, _createClass2.default)(function () {
+var Foo = (0, _createClass2.default)(function Foo_null1Factory(_classCallCheck) {
   var _e = [new global.Error(), -2, -27];
   var _Foo = function Foo(x) {
-    (0, _classCallCheck2.default)(this, _Foo);
+    _classCallCheck(this, _Foo);
     this.x = x;
   };
   _Foo.__closure = {
-    _classCallCheck: _classCallCheck2.default
+    _classCallCheck: _classCallCheck
   };
   _Foo.__workletHash = 8889327806636;
   _Foo.__initData = _worklet_8889327806636_init_data;
   _Foo.__stackDetails = _e;
   return _Foo;
-}());"
+}(_classCallCheck));"
 `;
 
 exports[`babel plugin for class worklets workletizes getter 1`] = `
@@ -457,7 +457,7 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    get: function () {
+    get: function get_null1Factory(x) {
       var _e = [new global.Error(), -2, -27];
       var get = function get() {
         return x + 2;
@@ -469,7 +469,7 @@ var Foo = function () {
       get.__initData = _worklet_13515258128853_init_data;
       get.__stackDetails = _e;
       return get;
-    }()
+    }(x)
   }]);
 }();"
 `;
@@ -490,7 +490,7 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    value: function () {
+    value: function bar_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var bar = function bar(x) {
         return x + 2;
@@ -521,7 +521,7 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    set: function () {
+    set: function set_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var set = function set(x) {
         this.x = x + 2;
@@ -549,7 +549,7 @@ var _worklet_2294411833184_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-Foo.bar = function () {
+Foo.bar = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(x) {
     return x + 2;
@@ -578,7 +578,7 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, null, [{
     key: "bar",
-    value: function () {
+    value: function bar_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var bar = function bar(x) {
         return x + 2;
@@ -604,7 +604,7 @@ var _worklet_10550735168277_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function f_null1Factory(x, objX) {
   var _e = [new global.Error(), -3, -27];
   var f = function f() {
     return {
@@ -619,7 +619,7 @@ var f = function () {
   f.__initData = _worklet_10550735168277_init_data;
   f.__stackDetails = _e;
   return f;
-}();"
+}(x, objX);"
 `;
 
 exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
@@ -629,7 +629,7 @@ exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function f_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var f = function f(a, b, c) {
     console.log(arguments);
@@ -650,7 +650,7 @@ var _worklet_11658370598384_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function f_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var f = function f() {
     console.log(foo);
@@ -670,7 +670,7 @@ exports[`babel plugin for closure capturing doesn't capture default globals 1`] 
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function f_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var f = function f() {
     console.log('test');
@@ -693,7 +693,7 @@ var _worklet_239990909653_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function f_null1Factory(foo) {
   var _e = [new global.Error(), -2, -27];
   var f = function f() {
     console.log(foo.bar);
@@ -705,7 +705,7 @@ var f = function () {
   f.__initData = _worklet_239990909653_init_data;
   f.__stackDetails = _e;
   return f;
-}();"
+}(foo);"
 `;
 
 exports[`babel plugin for context objects creates factories 1`] = `
@@ -719,7 +719,7 @@ var foo = {
   bar: function bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -751,7 +751,7 @@ var foo = {
   foobar: function foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -783,7 +783,7 @@ var foo = {
   bar: function bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -812,7 +812,7 @@ var foo = {
   bar: function bar() {
     return 'bar';
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -837,7 +837,7 @@ exports[`babel plugin for debugging does inject location for worklets in dev bui
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = useAnimatedStyle(function () {
+var foo = useAnimatedStyle(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     var x = 1;
@@ -854,7 +854,7 @@ exports[`babel plugin for debugging doesn't inject location for worklets in prod
 "var _worklet_8623346549410_init_data = {
   code: "function null1(){const x=1;}"
 };
-var foo = useAnimatedStyle(function () {
+var foo = useAnimatedStyle(function null1Factory() {
   var null1 = function null1() {
     var x = 1;
   };
@@ -869,7 +869,7 @@ exports[`babel plugin for debugging doesn't inject version for worklets in produ
 "var _worklet_8623346549410_init_data = {
   code: "function null1(){const x=1;}"
 };
-var foo = useAnimatedStyle(function () {
+var foo = useAnimatedStyle(function null1Factory() {
   var null1 = function null1() {
     var x = 1;
   };
@@ -887,7 +887,7 @@ exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(x) {
     return x + 2;
@@ -907,7 +907,7 @@ exports[`babel plugin for explicit worklets workletizes FunctionDeclaration 1`] 
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
     return x + 2;
@@ -928,7 +928,7 @@ exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
   version: "x.y.z"
 };
 var foo = {
-  bar: function () {
+  bar: function bar_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var bar = function bar(x) {
       return x + 2;
@@ -949,7 +949,7 @@ exports[`babel plugin for explicit worklets workletizes named FunctionExpression
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
     return x + 2;
@@ -969,7 +969,7 @@ exports[`babel plugin for explicit worklets workletizes unnamed FunctionExpressi
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(x) {
     return x + 2;
@@ -997,7 +997,7 @@ exports[`babel plugin for file workletization moves CommonJS export to the botto
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {};
   foo.__closure = {};
@@ -1017,7 +1017,7 @@ exports[`babel plugin for file workletization moves multiple CommonJS exports to
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {};
   foo.__closure = {};
@@ -1032,7 +1032,7 @@ var _worklet_552304524261_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var bar = function () {
+var bar = function bar_null2Factory() {
   var _e = [new global.Error(), 1, -27];
   var bar = function bar() {};
   bar.__closure = {};
@@ -1047,7 +1047,7 @@ var _worklet_9955902016844_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var baz = function () {
+var baz = function baz_null3Factory() {
   var _e = [new global.Error(), 1, -27];
   var baz = function baz() {};
   baz.__closure = {};
@@ -1062,7 +1062,7 @@ var _worklet_3271684035845_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foobar = function () {
+var foobar = function foobar_null4Factory() {
   var _e = [new global.Error(), 1, -27];
   var foobar = function foobar() {};
   foobar.__closure = {};
@@ -1084,7 +1084,7 @@ exports[`babel plugin for file workletization workletizes ArrowFunctionExpressio
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1108,7 +1108,7 @@ var _worklet_2420910284744_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _default = exports.default = function () {
+var _default = exports.default = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1132,7 +1132,7 @@ var _worklet_2420910284744_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = exports.foo = function () {
+var foo = exports.foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1183,7 +1183,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -1194,7 +1194,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -1212,7 +1212,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -1225,8 +1225,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -1241,8 +1241,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -1256,8 +1256,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -1282,7 +1282,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -1330,7 +1330,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = exports.default = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -1341,7 +1341,7 @@ var Clazz = exports.default = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -1359,7 +1359,7 @@ var Clazz = exports.default = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -1372,8 +1372,8 @@ var Clazz = exports.default = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -1388,8 +1388,8 @@ var Clazz = exports.default = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -1403,8 +1403,8 @@ var Clazz = exports.default = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -1429,7 +1429,7 @@ var Clazz = exports.default = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -1477,7 +1477,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = exports.Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -1488,7 +1488,7 @@ var Clazz = exports.Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -1506,7 +1506,7 @@ var Clazz = exports.Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -1519,8 +1519,8 @@ var Clazz = exports.Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -1535,8 +1535,8 @@ var Clazz = exports.Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -1550,8 +1550,8 @@ var Clazz = exports.Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -1576,7 +1576,7 @@ var Clazz = exports.Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -1589,7 +1589,7 @@ exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 'bar';
@@ -1613,7 +1613,7 @@ var _worklet_5253890412305_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _default = exports.default = function () {
+var _default = exports.default = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 'bar';
@@ -1637,7 +1637,7 @@ var _worklet_5253890412305_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = exports.foo = function () {
+var foo = exports.foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 'bar';
@@ -1657,7 +1657,7 @@ exports[`babel plugin for file workletization workletizes FunctionExpression 1`]
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1681,7 +1681,7 @@ var _worklet_2420910284744_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _default = exports.default = function () {
+var _default = exports.default = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1705,7 +1705,7 @@ var _worklet_2420910284744_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = exports.foo = function () {
+var foo = exports.foo = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'bar';
@@ -1726,7 +1726,7 @@ exports[`babel plugin for file workletization workletizes ObjectMethod 1`] = `
   version: "x.y.z"
 };
 var foo = {
-  bar: function () {
+  bar: function bar_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var bar = function bar() {
       return 'bar';
@@ -1752,7 +1752,7 @@ var _worklet_17582834634406_init_data = {
   version: "x.y.z"
 };
 var _default = exports.default = {
-  bar: function () {
+  bar: function bar_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var bar = function bar() {
       return 'bar';
@@ -1778,7 +1778,7 @@ var _worklet_17582834634406_init_data = {
   version: "x.y.z"
 };
 var foo = exports.foo = {
-  bar: function () {
+  bar: function bar_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var bar = function bar() {
       return 'bar';
@@ -1799,7 +1799,7 @@ exports[`babel plugin for file workletization workletizes assigned FunctionDecla
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 'bar';
@@ -1826,7 +1826,7 @@ var foo = {
   foobar: function foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -1865,7 +1865,7 @@ var _default = exports.default = {
   foobar: function foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -1904,7 +1904,7 @@ var foo = exports.foo = {
   foobar: function foobar() {
     return this.bar();
   },
-  __workletContextObjectFactory: function () {
+  __workletContextObjectFactory: function __workletContextObjectFactory_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var __workletContextObjectFactory = function __workletContextObjectFactory() {
       return {
@@ -1932,7 +1932,7 @@ exports[`babel plugin for file workletization workletizes multiple functions 1`]
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 'bar';
@@ -1949,7 +1949,7 @@ var _worklet_17530869641357_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var bar = function () {
+var bar = function null2Factory() {
   var _e = [new global.Error(), 1, -27];
   var null2 = function null2() {
     return 'foobar';
@@ -1969,7 +1969,7 @@ exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionE
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var animatedStyle = useAnimatedStyle(function () {
+var animatedStyle = useAnimatedStyle(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return {
@@ -1991,7 +1991,7 @@ exports[`babel plugin for function hooks workletizes hook wrapped named Function
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var animatedStyle = useAnimatedStyle(function () {
+var animatedStyle = useAnimatedStyle(function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return {
@@ -2013,7 +2013,7 @@ exports[`babel plugin for function hooks workletizes hook wrapped unnamed Functi
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var animatedStyle = useAnimatedStyle(function () {
+var animatedStyle = useAnimatedStyle(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return {
@@ -2035,7 +2035,7 @@ exports[`babel plugin for function hooks workletizes hook wrapped worklet refere
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var style = function () {
+var style = function style_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const style = function () {
     return {
@@ -2059,7 +2059,7 @@ exports[`babel plugin for generators makes a generator worklet factory 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function* foo() {
     yield 'hello';
@@ -2080,7 +2080,7 @@ exports[`babel plugin for generators makes a generator worklet string 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function* foo() {
     yield 'hello';
@@ -2164,7 +2164,7 @@ exports[`babel plugin for object hooks transforms ArrowFunctionExpression as arg
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-useAnimatedScrollHandler(function () {
+useAnimatedScrollHandler(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(event) {
     console.log(event);
@@ -2197,7 +2197,7 @@ var _worklet_3001796818986_init_data = {
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onStart: function () {
+  onStart: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1() {};
     null1.__closure = {};
@@ -2206,7 +2206,7 @@ useAnimatedGestureHandler({
     null1.__stackDetails = _e;
     return null1;
   }(),
-  onUpdate: function () {
+  onUpdate: function null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var null2 = function null2() {};
     null2.__closure = {};
@@ -2215,7 +2215,7 @@ useAnimatedGestureHandler({
     null2.__stackDetails = _e;
     return null2;
   }(),
-  onEnd: function () {
+  onEnd: function null3Factory() {
     var _e = [new global.Error(), 1, -27];
     var null3 = function null3() {};
     null3.__closure = {};
@@ -2259,7 +2259,7 @@ var _worklet_16301592545772_init_data = {
   version: "x.y.z"
 };
 useAnimatedScrollHandler({
-  onScroll: function () {
+  onScroll: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1() {};
     null1.__closure = {};
@@ -2268,7 +2268,7 @@ useAnimatedScrollHandler({
     null1.__stackDetails = _e;
     return null1;
   }(),
-  onBeginDrag: function () {
+  onBeginDrag: function null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var null2 = function null2() {};
     null2.__closure = {};
@@ -2277,7 +2277,7 @@ useAnimatedScrollHandler({
     null2.__stackDetails = _e;
     return null2;
   }(),
-  onEndDrag: function () {
+  onEndDrag: function null3Factory() {
     var _e = [new global.Error(), 1, -27];
     var null3 = function null3() {};
     null3.__closure = {};
@@ -2286,7 +2286,7 @@ useAnimatedScrollHandler({
     null3.__stackDetails = _e;
     return null3;
   }(),
-  onMomentumBegin: function () {
+  onMomentumBegin: function null4Factory() {
     var _e = [new global.Error(), 1, -27];
     var null4 = function null4() {};
     null4.__closure = {};
@@ -2295,7 +2295,7 @@ useAnimatedScrollHandler({
     null4.__stackDetails = _e;
     return null4;
   }(),
-  onMomentumEnd: function () {
+  onMomentumEnd: function null5Factory() {
     var _e = [new global.Error(), 1, -27];
     var null5 = function null5() {};
     null5.__closure = {};
@@ -2314,7 +2314,7 @@ exports[`babel plugin for object hooks transforms named FunctionExpression as ar
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-useAnimatedScrollHandler(function () {
+useAnimatedScrollHandler(function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(event) {
     console.log(event);
@@ -2334,7 +2334,7 @@ exports[`babel plugin for object hooks transforms unnamed FunctionExpression as 
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-useAnimatedScrollHandler(function () {
+useAnimatedScrollHandler(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(event) {
     console.log(event);
@@ -2355,7 +2355,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onStart: function () {
+  onStart: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1(event) {
       console.log(event);
@@ -2377,7 +2377,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onStart: function () {
+  onStart: function onStart_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var onStart = function onStart(event) {
       console.log(event);
@@ -2399,7 +2399,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onStart: function () {
+  onStart: function onStart_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var onStart = function onStart(event) {
       console.log(event);
@@ -2421,7 +2421,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onStart: function () {
+  onStart: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1(event) {
       console.log(event);
@@ -2443,7 +2443,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
   version: "x.y.z"
 };
 useAnimatedScrollHandler({
-  onScroll: function () {
+  onScroll: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1(event) {
       console.log(event);
@@ -2465,7 +2465,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
   version: "x.y.z"
 };
 useAnimatedGestureHandler({
-  onScroll: function () {
+  onScroll: function onScroll_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var onScroll = function onScroll(event) {
       console.log(event);
@@ -2487,7 +2487,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
   version: "x.y.z"
 };
 useAnimatedScrollHandler({
-  onScroll: function () {
+  onScroll: function onScroll_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var onScroll = function onScroll(event) {
       console.log(event);
@@ -2509,7 +2509,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
   version: "x.y.z"
 };
 useAnimatedScrollHandler({
-  onScroll: function () {
+  onScroll: function null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var null1 = function null1(event) {
       console.log(event);
@@ -2558,7 +2558,7 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     var bar = [4, 5];
@@ -2579,7 +2579,7 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -2604,7 +2604,7 @@ var _worklet_14662302952728_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(arg) {
     var _console;
@@ -2625,7 +2625,7 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     var bar = {
@@ -2666,7 +2666,7 @@ var _worklet_13974752356811_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
+var foo = Gesture.Tap().numberOfTaps(2).onBegin(function null3Factory() {
   var _e = [new global.Error(), 1, -27];
   var null3 = function null3() {
     console.log('onBegin');
@@ -2676,7 +2676,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   null3.__initData = _worklet_13974752356811_init_data;
   null3.__stackDetails = _e;
   return null3;
-}()).onStart(function () {
+}()).onStart(function null2Factory() {
   var _e = [new global.Error(), 1, -27];
   var null2 = function null2(_event) {
     console.log('onStart');
@@ -2686,7 +2686,7 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   null2.__initData = _worklet_16446448315454_init_data;
   null2.__stackDetails = _e;
   return null2;
-}()).onEnd(function () {
+}()).onEnd(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1(_event, _success) {
     console.log('onEnd');
@@ -2706,7 +2706,7 @@ exports[`babel plugin for react-native-gesture-handler workletizes referenced ca
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var onStart = function () {
+var onStart = function onStart_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const onStart = function () {};
   onStart.__closure = {};
@@ -2728,7 +2728,7 @@ var _worklet_7165463824996_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return 'AssignmentExpression';
@@ -2751,7 +2751,7 @@ var _worklet_2619465543015_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var styleFactory = function () {
+var styleFactory = function styleFactory_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var styleFactory = function styleFactory() {
     return 'FunctionDeclaration';
@@ -2776,7 +2776,7 @@ var _worklet_17388574355683_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return {};
@@ -2797,7 +2797,7 @@ exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpressio
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var styleFactory = function () {
+var styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return {};
@@ -2822,7 +2822,7 @@ var _worklet_7165463824996_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return 'AssignmentExpression';
@@ -2843,7 +2843,7 @@ exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var styleFactory = function () {
+var styleFactory = function styleFactory_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var styleFactory = function styleFactory() {
     return {};
@@ -2865,7 +2865,7 @@ var _worklet_17388574355683_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return {};
@@ -2886,7 +2886,7 @@ exports[`babel plugin for referenced worklets workletizes FunctionExpression on 
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var styleFactory = function () {
+var styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return {};
@@ -2911,7 +2911,7 @@ var _worklet_7165463824996_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return 'AssignmentExpression';
@@ -2934,7 +2934,7 @@ var _worklet_10431207809979_init_data = {
   version: "x.y.z"
 };
 handler = {
-  onScroll: function () {
+  onScroll: function onScroll_null1Factory() {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function () {};
     onScroll.__closure = {};
@@ -2955,7 +2955,7 @@ exports[`babel plugin for referenced worklets workletizes ObjectExpression on it
   version: "x.y.z"
 };
 var handler = {
-  onScroll: function () {
+  onScroll: function onScroll_null1Factory() {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function () {};
     onScroll.__closure = {};
@@ -2982,7 +2982,7 @@ var _worklet_3006312818667_init_data = {
   version: "x.y.z"
 };
 handler = {
-  onScroll: function () {
+  onScroll: function onScroll_null1Factory() {
     const _e = [new global.Error(), 1, -27];
     const onScroll = function () {
       return 'AssignmentExpression';
@@ -3008,7 +3008,7 @@ var _worklet_506044013293_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-styleFactory = function () {
+styleFactory = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 'AssignmentAfterUse';
@@ -3028,7 +3028,7 @@ exports[`babel plugin for referenced worklets workletizes in immediate scope 1`]
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var styleFactory = function () {
+var styleFactory = function styleFactory_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const styleFactory = function () {
     return {};
@@ -3050,7 +3050,7 @@ exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = 
   version: "x.y.z"
 };
 function outerScope() {
-  var styleFactory = function () {
+  var styleFactory = function styleFactory_null1Factory() {
     const _e = [new global.Error(), 1, -27];
     const styleFactory = function () {
       return {};
@@ -3074,7 +3074,7 @@ exports[`babel plugin for referenced worklets workletizes multiple referencing 1
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var secondReference = function () {
+var secondReference = function secondReference_null1Factory() {
   const _e = [new global.Error(), 1, -27];
   const secondReference = function () {
     return {};
@@ -3106,7 +3106,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, many
 };
 function App() {
   (0, 3, fun)({
-    onStart: function () {
+    onStart: function onStart_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
@@ -3128,7 +3128,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, with
 };
 function App() {
   (0, useAnimatedGestureHandler)({
-    onStart: function () {
+    onStart: function onStart_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
@@ -3150,7 +3150,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, with
 };
 function App() {
   (0, fun)({
-    onStart: function () {
+    onStart: function onStart_null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var onStart = function onStart() {};
       onStart.__closure = {};
@@ -3176,7 +3176,7 @@ function App() {
     b: 2
   };
   (0, fun)({
-    onStart: function () {
+    onStart: function onStart_null1Factory(obj) {
       var _e = [new global.Error(), -2, -27];
       var onStart = function onStart() {
         var a = obj.a;
@@ -3188,7 +3188,7 @@ function App() {
       onStart.__initData = _worklet_10926786553639_init_data;
       onStart.__stackDetails = _e;
       return onStart;
-    }()
+    }(obj)
   }, []);
 }"
 `;
@@ -3200,7 +3200,7 @@ exports[`babel plugin for web configuration doesn't substitute isWeb and shouldB
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory(isWeb, shouldBeUseWeb) {
   var _e = [new global.Error(), -3, -27];
   var foo = function foo() {
     var x = true;
@@ -3214,7 +3214,7 @@ var foo = function () {
   foo.__initData = _worklet_8645270621312_init_data;
   foo.__stackDetails = _e;
   return foo;
-}();"
+}(isWeb, shouldBeUseWeb);"
 `;
 
 exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to false 1`] = `
@@ -3234,7 +3234,7 @@ exports[`babel plugin for web configuration includes initData when omitNativeOnl
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     var bar = 'bar';
@@ -3248,7 +3248,7 @@ var foo = function () {
 `;
 
 exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
-"var foo = function () {
+"var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     var foo = 'bar';
@@ -3303,7 +3303,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -3314,7 +3314,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -3332,7 +3332,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -3345,8 +3345,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -3361,8 +3361,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -3376,8 +3376,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -3402,7 +3402,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -3446,7 +3446,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -3457,7 +3457,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -3475,7 +3475,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -3488,8 +3488,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -3504,8 +3504,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -3519,8 +3519,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -3545,7 +3545,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -3558,7 +3558,7 @@ exports[`babel plugin for worklet classes injects class factory into worklets 1`
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory(Clazz__classFactory) {
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
@@ -3570,7 +3570,7 @@ var foo = function () {
   foo.__initData = _worklet_3370991485663_init_data;
   foo.__stackDetails = _e;
   return foo;
-}();"
+}(Clazz__classFactory);"
 `;
 
 exports[`babel plugin for worklet classes keeps this binding 1`] = `
@@ -3617,7 +3617,7 @@ var _worklet_11384144076188_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -3628,7 +3628,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -3646,7 +3646,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -3659,8 +3659,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -3675,8 +3675,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -3690,8 +3690,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var _defineProperty = function () {
+  }(_defineProperties);
+  var _defineProperty = function _defineProperty_null6Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperty = function _defineProperty(e, r, t) {
       return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
@@ -3708,8 +3708,8 @@ var Clazz = function () {
     _defineProperty.__initData = _worklet_2394858016888_init_data;
     _defineProperty.__stackDetails = _e;
     return _defineProperty;
-  }();
-  var Clazz__classFactory = function () {
+  }(_toPropertyKey);
+  var Clazz__classFactory = function Clazz__classFactory_null7Factory(_classCallCheck, _defineProperty, _createClass) {
     var _e = [new global.Error(), -4, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -3736,7 +3736,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_11384144076188_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _defineProperty, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -3749,7 +3749,7 @@ exports[`babel plugin for worklet classes modifies closures 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory(Clazz__classFactory) {
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
@@ -3761,7 +3761,7 @@ var foo = function () {
   foo.__initData = _worklet_3370991485663_init_data;
   foo.__stackDetails = _e;
   return foo;
-}();"
+}(Clazz__classFactory);"
 `;
 
 exports[`babel plugin for worklet classes removes marker 1`] = `
@@ -3802,7 +3802,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -3813,7 +3813,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -3831,7 +3831,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -3844,8 +3844,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -3860,8 +3860,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -3875,8 +3875,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -3901,7 +3901,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -3945,7 +3945,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -3956,7 +3956,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -3974,7 +3974,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -3987,8 +3987,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -4003,8 +4003,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -4018,8 +4018,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -4044,7 +4044,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -4088,7 +4088,7 @@ var _worklet_7066863147557_init_data = {
   version: "x.y.z"
 };
 var Clazz = function () {
-  var _classCallCheck = function () {
+  var _classCallCheck = function _classCallCheck_null1Factory() {
     var _e = [new global.Error(), 1, -27];
     var _classCallCheck = function _classCallCheck(a, n) {
       if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
@@ -4099,7 +4099,7 @@ var Clazz = function () {
     _classCallCheck.__stackDetails = _e;
     return _classCallCheck;
   }();
-  var _toPrimitive = function () {
+  var _toPrimitive = function _toPrimitive_null2Factory() {
     var _e = [new global.Error(), 1, -27];
     var _toPrimitive = function _toPrimitive(t, r) {
       if ("object" != typeof t || !t) return t;
@@ -4117,7 +4117,7 @@ var Clazz = function () {
     _toPrimitive.__stackDetails = _e;
     return _toPrimitive;
   }();
-  var _toPropertyKey = function () {
+  var _toPropertyKey = function _toPropertyKey_null3Factory(_toPrimitive) {
     var _e = [new global.Error(), -2, -27];
     var _toPropertyKey = function _toPropertyKey(t) {
       var i = _toPrimitive(t, "string");
@@ -4130,8 +4130,8 @@ var Clazz = function () {
     _toPropertyKey.__initData = _worklet_10645339112046_init_data;
     _toPropertyKey.__stackDetails = _e;
     return _toPropertyKey;
-  }();
-  var _defineProperties = function () {
+  }(_toPrimitive);
+  var _defineProperties = function _defineProperties_null4Factory(_toPropertyKey) {
     var _e = [new global.Error(), -2, -27];
     var _defineProperties = function _defineProperties(e, r) {
       for (var t = 0; t < r.length; t++) {
@@ -4146,8 +4146,8 @@ var Clazz = function () {
     _defineProperties.__initData = _worklet_8234197014582_init_data;
     _defineProperties.__stackDetails = _e;
     return _defineProperties;
-  }();
-  var _createClass = function () {
+  }(_toPropertyKey);
+  var _createClass = function _createClass_null5Factory(_defineProperties) {
     var _e = [new global.Error(), -2, -27];
     var _createClass = function _createClass(e, r, t) {
       return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
@@ -4161,8 +4161,8 @@ var Clazz = function () {
     _createClass.__initData = _worklet_405664377367_init_data;
     _createClass.__stackDetails = _e;
     return _createClass;
-  }();
-  var Clazz__classFactory = function () {
+  }(_defineProperties);
+  var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass) {
     var _e = [new global.Error(), -3, -27];
     var _Clazz__classFactory = function Clazz__classFactory() {
       var Clazz = function () {
@@ -4187,7 +4187,7 @@ var Clazz = function () {
     _Clazz__classFactory.__initData = _worklet_7066863147557_init_data;
     _Clazz__classFactory.__stackDetails = _e;
     return _Clazz__classFactory;
-  }();
+  }(_classCallCheck, _createClass);
   var Clazz = Clazz__classFactory();
   return Clazz;
 }();"
@@ -4199,7 +4199,7 @@ exports[`babel plugin for worklet names appends file name to function name 1`] =
   location: "/source.js",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_sourceJs1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 1;
@@ -4218,7 +4218,7 @@ exports[`babel plugin for worklet names appends library name to function name 1`
   location: "/node_modules/library/source.js",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_library_sourceJs1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 1;
@@ -4237,7 +4237,7 @@ exports[`babel plugin for worklet names handles names with illegal characters 1`
   location: "/-source.js",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_SourceJs1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     return 1;
@@ -4257,7 +4257,7 @@ exports[`babel plugin for worklet names preserves recursion 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var _foo = function foo() {
     _foo(1);
@@ -4277,7 +4277,7 @@ exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-(function () {
+(function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 1;
@@ -4297,7 +4297,7 @@ exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-[function () {
+[function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return 1;
@@ -4323,10 +4323,10 @@ var _worklet_17260955035117_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var foo = function foo(x) {
-    var bar = function () {
+    var bar = function bar_null2Factory() {
       var _e = [new global.Error(), 1, -27];
       var bar = function bar(x) {
         return x + 2;
@@ -4354,17 +4354,17 @@ exports[`babel plugin for worklet nesting transpiles nested worklets embedded in
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_8060856534633_init_data = {
-  code: "function null2(){const{runOnJS,_worklet_5655279400236_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__closure={};null1.__workletHash=5655279400236;null1.__initData=_worklet_5655279400236_init_data;null1.__stackDetails=_e;return null1;}())();}",
+var _worklet_7778027876183_init_data = {
+  code: "function null2(){const{runOnJS,_worklet_5655279400236_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__closure={};null1.__workletHash=5655279400236;null1.__initData=_worklet_5655279400236_init_data;null1.__stackDetails=_e;return null1;}())();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
+runOnUI(function null2Factory(runOnJS, _worklet_5655279400236_init_data) {
   var _e = [new global.Error(), -3, -27];
   var null2 = function null2() {
     console.log('Hello from UI thread');
-    runOnJS(function () {
+    runOnJS(function null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var null1 = function null1() {
         console.log('Hello from JS thread');
@@ -4380,11 +4380,11 @@ runOnUI(function () {
     runOnJS: runOnJS,
     _worklet_5655279400236_init_data: _worklet_5655279400236_init_data
   };
-  null2.__workletHash = 8060856534633;
-  null2.__initData = _worklet_8060856534633_init_data;
+  null2.__workletHash = 7778027876183;
+  null2.__initData = _worklet_7778027876183_init_data;
   null2.__stackDetails = _e;
   return null2;
-}())();"
+}(runOnJS, _worklet_5655279400236_init_data))();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
@@ -4394,8 +4394,8 @@ exports[`babel plugin for worklet nesting transpiles nested worklets embedded in
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_3809176378244_init_data = {
-  code: "function null2(){const{runOnJS,runOnUI,_worklet_7185083753711_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}())();}",
+var _worklet_876092414810_init_data = {
+  code: "function null2(){const{runOnJS,_worklet_7185083753711_init_data,runOnUI}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory(runOnUI){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}(runOnUI))();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -4406,15 +4406,15 @@ var _worklet_2520605269387_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
+runOnUI(function null2Factory(runOnJS, _worklet_7185083753711_init_data, runOnUI) {
   var _e = [new global.Error(), -4, -27];
   var null2 = function null2() {
     console.log('Hello from UI thread');
-    runOnJS(function () {
+    runOnJS(function null1Factory(runOnUI) {
       var _e = [new global.Error(), -2, -27];
       var null1 = function null1() {
         console.log('Hello from JS thread');
-        runOnUI(function () {
+        runOnUI(function null3Factory() {
           var _e = [new global.Error(), 1, -27];
           var null3 = function null3() {
             console.log('Hello from UI thread again');
@@ -4433,18 +4433,18 @@ runOnUI(function () {
       null1.__initData = _worklet_7185083753711_init_data;
       null1.__stackDetails = _e;
       return null1;
-    }())();
+    }(runOnUI))();
   };
   null2.__closure = {
     runOnJS: runOnJS,
-    runOnUI: runOnUI,
-    _worklet_7185083753711_init_data: _worklet_7185083753711_init_data
+    _worklet_7185083753711_init_data: _worklet_7185083753711_init_data,
+    runOnUI: runOnUI
   };
-  null2.__workletHash = 3809176378244;
-  null2.__initData = _worklet_3809176378244_init_data;
+  null2.__workletHash = 876092414810;
+  null2.__initData = _worklet_876092414810_init_data;
   null2.__stackDetails = _e;
   return null2;
-}())();"
+}(runOnJS, _worklet_7185083753711_init_data, runOnUI))();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets when enabled 1`] = `
@@ -4454,16 +4454,16 @@ exports[`babel plugin for worklet nesting transpiles nested worklets when enable
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_1516424759965_init_data = {
-  code: "function null2(){const{_worklet_8064116599518_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=8064116599518;null1.__initData=_worklet_8064116599518_init_data;null1.__stackDetails=_e;return null1;}();bar();}",
+var _worklet_8915242678787_init_data = {
+  code: "function null2(){const{_worklet_8064116599518_init_data}=this.__closure;const bar=function null1Factory(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=8064116599518;null1.__initData=_worklet_8064116599518_init_data;null1.__stackDetails=_e;return null1;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null2Factory(_worklet_8064116599518_init_data) {
   var _e = [new global.Error(), -2, -27];
   var null2 = function null2() {
-    var bar = function () {
+    var bar = function null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var null1 = function null1() {
         console.log('bar');
@@ -4479,11 +4479,11 @@ var foo = function () {
   null2.__closure = {
     _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
   };
-  null2.__workletHash = 1516424759965;
-  null2.__initData = _worklet_1516424759965_init_data;
+  null2.__workletHash = 8915242678787;
+  null2.__initData = _worklet_8915242678787_init_data;
   null2.__stackDetails = _e;
   return null2;
-}();"
+}(_worklet_8064116599518_init_data);"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets when enabled with depth 3 1`] = `
@@ -4493,25 +4493,25 @@ exports[`babel plugin for worklet nesting transpiles nested worklets when enable
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_6327850153424_init_data = {
-  code: "function null2(){const{_worklet_3230974749144_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();}",
+var _worklet_7777349691374_init_data = {
+  code: "function null2(){const{_worklet_3230974749144_init_data}=this.__closure;const foobar=function null1Factory(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_2612038668792_init_data = {
-  code: "function null3(){const{_worklet_3230974749144_init_data,_worklet_6327850153424_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();};null2.__closure={_worklet_3230974749144_init_data:_worklet_3230974749144_init_data};null2.__workletHash=6327850153424;null2.__initData=_worklet_6327850153424_init_data;null2.__stackDetails=_e;return null2;}();bar();}",
+var _worklet_16293896386579_init_data = {
+  code: "function null3(){const{_worklet_7777349691374_init_data,_worklet_3230974749144_init_data}=this.__closure;const bar=function null2Factory(_worklet_3230974749144_init_data){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();};null2.__closure={_worklet_3230974749144_init_data:_worklet_3230974749144_init_data};null2.__workletHash=7777349691374;null2.__initData=_worklet_7777349691374_init_data;null2.__stackDetails=_e;return null2;}(_worklet_3230974749144_init_data);bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function null3Factory(_worklet_7777349691374_init_data, _worklet_3230974749144_init_data) {
   var _e = [new global.Error(), -3, -27];
   var null3 = function null3() {
-    var bar = function () {
+    var bar = function null2Factory(_worklet_3230974749144_init_data) {
       var _e = [new global.Error(), -2, -27];
       var null2 = function null2() {
-        var foobar = function () {
+        var foobar = function null1Factory() {
           var _e = [new global.Error(), 1, -27];
           var null1 = function null1() {
             console.log('foobar');
@@ -4526,22 +4526,22 @@ var foo = function () {
       null2.__closure = {
         _worklet_3230974749144_init_data: _worklet_3230974749144_init_data
       };
-      null2.__workletHash = 6327850153424;
-      null2.__initData = _worklet_6327850153424_init_data;
+      null2.__workletHash = 7777349691374;
+      null2.__initData = _worklet_7777349691374_init_data;
       null2.__stackDetails = _e;
       return null2;
-    }();
+    }(_worklet_3230974749144_init_data);
     bar();
   };
   null3.__closure = {
-    _worklet_3230974749144_init_data: _worklet_3230974749144_init_data,
-    _worklet_6327850153424_init_data: _worklet_6327850153424_init_data
+    _worklet_7777349691374_init_data: _worklet_7777349691374_init_data,
+    _worklet_3230974749144_init_data: _worklet_3230974749144_init_data
   };
-  null3.__workletHash = 2612038668792;
-  null3.__initData = _worklet_2612038668792_init_data;
+  null3.__workletHash = 16293896386579;
+  null3.__initData = _worklet_16293896386579_init_data;
   null3.__stackDetails = _e;
   return null3;
-}();"
+}(_worklet_7777349691374_init_data, _worklet_3230974749144_init_data);"
 `;
 
 exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
@@ -4557,16 +4557,16 @@ var _worklet_4437925222314_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_10266484047832_init_data = {
-  code: "function null3(){const{_worklet_12864992966034_init_data,_worklet_4437925222314_init_data,runOnJS}=this.__closure;const a=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__closure={};null1.__workletHash=12864992966034;null1.__initData=_worklet_12864992966034_init_data;null1.__stackDetails=_e;return null1;}();const b=function(){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__closure={};null2.__workletHash=4437925222314;null2.__initData=_worklet_4437925222314_init_data;null2.__stackDetails=_e;return null2;}();const func=Math.random()<0.5?a:b;runOnJS(func)();}",
+var _worklet_13206750441659_init_data = {
+  code: "function null3(){const{_worklet_12864992966034_init_data,_worklet_4437925222314_init_data,runOnJS}=this.__closure;const a=function null1Factory(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__closure={};null1.__workletHash=12864992966034;null1.__initData=_worklet_12864992966034_init_data;null1.__stackDetails=_e;return null1;}();const b=function null2Factory(){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__closure={};null2.__workletHash=4437925222314;null2.__initData=_worklet_4437925222314_init_data;null2.__stackDetails=_e;return null2;}();const func=Math.random()<0.5?a:b;runOnJS(func)();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-runOnUI(function () {
+runOnUI(function null3Factory(_worklet_12864992966034_init_data, _worklet_4437925222314_init_data, runOnJS) {
   var _e = [new global.Error(), -4, -27];
   var null3 = function null3() {
-    var a = function () {
+    var a = function null1Factory() {
       var _e = [new global.Error(), 1, -27];
       var null1 = function null1() {
         console.log('Good morning from JS thread!');
@@ -4577,7 +4577,7 @@ runOnUI(function () {
       null1.__stackDetails = _e;
       return null1;
     }();
-    var b = function () {
+    var b = function null2Factory() {
       var _e = [new global.Error(), 1, -27];
       var null2 = function null2() {
         console.log('Good afternoon from JS thread');
@@ -4596,11 +4596,11 @@ runOnUI(function () {
     _worklet_4437925222314_init_data: _worklet_4437925222314_init_data,
     runOnJS: runOnJS
   };
-  null3.__workletHash = 10266484047832;
-  null3.__initData = _worklet_10266484047832_init_data;
+  null3.__workletHash = 13206750441659;
+  null3.__initData = _worklet_13206750441659_init_data;
   null3.__stackDetails = _e;
   return null3;
-}())();"
+}(_worklet_12864992966034_init_data, _worklet_4437925222314_init_data, runOnJS))();"
 `;
 
 exports[`babel plugin generally removes comments from worklets 1`] = `
@@ -4610,7 +4610,7 @@ exports[`babel plugin generally removes comments from worklets 1`] = `
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var f = function () {
+var f = function null1Factory() {
   var _e = [new global.Error(), 1, -27];
   var null1 = function null1() {
     return true;
@@ -4631,7 +4631,7 @@ var _worklet_12624627966719_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function () {
+var foo = function foo_null1Factory(a) {
   var _e = [new global.Error(), -2, -27];
   var _foo = function foo(t) {
     if (t > 0) {
@@ -4645,7 +4645,7 @@ var foo = function () {
   _foo.__initData = _worklet_12624627966719_init_data;
   _foo.__stackDetails = _e;
   return _foo;
-}();"
+}(a);"
 `;
 
 exports[`babel plugin generally transforms 1`] = `
@@ -4661,7 +4661,7 @@ var _worklet_6576407799916_init_data = {
 };
 function Box() {
   var offset = (0, _reactNativeReanimated.useSharedValue)(0);
-  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function () {
+  var animatedStyles = (0, _reactNativeReanimated.useAnimatedStyle)(function null1Factory(offset) {
     var _e = [new global.Error(), -2, -27];
     var null1 = function null1() {
       return {
@@ -4677,7 +4677,7 @@ function Box() {
     null1.__initData = _worklet_6576407799916_init_data;
     null1.__stackDetails = _e;
     return null1;
-  }());
+  }(offset));
   return (0, _jsxRuntime.jsxs)(_jsxRuntime.Fragment, {
     children: [(0, _jsxRuntime.jsx)(_reactNativeReanimated.default.View, {
       style: [styles.box, animatedStyles]
