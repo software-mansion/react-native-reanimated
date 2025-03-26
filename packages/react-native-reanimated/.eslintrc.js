@@ -7,6 +7,7 @@ module.exports = {
       plugins: ['reanimated'],
       rules: {
         'reanimated/use-reanimated-error': 'error',
+        'reanimated/use-global-this': 'error',
       },
     },
   ],

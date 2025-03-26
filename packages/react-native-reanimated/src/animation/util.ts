@@ -73,7 +73,7 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
     // but its bound copy, which is not a worklet. We don't want to throw any error then.
     return;
@@ -550,7 +550,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || SHOULD_BE_USE_WEB) {
+  if (globalThis._WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   create.__isAnimationDefinition = true;
@@ -562,7 +562,7 @@ export function defineAnimation<
 function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
     runOnUI(() => {
