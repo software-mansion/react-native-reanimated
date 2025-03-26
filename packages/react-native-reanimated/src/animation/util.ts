@@ -48,7 +48,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
   originY: true,
   width: true,
-  heigth: true,
+  height: true,
   borderRadius: true,
   globalOriginX: true,
   globalOriginY: true,
