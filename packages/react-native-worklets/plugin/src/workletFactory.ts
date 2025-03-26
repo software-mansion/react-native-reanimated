@@ -294,13 +294,13 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const newFun = functionExpression(
+  const workletFactory = functionExpression(
     identifier(workletName + 'Factory'),
     closureVariables,
     blockStatement(statements)
   );
 
-  return { workletFactory: newFun, closureVariables };
+  return { workletFactory, closureVariables };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
