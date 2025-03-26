@@ -400,9 +400,10 @@ export function createAnimatedComponent(
           ...this.jestAnimatedProps.value,
           ...animatedProps?.initial?.value,
         };
-        // @ts-ignore It tells jestAnimatedValues is unknown yet it's part of animatedProps
-        // TODO: fix this somewhat in the future
-        animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
+
+        if (animatedProps?.jestAnimatedValues) {
+          animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
+        }
       }
 
       styles.forEach((style) => {
