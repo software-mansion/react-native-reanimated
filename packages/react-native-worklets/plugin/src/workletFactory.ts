@@ -221,7 +221,7 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          closureVariables.map((variable) =>
+          closureVariables.map((variable, id) =>
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -237,7 +237,7 @@ export function makeWorkletFactory(
                 )
               : objectProperty(
                   identifier(variable.name),
-                  identifier(variable.name),
+                  identifier(params[id].name),
                   false,
                   true
                 )
