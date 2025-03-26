@@ -19,6 +19,7 @@ class SynchronizableConverter {
   static auto hostValue(Runtime &rt, const JSValue &value) -> TValue;
 };
 
+// TODO: Use CRTP instead.
 template <typename TValue>
 class Synchronizable
     : public SynchronizableAccess,
@@ -31,12 +32,12 @@ class Synchronizable
 
   // TODO: Find a way of taking the unmangled method names in compile
   // time and use them instead of these hardcoded strings.
-  const char getDirtyName_[9]{"getDirty"};
-  const char getBlockingName_[12]{"getBlocking"};
-  const char setDirtyName_[9]{"setDirty"};
-  const char setBlockingName_[12]{"setBlocking"};
-  const char lockName_[5]{"lock"};
-  const char unlockName_[7]{"unlock"};
+  static constexpr char getDirtyName_[9]{"getDirty"};
+  static constexpr char getBlockingName_[12]{"getBlocking"};
+  static constexpr char setDirtyName_[9]{"setDirty"};
+  static constexpr char setBlockingName_[12]{"setBlocking"};
+  static constexpr char lockName_[5]{"lock"};
+  static constexpr char unlockName_[7]{"unlock"};
 
  public:
   auto get(Runtime &rt, const facebook::jsi::PropNameID &name)
@@ -180,6 +181,9 @@ class Synchronizable
   // TODO: Perhaps we can use Serializable (old Shareable) as TValue.
   TValue value_;
 };
+
+// TODO: More base implementations, consult with Serializable (old Shareable)
+// and CSS objects.
 
 template <>
 auto SynchronizableConverter<double>::jsValue(Runtime &rt, const double &value)

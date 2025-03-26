@@ -5,8 +5,8 @@ import { WorkletsTurboModule } from '../specs';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type {
+  HostSynchronizableRef,
   ShareableRef,
-  SynchronizableRef,
   WorkletRuntime,
 } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -46,7 +46,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  makeSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
+  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue> {
     return this.#workletsModuleProxy.makeSynchronizable(value);
   }
 

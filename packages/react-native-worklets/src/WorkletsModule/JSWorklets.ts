@@ -4,11 +4,7 @@
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
 import { isJest } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
-import type {
-  ShareableRef,
-  SynchronizableRef,
-  WorkletRuntime,
-} from '../workletTypes';
+import type { ShareableRef } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
@@ -24,13 +20,13 @@ const requestAnimationFrameImpl =
     : globalThis.requestAnimationFrame;
 
 class JSWorklets implements IWorkletsModule {
-  makeShareableClone<TValue>(): ShareableRef<TValue> {
+  makeShareableClone(): never {
     throw new WorkletsError(
       'makeShareableClone should never be called in JSWorklets.'
     );
   }
 
-  makeSynchronizable<TValue>(): SynchronizableRef<TValue> {
+  makeSynchronizable(): never {
     throw new WorkletsError(
       'makeSynchronizable should never be called in JSWorklets.'
     );
@@ -44,22 +40,19 @@ class JSWorklets implements IWorkletsModule {
     requestAnimationFrameImpl(worklet);
   }
 
-  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
+  executeOnUIRuntimeSync(): never {
     throw new WorkletsError(
       '`executeOnUIRuntimeSync` is not available in JSWorklets.'
     );
   }
 
-  createWorkletRuntime(
-    _name: string,
-    _initializer: ShareableRef<() => void>
-  ): WorkletRuntime {
+  createWorkletRuntime(): never {
     throw new WorkletsError(
       'createWorkletRuntime is not available in JSWorklets.'
     );
   }
 
-  scheduleOnRuntime() {
+  scheduleOnRuntime(): never {
     throw new WorkletsError(
       'scheduleOnRuntime is not available in JSWorklets.'
     );

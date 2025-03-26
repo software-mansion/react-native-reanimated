@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -78,6 +79,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
+  std::shared_ptr<JSLogger> jsLogger_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

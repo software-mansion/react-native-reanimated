@@ -5,6 +5,7 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -44,7 +45,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           valueUnpackerCode_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
-          std::move(forwardedRequestAnimationFrame))) {
+          std::move(forwardedRequestAnimationFrame))),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler)) {
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
@@ -75,7 +77,7 @@ jsi::Value WorkletsModuleProxy::makeSynchronizable(
         std::make_shared<Synchronizable<double>>(value.asNumber());
     return jsi::Object::createFromHostObject(rt, synchronizable);
   }
-  // TODO: Use jslogger here to log the error.
+  jsLogger_->warnOnJS("Couldn't make a synchronizable from the given value.");
   return jsi::Value::undefined();
 }
 
