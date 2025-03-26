@@ -43,20 +43,18 @@ export function processWorklet(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): void {
-  if (state.opts.processNestedWorklets) {
-    path.traverse(
-      {
-        // @ts-expect-error TypeScript doesn't like this syntax here.
-        [WorkletizableFunction](
-          subPath: NodePath<WorkletizableFunction>,
-          passedState: ReanimatedPluginPass
-        ): void {
-          processIfWithWorkletDirective(subPath, passedState);
-        },
+  path.traverse(
+    {
+      // @ts-expect-error TypeScript doesn't like this syntax here.
+      [WorkletizableFunction](
+        subPath: NodePath<WorkletizableFunction>,
+        passedState: ReanimatedPluginPass
+      ): void {
+        processIfWithWorkletDirective(subPath, passedState);
       },
-      state
-    );
-  }
+    },
+    state
+  );
 
   const workletFactoryCall = makeWorkletFactoryCall(path, state);
 

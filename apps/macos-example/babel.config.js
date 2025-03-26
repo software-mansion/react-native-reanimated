@@ -12,6 +12,6 @@ module.exports = {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
     ],
-    ['react-native-worklets/plugin', { processNestedWorklets: true }],
+    ['react-native-worklets/plugin'],
   ],
 };
