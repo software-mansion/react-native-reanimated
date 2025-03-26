@@ -184,12 +184,6 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },
   transform: { process: processTransform },
-  transformMatrix: false, // deprecated
-  rotation: false, // deprecated
-  scaleX: false, // deprecated
-  scaleY: false, // deprecated
-  translateX: false, // deprecated
-  translateY: false, // deprecated
 
   // OTHERS
   backfaceVisibility: true,
