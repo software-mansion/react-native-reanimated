@@ -94,6 +94,14 @@ export function makeWorkletFactory(
 
   const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
+  const params = closureVariables.map((variable) =>
+    fun.scope.generateUidIdentifier(variable.name)
+  );
+
+  closureVariables.forEach((_variable, id) => {
+    fun.scope.rename(closureVariables[id].name, params[id].name, fun.node);
+  });
+
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
     ? functionExpression(
@@ -227,7 +235,12 @@ export function makeWorkletFactory(
                     identifier(variable.name)
                   )
                 )
-              : objectProperty(identifier(variable.name), variable, false, true)
+              : objectProperty(
+                  identifier(variable.name),
+                  identifier(variable.name),
+                  false,
+                  true
+                )
           )
         )
       )
@@ -296,7 +309,7 @@ export function makeWorkletFactory(
 
   const workletFactory = functionExpression(
     identifier(workletName + 'Factory'),
-    closureVariables,
+    params,
     blockStatement(statements)
   );
 

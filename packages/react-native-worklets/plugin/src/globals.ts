@@ -177,7 +177,7 @@ export function initializeGlobals() {
  *
  * ```js
  * plugins: [
- *   ['react-native-reanimated/plugin', { globals: ['myHostFunction'] }],
+ *   ['react-native-worklets/plugin', { globals: ['myHostFunction'] }],
  * ];
  * ```
  */
