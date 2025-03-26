@@ -14,7 +14,6 @@ declare global {
    * code shouldn't depend on it, we keep it here mainly for backward
    * compatibility for our users.
    */
-
   var _WORKLET: boolean | undefined;
 
   /**

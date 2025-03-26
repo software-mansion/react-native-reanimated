@@ -13,23 +13,13 @@ export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
 }
 
-class NativeWorklets implements IWorkletsModule {
+class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined && WorkletsTurboModule) {
+    if (global.__workletsModuleProxy === undefined) {
       const valueUnpackerCode = getValueUnpackerCode();
-      if (!WorkletsTurboModule?.installTurboModule(valueUnpackerCode)) {
-        // This path means that React Native has failed on reload.
-        // We don't want to throw any errors to not mislead the users
-        // that the problem is related to Worklets.
-        // We install a DummyWorkletsModuleProxy instead.
-        console.warn(
-          "[Worklets] Worklets TurboModule couldn't be installed. If this happened during a multiple reload, you can ignore this message."
-        );
-        this.#workletsModuleProxy = new DummyWorkletsModuleProxy();
-        return;
-      }
+      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -74,27 +64,5 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       workletRuntime,
       shareableWorklet
     );
-  }
-}
-
-class DummyWorkletsModuleProxy implements IWorkletsModule {
-  makeShareableClone() {
-    return null!;
-  }
-
-  scheduleOnUI() {
-    return null!;
-  }
-
-  executeOnUIRuntimeSync() {
-    return null!;
-  }
-
-  createWorkletRuntime() {
-    return null!;
-  }
-
-  scheduleOnRuntime() {
-    return null!;
   }
 }
