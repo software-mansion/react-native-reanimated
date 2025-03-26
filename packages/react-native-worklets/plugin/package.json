@@ -1,5 +1,5 @@
 {
-  "name": "babel-plugin-reanimated",
+  "name": "babel-plugin-worklets",
   "version": "1.0.0",
   "private": true,
   "devDependencies": {
