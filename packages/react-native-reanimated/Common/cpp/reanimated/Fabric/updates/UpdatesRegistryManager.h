@@ -11,16 +11,14 @@
 
 namespace reanimated {
 
+using namespace css;
+
 class UpdatesRegistryManager {
  public:
-  UpdatesRegistryManager();
-
-#ifdef ANDROID
   explicit UpdatesRegistryManager(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
-#endif
 
-  std::lock_guard<std::mutex> createLock() const;
+  std::lock_guard<std::mutex> lock() const;
 
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)
@@ -33,7 +31,10 @@ class UpdatesRegistryManager {
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
-  void removeBatch(const std::vector<Tag> &tags);
+
+  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void unmarkNodeAsRemovable(Tag viewTag);
+  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
 
 #ifdef ANDROID
@@ -47,11 +48,12 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
+  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
+  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
   static void addToPropsMap(
       PropsMap &propsMap,

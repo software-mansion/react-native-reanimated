@@ -1,7 +1,7 @@
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 template <CSSValueDerived TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray() : values() {}
@@ -40,7 +40,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
   values.reserve(array.size());
 
   for (size_t i = 0; i < array.size(); i++) {
-    values.emplace_back(array.at(i));
+    values.emplace_back(array[i]);
   }
 }
 
@@ -117,4 +117,4 @@ std::ostream &operator<<(
 
 template struct CSSDiscreteArray<CSSKeyword>;
 
-} // namespace reanimated
+} // namespace reanimated::css

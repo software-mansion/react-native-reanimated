@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 PropertyInterpolator::PropertyInterpolator(
     PropertyPath propertyPath,
@@ -14,4 +14,4 @@ bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

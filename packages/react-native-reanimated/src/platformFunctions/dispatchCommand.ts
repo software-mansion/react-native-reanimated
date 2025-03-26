@@ -40,7 +40,7 @@ function dispatchCommandNative(
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandJest() {

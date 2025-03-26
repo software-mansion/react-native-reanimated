@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <string>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -69,4 +69,4 @@ struct CSSShadowRadiusAndroid
 
 #endif
 
-} // namespace reanimated
+} // namespace reanimated::css

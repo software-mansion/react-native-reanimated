@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
     std::make_shared<MatrixOperation>(TransformMatrix::Identity())};
@@ -73,7 +73,7 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 
   // Get or create the current keyframe
-  auto keyframe = keyframes_.at(currentIndex);
+  auto keyframe = keyframes_[currentIndex];
   if (!keyframe->fromOperations.has_value() ||
       !keyframe->toOperations.has_value()) {
     // If the value is nullopt, we would have to read it from the view style
@@ -185,7 +185,7 @@ TransformsStyleInterpolator::parseTransformOperations(
   transformOperations.reserve(transformsCount);
 
   for (size_t i = 0; i < transformsCount; ++i) {
-    const auto &transform = transformsArray.at(i);
+    const auto &transform = transformsArray[i];
     transformOperations.emplace_back(
         TransformOperation::fromDynamic(transform));
   }
@@ -403,4 +403,4 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
   return result;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

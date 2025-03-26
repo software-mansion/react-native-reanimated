@@ -11,7 +11,7 @@ on:
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
   merge_group:
     branches:
@@ -27,18 +27,17 @@ on:
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-tvos-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/tvos-example
-      COMMON_APP_DIR: apps/common-app
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
       group: tvos-${{ github.ref }}

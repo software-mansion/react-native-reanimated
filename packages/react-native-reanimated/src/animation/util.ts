@@ -44,6 +44,25 @@ import {
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
+  originX: true,
+  originY: true,
+  width: true,
+  heigth: true,
+  borderRadius: true,
+  globalOriginX: true,
+  globalOriginY: true,
+  opacity: true,
+  transform: true,
+};
+
+type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
+
+export function isValidLayoutAnimationProp(prop: string) {
+  'worklet';
+  return (prop as LayoutAnimationProp) in LAYOUT_ANIMATION_SUPPORTED_PROPS;
+}
+
 if (__DEV__ && ReducedMotionManager.jsValue) {
   logger.warn(
     `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
@@ -540,15 +559,7 @@ export function defineAnimation<
   return create;
 }
 
-/**
- * Lets you cancel a running animation paired to a shared value. The
- * cancellation is asynchronous.
- *
- * @param sharedValue - The shared value of a running animation that you want to
- *   cancel.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
- */
-export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
+function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   if (_WORKLET) {
@@ -560,3 +571,20 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
     })();
   }
 }
+
+function cancelAnimationWeb<TValue>(sharedValue: SharedValue<TValue>): void {
+  // setting the current value cancels the animation if one is currently running
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+}
+
+/**
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
+ *
+ * @param sharedValue - The shared value of a running animation that you want to
+ *   cancel.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
+ */
+export const cancelAnimation = SHOULD_BE_USE_WEB
+  ? cancelAnimationWeb
+  : cancelAnimationNative;

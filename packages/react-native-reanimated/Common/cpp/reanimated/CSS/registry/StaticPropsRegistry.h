@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
@@ -20,8 +20,8 @@ class StaticPropsRegistry {
   folly::dynamic get(Tag viewTag) const;
   bool has(Tag viewTag) const;
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove);
-  bool isEmpty();
+  bool isEmpty() const;
+
   bool hasObservers(Tag viewTag) const;
   void setObserver(Tag viewTag, PropsObserver observer);
   void removeObserver(Tag viewTag);
@@ -36,4 +36,4 @@ class StaticPropsRegistry {
       const folly::dynamic &newProps);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

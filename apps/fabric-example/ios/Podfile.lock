@@ -1734,7 +1734,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.2):
+  - RNReanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1756,10 +1756,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.2)
+    - RNReanimated/reanimated (= 4.0.0-beta.3)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.2):
+  - RNReanimated/reanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1781,10 +1781,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.2)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.3)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.2):
+  - RNReanimated/reanimated/apple (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1896,7 +1896,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNWorklets (0.1.0):
+  - RNWorklets (0.2.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1916,9 +1916,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.1.0)
+    - RNWorklets/worklets (= 0.2.0)
     - Yoga
-  - RNWorklets/worklets (0.1.0):
+  - RNWorklets/worklets (0.2.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1938,9 +1938,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.1.0)
+    - RNWorklets/worklets/apple (= 0.2.0)
     - Yoga
-  - RNWorklets/worklets/apple (0.1.0):
+  - RNWorklets/worklets/apple (0.2.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2283,13 +2283,13 @@ SPEC CHECKSUMS:
   RNCMaskedView: 308c763227e237d4d260bd8841870e099572bb3e
   RNFlashList: b799a0cdd1189c1f5064331548400dd79a7e3047
   RNGestureHandler: 70069ab3e0431b03f6e465b65745f87a1a02c6c0
-  RNReanimated: e77e4505746e65786d6309d656b24f38b9f7e268
+  RNReanimated: 5785c53674feb35aea7af14e076495adf345d310
   RNScreens: 5d61e452b51e7c23b3fcb9f16c4967d683a60a9d
   RNSVG: 2089e8b3a145acb2f392017279790f007f934567
-  RNWorklets: 55929a92933d1faea5febd2d50ebddb7765962e8
+  RNWorklets: b4b9749e208901b364f144049dc0b888848b67d8
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 78d74e245ed67bb94275a1316cdc170b9b7fe884
 
-PODFILE CHECKSUM: 4a9e0af2552a3fcd2303b56ad75e373f8bae65b9
+PODFILE CHECKSUM: e19c71a6204ef86abcaad82da473c338754ef94c
 
 COCOAPODS: 1.15.2

@@ -55,6 +55,6 @@ jobs:
       - name: Check use strict
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn use-strict-check
-      - name: Run jest unit tests
+      - name: Run Jest unit tests
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn test
