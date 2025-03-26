@@ -694,9 +694,9 @@ void ReanimatedModuleProxy::performOperations() {
 
   PropsBatch updatesBatch;
   {
+    auto lock = updatesRegistryManager_->lock();
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
-    auto lock = updatesRegistryManager_->lock();
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
     }

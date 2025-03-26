@@ -66,6 +66,10 @@ void AnimatedPropsRegistry::addUpdatesToRegistry() {
     const auto &[shadowNode, props] = update;
     const auto tag = shadowNode->getTag();
 
+    if (props.empty()) {
+      continue;
+    }
+
     const auto it = registry_.find(tag);
     if (it == registry_.end()) {
       registry_.emplace(tag, update);

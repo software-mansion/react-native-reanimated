@@ -187,7 +187,6 @@ export default class AnimatedComponent<
   }
 
   shouldComponentUpdate(nextProps: P) {
-    console.log('should update');
     this._updateStyles(nextProps);
 
     if (this._CSSManager) {

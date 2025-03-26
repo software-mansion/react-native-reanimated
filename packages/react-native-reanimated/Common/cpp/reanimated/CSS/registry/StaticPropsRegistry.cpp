@@ -2,7 +2,7 @@
 
 namespace reanimated::css {
 
-void StaticPropsRegistry::set(
+void StaticPropsRegistry::update(
     const ShadowNode::Shared &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();

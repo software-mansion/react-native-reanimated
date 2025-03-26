@@ -77,11 +77,9 @@ class CSSAnimationsRegistry
   NodeWithPropsPair updateAllViewAnimations(
       const CSSAnimationsVector &animationsVector,
       double timestamp);
-  void processAnimation(
+  folly::dynamic updateAnimation(
       const std::shared_ptr<CSSAnimation> &animation,
-      double timestamp,
-      ShadowNode::Shared &shadowNode,
-      folly::dynamic &updates);
+      double timestamp);
   void scheduleOrActivateAnimation(
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,

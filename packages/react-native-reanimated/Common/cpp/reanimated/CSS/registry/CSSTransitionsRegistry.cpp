@@ -42,46 +42,14 @@ void CSSTransitionsRegistry::updateSettings(
 void CSSTransitionsRegistry::flushFrameUpdates(
     PropsBatch &updatesBatch,
     const double timestamp) {
-  handleUpdate(
-      [&](const ShadowNode::Shared &shadowNode, const folly::dynamic &props) {
-        updatesBatch.emplace_back(shadowNode, props);
-      },
-      timestamp);
-}
-
-void CSSTransitionsRegistry::collectAllProps(
-    PropsMap &propsMap,
-    const double timestamp) {
-  // We can reuse the same logic as for the frame update because transitions
-  // have no fill mode, so they affect the view style only when they are running
-  handleUpdate(
-      [&](const ShadowNode::Shared &shadowNode, const folly::dynamic &props) {
-        addToPropsMap(propsMap, shadowNode, props);
-      },
-      timestamp);
-}
-
-void CSSTransitionsRegistry::handleUpdate(
-    const UpdateHandler &handler,
-    const double timestamp) {
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
 
   // Iterate over active transitions and update them
   for (auto it = runningTransitionTags_.begin();
        it != runningTransitionTags_.end();) {
-    const auto &viewTag = *it;
-    const auto &transition = registry_[viewTag];
-
-    handler(transition->getShadowNode(), transition->update(timestamp));
-
-    // We remove transition from running and schedule it when animation of
-    // one of properties has finished and the other one is still delayed
-    const auto &minDelay = transition->getMinDelay(timestamp);
-    if (minDelay > 0) {
-      delayedTransitionsManager_.add(
-          timestamp + transition->getMinDelay(timestamp), viewTag);
-    }
+    const auto &transition = registry_[*it];
+    updatesBatch.emplace_back(updateTransition(transition, timestamp));
 
     if (transition->getState() != TransitionProgressState::Running) {
       it = runningTransitionTags_.erase(it);
@@ -89,6 +57,36 @@ void CSSTransitionsRegistry::handleUpdate(
       ++it;
     }
   }
+}
+
+void CSSTransitionsRegistry::collectAllProps(
+    PropsMap &propsMap,
+    const double timestamp) {
+  // Activate all delayed transitions that should start now
+  activateDelayedTransitions(timestamp);
+
+  // Iterate over active transitions and update them
+  for (const auto &[_, transition] : registry_) {
+    const auto [shadowNode, props] = updateTransition(transition, timestamp);
+    addToPropsMap(propsMap, shadowNode, props);
+  }
+}
+
+NodeWithPropsPair CSSTransitionsRegistry::updateTransition(
+    const std::shared_ptr<CSSTransition> &transition,
+    const double timestamp) {
+  const auto &shadowNode = transition->getShadowNode();
+  NodeWithPropsPair result{shadowNode, transition->update(timestamp)};
+
+  // We schedule a transition when animation of one of transitioned
+  // properties has finished and the other one is still delayed
+  const auto &minDelay = transition->getMinDelay(timestamp);
+  if (minDelay > 0) {
+    delayedTransitionsManager_.add(
+        timestamp + transition->getMinDelay(timestamp), shadowNode->getTag());
+  }
+
+  return result;
 }
 
 void CSSTransitionsRegistry::activateDelayedTransitions(
@@ -115,8 +113,10 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(
   delayedTransitionsManager_.remove(viewTag);
 
   if (minDelay > 0) {
+    LOG(INFO) << "Schedule transition for tag: " << viewTag;
     delayedTransitionsManager_.add(currentTimestamp + minDelay, viewTag);
   } else {
+    LOG(INFO) << "Activate transition for tag: " << viewTag;
     runningTransitionTags_.insert(viewTag);
   }
 }
@@ -142,6 +142,10 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
+
+      LOG(INFO) << "Run transition for tag: " << viewTag
+                << " from props: " << changedProps.oldProps
+                << " to props: " << changedProps.newProps;
 
       transition->run(changedProps, strongThis->getCurrentTimestamp_());
       strongThis->scheduleOrActivateTransition(transition);

@@ -48,7 +48,9 @@ class CSSTransitionsRegistry
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
-  void handleUpdate(const UpdateHandler &handler, const double timestamp);
+  NodeWithPropsPair updateTransition(
+      const std::shared_ptr<CSSTransition> &transition,
+      double timestamp);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
