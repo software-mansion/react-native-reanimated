@@ -71,7 +71,15 @@ export function createAnimatedComponent(
   const animatedComponent = (
     props: AnimatedComponentProps & { ref: Ref<AnimatedComponent> }
   ) => {
-    return <AnimatedComponent {...props} />;
+    return (
+      <AnimatedComponent
+        {...props}
+        // Needed to prevent react from signing AnimatedComponent to the ref
+        // (we want to handle the ref assignment in the AnimatedComponent)
+        ref={null}
+        {...(props.ref === null ? null : { forwardedRef: props.ref })}
+      />
+    );
   };
 
   animatedComponent.displayName =
