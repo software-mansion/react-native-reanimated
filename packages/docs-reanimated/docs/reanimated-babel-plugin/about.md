@@ -164,7 +164,7 @@ const style = useAnimatedStyle(() => {
 });
 ```
 
-This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/src/autoworkletization.ts).
+This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 

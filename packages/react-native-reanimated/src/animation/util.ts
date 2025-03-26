@@ -48,7 +48,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
   originY: true,
   width: true,
-  heigth: true,
+  height: true,
   borderRadius: true,
   globalOriginX: true,
   globalOriginY: true,
@@ -559,15 +559,7 @@ export function defineAnimation<
   return create;
 }
 
-/**
- * Lets you cancel a running animation paired to a shared value. The
- * cancellation is asynchronous.
- *
- * @param sharedValue - The shared value of a running animation that you want to
- *   cancel.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
- */
-export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
+function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
   if (globalThis._WORKLET) {
@@ -579,3 +571,20 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
     })();
   }
 }
+
+function cancelAnimationWeb<TValue>(sharedValue: SharedValue<TValue>): void {
+  // setting the current value cancels the animation if one is currently running
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+}
+
+/**
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
+ *
+ * @param sharedValue - The shared value of a running animation that you want to
+ *   cancel.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
+ */
+export const cancelAnimation = SHOULD_BE_USE_WEB
+  ? cancelAnimationWeb
+  : cancelAnimationNative;

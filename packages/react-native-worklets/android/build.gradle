@@ -1,3 +1,4 @@
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -255,6 +256,22 @@ android {
                 }
             }
         }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!IS_REANIMATED_EXAMPLE_APP) {
+                    return
+                }
+                def packageDir = new File("${project.projectDir}/..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${packageDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
     }
 }
 
