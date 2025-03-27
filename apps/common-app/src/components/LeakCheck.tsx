@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 
-import { NukeContext } from '@/App';
+import { NukeContext } from '../App';
 
 function registriesLeakCheck(): string {
   // eslint-disable-next-line no-underscore-dangle

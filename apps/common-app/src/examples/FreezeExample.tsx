@@ -4,9 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { Button, Text, View } from 'react-native';
+import { Button, Text, View, StyleSheet } from 'react-native';
 import Animated, {
-  css,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -14,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { NukeContext } from '@/App';
+import { NukeContext } from '../App';
 
 type RootStackParamList = {
   screen1: undefined;
@@ -46,28 +45,6 @@ const AnimatedSwitch = () => {
     <View style={styles.switchContainer} onTouchEnd={handleToggle}>
       <Animated.View style={[styles.toggle, animatedStyles]} />
     </View>
-  );
-};
-
-const CSSAnimation = () => {
-  return (
-    <Animated.View style={styles.animationBox}>
-      <Text>CSS animation</Text>
-    </Animated.View>
-  );
-};
-
-const CSSTransition = () => {
-  const [state, setState] = useState(true);
-
-  useEffect(() => {
-    setState((x) => !x);
-  }, []);
-
-  return (
-    <Animated.View style={[styles.transitionBox, { left: state ? -100 : 100 }]}>
-      <Text>CSS transition</Text>
-    </Animated.View>
   );
 };
 
@@ -119,8 +96,6 @@ function HomeScreen() {
         />
         <Button onPress={nuke} title="Check for registry leaks" />
         <AnimatedSwitch />
-        <CSSAnimation />
-        <CSSTransition />
         <AnimatedStyleAnimation />
       </View>
     </Freeze>
@@ -197,7 +172,7 @@ export default function App() {
   );
 }
 
-const styles = css.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -217,37 +192,9 @@ const styles = css.create({
     borderRadius: 10.5,
     backgroundColor: '#fff',
   },
-  animationBox: {
-    width: 100,
-    height: 50,
-    animationDelay: '1s',
-    animationDuration: '10s',
-    animationFillMode: 'forwards',
-    animationName: {
-      from: {
-        backgroundColor: 'red',
-        left: -100,
-      },
-      to: {
-        backgroundColor: 'green',
-        left: 100,
-      },
-    },
-  },
-  transitionBox: {
-    width: 100,
-    height: 50,
-    backgroundColor: 'blue',
-    transitionDelay: '1s',
-    transitionDuration: '10s',
-    transitionProperty: 'left',
-  },
   box: {
     width: 100,
     height: 50,
     backgroundColor: 'pink',
-    transitionDelay: '1s',
-    transitionDuration: '20s',
-    transitionProperty: 'left',
   },
 });

@@ -44,6 +44,10 @@ class PropsRegistry {
   bool shouldCommitAfterPause() {
     return shouldCommitAfterPause_.exchange(false);
   }
+  
+  bool isEmpty(){
+    return map_.empty();
+  }
 
   void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);

@@ -5,6 +5,7 @@ import type {
   IReanimatedModule,
   IWorkletsModule,
   LayoutAnimationBatchItem,
+  ShadowNodeWrapper,
   ShareableRef,
   Value3D,
   ValueRotation,

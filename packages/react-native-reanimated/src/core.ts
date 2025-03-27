@@ -9,6 +9,7 @@ import type {
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
+  ShadowNodeWrapper,
   SharedValue,
   Value3D,
   ValueRotation,
@@ -223,4 +224,12 @@ export function jsiConfigureProps(
   if (!SHOULD_BE_USE_WEB) {
     ReanimatedModule.configureProps(uiProps, nativeProps);
   }
+}
+
+export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+  ReanimatedModule.markNodeAsRemovable(shadowNodeWrapper);
+}
+
+export function unmarkNodeAsRemovable(viewTag: number) {
+  ReanimatedModule.unmarkNodeAsRemovable(viewTag);
 }
