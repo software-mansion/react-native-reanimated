@@ -49,8 +49,7 @@
     "react-native-worklets": "^0.1.0",
     "source-map": "^0.7.4",
     "source-map-loader": "^4.0.1",
-    "usehooks-ts": "^2.9.1",
-    "react-native-worklets": "workspace:*"
+    "usehooks-ts": "^2.9.1"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^2.4.3",
