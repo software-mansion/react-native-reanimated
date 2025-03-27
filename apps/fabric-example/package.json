@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react-native": "0.78.0"
+    "react-native": "0.78.1"
   },
   "devDependencies": {
     "prettier": "^3.3.3"
