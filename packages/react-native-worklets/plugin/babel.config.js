@@ -3,5 +3,6 @@ const reanimatedPlugin = require('./index.js');
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
+  presets: ['@babel/preset-typescript'],
   plugins: [reanimatedPlugin],
 };

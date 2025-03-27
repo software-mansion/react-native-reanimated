@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
+import { transformFromAst, transformFromAstSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
@@ -14,8 +14,11 @@ import {
   arrayExpression,
   assignmentExpression,
   blockStatement,
+  callExpression,
   cloneNode,
   expressionStatement,
+  file,
+  functionDeclaration,
   functionExpression,
   identifier,
   isBlockStatement,
@@ -31,6 +34,7 @@ import {
   numericLiteral,
   objectExpression,
   objectProperty,
+  program,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -38,7 +42,8 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { appendFileSync } from 'fs';
+import { basename, join, relative } from 'path';
 
 import { globals } from './globals';
 import { workletTransformSync } from './transform';
@@ -54,7 +59,10 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { workletFactory: FunctionExpression; closureVariables: Identifier[] } {
+): {
+  factoryParams: Identifier[];
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -193,13 +201,6 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
-  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -268,7 +269,7 @@ export function makeWorkletFactory(
             identifier('__initData'),
             false
           ),
-          initDataId
+          identifier('_' + initDataId.name)
         )
       )
     );
@@ -307,13 +308,77 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const workletFactory = functionExpression(
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
+
+  const factoryParams = [identifier('_' + initDataId.name), ...params];
+
+  const workletFactory = functionDeclaration(
     identifier(workletName + 'Factory'),
-    params,
+    factoryParams,
     blockStatement(statements)
   );
 
-  return { workletFactory, closureVariables };
+  pathForStringDefinitions.insertBefore(workletFactory);
+
+  pathForStringDefinitions.insertBefore(
+    expressionStatement(
+      callExpression(identifier('__registerWorkletFactory'), [
+        numericLiteral(workletHash),
+        workletFactory.id!,
+      ])
+    )
+  );
+
+  // pathForStringDefinitions.insertBefore(
+  //   expressionStatement(
+  //     callExpression(
+  //       memberExpression(
+  //         callExpression(identifier('require'), [
+  //           stringLiteral('react-native-worklets'),
+  //         ]),
+  //         identifier('__registerWorkletFactory')
+  //       ),
+  //       [numericLiteral(workletHash), workletFactory.id!]
+  //     )
+  //   )
+  // );
+
+  // pathForStringDefinitions.insertBefore(
+  //   expressionStatement(
+  //     callExpression(
+  //       memberExpression(
+  //         identifier('globalThis'),
+  //         identifier('__registerWorkletFactory')
+  //       ),
+  //       [numericLiteral(workletHash), workletFactory.id!]
+  //     )
+  //   )
+  // );
+
+  const callParams = [initDataId, ...closureVariables];
+
+  const newProg = program([
+    variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]),
+    workletFactory,
+  ]);
+
+  const transformedProg = transformFromAstSync(newProg, undefined, {
+    filename: state.file.opts.filename,
+    presets: ['@babel/preset-typescript'],
+  })?.code;
+
+  const outputDir = join(state.cwd, 'generatedWorklets.js');
+  appendFileSync(outputDir, transformedProg + '\n');
+
+  return { factoryParams: callParams, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {

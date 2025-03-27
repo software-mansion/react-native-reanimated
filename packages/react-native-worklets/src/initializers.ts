@@ -28,10 +28,10 @@ const IS_CHROME_DEBUGGER = isChromeDebugger();
 // is defined).
 function overrideLogFunctionImplementation() {
   'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(logToLogBoxAndConsole)(data);
-  });
+  // replaceLoggerImplementation((data) => {
+  //   'worklet';
+  //   runOnJS(logToLogBoxAndConsole)(data);
+  // });
 }
 
 // Register logger config and replace the log function implementation in

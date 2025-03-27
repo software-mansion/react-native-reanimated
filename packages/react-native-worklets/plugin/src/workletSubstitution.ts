@@ -61,6 +61,8 @@ export function processWorklet(
   const workletFactoryCall = makeWorkletFactoryCall(path, state);
 
   substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
+  // path.requeue();
+  // path.visit();
 }
 
 function hasWorkletDirective(directives: Directive[]): boolean {
