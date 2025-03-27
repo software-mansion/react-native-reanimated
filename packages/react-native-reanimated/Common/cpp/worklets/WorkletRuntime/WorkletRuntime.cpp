@@ -4,7 +4,9 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
+#include <jsi/jsi.h>
 
 namespace worklets {
 
@@ -44,6 +46,22 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
     const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   auto reanimatedRuntime = ReanimatedRuntime::make(runtime, jsQueue, name);
+  std::shared_ptr<jsi::Runtime> jsiRuntime;
+#if JS_RUNTIME_HERMES
+  (void)rnRuntime; // used only by V8
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+  jsiRuntime = std::make_shared<ReanimatedHermesRuntime>(
+      std::move(hermesRuntime), jsQueue, name);
+#elif JS_RUNTIME_V8
+  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
+  config->enableInspector = false;
+  config->appName = name;
+  jsiRuntime = rnv8::createSharedV8Runtime(&rnRuntime, std::move(config));
+#else
+  (void)rnRuntime; // used only by V8
+  jsiRuntime = facebook::jsc::makeJSCRuntime();
+#endif
+
   if (supportsLocking) {
     return std::make_shared<LockableRuntime>(reanimatedRuntime, runtimeMutex);
   } else {

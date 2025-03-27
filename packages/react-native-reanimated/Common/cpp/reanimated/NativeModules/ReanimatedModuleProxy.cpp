@@ -205,7 +205,6 @@ void ReanimatedModuleProxy::init(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      removeFromPropsRegistry,
       obtainProp,
       updateProps,
       measure,
@@ -799,6 +798,7 @@ void ReanimatedModuleProxy::performOperations() {
     react_native_assert(family->getSurfaceId() == surfaceId);
     propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
   }
+  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -809,8 +809,8 @@ void ReanimatedModuleProxy::performOperations() {
               return nullptr;
             }
 
-            auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode = cloneShadowTreeWithNewProps(
+                oldRootShadowNode, propsMap, tagsToRemove);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -835,6 +835,11 @@ void ReanimatedModuleProxy::removeFromPropsRegistry(
   auto array = viewTags.asObject(rt).asArray(rt);
   for (size_t i = 0, size = array.size(rt); i < size; ++i) {
     tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+  }
+
+  if (!tagsToRemove.empty()) {
+    auto lock = updatesRegistryManager_->createLock();
+    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 
@@ -935,6 +940,31 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler());
   }
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+std::string format(bool b) {
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return std::string("");
+    }
+
+    std::string result = "";
+
+    result += "PropsRegistry: " +
+        format(strongThis->propsRegistry_->isEmpty());
+
+    return result;
+  };
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 #endif // RCT_NEW_ARCH_ENABLED
 

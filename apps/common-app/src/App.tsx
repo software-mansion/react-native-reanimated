@@ -9,7 +9,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { createStackNavigator } from '@react-navigation/stack';
-import React, { useCallback } from 'react';
+import React, { createContext, useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -28,6 +28,9 @@ import {
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { EXAMPLES } from './examples';
+import { LeakCheck } from './components/LeakCheck';
+
+export const NukeContext = createContext<() => void>(() => '');
 
 function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
@@ -168,10 +171,19 @@ function BackButton(props: HeaderBackButtonProps) {
 }
 
 export default function App() {
+  const [nuked, setNuked] = useState(false);
   const { isReady, navigationState, updateNavigationState } =
     useNavigationState();
 
   const shouldReduceMotion = useReducedMotion();
+
+  if (nuked) {
+    return (
+      <NukeContext.Provider value={() => setNuked(false)}>
+        <LeakCheck />
+      </NukeContext.Provider>
+    );
+  }
 
   if (!isReady) {
     return (
@@ -182,37 +194,39 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer
-        linking={linking}
-        initialState={navigationState}
-        onStateChange={updateNavigationState}>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              headerTitle: '🐎 Reanimated examples',
-              title: 'Reanimated examples',
-              headerLeft: Platform.OS === 'web' ? () => null : undefined,
-            }}
-          />
-          {EXAMPLES_NAMES.map((name) => (
+    <NukeContext.Provider value={() => setNuked(true)}>
+      <GestureHandlerRootView style={styles.container}>
+        <NavigationContainer
+          linking={linking}
+          initialState={navigationState}
+          onStateChange={updateNavigationState}>
+          <Stack.Navigator>
             <Stack.Screen
-              key={name}
-              name={name}
-              component={EXAMPLES[name].screen}
+              name="Home"
+              component={HomeScreen}
               options={{
-                animation: shouldReduceMotion ? 'fade' : 'default',
-                headerTitle: EXAMPLES[name].title,
-                title: EXAMPLES[name].title,
-                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
+                headerTitle: '🐎 Reanimated examples',
+                title: 'Reanimated examples',
+                headerLeft: Platform.OS === 'web' ? () => null : undefined,
               }}
             />
-          ))}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+            {EXAMPLES_NAMES.map((name) => (
+              <Stack.Screen
+                key={name}
+                name={name}
+                component={EXAMPLES[name].screen}
+                options={{
+                  animation: shouldReduceMotion ? 'fade' : 'default',
+                  headerTitle: EXAMPLES[name].title,
+                  title: EXAMPLES[name].title,
+                  headerLeft: Platform.OS === 'web' ? BackButton : undefined,
+                }}
+              />
+            ))}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </NukeContext.Provider>
   );
 }
 

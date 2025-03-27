@@ -187,6 +187,7 @@ class ReanimatedModuleProxy
     return workletsModuleProxy_;
   }
 
+  std::function<std::string()> createRegistriesLeakCheck();
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
