@@ -30,7 +30,7 @@
     "eslint-plugin-reanimated": "workspace:*",
     "react": "19.0.0",
     "react-native-gesture-handler": "2.24.0",
-    "react-native-pager-view": "6.6.1",
+    "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.2.0",
     "react-native-screens": "4.9.1",
