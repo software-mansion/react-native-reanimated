@@ -9,8 +9,11 @@ import type {
 
 // COMMON
 
-export function setViewStyle(viewTag: number, style: StyleProps) {
-  ReanimatedModule.setViewStyle(viewTag, style);
+export function setViewStyle(
+  shadowNodeWrapper: ShadowNodeWrapper,
+  style: StyleProps
+) {
+  ReanimatedModule.setViewStyle(shadowNodeWrapper, style);
 }
 
 export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {

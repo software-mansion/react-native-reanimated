@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+
 #include <react/renderer/core/ShadowNode.h>
 
 #include <unordered_map>
@@ -16,7 +18,7 @@ using PropsObserver = std::function<
 
 class StaticPropsRegistry {
  public:
-  void set(jsi::Runtime &rt, Tag viewTag, const jsi::Value &props);
+  void set(const ShadowNode::Shared &shadowNode, const folly::dynamic &props);
   folly::dynamic get(Tag viewTag) const;
   bool has(Tag viewTag) const;
   void remove(Tag viewTag);
@@ -26,8 +28,10 @@ class StaticPropsRegistry {
   void setObserver(Tag viewTag, PropsObserver observer);
   void removeObserver(Tag viewTag);
 
+  void collectAllProps(PropsMap &propsMap);
+
  private:
-  std::unordered_map<Tag, folly::dynamic> registry_;
+  NodeWithPropsRegistry registry_;
   std::unordered_map<Tag, PropsObserver> observers_;
 
   void notifyObservers(

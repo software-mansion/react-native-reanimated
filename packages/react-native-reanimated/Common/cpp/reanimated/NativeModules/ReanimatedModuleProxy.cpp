@@ -46,29 +46,27 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      updatesRegistryManager_(
-          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
+      updatesRegistryManager_(
+          std::make_shared<UpdatesRegistryManager>(
+              staticPropsRegistry_,
+              cssTransitionsRegistry_,
+              animatedPropsRegistry_,
+              cssAnimationsRegistry_,
+              getAnimationTimestamp_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
-          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  auto lock = updatesRegistryManager_->lock();
-  // Add registries in order of their priority (from the lowest to the
-  // highest)
-  // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations
-  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-  updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-}
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {}
 
 void ReanimatedModuleProxy::init(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
@@ -91,7 +89,9 @@ void ReanimatedModuleProxy::init(
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto &registry = strongThis->animatedPropsRegistry_;
+    registry->lock();
+    registry->add(rt, operations);
   };
 
   auto measure = [weakThis = weak_from_this()](
@@ -286,9 +286,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -433,11 +434,13 @@ void ReanimatedModuleProxy::cleanupSensors() {
 
 void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag,
+    const jsi::Value &shadowNodeWrapper,
     const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto styleProps = dynamicFromValue(rt, viewStyle);
+
+  staticPropsRegistry_->set(shadowNode, styleProps);
+  if (staticPropsRegistry_->hasObservers(shadowNode->getTag())) {
     maybeRunCSSLoop();
   }
 }
@@ -689,30 +692,16 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
-  UpdatesBatch updatesBatch;
+  PropsBatch updatesBatch;
   {
-    ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
-
     auto lock = updatesRegistryManager_->lock();
+    ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
-      cssAnimationsRegistry_->lock();
-      // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
-
-    // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch);
-
-    if (shouldUpdateCssAnimations_) {
-      cssTransitionsRegistry_->lock();
-      // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch);
-    }
-
+    updatesBatch = updatesRegistryManager_->getFrameUpdates(
+        currentCssTimestamp_, shouldUpdateCssAnimations_);
     shouldUpdateCssAnimations_ = false;
 
     if ((updatesBatch.size() > 0) &&
@@ -763,7 +752,7 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 
 void ReanimatedModuleProxy::commitUpdates(
     jsi::Runtime &rt,
-    const UpdatesBatch &updatesBatch) {
+    const PropsBatch &updatesBatch) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
@@ -776,7 +765,7 @@ void ReanimatedModuleProxy::commitUpdates(
 
   if (shouldFlushRegistry_) {
     shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
+    const auto propsMap = updatesRegistryManager_->getAllProps();
     for (auto const &[family, props] : propsMap) {
       const auto surfaceId = family->getSurfaceId();
       auto &propsVector = propsMapBySurface[surfaceId][family];

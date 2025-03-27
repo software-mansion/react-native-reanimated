@@ -29,10 +29,6 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
-}
-
 TransitionProperties CSSTransition::getProperties() const {
   return properties_;
 }
@@ -82,18 +78,22 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
 }
 
-folly::dynamic CSSTransition::run(
+void CSSTransition::run(
     const ChangedProps &changedProps,
-    const folly::dynamic &lastUpdateValue,
     const double timestamp) {
+  // Get value of last transition update (will be non-empty if the transition
+  // was interrupted)
+  const auto lastUpdateValue =
+      styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  // Run progress providers for changed properties
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
+  // Update interpolators with the new properties
   styleInterpolator_.updateInterpolatedProperties(
       changedProps, lastUpdateValue);
-  return update(timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {

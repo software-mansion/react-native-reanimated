@@ -16,6 +16,9 @@
 
 namespace reanimated::css {
 
+using UpdateHandler =
+    std::function<void(const ShadowNode::Shared &, const folly::dynamic &)>;
+
 class CSSTransitionsRegistry
     : public UpdatesRegistry,
       public std::enable_shared_from_this<CSSTransitionsRegistry> {
@@ -31,7 +34,8 @@ class CSSTransitionsRegistry
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
   void remove(Tag viewTag) override;
 
-  void update(double timestamp);
+  void flushFrameUpdates(PropsBatch &updatesBatch, double timestamp);
+  void collectAllProps(PropsMap &propsMap, double timestamp);
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
@@ -44,13 +48,13 @@ class CSSTransitionsRegistry
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
+  NodeWithPropsPair updateTransition(
+      const std::shared_ptr<CSSTransition> &transition,
+      double timestamp);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
-  void updateInUpdatesRegistry(
-      const std::shared_ptr<CSSTransition> &transition,
-      const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css

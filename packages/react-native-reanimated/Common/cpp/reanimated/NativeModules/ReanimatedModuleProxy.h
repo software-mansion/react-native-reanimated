@@ -39,7 +39,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using PropsBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
@@ -115,7 +115,7 @@ class ReanimatedModuleProxy
 
   void setViewStyle(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
+      const jsi::Value &shadowNodeWrapper,
       const jsi::Value &viewStyle) override;
 
   void markNodeAsRemovable(
@@ -208,7 +208,7 @@ class ReanimatedModuleProxy
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void commitUpdates(jsi::Runtime &rt, const PropsBatch &updatesBatch);
 
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
@@ -234,10 +234,10 @@ class ReanimatedModuleProxy
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
-  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   std::unordered_set<std::string>

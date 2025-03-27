@@ -12,12 +12,13 @@ import CSSTransitionsManager from './CSSTransitionsManager';
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
-  private readonly viewTag: number;
+  private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewConfig, viewTag }: ViewInfo) {
-    const tag = (this.viewTag = viewTag as number);
-    const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
+    const tag = viewTag as number;
+    const wrapper = (this.shadowNodeWrapper =
+      shadowNodeWrapper as ShadowNodeWrapper);
 
     this.cssAnimationsManager = new CSSAnimationsManager(wrapper, tag);
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
@@ -35,7 +36,7 @@ export default class CSSManager implements ICSSManager {
     // If the update is called during the first css style update, we won't
     // trigger CSS transitions and set styles before attaching CSS transitions
     if (this.isFirstUpdate && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
+      setViewStyle(this.shadowNodeWrapper, normalizedStyle);
     }
 
     this.cssTransitionsManager.update(transitionProperties);
@@ -45,7 +46,7 @@ export default class CSSManager implements ICSSManager {
     // animations and transitions first and update the style then to make
     // sure that the new transition is fired with new settings (like duration)
     if (!this.isFirstUpdate && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
+      setViewStyle(this.shadowNodeWrapper, normalizedStyle);
     }
 
     this.isFirstUpdate = false;
