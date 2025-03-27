@@ -103,7 +103,7 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
-    const forwardedRef = this.props.ref;
+    const forwardedRef = this.props.forwardedRef;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.

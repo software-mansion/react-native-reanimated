@@ -12030,10 +12030,10 @@ react-native-is-edge-to-edge@1.1.6:
   resolved "https://registry.yarnpkg.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.6.tgz#69ec13f70d76e9245e275eed4140d0873a78f902"
   integrity sha512-1pHnFTlBahins6UAajXUqeCOHew9l9C2C8tErnpGC3IyLJzvxD+TpYAixnCbrVS52f7+NvMttbiSI290XfwN0w==
 
-react-native-reanimated@4.0.0-nightly-20250313-d623d8c53:
-  version "4.0.0-nightly-20250313-d623d8c53"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0-nightly-20250313-d623d8c53.tgz#e21118f1ce7d6ff060593072aaf9faa561ac7433"
-  integrity sha512-6hsRKXrYHeKxR3yMloYUCD54WS3zPs7Q7vhnNi30xI0XLvq41I5F9XjH5AViodvY3p2KKufVmwSU79p1zmlsbQ==
+react-native-reanimated@^4.0.0-nightly-20250325-d67e51599:
+  version "4.0.0-nightly-20250325-d67e51599"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0-nightly-20250325-d67e51599.tgz#12f654bb39ed4ad74a79da4d1b406f6c56fb8f4d"
+  integrity sha512-2tY4E9E+PK2B+C5t1wmE8RffeBcwMYjzRPkRKz8veFZQ5Jy872VbgzyBkbtpnxPg2q6K1V6bfxwLGXFQ7l4oXw==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"
@@ -12070,7 +12070,7 @@ react-native-web@^0.18.12:
     postcss-value-parser "^4.2.0"
     styleq "^0.1.2"
 
-"react-native-worklets@workspace:*":
+react-native-worklets@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.1.0.tgz#bb39986ce2e5228d37dd1acd79d330b6d56f55bb"
   integrity sha512-+SlJfWlclW8T2W9l5q9EuDhurHk6OKc3892yQNrNgeJr7vBEYdHEpjyHsQR4nnpfSt13nzB5OZrL4OAD1sQnWw==

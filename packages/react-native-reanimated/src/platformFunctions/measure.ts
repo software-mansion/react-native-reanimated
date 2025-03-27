@@ -29,7 +29,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return null;
   }
 

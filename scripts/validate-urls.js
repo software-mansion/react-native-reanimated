@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const fsp = fs.promises;
 const readFile = util.promisify(fs.readFile);
-const fetch = require('node-fetch');
+const fetch = require('node-fetch').default;
 
 const extensions = [
   '.js',
@@ -24,11 +23,22 @@ const extensions = [
   '.swift',
 ];
 // Every hidden directory is ignored as well.
-const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build', 'cypress'];
+const ignoredDirectories = [
+  'node_modules',
+  'Pods',
+  'lib',
+  'build',
+  'cypress',
+  'vendor',
+];
 
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
+/**
+ * @param {string} dir
+ * @returns {Promise<{ file: string; url: string }[]>}
+ */
 async function getFileAndUrls(dir) {
   const directories = await fsp.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -55,6 +65,7 @@ async function getFileAndUrls(dir) {
   return Array.prototype.concat(...files);
 }
 
+/** @param {{ file: string; url: string }[]} data */
 function validUrls(data) {
   let index = 0;
   let isBrokenUrlDetected = false;
@@ -70,25 +81,29 @@ function validUrls(data) {
       currentData.url.includes('twitter.com') || // redirect issue
       currentData.url.includes('blog.swmansion.com') || // authorization issue
       currentData.url.includes('opensource.org') || // request from GitHub actions probably blocked
-      currentData.url.includes('good+first+issue') // sometimes we don't have any issues with this label
+      currentData.url.includes('good+first+issue') || // sometimes we don't have any issues with this label
+      currentData.url.includes('codepen') // getting 403 no matter what
     ) {
       index++;
       sendRequest();
       return;
     }
-    fetch(currentData.url)
+    fetch(currentData.url, {
+      headers: [],
+    })
       .then((response) => {
         const status = response.status;
         if (![200, 301, 302, 307].includes(status)) {
+          // console.error(response);
           console.error(
-            `🔴 Invalid link: ${response.url} in file: ${currentData.file}\n`
+            `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
           );
           isBrokenUrlDetected = true;
         }
         index++;
         sendRequest();
       })
-      .catch((error) => {
+      .catch((/** @type {Error} */ error) => {
         isBrokenUrlDetected = true;
         console.error('Error:', error);
         index++;

@@ -48,7 +48,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
   originY: true,
   width: true,
-  heigth: true,
+  height: true,
   borderRadius: true,
   globalOriginX: true,
   globalOriginY: true,
@@ -73,7 +73,7 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
     // but its bound copy, which is not a worklet. We don't want to throw any error then.
     return;
@@ -550,13 +550,31 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || SHOULD_BE_USE_WEB) {
+  if (globalThis._WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   create.__isAnimationDefinition = true;
 
   // @ts-expect-error it's fine
   return create;
+}
+
+function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
+  'worklet';
+  // setting the current value cancels the animation if one is currently running
+  if (globalThis._WORKLET) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    runOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    })();
+  }
+}
+
+function cancelAnimationWeb<TValue>(sharedValue: SharedValue<TValue>): void {
+  // setting the current value cancels the animation if one is currently running
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
 
 /**
@@ -567,15 +585,6 @@ export function defineAnimation<
  *   cancel.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
  */
-export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
-  'worklet';
-  // setting the current value cancels the animation if one is currently running
-  if (_WORKLET) {
-    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-  } else {
-    runOnUI(() => {
-      'worklet';
-      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    })();
-  }
-}
+export const cancelAnimation = SHOULD_BE_USE_WEB
+  ? cancelAnimationWeb
+  : cancelAnimationNative;
