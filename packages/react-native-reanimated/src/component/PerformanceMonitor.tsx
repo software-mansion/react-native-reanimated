@@ -72,7 +72,7 @@ function getFps(renderTimeInMs: number): number {
 
 function completeBufferRoutine(
   buffer: CircularBuffer,
-  timestamp: number
+  timestamp: number,
 ): number {
   'worklet';
   timestamp = Math.round(timestamp);
@@ -81,7 +81,14 @@ function completeBufferRoutine(
 
   const measuredRangeDuration = timestamp - droppedTimestamp;
 
-  return getFps(measuredRangeDuration / buffer.count);
+  // Protect against unrealistic frame times
+  const avgFrameTime = measuredRangeDuration / buffer.count;
+  if (avgFrameTime < 16) {
+    // minimum realistic frame time in ms
+    return 60; // cap at 60fps
+  }
+
+  return getFps(avgFrameTime);
 }
 
 function JsPerformance({ smoothingFrames }: { smoothingFrames: number }) {
