@@ -955,8 +955,7 @@ ReanimatedModuleProxy::createRegistriesLeakCheck() {
 
     std::string result = "";
 
-    result += "PropsRegistry: " +
-        format(strongThis->propsRegistry_->isEmpty());
+    result += "PropsRegistry: " + format(strongThis->propsRegistry_->isEmpty());
 
     return result;
   };

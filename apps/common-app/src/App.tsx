@@ -27,8 +27,8 @@ import {
 } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 
-import { EXAMPLES } from './examples';
 import { LeakCheck } from './components/LeakCheck';
+import { EXAMPLES } from './examples';
 
 export const NukeContext = createContext<() => void>(() => '');
 

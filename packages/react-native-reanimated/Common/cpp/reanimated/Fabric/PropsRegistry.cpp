@@ -32,34 +32,31 @@ void PropsRegistry::for_each(std::function<void(
   }
 }
 
-
-void PropsRegistry::markNodeAsRemovable(
-  const ShadowNode::Shared &shadowNode) {
-removableShadowNodes_[shadowNode->getTag()] = shadowNode;
+void PropsRegistry::markNodeAsRemovable(const ShadowNode::Shared &shadowNode) {
+  removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
 void PropsRegistry::unmarkNodeAsRemovable(Tag viewTag) {
-removableShadowNodes_.erase(viewTag);
+  removableShadowNodes_.erase(viewTag);
 }
 
-void PropsRegistry::handleNodeRemovals(
-  const RootShadowNode &rootShadowNode) {
-for (auto it = removableShadowNodes_.begin();
-     it != removableShadowNodes_.end();) {
-  const auto &shadowNode = it->second;
-  const auto &family = shadowNode->getFamily();
-  const auto &ancestors = family.getAncestors(rootShadowNode);
+void PropsRegistry::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+  for (auto it = removableShadowNodes_.begin();
+       it != removableShadowNodes_.end();) {
+    const auto &shadowNode = it->second;
+    const auto &family = shadowNode->getFamily();
+    const auto &ancestors = family.getAncestors(rootShadowNode);
 
-  // Skip if the node hasn't been removed
-  if (!ancestors.empty()) {
-    ++it;
-    continue;
+    // Skip if the node hasn't been removed
+    if (!ancestors.empty()) {
+      ++it;
+      continue;
+    }
+
+    const auto tag = shadowNode->getTag();
+    map_.erase(tag);
+    it = removableShadowNodes_.erase(it);
   }
-
-  const auto tag = shadowNode->getTag();
-  map_.erase(tag);
-  it = removableShadowNodes_.erase(it);
-}
 }
 
 void PropsRegistry::remove(const Tag tag) {

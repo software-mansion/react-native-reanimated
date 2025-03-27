@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { Button, Text, View, StyleSheet } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,

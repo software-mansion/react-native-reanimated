@@ -221,6 +221,5 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
   methodMap_["unmarkNodeAsRemovable"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
-
 }
 } // namespace reanimated

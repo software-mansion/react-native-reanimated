@@ -1,10 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 import { NukeContext } from '../App';
 
 function registriesLeakCheck(): string {
-  // eslint-disable-next-line no-underscore-dangle
   return global._registriesLeakCheck() ?? '';
 }
 
@@ -17,8 +16,8 @@ export function LeakCheck() {
   }, []);
 
   return (
-    <View style={{ alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-      <Text style={{ textAlign: 'right' }}>{leakCheck}</Text>
+    <View style={styles.container}>
+      <Text style={styles.text}>{leakCheck}</Text>
       <Button
         title="reload"
         onPress={() => setLeakCheck(registriesLeakCheck())}
@@ -27,3 +26,8 @@ export function LeakCheck() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  text: { textAlign: 'right' },
+});

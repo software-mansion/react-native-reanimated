@@ -44,8 +44,8 @@ class PropsRegistry {
   bool shouldCommitAfterPause() {
     return shouldCommitAfterPause_.exchange(false);
   }
-  
-  bool isEmpty(){
+
+  bool isEmpty() {
     return map_.empty();
   }
 
