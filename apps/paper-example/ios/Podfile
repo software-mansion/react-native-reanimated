@@ -19,6 +19,9 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+plugin 'cocoapods-swift-modular-headers'
+apply_modular_headers_for_swift_dependencies()
+
 target 'ReanimatedExample' do
   config = use_native_modules!
 
