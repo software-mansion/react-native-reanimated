@@ -10,7 +10,8 @@ class UIRuntimeDecorator {
       facebook::jsi::Runtime &uiRuntime,
       std::function<void(
           facebook::jsi::Runtime &rt,
-          const facebook::jsi::Value &callback)> &&requestAnimationFrame);
+          const facebook::jsi::Value &callback)> &&requestAnimationFrame,
+        std::function<void(std::string, std::string, std::function<void(std::string)>)> &&fetch);
 };
 
 } // namespace worklets
