@@ -342,6 +342,7 @@ export const ColorProperties = makeShareable([
   'borderBlockEndColor',
   'borderBlockStartColor',
   'color',
+  'colors',
   'outlineColor',
   'placeholderTextColor',
   'shadowColor',
@@ -686,7 +687,11 @@ export function processColorsInProps(props: StyleProps) {
   'worklet';
   for (const key in props) {
     if (ColorProperties.includes(key)) {
-      props[key] = processColor(props[key]);
+      if (Array.isArray(props[key])) {
+        props[key] = props[key].map((color: unknown) => processColor(color));
+      } else {
+        props[key] = processColor(props[key]);
+      }
     } else if (
       NestedColorProperties[key as keyof typeof NestedColorProperties]
     ) {
