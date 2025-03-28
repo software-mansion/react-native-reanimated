@@ -21,7 +21,11 @@ import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
-import { enableLayoutAnimations } from '../core';
+import {
+  enableLayoutAnimations,
+  markNodeAsRemovable,
+  unmarkNodeAsRemovable,
+} from '../core';
 import { ReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimateProps } from '../helperTypes';
@@ -43,7 +47,6 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import { removeFromPropsRegistry } from '../PropsRegistry';
 import { componentWithRef } from '../reactUtils';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
@@ -156,6 +159,7 @@ export function createAnimatedComponent(
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
     reanimatedID = id++;
+    _willUnmount: boolean = false;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -223,6 +227,16 @@ export function createAnimatedComponent(
         }
       }
 
+      const viewTag = this._viewInfo?.viewTag;
+      if (
+        !SHOULD_BE_USE_WEB &&
+        isFabric() &&
+        this._willUnmount &&
+        typeof viewTag === 'number'
+      ) {
+        unmarkNodeAsRemovable(viewTag);
+      }
+
       this._isFirstRender = false;
     }
 
@@ -272,6 +286,17 @@ export function createAnimatedComponent(
           );
         }
       }
+
+      const wrapper = this._viewInfo?.shadowNodeWrapper;
+      if (!SHOULD_BE_USE_WEB && isFabric() && wrapper) {
+        // Mark node as removable on the native (C++) side, but only actually remove it
+        // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
+        // animations/transitions/props while handling cases where the node might be
+        // remounted (e.g., when frozen) after componentWillUnmount is called.
+        markNodeAsRemovable(wrapper);
+      }
+
+      this._willUnmount = true;
     }
 
     getComponentViewTag() {
@@ -290,9 +315,6 @@ export function createAnimatedComponent(
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(viewTag);
-        }
-        if (isFabric()) {
-          removeFromPropsRegistry(viewTag);
         }
       }
     }

@@ -5,6 +5,7 @@ import type {
   IReanimatedModule,
   IWorkletsModule,
   LayoutAnimationBatchItem,
+  ShadowNodeWrapper,
   ShareableRef,
   Value3D,
   ValueRotation,
@@ -188,6 +189,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
+
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
+  }
+
+  unmarkNodeAsRemovable(viewTag: number) {
+    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
+  }
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
@@ -210,6 +219,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   }
 
   unsubscribeFromKeyboardEvents(): void {}
+  markNodeAsRemovable(): void {}
+  unmarkNodeAsRemovable(): void {}
+
   registerSensor(): number {
     return -1;
   }

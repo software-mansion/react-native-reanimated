@@ -66,4 +66,7 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
+  unmarkNodeAsRemovable(viewTag: number): void;
 }

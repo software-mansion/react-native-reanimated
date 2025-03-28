@@ -24,8 +24,6 @@ using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using RemoveFromPropsRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
 using ObtainPropFunction = std::function<jsi::Value(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,

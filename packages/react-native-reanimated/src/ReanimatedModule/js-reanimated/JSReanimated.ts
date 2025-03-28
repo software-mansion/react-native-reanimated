@@ -2,6 +2,7 @@
 import type {
   IReanimatedModule,
   IWorkletsModule,
+  ShadowNodeWrapper,
   ShareableRef,
   Value3D,
   ValueRotation,
@@ -297,6 +298,18 @@ class JSReanimated implements IReanimatedModule {
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
     throw new ReanimatedError(
       '`executeOnUIRuntimeSync` is not available in JSReanimated.'
+    );
+  }
+
+  markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
+    throw new ReanimatedError(
+      'markNodeAsRemovable is not available in JSReanimated.'
+    );
+  }
+
+  unmarkNodeAsRemovable(_viewTag: number): void {
+    throw new ReanimatedError(
+      'unmarkNodeAsRemovable is not available in JSReanimated.'
     );
   }
 }
