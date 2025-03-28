@@ -19,7 +19,7 @@
     "expo": "^52.0.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-native": "0.78.0",
+    "react-native": "0.78.1",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.19.13"
   },
