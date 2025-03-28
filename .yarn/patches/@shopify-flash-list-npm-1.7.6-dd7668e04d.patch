@@ -1,0 +1,37 @@
+diff --git a/package.json b/package.json
+index cad2bd7d6eebde52fca6f4d75e60c58141d30506..70efec9ac9d9811aed247c403a121beac4710a95 100644
+--- a/package.json
++++ b/package.json
+@@ -26,6 +26,7 @@
+   "license": "MIT",
+   "homepage": "https://shopify.github.io/flash-list/",
+   "main": "dist/index.js",
++  "react-native": "src/index.ts",
+   "types": "dist/index.d.ts",
+   "scripts": {
+     "up": "bundle install && yarn fixture:rn:up && yarn e2e:up && yarn build",
+diff --git a/src/FlashList.tsx b/src/FlashList.tsx
+index 0e9f071a53d113e85f3099ccf239d1f3d06361b6..877896f778b4fa27977b1aed9b550e2880c11e79 100644
+--- a/src/FlashList.tsx
++++ b/src/FlashList.tsx
+@@ -4,6 +4,7 @@ import {
+   RefreshControl,
+   LayoutChangeEvent,
+   NativeSyntheticEvent,
++  ScrollViewComponent,
+   StyleSheet,
+   NativeScrollEvent,
+ } from "react-native";
+@@ -842,6 +843,12 @@ class FlashList<T> extends React.PureComponent<
+     return this.rlvRef?.getScrollableNode?.() || null;
+   }
+ 
++  public getNativeScrollRef(): React.ElementRef<
++    typeof ScrollViewComponent
++  > | null {
++    return this.rlvRef?.getNativeScrollRef?.() || null;
++  }
++
+   /**
+    * Allows access to internal recyclerlistview. This is useful for enabling access to its public APIs.
+    * Warning: We may swap recyclerlistview for something else in the future. Use with caution.
