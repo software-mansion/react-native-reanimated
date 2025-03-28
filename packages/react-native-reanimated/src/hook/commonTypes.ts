@@ -25,14 +25,14 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export interface AnimatedRef<T extends Component> {
+export type AnimatedRef<T extends Component> = {
   (component?: T):
     | number // Paper
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
   current: T | null;
   getTag: () => number;
-}
+};
 
 // Might make that type generic if it's ever needed.
 export type AnimatedRefOnJS = AnimatedRef<Component>;

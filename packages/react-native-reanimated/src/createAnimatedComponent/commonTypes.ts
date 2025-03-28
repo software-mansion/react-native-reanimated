@@ -60,8 +60,10 @@ export type LayoutAnimationStaticContext = {
   presetName: string;
 };
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
+export type AnimatedComponentProps<
+  P extends Record<string, unknown> = Record<string, unknown>,
+> = P & {
+  ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   jestAnimatedValues?: MutableRefObject<AnimatedProps>;

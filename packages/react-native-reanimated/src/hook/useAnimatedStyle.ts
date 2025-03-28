@@ -464,7 +464,7 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
 ):
   | AnimatedStyleHandle<Style | AnimatedProps>
   | JestAnimatedStyleHandle<Style | AnimatedProps> {
-  const animatedUpdaterData = useRef<AnimatedUpdaterData>();
+  const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
