@@ -141,6 +141,7 @@ export function createAnimatedComponent(
     _isFirstRender = true;
     jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
+    jestAnimatedProps: { value: AnimatedProps } = { value: {} };
     _componentRef: AnimatedComponentRef | HTMLElement | null = null;
     _hasAnimatedRef = false;
     // Used only on web
@@ -160,6 +161,7 @@ export function createAnimatedComponent(
       super(props);
       if (IS_JEST) {
         this.jestAnimatedStyle = { value: {} };
+        this.jestAnimatedProps = { value: {} };
       }
 
       const entering = this.props.entering;
@@ -357,11 +359,12 @@ export function createAnimatedComponent(
       const styles = this.props.style
         ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
         : [];
+      const animatedProps = this.props.animatedProps;
       const prevStyles = this._styles;
       this._styles = styles;
 
       const prevAnimatedProps = this._animatedProps;
-      this._animatedProps = this.props.animatedProps;
+      this._animatedProps = animatedProps;
 
       const { viewTag, viewName, shadowNodeWrapper, viewConfig } =
         this._getViewInfo();
@@ -392,6 +395,17 @@ export function createAnimatedComponent(
         }
       }
 
+      if (animatedProps && IS_JEST) {
+        this.jestAnimatedProps.value = {
+          ...this.jestAnimatedProps.value,
+          ...animatedProps?.initial?.value,
+        };
+
+        if (animatedProps?.jestAnimatedValues) {
+          animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
+        }
+      }
+
       styles.forEach((style) => {
         style.viewDescriptors.add({
           tag: viewTag,
@@ -410,7 +424,7 @@ export function createAnimatedComponent(
             ...this.jestAnimatedStyle.value,
             ...style.initial.value,
           };
-          style.jestAnimatedStyle.current = this.jestAnimatedStyle;
+          style.jestAnimatedValues.current = this.jestAnimatedStyle;
         }
       });
 
@@ -615,6 +629,7 @@ export function createAnimatedComponent(
 
       if (IS_JEST) {
         filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
+        filteredProps.jestAnimatedProps = this.jestAnimatedProps;
       }
 
       // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
@@ -646,6 +661,7 @@ export function createAnimatedComponent(
         ? {
             jestInlineStyle: this.props.style,
             jestAnimatedStyle: this.jestAnimatedStyle,
+            jestAnimatedProps: this.jestAnimatedProps,
           }
         : {};
 
