@@ -196,4 +196,6 @@ jsi::Array convertStringToArray(
     const std::string &value,
     const unsigned int expectedSize);
 
+void installCaches(jsi::Runtime &rt);
+
 } // namespace worklets::jsi_utils
