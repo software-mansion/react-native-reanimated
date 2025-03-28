@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, Ref } from 'react';
+import type { Component, MutableRefObject, Ref } from 'react';
 
 import type {
   EntryExitAnimationFunction,
@@ -66,6 +66,7 @@ export type AnimatedComponentProps<
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  jestAnimatedValues?: MutableRefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder
@@ -105,6 +106,7 @@ export interface IAnimatedComponentInternal {
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
+  jestAnimatedProps: { value: AnimatedProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _hasAnimatedRef: boolean;
   _jsPropsUpdater: IJSPropsUpdater;
