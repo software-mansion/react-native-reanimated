@@ -95,6 +95,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
 
+#ifdef RCT_NEW_ARCH_ENABLED
   // Cleanup
   virtual void markNodeAsRemovable(
       jsi::Runtime &rt,
@@ -102,6 +103,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void unmarkNodeAsRemovable(
       jsi::Runtime &rt,
       const jsi::Value &viewTag) = 0;
+#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated

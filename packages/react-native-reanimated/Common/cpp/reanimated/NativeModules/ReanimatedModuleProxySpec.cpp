@@ -160,6 +160,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 static jsi::Value REANIMATED_SPEC_PREFIX(markNodeAsRemovable)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -179,6 +181,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)(
       ->unmarkNodeAsRemovable(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
@@ -217,9 +221,11 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
 
+#ifdef RCT_NEW_ARCH_ENABLED
   methodMap_["markNodeAsRemovable"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
   methodMap_["unmarkNodeAsRemovable"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
+#endif // RCT_NEW_ARCH_ENABLED
 }
 } // namespace reanimated

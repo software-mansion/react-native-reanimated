@@ -151,6 +151,10 @@ class ReanimatedModuleProxy
       jsi::Runtime &rt,
       const std::string &propName,
       const ShadowNode::Shared &shadowNode);
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  std::function<std::string()> createRegistriesLeakCheck();
+#endif // IS_REANIMATED_EXAMPLE_APP
 #endif
 
   jsi::Value registerSensor(
@@ -192,8 +196,6 @@ class ReanimatedModuleProxy
   getWorkletsModuleProxy() const {
     return workletsModuleProxy_;
   }
-
-  std::function<std::string()> createRegistriesLeakCheck();
 
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
