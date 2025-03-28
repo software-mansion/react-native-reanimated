@@ -56,4 +56,4 @@ jobs:
         run: export USE_FRAMEWORKS=${{matrix.type}} && bundle install && bundle exec pod update
       - name: Build app
         working-directory: ${{env.APP_NAME}}/ios
-        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -scheme ${{env.APP_NAME}} -configuration Debug -destination 'generic/platform=iOS Simulator' build | xcpretty
+        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -scheme ${{env.APP_NAME}} -configuration Debug -destination 'generic/platform=iOS Simulator' build
