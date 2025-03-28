@@ -3,7 +3,9 @@
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -43,7 +45,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           valueUnpackerCode_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
-          std::move(forwardedRequestAnimationFrame))) {
+          std::move(forwardedRequestAnimationFrame))),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler)) {
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
@@ -64,6 +67,18 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
   // confusion.
   return worklets::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
+}
+
+jsi::Value WorkletsModuleProxy::makeSynchronizable(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (value.isNumber()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<double>>(value.asNumber());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  }
+  jsLogger_->warnOnJS("Couldn't make a synchronizable from the given value.");
+  return jsi::Value::undefined();
 }
 
 void WorkletsModuleProxy::scheduleOnUI(

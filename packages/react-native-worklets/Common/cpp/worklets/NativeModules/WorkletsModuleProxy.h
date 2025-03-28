@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -34,6 +36,9 @@ class WorkletsModuleProxy
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
+
+  jsi::Value makeSynchronizable(jsi::Runtime &rt, const jsi::Value &value)
+      override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
@@ -74,6 +79,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
+  std::shared_ptr<JSLogger> jsLogger_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

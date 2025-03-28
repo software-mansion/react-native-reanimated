@@ -1,6 +1,10 @@
 'use strict';
 
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type {
+  HostSynchronizableRef,
+  ShareableRef,
+  WorkletRuntime,
+} from '../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
@@ -9,6 +13,8 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ): ShareableRef<TValue>;
+
+  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
