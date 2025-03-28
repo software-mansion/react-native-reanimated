@@ -6,6 +6,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 
+import type { EasingFunctionFactory } from './Easing';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { WorkletsModuleProxy } from './worklets';
 
@@ -44,7 +45,7 @@ interface WindowDimensions {
 }
 
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 
 type FirstFrame =
@@ -130,7 +131,7 @@ export interface ILayoutAnimationBuilder {
 
 export interface BaseLayoutAnimationConfig {
   duration?: number;
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
   type?: AnimationFunction;
   damping?: number;
   dampingRatio?: number;

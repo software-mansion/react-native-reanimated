@@ -4,8 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   createAnimatedPropAdapter,
+  Easing,
   interpolateColor,
   isSharedValue,
+  Keyframe,
   makeMutable,
   makeShareableCloneRecursive,
   useAnimatedProps,
@@ -57,4 +59,18 @@ function UpdatePropsTest() {
   useAnimatedProps(() => ({}), null, adapter1);
 
   useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
+}
+
+function EasingFactoryFunctionTest() {
+  const easing = Easing.bezier(0.1, 0.7, 1, 0.1);
+
+  const keyframe = new Keyframe({
+    from: {
+      opacity: 0,
+    },
+    to: {
+      opacity: 1,
+      easing,
+    },
+  });
 }
