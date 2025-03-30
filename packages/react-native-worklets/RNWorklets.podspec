@@ -48,7 +48,6 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
-      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
