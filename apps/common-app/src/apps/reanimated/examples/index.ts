@@ -399,7 +399,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RefExample: {
     icon: '🦑',
-    title: 'forwardRef & useImperativeHandle',
+    title: 'Ref & useImperativeHandle',
     screen: RefExample,
   },
   ChessExample: {

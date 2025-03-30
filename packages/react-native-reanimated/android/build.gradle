@@ -207,10 +207,10 @@ android {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
-                def monorepoDir = new File("${project.projectDir}/../../..")
+                def packageDir = new File("${project.projectDir}/..")
 
                 def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
-                def output = new File("${monorepoDir}/compile_commands.json")
+                def output = new File("${packageDir}/compile_commands.json")
 
                 output.text = generated.text
 

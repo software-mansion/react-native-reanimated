@@ -10,7 +10,7 @@ export let setGestureState: SetGestureState;
 
 function setGestureStateNative(handlerTag: number, newState: number) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     logger.warn('You can not use setGestureState in non-worklet function.');
     return;
   }
