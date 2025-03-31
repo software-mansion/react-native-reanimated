@@ -1,7 +1,5 @@
 'use strict';
 
-import { StyleSheet } from 'react-native';
-
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
@@ -53,7 +51,9 @@ export class PropsFilter implements IPropsFilter {
             return style;
           }
         });
-        props[key] = StyleSheet.flatten(processedStyle);
+        // keep styles as they were passed by the user
+        // it will help other libs to interpret styles correctly
+        props[key] = processedStyle;
       } else if (key === 'animatedProps') {
         const animatedProp = inputProps.animatedProps as Partial<
           AnimatedComponentProps<AnimatedProps>

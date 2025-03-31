@@ -23,9 +23,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     REAModule *reaModule);
 SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
     RCTModuleRegistry *moduleRegistry);
-
-SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(
-    REANodesManager *nodesManager);
 #else // RCT_NEW_ARCH_ENABLED
 UpdatePropsFunction makeUpdatePropsFunction(REAModule *reaModule);
 MeasureFunction makeMeasureFunction(RCTUIManager *uiManager);

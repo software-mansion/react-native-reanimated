@@ -64,8 +64,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
-      synchronouslyUpdateUIPropsFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
@@ -488,7 +486,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
   auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
     auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    nativePropNames_.insert(name);
     animatablePropNames_.insert(name);
   }
 #else
@@ -772,25 +769,6 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  bool hasLayoutUpdates = false;
-
-  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-      hasLayoutUpdates = true;
-      break;
-    }
-  }
-
-  if (!hasLayoutUpdates) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-    }
-    return;
-  }
-
   if (propsRegistry_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
@@ -849,7 +827,19 @@ void ReanimatedModuleProxy::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-  uiManager_->dispatchCommand(shadowNode, commandName, args);
+  const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
+
+  if (!scheduler) {
+    return;
+  }
+
+  const auto &schedulerDelegate = scheduler->getDelegate();
+
+  if (schedulerDelegate) {
+    const auto shadowView = ShadowView(*shadowNode);
+    schedulerDelegate->schedulerDidDispatchCommand(
+        shadowView, commandName, args);
+  }
 }
 
 jsi::String ReanimatedModuleProxy::obtainProp(
