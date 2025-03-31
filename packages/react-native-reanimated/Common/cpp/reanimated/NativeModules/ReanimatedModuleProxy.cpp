@@ -596,21 +596,6 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(
-    jsi::Runtime &rt,
-    const jsi::Object &props) {
-  const jsi::Array propNames = props.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    bool isLayoutProp =
-        nativePropNames_.find(propName) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-  return false;
-}
 
 void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
