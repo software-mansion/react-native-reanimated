@@ -73,8 +73,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
         ...style,
       };
     });
-
-    return currentStyle;
   }
 
   const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
@@ -95,7 +93,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     }
 
     currentStyle = {
-      ...styleObject,
       ...currentStyle,
       ...jestAnimatedStyleValue,
     };
@@ -106,8 +103,8 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   const inlineStyles = getStylesFromObject(jestInlineStyles);
 
   currentStyle = isEmpty(jestAnimatedStyleValue as object | undefined)
-    ? { ...styleObject, ...inlineStyles }
-    : { ...styleObject, ...jestAnimatedStyleValue };
+    ? { ...inlineStyles }
+    : { ...jestAnimatedStyleValue };
 
   return currentStyle;
 };
