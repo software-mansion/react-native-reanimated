@@ -70,7 +70,7 @@ function Digit({ number, index }: DigitProps) {
   useDerivedValue(() => {
     if (Platform.OS === 'web') {
       if (aref && aref.current) {
-        aref.current.getNode().scrollTo({ y: digit.value * 200 });
+        aref.current.getScrollableNode().scrollTo({ y: digit.value * 200 });
       }
     } else {
       // TODO fix this
