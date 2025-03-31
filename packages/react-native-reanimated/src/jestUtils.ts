@@ -73,8 +73,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
         ...style,
       };
     });
-
-    return currentStyle;
   }
 
   const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
