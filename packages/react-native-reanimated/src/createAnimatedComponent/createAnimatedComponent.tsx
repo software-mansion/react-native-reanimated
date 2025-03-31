@@ -490,17 +490,18 @@ export function createAnimatedComponent(
       }
 
       const layout = this.props.layout;
-      if (!layout || getReducedMotionFromConfig(layout as CustomConfig)) {
+      if (layout && getReducedMotionFromConfig(layout as CustomConfig)) {
         return;
       }
       updateLayoutAnimations(
         this.getComponentViewTag(),
         LayoutAnimationType.LAYOUT,
-        maybeBuild(
-          layout,
-          undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-          AnimatedComponent.displayName
-        )
+        layout &&
+          maybeBuild(
+            layout,
+            undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+            AnimatedComponent.displayName
+          )
       );
     }
 
