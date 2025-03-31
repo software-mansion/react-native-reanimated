@@ -440,10 +440,6 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
-  }
-
   public String obtainProp(int viewTag, String propName) {
     View view;
     try {
