@@ -363,20 +363,61 @@ export function makeWorkletFactory(
 
   const callParams = [initDataId, ...closureVariables];
 
+  const registerInInitDataRegistry = callExpression(
+    // identifier('__registerWorkletInitData'),
+    memberExpression(
+      identifier('globalThis'),
+      identifier('__registerWorkletInitData')
+    ),
+    [numericLiteral(workletHash), initDataId]
+  );
+  const registerInWorkletFactoryRegistry = callExpression(
+    // identifier('__registerWorkletFactory'),
+    memberExpression(
+      identifier('globalThis'),
+      identifier('__registerWorkletFactory')
+    ),
+    [numericLiteral(workletHash), workletFactory.id!]
+  );
+
   const newProg = program([
     variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]),
+    expressionStatement(registerInInitDataRegistry),
     workletFactory,
+    expressionStatement(registerInWorkletFactoryRegistry),
   ]);
+
+  // @ts-expect-error wwww
+  newProg.dupaProp = true;
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: ['@babel/preset-typescript'],
+    plugins: [],
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
   })?.code;
 
-  const outputDir = join(state.cwd, 'generatedWorklets.js');
-  appendFileSync(outputDir, transformedProg + '\n');
+  const literal = stringLiteral(transformedProg!);
+
+  // const decl = variableDeclaration('const', [
+  //   variableDeclarator(
+  //     identifier(workletName),
+  //     callExpression(
+  //       memberExpression(identifier('globalThis'), identifier(workletName)),
+  //       [literal]
+  //     )
+  //   ),
+  // ]);
+
+  const coddde = generate(literal, {}).code;
+
+  const outputDir = join(state.cwd, 'assets/generatedWorklets.js');
+  appendFileSync(outputDir, '+\n' + coddde);
 
   return { factoryParams: callParams, workletHash };
 }

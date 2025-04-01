@@ -1,5 +1,5 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression, Program } from '@babel/types';
+import type { CallExpression, ImportDeclaration, Program } from '@babel/types';
 import {
   callExpression,
   identifier,
@@ -23,9 +23,10 @@ export function makeWorkletFactoryCall(
   const programPath = path.findParent((ancestorPath) =>
     ancestorPath.isProgram()
   ) as NodePath<Program> | null;
+  const programPath2 = path.scope.getProgramParent().path;
   assert(programPath, 'Program path not found');
 
-  addWorkletRegistryImports(programPath);
+  addWorkletRegistryImports(programPath, state);
 
   const workletFactoryCall = callExpression(identifier('__getWorklet'), [
     numericLiteral(workletHash),
@@ -96,12 +97,20 @@ function addStackTraceDataToWorkletFactory(
 
 // let hasVisited = false;
 
-function addWorkletRegistryImports(path: NodePath<Program>): void {
+function addWorkletRegistryImports(
+  path: NodePath<Program>,
+  _state: ReanimatedPluginPass
+): void {
   const registerName = '__registerWorkletFactory';
   const invokeFactoryName = '__getWorklet';
   const registerNameBinding = path.scope.getBinding(registerName);
   const invokeFactoryNameBinding = path.scope.getBinding(invokeFactoryName);
-  if (registerNameBinding && invokeFactoryNameBinding) {
+
+  if (
+    (registerNameBinding && invokeFactoryNameBinding) ||
+    // @ts-expect-error wwww
+    path.node.dupaProp
+  ) {
     return;
   }
 
@@ -116,6 +125,21 @@ function addWorkletRegistryImports(path: NodePath<Program>): void {
       ],
       stringLiteral('react-native-worklets/src/workletRegistry')
     )
+  );
+
+  const importPath = path.get('body')[0];
+
+  path.scope.registerBinding(
+    'module',
+    (importPath as NodePath<ImportDeclaration>)
+      .get('specifiers')[0]
+      .get('local')
+  );
+  path.scope.registerBinding(
+    'module',
+    (importPath as NodePath<ImportDeclaration>)
+      .get('specifiers')[1]
+      .get('local')
   );
 
   // if (!hasVisited) {

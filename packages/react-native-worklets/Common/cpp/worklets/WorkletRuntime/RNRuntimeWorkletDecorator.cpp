@@ -1,3 +1,5 @@
+#include <jsi/jsi.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 
 namespace worklets {
@@ -15,6 +17,22 @@ void RNRuntimeWorkletDecorator::decorate(
       rnRuntime,
       "__workletsModuleProxy",
       jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
+
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "__registerWorkletBundle",
+      [&workletsModuleProxy](jsi::Runtime &rt, const jsi::Value &bundleStr) {
+        const auto bundle = bundleStr.asString(rt).utf8(rt);
+        auto &uiRuntime =
+            workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+
+        workletsModuleProxy->getUIScheduler()->scheduleOnUI(
+            [bundle, &uiRuntime] {
+              auto buffer = std::make_shared<jsi::StringBuffer>(bundle);
+              uiRuntime.evaluateJavaScript(buffer, "");
+            });
+        return jsi::Value::undefined();
+      });
 }
 
 } // namespace worklets

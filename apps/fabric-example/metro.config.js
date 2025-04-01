@@ -7,15 +7,16 @@ const {
 } = require('react-native-monorepo-tools');
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 const { cwd } = require('process');
-const { rmSync } = require('fs');
+const { rmSync, writeFileSync, write } = require('fs');
 
 const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
-const filePath = path.resolve(cwd(), 'generatedWorklets.js');
-console.log('Removing file:', filePath);
-rmSync(filePath);
+const filePath = path.resolve(cwd(), 'assets/generatedWorklets.js');
+
+rmSync(filePath, { force: true });
+writeFileSync(filePath, 'export const code = ""');
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -32,8 +33,19 @@ const config = {
       return androidAssetsResolutionFix.applyMiddleware(middleware);
     },
   },
+  resolver: {
+    assetExts: ['txt', 'jpg', 'png', 'gif', 'jpeg', 'svg'],
+  },
 };
 
-module.exports = wrapWithReanimatedMetroConfig(
+const finalConfig = wrapWithReanimatedMetroConfig(
   mergeConfig(getDefaultConfig(__dirname), config)
 );
+
+console.log('finalConfig', finalConfig);
+
+module.exports = finalConfig;
+
+// wrapWithReanimatedMetroConfig(
+//   mergeConfig(getDefaultConfig(__dirname), config)
+// );

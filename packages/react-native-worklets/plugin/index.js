@@ -751,18 +751,30 @@ var require_workletFactory = __commonJS({
         workletFactory.id
       ])));
       const callParams = [initDataId, ...closureVariables];
+      const registerInInitDataRegistry = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.identifier)("globalThis"), (0, types_12.identifier)("__registerWorkletInitData")), [(0, types_12.numericLiteral)(workletHash), initDataId]);
+      const registerInWorkletFactoryRegistry = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.identifier)("globalThis"), (0, types_12.identifier)("__registerWorkletFactory")), [(0, types_12.numericLiteral)(workletHash), workletFactory.id]);
       const newProg = (0, types_12.program)([
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]),
-        workletFactory
+        (0, types_12.expressionStatement)(registerInInitDataRegistry),
+        workletFactory,
+        (0, types_12.expressionStatement)(registerInWorkletFactoryRegistry)
       ]);
+      newProg.dupaProp = true;
       const transformedProg = (_b = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"]
+        presets: ["@babel/preset-typescript"],
+        plugins: [],
+        ast: false,
+        babelrc: false,
+        configFile: false,
+        comments: false
       })) === null || _b === void 0 ? void 0 : _b.code;
-      const outputDir = (0, path_1.join)(state.cwd, "generatedWorklets.js");
-      (0, fs_1.appendFileSync)(outputDir, transformedProg + "\n");
+      const literal = (0, types_12.stringLiteral)(transformedProg);
+      const coddde = (0, generator_1.default)(literal, {}).code;
+      const outputDir = (0, path_1.join)(state.cwd, "assets/generatedWorklets.js");
+      (0, fs_1.appendFileSync)(outputDir, "+\n" + coddde);
       return { factoryParams: callParams, workletHash };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
@@ -885,8 +897,9 @@ var require_workletFactoryCall = __commonJS({
     function makeWorkletFactoryCall(path, state) {
       const { factoryParams, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       const programPath = path.findParent((ancestorPath) => ancestorPath.isProgram());
+      const programPath2 = path.scope.getProgramParent().path;
       (0, assert_1.strict)(programPath, "Program path not found");
-      addWorkletRegistryImports(programPath);
+      addWorkletRegistryImports(programPath, state);
       const workletFactoryCall = (0, types_12.callExpression)((0, types_12.identifier)("__getWorklet"), [
         (0, types_12.numericLiteral)(workletHash),
         ...factoryParams
@@ -907,18 +920,21 @@ var require_workletFactoryCall = __commonJS({
         };
       }
     }
-    function addWorkletRegistryImports(path) {
+    function addWorkletRegistryImports(path, _state) {
       const registerName = "__registerWorkletFactory";
       const invokeFactoryName = "__getWorklet";
       const registerNameBinding = path.scope.getBinding(registerName);
       const invokeFactoryNameBinding = path.scope.getBinding(invokeFactoryName);
-      if (registerNameBinding && invokeFactoryNameBinding) {
+      if (registerNameBinding && invokeFactoryNameBinding || path.node.dupaProp) {
         return;
       }
       path.node.body.unshift((0, types_12.importDeclaration)([
         (0, types_12.importSpecifier)((0, types_12.identifier)(registerName), (0, types_12.identifier)(registerName)),
         (0, types_12.importSpecifier)((0, types_12.identifier)(invokeFactoryName), (0, types_12.identifier)(invokeFactoryName))
       ], (0, types_12.stringLiteral)("react-native-worklets/src/workletRegistry")));
+      const importPath = path.get("body")[0];
+      path.scope.registerBinding("module", importPath.get("specifiers")[0].get("local"));
+      path.scope.registerBinding("module", importPath.get("specifiers")[1].get("local"));
     }
   }
 });
