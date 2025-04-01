@@ -1,6 +1,6 @@
 'use strict';
 
-// import type { WorkletFactory, WorkletInitData } from './workletTypes';
+import type { WorkletFactory, WorkletInitData } from './workletTypes';
 
 let initDataRegistry: Map<number, WorkletInitData> = null!;
 let workletFactoryRegistry: Map<number, WorkletFactory> = null!;
