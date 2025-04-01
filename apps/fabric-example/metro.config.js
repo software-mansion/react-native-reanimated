@@ -4,10 +4,11 @@ const {
 } = require('react-native-reanimated/metro-config');
 const {
   getMetroAndroidAssetsResolutionFix,
+  // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 const { cwd } = require('process');
-const { rmSync, writeFileSync, write } = require('fs');
+const { rmSync, writeFileSync } = require('fs');
 
 const path = require('path');
 
@@ -38,14 +39,6 @@ const config = {
   },
 };
 
-const finalConfig = wrapWithReanimatedMetroConfig(
+module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(getDefaultConfig(__dirname), config)
 );
-
-console.log('finalConfig', finalConfig);
-
-module.exports = finalConfig;
-
-// wrapWithReanimatedMetroConfig(
-//   mergeConfig(getDefaultConfig(__dirname), config)
-// );
