@@ -17,17 +17,10 @@ export const processColor: ValueProcessor<
 > = (value) => {
   let normalizedColor: Maybe<number | string> = null;
 
-  if (typeof value === 'string') {
-    if (value === 'transparent') {
-      normalizedColor = 'transparent';
-    } else {
-      normalizedColor = processColorInternal(value);
-    }
-  } else if (typeof value === 'number') {
-    // case of number format 0xRRGGBBAA format needs to be re-formatted
-    normalizedColor = processColorInternal(
-      `#${value.toString(16).padStart(8, '0')}`
-    );
+  if (typeof value === 'string' && value === 'transparent') {
+    normalizedColor = 'transparent';
+  } else {
+    normalizedColor = processColorInternal(value);
   }
 
   if (!normalizedColor && normalizedColor !== 0) {
