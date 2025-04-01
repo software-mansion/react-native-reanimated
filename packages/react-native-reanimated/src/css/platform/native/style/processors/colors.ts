@@ -7,13 +7,14 @@ import type { Maybe } from '../../../../types';
 import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {
-  invalidColor: (color: Maybe<ColorValue>) =>
+  invalidColor: (color: Maybe<ColorValue | number>) =>
     `Invalid color value: ${String(color)}`,
 };
 
-export const processColor: ValueProcessor<ColorValue, number | string> = (
-  value
-) => {
+export const processColor: ValueProcessor<
+  ColorValue | number,
+  number | string
+> = (value) => {
   let normalizedColor: Maybe<number | string> = null;
 
   if (typeof value === 'string') {
@@ -25,7 +26,7 @@ export const processColor: ValueProcessor<ColorValue, number | string> = (
   } else if (typeof value === 'number') {
     // case of number format 0xRRGGBBAA format needs to be re-formatted
     normalizedColor = processColorInternal(
-      `#${String(value).padStart(8, '0')}`
+      `#${value.toString(16).padStart(8, '0')}`
     );
   }
 
