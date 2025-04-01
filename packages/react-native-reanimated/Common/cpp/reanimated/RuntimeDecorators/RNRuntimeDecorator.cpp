@@ -1,4 +1,5 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <worklets/Tools/ReanimatedVersion.h>
 
 namespace reanimated {
@@ -32,6 +33,13 @@ void RNRuntimeDecorator::decorate(
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG
+
+#if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "_registriesLeakCheck",
+      reanimatedModuleProxy->createRegistriesLeakCheck());
+#endif // defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(

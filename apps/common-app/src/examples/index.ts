@@ -32,6 +32,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FrameCallbackExample from './FrameCallbackExample';
+import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
@@ -155,6 +156,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+  },
+  ReactFreeze: {
+    icon: '❄️',
+    title: 'React freeze',
+    screen: FreezeExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',

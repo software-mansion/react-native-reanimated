@@ -124,6 +124,12 @@ class ReanimatedModuleProxy
 
   void performOperations();
 
+  void markNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper) override;
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag)
+      override;
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
@@ -145,6 +151,10 @@ class ReanimatedModuleProxy
       jsi::Runtime &rt,
       const std::string &propName,
       const ShadowNode::Shared &shadowNode);
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  std::function<std::string()> createRegistriesLeakCheck();
+#endif // IS_REANIMATED_EXAMPLE_APP
 #endif
 
   jsi::Value registerSensor(

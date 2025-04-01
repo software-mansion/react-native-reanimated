@@ -45,8 +45,17 @@ class PropsRegistry {
     return shouldCommitAfterPause_.exchange(false);
   }
 
+  bool isEmpty() {
+    return map_.empty();
+  }
+
+  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void unmarkNodeAsRemovable(Tag viewTag);
+  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
+  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
 
   mutable std::mutex mutex_; // Protects `map_`.
 

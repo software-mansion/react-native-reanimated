@@ -203,7 +203,6 @@ void ReanimatedModuleProxy::init(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      removeFromPropsRegistry,
       obtainProp,
       updateProps,
       measure,
@@ -597,6 +596,20 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+
+void ReanimatedModuleProxy::markNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  propsRegistry_->markNodeAsRemovable(shadowNode);
+}
+
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  propsRegistry_->unmarkNodeAsRemovable(viewTag.asNumber());
+}
+
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -791,15 +804,6 @@ void ReanimatedModuleProxy::performOperations() {
   }
 }
 
-void ReanimatedModuleProxy::removeFromPropsRegistry(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
-  auto array = viewTags.asObject(rt).asArray(rt);
-  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
-    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
-  }
-}
-
 void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
@@ -909,6 +913,30 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler());
   }
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+std::string format(bool b) {
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return std::string("");
+    }
+
+    std::string result = "";
+
+    result += "PropsRegistry: " + format(strongThis->propsRegistry_->isEmpty());
+
+    return result;
+  };
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 #endif // RCT_NEW_ARCH_ENABLED
 

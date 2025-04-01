@@ -45,6 +45,7 @@ declare global {
     value: Record<string, unknown>,
     isSharedTransition: boolean
   ) => void;
+  var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
   var _makeShareableClone: <T>(
@@ -76,7 +77,6 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper:
     | ((viewTag: number | null) => MeasuredDimensions)
     | undefined;

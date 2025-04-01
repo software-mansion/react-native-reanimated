@@ -160,6 +160,30 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
+static jsi::Value REANIMATED_SPEC_PREFIX(markNodeAsRemovable)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->markNodeAsRemovable(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unmarkNodeAsRemovable(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
+
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -196,5 +220,12 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)};
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  methodMap_["markNodeAsRemovable"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
+  methodMap_["unmarkNodeAsRemovable"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
+#endif // RCT_NEW_ARCH_ENABLED
 }
 } // namespace reanimated
