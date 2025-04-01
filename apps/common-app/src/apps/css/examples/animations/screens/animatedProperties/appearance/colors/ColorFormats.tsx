@@ -1,3 +1,4 @@
+import type { ColorValue } from 'react-native';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -14,10 +15,10 @@ export default function ColorsFormats() {
         animationIterationCount: 'infinite',
         animationName: {
           from: {
-            backgroundColor: from,
+            backgroundColor: from as ColorValue,
           },
           to: {
-            backgroundColor: to,
+            backgroundColor: to as ColorValue,
           },
         },
         animationTimingFunction: 'ease-in-out',
