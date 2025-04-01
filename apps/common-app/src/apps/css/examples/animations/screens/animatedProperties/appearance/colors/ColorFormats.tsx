@@ -6,11 +6,11 @@ import { radius, sizes } from '@/theme';
 
 export default function ColorsFormats() {
   return (
-    <ExamplesScreen<{ from: string; to: string }>
+    <ExamplesScreen<{ from: number | string; to: number | string }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
-        animationDuration: '3s',
+        animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationName: {
           from: {
@@ -27,16 +27,6 @@ export default function ColorsFormats() {
       )}
       tabs={[
         {
-          buildAnimation: ({ from, to }) => ({
-            animationDirection: 'alternate',
-            animationDuration: '3s',
-            animationIterationCount: 'infinite',
-            animationName: {
-              from: { backgroundColor: from },
-              to: { backgroundColor: to },
-            },
-            animationTimingFunction: 'ease-in-out',
-          }),
           name: 'Predefined',
           sections: [
             {
@@ -130,6 +120,21 @@ export default function ColorsFormats() {
                   from: 'hwb(311, 15%, 15%)',
                   title: 'HWB',
                   to: 'hwb(221, 25%, 42%)',
+                },
+              ],
+              title: 'HWB',
+            },
+          ],
+        },
+        {
+          name: 'numeric',
+          sections: [
+            {
+              examples: [
+                {
+                  from: 0xff00ffff, // magenta
+                  title: 'HWB',
+                  to: 0xffff, // blue
                 },
               ],
               title: 'HWB',
