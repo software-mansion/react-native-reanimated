@@ -111,6 +111,7 @@ export interface IAnimatedComponentInternal {
   jestAnimatedProps: { value: AnimatedProps };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
+  _hasAnimatedRef: boolean;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
@@ -123,7 +124,6 @@ export interface IAnimatedComponentInternal {
    * It is not related to event handling.
    */
   getComponentViewTag: () => number;
-  hasAnimatedRef: () => boolean;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
