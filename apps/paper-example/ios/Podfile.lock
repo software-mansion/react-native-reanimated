@@ -1356,7 +1356,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.2.0):
+  - react-native-safe-area-context (5.3.0):
     - React-Core
   - react-native-slider (4.5.5):
     - DoubleConversion
@@ -2223,7 +2223,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: aee77f26ccc8ae3846ddede7ed8350680a69b8df
   React-microtasksnativemodule: 84520f194edb907b394e0b65b590404e67cb205c
   react-native-pager-view: 7919d307066a4586ba3ca3514f9ff0fcdc6f1aaf
-  react-native-safe-area-context: 849d7df29ecb2a7155c769c0b76849ba952c2aa3
+  react-native-safe-area-context: f6fd1adb0c0dfb0a528f561c7c6f9297f3391af3
   react-native-slider: 702a78982b34ec61454806f21cf4ed84ef6d92c4
   React-NativeModulesApple: 0b5a823c372c93399cb76c8d183e7a2b7491e5dd
   React-oscompat: c6082f356b7a89f29d011e36aaac7101a0a5c032
@@ -2260,7 +2260,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: dc63cbc7b2f614b8b4526e11ed677b36e92cd9fb
   RNFlashList: 857850f98e3fcb048022ca878b699418bb752371
   RNGestureHandler: f4b38c25a4a61f233589a3d321436360c59eccd1
-  RNReanimated: a9c8eca92cee3d4502a37cece68f58dc4ffa9662
+  RNReanimated: 4dfd429908589990e5c8e5e8dca2666465403d6f
   RNScreens: b44b98aa6f8afe08fd8ecfc1e96e61e7b6a25d60
   RNSVG: 1d73f0c3199936c8e44f4d102d2744f3d258d2fc
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
