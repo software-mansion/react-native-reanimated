@@ -14,7 +14,8 @@ def find_config()
     :is_tvos_target => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
-    :react_native_reanimated_dir_from_pods_root => nil,
+    :dynamic_frameworks_reanimated_dir => nil,
+    :dynamic_frameworks_worklets_dir => nil,
   }
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
@@ -46,7 +47,12 @@ def find_config()
 
   react_native_reanimated_dir_absolute = File.join(__dir__, '..')
   react_native_reanimated_dir_relative = Pathname.new(react_native_reanimated_dir_absolute).relative_path_from(pods_root).to_s
-  result[:react_native_reanimated_dir_from_pods_root] = react_native_reanimated_dir_relative
+  result[:dynamic_frameworks_reanimated_dir] = react_native_reanimated_dir_relative
+
+  react_native_worklets_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native-worklets/package.json')"`), '..')
+  react_native_worklets_dir_absolute = File.join(react_native_worklets_node_modules_dir, 'react-native-worklets')
+  react_native_worklets_dir_relative = Pathname.new(react_native_worklets_dir_absolute).relative_path_from(pods_root).to_s
+  result[:dynamic_frameworks_worklets_dir] = react_native_worklets_dir_relative
 
   return result
 end

@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.1.0):
+  - react-native-safe-area-context (5.2.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1561,7 +1561,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.22.0):
+  - RNGestureHandler (2.24.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1650,7 +1650,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets
     - Yoga
-  - RNSVG (15.11.1):
+  - RNSVG (15.11.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -2006,8 +2006,8 @@ SPEC CHECKSUMS:
   React-jsitracing: 5709cb59ac54922a66002c8c4c5aabfa73bd158b
   React-logger: d2346d2c6056e50941ee0e91db9639188842fe34
   React-Mapbuffer: 42c1c6a2fcfc7993c96fd1540993ec5070fc870f
-  React-microtasksnativemodule: 88c6fca8e4ec000ea9f417df23798ae67bda047c
-  react-native-safe-area-context: b05e627d1ab80b9c22ab628ce6b9986ab9e90947
+  React-microtasksnativemodule: 74040ecf5ffab05e7276a3c73bc6aa423e152c1b
+  react-native-safe-area-context: 3e33e7c43c8b74dba436a5a32651cb8d7064c740
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 89541f2dd4928c7a6e40a01a7771664e1ff61066
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147

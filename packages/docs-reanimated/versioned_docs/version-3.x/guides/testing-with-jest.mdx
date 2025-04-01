@@ -71,6 +71,13 @@ Checking equality of selected styles with current component styles.
 
 Checking equality of all current component styles with expected styles.
 
+#### `expect(component).toHaveAnimatedProps(expectedProps)` <AvailableFrom version={'3.17.2'} />
+
+Checking equality of selected props with current component props.
+
+- `component` - tested component.
+- `expectedProps` - contains expected props of testing component, for example `{ text: 'name' }`.
+
 #### `getDefaultStyle(component)`
 
 Gets all styles of tested component.
@@ -107,6 +114,7 @@ More examples from `react-native-reanimated` repository:
 ## Remarks
 
 - Tests must run with Node 16 or newer.
+- Testing `react-native-svg` props is not supported.
 - If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled in that environment.
 
 ## Recommended testing library

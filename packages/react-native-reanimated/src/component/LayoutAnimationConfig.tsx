@@ -12,7 +12,7 @@ import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 
 export const SkipEnteringContext =
-  createContext<React.MutableRefObject<boolean> | null>(null);
+  createContext<React.RefObject<boolean> | null>(null);
 
 // skipEntering - don't animate entering of children on wrapper mount
 // skipExiting - don't animate exiting of children on wrapper unmount
@@ -30,9 +30,9 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   }, [skipValueRef]);
 
   return (
-    <SkipEnteringContext.Provider value={skipValueRef}>
+    <SkipEnteringContext value={skipValueRef}>
       {props.children}
-    </SkipEnteringContext.Provider>
+    </SkipEnteringContext>
   );
 }
 

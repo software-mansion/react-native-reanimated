@@ -17,8 +17,6 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.source_files = "apple/*.{h,m,mm,cpp}"
-
   s.subspec "worklets" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.header_dir = "worklets"
@@ -50,7 +48,6 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
-      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
@@ -64,6 +61,8 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
+      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/apple\"",
+      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
   }
   

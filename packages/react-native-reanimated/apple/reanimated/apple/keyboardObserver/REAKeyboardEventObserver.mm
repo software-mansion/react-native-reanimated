@@ -6,7 +6,7 @@
 
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
-#import <reanimated/apple/REAUIKit.h>
+#import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 
 typedef NS_ENUM(NSUInteger, KeyboardState) {

@@ -24,6 +24,7 @@ class CSSTransition {
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   folly::dynamic getCurrentInterpolationStyle() const;
+  TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
