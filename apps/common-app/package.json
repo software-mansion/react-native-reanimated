@@ -51,7 +51,7 @@
     "react-native-gesture-handler": "2.24.0",
     "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch",
     "react-native-reanimated": "workspace:*",
-    "react-native-safe-area-context": "5.2.0",
+    "react-native-safe-area-context": "5.3.0",
     "react-native-screens": "4.9.1",
     "react-native-svg": "15.11.2",
     "react-strict-dom": "0.0.27",

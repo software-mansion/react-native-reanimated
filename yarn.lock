@@ -8928,7 +8928,7 @@ __metadata:
     react-native-gesture-handler: "npm:2.24.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.2.0"
+    react-native-safe-area-context: "npm:5.3.0"
     react-native-screens: "npm:4.9.1"
     react-native-svg: "npm:15.11.2"
     react-strict-dom: "npm:0.0.27"
@@ -11522,7 +11522,7 @@ __metadata:
     react-native-gesture-handler: "npm:2.24.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.2.0"
+    react-native-safe-area-context: "npm:5.3.0"
     react-native-screens: "npm:4.9.1"
     react-native-svg: "npm:15.11.2"
     react-test-renderer: "npm:19.0.0"
@@ -17443,7 +17443,7 @@ __metadata:
     react-native-gesture-handler: "npm:2.24.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.2.0"
+    react-native-safe-area-context: "npm:5.3.0"
     react-native-screens: "npm:4.9.1"
     react-native-svg: "npm:15.11.2"
     react-test-renderer: "npm:19.0.0"
@@ -18529,13 +18529,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-safe-area-context@npm:5.2.0":
-  version: 5.2.0
-  resolution: "react-native-safe-area-context@npm:5.2.0"
+"react-native-safe-area-context@npm:5.3.0":
+  version: 5.3.0
+  resolution: "react-native-safe-area-context@npm:5.3.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/0972d6f1e2485b71c148aeabaf9f1bfbc533549c66de7d0ea617f92df0024646324c38dc9062ea0392761b72b0f7b6e605a784c09addce61e105e6737bbde7b0
+  checksum: 10/771abab96577fcdf7ff77835174d58ebb032df06938a99b30d24f192e2c8eb823cec88f289a33b862b7c10f35c6fccc5da02698aadcb2a199741cbf829ee4ea6
   languageName: node
   linkType: hard
 
