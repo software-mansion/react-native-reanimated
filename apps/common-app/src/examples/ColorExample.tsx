@@ -29,7 +29,9 @@ export default function ColorExample() {
   });
 
   const style4 = useAnimatedStyle(() => {
-    return { shadowColor: makeColor(sv.value) };
+    return {
+      boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
+    };
   });
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
@@ -81,13 +83,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: 'lightgray',
-    shadowOffset: {
-      width: 20,
-      height: 20,
-    },
-    shadowRadius: 5,
-    shadowOpacity: 1,
-    shadowColor: 'black',
   },
   buttons: {
     marginTop: 50,
