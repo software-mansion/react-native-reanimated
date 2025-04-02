@@ -6,8 +6,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { IS_WEB } from '@/utils';
-
 function makeColor(x: number) {
   'worklet';
   return `hsl(${Math.round(x * 240)}, 100%, 50%)`;
