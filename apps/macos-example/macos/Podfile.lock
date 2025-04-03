@@ -1561,7 +1561,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.22.0):
+  - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -2035,7 +2035,7 @@ SPEC CHECKSUMS:
   ReactCommon: 33aa3e538f80f05a4d91150f7d704f1accf9b2ec
   RNCAsyncStorage: befba0534e46dee5c3a5a58fe9bcf378c3c616ec
   RNCClipboard: d648682aad40632c1f6e365ce6b66f267b6df034
-  RNGestureHandler: ce289cd724a1a1bf8200bb381eced353f0b8010e
+  RNGestureHandler: c6b441559fe02f0c07fe2720c9103a8532552ce1
   RNReanimated: fa84dc7d86a85014117828d43b6f6f48d258d51f
   RNSVG: a0d6f47aafa401209c2fef7e90fcd44d1f846b9a
   RNWorklets: 94c2f671630f36a081f36d21f41c12fcb5d9ed8e

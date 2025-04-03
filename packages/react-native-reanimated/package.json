@@ -149,7 +149,7 @@
     "react": "19.0.0",
     "react-native": "0.79.0-rc.4",
     "react-native-builder-bob": "0.33.1",
-    "react-native-gesture-handler": "2.22.0",
+    "react-native-gesture-handler": "2.25.0",
     "react-native-web": "0.19.11",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.0.0",
