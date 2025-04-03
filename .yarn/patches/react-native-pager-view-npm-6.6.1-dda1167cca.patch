@@ -1,0 +1,26 @@
+diff --git a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
+index aad38b2bf38cec3bc9fd90301b49b368c483f673..8ec286a78bb4d61313e1f45cc796da844f3b623f 100644
+--- a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
++++ b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
+@@ -37,7 +37,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>(), RNCViewPa
+         return PagerViewViewManagerImpl.NAME
+     }
+ 
+-    override fun receiveCommand(root: NestedScrollableHost, commandId: String?, args: ReadableArray?) {
++    override fun receiveCommand(root: NestedScrollableHost, commandId: String, args: ReadableArray?) {
+         mDelegate.receiveCommand(root, commandId, args)
+     }
+ 
+diff --git a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt b/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
+index 959362c62af06f791088c416e2db8f1629ab63ce..66ad7b60065455766fbcbf47d1a7e356938f3f9e 100644
+--- a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
++++ b/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
+@@ -132,7 +132,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>() {
+                 PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected"))
+     }
+ 
+-    override fun receiveCommand(root: NestedScrollableHost, commandId: String?, args: ReadableArray?) {
++    override fun receiveCommand(root: NestedScrollableHost, commandId: String, args: ReadableArray?) {
+         super.receiveCommand(root, commandId, args)
+         val view = PagerViewViewManagerImpl.getViewPager(root)
+         Assertions.assertNotNull(view)
