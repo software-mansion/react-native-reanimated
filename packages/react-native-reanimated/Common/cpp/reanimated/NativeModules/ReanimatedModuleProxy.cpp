@@ -336,7 +336,6 @@ jsi::Value ReanimatedModuleProxy::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
-  return jsi::Value::undefined();
   auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
     auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
