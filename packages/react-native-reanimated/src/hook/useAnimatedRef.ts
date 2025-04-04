@@ -18,6 +18,7 @@ const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?: FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
@@ -26,6 +27,9 @@ interface MaybeScrollableComponent extends Component {
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (component.getNativeScrollRef) {
     return component.getNativeScrollRef();
+  }
+  if (component.getScrollableNode) {
+    return component.getScrollableNode();
   }
   return component;
 }
