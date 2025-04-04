@@ -6,8 +6,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { IS_WEB } from '@/utils';
-
 function makeColor(x: number) {
   'worklet';
   return `hsl(${Math.round(x * 240)}, 100%, 50%)`;
@@ -31,9 +29,9 @@ export default function ColorExample() {
   });
 
   const style4 = useAnimatedStyle(() => {
-    return IS_WEB
-      ? { boxShadow: `20px 20px 5px ${makeColor(sv.value)}` } // Use boxShadow for web
-      : { shadowColor: makeColor(sv.value) };
+    return {
+      boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
+    };
   });
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
