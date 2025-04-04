@@ -33,7 +33,7 @@ Install [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs
 
 ### Step 2: Add plugins to config file
 
-Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin to your `babel.config.js`.
+Add `@babel/plugin-proposal-export-namespace-from` and Worklets Babel plugin to your `babel.config.js`.
 
 ```js {7,8}
   module.exports = {
@@ -43,14 +43,14 @@ Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin t
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          'react-native-reanimated/plugin',
+          'react-native-worklets/plugin',
       ],
   };
 ```
 
 :::caution
 
-Make sure to list `react-native-reanimated/plugin` last.
+Make sure to list `react-native-worklets/plugin` last.
 
 :::
 
@@ -122,9 +122,9 @@ module.exports = {
 
 ## Web without the Babel plugin
 
-It is possible to use Reanimated without the Babel plugin (`react-native-reanimated/plugin` on the Web, with some additional configuration.
+It is possible to use Reanimated without the Babel plugin (`react-native-worklets/plugin` on the Web, with some additional configuration.
 
-Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
+Reanimated hooks all accept optional dependency arrays. Under the hood, the Worklets Babel plugin inserts these for you.
 
 In order to use Reanimated without a Babel/SWC plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
 
