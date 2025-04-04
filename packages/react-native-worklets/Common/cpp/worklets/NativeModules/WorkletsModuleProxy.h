@@ -20,6 +20,8 @@ class WorkletsModuleProxy
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
       const std::string &valueUnpackerCode,
+      const std::string &cacheInitializerCode,
+      const std::string &workletBundle,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -69,6 +71,8 @@ class WorkletsModuleProxy
 
  private:
   const std::string valueUnpackerCode_;
+  const std::string cacheInitializerCode_;
+  const std::string workletBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

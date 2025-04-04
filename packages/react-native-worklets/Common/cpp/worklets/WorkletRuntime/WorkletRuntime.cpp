@@ -85,7 +85,9 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const std::string &valueUnpackerCode)
+    const std::string &valueUnpackerCode,
+    const std::string &cacheInitializerCode,
+    const std::string &workletBundle)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -107,6 +109,14 @@ WorkletRuntime::WorkletRuntime(
                            .asObject(rt)
                            .asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
+  auto cacheInitializerBuffer = std::make_shared<const jsi::StringBuffer>(
+      "(function(){" + cacheInitializerCode + "}());");
+  auto workletBundleBuffer = std::make_shared<const jsi::StringBuffer>(
+      "(function(){" + workletBundle + "}());");
+  auto preparedCache = rt.prepareJavaScript(cacheInitializerBuffer, "");
+  auto preparedBundle = rt.prepareJavaScript(workletBundleBuffer, "");
+  rt.evaluatePreparedJavaScript(preparedCache);
+  rt.evaluatePreparedJavaScript(preparedBundle);
 }
 
 jsi::Value WorkletRuntime::executeSync(

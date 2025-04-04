@@ -34,7 +34,7 @@ using worklets::WorkletsModuleProxy;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode : (nonnull NSString*) cacheInitializerCode : (nonnull NSString *) workletBundle)
 {
   AssertJavaScriptQueue();
 
@@ -47,6 +47,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   });
 
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
+  std::string cacheInitializerCodeStr = [cacheInitializerCode UTF8String];
+  std::string workletBundleStr = [workletBundle UTF8String];
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
@@ -58,6 +60,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
       valueUnpackerCodeStr,
+      cacheInitializerCodeStr,
+      workletBundleStr,
       jsQueue,
       jsCallInvoker,
       jsScheduler,
