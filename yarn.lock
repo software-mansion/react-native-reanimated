@@ -8816,7 +8816,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
     react-native: "npm:0.79.0-rc.4"
-    react-native-gesture-handler: "npm:2.24.0"
+    react-native-gesture-handler: "npm:2.25.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -11410,7 +11410,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
     react-native: "npm:0.79.0-rc.4"
-    react-native-gesture-handler: "npm:2.24.0"
+    react-native-gesture-handler: "npm:2.25.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -14784,7 +14784,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.1"
-    react-native-gesture-handler: "npm:2.22.0"
+    react-native-gesture-handler: "npm:2.25.0"
     react-native-macos: "npm:0.77.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
@@ -17313,7 +17313,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
     react-native: "npm:0.79.0-rc.4"
-    react-native-gesture-handler: "npm:2.24.0"
+    react-native-gesture-handler: "npm:2.25.0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -18185,9 +18185,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:2.22.0":
-  version: 2.22.0
-  resolution: "react-native-gesture-handler@npm:2.22.0"
+"react-native-gesture-handler@npm:2.25.0":
+  version: 2.25.0
+  resolution: "react-native-gesture-handler@npm:2.25.0"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
@@ -18195,21 +18195,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/8c428bf6c6b5bf0752085d5e5a1659af687ca34962c17019d289cac66573141ee76b0d0a681b5276688068ced69999304455c99d22da28aca8b1c6c606c1af92
-  languageName: node
-  linkType: hard
-
-"react-native-gesture-handler@npm:2.24.0":
-  version: 2.24.0
-  resolution: "react-native-gesture-handler@npm:2.24.0"
-  dependencies:
-    "@egjs/hammerjs": "npm:^2.0.17"
-    hoist-non-react-statics: "npm:^3.3.0"
-    invariant: "npm:^2.2.4"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/e8e97fde1a1a4e776d448870c5a89e53df64836a7a131ba8348712038c4b6ff0a99e59be5702b98d5687a35ba57d260a02a50da9d7702427b62bc7abea2fe687
+  checksum: 10/780c53e90b41c8bc151c5b4dc908386d5709e7b8e5eaf44e8bbadc02b39d7b07ec15c3865e08f30463bd1fbfcac14a79ff8238752712e6f15a0f98b7a658afd3
   languageName: node
   linkType: hard
 
@@ -18374,7 +18360,7 @@ __metadata:
     react: "npm:19.0.0"
     react-native: "npm:0.79.0-rc.4"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
-    react-native-gesture-handler: "npm:2.24.0"
+    react-native-gesture-handler: "npm:2.25.0"
     react-native-is-edge-to-edge: "npm:1.1.7"
     react-native-web: "npm:0.19.13"
     react-test-renderer: "npm:19.0.0"

@@ -1457,7 +1457,7 @@ PODS:
     - React-utils (= 0.77.1)
   - RNCAsyncStorage (2.1.0):
     - React-Core
-  - RNGestureHandler (2.22.0):
+  - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1815,7 +1815,7 @@ SPEC CHECKSUMS:
   FBLazyVector: fd2df0a5df856759698fbfcb236683fe091560e8
   fmt: f6af2d677a106e3e44c9536a4c0c7f03ab53c854
   glog: b7594b792ee4e02ed1f44b01d046ca25fa713e3d
-  RCT-Folly: abec2d7f4af402b4957c44e86ceff8725b23c1b4
+  RCT-Folly: e8b53d8c0d2d9df4a6a8b0a368a1a91fc62a88cb
   RCTDeprecation: 664055db806cce35c3c1b43c84414dd66e117ae6
   RCTRequired: 8dd9159814927f429543a41f8865de5d2adbc07e
   RCTTypeSafety: 607307679a47c17389f01880a55d9357406efdf4
