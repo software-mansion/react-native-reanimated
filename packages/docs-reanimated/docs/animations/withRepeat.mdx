@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # withRepeat
 
-`withRepeat` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
+`withRepeat` is an [animation modifier](/docs/next/fundamentals/glossary#animation-modifier) that lets you repeat an animation given number of times or run it indefinitely.
 
 import RepeatBasic from '@site/src/examples/RepeatBasic';
 import RepeatBasicSrc from '!!raw-loader!@site/src/examples/RepeatBasic';
@@ -49,19 +49,19 @@ enum ReduceMotion {
 
 #### `animation`
 
-An [animation object](/docs/fundamentals/glossary#animation-object) you want to repeat.
+An [animation object](/docs/next/fundamentals/glossary#animation-object) you want to repeat.
 
 #### `numberOfReps` <Optional />
 
 The number of times the animation is going to be repeated. Defaults to `2`.
 
-A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](/docs/core/cancelAnimation) was called.
+A non-positive value (e.g. `0` or `-1`) will cause the animation to repeat indefinitely until it is cancelled or torn down. For example, if the component unmounts or [`cancelAnimation`](/docs/next/core/cancelAnimation) was called.
 
 #### `reverse` <Optional />
 
 Whether the animation should run in reverse every other repetition. Defaults to `false`.
 
-This option only supports [animation functions](/docs/fundamentals/glossary#animation-function) (eg. [`withSpring`](/docs/animations/withSpring)) and doesn't work with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](/docs/animations/withSequence)).
+This option only supports [animation functions](/docs/next/fundamentals/glossary#animation-function) (eg. [`withSpring`](/docs/next/animations/withSpring)) and doesn't work with [animation modifiers](/docs/next/fundamentals/glossary#animation-modifier) (eg. [`withSequence`](/docs/next/animations/withSequence)).
 
 #### `callback` <Optional />
 
@@ -77,7 +77,7 @@ import { useRepeatPlayground } from '@site/src/components/InteractivePlayground'
 
 ### Returns
 
-`withRepeat` returns an [animation object](/docs/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
+`withRepeat` returns an [animation object](/docs/next/fundamentals/glossary#animation-object) which holds the current state of the animation. It can be either assigned directly to a [shared value](/docs/next/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/next/core/useAnimatedStyle).
 
 ## Example
 
@@ -88,7 +88,7 @@ import SequenceWobbleSrc from '!!raw-loader!@site/src/examples/SequenceWobble';
 
 ## Remarks
 
-- The callback passed to the 4th argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+- The callback passed to the 4th argument is automatically [workletized](/docs/next/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/next/fundamentals/glossary#ui-thread).
 
 ## Platform compatibility
 

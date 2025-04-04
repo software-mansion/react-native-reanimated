@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # runOnJS
 
-`runOnJS` lets you asynchronously run non-[workletized](/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
+`runOnJS` lets you asynchronously run non-[workletized](/docs/next/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
 
 `runOnJS` is usually used to update React state either on animation finish or conditionally within a gesture.
 
@@ -34,7 +34,7 @@ function runOnJS<A extends any[], R>(
 
 #### fn
 
-A reference to a function you want to execute on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) from the [UI thread](/docs/fundamentals/glossary#ui-thread). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
+A reference to a function you want to execute on the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread) from the [UI thread](/docs/next/fundamentals/glossary#ui-thread). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
 
 ### Returns
 
@@ -53,7 +53,7 @@ import RunOnJSSrc from '!!raw-loader!@site/src/examples/RunOnJS';
 
 ## Remarks
 
-- Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
+- Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/next/fundamentals/glossary#ui-thread):
 
 <Indent>
 
@@ -71,7 +71,7 @@ withTiming(0, {}, () => {
 
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
 
-- It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
+- It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread), as this has no effect.
 
 ## Platform compatibility
 
