@@ -1,3 +1,4 @@
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 
 namespace worklets {
@@ -15,6 +16,8 @@ void RNRuntimeWorkletDecorator::decorate(
       rnRuntime,
       "__workletsModuleProxy",
       jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
+
+  jsi_utils::installCaches(rnRuntime);
 }
 
 } // namespace worklets

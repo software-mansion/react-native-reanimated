@@ -174,6 +174,8 @@ void WorkletRuntimeDecorator::decorate(
              const jsi::Value *args,
              size_t count) { return jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
+
+  jsi_utils::installCaches(rt);
 }
 
 } // namespace worklets

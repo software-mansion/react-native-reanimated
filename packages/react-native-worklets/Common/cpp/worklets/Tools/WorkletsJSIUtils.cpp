@@ -23,4 +23,30 @@ jsi::Array convertStringToArray(
   return matrix;
 }
 
+void installCaches(jsi::Runtime &rt) {
+  const auto mapPrototype =
+      rt.global().getProperty(rt, "Map").asObject(rt).asFunction(rt);
+
+  rt.global().setProperty(
+      rt, "__workletsCache", mapPrototype.callAsConstructor(rt));
+
+  const auto weakMapPrototype =
+      rt.global().getProperty(rt, "WeakMap").asObject(rt).asFunction(rt);
+
+  rt.global().setProperty(
+      rt, "__handleCache", weakMapPrototype.callAsConstructor(rt));
+
+  rt.global().setProperty(
+      rt, "__shareableMappingCache", weakMapPrototype.callAsConstructor(rt));
+
+  const auto symbolPrototype =
+      rt.global().getProperty(rt, "Symbol").asObject(rt).asFunction(rt);
+
+  rt.global().setProperty(
+      rt,
+      "__shareableMappingFlag",
+      symbolPrototype.call(
+          rt, jsi::String::createFromAscii(rt, "shareable flag")));
+}
+
 } // namespace worklets::jsi_utils
