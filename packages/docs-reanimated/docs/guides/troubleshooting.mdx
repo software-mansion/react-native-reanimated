@@ -13,13 +13,13 @@ Reanimated has four core components that compose its code:
 - C++,
 - Java,
 - JavaScript,
-- Reanimated Babel plugin.
+- Worklets Babel plugin.
 
 All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Reanimated Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
 **Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#step-2-add-reanimateds-babel-plugin for more information.
 
@@ -37,22 +37,22 @@ All of them are supposed to work correctly only within the same minor version. T
    - Web
 3. If you are using Reanimated in a brownfield app, make sure to initialize the native library manually.
 
-### Unknown version of Reanimated Babel plugin
+### Unknown version of Worklets Babel plugin
 
-**Problem:** This happens when JavaScript side of Reanimated fails to get Reanimated Babel plugin version.
+**Problem:** This happens when JavaScript side of Reanimated fails to get Worklets Babel plugin version.
 
 **Solution:**
 
-1. Part of your code might be transpiled with an outdated version of Reanimated Babel plugin. See [Mismatch between JavaScript code version and Reanimated Babel plugin version](#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
+1. Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
 2. You use release bundle with debug build of the app. This is not supported. See [Using dev bundle in release app build is not supported](#using-dev-bundle-in-a-release-app-build-is-not-supported) for more information.
 
-### Mismatch between JavaScript code version and Reanimated Babel plugin version
+### Mismatch between JavaScript code version and Worklets Babel plugin version
 
-**Problem:** This can happen when you use code that was transpiled with an outdated version of Reanimated Babel plugin.
+**Problem:** This can happen when you use code that was transpiled with an outdated version of Worklets Babel plugin.
 
 **Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
-If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
+If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Using dev bundle in a release app build is not supported
 
@@ -74,11 +74,11 @@ If this didn't help, you probably have a dependency that contains already transf
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated) and [Unknown version of Reanimated Babel plugin](#unknown-version-of-reanimated-babel-plugin).
+See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated) and [Unknown version of Worklets Babel plugin](#unknown-version-of-reanimated-babel-plugin).
 
 ### Mismatch between C++ code version and JavaScript code version
 
-See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-between-javascript-part-and-native-part-of-reanimated] and (Mismatch between JavaScript code version and Reanimated Babel plugin version)[#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version].
+See (Mismatch between JavaScript part and native part of Reanimated)[#mismatch-between-javascript-part-and-native-part-of-reanimated] and (Mismatch between JavaScript code version and Worklets Babel plugin version)[#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version].
 
 ### C++ side failed to resolve Java code version
 

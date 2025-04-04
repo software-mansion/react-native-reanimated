@@ -4,7 +4,7 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
-# Options for Reanimated Babel Plugin
+# Options for Worklets Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
@@ -39,7 +39,7 @@ module.exports = {
   plugins: [
     ...
     [
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
       {
         relativeSourceLocation: true,
         disableInlineStylesWarning: true,
@@ -188,7 +188,7 @@ JS THREAD
 
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/3.14.0/packages/react-native-reanimated/plugin/src/globals.ts).
+There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
 
 ### substituteWebPlatformChecks
 
@@ -204,8 +204,8 @@ This option turns off the source map generation for worklets. Mostly used for te
 
 ### extraPlugins
 
-This is a list of Babel plugins that will be used when transforming worklets' code with Reanimated Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
 
 ### extraPresets
 
-This is a list of Babel presets that will be used when transforming worklets' code with Reanimated Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.

@@ -4,11 +4,11 @@ title: 'About'
 sidebar_label: 'About'
 ---
 
-# Reanimated Babel Plugin
+# Worklets Babel Plugin
 
-## What is Reanimated Babel Plugin?
+## What is Worklets Babel Plugin?
 
-The Reanimated Babel Plugin transforms your code so that it can run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/next/fundamentals/glossary#to-workletize).
+The Worklets Babel Plugin transforms your code so that it can run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/next/fundamentals/glossary#to-workletize).
 
 In short, a worklet is:
 
@@ -38,7 +38,7 @@ useAnimatedStyle(() => {
 
 ### JavaScript terms
 
-Reanimated Babel Plugin supports the following terms as worklets:
+Worklets Babel Plugin supports the following terms as worklets:
 
 #### Function Declarations
 
@@ -152,7 +152,7 @@ runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
 
 ## Autoworkletization
 
-To reduce boilerplate code and provide a safer API, Reanimated Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+To reduce boilerplate code and provide a safer API, Worklets Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
 ```ts
 const style = useAnimatedStyle(() => {
@@ -164,7 +164,7 @@ const style = useAnimatedStyle(() => {
 });
 ```
 
-This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
@@ -295,4 +295,4 @@ function foo() {
 
 ## Notes
 
-Babel is a powerful tool that can be explored to implement numerous useful features. If you feel like Reanimated Babel plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
+Babel is a powerful tool that can be explored to implement numerous useful features. If you feel like Worklets Babel plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
