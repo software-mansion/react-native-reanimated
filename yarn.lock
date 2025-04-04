@@ -16998,7 +16998,7 @@ __metadata:
     react: "npm:19.0.0"
     react-dom: "npm:19.0.0"
     react-native-reanimated: "workspace:*"
-    react-native-web: "npm:^0.20.0"
+    react-native-web: "npm:0.20.0"
     react-native-worklets: "workspace:*"
     start-server-and-test: "npm:^2.0.1"
   languageName: unknown
@@ -18727,7 +18727,7 @@ __metadata:
     react-native-builder-bob: "npm:0.33.1"
     react-native-gesture-handler: "npm:2.25.0"
     react-native-is-edge-to-edge: "npm:1.1.6"
-    react-native-web: "npm:^0.20.0"
+    react-native-web: "npm:0.20.0"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.0.0"
     shelljs: "npm:^0.8.5"
@@ -18778,7 +18778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-web@npm:0.20.0, react-native-web@npm:^0.20.0":
+"react-native-web@npm:0.20.0":
   version: 0.20.0
   resolution: "react-native-web@npm:0.20.0"
   dependencies:
