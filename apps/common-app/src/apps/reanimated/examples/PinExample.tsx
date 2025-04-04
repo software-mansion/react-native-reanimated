@@ -1,15 +1,9 @@
 import React from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import {
-  Gesture,
-  GestureDetector,
-  PanGestureHandler,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
