@@ -30,7 +30,8 @@
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
-    "build": "yarn workspace react-native-worklets build && bob build",
+    "build": "yarn workspace react-native-worklets build && bob build && yarn build:preworkletized",
+    "build:preworkletized": "yarn babel --out-dir lib/preworkletized --config-file ../react-native-worklets/preworkletized.babel.config.js --extensions \".js,.jsx\" --source-maps true lib/module",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
     "use-strict-check": "node ../../scripts/validate-use-strict.js",
     "prepack": "cp ../../README.md ./README.md",
@@ -40,6 +41,7 @@
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
+  "preworkletized": "lib/preworkletized/index",
   "types": "lib/typescript/index.d.ts",
   "files": [
     "Common/",
