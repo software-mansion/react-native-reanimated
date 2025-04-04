@@ -28,7 +28,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame)
+        &&forwardedRequestAnimationFrame,
+        std::function<void(std::string, std::string, std::function<void(std::string)>)> &&forwardedFetch)
     : WorkletsModuleProxySpec(jsCallInvoker),
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
@@ -46,7 +47,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           std::move(forwardedRequestAnimationFrame))) {
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
-      animationFrameBatchinator_->getJsiRequestAnimationFrame());
+      animationFrameBatchinator_->getJsiRequestAnimationFrame(),
+    std::move(forwardedFetch));
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
