@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import React, { useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -16,20 +15,6 @@ function randBetween(min: number, max: number) {
 }
 
 function Circle() {
-  if (
-    !globalThis.__registeredWorkletBundle &&
-    globalThis.__registerWorkletBundle
-  ) {
-    console.log(globalThis.__registerWorkletBundle);
-
-    console.log('loading cache');
-    const caches = require('./assets/caches.js').code;
-    console.log('loading bundle');
-    const bundle = require('./assets/generatedWorklets.js').code;
-    __registerWorkletBundle(caches);
-    __registerWorkletBundle(bundle);
-    globalThis.__registeredWorkletBundle = true;
-  }
   const shouldReduceMotion = useReducedMotion();
 
   const [power] = useState(randBetween(0, 1));

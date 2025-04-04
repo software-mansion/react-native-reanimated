@@ -21,19 +21,18 @@ function valueUnpacker(
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     if (globalThis.__getWorklet && globalThis._log) {
-      globalThis._log('Trying __getWorklet');
-      globalThis._log(globalThis.__getWorklet);
-      const args = [
-        workletHash,
-        objectToUnpack.__initData,
-        ...Object.values(objectToUnpack.__closure),
-      ];
-      globalThis._log(args);
-      return globalThis.__getWorklet(
-        workletHash,
-        objectToUnpack.__initData,
-        ...Object.values(objectToUnpack.__closure)
-      );
+      try {
+        const worklet = globalThis.__getWorklet(
+          workletHash,
+          objectToUnpack.__initData,
+          ...Object.values(objectToUnpack.__closure)
+        );
+        return worklet;
+      } catch (e) {
+        globalThis._log('Error in __getWorklet');
+        globalThis._log(e);
+        return undefined;
+      }
     }
     let workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {

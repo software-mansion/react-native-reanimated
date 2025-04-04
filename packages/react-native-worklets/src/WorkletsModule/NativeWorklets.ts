@@ -19,7 +19,15 @@ class NativeWorklets {
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
       const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+      const cacheInitializerCode = getCacheInitializerCode();
+      const workletBundleCode = getWorkletBundleCode();
+      WorkletsTurboModule?.installTurboModule(
+        valueUnpackerCode,
+        cacheInitializerCode,
+        // '',
+        workletBundleCode
+        // ''
+      );
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -64,5 +72,21 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       workletRuntime,
       shareableWorklet
     );
+  }
+}
+
+function getCacheInitializerCode(): string {
+  try {
+    return require('react-native-worklets/caches.js').code;
+  } catch (e) {
+    return '';
+  }
+}
+
+function getWorkletBundleCode(): string {
+  try {
+    return require('react-native-worklets/generatedWorklets.js').code;
+  } catch (e) {
+    return '';
   }
 }

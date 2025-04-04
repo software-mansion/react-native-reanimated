@@ -1,3 +1,4 @@
+const { exec } = require('shelljs');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
@@ -7,17 +8,28 @@ const {
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
-const { cwd } = require('process');
 const { rmSync, writeFileSync } = require('fs');
-
 const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
-const filePath = path.resolve(cwd(), 'assets/generatedWorklets.js');
+const filePath = path.resolve(
+  path.dirname(require.resolve('react-native-worklets/package.json')),
+  'generatedWorklets.js'
+);
+
+console.log(filePath);
 
 rmSync(filePath, { force: true });
 writeFileSync(filePath, 'export const code = ""');
+
+let hasInitialized = false;
+
+function initialize() {
+  exec(
+    'yarn react-native bundle --reset-cache --entry-file index.js  --bundle-output /dev/null --dev true --platform ios --minify false'
+  );
+}
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -33,9 +45,15 @@ const config = {
     enhanceMiddleware: (middleware) => {
       return androidAssetsResolutionFix.applyMiddleware(middleware);
     },
-  },
-  resolver: {
-    assetExts: ['txt', 'jpg', 'png', 'gif', 'jpeg', 'svg'],
+    rewriteRequestUrl: (url) => {
+      // To get the whole bundle on initial load.
+      if (!hasInitialized) {
+        initialize();
+        hasInitialized = true;
+      }
+
+      return url;
+    },
   },
 };
 

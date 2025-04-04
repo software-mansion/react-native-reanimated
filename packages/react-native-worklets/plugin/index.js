@@ -773,16 +773,20 @@ var require_workletFactory = __commonJS({
       })) === null || _b === void 0 ? void 0 : _b.code;
       const literal = (0, types_12.stringLiteral)(transformedProg);
       const coddde = (0, generator_1.default)(literal, {}).code;
-      const outputDir = (0, path_1.join)(state.cwd, "assets/generatedWorklets.js");
-      (0, fs_1.appendFileSync)(outputDir, "+\n" + coddde);
+      const outputPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generatedWorklets.js");
+      console.log(outputPath);
+      try {
+        (0, fs_1.appendFileSync)(outputPath, "+\n" + coddde);
+      } catch (_e) {
+      }
       return { factoryParams: callParams, workletHash };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
       fun.traverse({
-        DirectiveLiteral(path) {
-          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
-            path.parentPath.remove();
+        DirectiveLiteral(nodePath) {
+          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
+            nodePath.parentPath.remove();
           }
         }
       });

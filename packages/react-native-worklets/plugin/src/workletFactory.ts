@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { transformFromAst, transformFromAstSync, traverse } from '@babel/core';
+import { transformFromAstSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
   File as BabelFile,
-  FunctionExpression,
   Identifier,
   ReturnStatement,
   VariableDeclaration,
@@ -17,7 +16,6 @@ import {
   callExpression,
   cloneNode,
   expressionStatement,
-  file,
   functionDeclaration,
   functionExpression,
   identifier,
@@ -43,7 +41,7 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 import { appendFileSync } from 'fs';
-import { basename, join, relative } from 'path';
+import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
 import { workletTransformSync } from './transform';
@@ -416,17 +414,30 @@ export function makeWorkletFactory(
 
   const coddde = generate(literal, {}).code;
 
-  const outputDir = join(state.cwd, 'assets/generatedWorklets.js');
-  appendFileSync(outputDir, '+\n' + coddde);
+  const outputPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    'generatedWorklets.js'
+  );
+
+  console.log(outputPath);
+
+  try {
+    appendFileSync(outputPath, '+\n' + coddde);
+  } catch (_e) {
+    // Nothing.
+  }
 
   return { factoryParams: callParams, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });
