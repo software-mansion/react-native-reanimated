@@ -5193,13 +5193,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-community/slider@npm:4.5.5":
-  version: 4.5.5
-  resolution: "@react-native-community/slider@npm:4.5.5"
-  checksum: 10/8c49f7e0b7d7c37b91c936805106e88ee31011dc210d5c237c07e35d330870536b560b48e6212195fffc2e2706b16c31715b6cebbb2cc33127702bff9850f134
-  languageName: node
-  linkType: hard
-
 "@react-native-mac/virtualized-lists@npm:0.75.0":
   version: 0.75.0
   resolution: "@react-native-mac/virtualized-lists@npm:0.75.0"
@@ -9175,7 +9168,6 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native-community/cli-platform-android": "npm:15.0.1"
     "@react-native-community/cli-platform-ios": "npm:15.0.1"
-    "@react-native-community/slider": "npm:4.5.5"
     "@react-native-masked-view/masked-view": "npm:0.3.2"
     "@react-native/babel-preset": "npm:0.78.0"
     "@react-native/eslint-config": "npm:0.78.0"
