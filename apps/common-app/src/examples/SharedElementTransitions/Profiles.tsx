@@ -8,7 +8,6 @@ import {
   Dimensions,
   Image,
   FlatList,
-  StatusBar,
   Platform,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -24,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
+import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 
 const leavesBackground = require('./assets/nature/leaves.jpg');
 
@@ -96,7 +96,6 @@ function ProfilesScreen({
 
   return (
     <View style={profilesStyles.container}>
-      <StatusBar barStyle={'light-content'} />
       <Image source={leavesBackground} style={profilesStyles.backgroundImage} />
       <Text style={profilesStyles.header}>Welcome back!</Text>
       <View style={commonStyles.row}>
@@ -228,8 +227,6 @@ function HomeScreen({
 
   return (
     <View style={homeStyles.container}>
-      <StatusBar barStyle={'dark-content'} />
-
       <View style={homeStyles.headerContainer}>
         <Pressable
           style={homeStyles.pressable}
@@ -411,7 +408,6 @@ function DetailsScreen({
 
   return (
     <>
-      <StatusBar barStyle={'dark-content'} />
       <GestureDetector gesture={pan}>
         <Animated.View style={[detailStyles.container, animatedStyle]}>
           <Animated.Image
@@ -513,27 +509,36 @@ export default function ProfilesExample() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="Profiles"
-        component={ProfilesScreen}
-        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
-      />
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
-      />
-      <Stack.Screen
-        name="Details"
-        component={DetailsScreen}
-        options={{
-          animation: 'fade',
-          presentation: 'transparentModal',
-          headerShown: false,
-        }}
-      />
-    </Stack.Navigator>
+    <GestureDetectorProvider>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="Profiles"
+          component={ProfilesScreen}
+          options={{
+            animation: shouldReduceMotion ? 'fade' : 'default',
+            statusBarStyle: 'light-content',
+          }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            animation: shouldReduceMotion ? 'fade' : 'default',
+            statusBarStyle: 'dark-content',
+          }}
+        />
+        <Stack.Screen
+          name="Details"
+          component={DetailsScreen}
+          options={{
+            animation: 'fade',
+            presentation: 'transparentModal',
+            headerShown: false,
+            statusBarStyle: 'dark-content',
+          }}
+        />
+      </Stack.Navigator>
+    </GestureDetectorProvider>
   );
 }
 
