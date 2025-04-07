@@ -30,21 +30,33 @@ It takes two steps to add Reanimated 4 to an Expo project:
 
 Install `react-native-reanimated@next` and `react-native-worklets` packages from npm:
 
-:::note
-
-`react-native-worklets` is currently a required dependency. It was separated from `react-native-reanimated` for better modularity.
-
-:::
-
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    {/* TODO (for the future) - add information to specify a proper version of react-native-worklets during installation, compatible with the version of Reanimated */}
-    npm install react-native-reanimated@next react-native-worklets
+
+    npm install react-native-reanimated@next
 
   </TabItem>
   <TabItem value="yarn" label="YARN">
 
     yarn add react-native-reanimated@next
+
+  </TabItem>
+</Tabs>
+
+#### Dependencies
+
+This library requires an installation of the `react-native-worklets` dependency. It was separated from `react-native-reanimated` for better modularity and must be installed separately.
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+    {/* TODO - add information about the necessity to specify a proper version of the library compatible with reanimated */}
+
+    npm install react-native-worklets
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn add react-native-worklets
 
   </TabItem>
 </Tabs>
