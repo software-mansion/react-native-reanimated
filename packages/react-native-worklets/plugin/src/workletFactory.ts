@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
+import { transformFromAstSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
   File as BabelFile,
-  FunctionExpression,
   Identifier,
   ReturnStatement,
   VariableDeclaration,
@@ -14,8 +13,10 @@ import {
   arrayExpression,
   assignmentExpression,
   blockStatement,
+  callExpression,
   cloneNode,
   expressionStatement,
+  functionDeclaration,
   functionExpression,
   identifier,
   isBlockStatement,
@@ -31,6 +32,7 @@ import {
   numericLiteral,
   objectExpression,
   objectProperty,
+  program,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -38,7 +40,8 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { appendFileSync } from 'fs';
+import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
 import { workletTransformSync } from './transform';
@@ -54,7 +57,10 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): FunctionExpression {
+): {
+  factoryParams: Identifier[];
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -92,7 +98,15 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+
+  const params = closureVariables.map((variable) =>
+    fun.scope.generateUidIdentifier(variable.name)
+  );
+
+  closureVariables.forEach((_variable, id) => {
+    fun.scope.rename(closureVariables[id].name, params[id].name, fun.node);
+  });
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -110,7 +124,7 @@ export function makeWorkletFactory(
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    variables,
+    closureVariables,
     workletName,
     transformed.map
   );
@@ -118,13 +132,13 @@ export function makeWorkletFactory(
   const workletHash = hash(funString);
 
   let lineOffset = 1;
-  if (variables.length > 0) {
+  if (closureVariables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
     // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
-    lineOffset -= variables.length + 2;
+    lineOffset -= closureVariables.length + 2;
   }
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
@@ -185,13 +199,6 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
-  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -213,7 +220,7 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          variables.map((variable) =>
+          closureVariables.map((variable, id) =>
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -227,7 +234,12 @@ export function makeWorkletFactory(
                     identifier(variable.name)
                   )
                 )
-              : objectProperty(identifier(variable.name), variable, false, true)
+              : objectProperty(
+                  identifier(variable.name),
+                  identifier(params[id].name),
+                  false,
+                  true
+                )
           )
         )
       )
@@ -255,7 +267,7 @@ export function makeWorkletFactory(
             identifier('__initData'),
             false
           ),
-          initDataId
+          identifier('_' + initDataId.name)
         )
       )
     );
@@ -294,16 +306,138 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const newFun = functionExpression(undefined, [], blockStatement(statements));
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
 
-  return newFun;
+  const factoryParams = [identifier('_' + initDataId.name), ...params];
+
+  const workletFactory = functionDeclaration(
+    identifier(workletName + 'Factory'),
+    factoryParams,
+    blockStatement(statements)
+  );
+
+  pathForStringDefinitions.insertBefore(workletFactory);
+
+  pathForStringDefinitions.insertBefore(
+    expressionStatement(
+      callExpression(identifier('__registerWorkletFactory'), [
+        numericLiteral(workletHash),
+        workletFactory.id!,
+      ])
+    )
+  );
+
+  // pathForStringDefinitions.insertBefore(
+  //   expressionStatement(
+  //     callExpression(
+  //       memberExpression(
+  //         callExpression(identifier('require'), [
+  //           stringLiteral('react-native-worklets'),
+  //         ]),
+  //         identifier('__registerWorkletFactory')
+  //       ),
+  //       [numericLiteral(workletHash), workletFactory.id!]
+  //     )
+  //   )
+  // );
+
+  // pathForStringDefinitions.insertBefore(
+  //   expressionStatement(
+  //     callExpression(
+  //       memberExpression(
+  //         identifier('globalThis'),
+  //         identifier('__registerWorkletFactory')
+  //       ),
+  //       [numericLiteral(workletHash), workletFactory.id!]
+  //     )
+  //   )
+  // );
+
+  const callParams = [initDataId, ...closureVariables];
+
+  const registerInInitDataRegistry = callExpression(
+    // identifier('__registerWorkletInitData'),
+    memberExpression(
+      identifier('globalThis'),
+      identifier('__registerWorkletInitData')
+    ),
+    [numericLiteral(workletHash), initDataId]
+  );
+  const registerInWorkletFactoryRegistry = callExpression(
+    // identifier('__registerWorkletFactory'),
+    memberExpression(
+      identifier('globalThis'),
+      identifier('__registerWorkletFactory')
+    ),
+    [numericLiteral(workletHash), workletFactory.id!]
+  );
+
+  const newProg = program([
+    variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]),
+    expressionStatement(registerInInitDataRegistry),
+    workletFactory,
+    expressionStatement(registerInWorkletFactoryRegistry),
+  ]);
+
+  // @ts-expect-error wwww
+  newProg.dupaProp = true;
+
+  const transformedProg = transformFromAstSync(newProg, undefined, {
+    filename: state.file.opts.filename,
+    presets: ['@babel/preset-typescript'],
+    plugins: [],
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
+  })?.code;
+
+  const literal = stringLiteral(transformedProg!);
+
+  // const decl = variableDeclaration('const', [
+  //   variableDeclarator(
+  //     identifier(workletName),
+  //     callExpression(
+  //       memberExpression(identifier('globalThis'), identifier(workletName)),
+  //       [literal]
+  //     )
+  //   ),
+  // ]);
+
+  const coddde = generate(literal, {}).code;
+
+  const outputPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    'generatedWorklets.js'
+  );
+
+  console.log(outputPath);
+
+  try {
+    appendFileSync(outputPath, '+\n' + coddde);
+  } catch (_e) {
+    // Nothing.
+  }
+
+  return { factoryParams: callParams, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });
