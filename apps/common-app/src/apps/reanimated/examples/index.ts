@@ -110,7 +110,6 @@ import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
