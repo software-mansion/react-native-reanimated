@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 
 function makeColor(x: number) {
   'worklet';
@@ -31,7 +32,7 @@ export default function ColorExample() {
   const style4 = useAnimatedStyle(() => {
     return {
       boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
-    };
+    } as DefaultStyle;
   });
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
