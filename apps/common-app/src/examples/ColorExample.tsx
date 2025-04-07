@@ -29,7 +29,9 @@ export default function ColorExample() {
   });
 
   const style4 = useAnimatedStyle(() => {
-    return { shadowColor: makeColor(sv.value) };
+    return {
+      boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
+    };
   });
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
