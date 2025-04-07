@@ -23,7 +23,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
-import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
 
 const leavesBackground = require('./assets/nature/leaves.jpg');
 
@@ -509,36 +508,34 @@ export default function ProfilesExample() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <GestureDetectorProvider>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen
-          name="Profiles"
-          component={ProfilesScreen}
-          options={{
-            animation: shouldReduceMotion ? 'fade' : 'default',
-            statusBarStyle: 'light-content',
-          }}
-        />
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            animation: shouldReduceMotion ? 'fade' : 'default',
-            statusBarStyle: 'dark-content',
-          }}
-        />
-        <Stack.Screen
-          name="Details"
-          component={DetailsScreen}
-          options={{
-            animation: 'fade',
-            presentation: 'transparentModal',
-            headerShown: false,
-            statusBarStyle: 'dark-content',
-          }}
-        />
-      </Stack.Navigator>
-    </GestureDetectorProvider>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="Profiles"
+        component={ProfilesScreen}
+        options={{
+          animation: shouldReduceMotion ? 'fade' : 'default',
+          statusBarStyle: 'light',
+        }}
+      />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          animation: shouldReduceMotion ? 'fade' : 'default',
+          statusBarStyle: 'dark',
+        }}
+      />
+      <Stack.Screen
+        name="Details"
+        component={DetailsScreen}
+        options={{
+          animation: 'fade',
+          presentation: 'transparentModal',
+          headerShown: false,
+          statusBarStyle: 'dark',
+        }}
+      />
+    </Stack.Navigator>
   );
 }
 
