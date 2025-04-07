@@ -456,6 +456,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🙆‍♂️',
     title: 'Profiles',
     screen: ProfilesExample,
+    missingOnFabric: true,
   },
   VolumeExample: {
     icon: '🎧',
