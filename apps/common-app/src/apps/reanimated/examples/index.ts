@@ -437,11 +437,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
-  },
   MatrixExample: {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',

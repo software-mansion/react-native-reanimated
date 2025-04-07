@@ -19,7 +19,6 @@
     "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "2.1.0",
     "@react-native-clipboard/clipboard": "^1.15.0",
-    "@react-native-community/slider": "4.5.5",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/drawer": "^7.1.1",
