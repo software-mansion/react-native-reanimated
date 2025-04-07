@@ -207,7 +207,8 @@ export default class AnimatedComponent<
 
     return (
       <ChildComponent
-        {...(props ?? this.props)}
+        {...this.props}
+        {...props}
         {...platformProps}
         style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
