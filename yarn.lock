@@ -3726,7 +3726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-runtime@npm:~4.0.1":
+"@expo/metro-runtime@npm:~4.0.0":
   version: 4.0.1
   resolution: "@expo/metro-runtime@npm:4.0.1"
   peerDependencies:
@@ -11777,7 +11777,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo@npm:^52.0.42":
+"expo@npm:^52.0.4":
   version: 52.0.44
   resolution: "expo@npm:52.0.44"
   dependencies:
@@ -21671,10 +21671,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "web-example@workspace:apps/web-example"
   dependencies:
-    "@expo/metro-runtime": "npm:~4.0.1"
+    "@expo/metro-runtime": "npm:~4.0.0"
     "@stylexjs/babel-plugin": "npm:^0.10.0"
     common-app: "workspace:*"
-    expo: "npm:^52.0.42"
+    expo: "npm:^52.0.4"
     prettier: "npm:^3.3.3"
     react-dom: "npm:19.0.0"
     react-native: "npm:0.78.0"
