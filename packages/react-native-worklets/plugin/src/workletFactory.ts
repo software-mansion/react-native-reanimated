@@ -54,7 +54,7 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { workletFactory: FunctionExpression; closureVariables: Identifier[] } {
+): { factory: FunctionExpression; factoryCallArgs: Identifier[] } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -93,14 +93,6 @@ export function makeWorkletFactory(
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
   const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
-
-  const params = closureVariables.map((variable) =>
-    fun.scope.generateUidIdentifier(variable.name)
-  );
-
-  closureVariables.forEach((_variable, id) => {
-    fun.scope.rename(closureVariables[id].name, params[id].name, fun.node);
-  });
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -221,7 +213,7 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          closureVariables.map((variable, id) =>
+          closureVariables.map((variable) =>
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -236,8 +228,8 @@ export function makeWorkletFactory(
                   )
                 )
               : objectProperty(
-                  identifier(variable.name),
-                  identifier(params[id].name),
+                  cloneNode(variable, true),
+                  cloneNode(variable, true),
                   false,
                   true
                 )
@@ -268,7 +260,7 @@ export function makeWorkletFactory(
             identifier('__initData'),
             false
           ),
-          initDataId
+          cloneNode(initDataId, true)
         )
       )
     );
@@ -307,13 +299,23 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const workletFactory = functionExpression(
+  const factoryParams = [
+    cloneNode(initDataId, true),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+  ];
+
+  const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    params,
+    factoryParams,
     blockStatement(statements)
   );
 
-  return { workletFactory, closureVariables };
+  const factoryCallArgs = [
+    identifier(initDataId.name),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+  ];
+
+  return { factory, factoryCallArgs };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
@@ -444,7 +446,7 @@ function makeArrayFromCapturedBindings(
         }
         currentScope = currentScope.parent;
       }
-      closure.set(name, path.node);
+      closure.set(name, cloneNode(path.node, true));
       isLocationAssignedMap.set(name, false);
     },
   });

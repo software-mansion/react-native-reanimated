@@ -1,3 +1,1664 @@
-"use strict";var st=Object.create;var ge=Object.defineProperty;var at=Object.getOwnPropertyDescriptor;var lt=Object.getOwnPropertyNames;var ct=Object.getPrototypeOf,ut=Object.prototype.hasOwnProperty;var p=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports);var dt=(e,t,r,i)=>{if(t&&typeof t=="object"||typeof t=="function")for(let n of lt(t))!ut.call(e,n)&&n!==r&&ge(e,n,{get:()=>t[n],enumerable:!(i=at(t,n))||i.enumerable});return e};var P=(e,t,r)=>(r=e!=null?st(ct(e)):{},dt(t||!e||!e.__esModule?ge(r,"default",{value:e,enumerable:!0}):r,e));var Oe=p(C=>{"use strict";Object.defineProperty(C,"__esModule",{value:!0});C.isGestureObjectEventCallbackMethod=C.isGestureHandlerEventCallback=C.gestureHandlerBuilderMethods=void 0;var x=require("@babel/types"),ft=new Set(["Tap","Pan","Pinch","Rotation","Fling","LongPress","ForceTouch","Native","Manual","Race","Simultaneous","Exclusive","Hover"]);C.gestureHandlerBuilderMethods=new Set(["onBegin","onStart","onEnd","onFinalize","onUpdate","onChange","onTouchesDown","onTouchesMove","onTouchesUp","onTouchesCancelled"]);function pt(e){return(0,x.isCallExpression)(e.parent)&&(0,x.isExpression)(e.parent.callee)&&_e(e.parent.callee)}C.isGestureHandlerEventCallback=pt;function _e(e){return(0,x.isMemberExpression)(e)&&(0,x.isIdentifier)(e.property)&&C.gestureHandlerBuilderMethods.has(e.property.name)&&ve(e.object)}C.isGestureObjectEventCallbackMethod=_e;function ve(e){return!!(mt(e)||(0,x.isCallExpression)(e)&&(0,x.isMemberExpression)(e.callee)&&ve(e.callee.object))}function mt(e){return(0,x.isCallExpression)(e)&&(0,x.isMemberExpression)(e.callee)&&(0,x.isIdentifier)(e.callee.object)&&e.callee.object.name==="Gesture"&&(0,x.isIdentifier)(e.callee.property)&&ft.has(e.callee.property.name)}});var Ie=p(Y=>{"use strict";Object.defineProperty(Y,"__esModule",{value:!0});Y.isLayoutAnimationCallback=void 0;var W=require("@babel/types"),bt=new Set(["BounceIn","BounceInDown","BounceInLeft","BounceInRight","BounceInUp","BounceOut","BounceOutDown","BounceOutLeft","BounceOutRight","BounceOutUp","FadeIn","FadeInDown","FadeInLeft","FadeInRight","FadeInUp","FadeOut","FadeOutDown","FadeOutLeft","FadeOutRight","FadeOutUp","FlipInEasyX","FlipInEasyY","FlipInXDown","FlipInXUp","FlipInYLeft","FlipInYRight","FlipOutEasyX","FlipOutEasyY","FlipOutXDown","FlipOutXUp","FlipOutYLeft","FlipOutYRight","LightSpeedInLeft","LightSpeedInRight","LightSpeedOutLeft","LightSpeedOutRight","PinwheelIn","PinwheelOut","RollInLeft","RollInRight","RollOutLeft","RollOutRight","RotateInDownLeft","RotateInDownRight","RotateInUpLeft","RotateInUpRight","RotateOutDownLeft","RotateOutDownRight","RotateOutUpLeft","RotateOutUpRight","SlideInDown","SlideInLeft","SlideInRight","SlideInUp","SlideOutDown","SlideOutLeft","SlideOutRight","SlideOutUp","StretchInX","StretchInY","StretchOutX","StretchOutY","ZoomIn","ZoomInDown","ZoomInEasyDown","ZoomInEasyUp","ZoomInLeft","ZoomInRight","ZoomInRotate","ZoomInUp","ZoomOut","ZoomOutDown","ZoomOutEasyDown","ZoomOutEasyUp","ZoomOutLeft","ZoomOutRight","ZoomOutRotate","ZoomOutUp"]),yt=new Set(["Layout","LinearTransition","SequencedTransition","FadingTransition","JumpingTransition","CurvedTransition","EntryExitTransition"]),he=new Set([...bt,...yt]),kt=new Set(["build","duration","delay","getDuration","randomDelay","getDelay","getDelayFunction"]),gt=new Set(["easing","rotate","springify","damping","mass","stiffness","overshootClamping","restDisplacementThreshold","restSpeedThreshold","withInitialValues","getAnimationAndConfig"]),_t=new Set(["easingX","easingY","easingWidth","easingHeight","entering","exiting","reverse"]),vt=new Set([...kt,...gt,..._t]),Ot=new Set(["withCallback"]);function ht(e){return(0,W.isCallExpression)(e.parent)&&(0,W.isExpression)(e.parent.callee)&&Et(e.parent.callee)}Y.isLayoutAnimationCallback=ht;function Et(e){return(0,W.isMemberExpression)(e)&&(0,W.isIdentifier)(e.property)&&Ot.has(e.property.name)&&Ee(e.object)}function Ee(e){return(0,W.isIdentifier)(e)&&he.has(e.name)?!0:!!((0,W.isNewExpression)(e)&&(0,W.isIdentifier)(e.callee)&&he.has(e.callee.name)||(0,W.isCallExpression)(e)&&(0,W.isMemberExpression)(e.callee)&&(0,W.isIdentifier)(e.callee.property)&&vt.has(e.callee.property.name)&&Ee(e.callee.object))}});var w=p(k=>{"use strict";Object.defineProperty(k,"__esModule",{value:!0});k.workletClassFactorySuffix=k.isWorkletizableObjectNode=k.isWorkletizableObjectPath=k.isWorkletizableFunctionNode=k.isWorkletizableFunctionPath=k.WorkletizableObject=k.WorkletizableFunction=void 0;var V=require("@babel/types");k.WorkletizableFunction="FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";k.WorkletizableObject="ObjectExpression";function It(e){return e.isFunctionDeclaration()||e.isFunctionExpression()||e.isArrowFunctionExpression()||e.isObjectMethod()}k.isWorkletizableFunctionPath=It;function St(e){return(0,V.isFunctionDeclaration)(e)||(0,V.isFunctionExpression)(e)||(0,V.isArrowFunctionExpression)(e)||(0,V.isObjectMethod)(e)}k.isWorkletizableFunctionNode=St;function xt(e){return e.isObjectExpression()}k.isWorkletizableObjectPath=xt;function Wt(e){return(0,V.isObjectExpression)(e)}k.isWorkletizableObjectNode=Wt;k.workletClassFactorySuffix="__classFactory"});var z=p(q=>{"use strict";Object.defineProperty(q,"__esModule",{value:!0});q.replaceWithFactoryCall=q.isRelease=void 0;var Z=require("@babel/types");function wt(){var e,t;let r=/(prod|release|stag[ei])/i;return!!(!((e=process.env.BABEL_ENV)===null||e===void 0)&&e.match(r)||!((t=process.env.NODE_ENV)===null||t===void 0)&&t.match(r))}q.isRelease=wt;function Ct(e,t,r){if(!t||!jt(e))e.replaceWith(r);else{let i=(0,Z.variableDeclaration)("const",[(0,Z.variableDeclarator)((0,Z.identifier)(t),r)]);e.replaceWith(i)}}q.replaceWithFactoryCall=Ct;function jt(e){return(0,Z.isScopable)(e.parent)||(0,Z.isExportNamedDeclaration)(e.parent)}});var le=p(g=>{"use strict";Object.defineProperty(g,"__esModule",{value:!0});g.addCustomGlobals=g.initializeGlobals=g.globals=g.defaultGlobals=g.initializeState=void 0;var Ft=["globalThis","Infinity","NaN","undefined","eval","isFinite","isNaN","parseFloat","parseInt","decodeURI","decodeURIComponent","encodeURI","encodeURIComponent","escape","unescape","Object","Function","Boolean","Symbol","Error","AggregateError","EvalError","RangeError","ReferenceError","SyntaxError","TypeError","URIError","InternalError","Number","BigInt","Math","Date","String","RegExp","Array","Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","BigInt64Array","BigUint64Array","Float32Array","Float64Array","Map","Set","WeakMap","WeakSet","ArrayBuffer","SharedArrayBuffer","DataView","Atomics","JSON","WeakRef","FinalizationRegistry","Iterator","AsyncIterator","Promise","GeneratorFunction","AsyncGeneratorFunction","Generator","AsyncGenerator","AsyncFunction","Reflect","Proxy","Intl","null","this","global","window","globalThis","console","performance","queueMicrotask","requestAnimationFrame","setImmediate","arguments","HermesInternal","ReanimatedError","_WORKLET","WorkletsError","__workletsLoggerConfig"],Dt=["_IS_FABRIC","_log","_toString","_scheduleHostFunctionOnJS","_scheduleRemoteFunctionOnJS","_scheduleOnRuntime","_makeShareableClone","_updateProps","_measure","_dispatchCommand","_setGestureState","_notifyAboutProgress","_notifyAboutEnd","_runOnUIQueue","_getAnimationTimestamp"];function Mt(e){e.workletNumber=1,e.classesToWorkletize=[],Se(),xe(e)}g.initializeState=Mt;g.defaultGlobals=new Set(Ft.concat(Dt));function Se(){g.globals=new Set(g.defaultGlobals)}g.initializeGlobals=Se;function xe(e){e.opts&&Array.isArray(e.opts.globals)&&e.opts.globals.forEach(t=>{g.globals.add(t)})}g.addCustomGlobals=xe});var K=p(L=>{"use strict";var Rt=L&&L.__rest||function(e,t){var r={};for(var i in e)Object.prototype.hasOwnProperty.call(e,i)&&t.indexOf(i)<0&&(r[i]=e[i]);if(e!=null&&typeof Object.getOwnPropertySymbols=="function")for(var n=0,i=Object.getOwnPropertySymbols(e);n<i.length;n++)t.indexOf(i[n])<0&&Object.prototype.propertyIsEnumerable.call(e,i[n])&&(r[i[n]]=e[i[n]]);return r};Object.defineProperty(L,"__esModule",{value:!0});L.workletTransformSync=void 0;var At=require("@babel/core");function Pt(e,t){let{extraPlugins:r=[],extraPresets:i=[]}=t,n=Rt(t,["extraPlugins","extraPresets"]);return(0,At.transformSync)(e,Object.assign(Object.assign({},n),{plugins:[...zt,...r],presets:[...qt,...i]}))}L.workletTransformSync=Pt;var qt=[require.resolve("@babel/preset-typescript")],zt=[]});var Ce=p(_=>{"use strict";var Lt=_&&_.__createBinding||(Object.create?function(e,t,r,i){i===void 0&&(i=r);var n=Object.getOwnPropertyDescriptor(t,r);(!n||("get"in n?!t.__esModule:n.writable||n.configurable))&&(n={enumerable:!0,get:function(){return t[r]}}),Object.defineProperty(e,i,n)}:function(e,t,r,i){i===void 0&&(i=r),e[i]=t[r]}),Tt=_&&_.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),We=_&&_.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(e!=null)for(var r in e)r!=="default"&&Object.prototype.hasOwnProperty.call(e,r)&&Lt(t,e,r);return Tt(t,e),t},Nt=_&&_.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(_,"__esModule",{value:!0});_.buildWorkletString=void 0;var we=require("@babel/core"),Bt=Nt(require("@babel/generator")),c=require("@babel/types"),J=require("assert"),Ut=We(require("convert-source-map")),Gt=We(require("fs")),Ht=K(),Vt=w(),Zt=z(),Jt="mock source map";function Xt(e,t,r,i,n){var s;$t(e,i);let u=e.program.body.find(O=>(0,c.isFunctionDeclaration)(O))||e.program.body.find(O=>(0,c.isExpressionStatement)(O))||void 0;(0,J.strict)(u,"[Reanimated] `draftExpression` is undefined.");let a=(0,c.isFunctionDeclaration)(u)?u:u.expression;(0,J.strict)("params"in a,"'params' property is undefined in 'expression'"),(0,J.strict)((0,c.isBlockStatement)(a.body),"[Reanimated] `expression.body` is not a `BlockStatement`");let b=new Set;(0,we.traverse)(e,{NewExpression(O){if(!(0,c.isIdentifier)(O.node.callee))return;let h=O.node.callee.name;if(!r.some($=>$.name===h)||b.has(h))return;let X=r.findIndex($=>$.name===h);r.splice(X,1);let A=h+Vt.workletClassFactorySuffix;r.push((0,c.identifier)(A)),(0,c.assertBlockStatement)(a.body),a.body.body.unshift((0,c.variableDeclaration)("const",[(0,c.variableDeclarator)((0,c.identifier)(h),(0,c.callExpression)((0,c.identifier)(A),[]))])),b.add(h)}});let d=(0,c.functionExpression)((0,c.identifier)(i),a.params,a.body,a.generator,a.async),I=(0,Bt.default)(d).code;(0,J.strict)(n,"[Reanimated] `inputMap` is undefined.");let M=!((0,Zt.isRelease)()||t.opts.disableSourceMaps);if(M){n.sourcesContent=[];for(let O of n.sources)n.sourcesContent.push(Gt.readFileSync(O).toString("utf-8"))}let S=(0,Ht.workletTransformSync)(I,{filename:t.file.opts.filename,extraPlugins:[er(r),...(s=t.opts.extraPlugins)!==null&&s!==void 0?s:[]],extraPresets:t.opts.extraPresets,compact:!0,sourceMaps:M,inputSourceMap:n,ast:!1,babelrc:!1,configFile:!1,comments:!1});(0,J.strict)(S,"[Reanimated] `transformed` is null.");let R;return M&&(Yt()?R=Jt:(R=Ut.fromObject(S.map).toObject(),delete R.sourcesContent)),[S.code,JSON.stringify(R)]}_.buildWorkletString=Xt;function $t(e,t){(0,we.traverse)(e,{FunctionExpression(r){if(!r.node.id){r.stop();return}let i=r.node.id.name;r.scope.rename(i,t)}})}function Yt(){return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP==="1"}function Kt(e,t,r){t.length===0||!(0,c.isProgram)(e.parent)||(0,c.isExpression)(e.node.body)||e.node.body.body.unshift(r)}function Qt(e){var t;(0,c.isProgram)(e.parent)&&!(0,c.isArrowFunctionExpression)(e.node)&&!(0,c.isObjectMethod)(e.node)&&e.node.id&&e.scope.parent&&((t=e.scope.parent.bindings[e.node.id.name])===null||t===void 0?void 0:t.references)>0&&e.node.body.body.unshift((0,c.variableDeclaration)("const",[(0,c.variableDeclarator)((0,c.identifier)(e.node.id.name),(0,c.memberExpression)((0,c.thisExpression)(),(0,c.identifier)("_recur")))]))}function er(e){let t=(0,c.variableDeclaration)("const",[(0,c.variableDeclarator)((0,c.objectPattern)(e.map(r=>(0,c.objectProperty)((0,c.identifier)(r.name),(0,c.identifier)(r.name),!1,!0))),(0,c.memberExpression)((0,c.thisExpression)(),(0,c.identifier)("__closure")))]);return{visitor:{"FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod":r=>{Kt(r,e,t),Qt(r)}}}}});var De=p(T=>{"use strict";var tr=T&&T.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(T,"__esModule",{value:!0});T.makeWorkletFactory=void 0;var rr=require("@babel/core"),nr=tr(require("@babel/generator")),o=require("@babel/types"),F=require("assert"),Fe=require("path"),ir=le(),or=K(),je=w(),ce=z(),sr=Ce(),ar=require("../package.json").version,lr="x.y.z";function cr(e,t){var r;ur(e),(0,F.strict)(t.file.opts.filename,"[Reanimated] `state.file.opts.filename` is undefined.");let i=(0,nr.default)(e.node,{sourceMaps:!0,sourceFileName:t.file.opts.filename});i.code="("+(e.isObjectMethod()?"function ":"")+i.code+`
-)`;let n=(0,or.workletTransformSync)(i.code,{extraPlugins:[...br,...(r=t.opts.extraPlugins)!==null&&r!==void 0?r:[]],extraPresets:t.opts.extraPresets,filename:t.file.opts.filename,ast:!0,babelrc:!1,configFile:!1,inputSourceMap:i.map});(0,F.strict)(n,"[Reanimated] `transformed` is undefined."),(0,F.strict)(n.ast,"[Reanimated] `transformed.ast` is undefined.");let s=mr(n.ast,e),u=s.map(y=>e.scope.generateUidIdentifier(y.name));s.forEach((y,j)=>{e.scope.rename(s[j].name,u[j].name,e.node)});let a=(0,o.cloneNode)(e.node),b=(0,o.isBlockStatement)(a.body)?(0,o.functionExpression)(null,a.params,a.body,a.generator,a.async):a,{workletName:d,reactName:I}=pr(e,t),[M,S]=(0,sr.buildWorkletString)(n.ast,t,s,d,n.map);(0,F.strict)(M,"[Reanimated] `funString` is undefined.");let R=fr(M),O=1;s.length>0&&(O-=s.length+2);let h=e.parentPath.isProgram()?e:e.findParent(y=>{var j,ae;return(ae=(j=y.parentPath)===null||j===void 0?void 0:j.isProgram())!==null&&ae!==void 0?ae:!1});(0,F.strict)(h,"[Reanimated] `pathForStringDefinitions` is null."),(0,F.strict)(h.parentPath,"[Reanimated] `pathForStringDefinitions.parentPath` is null.");let X=h.parentPath.scope.generateUidIdentifier(`worklet_${R}_init_data`),A=(0,o.objectExpression)([(0,o.objectProperty)((0,o.identifier)("code"),(0,o.stringLiteral)(M))]);if(!(0,ce.isRelease)()){let y=t.file.opts.filename;t.opts.relativeSourceLocation&&(y=(0,Fe.relative)(t.cwd,y),S=S==null?void 0:S.replace(t.file.opts.filename,y)),A.properties.push((0,o.objectProperty)((0,o.identifier)("location"),(0,o.stringLiteral)(y)))}S&&A.properties.push((0,o.objectProperty)((0,o.identifier)("sourceMap"),(0,o.stringLiteral)(S))),!(0,ce.isRelease)()&&A.properties.push((0,o.objectProperty)((0,o.identifier)("version"),(0,o.stringLiteral)(dr()?lr:ar)));let ke=!t.opts.omitNativeOnlyData;ke&&h.insertBefore((0,o.variableDeclaration)("const",[(0,o.variableDeclarator)(X,A)])),(0,F.strict)(!(0,o.isFunctionDeclaration)(b),"[Reanimated] `funExpression` is a `FunctionDeclaration`."),(0,F.strict)(!(0,o.isObjectMethod)(b),"[Reanimated] `funExpression` is an `ObjectMethod`.");let H=[(0,o.variableDeclaration)("const",[(0,o.variableDeclarator)((0,o.identifier)(I),b)]),(0,o.expressionStatement)((0,o.assignmentExpression)("=",(0,o.memberExpression)((0,o.identifier)(I),(0,o.identifier)("__closure"),!1),(0,o.objectExpression)(s.map((y,j)=>y.name.endsWith(je.workletClassFactorySuffix)?(0,o.objectProperty)((0,o.identifier)(y.name),(0,o.memberExpression)((0,o.identifier)(y.name.slice(0,y.name.length-je.workletClassFactorySuffix.length)),(0,o.identifier)(y.name))):(0,o.objectProperty)((0,o.identifier)(y.name),(0,o.identifier)(u[j].name),!1,!0))))),(0,o.expressionStatement)((0,o.assignmentExpression)("=",(0,o.memberExpression)((0,o.identifier)(I),(0,o.identifier)("__workletHash"),!1),(0,o.numericLiteral)(R)))];return ke&&H.push((0,o.expressionStatement)((0,o.assignmentExpression)("=",(0,o.memberExpression)((0,o.identifier)(I),(0,o.identifier)("__initData"),!1),X))),(0,ce.isRelease)()||(H.unshift((0,o.variableDeclaration)("const",[(0,o.variableDeclarator)((0,o.identifier)("_e"),(0,o.arrayExpression)([(0,o.newExpression)((0,o.memberExpression)((0,o.identifier)("global"),(0,o.identifier)("Error")),[]),(0,o.numericLiteral)(O),(0,o.numericLiteral)(-27)]))])),H.push((0,o.expressionStatement)((0,o.assignmentExpression)("=",(0,o.memberExpression)((0,o.identifier)(I),(0,o.identifier)("__stackDetails"),!1),(0,o.identifier)("_e"))))),H.push((0,o.returnStatement)((0,o.identifier)(I))),{workletFactory:(0,o.functionExpression)((0,o.identifier)(d+"Factory"),u,(0,o.blockStatement)(H)),closureVariables:s}}T.makeWorkletFactory=cr;function ur(e){e.traverse({DirectiveLiteral(t){t.node.value==="worklet"&&t.getFunctionParent()===e&&t.parentPath.remove()}})}function dr(){return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION==="1"}function fr(e){let t=e.length,r=5381,i=52711;for(;t--;){let n=e.charCodeAt(t);r=r*33^n,i=i*33^n}return(r>>>0)*4096+(i>>>0)}function pr(e,t){let r="unknownFile";if(t.file.opts.filename){let u=t.file.opts.filename;r=(0,Fe.basename)(u);let a=u.split("/"),b=a.indexOf("node_modules");b!==-1&&(r=`${a[b+1]}_${r}`)}let i=`${r}${t.workletNumber++}`,n="";(0,o.isObjectMethod)(e.node)&&(0,o.isIdentifier)(e.node.key)?n=e.node.key.name:((0,o.isFunctionDeclaration)(e.node)||(0,o.isFunctionExpression)(e.node))&&(0,o.isIdentifier)(e.node.id)&&(n=e.node.id.name);let s=n?(0,o.toIdentifier)(`${n}_${i}`):(0,o.toIdentifier)(i);return n=n||(0,o.toIdentifier)(i),{workletName:s,reactName:n}}function mr(e,t){let r=new Map,i=new Map;return(0,rr.traverse)(e,{Identifier(n){if(!n.isReferencedIdentifier())return;let s=n.node.name;if(ir.globals.has(s)||"id"in t.node&&t.node.id&&t.node.id.name===s)return;let u=n.parent;if((0,o.isMemberExpression)(u)&&u.property===n.node&&!u.computed||(0,o.isObjectProperty)(u)&&(0,o.isObjectExpression)(n.parentPath.parent)&&n.node!==u.value)return;let a=n.scope;for(;a!=null;){if(a.bindings[s]!=null)return;a=a.parent}r.set(s,n.node),i.set(s,!1)}}),t.traverse({Identifier(n){if(!n.isReferencedIdentifier())return;let s=r.get(n.node.name);!s||i.get(n.node.name)||(s.loc=n.node.loc,i.set(n.node.name,!0))}}),Array.from(r.values())}var br=[require.resolve("@babel/plugin-transform-shorthand-properties"),require.resolve("@babel/plugin-transform-arrow-functions"),require.resolve("@babel/plugin-transform-optional-chaining"),require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),[require.resolve("@babel/plugin-transform-template-literals"),{loose:!0}]]});var Me=p(Q=>{"use strict";Object.defineProperty(Q,"__esModule",{value:!0});Q.makeWorkletFactoryCall=void 0;var yr=require("@babel/types"),kr=De();function gr(e,t){let{workletFactory:r,closureVariables:i}=(0,kr.makeWorkletFactory)(e,t),n=(0,yr.callExpression)(r,i);return _r(e,n),n}Q.makeWorkletFactoryCall=gr;function _r(e,t){let r=e.node.loc;r&&(t.callee.loc={filename:r.filename,identifierName:r.identifierName,start:r.start,end:r.start})}});var ee=p(D=>{"use strict";Object.defineProperty(D,"__esModule",{value:!0});D.substituteObjectMethodWithObjectProperty=D.processWorklet=D.processIfWithWorkletDirective=void 0;var ue=require("@babel/types"),vr=w(),Or=z(),hr=Me();function Re(e,t){return!(0,ue.isBlockStatement)(e.node.body)||!Er(e.node.body.directives)?!1:(Ae(e,t),!0)}D.processIfWithWorkletDirective=Re;function Ae(e,t){t.opts.processNestedWorklets&&e.traverse({[vr.WorkletizableFunction](i,n){Re(i,n)}},t);let r=(0,hr.makeWorkletFactoryCall)(e,t);Ir(e,r)}D.processWorklet=Ae;function Er(e){return e.some(t=>(0,ue.isDirectiveLiteral)(t.value)&&t.value.value==="worklet")}function Ir(e,t){var r;if(e.isObjectMethod())Pe(e,t);else{let i="id"in e.node?(r=e.node.id)===null||r===void 0?void 0:r.name:void 0;(0,Or.replaceWithFactoryCall)(e,i,t)}}function Pe(e,t){let r=(0,ue.objectProperty)(e.node.key,t);e.replaceWith(r)}D.substituteObjectMethodWithObjectProperty=Pe});var ze=p(te=>{"use strict";Object.defineProperty(te,"__esModule",{value:!0});te.processWorkletizableObject=void 0;var Sr=w(),qe=ee();function xr(e,t){let r=e.get("properties");for(let i of r)if(i.isObjectMethod())(0,qe.processWorklet)(i,t);else if(i.isObjectProperty()){let n=i.get("value");(0,Sr.isWorkletizableFunctionPath)(n)&&(0,qe.processWorklet)(n,t)}else throw new Error(`[Reanimated] '${i.type}' as to-be workletized argument is not supported for object hooks.`)}te.processWorkletizableObject=xr});var Le=p(re=>{"use strict";Object.defineProperty(re,"__esModule",{value:!0});re.findReferencedWorklet=void 0;var N=w();function de(e,t,r){let i=e.node.name,s=e.scope.getBinding(i);return s?t&&s.path.isFunctionDeclaration()?s.path:s.constant?Wr(s,t,r):wr(s,t,r):void 0}re.findReferencedWorklet=de;function Wr(e,t,r){let i=e.path;if(!i.isVariableDeclarator())return;let n=i.get("init");if(t&&(0,N.isWorkletizableFunctionPath)(n)||r&&(0,N.isWorkletizableObjectPath)(n))return n;if(n.isIdentifier()&&n.isReferencedIdentifier())return de(n,t,r)}function wr(e,t,r){let i=e.constantViolations.reverse().find(s=>s.isAssignmentExpression()&&(t&&(0,N.isWorkletizableFunctionPath)(s.get("right"))||r&&(0,N.isWorkletizableObjectPath)(s.get("right"))));if(!i||!i.isAssignmentExpression())return;let n=i.get("right");if(t&&(0,N.isWorkletizableFunctionPath)(n)||r&&(0,N.isWorkletizableObjectPath)(n))return n;if(n.isIdentifier()&&n.isReferencedIdentifier())return de(n,t,r)}});var He=p(B=>{"use strict";Object.defineProperty(B,"__esModule",{value:!0});B.processCalleesAutoworkletizableCallbacks=B.processIfAutoworkletizableCallback=void 0;var Te=require("@babel/types"),fe=Oe(),Cr=Ie(),jr=ze(),Fr=Le(),ne=w(),Ge=ee(),Ne=new Set(["useAnimatedGestureHandler","useAnimatedScrollHandler"]),Be=new Set(["useFrameCallback","useAnimatedStyle","useAnimatedProps","createAnimatedPropAdapter","useDerivedValue","useAnimatedScrollHandler","useAnimatedReaction","useWorkletCallback","withTiming","withSpring","withDecay","withRepeat","runOnUI","executeOnUIRuntimeSync"]),Dr=new Map([["useAnimatedGestureHandler",[0]],["useFrameCallback",[0]],["useAnimatedStyle",[0]],["useAnimatedProps",[0]],["createAnimatedPropAdapter",[0]],["useDerivedValue",[0]],["useAnimatedScrollHandler",[0]],["useAnimatedReaction",[0,1]],["useWorkletCallback",[0]],["withTiming",[2]],["withSpring",[2]],["withDecay",[1]],["withRepeat",[3]],["runOnUI",[0]],["executeOnUIRuntimeSync",[0]],...Array.from(fe.gestureHandlerBuilderMethods).map(e=>[e,[0]])]);function Mr(e,t){return(0,fe.isGestureHandlerEventCallback)(e)||(0,Cr.isLayoutAnimationCallback)(e)?((0,Ge.processWorklet)(e,t),!0):!1}B.processIfAutoworkletizableCallback=Mr;function Rr(e,t){let r=(0,Te.isSequenceExpression)(e.node.callee)?e.node.callee.expressions[e.node.callee.expressions.length-1]:e.node.callee,i="name"in r?r.name:"property"in r&&"name"in r.property?r.property.name:void 0;if(i!==void 0){if(Be.has(i)||Ne.has(i)){let n=Be.has(i),s=Ne.has(i),u=Dr.get(i),a=e.get("arguments").filter((b,d)=>u.includes(d));Ue(a,t,n,s)}else if(!(0,Te.isV8IntrinsicIdentifier)(r)&&(0,fe.isGestureObjectEventCallbackMethod)(r)){let n=e.get("arguments");Ue(n,t,!0,!0)}}}B.processCalleesAutoworkletizableCallbacks=Rr;function Ue(e,t,r,i){e.forEach(n=>{let s=Ar(n,r,i);s&&((0,ne.isWorkletizableFunctionPath)(s)?(0,Ge.processWorklet)(s,t):(0,ne.isWorkletizableObjectPath)(s)&&(0,jr.processWorkletizableObject)(s,t))})}function Ar(e,t,r){if(t&&(0,ne.isWorkletizableFunctionPath)(e)||r&&(0,ne.isWorkletizableObjectPath)(e))return e;if(e.isIdentifier()&&e.isReferencedIdentifier())return(0,Fr.findReferencedWorklet)(e,t,r)}});var Xe=p(U=>{"use strict";var Ve=U&&U.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(U,"__esModule",{value:!0});U.processIfWorkletClass=void 0;var Pr=Ve(require("@babel/generator")),qr=Ve(require("@babel/traverse")),l=require("@babel/types"),ie=require("assert"),zr=K(),Lr=w(),Tr=z(),Ze="__workletClass";function Nr(e,t){return Qr(e,t)?(Jr(e.node.body),Br(e,t),!0):!1}U.processIfWorkletClass=Nr;function Br(e,t){(0,ie.strict)(e.node.id);let r=e.node.id.name,i=Ur(e.node,t);Xr(i),Gr(i.program.body),Hr(i.program.body,r),i.program.body.push((0,l.returnStatement)((0,l.identifier)(r)));let n=(0,l.functionExpression)(null,[],(0,l.blockStatement)([...i.program.body])),s=(0,l.callExpression)(n,[]);(0,Tr.replaceWithFactoryCall)(e,r,s)}function Ur(e,t){var r;let i=(0,Pr.default)(e).code,n=(0,zr.workletTransformSync)(i,{extraPlugins:["@babel/plugin-transform-class-properties","@babel/plugin-transform-classes","@babel/plugin-transform-unicode-regex",...(r=t.opts.extraPlugins)!==null&&r!==void 0?r:[]],extraPresets:t.opts.extraPresets,filename:t.file.opts.filename,ast:!0,babelrc:!1,configFile:!1});return(0,ie.strict)(n&&n.ast),n.ast}function Gr(e){e.forEach(t=>{if((0,l.isFunctionDeclaration)(t)){let r=(0,l.directive)((0,l.directiveLiteral)("worklet"));t.body.directives.push(r)}})}function Hr(e,t){let r=t+Lr.workletClassFactorySuffix,i=Vr(e,t),s=e[i].declarations[0].init,u=(0,l.functionDeclaration)((0,l.identifier)(r),[],(0,l.blockStatement)([(0,l.variableDeclaration)("const",[(0,l.variableDeclarator)((0,l.identifier)(t),s)]),(0,l.expressionStatement)((0,l.assignmentExpression)("=",(0,l.memberExpression)((0,l.identifier)(t),(0,l.identifier)(r)),(0,l.identifier)(r))),(0,l.returnStatement)((0,l.identifier)(t))],[(0,l.directive)((0,l.directiveLiteral)("worklet"))])),a=(0,l.variableDeclaration)("const",[(0,l.variableDeclarator)((0,l.identifier)(t),(0,l.callExpression)((0,l.identifier)(r),[]))]);e.splice(i,1,u,a)}function Vr(e,t){let r=e.findIndex(i=>(0,l.isVariableDeclaration)(i)&&i.declarations.some(n=>(0,l.isIdentifier)(n.id)&&n.id.name===t));return(0,ie.strict)(r>=0),r}function Zr(e){return e.body.some(t=>(0,l.isClassProperty)(t)&&(0,l.isIdentifier)(t.key)&&t.key.name===Ze)}function Jr(e){e.body=e.body.filter(t=>!(0,l.isClassProperty)(t)||!(0,l.isIdentifier)(t.key)||t.key.name!==Ze)}function Xr(e){let t=$r(e),r=Yr(t),i=t.map(a=>a.index),n=r.map(a=>a.index),s=e.program.body,u=[...s];for(let a=0;a<t.length;a++){let b=n[a],d=i[a],I=u[b];s[d]=I}}function $r(e){let t=[];return(0,qr.default)(e,{Program:{enter:r=>{r.get("body").forEach((n,s)=>{var u;let a=n.getBindingIdentifiers();if(!n.isFunctionDeclaration()||!(!((u=n.node.id)===null||u===void 0)&&u.name))return;let b={name:n.node.id.name,index:s,dependencies:new Set};t.push(b),n.traverse({Identifier(d){Kr(d,a,n)&&b.dependencies.add(d.node.name)}})})}}}),t}function Yr(e){let t=[],r=new Set;for(let i of e)Je(i,e,t,r);return t}function Je(e,t,r,i){if(i.has(e.name))throw new Error("Cycle detected. This should never happen.");if(!r.find(n=>n.name===e.name)){i.add(e.name);for(let n of e.dependencies)if(!r.find(s=>s.name===n)){let s=t.find(u=>u.name===n);(0,ie.strict)(s),Je(s,t,r,i)}r.push(e),i.delete(e.name)}}function Kr(e,t,r){return e.isReferencedIdentifier()&&!(e.node.name in t)&&!r.scope.hasOwnBinding(e.node.name)&&r.scope.hasReference(e.node.name)}function Qr(e,t){var r;let i=(r=e.node.id)===null||r===void 0?void 0:r.name,n=e.node;if(!i)return!1;let s=Zr(n.body),u=t.classesToWorkletize.some(d=>d.node===n),a=e.parentPath.isProgram()&&t.classesToWorkletize.some(d=>d.name===i);return t.classesToWorkletize=t.classesToWorkletize.filter(d=>d.node!==n&&d.name!==i),s||u||a}});var pe=p(E=>{"use strict";Object.defineProperty(E,"__esModule",{value:!0});E.isContextObject=E.processIfWorkletContextObject=E.contextObjectMarker=void 0;var v=require("@babel/types");E.contextObjectMarker="__workletContextObject";function en(e,t){return $e(e.node)?(rn(e.node),tn(e.node),!0):!1}E.processIfWorkletContextObject=en;function $e(e){return e.properties.some(t=>(0,v.isObjectProperty)(t)&&(0,v.isIdentifier)(t.key)&&t.key.name===E.contextObjectMarker)}E.isContextObject=$e;function tn(e){let t=(0,v.functionExpression)(null,[],(0,v.blockStatement)([(0,v.returnStatement)((0,v.cloneNode)(e))],[(0,v.directive)((0,v.directiveLiteral)("worklet"))]));e.properties.push((0,v.objectProperty)((0,v.identifier)(`${E.contextObjectMarker}Factory`),t))}function rn(e){e.properties=e.properties.filter(t=>!((0,v.isObjectProperty)(t)&&(0,v.isIdentifier)(t.key)&&t.key.name===E.contextObjectMarker))}});var tt=p(G=>{"use strict";Object.defineProperty(G,"__esModule",{value:!0});G.isImplicitContextObject=G.processIfWorkletFile=void 0;var m=require("@babel/types"),Ye=pe(),Ke=w();function nn(e,t){return e.node.directives.some(r=>r.value.value==="worklet")?(e.node.directives=e.node.directives.filter(r=>r.value.value!=="worklet"),on(e,t),!0):!1}G.processIfWorkletFile=nn;function on(e,t){let r=e.get("body");pn(e.node),r.forEach(i=>{let n=sn(i);me(n,t)})}function sn(e){return e.isExportNamedDeclaration()||e.isExportDefaultDeclaration()?e.get("declaration"):e}function me(e,t){var r;(0,Ke.isWorkletizableFunctionPath)(e)?(e.isArrowFunctionExpression()&&cn(e.node),Qe(e.node.body)):(0,Ke.isWorkletizableObjectPath)(e)?et(e)?un(e.node):ln(e,t):e.isVariableDeclaration()?an(e,t):e.isClassDeclaration()&&(fn(e.node.body),!((r=e.node.id)===null||r===void 0)&&r.name&&t.classesToWorkletize.push({node:e.node,name:e.node.id.name}))}function an(e,t){e.get("declarations").forEach(i=>{let n=i.get("init");n.isExpression()&&me(n,t)})}function ln(e,t){e.get("properties").forEach(i=>{if(i.isObjectMethod())Qe(i.node.body);else if(i.isObjectProperty()){let n=i.get("value");me(n,t)}})}function cn(e){(0,m.isBlockStatement)(e.body)||(e.body=(0,m.blockStatement)([(0,m.returnStatement)(e.body)]))}function Qe(e){e.directives.some(t=>t.value.value==="worklet")||e.directives.push((0,m.directive)((0,m.directiveLiteral)("worklet")))}function un(e){e.properties.some(t=>(0,m.isObjectProperty)(t)&&(0,m.isIdentifier)(t.key)&&t.key.name===Ye.contextObjectMarker)||e.properties.push((0,m.objectProperty)((0,m.identifier)(`${Ye.contextObjectMarker}`),(0,m.booleanLiteral)(!0)))}function et(e){return e.get("properties").some(r=>r.isObjectMethod()?dn(r):!1)}G.isImplicitContextObject=et;function dn(e){let t=!1;return e.traverse({ThisExpression(r){t=!0,r.stop()}}),t}function fn(e){e.body.push((0,m.classProperty)((0,m.identifier)("__workletClass"),(0,m.booleanLiteral)(!0)))}function pn(e){let t=e.body,r=t.length,i=0;for(;i<r;){let n=t[i];if(!mn(n)){i++;continue}let s=t.splice(i,1);t.push(...s),r--}}function mn(e){return(0,m.isExpressionStatement)(e)&&(0,m.isAssignmentExpression)(e.expression)&&(0,m.isMemberExpression)(e.expression.left)&&(0,m.isIdentifier)(e.expression.left.object)&&e.expression.left.object.name==="exports"}});var rt=p(oe=>{"use strict";Object.defineProperty(oe,"__esModule",{value:!0});oe.processInlineStylesWarning=void 0;var f=require("@babel/types"),be=require("assert"),bn=z();function yn(e){return(0,f.callExpression)((0,f.arrowFunctionExpression)([],(0,f.blockStatement)([(0,f.expressionStatement)((0,f.callExpression)((0,f.memberExpression)((0,f.identifier)("console"),(0,f.identifier)("warn")),[(0,f.callExpression)((0,f.memberExpression)((0,f.callExpression)((0,f.identifier)("require"),[(0,f.stringLiteral)("react-native-reanimated")]),(0,f.identifier)("getUseOfValueInStyleWarning")),[])])),(0,f.returnStatement)(e.node)])),[])}function kn(e){e.isMemberExpression()&&(0,f.isIdentifier)(e.node.property)&&e.node.property.name==="value"&&e.replaceWith(yn(e))}function gn(e){if((0,f.isArrayExpression)(e.node)){let t=e.get("elements");(0,be.strict)(Array.isArray(t),"[Reanimated] `elements` should be an array.");for(let r of t)r.isObjectExpression()&&ye(r)}}function ye(e){let t=e.get("properties");for(let r of t)if(r.isObjectProperty()){let i=r.get("value");(0,f.isIdentifier)(r.node.key)&&r.node.key.name==="transform"?gn(i):kn(i)}}function _n(e,t){if((0,bn.isRelease)()||t.opts.disableInlineStylesWarning||e.node.name.name!=="style"||!(0,f.isJSXExpressionContainer)(e.node.value))return;let r=e.get("value").get("expression");if((0,be.strict)(!Array.isArray(r),"[Reanimated] `expression` should not be an array."),r.isArrayExpression()){let i=r.get("elements");(0,be.strict)(Array.isArray(i),"[Reanimated] `elements` should be an array.");for(let n of i)n.isObjectExpression()&&ye(n)}else r.isObjectExpression()&&ye(r)}oe.processInlineStylesWarning=_n});var it=p(se=>{"use strict";Object.defineProperty(se,"__esModule",{value:!0});se.substituteWebCallExpression=void 0;var nt=require("@babel/types");function vn(e){let t=e.node.callee;if((0,nt.isIdentifier)(t)){let r=t.name;(r==="isWeb"||r==="shouldBeUseWeb")&&e.replaceWith((0,nt.booleanLiteral)(!0))}}se.substituteWebCallExpression=vn});Object.defineProperty(exports,"__esModule",{value:!0});var ot=He(),On=Xe(),hn=pe(),En=tt(),In=le(),Sn=rt(),xn=w(),Wn=it(),wn=ee();module.exports=function(){function e(t){try{t()}catch(r){throw new Error(`[Reanimated] Babel plugin exception: ${r}`)}}return{name:"reanimated",pre(){e(()=>{(0,In.initializeState)(this)})},visitor:{CallExpression:{enter(t,r){e(()=>{(0,ot.processCalleesAutoworkletizableCallbacks)(t,r),r.opts.substituteWebPlatformChecks&&(0,Wn.substituteWebCallExpression)(t)})}},[xn.WorkletizableFunction]:{enter(t,r){e(()=>{(0,wn.processIfWithWorkletDirective)(t,r)||(0,ot.processIfAutoworkletizableCallback)(t,r)})}},ObjectExpression:{enter(t,r){e(()=>{(0,hn.processIfWorkletContextObject)(t,r)})}},ClassDeclaration:{enter(t,r){e(()=>{(0,On.processIfWorkletClass)(t,r)})}},Program:{enter(t,r){e(()=>{(0,En.processIfWorkletFile)(t,r)})}},JSXAttribute:{enter(t,r){e(()=>(0,Sn.processInlineStylesWarning)(t,r))}}}}};
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// lib/gestureHandlerAutoworkletization.js
+var require_gestureHandlerAutoworkletization = __commonJS({
+  "lib/gestureHandlerAutoworkletization.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isGestureObjectEventCallbackMethod = exports2.isGestureHandlerEventCallback = exports2.gestureHandlerBuilderMethods = void 0;
+    var types_12 = require("@babel/types");
+    var gestureHandlerGestureObjects = /* @__PURE__ */ new Set([
+      "Tap",
+      "Pan",
+      "Pinch",
+      "Rotation",
+      "Fling",
+      "LongPress",
+      "ForceTouch",
+      "Native",
+      "Manual",
+      "Race",
+      "Simultaneous",
+      "Exclusive",
+      "Hover"
+    ]);
+    exports2.gestureHandlerBuilderMethods = /* @__PURE__ */ new Set([
+      "onBegin",
+      "onStart",
+      "onEnd",
+      "onFinalize",
+      "onUpdate",
+      "onChange",
+      "onTouchesDown",
+      "onTouchesMove",
+      "onTouchesUp",
+      "onTouchesCancelled"
+    ]);
+    function isGestureHandlerEventCallback(path) {
+      return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee);
+    }
+    exports2.isGestureHandlerEventCallback = isGestureHandlerEventCallback;
+    function isGestureObjectEventCallbackMethod(exp) {
+      return (0, types_12.isMemberExpression)(exp) && (0, types_12.isIdentifier)(exp.property) && exports2.gestureHandlerBuilderMethods.has(exp.property.name) && containsGestureObject(exp.object);
+    }
+    exports2.isGestureObjectEventCallbackMethod = isGestureObjectEventCallbackMethod;
+    function containsGestureObject(exp) {
+      if (isGestureObject(exp)) {
+        return true;
+      }
+      if ((0, types_12.isCallExpression)(exp) && (0, types_12.isMemberExpression)(exp.callee) && containsGestureObject(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+    function isGestureObject(exp) {
+      return (0, types_12.isCallExpression)(exp) && (0, types_12.isMemberExpression)(exp.callee) && (0, types_12.isIdentifier)(exp.callee.object) && exp.callee.object.name === "Gesture" && (0, types_12.isIdentifier)(exp.callee.property) && gestureHandlerGestureObjects.has(exp.callee.property.name);
+    }
+  }
+});
+
+// lib/layoutAnimationAutoworkletization.js
+var require_layoutAnimationAutoworkletization = __commonJS({
+  "lib/layoutAnimationAutoworkletization.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isLayoutAnimationCallback = void 0;
+    var types_12 = require("@babel/types");
+    var EntryExitAnimations = /* @__PURE__ */ new Set([
+      "BounceIn",
+      "BounceInDown",
+      "BounceInLeft",
+      "BounceInRight",
+      "BounceInUp",
+      "BounceOut",
+      "BounceOutDown",
+      "BounceOutLeft",
+      "BounceOutRight",
+      "BounceOutUp",
+      "FadeIn",
+      "FadeInDown",
+      "FadeInLeft",
+      "FadeInRight",
+      "FadeInUp",
+      "FadeOut",
+      "FadeOutDown",
+      "FadeOutLeft",
+      "FadeOutRight",
+      "FadeOutUp",
+      "FlipInEasyX",
+      "FlipInEasyY",
+      "FlipInXDown",
+      "FlipInXUp",
+      "FlipInYLeft",
+      "FlipInYRight",
+      "FlipOutEasyX",
+      "FlipOutEasyY",
+      "FlipOutXDown",
+      "FlipOutXUp",
+      "FlipOutYLeft",
+      "FlipOutYRight",
+      "LightSpeedInLeft",
+      "LightSpeedInRight",
+      "LightSpeedOutLeft",
+      "LightSpeedOutRight",
+      "PinwheelIn",
+      "PinwheelOut",
+      "RollInLeft",
+      "RollInRight",
+      "RollOutLeft",
+      "RollOutRight",
+      "RotateInDownLeft",
+      "RotateInDownRight",
+      "RotateInUpLeft",
+      "RotateInUpRight",
+      "RotateOutDownLeft",
+      "RotateOutDownRight",
+      "RotateOutUpLeft",
+      "RotateOutUpRight",
+      "SlideInDown",
+      "SlideInLeft",
+      "SlideInRight",
+      "SlideInUp",
+      "SlideOutDown",
+      "SlideOutLeft",
+      "SlideOutRight",
+      "SlideOutUp",
+      "StretchInX",
+      "StretchInY",
+      "StretchOutX",
+      "StretchOutY",
+      "ZoomIn",
+      "ZoomInDown",
+      "ZoomInEasyDown",
+      "ZoomInEasyUp",
+      "ZoomInLeft",
+      "ZoomInRight",
+      "ZoomInRotate",
+      "ZoomInUp",
+      "ZoomOut",
+      "ZoomOutDown",
+      "ZoomOutEasyDown",
+      "ZoomOutEasyUp",
+      "ZoomOutLeft",
+      "ZoomOutRight",
+      "ZoomOutRotate",
+      "ZoomOutUp"
+    ]);
+    var LayoutTransitions = /* @__PURE__ */ new Set([
+      "Layout",
+      "LinearTransition",
+      "SequencedTransition",
+      "FadingTransition",
+      "JumpingTransition",
+      "CurvedTransition",
+      "EntryExitTransition"
+    ]);
+    var LayoutAnimations = /* @__PURE__ */ new Set([
+      ...EntryExitAnimations,
+      ...LayoutTransitions
+    ]);
+    var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "build",
+      "duration",
+      "delay",
+      "getDuration",
+      "randomDelay",
+      "getDelay",
+      "getDelayFunction"
+    ]);
+    var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      "easing",
+      "rotate",
+      "springify",
+      "damping",
+      "mass",
+      "stiffness",
+      "overshootClamping",
+      "restDisplacementThreshold",
+      "restSpeedThreshold",
+      "withInitialValues",
+      "getAnimationAndConfig"
+    ]);
+    var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "easingX",
+      "easingY",
+      "easingWidth",
+      "easingHeight",
+      "entering",
+      "exiting",
+      "reverse"
+    ]);
+    var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
+      ...BaseAnimationsChainableMethods,
+      ...ComplexAnimationsChainableMethods,
+      ...DefaultTransitionChainableMethods
+    ]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    function isLayoutAnimationCallback(path) {
+      return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
+    }
+    exports2.isLayoutAnimationCallback = isLayoutAnimationCallback;
+    function isLayoutAnimationCallbackMethod(exp) {
+      return (0, types_12.isMemberExpression)(exp) && (0, types_12.isIdentifier)(exp.property) && LayoutAnimationsCallbacks.has(exp.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.object);
+    }
+    function isLayoutAnimationsChainableOrNewOperator(exp) {
+      if ((0, types_12.isIdentifier)(exp) && LayoutAnimations.has(exp.name)) {
+        return true;
+      } else if ((0, types_12.isNewExpression)(exp) && (0, types_12.isIdentifier)(exp.callee) && LayoutAnimations.has(exp.callee.name)) {
+        return true;
+      }
+      if ((0, types_12.isCallExpression)(exp) && (0, types_12.isMemberExpression)(exp.callee) && (0, types_12.isIdentifier)(exp.callee.property) && LayoutAnimationsChainableMethods.has(exp.callee.property.name) && isLayoutAnimationsChainableOrNewOperator(exp.callee.object)) {
+        return true;
+      }
+      return false;
+    }
+  }
+});
+
+// lib/types.js
+var require_types = __commonJS({
+  "lib/types.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.workletClassFactorySuffix = exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    var types_12 = require("@babel/types");
+    exports2.WorkletizableFunction = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";
+    exports2.WorkletizableObject = "ObjectExpression";
+    function isWorkletizableFunctionPath(path) {
+      return path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression() || path.isObjectMethod();
+    }
+    exports2.isWorkletizableFunctionPath = isWorkletizableFunctionPath;
+    function isWorkletizableFunctionNode(node) {
+      return (0, types_12.isFunctionDeclaration)(node) || (0, types_12.isFunctionExpression)(node) || (0, types_12.isArrowFunctionExpression)(node) || (0, types_12.isObjectMethod)(node);
+    }
+    exports2.isWorkletizableFunctionNode = isWorkletizableFunctionNode;
+    function isWorkletizableObjectPath(path) {
+      return path.isObjectExpression();
+    }
+    exports2.isWorkletizableObjectPath = isWorkletizableObjectPath;
+    function isWorkletizableObjectNode(node) {
+      return (0, types_12.isObjectExpression)(node);
+    }
+    exports2.isWorkletizableObjectNode = isWorkletizableObjectNode;
+    exports2.workletClassFactorySuffix = "__classFactory";
+  }
+});
+
+// lib/utils.js
+var require_utils = __commonJS({
+  "lib/utils.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.replaceWithFactoryCall = exports2.isRelease = void 0;
+    var types_12 = require("@babel/types");
+    function isRelease() {
+      var _a, _b;
+      const pattern = /(prod|release|stag[ei])/i;
+      return !!(((_a = process.env.BABEL_ENV) === null || _a === void 0 ? void 0 : _a.match(pattern)) || ((_b = process.env.NODE_ENV) === null || _b === void 0 ? void 0 : _b.match(pattern)));
+    }
+    exports2.isRelease = isRelease;
+    function replaceWithFactoryCall(toReplace, name, factoryCall) {
+      if (!name || !needsDeclaration(toReplace)) {
+        toReplace.replaceWith(factoryCall);
+      } else {
+        const replacement = (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(name), factoryCall)
+        ]);
+        toReplace.replaceWith(replacement);
+      }
+    }
+    exports2.replaceWithFactoryCall = replaceWithFactoryCall;
+    function needsDeclaration(nodePath) {
+      return (0, types_12.isScopable)(nodePath.parent) || (0, types_12.isExportNamedDeclaration)(nodePath.parent);
+    }
+  }
+});
+
+// lib/globals.js
+var require_globals = __commonJS({
+  "lib/globals.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.addCustomGlobals = exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = exports2.initializeState = void 0;
+    var notCapturedIdentifiers = [
+      "globalThis",
+      "Infinity",
+      "NaN",
+      "undefined",
+      "eval",
+      "isFinite",
+      "isNaN",
+      "parseFloat",
+      "parseInt",
+      "decodeURI",
+      "decodeURIComponent",
+      "encodeURI",
+      "encodeURIComponent",
+      "escape",
+      "unescape",
+      "Object",
+      "Function",
+      "Boolean",
+      "Symbol",
+      "Error",
+      "AggregateError",
+      "EvalError",
+      "RangeError",
+      "ReferenceError",
+      "SyntaxError",
+      "TypeError",
+      "URIError",
+      "InternalError",
+      "Number",
+      "BigInt",
+      "Math",
+      "Date",
+      "String",
+      "RegExp",
+      "Array",
+      "Int8Array",
+      "Uint8Array",
+      "Uint8ClampedArray",
+      "Int16Array",
+      "Uint16Array",
+      "Int32Array",
+      "Uint32Array",
+      "BigInt64Array",
+      "BigUint64Array",
+      "Float32Array",
+      "Float64Array",
+      "Map",
+      "Set",
+      "WeakMap",
+      "WeakSet",
+      "ArrayBuffer",
+      "SharedArrayBuffer",
+      "DataView",
+      "Atomics",
+      "JSON",
+      "WeakRef",
+      "FinalizationRegistry",
+      "Iterator",
+      "AsyncIterator",
+      "Promise",
+      "GeneratorFunction",
+      "AsyncGeneratorFunction",
+      "Generator",
+      "AsyncGenerator",
+      "AsyncFunction",
+      "Reflect",
+      "Proxy",
+      "Intl",
+      "null",
+      "this",
+      "global",
+      "window",
+      "globalThis",
+      "console",
+      "performance",
+      "queueMicrotask",
+      "requestAnimationFrame",
+      "setImmediate",
+      "arguments",
+      "HermesInternal",
+      "ReanimatedError",
+      "_WORKLET",
+      "WorkletsError",
+      "__workletsLoggerConfig"
+    ];
+    var notCapturedIdentifiers_DEPRECATED = [
+      "_IS_FABRIC",
+      "_log",
+      "_toString",
+      "_scheduleHostFunctionOnJS",
+      "_scheduleRemoteFunctionOnJS",
+      "_scheduleOnRuntime",
+      "_makeShareableClone",
+      "_updateProps",
+      "_measure",
+      "_dispatchCommand",
+      "_setGestureState",
+      "_notifyAboutProgress",
+      "_notifyAboutEnd",
+      "_runOnUIQueue",
+      "_getAnimationTimestamp"
+    ];
+    function initializeState(state) {
+      state.workletNumber = 1;
+      state.classesToWorkletize = [];
+      initializeGlobals();
+      addCustomGlobals(state);
+    }
+    exports2.initializeState = initializeState;
+    exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
+    function initializeGlobals() {
+      exports2.globals = new Set(exports2.defaultGlobals);
+    }
+    exports2.initializeGlobals = initializeGlobals;
+    function addCustomGlobals(state) {
+      if (state.opts && Array.isArray(state.opts.globals)) {
+        state.opts.globals.forEach((name) => {
+          exports2.globals.add(name);
+        });
+      }
+    }
+    exports2.addCustomGlobals = addCustomGlobals;
+  }
+});
+
+// lib/transform.js
+var require_transform = __commonJS({
+  "lib/transform.js"(exports2) {
+    "use strict";
+    var __rest = exports2 && exports2.__rest || function(s, e) {
+      var t = {};
+      for (var p in s)
+        if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+          t[p] = s[p];
+      if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+          if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+            t[p[i]] = s[p[i]];
+        }
+      return t;
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.workletTransformSync = void 0;
+    var core_1 = require("@babel/core");
+    function workletTransformSync(code, opts) {
+      const { extraPlugins = [], extraPresets = [] } = opts, rest = __rest(opts, ["extraPlugins", "extraPresets"]);
+      return (0, core_1.transformSync)(code, Object.assign(Object.assign({}, rest), { plugins: [...defaultPlugins, ...extraPlugins], presets: [...defaultPresets, ...extraPresets] }));
+    }
+    exports2.workletTransformSync = workletTransformSync;
+    var defaultPresets = [
+      require.resolve("@babel/preset-typescript")
+    ];
+    var defaultPlugins = [];
+  }
+});
+
+// lib/workletStringCode.js
+var require_workletStringCode = __commonJS({
+  "lib/workletStringCode.js"(exports2) {
+    "use strict";
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    } : function(o, m, k, k2) {
+      if (k2 === void 0)
+        k2 = k;
+      o[k2] = m[k];
+    });
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    } : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || function(mod) {
+      if (mod && mod.__esModule)
+        return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k in mod)
+          if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
+            __createBinding(result, mod, k);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.buildWorkletString = void 0;
+    var core_1 = require("@babel/core");
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    var convertSourceMap = __importStar(require("convert-source-map"));
+    var fs = __importStar(require("fs"));
+    var transform_1 = require_transform();
+    var types_2 = require_types();
+    var utils_1 = require_utils();
+    var MOCK_SOURCE_MAP = "mock source map";
+    function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
+      var _a;
+      restoreRecursiveCalls(fun, workletName);
+      const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
+      (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
+      const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
+      (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
+      (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
+      const parsedClasses = /* @__PURE__ */ new Set();
+      (0, core_1.traverse)(fun, {
+        NewExpression(path) {
+          if (!(0, types_12.isIdentifier)(path.node.callee)) {
+            return;
+          }
+          const constructorName = path.node.callee.name;
+          if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
+            return;
+          }
+          const index = closureVariables.findIndex((variable) => variable.name === constructorName);
+          closureVariables.splice(index, 1);
+          const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
+          closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
+          (0, types_12.assertBlockStatement)(expression.body);
+          expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
+          ]));
+          parsedClasses.add(constructorName);
+        }
+      });
+      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
+      const code = (0, generator_1.default)(workletFunction).code;
+      (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
+      const includeSourceMap = !((0, utils_1.isRelease)() || state.opts.disableSourceMaps);
+      if (includeSourceMap) {
+        inputMap.sourcesContent = [];
+        for (const sourceFile of inputMap.sources) {
+          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
+        }
+      }
+      const transformed = (0, transform_1.workletTransformSync)(code, {
+        filename: state.file.opts.filename,
+        extraPlugins: [
+          getClosurePlugin(closureVariables),
+          ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
+        ],
+        extraPresets: state.opts.extraPresets,
+        compact: true,
+        sourceMaps: includeSourceMap,
+        inputSourceMap: inputMap,
+        ast: false,
+        babelrc: false,
+        configFile: false,
+        comments: false
+      });
+      (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is null.");
+      let sourceMap;
+      if (includeSourceMap) {
+        if (shouldMockSourceMap()) {
+          sourceMap = MOCK_SOURCE_MAP;
+        } else {
+          sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
+          delete sourceMap.sourcesContent;
+        }
+      }
+      return [transformed.code, JSON.stringify(sourceMap)];
+    }
+    exports2.buildWorkletString = buildWorkletString;
+    function restoreRecursiveCalls(file, newName) {
+      (0, core_1.traverse)(file, {
+        FunctionExpression(path) {
+          if (!path.node.id) {
+            path.stop();
+            return;
+          }
+          const oldName = path.node.id.name;
+          const scope = path.scope;
+          scope.rename(oldName, newName);
+        }
+      });
+    }
+    function shouldMockSourceMap() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_SOURCE_MAP === "1";
+    }
+    function prependClosure(path, closureVariables, closureDeclaration) {
+      if (closureVariables.length === 0 || !(0, types_12.isProgram)(path.parent)) {
+        return;
+      }
+      if (!(0, types_12.isExpression)(path.node.body)) {
+        path.node.body.body.unshift(closureDeclaration);
+      }
+    }
+    function prependRecursiveDeclaration(path) {
+      var _a;
+      if ((0, types_12.isProgram)(path.parent) && !(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
+        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
+        if (hasRecursiveCalls) {
+          path.node.body.body.unshift((0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)((0, types_12.identifier)(path.node.id.name), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
+          ]));
+        }
+      }
+    }
+    function getClosurePlugin(closureVariables) {
+      const closureDeclaration = (0, types_12.variableDeclaration)("const", [
+        (0, types_12.variableDeclarator)((0, types_12.objectPattern)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.identifier)(variable.name), false, true))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
+      ]);
+      return {
+        visitor: {
+          "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
+            prependClosure(path, closureVariables, closureDeclaration);
+            prependRecursiveDeclaration(path);
+          }
+        }
+      };
+    }
+  }
+});
+
+// lib/workletFactory.js
+var require_workletFactory = __commonJS({
+  "lib/workletFactory.js"(exports2) {
+    "use strict";
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.makeWorkletFactory = void 0;
+    var core_1 = require("@babel/core");
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    var path_1 = require("path");
+    var globals_12 = require_globals();
+    var transform_1 = require_transform();
+    var types_2 = require_types();
+    var utils_1 = require_utils();
+    var workletStringCode_1 = require_workletStringCode();
+    var REAL_VERSION = require("../package.json").version;
+    var MOCK_VERSION = "x.y.z";
+    function makeWorkletFactory(fun, state) {
+      var _a;
+      removeWorkletDirective(fun);
+      (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
+      const codeObject = (0, generator_1.default)(fun.node, {
+        sourceMaps: true,
+        sourceFileName: state.file.opts.filename
+      });
+      codeObject.code = "(" + (fun.isObjectMethod() ? "function " : "") + codeObject.code + "\n)";
+      const transformed = (0, transform_1.workletTransformSync)(codeObject.code, {
+        extraPlugins: [...extraPlugins, ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []],
+        extraPresets: state.opts.extraPresets,
+        filename: state.file.opts.filename,
+        ast: true,
+        babelrc: false,
+        configFile: false,
+        inputSourceMap: codeObject.map
+      });
+      (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
+      (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
+      const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+      const clone = (0, types_12.cloneNode)(fun.node);
+      const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
+      const { workletName, reactName } = makeWorkletName(fun, state);
+      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, closureVariables, workletName, transformed.map);
+      (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
+      const workletHash = hash(funString);
+      let lineOffset = 1;
+      if (closureVariables.length > 0) {
+        lineOffset -= closureVariables.length + 2;
+      }
+      const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => {
+        var _a2, _b;
+        return (_b = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b !== void 0 ? _b : false;
+      });
+      (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
+      (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
+      const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
+      const initDataObjectExpression = (0, types_12.objectExpression)([
+        (0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))
+      ]);
+      const shouldInjectLocation = !(0, utils_1.isRelease)();
+      if (shouldInjectLocation) {
+        let location = state.file.opts.filename;
+        if (state.opts.relativeSourceLocation) {
+          location = (0, path_1.relative)(state.cwd, location);
+          sourceMapString = sourceMapString === null || sourceMapString === void 0 ? void 0 : sourceMapString.replace(state.file.opts.filename, location);
+        }
+        initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("location"), (0, types_12.stringLiteral)(location)));
+      }
+      if (sourceMapString) {
+        initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("sourceMap"), (0, types_12.stringLiteral)(sourceMapString)));
+      }
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      if (shouldInjectVersion) {
+        initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
+      }
+      const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+      if (shouldIncludeInitData) {
+        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+        ]));
+      }
+      (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
+      (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
+      const statements = [
+        (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
+        ]),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
+      ];
+      if (shouldIncludeInitData) {
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
+      }
+      if (!(0, utils_1.isRelease)()) {
+        statements.unshift((0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
+            (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
+            (0, types_12.numericLiteral)(lineOffset),
+            (0, types_12.numericLiteral)(-27)
+          ]))
+        ]));
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
+      }
+      statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
+      const factoryParams = [
+        (0, types_12.cloneNode)(initDataId, true),
+        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+      ];
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams, (0, types_12.blockStatement)(statements));
+      const factoryCallArgs = [
+        (0, types_12.identifier)(initDataId.name),
+        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+      ];
+      return { factory, factoryCallArgs };
+    }
+    exports2.makeWorkletFactory = makeWorkletFactory;
+    function removeWorkletDirective(fun) {
+      fun.traverse({
+        DirectiveLiteral(path) {
+          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
+            path.parentPath.remove();
+          }
+        }
+      });
+    }
+    function shouldMockVersion() {
+      return process.env.REANIMATED_JEST_SHOULD_MOCK_VERSION === "1";
+    }
+    function hash(str) {
+      let i = str.length;
+      let hash1 = 5381;
+      let hash2 = 52711;
+      while (i--) {
+        const char = str.charCodeAt(i);
+        hash1 = hash1 * 33 ^ char;
+        hash2 = hash2 * 33 ^ char;
+      }
+      return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
+    }
+    function makeWorkletName(fun, state) {
+      let source = "unknownFile";
+      if (state.file.opts.filename) {
+        const filepath = state.file.opts.filename;
+        source = (0, path_1.basename)(filepath);
+        const splitFilepath = filepath.split("/");
+        const nodeModulesIndex = splitFilepath.indexOf("node_modules");
+        if (nodeModulesIndex !== -1) {
+          const libraryName = splitFilepath[nodeModulesIndex + 1];
+          source = `${libraryName}_${source}`;
+        }
+      }
+      const suffix = `${source}${state.workletNumber++}`;
+      let reactName = "";
+      if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
+        reactName = fun.node.key.name;
+      } else if (((0, types_12.isFunctionDeclaration)(fun.node) || (0, types_12.isFunctionExpression)(fun.node)) && (0, types_12.isIdentifier)(fun.node.id)) {
+        reactName = fun.node.id.name;
+      }
+      const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
+      reactName = reactName || (0, types_12.toIdentifier)(suffix);
+      return { workletName, reactName };
+    }
+    function makeArrayFromCapturedBindings(ast, fun) {
+      const closure = /* @__PURE__ */ new Map();
+      const isLocationAssignedMap = /* @__PURE__ */ new Map();
+      (0, core_1.traverse)(ast, {
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const name = path.node.name;
+          if (globals_12.globals.has(name)) {
+            return;
+          }
+          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
+            return;
+          }
+          const parentNode = path.parent;
+          if ((0, types_12.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
+            return;
+          }
+          if ((0, types_12.isObjectProperty)(parentNode) && (0, types_12.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
+            return;
+          }
+          let currentScope = path.scope;
+          while (currentScope != null) {
+            if (currentScope.bindings[name] != null) {
+              return;
+            }
+            currentScope = currentScope.parent;
+          }
+          closure.set(name, (0, types_12.cloneNode)(path.node, true));
+          isLocationAssignedMap.set(name, false);
+        }
+      });
+      fun.traverse({
+        Identifier(path) {
+          if (!path.isReferencedIdentifier()) {
+            return;
+          }
+          const node = closure.get(path.node.name);
+          if (!node || isLocationAssignedMap.get(path.node.name)) {
+            return;
+          }
+          node.loc = path.node.loc;
+          isLocationAssignedMap.set(path.node.name, true);
+        }
+      });
+      return Array.from(closure.values());
+    }
+    var extraPlugins = [
+      require.resolve("@babel/plugin-transform-shorthand-properties"),
+      require.resolve("@babel/plugin-transform-arrow-functions"),
+      require.resolve("@babel/plugin-transform-optional-chaining"),
+      require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),
+      [
+        require.resolve("@babel/plugin-transform-template-literals"),
+        { loose: true }
+      ]
+    ];
+  }
+});
+
+// lib/workletFactoryCall.js
+var require_workletFactoryCall = __commonJS({
+  "lib/workletFactoryCall.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.makeWorkletFactoryCall = void 0;
+    var types_12 = require("@babel/types");
+    var workletFactory_1 = require_workletFactory();
+    function makeWorkletFactoryCall(path, state) {
+      const { factory, factoryCallArgs } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      const factoryCall = (0, types_12.callExpression)(factory, factoryCallArgs);
+      addStackTraceDataToWorkletFactory(path, factoryCall);
+      const replacement = factoryCall;
+      return replacement;
+    }
+    exports2.makeWorkletFactoryCall = makeWorkletFactoryCall;
+    function addStackTraceDataToWorkletFactory(path, workletFactoryCall) {
+      const originalWorkletLocation = path.node.loc;
+      if (originalWorkletLocation) {
+        workletFactoryCall.callee.loc = {
+          filename: originalWorkletLocation.filename,
+          identifierName: originalWorkletLocation.identifierName,
+          start: originalWorkletLocation.start,
+          end: originalWorkletLocation.start
+        };
+      }
+    }
+  }
+});
+
+// lib/workletSubstitution.js
+var require_workletSubstitution = __commonJS({
+  "lib/workletSubstitution.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.substituteObjectMethodWithObjectProperty = exports2.processWorklet = exports2.processIfWithWorkletDirective = void 0;
+    var types_12 = require("@babel/types");
+    var types_2 = require_types();
+    var utils_1 = require_utils();
+    var workletFactoryCall_1 = require_workletFactoryCall();
+    function processIfWithWorkletDirective(path, state) {
+      if (!(0, types_12.isBlockStatement)(path.node.body)) {
+        return false;
+      }
+      if (!hasWorkletDirective(path.node.body.directives)) {
+        return false;
+      }
+      processWorklet(path, state);
+      return true;
+    }
+    exports2.processIfWithWorkletDirective = processIfWithWorkletDirective;
+    function processWorklet(path, state) {
+      if (state.opts.processNestedWorklets) {
+        path.traverse({
+          [types_2.WorkletizableFunction](subPath, passedState) {
+            processIfWithWorkletDirective(subPath, passedState);
+          }
+        }, state);
+      }
+      const workletFactoryCall = (0, workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
+      substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
+      path.scope.getProgramParent().crawl();
+    }
+    exports2.processWorklet = processWorklet;
+    function hasWorkletDirective(directives) {
+      return directives.some((directive) => (0, types_12.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
+    }
+    function substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall) {
+      var _a;
+      if (path.isObjectMethod()) {
+        substituteObjectMethodWithObjectProperty(path, workletFactoryCall);
+      } else {
+        const name = "id" in path.node ? (_a = path.node.id) === null || _a === void 0 ? void 0 : _a.name : void 0;
+        (0, utils_1.replaceWithFactoryCall)(path, name, workletFactoryCall);
+      }
+    }
+    function substituteObjectMethodWithObjectProperty(path, workletFactoryCall) {
+      const replacement = (0, types_12.objectProperty)(path.node.key, workletFactoryCall);
+      path.replaceWith(replacement);
+    }
+    exports2.substituteObjectMethodWithObjectProperty = substituteObjectMethodWithObjectProperty;
+  }
+});
+
+// lib/objectWorklets.js
+var require_objectWorklets = __commonJS({
+  "lib/objectWorklets.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processWorkletizableObject = void 0;
+    var types_12 = require_types();
+    var workletSubstitution_12 = require_workletSubstitution();
+    function processWorkletizableObject(path, state) {
+      const properties = path.get("properties");
+      for (const property of properties) {
+        if (property.isObjectMethod()) {
+          (0, workletSubstitution_12.processWorklet)(property, state);
+        } else if (property.isObjectProperty()) {
+          const value = property.get("value");
+          if ((0, types_12.isWorkletizableFunctionPath)(value)) {
+            (0, workletSubstitution_12.processWorklet)(value, state);
+          }
+        } else {
+          throw new Error(`[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`);
+        }
+      }
+    }
+    exports2.processWorkletizableObject = processWorkletizableObject;
+  }
+});
+
+// lib/referencedWorklets.js
+var require_referencedWorklets = __commonJS({
+  "lib/referencedWorklets.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.findReferencedWorklet = void 0;
+    var types_12 = require_types();
+    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject) {
+      const workletName = workletIdentifier.node.name;
+      const scope = workletIdentifier.scope;
+      const workletBinding = scope.getBinding(workletName);
+      if (!workletBinding) {
+        return void 0;
+      }
+      if (acceptWorkletizableFunction && workletBinding.path.isFunctionDeclaration()) {
+        return workletBinding.path;
+      }
+      const isConstant = workletBinding.constant;
+      if (isConstant) {
+        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject);
+      }
+      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject);
+    }
+    exports2.findReferencedWorklet = findReferencedWorklet;
+    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject) {
+      const workletDeclaration = workletBinding.path;
+      if (!workletDeclaration.isVariableDeclarator()) {
+        return void 0;
+      }
+      const worklet = workletDeclaration.get("init");
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(worklet)) {
+        return worklet;
+      }
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(worklet)) {
+        return worklet;
+      }
+      if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
+        return findReferencedWorklet(worklet, acceptWorkletizableFunction, acceptObject);
+      }
+      return void 0;
+    }
+    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject) {
+      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectPath)(constantViolation.get("right"))));
+      if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
+        return void 0;
+      }
+      const workletDefinition = workletDeclaration.get("right");
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(workletDefinition)) {
+        return workletDefinition;
+      }
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(workletDefinition)) {
+        return workletDefinition;
+      }
+      if (workletDefinition.isIdentifier() && workletDefinition.isReferencedIdentifier()) {
+        return findReferencedWorklet(workletDefinition, acceptWorkletizableFunction, acceptObject);
+      }
+      return void 0;
+    }
+  }
+});
+
+// lib/autoworkletization.js
+var require_autoworkletization = __commonJS({
+  "lib/autoworkletization.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processCalleesAutoworkletizableCallbacks = exports2.processIfAutoworkletizableCallback = void 0;
+    var types_12 = require("@babel/types");
+    var gestureHandlerAutoworkletization_1 = require_gestureHandlerAutoworkletization();
+    var layoutAnimationAutoworkletization_1 = require_layoutAnimationAutoworkletization();
+    var objectWorklets_1 = require_objectWorklets();
+    var referencedWorklets_1 = require_referencedWorklets();
+    var types_2 = require_types();
+    var workletSubstitution_12 = require_workletSubstitution();
+    var reanimatedObjectHooks = /* @__PURE__ */ new Set([
+      "useAnimatedGestureHandler",
+      "useAnimatedScrollHandler"
+    ]);
+    var reanimatedFunctionHooks = /* @__PURE__ */ new Set([
+      "useFrameCallback",
+      "useAnimatedStyle",
+      "useAnimatedProps",
+      "createAnimatedPropAdapter",
+      "useDerivedValue",
+      "useAnimatedScrollHandler",
+      "useAnimatedReaction",
+      "useWorkletCallback",
+      "withTiming",
+      "withSpring",
+      "withDecay",
+      "withRepeat",
+      "runOnUI",
+      "executeOnUIRuntimeSync"
+    ]);
+    var reanimatedFunctionArgsToWorkletize = new Map([
+      ["useAnimatedGestureHandler", [0]],
+      ["useFrameCallback", [0]],
+      ["useAnimatedStyle", [0]],
+      ["useAnimatedProps", [0]],
+      ["createAnimatedPropAdapter", [0]],
+      ["useDerivedValue", [0]],
+      ["useAnimatedScrollHandler", [0]],
+      ["useAnimatedReaction", [0, 1]],
+      ["useWorkletCallback", [0]],
+      ["withTiming", [2]],
+      ["withSpring", [2]],
+      ["withDecay", [1]],
+      ["withRepeat", [3]],
+      ["runOnUI", [0]],
+      ["executeOnUIRuntimeSync", [0]],
+      ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
+    ]);
+    function processIfAutoworkletizableCallback(path, state) {
+      if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
+        (0, workletSubstitution_12.processWorklet)(path, state);
+        return true;
+      }
+      return false;
+    }
+    exports2.processIfAutoworkletizableCallback = processIfAutoworkletizableCallback;
+    function processCalleesAutoworkletizableCallbacks(path, state) {
+      const callee = (0, types_12.isSequenceExpression)(path.node.callee) ? path.node.callee.expressions[path.node.callee.expressions.length - 1] : path.node.callee;
+      const name = "name" in callee ? callee.name : "property" in callee && "name" in callee.property ? callee.property.name : void 0;
+      if (name === void 0) {
+        return;
+      }
+      if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
+        const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
+        const acceptObject = reanimatedObjectHooks.has(name);
+        const argIndices = reanimatedFunctionArgsToWorkletize.get(name);
+        const args = path.get("arguments").filter((_, index) => argIndices.includes(index));
+        processArgs(args, state, acceptWorkletizableFunction, acceptObject);
+      } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
+        const args = path.get("arguments");
+        processArgs(args, state, true, true);
+      }
+    }
+    exports2.processCalleesAutoworkletizableCallbacks = processCalleesAutoworkletizableCallbacks;
+    function processArgs(args, state, acceptWorkletizableFunction, acceptObject) {
+      args.forEach((arg) => {
+        const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject);
+        if (!maybeWorklet) {
+          return;
+        }
+        if ((0, types_2.isWorkletizableFunctionPath)(maybeWorklet)) {
+          (0, workletSubstitution_12.processWorklet)(maybeWorklet, state);
+        } else if ((0, types_2.isWorkletizableObjectPath)(maybeWorklet)) {
+          (0, objectWorklets_1.processWorkletizableObject)(maybeWorklet, state);
+        }
+      });
+    }
+    function findWorklet(arg, acceptWorkletizableFunction, acceptObject) {
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(arg)) {
+        return arg;
+      }
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(arg)) {
+        return arg;
+      }
+      if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
+        return (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject);
+      }
+      return void 0;
+    }
+  }
+});
+
+// lib/class.js
+var require_class = __commonJS({
+  "lib/class.js"(exports2) {
+    "use strict";
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletClass = void 0;
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var traverse_1 = __importDefault(require("@babel/traverse"));
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    var transform_1 = require_transform();
+    var types_2 = require_types();
+    var utils_1 = require_utils();
+    var classWorkletMarker = "__workletClass";
+    function processIfWorkletClass(classPath, state) {
+      if (!isWorkletizableClass(classPath, state)) {
+        return false;
+      }
+      removeWorkletClassMarker(classPath.node.body);
+      processClass(classPath, state);
+      return true;
+    }
+    exports2.processIfWorkletClass = processIfWorkletClass;
+    function processClass(classPath, state) {
+      (0, assert_1.strict)(classPath.node.id);
+      const className = classPath.node.id.name;
+      const polyfilledClassAst = getPolyfilledAst(classPath.node, state);
+      sortPolyfills(polyfilledClassAst);
+      appendWorkletDirectiveToPolyfills(polyfilledClassAst.program.body);
+      replaceClassDeclarationWithFactoryAndCall(polyfilledClassAst.program.body, className);
+      polyfilledClassAst.program.body.push((0, types_12.returnStatement)((0, types_12.identifier)(className)));
+      const factoryFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([...polyfilledClassAst.program.body]));
+      const factoryCall = (0, types_12.callExpression)(factoryFactory, []);
+      (0, utils_1.replaceWithFactoryCall)(classPath, className, factoryCall);
+    }
+    function getPolyfilledAst(classNode, state) {
+      var _a;
+      const classCode = (0, generator_1.default)(classNode).code;
+      const classWithPolyfills = (0, transform_1.workletTransformSync)(classCode, {
+        extraPlugins: [
+          "@babel/plugin-transform-class-properties",
+          "@babel/plugin-transform-classes",
+          "@babel/plugin-transform-unicode-regex",
+          ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
+        ],
+        extraPresets: state.opts.extraPresets,
+        filename: state.file.opts.filename,
+        ast: true,
+        babelrc: false,
+        configFile: false
+      });
+      (0, assert_1.strict)(classWithPolyfills && classWithPolyfills.ast);
+      return classWithPolyfills.ast;
+    }
+    function appendWorkletDirectiveToPolyfills(statements) {
+      statements.forEach((statement) => {
+        if ((0, types_12.isFunctionDeclaration)(statement)) {
+          const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
+          statement.body.directives.push(workletDirective);
+        }
+      });
+    }
+    function replaceClassDeclarationWithFactoryAndCall(statements, className) {
+      const classFactoryName = className + types_2.workletClassFactorySuffix;
+      const classDeclarationIndex = getPolyfilledClassDeclarationIndex(statements, className);
+      const classDeclarationToReplace = statements[classDeclarationIndex];
+      const classDeclarationInit = classDeclarationToReplace.declarations[0].init;
+      const classFactoryDeclaration = (0, types_12.functionDeclaration)((0, types_12.identifier)(classFactoryName), [], (0, types_12.blockStatement)([
+        (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(className), classDeclarationInit)
+        ]),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(classFactoryName)), (0, types_12.identifier)(classFactoryName))),
+        (0, types_12.returnStatement)((0, types_12.identifier)(className))
+      ], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      const newClassDeclaration = (0, types_12.variableDeclaration)("const", [
+        (0, types_12.variableDeclarator)((0, types_12.identifier)(className), (0, types_12.callExpression)((0, types_12.identifier)(classFactoryName), []))
+      ]);
+      statements.splice(classDeclarationIndex, 1, classFactoryDeclaration, newClassDeclaration);
+    }
+    function getPolyfilledClassDeclarationIndex(statements, className) {
+      const index = statements.findIndex((statement) => (0, types_12.isVariableDeclaration)(statement) && statement.declarations.some((declaration) => (0, types_12.isIdentifier)(declaration.id) && declaration.id.name === className));
+      (0, assert_1.strict)(index >= 0);
+      return index;
+    }
+    function hasWorkletClassMarker(classBody) {
+      return classBody.body.some((statement) => (0, types_12.isClassProperty)(statement) && (0, types_12.isIdentifier)(statement.key) && statement.key.name === classWorkletMarker);
+    }
+    function removeWorkletClassMarker(classBody) {
+      classBody.body = classBody.body.filter((statement) => !(0, types_12.isClassProperty)(statement) || !(0, types_12.isIdentifier)(statement.key) || statement.key.name !== classWorkletMarker);
+    }
+    function sortPolyfills(ast) {
+      const toSort = getPolyfillsToSort(ast);
+      const sorted = topoSort(toSort);
+      const toSortIndices = toSort.map((element) => element.index);
+      const sortedIndices = sorted.map((element) => element.index);
+      const statements = ast.program.body;
+      const oldStatements = [...statements];
+      for (let i = 0; i < toSort.length; i++) {
+        const sourceIndex = sortedIndices[i];
+        const targetIndex = toSortIndices[i];
+        const source = oldStatements[sourceIndex];
+        statements[targetIndex] = source;
+      }
+    }
+    function getPolyfillsToSort(ast) {
+      const polyfills = [];
+      (0, traverse_1.default)(ast, {
+        Program: {
+          enter: (functionPath) => {
+            const statements = functionPath.get("body");
+            statements.forEach((statement, index) => {
+              var _a;
+              const bindingIdentifiers = statement.getBindingIdentifiers();
+              if (!statement.isFunctionDeclaration() || !((_a = statement.node.id) === null || _a === void 0 ? void 0 : _a.name)) {
+                return;
+              }
+              const element = {
+                name: statement.node.id.name,
+                index,
+                dependencies: /* @__PURE__ */ new Set()
+              };
+              polyfills.push(element);
+              statement.traverse({
+                Identifier(path) {
+                  if (isOutsideDependency(path, bindingIdentifiers, statement)) {
+                    element.dependencies.add(path.node.name);
+                  }
+                }
+              });
+            });
+          }
+        }
+      });
+      return polyfills;
+    }
+    function topoSort(toSort) {
+      const sorted = [];
+      const stack = /* @__PURE__ */ new Set();
+      for (const element of toSort) {
+        recursiveTopoSort(element, toSort, sorted, stack);
+      }
+      return sorted;
+    }
+    function recursiveTopoSort(current, toSort, sorted, stack) {
+      if (stack.has(current.name)) {
+        throw new Error("Cycle detected. This should never happen.");
+      }
+      if (sorted.find((element) => element.name === current.name)) {
+        return;
+      }
+      stack.add(current.name);
+      for (const dependency of current.dependencies) {
+        if (!sorted.find((element) => element.name === dependency)) {
+          const next = toSort.find((element) => element.name === dependency);
+          (0, assert_1.strict)(next);
+          recursiveTopoSort(next, toSort, sorted, stack);
+        }
+      }
+      sorted.push(current);
+      stack.delete(current.name);
+    }
+    function isOutsideDependency(identifierPath, bindingIdentifiers, functionPath) {
+      return identifierPath.isReferencedIdentifier() && !(identifierPath.node.name in bindingIdentifiers) && !functionPath.scope.hasOwnBinding(identifierPath.node.name) && functionPath.scope.hasReference(identifierPath.node.name);
+    }
+    function isWorkletizableClass(classPath, state) {
+      var _a;
+      const className = (_a = classPath.node.id) === null || _a === void 0 ? void 0 : _a.name;
+      const classNode = classPath.node;
+      if (!className) {
+        return false;
+      }
+      const isMarked = hasWorkletClassMarker(classNode.body);
+      const isMemoizedNode = state.classesToWorkletize.some((record) => record.node === classNode);
+      const isTopLevelMemoizedName = classPath.parentPath.isProgram() && state.classesToWorkletize.some((record) => record.name === className);
+      state.classesToWorkletize = state.classesToWorkletize.filter((record) => record.node !== classNode && record.name !== className);
+      const result = isMarked || isMemoizedNode || isTopLevelMemoizedName;
+      return result;
+    }
+  }
+});
+
+// lib/contextObject.js
+var require_contextObject = __commonJS({
+  "lib/contextObject.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isContextObject = exports2.processIfWorkletContextObject = exports2.contextObjectMarker = void 0;
+    var types_12 = require("@babel/types");
+    exports2.contextObjectMarker = "__workletContextObject";
+    function processIfWorkletContextObject(path, _state) {
+      if (!isContextObject(path.node)) {
+        return false;
+      }
+      removeContextObjectMarker(path.node);
+      processWorkletContextObject(path.node);
+      return true;
+    }
+    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
+    function isContextObject(objectExpression) {
+      return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
+    }
+    exports2.isContextObject = isContextObject;
+    function processWorkletContextObject(objectExpression) {
+      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
+    }
+    function removeContextObjectMarker(objectExpression) {
+      objectExpression.properties = objectExpression.properties.filter((property) => !((0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker));
+    }
+  }
+});
+
+// lib/file.js
+var require_file = __commonJS({
+  "lib/file.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isImplicitContextObject = exports2.processIfWorkletFile = void 0;
+    var types_12 = require("@babel/types");
+    var contextObject_12 = require_contextObject();
+    var types_2 = require_types();
+    function processIfWorkletFile(path, state) {
+      if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        return false;
+      }
+      path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      processWorkletFile(path, state);
+      return true;
+    }
+    exports2.processIfWorkletFile = processIfWorkletFile;
+    function processWorkletFile(programPath, state) {
+      const statements = programPath.get("body");
+      dehoistCommonJSExports(programPath.node);
+      statements.forEach((statement) => {
+        const candidatePath = getCandidate(statement);
+        processWorkletizableEntity(candidatePath, state);
+      });
+    }
+    function getCandidate(statementPath) {
+      if (statementPath.isExportNamedDeclaration() || statementPath.isExportDefaultDeclaration()) {
+        return statementPath.get("declaration");
+      } else {
+        return statementPath;
+      }
+    }
+    function processWorkletizableEntity(nodePath, state) {
+      var _a;
+      if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
+        if (nodePath.isArrowFunctionExpression()) {
+          replaceImplicitReturnWithBlock(nodePath.node);
+        }
+        appendWorkletDirective(nodePath.node.body);
+      } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
+        if (isImplicitContextObject(nodePath)) {
+          appendWorkletContextObjectMarker(nodePath.node);
+        } else {
+          processWorkletAggregator(nodePath, state);
+        }
+      } else if (nodePath.isVariableDeclaration()) {
+        processVariableDeclaration(nodePath, state);
+      } else if (nodePath.isClassDeclaration()) {
+        appendWorkletClassMarker(nodePath.node.body);
+        if ((_a = nodePath.node.id) === null || _a === void 0 ? void 0 : _a.name) {
+          state.classesToWorkletize.push({
+            node: nodePath.node,
+            name: nodePath.node.id.name
+          });
+        }
+      }
+    }
+    function processVariableDeclaration(variableDeclarationPath, state) {
+      const declarations = variableDeclarationPath.get("declarations");
+      declarations.forEach((declaration) => {
+        const initPath = declaration.get("init");
+        if (initPath.isExpression()) {
+          processWorkletizableEntity(initPath, state);
+        }
+      });
+    }
+    function processWorkletAggregator(objectPath, state) {
+      const properties = objectPath.get("properties");
+      properties.forEach((property) => {
+        if (property.isObjectMethod()) {
+          appendWorkletDirective(property.node.body);
+        } else if (property.isObjectProperty()) {
+          const valuePath = property.get("value");
+          processWorkletizableEntity(valuePath, state);
+        }
+      });
+    }
+    function replaceImplicitReturnWithBlock(path) {
+      if (!(0, types_12.isBlockStatement)(path.body)) {
+        path.body = (0, types_12.blockStatement)([(0, types_12.returnStatement)(path.body)]);
+      }
+    }
+    function appendWorkletDirective(node) {
+      if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)("worklet")));
+      }
+    }
+    function appendWorkletContextObjectMarker(objectExpression) {
+      if (objectExpression.properties.some((value) => (0, types_12.isObjectProperty)(value) && (0, types_12.isIdentifier)(value.key) && value.key.name === contextObject_12.contextObjectMarker)) {
+        return;
+      }
+      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${contextObject_12.contextObjectMarker}`), (0, types_12.booleanLiteral)(true)));
+    }
+    function isImplicitContextObject(path) {
+      const propertyPaths = path.get("properties");
+      return propertyPaths.some((propertyPath) => {
+        if (!propertyPath.isObjectMethod()) {
+          return false;
+        }
+        return hasThisExpression(propertyPath);
+      });
+    }
+    exports2.isImplicitContextObject = isImplicitContextObject;
+    function hasThisExpression(path) {
+      let result = false;
+      path.traverse({
+        ThisExpression(thisPath) {
+          result = true;
+          thisPath.stop();
+        }
+      });
+      return result;
+    }
+    function appendWorkletClassMarker(classBody) {
+      classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
+    }
+    function dehoistCommonJSExports(program) {
+      const statements = program.body;
+      let end = statements.length;
+      let current = 0;
+      while (current < end) {
+        const statement = statements[current];
+        if (!isCommonJSExport(statement)) {
+          current++;
+          continue;
+        }
+        const exportStatement = statements.splice(current, 1);
+        statements.push(...exportStatement);
+        end--;
+      }
+    }
+    function isCommonJSExport(statement) {
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
+    }
+  }
+});
+
+// lib/inlineStylesWarning.js
+var require_inlineStylesWarning = __commonJS({
+  "lib/inlineStylesWarning.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processInlineStylesWarning = void 0;
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    var utils_1 = require_utils();
+    function generateInlineStylesWarning(path) {
+      return (0, types_12.callExpression)((0, types_12.arrowFunctionExpression)([], (0, types_12.blockStatement)([
+        (0, types_12.expressionStatement)((0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.identifier)("console"), (0, types_12.identifier)("warn")), [
+          (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
+            (0, types_12.stringLiteral)("react-native-reanimated")
+          ]), (0, types_12.identifier)("getUseOfValueInStyleWarning")), [])
+        ])),
+        (0, types_12.returnStatement)(path.node)
+      ])), []);
+    }
+    function processPropertyValueForInlineStylesWarning(path) {
+      if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
+        if (path.node.property.name === "value") {
+          path.replaceWith(generateInlineStylesWarning(path));
+        }
+      }
+    }
+    function processTransformPropertyForInlineStylesWarning(path) {
+      if ((0, types_12.isArrayExpression)(path.node)) {
+        const elements = path.get("elements");
+        (0, assert_1.strict)(Array.isArray(elements), "[Reanimated] `elements` should be an array.");
+        for (const element of elements) {
+          if (element.isObjectExpression()) {
+            processStyleObjectForInlineStylesWarning(element);
+          }
+        }
+      }
+    }
+    function processStyleObjectForInlineStylesWarning(path) {
+      const properties = path.get("properties");
+      for (const property of properties) {
+        if (property.isObjectProperty()) {
+          const value = property.get("value");
+          if ((0, types_12.isIdentifier)(property.node.key) && property.node.key.name === "transform") {
+            processTransformPropertyForInlineStylesWarning(value);
+          } else {
+            processPropertyValueForInlineStylesWarning(value);
+          }
+        }
+      }
+    }
+    function processInlineStylesWarning(path, state) {
+      if ((0, utils_1.isRelease)()) {
+        return;
+      }
+      if (state.opts.disableInlineStylesWarning) {
+        return;
+      }
+      if (path.node.name.name !== "style") {
+        return;
+      }
+      if (!(0, types_12.isJSXExpressionContainer)(path.node.value)) {
+        return;
+      }
+      const expression = path.get("value").get("expression");
+      (0, assert_1.strict)(!Array.isArray(expression), "[Reanimated] `expression` should not be an array.");
+      if (expression.isArrayExpression()) {
+        const elements = expression.get("elements");
+        (0, assert_1.strict)(Array.isArray(elements), "[Reanimated] `elements` should be an array.");
+        for (const element of elements) {
+          if (element.isObjectExpression()) {
+            processStyleObjectForInlineStylesWarning(element);
+          }
+        }
+      } else if (expression.isObjectExpression()) {
+        processStyleObjectForInlineStylesWarning(expression);
+      }
+    }
+    exports2.processInlineStylesWarning = processInlineStylesWarning;
+  }
+});
+
+// lib/webOptimization.js
+var require_webOptimization = __commonJS({
+  "lib/webOptimization.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.substituteWebCallExpression = void 0;
+    var types_12 = require("@babel/types");
+    function substituteWebCallExpression(path) {
+      const callee = path.node.callee;
+      if ((0, types_12.isIdentifier)(callee)) {
+        const name = callee.name;
+        if (name === "isWeb" || name === "shouldBeUseWeb") {
+          path.replaceWith((0, types_12.booleanLiteral)(true));
+        }
+      }
+    }
+    exports2.substituteWebCallExpression = substituteWebCallExpression;
+  }
+});
+
+// lib/plugin.js
+Object.defineProperty(exports, "__esModule", { value: true });
+var autoworkletization_1 = require_autoworkletization();
+var class_1 = require_class();
+var contextObject_1 = require_contextObject();
+var file_1 = require_file();
+var globals_1 = require_globals();
+var inlineStylesWarning_1 = require_inlineStylesWarning();
+var types_1 = require_types();
+var webOptimization_1 = require_webOptimization();
+var workletSubstitution_1 = require_workletSubstitution();
+module.exports = function() {
+  function runWithTaggedExceptions(fun) {
+    try {
+      fun();
+    } catch (e) {
+      throw new Error(`[Reanimated] Babel plugin exception: ${e}`);
+    }
+  }
+  return {
+    name: "reanimated",
+    pre() {
+      runWithTaggedExceptions(() => {
+        (0, globals_1.initializeState)(this);
+      });
+    },
+    visitor: {
+      CallExpression: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, autoworkletization_1.processCalleesAutoworkletizableCallbacks)(path, state);
+            if (state.opts.substituteWebPlatformChecks) {
+              (0, webOptimization_1.substituteWebCallExpression)(path);
+            }
+          });
+        }
+      },
+      [types_1.WorkletizableFunction]: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
+          });
+        }
+      },
+      ObjectExpression: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, contextObject_1.processIfWorkletContextObject)(path, state);
+          });
+        }
+      },
+      ClassDeclaration: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, class_1.processIfWorkletClass)(path, state);
+          });
+        }
+      },
+      Program: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, file_1.processIfWorkletFile)(path, state);
+          });
+        }
+      },
+      JSXAttribute: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
+        }
+      }
+    }
+  };
+};
 //# sourceMappingURL=index.js.map

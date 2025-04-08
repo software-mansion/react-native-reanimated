@@ -2356,7 +2356,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass)'
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
@@ -2378,7 +2378,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass)'
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
@@ -2400,7 +2400,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.default = function ()');
       expect(code).toContain(
-        'var Clazz__classFactory = function Clazz__classFactory_null6Factory(_classCallCheck, _createClass)'
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
       );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
