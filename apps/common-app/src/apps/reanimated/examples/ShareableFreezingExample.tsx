@@ -74,6 +74,9 @@ export default function FreezingShareables() {
           onPress={tryModifyUnconfigurableObject}
         />
       </View>
+      <View style={styles.warning}>
+        <Text>Open debugger to view warnings.</Text>
+      </View>
     </View>
   );
 }
@@ -163,5 +166,9 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 32,
     marginRight: 10,
+  },
+  warning: {
+    width: '90%',
+    alignItems: 'center',
   },
 });
