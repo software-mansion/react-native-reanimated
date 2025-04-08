@@ -173,10 +173,19 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "./src/specs",
+    "outputDir": {
+      "ios": "./apple/generated",
+      "android": "./android/generated"
+    },
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
+    },
+    "ios": {
+      "componentProvider": {
+        "ReanimatedView": "ReanimatedView"
+      }
     }
   },
   "sideEffects": [
