@@ -6,7 +6,9 @@ export default function EmptyExample() {
   return (
     <View style={styles.container}>
       <Text>Hello world!</Text>
-      <ReanimatedView style={{width: 200, height: 200, backgroundColor: 'green' }} />
+      <ReanimatedView style={{width: 200, height: 200, backgroundColor: 'green' }}>
+        <Text>Reanimated View</Text>
+      </ReanimatedView>
     </View>
   );
 }
