@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.17.2",
+  "version": "3.17.3",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "jest",
