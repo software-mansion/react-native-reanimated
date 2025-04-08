@@ -110,7 +110,6 @@ import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -436,11 +435,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔌',
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
-  },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
   },
   MatrixExample: {
     icon: '🧮',
