@@ -11,6 +11,17 @@ import { makeShareableCloneRecursive } from 'react-native-reanimated';
 export default function FreezingShareables() {
   return (
     <View style={styles.container}>
+      <View style={styles.warning}>
+        <Text>Open debugger to view warnings.</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.text}>⚠️</Text>
+          <Text>Should show warning</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.text}>🤫</Text>
+          <Text>Should not show warning</Text>
+        </View>
+      </View>
       <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
@@ -26,17 +37,17 @@ export default function FreezingShareables() {
         />
       </View>
       <View style={styles.textAndButton}>
-        <Text style={styles.text}>🤫</Text>
-        <Button
-          title="Modify converted host object"
-          onPress={tryModifyConvertedHostObject}
-        />
-      </View>
-      <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
           title="Modify converted plain object"
           onPress={tryModifyConvertedPlainObject}
+        />
+      </View>
+      <View style={styles.textAndButton}>
+        <Text style={styles.text}>🤫</Text>
+        <Button
+          title="Modify converted host object"
+          onPress={tryModifyConvertedHostObject}
         />
       </View>
       <View style={styles.textAndButton}>
@@ -73,9 +84,6 @@ export default function FreezingShareables() {
           title="Modify unconfigurable object"
           onPress={tryModifyUnconfigurableObject}
         />
-      </View>
-      <View style={styles.warning}>
-        <Text>Open debugger to view warnings.</Text>
       </View>
     </View>
   );
@@ -169,6 +177,9 @@ const styles = StyleSheet.create({
   },
   warning: {
     width: '90%',
-    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    padding: 10,
   },
 });
