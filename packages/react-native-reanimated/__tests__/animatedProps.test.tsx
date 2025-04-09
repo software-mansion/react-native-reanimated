@@ -70,8 +70,9 @@ describe('animatedProps', () => {
 
     expect(circle).toHaveAnimatedProps({});
 
-    // No snapshot test.
-    // SVG components snapshots don't work properly with animated props.
+    // TODO: There's still a problem with stringizing `TextInput` with `animatedProps`.
+    // const rendered = render(<AnimatedComponent />).toJSON();
+    // expect(rendered).toMatchSnapshot();
   });
 
   test('Custom animated component', () => {
@@ -86,7 +87,8 @@ describe('animatedProps', () => {
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
 
-    // No snapshot test.
-    // SVG components snapshots don't work properly with animated props.
+    // TODO: There's still a problem with stringizing `TextInput` with `animatedProps`.
+    // const rendered = render(<AnimatedComponent />).toJSON();
+    // expect(rendered).toMatchSnapshot();
   });
 });
