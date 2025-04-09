@@ -1,3 +1,4 @@
+'use strict';
 import type { HostComponent, ViewProps } from 'react-native';
 
 import codegenNativeComponent from './codegenNativeComponent';
