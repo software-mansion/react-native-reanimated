@@ -15,11 +15,11 @@ export default function FreezingShareables() {
         <Text>Open debugger to view warnings.</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={styles.text}>⚠️</Text>
-          <Text>Should show warning</Text>
+          <Text>Should show a warning.</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={styles.text}>🤫</Text>
-          <Text>Should not show warning</Text>
+          <Text>Should not show a warning.</Text>
         </View>
       </View>
       <View style={styles.textAndButton}>
