@@ -2,6 +2,6 @@
 
 import ReanimatedTurboModule from './NativeReanimatedModule';
 import WorkletsTurboModule from './NativeReaWorkletsModule';
-import ReanimatedView from './ReanimatedNativeComponent';
+import ReanimatedNativeView from './ReanimatedNativeComponent';
 
-export { ReanimatedTurboModule, WorkletsTurboModule, ReanimatedView };
+export { ReanimatedNativeView, ReanimatedTurboModule, WorkletsTurboModule };
