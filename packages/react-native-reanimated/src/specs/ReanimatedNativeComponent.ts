@@ -1,11 +1,8 @@
 'use strict';
-import type { HostComponent, ViewProps } from 'react-native';
-
-// This rename is important to avoid problem with Jest auto-mocking
-import createNativeView from './codegenNativeComponent';
+import type { ViewProps } from 'react-native';
+import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
 
 interface NativeProps extends ViewProps {}
 
-export default createNativeView<NativeProps>(
-  'ReanimatedView'
-) as HostComponent<NativeProps>;
+// ts-prune-ignore-next-line
+export default codegenNativeComponent<NativeProps>('ReanimatedView');
