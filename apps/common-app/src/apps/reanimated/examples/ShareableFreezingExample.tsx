@@ -6,7 +6,7 @@ import {
   TurboModuleRegistry,
   View,
 } from 'react-native';
-import { makeShareableCloneRecursive } from 'react-native-reanimated';
+import { makeShareableCloneRecursive, runOnUI } from 'react-native-reanimated';
 
 export default function FreezingShareables() {
   return (
@@ -108,9 +108,17 @@ function tryModifyConvertedHostObject() {
     console.warn('No host object found.');
     return;
   }
+  // @ts-expect-error It's ok
+  obj.prop2 = 'prop2';
   makeShareableCloneRecursive(obj);
   // @ts-expect-error It's ok
-  obj.prop = 2; // shouldn't warn because it's not frozen
+  obj.prop = 'prop'; // shouldn't warn because it's not frozen
+
+  runOnUI(() => {
+    console.log('obj', obj);
+    // @ts-expect-error It's ok
+    console.log(obj.prop2); // undefined, should be "hello" for consistency
+  })();
 }
 
 function tryModifyConvertedPlainObject() {

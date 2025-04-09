@@ -141,7 +141,15 @@ function makeShareableCloneRecursiveNative<T>(
   if (isHostObject(value)) {
     // https://github.com/facebook/react-native/commit/20dba39dab4ef85eb28659a89b19750cec3193a4
     if (isHostObject(Object.getPrototypeOf(value))) {
-      return cloneHostObject(Object.getPrototypeOf(value), shouldPersistRemote);
+      const plainJSObject = {
+        ...Object.getPrototypeOf(value),
+      };
+      Object.getOwnPropertyNames(value).forEach((key) => {
+        plainJSObject[key] = value[key as keyof typeof value];
+      });
+
+      return clonePlainJSObject(plainJSObject, shouldPersistRemote, depth);
+      // return cloneHostObject(Object.getPrototypeOf(value), shouldPersistRemote);
     }
     return cloneHostObject(value, shouldPersistRemote);
   }
