@@ -1,0 +1,244 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test of boxShadow prop boxShadow prop animation 1`] = `
+<View
+  style={
+    {
+      "padding": 24,
+    }
+  }
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    jestAnimatedProps={
+      {
+        "value": {},
+      }
+    }
+    jestAnimatedStyle={
+      {
+        "value": {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+      }
+    }
+    jestInlineStyle={
+      [
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    nativeID="1"
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    testID="pressable"
+  >
+    <Text>
+      Button
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`Test of boxShadow prop boxShadow prop animation, get animated style 1`] = `
+<View
+  style={
+    {
+      "padding": 24,
+    }
+  }
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    jestAnimatedProps={
+      {
+        "value": {},
+      }
+    }
+    jestAnimatedStyle={
+      {
+        "value": {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+      }
+    }
+    jestInlineStyle={
+      [
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    nativeID="3"
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    testID="pressable"
+  >
+    <Text>
+      Button
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`Test of boxShadow prop one boxShadow string parsing 1`] = `
+<View
+  style={
+    {
+      "padding": 24,
+    }
+  }
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    jestAnimatedProps={
+      {
+        "value": {},
+      }
+    }
+    jestAnimatedStyle={
+      {
+        "value": {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+      }
+    }
+    jestInlineStyle={
+      [
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    nativeID="5"
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+        },
+        {
+          "backgroundColor": "red",
+          "boxShadow": "0px 4px 10px 0px rgba(255, 0, 0, 1)",
+          "padding": 16,
+        },
+      ]
+    }
+    testID="pressable"
+  >
+    <Text>
+      Button
+    </Text>
+  </View>
+</View>
+`;
