@@ -1,7 +1,6 @@
 package com.swmansion.reanimated.view;
 
 import androidx.annotation.NonNull;
-
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 

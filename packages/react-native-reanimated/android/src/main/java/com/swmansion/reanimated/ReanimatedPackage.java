@@ -13,7 +13,6 @@ import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
 import com.swmansion.reanimated.view.ReanimatedViewManager;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
