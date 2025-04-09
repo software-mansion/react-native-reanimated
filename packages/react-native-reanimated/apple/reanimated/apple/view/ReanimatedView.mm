@@ -1,4 +1,4 @@
-#import "ReanimatedView.h"
+#import <reanimated/apple/view/ReanimatedView.h>
 
 #include <react/renderer/components/rnreanimated/ComponentDescriptors.h>
 #include <react/renderer/components/rnreanimated/EventEmitters.h>
