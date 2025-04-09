@@ -1,9 +1,9 @@
-#include <reanimated/apple/view/ReanimatedView.h>
+#import <reanimated/apple/view/ReanimatedView.h>
 
-#include <react/renderer/components/rnreanimated/ComponentDescriptors.h>
-#include <react/renderer/components/rnreanimated/EventEmitters.h>
-#include <react/renderer/components/rnreanimated/Props.h>
-#include <react/renderer/components/rnreanimated/RCTComponentViewHelpers.h>
+#import <react/renderer/components/rnreanimated/ComponentDescriptors.h>
+#import <react/renderer/components/rnreanimated/EventEmitters.h>
+#import <react/renderer/components/rnreanimated/Props.h>
+#import <react/renderer/components/rnreanimated/RCTComponentViewHelpers.h>
 
 using namespace facebook::react;
 
