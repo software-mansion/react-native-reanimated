@@ -6,8 +6,6 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 
 public class ReanimatedViewManager extends ViewGroupManager<ReanimatedView> {
-  public ReanimatedViewManager() {}
-
   @NonNull
   @Override
   public String getName() {
