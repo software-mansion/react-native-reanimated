@@ -69,7 +69,11 @@ describe('animatedProps', () => {
     const circle = getByTestId('circle');
 
     expect(circle).toHaveAnimatedProps({});
+
+    // No snapshot test.
+    // SVG components snapshots don't work properly with animated props.
   });
+
   test('Custom animated component', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const textInput = getByTestId('text');
@@ -81,5 +85,8 @@ describe('animatedProps', () => {
     jest.advanceTimersByTime(animationDuration);
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
+
+    // No snapshot test.
+    // SVG components snapshots don't work properly with animated props.
   });
 });
