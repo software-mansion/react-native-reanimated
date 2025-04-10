@@ -45,7 +45,7 @@ export function processTransformOrigin(
   
       let index = INDEX_X;
       let matches;
-      outer: while ((matches = regex.exec(transformOriginString))) {
+      while ((matches = regex.exec(transformOriginString))) {
         let nextIndex = index + 1;
   
         const value = matches[0];
@@ -76,7 +76,7 @@ export function processTransformOrigin(
             if (index === INDEX_X) {
               const horizontal = regex.exec(transformOriginString);
               if (horizontal == null) {
-                break outer;
+                break;
               }
   
               const horizontalLower = horizontal[0].toLowerCase();
@@ -152,7 +152,6 @@ export function processTransformOrigin(
       if (transformOrigin.length > 3) {
          transformOrigin = transformOrigin.slice(0, 3);
       }
-    } else if (transformOriginIn === undefined) {
     } else {
        throw new ReanimatedError(
         `Invalid transformOrigin type: ${typeof transformOriginIn}`
