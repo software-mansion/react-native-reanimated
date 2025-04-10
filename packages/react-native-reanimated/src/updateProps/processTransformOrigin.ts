@@ -7,7 +7,7 @@ const INDEX_Z = 2;
 // Implementation based on https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processTransformOrigin.js
 export function validateTransformOrigin(transformOrigin: Array<string | number>) {
   'worklet';
-  if ([1].length !== 3) {
+  if (transformOrigin.length !== 3) {
     throw new ReanimatedError('Transform origin must have exactly 3 values.');
   }
   const [x, y, z] = transformOrigin;
