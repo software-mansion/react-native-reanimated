@@ -9,7 +9,6 @@ import {
   Image,
   Platform,
   Pressable,
-  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -96,7 +95,6 @@ function ProfilesScreen({
 
   return (
     <View style={profilesStyles.container}>
-      <StatusBar barStyle={'light-content'} />
       <Image source={leavesBackground} style={profilesStyles.backgroundImage} />
       <Text style={profilesStyles.header}>Welcome back!</Text>
       <View style={commonStyles.row}>
@@ -228,8 +226,6 @@ function HomeScreen({
 
   return (
     <View style={homeStyles.container}>
-      <StatusBar barStyle={'dark-content'} />
-
       <View style={homeStyles.headerContainer}>
         <Pressable
           style={homeStyles.pressable}
@@ -411,7 +407,6 @@ function DetailsScreen({
 
   return (
     <>
-      <StatusBar barStyle={'dark-content'} />
       <GestureDetector gesture={pan}>
         <Animated.View style={[detailStyles.container, animatedStyle]}>
           <Animated.Image
@@ -517,12 +512,18 @@ export default function ProfilesExample() {
       <Stack.Screen
         name="Profiles"
         component={ProfilesScreen}
-        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
+        options={{
+          animation: shouldReduceMotion ? 'fade' : 'default',
+          statusBarStyle: 'light',
+        }}
       />
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ animation: shouldReduceMotion ? 'fade' : 'default' }}
+        options={{
+          animation: shouldReduceMotion ? 'fade' : 'default',
+          statusBarStyle: 'dark',
+        }}
       />
       <Stack.Screen
         name="Details"
@@ -531,6 +532,7 @@ export default function ProfilesExample() {
           animation: 'fade',
           presentation: 'transparentModal',
           headerShown: false,
+          statusBarStyle: 'dark',
         }}
       />
     </Stack.Navigator>
