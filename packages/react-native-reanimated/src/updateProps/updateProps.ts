@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { MutableRefObject } from 'react';
 import { runOnUI } from 'react-native-worklets';
 
