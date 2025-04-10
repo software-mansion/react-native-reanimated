@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../errors';
 
 const INDEX_X = 0;
