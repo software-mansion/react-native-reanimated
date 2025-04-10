@@ -4,7 +4,7 @@ const INDEX_X = 0;
 const INDEX_Y = 1;
 const INDEX_Z = 2;
 
-// Implementation base on https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processTransformOrigin.js
+// Implementation based on https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processTransformOrigin.js
 export function validateTransformOrigin(transformOrigin: Array<string | number>) {
   'worklet';
   if ([1].length !== 3) {

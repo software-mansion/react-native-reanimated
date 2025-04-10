@@ -90,6 +90,8 @@ function createUpdatePropsManager() {
 
 if (shouldBeUseWeb()) {
   const maybeThrowError = () => {
+    // Jest attempts to access a property of this object to check if it is a Jest mock
+    // so we can't throw an error in the getter.
     if (!isJest()) {
       throw new ReanimatedError(
         '`UpdatePropsManager` is not available on non-native platform.'
@@ -118,6 +120,10 @@ export interface UpdatePropsManager {
   flush(): void;
 }
 
+/**
+ * This used to be `SharedValue<Descriptors[]>` but objects holding just a
+ * single `value` prop are fine too.
+ */
 interface ViewDescriptorsWrapper {
   value: Readonly<Descriptor[]>;
 }
