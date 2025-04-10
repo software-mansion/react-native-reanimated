@@ -1,7 +1,7 @@
 #import <React/RCTCallInvokerModule.h>
 #import <React/RCTEventEmitter.h>
-#import <React/RCTUIManagerObserverCoordinator.h>
 #import <React/RCTInvalidating.h>
+#import <React/RCTUIManagerObserverCoordinator.h>
 
 #import <rnreanimated/rnreanimated.h>
 
