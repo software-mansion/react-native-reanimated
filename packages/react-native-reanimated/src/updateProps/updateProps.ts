@@ -1,19 +1,19 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
 import { runOnUI } from 'react-native-worklets';
 
-import { processColorsInProps } from './Colors';
+import { processColorsInProps } from '../Colors';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
-} from './commonTypes';
-import { ReanimatedError } from './errors';
-import type { Descriptor } from './hook/commonTypes';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
-import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
+} from '../commonTypes';
+import { ReanimatedError } from '../errors';
+import type { Descriptor } from '../hook/commonTypes';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+import { processTransformOrigin, validateTransformOrigin } from './processTransformOrigin';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -33,10 +33,9 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    if (updates.transformOrigin) {
-      if (!Array.isArray(updates.transformOrigin)) {
-        throw new ReanimatedError('Please use transformOrigin in array form');
-      }
+    if ('transformOrigin' in updates) {
+      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+      validateTransformOrigin(updates.transformOrigin);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
@@ -91,13 +90,11 @@ function createUpdatePropsManager() {
 
 if (shouldBeUseWeb()) {
   const maybeThrowError = () => {
-    // Jest attempts to access a property of this object to check if it is a Jest mock
-    // so we can't throw an error in the getter.
     if (!isJest()) {
       throw new ReanimatedError(
         '`UpdatePropsManager` is not available on non-native platform.'
       );
-    }
+    };
   };
   global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
     get: maybeThrowError,
@@ -121,10 +118,6 @@ export interface UpdatePropsManager {
   flush(): void;
 }
 
-/**
- * This used to be `SharedValue<Descriptors[]>` but objects holding just a
- * single `value` prop are fine too.
- */
 interface ViewDescriptorsWrapper {
   value: Readonly<Descriptor[]>;
 }
