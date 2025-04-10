@@ -103,7 +103,7 @@ if (shouldBeUseWeb()) {
       );
     }
   };
-  global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
+  global.UpdatePropsManager = new Proxy({}, {
     get: maybeThrowError,
     set: () => {
       maybeThrowError();
@@ -115,14 +115,6 @@ if (shouldBeUseWeb()) {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
-}
-
-export interface UpdatePropsManager {
-  update(
-    viewDescriptors: ViewDescriptorsWrapper,
-    updates: StyleProps | AnimatedStyle<any>
-  ): void;
-  flush(): void;
 }
 
 /**
