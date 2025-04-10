@@ -99,6 +99,7 @@ export interface JestAnimatedStyleHandle<
   jestAnimatedValues:
     | MutableRefObject<AnimatedStyle<Style>>
     | MutableRefObject<AnimatedProps>;
+  toJSON: () => string;
 }
 
 export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (

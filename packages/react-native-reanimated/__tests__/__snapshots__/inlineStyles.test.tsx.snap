@@ -24,22 +24,10 @@ exports[`Tests of inline styles Double inline styles (array) 1`] = `
     jestInlineStyle={
       [
         {
-          "width": {
-            "_isReanimatedSharedValue": true,
-            "addListener": [Function],
-            "modify": [Function],
-            "removeListener": [Function],
-            "value": 100,
-          },
+          "width": "100",
         },
         {
-          "height": {
-            "_isReanimatedSharedValue": true,
-            "addListener": [Function],
-            "modify": [Function],
-            "removeListener": [Function],
-            "value": 100,
-          },
+          "height": "100",
         },
       ]
     }
@@ -141,20 +129,8 @@ exports[`Tests of inline styles Double inline styles (single object) 1`] = `
     }
     jestInlineStyle={
       {
-        "height": {
-          "_isReanimatedSharedValue": true,
-          "addListener": [Function],
-          "modify": [Function],
-          "removeListener": [Function],
-          "value": 100,
-        },
-        "width": {
-          "_isReanimatedSharedValue": true,
-          "addListener": [Function],
-          "modify": [Function],
-          "removeListener": [Function],
-          "value": 100,
-        },
+        "height": "100",
+        "width": "100",
       }
     }
     nativeID="5"
@@ -256,13 +232,7 @@ exports[`Tests of inline styles Inline & useAnimatedStyle() 1`] = `
     jestInlineStyle={
       [
         {
-          "height": {
-            "_isReanimatedSharedValue": true,
-            "addListener": [Function],
-            "modify": [Function],
-            "removeListener": [Function],
-            "value": 100,
-          },
+          "height": "100",
         },
       ]
     }
@@ -364,13 +334,7 @@ exports[`Tests of inline styles Inline styles 1`] = `
     }
     jestInlineStyle={
       {
-        "width": {
-          "_isReanimatedSharedValue": true,
-          "addListener": [Function],
-          "modify": [Function],
-          "removeListener": [Function],
-          "value": 100,
-        },
+        "width": "100",
       }
     }
     nativeID="1"
@@ -470,13 +434,7 @@ exports[`Tests of inline styles Inline styles with withTiming 1`] = `
       {
         "backgroundColor": "violet",
         "height": 100,
-        "width": {
-          "_isReanimatedSharedValue": true,
-          "addListener": [Function],
-          "modify": [Function],
-          "removeListener": [Function],
-          "value": 100,
-        },
+        "width": "100",
       }
     }
     nativeID="3"

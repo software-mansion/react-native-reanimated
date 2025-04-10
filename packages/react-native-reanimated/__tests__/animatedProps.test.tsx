@@ -70,9 +70,8 @@ describe('animatedProps', () => {
 
     expect(circle).toHaveAnimatedProps({});
 
-    // TODO: There's still a problem with stringizing `TextInput` with `animatedProps`.
-    // const rendered = render(<AnimatedComponent />).toJSON();
-    // expect(rendered).toMatchSnapshot();
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('Custom animated component', () => {
@@ -87,8 +86,7 @@ describe('animatedProps', () => {
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
 
-    // TODO: There's still a problem with stringizing `TextInput` with `animatedProps`.
-    // const rendered = render(<AnimatedComponent />).toJSON();
-    // expect(rendered).toMatchSnapshot();
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });
