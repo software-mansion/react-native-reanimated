@@ -103,13 +103,16 @@ if (shouldBeUseWeb()) {
       );
     }
   };
-  global.UpdatePropsManager = new Proxy({}, {
-    get: maybeThrowError,
-    set: () => {
-      maybeThrowError();
-      return false;
-    },
-  });
+  global.UpdatePropsManager = new Proxy(
+    {},
+    {
+      get: maybeThrowError,
+      set: () => {
+        maybeThrowError();
+        return false;
+      },
+    }
+  );
 } else {
   runOnUI(() => {
     'worklet';
