@@ -1,12 +1,11 @@
-import React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import { Button, StyleSheet,View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolate,
-  Easing,
   cancelAnimation,
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 type TransformOriginOption = string | number[] | (string | number)[];
@@ -75,7 +74,7 @@ export default function TransformOriginExample() {
     <View style={styles.container}>
       <View style={styles.boxContainer}>
         <Animated.View style={[styles.box, containerStyle]} />
-        <View style={styles.borderBackground}></View>
+        <View style={styles.borderBackground} />
       </View>
       <View style={styles.buttonContainer}>
         <View style={styles.buttonWrapper}>
