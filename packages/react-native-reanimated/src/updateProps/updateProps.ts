@@ -1,4 +1,4 @@
- /* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any */
 'use strict';
 
 import type { MutableRefObject } from 'react';
@@ -15,7 +15,10 @@ import type { Descriptor } from '../hook/commonTypes';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-import { processTransformOrigin, validateTransformOrigin } from './processTransformOrigin';
+import {
+  processTransformOrigin,
+  validateTransformOrigin,
+} from './processTransformOrigin';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -98,7 +101,7 @@ if (shouldBeUseWeb()) {
       throw new ReanimatedError(
         '`UpdatePropsManager` is not available on non-native platform.'
       );
-    };
+    }
   };
   global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
     get: maybeThrowError,
