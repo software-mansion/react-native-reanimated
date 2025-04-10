@@ -287,7 +287,7 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export { ReanimatedNativeView } from './specs';
+export { ReanimatedView } from './specs';
 export type { WorkletRuntime } from 'react-native-worklets';
 export {
   isWorkletFunction,
