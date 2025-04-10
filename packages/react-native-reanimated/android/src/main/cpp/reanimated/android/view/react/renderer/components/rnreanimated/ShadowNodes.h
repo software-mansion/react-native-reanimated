@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include <reanimated/android/view/react/renderer/components/rnreanimated/EventEmitters.h>
-#include <reanimated/android/view/react/renderer/components/rnreanimated/Props.h>
-#include <reanimated/android/view/react/renderer/components/rnreanimated/States.h>
+#include "EventEmitters.h"
+#include "Props.h"
+#include "States.h"
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/LayoutContext.h>
@@ -36,7 +36,7 @@ public:
     using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
     void layout(LayoutContext layoutContext) override {
-//        YogaLayoutableShadowNode::layout(layoutContext);
+       YogaLayoutableShadowNode::layout(layoutContext);
     }
 
 };

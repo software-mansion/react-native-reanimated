@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <reanimated/android/view/react/renderer/components/rnreanimated/ShadowNodes.h>
+#include "ShadowNodes.h"
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 
