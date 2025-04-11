@@ -15,6 +15,11 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  #workletMakeShareableClone: <TValue>(
+    value: TValue,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ) => ShareableRef<TValue>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
@@ -28,6 +33,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       );
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletMakeShareableClone = this.#workletsModuleProxy.makeShareableClone;
   }
 
   makeShareableClone<TValue>(
@@ -35,7 +41,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
-    return this.#workletsModuleProxy.makeShareableClone(
+    return this.#workletMakeShareableClone(
       value,
       shouldPersistRemote,
       nativeStateSource

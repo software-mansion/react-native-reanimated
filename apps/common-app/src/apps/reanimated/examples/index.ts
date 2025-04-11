@@ -117,6 +117,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
 
 interface Example {
   icon?: string;
@@ -176,6 +177,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔒',
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
+  },
+
+  CopyShareablesPerformanceTest: {
+    icon: '🔄',
+    title: 'Copy shareables performance test',
+    screen: CopyShareablesPerformanceTest,
   },
 
   // About
@@ -250,7 +257,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -509,7 +515,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -576,7 +581,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
