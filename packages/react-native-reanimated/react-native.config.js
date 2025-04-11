@@ -5,7 +5,7 @@ module.exports = {
         componentDescriptors: [
           "ReanimatedViewComponentDescriptor",
         ],
-        cmakeListsPath: "./src/main/cpp/reanimated/android/view/CMakeLists.txt",      },
+        cmakeListsPath: "../android/src/main/fabric/CMakeLists.txt",      },
     },
   },
 }

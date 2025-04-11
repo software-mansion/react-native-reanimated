@@ -4,4 +4,4 @@ import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNati
 
 interface NativeProps extends ViewProps {}
 
-export default codegenNativeComponent<NativeProps>('ReanimatedView');
+export default codegenNativeComponent<NativeProps>('ReanimatedView', { interfaceOnly: true, });
