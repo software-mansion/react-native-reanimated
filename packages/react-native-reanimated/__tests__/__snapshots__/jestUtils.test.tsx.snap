@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`jestUtils differentiates matching with shouldMatchAllProps option with toHaveAnimatedStyle 1`] = `
+<View>
+  <View
+    collapsable={false}
+    jestAnimatedProps={
+      {
+        "value": {},
+      }
+    }
+    jestAnimatedStyle={
+      {
+        "value": {
+          "flex": 1,
+        },
+      }
+    }
+    jestInlineStyle={
+      [
+        {
+          "backgroundColor": "black",
+        },
+      ]
+    }
+    nativeID="1"
+    style={
+      [
+        {
+          "backgroundColor": "black",
+        },
+        {
+          "flex": 1,
+        },
+      ]
+    }
+    testID="view"
+  />
+</View>
+`;

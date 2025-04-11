@@ -6,10 +6,10 @@ import {
 
 describe('Spring utils', () => {
   test.each([
-    [[0, 5, (x) => x - 3, 20], 3],
-    [[0, 5, (x) => x * x - 9, 20], 3],
-    [[0, 5, (x) => x * x - 2, 20], Math.sqrt(2)],
-    [[0, 5, (x) => x - 1 / x - 1, 20], (1 + Math.sqrt(5)) / 2],
+    [[0, 5, (x: number) => x - 3, 20], 3],
+    [[0, 5, (x: number) => x * x - 9, 20], 3],
+    [[0, 5, (x: number) => x * x - 2, 20], Math.sqrt(2)],
+    [[0, 5, (x: number) => x - 1 / x - 1, 20], (1 + Math.sqrt(5)) / 2],
   ] as const)('Bisect root', (testCase, result) => {
     const [min, max, func, maxIterations] = testCase;
     const calculatedOutput = bisectRoot({
