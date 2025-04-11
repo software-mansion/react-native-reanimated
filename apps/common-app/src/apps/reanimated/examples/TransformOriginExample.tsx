@@ -1,4 +1,4 @@
-import { Button, StyleSheet,View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-type TransformOriginOption = string | number[] | (string | number)[];
+type TransformOriginOption = string | (string | number)[];
 
 export default function TransformOriginExample() {
   const progress = useSharedValue(0);

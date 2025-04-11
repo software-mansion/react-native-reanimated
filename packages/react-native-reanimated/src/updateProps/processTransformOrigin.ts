@@ -16,15 +16,15 @@ export function validateTransformOrigin(
   const [x, y, z] = transformOrigin;
   if (!(typeof x === 'number' || (typeof x === 'string' && x.endsWith('%')))) {
     throw new ReanimatedError(
-      `Transform origin x-position must be a number or percentage string. Passed value: ${x}.`
+      `Transform origin x-position must be a number or a percentage string. Passed value: ${x}.`
     );
   }
   if (!(typeof y === 'number' || (typeof y === 'string' && y.endsWith('%')))) {
     throw new ReanimatedError(
-      `Transform origin y-position must be a number or percentage string. Passed value: ${y}.`
+      `Transform origin y-position must be a number or a percentage string. Passed value: ${y}.`
     );
   }
-  if (!(typeof z === 'number')) {
+  if (typeof z !== 'number') {
     throw new ReanimatedError(
       `Transform origin z-position must be a number. Passed value: ${z}.`
     );
@@ -39,7 +39,7 @@ export function processTransformOrigin(
 
   if (typeof transformOriginIn === 'string') {
     const transformOriginString = transformOriginIn;
-    const regex = /(top|bottom|left|right|center|\d+(?:%|px)?|0)/gi;
+    const regex = /(top|bottom|left|right|center|\d+(?:%|px)|0)/gi;
     const transformOriginArray: Array<string | number> = ['50%', '50%', 0];
 
     let index = INDEX_X;
@@ -70,14 +70,14 @@ export function processTransformOrigin(
           }
           transformOriginArray[INDEX_Y] = valueLower === 'top' ? 0 : '100%';
 
+          // Handle [[ center | left | right ] && [ center | top | bottom ]] <length>?
           if (index === INDEX_X) {
             const horizontal = regex.exec(transformOriginString);
             if (horizontal == null) {
               break;
             }
 
-            const horizontalLower = horizontal[0].toLowerCase();
-            switch (horizontalLower) {
+            switch (horizontal?.[0].toLowerCase()) {
               case 'left':
                 transformOriginArray[INDEX_X] = 0;
                 break;
@@ -87,19 +87,10 @@ export function processTransformOrigin(
               case 'center':
                 transformOriginArray[INDEX_X] = '50%';
                 break;
-              default: {
-                const zValue = horizontalLower.endsWith('px')
-                  ? parseFloat(horizontalLower)
-                  : parseFloat(horizontalLower);
-                if (!isNaN(zValue)) {
-                  transformOriginArray[INDEX_Z] = zValue;
-                } else {
-                  throw new ReanimatedError(
-                    `Could not parse transform-origin: ${transformOriginString}`
-                  );
-                }
-                break;
-              }
+              default:
+                throw new ReanimatedError(
+                  `Could not parse transform-origin: ${transformOriginString}`
+                );
             }
             nextIndex = INDEX_Z;
           }
@@ -131,26 +122,12 @@ export function processTransformOrigin(
         }
       }
 
-      if (regex.lastIndex === matches.index) {
-        regex.lastIndex++;
-      }
       index = nextIndex;
-      if (index > INDEX_Z) {
-        break;
-      }
     }
+
     transformOrigin = transformOriginArray;
   } else if (Array.isArray(transformOriginIn)) {
-    transformOrigin = [...transformOriginIn];
-    if (transformOrigin.length < 3) {
-      if (transformOrigin.length < 2) {
-        transformOrigin.push('50%');
-      }
-      transformOrigin.push(0);
-    }
-    if (transformOrigin.length > 3) {
-      transformOrigin = transformOrigin.slice(0, 3);
-    }
+    transformOrigin = transformOriginIn;
   } else {
     throw new ReanimatedError(
       `Invalid transformOrigin type: ${typeof transformOriginIn}`

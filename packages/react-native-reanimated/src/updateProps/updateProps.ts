@@ -40,7 +40,9 @@ if (shouldBeUseWeb()) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
-      validateTransformOrigin(updates.transformOrigin);
+      if (__DEV__) {
+        validateTransformOrigin(updates.transformOrigin);
+      }
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
