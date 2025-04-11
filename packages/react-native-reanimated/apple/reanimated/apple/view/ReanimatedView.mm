@@ -1,5 +1,4 @@
 #import <reanimated/apple/view/ReanimatedView.h>
-//#import <reanimated/apple/view/ComponentDescriptors.h>
 #import <reanimated/view/react/renderer/components/rnreanimated/ComponentDescriptors.h>
 
 #import <react/renderer/components/rnreanimated/ComponentDescriptors.h>

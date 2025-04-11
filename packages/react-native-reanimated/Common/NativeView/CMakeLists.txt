@@ -4,7 +4,6 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 set(ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../android)
 set(CODEGEN_JNI_DIR ${ANDROID_DIR}/build/generated/source/codegen/jni)
 set(CODEGEN_COMPONENTS_DIR ${CODEGEN_JNI_DIR}/react/renderer/components/rnreanimated)
-message(WARNING "mleko: ${CODEGEN_JNI_DIR}")
 file(
   GLOB CODEGEN_ORIGINAL_SRCS CONFIGURE_DEPENDS
   ${CODEGEN_JNI_DIR}/*.cpp
