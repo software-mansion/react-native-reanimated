@@ -6,11 +6,22 @@ import {
   TurboModuleRegistry,
   View,
 } from 'react-native';
-import { makeShareableCloneRecursive } from 'react-native-reanimated';
+import { makeShareableCloneRecursive, runOnUI } from 'react-native-reanimated';
 
 export default function FreezingShareables() {
   return (
     <View style={styles.container}>
+      <View style={styles.warning}>
+        <Text>Open debugger to view warnings.</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.text}>⚠️</Text>
+          <Text>Should show a warning.</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.text}>🤫</Text>
+          <Text>Should not show a warning.</Text>
+        </View>
+      </View>
       <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
@@ -26,17 +37,17 @@ export default function FreezingShareables() {
         />
       </View>
       <View style={styles.textAndButton}>
-        <Text style={styles.text}>🤫</Text>
-        <Button
-          title="Modify converted host object"
-          onPress={tryModifyConvertedHostObject}
-        />
-      </View>
-      <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
           title="Modify converted plain object"
           onPress={tryModifyConvertedPlainObject}
+        />
+      </View>
+      <View style={styles.textAndButton}>
+        <Text style={styles.text}>🤫</Text>
+        <Button
+          title="Modify converted host object"
+          onPress={tryModifyConvertedHostObject}
         />
       </View>
       <View style={styles.textAndButton}>
@@ -97,9 +108,17 @@ function tryModifyConvertedHostObject() {
     console.warn('No host object found.');
     return;
   }
+  // @ts-expect-error It's ok
+  obj.prop2 = 'prop2';
   makeShareableCloneRecursive(obj);
   // @ts-expect-error It's ok
-  obj.prop = 2; // shouldn't warn because it's not frozen
+  obj.prop = 'prop'; // shouldn't warn because it's not frozen
+
+  runOnUI(() => {
+    console.log('obj', obj);
+    // @ts-expect-error It's ok
+    console.log(obj.prop2); // undefined, should be "hello" for consistency
+  })();
 }
 
 function tryModifyConvertedPlainObject() {
@@ -163,5 +182,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 32,
     marginRight: 10,
+  },
+  warning: {
+    width: '90%',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    padding: 10,
   },
 });
