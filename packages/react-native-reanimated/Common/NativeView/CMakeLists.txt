@@ -38,8 +38,6 @@ target_link_libraries(
   react_codegen_rnreanimated
   fbjni
   jsi
-  # We need to link different libraries based on whether we are building rncore or not, that's necessary
-  # because we want to break a circular dependency between react_codegen_rncore and reactnative
   reactnative
 )
 

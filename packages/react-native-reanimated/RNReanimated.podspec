@@ -44,7 +44,7 @@ Pod::Spec.new do |s|
     ss.header_mappings_dir = "Common/cpp/reanimated"
 
     ss.subspec "apple" do |sss|
-      sss.source_files = "apple/reanimated/**/*.{mm,h,m,cpp}"
+      sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
       sss.header_dir = "reanimated"
       sss.header_mappings_dir = "apple/reanimated"
     end
