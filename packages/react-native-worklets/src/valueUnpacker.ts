@@ -10,34 +10,29 @@ function valueUnpacker(
   remoteFunctionName?: string
 ): unknown {
   'worklet';
-  let workletsCache = global.__workletsCache;
-  let handleCache = global.__handleCache;
-  if (workletsCache === undefined) {
-    // init
-    workletsCache = global.__workletsCache = new Map();
-    handleCache = global.__handleCache = new WeakMap();
-  }
+  const workletsCache = globalThis.__workletsCache;
+  const handleCache = globalThis.__handleCache;
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     let workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {
       const initData = objectToUnpack.__initData;
-      if (global.evalWithSourceMap) {
+      if (globalThis.evalWithSourceMap) {
         // if the runtime (hermes only for now) supports loading source maps
         // we want to use the proper filename for the location as it guarantees
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
-        workletFun = global.evalWithSourceMap(
+        workletFun = globalThis.evalWithSourceMap(
           '(' + initData.code + '\n)',
           initData.location!,
           initData.sourceMap!
         );
-      } else if (global.evalWithSourceUrl) {
+      } else if (globalThis.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
         // can pass source url when evaluating the worklet. Now, instead of using
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
-        workletFun = global.evalWithSourceUrl(
+        workletFun = globalThis.evalWithSourceUrl(
           '(' + initData.code + '\n)',
           `worklet_${workletHash}`
         );
