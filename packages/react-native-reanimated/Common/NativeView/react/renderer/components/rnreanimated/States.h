@@ -7,11 +7,13 @@
 namespace facebook::react {
 
 class ReanimatedViewState {
-public:
+ public:
   ReanimatedViewState() = default;
 
 #ifdef ANDROID
-  ReanimatedViewState(ReanimatedViewState const &previousState, folly::dynamic data){};
+  ReanimatedViewState(
+      ReanimatedViewState const &previousState,
+      folly::dynamic data) {};
   folly::dynamic getDynamic() const {
     return {};
   };
