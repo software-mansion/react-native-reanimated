@@ -1,5 +1,5 @@
 #import <reanimated/apple/view/ReanimatedView.h>
-#import <reanimated/apple/view/ReanimatedViewCustomComponentDescriptor.h>
+#import <reanimated/apple/view/ComponentDescriptors.h>
 
 #import <react/renderer/components/rnreanimated/ComponentDescriptors.h>
 #import <react/renderer/components/rnreanimated/EventEmitters.h>
@@ -12,7 +12,7 @@ using namespace facebook::react;
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
 {
-  return concreteComponentDescriptorProvider<ReanimatedViewCustomComponentDescriptor>();
+  return concreteComponentDescriptorProvider<ReanimatedViewComponentDescriptor>();
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
