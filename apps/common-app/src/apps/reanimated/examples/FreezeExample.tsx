@@ -2,7 +2,7 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
 import { Button, Text, View } from 'react-native';
 import Animated, {
@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { NukeContext } from '@/App';
+import { NukeContext } from '@/components';
 
 type RootStackParamList = {
   screen1: undefined;
@@ -95,7 +95,7 @@ const AnimatedStyleAnimation = () => {
 };
 
 function HomeScreen() {
-  const nuke = React.useContext(NukeContext);
+  const nuke = useContext(NukeContext);
   const navigation = useNavigation<FirstScreenProp>();
   const [freezed, setFreezed] = useState(false);
   const isFocused = useIsFocused();

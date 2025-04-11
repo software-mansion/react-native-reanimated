@@ -3761,11 +3761,11 @@ __metadata:
   linkType: hard
 
 "@expo/metro-runtime@npm:~4.0.0":
-  version: 4.0.0
-  resolution: "@expo/metro-runtime@npm:4.0.0"
+  version: 4.0.1
+  resolution: "@expo/metro-runtime@npm:4.0.1"
   peerDependencies:
     react-native: "*"
-  checksum: 10/2f5bd81e4d0735dc9b99ac4f35169969eb9dc303669ddc3158f670a3c36115f87d479a6fda11c1d5acab551f1015a32271c83001e8874493f0ec58c02f8ddbf3
+  checksum: 10/3e4bbb52a5c57ec1b86731e1ff5bc5de7d2fa616d66785c025b3dbb54b6d2bdf5c070749ed5b8661f51577312e0ebe45c71f4be6748d18d2a28fb8a7eb81307c
   languageName: node
   linkType: hard
 

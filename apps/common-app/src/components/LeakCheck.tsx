@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 
-import { NukeContext } from '@/App';
+export const NukeContext = createContext<() => void>(() => '');
 
 function registriesLeakCheck(): string {
   // eslint-disable-next-line no-underscore-dangle
