@@ -1,39 +1,37 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 cmake_minimum_required(VERSION 3.13)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
-set(LIB_ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
-# set(LIB_CPP_DIR ${LIB_ANDROID_DIR}/../cpp)
-# set(LIB_CUSTOM_SOURCES_DIR ${LIB_CPP_DIR}/react/renderer/components/${LIB_LITERAL})
-set(LIB_ANDROID_GENERATED_JNI_DIR ${LIB_ANDROID_DIR}/build/generated/source/codegen/jni)
-set(LIB_ANDROID_GENERATED_COMPONENTS_DIR ${LIB_ANDROID_GENERATED_JNI_DIR}/react/renderer/components/rnreanimated)
+set(ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
+set(CODEGEN_JNI_DIR ${ANDROID_DIR}/build/generated/source/codegen/jni)
+set(CODEGEN_COMPONENTS_DIR ${CODEGEN_JNI_DIR}/react/renderer/components/rnreanimated)
+file(
+  GLOB CODEGEN_ORIGINAL_SRCS CONFIGURE_DEPENDS
+  ${CODEGEN_JNI_DIR}/*.cpp
+  ${CODEGEN_COMPONENTS_DIR}/*.cpp
+)
 
-file(GLOB react_codegen_SRCS CONFIGURE_DEPENDS *.cpp react/renderer/components/rnreanimated/*.cpp)
-# file(GLOB LIB_CUSTOM_SRCS CONFIGURE_DEPENDS ${LIB_CUSTOM_SOURCES_DIR}/*.cpp)
-file(GLOB LIB_ANDROID_GENERATED_JNI_SRCS CONFIGURE_DEPENDS ${LIB_ANDROID_GENERATED_JNI_DIR}/*.cpp)
-file(GLOB LIB_CODEGEN_SRCS CONFIGURE_DEPENDS ${LIB_ANDROID_GENERATED_COMPONENTS_DIR}/*.cpp)
-
-message(WARNING "mleko: ${react_codegen_SRCS}")
+set(CODEGEN_OVERWRITTEN_JNI_DIR .)
+set(CODEGEN_OVERWRITTEN_COMPONENTS_DIR ${CODEGEN_OVERWRITTEN_JNI_DIR}/react/renderer/components/rnreanimated)
+file(
+  GLOB CODEGEN_OVERWRITTEN_SRCS CONFIGURE_DEPENDS 
+  ${CODEGEN_OVERWRITTEN_JNI_DIR}/*.cpp
+  ${CODEGEN_OVERWRITTEN_COMPONENTS_DIR}/*.cpp
+)
 
 add_library(
   react_codegen_rnreanimated
   OBJECT
-  ${react_codegen_SRCS}
-  ${LIB_CODEGEN_SRCS}
-  ${LIB_ANDROID_GENERATED_JNI_SRCS}
+  ${CODEGEN_OVERWRITTEN_SRCS}
+  ${CODEGEN_ORIGINAL_SRCS}
 )
 
 target_include_directories(
   react_codegen_rnreanimated
   PUBLIC
-  .
-  react/renderer/components/rnreanimated
-  ${LIB_ANDROID_GENERATED_JNI_DIR}
-  ${LIB_ANDROID_GENERATED_COMPONENTS_DIR}
+  ${CODEGEN_OVERWRITTEN_JNI_DIR}
+  ${CODEGEN_OVERWRITTEN_COMPONENTS_DIR}
+  ${CODEGEN_JNI_DIR}
+  ${CODEGEN_COMPONENTS_DIR}
 )
 
 target_link_libraries(
