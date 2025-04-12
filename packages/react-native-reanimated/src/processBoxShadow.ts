@@ -12,6 +12,7 @@
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 
 import type { StyleProps } from '.';
+import { processColor } from './Colors';
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
   'worklet';
@@ -34,6 +35,19 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
     // split rawBoxShadow string by all whitespaces that are not in parenthesis
     const args = rawBoxShadow.split(/\s+(?![^(]*\))/);
     for (const arg of args) {
+      // check if arg is a color, and if so end parsing
+      const processedColor = processColor(arg);
+      if (processedColor != null) {
+        if (boxShadow.color != null) {
+          return [];
+        }
+        if (offsetX != null) {
+          keywordDetectedAfterLength = true;
+        }
+        boxShadow.color = arg;
+        continue;
+      }
+
       if (arg === 'inset') {
         if (boxShadow.inset != null) {
           return [];
@@ -69,13 +83,6 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
             return [];
           }
           boxShadow.spreadDistance = arg;
-          lengthCount++;
-          break;
-        case 4:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.color = arg;
           lengthCount++;
           break;
         default:
@@ -127,13 +134,14 @@ export function processBoxShadow(props: StyleProps) {
 
   const rawBoxShadows = props.boxShadow;
 
-  if (rawBoxShadows === '') {
+  if (rawBoxShadows === '' || rawBoxShadows == null) {
     return result;
   }
 
-  const boxShadowList = parseBoxShadowString(
-    (rawBoxShadows as string).replace(/\n/g, ' ')
-  );
+  const boxShadowList =
+    typeof rawBoxShadows === 'string'
+      ? parseBoxShadowString(rawBoxShadows.replace(/\n/g, ' '))
+      : rawBoxShadows;
 
   for (const rawBoxShadow of boxShadowList) {
     const parsedBoxShadow: ParsedBoxShadow = {
