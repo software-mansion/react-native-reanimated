@@ -6,9 +6,7 @@ const INDEX_Y = 1;
 const INDEX_Z = 2;
 
 // Implementation based on https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processTransformOrigin.js
-export function validateTransformOrigin(
-  transformOrigin: Array<string | number>
-) {
+function validateTransformOrigin(transformOrigin: Array<string | number>) {
   'worklet';
   if (transformOrigin.length !== 3) {
     throw new ReanimatedError('Transform origin must have exactly 3 values.');
@@ -35,7 +33,9 @@ export function processTransformOrigin(
   transformOriginIn: Array<string | number> | string | undefined
 ): Array<string | number> {
   'worklet';
-  let transformOrigin: Array<string | number> = Array.isArray(transformOriginIn) ? transformOriginIn : ['50%', '50%', 0];
+  let transformOrigin: Array<string | number> = Array.isArray(transformOriginIn)
+    ? transformOriginIn
+    : ['50%', '50%', 0];
 
   if (typeof transformOriginIn === 'string') {
     const transformOriginString = transformOriginIn;
@@ -126,9 +126,12 @@ export function processTransformOrigin(
     }
 
     transformOrigin = transformOriginArray;
-  } 
-  
-  if (typeof transformOriginIn !== 'string' && !Array.isArray(transformOriginIn)) {
+  }
+
+  if (
+    typeof transformOriginIn !== 'string' &&
+    !Array.isArray(transformOriginIn)
+  ) {
     throw new ReanimatedError(
       `Invalid transformOrigin type: ${typeof transformOriginIn}`
     );
