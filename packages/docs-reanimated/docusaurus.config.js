@@ -5,6 +5,7 @@ const lightCodeTheme = require('./src/theme/CodeBlock/highlighting-light.js');
 const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
 const webpack = require('webpack');
+const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -138,6 +139,22 @@ const config = {
       },
     }),
   plugins: [
+    function svgModulePlugin() {
+      return {
+        name: 'svg-module-plugin',
+        configureWebpack(config, isServer, utils) {
+          config.module.rules.push({
+            include: [
+              path.resolve(
+                __dirname,
+                'node_modules/@react-native/assets-registry/registry'
+              ),
+            ],
+          });
+          return config;
+        },
+      };
+    },
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
     ].filter(Boolean),
