@@ -14,7 +14,7 @@ import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 import type { StyleProps } from '.';
 import { ReanimatedError } from './errors';
 
-export const isLength = (value: string) => {
+const isLength = (value: string) => {
   'worklet';
   return value.endsWith('px') || !isNaN(Number(value));
 };
