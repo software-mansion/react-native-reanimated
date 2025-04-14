@@ -10,6 +10,6 @@ using ReanimatedViewComponentDescriptor =
     ConcreteComponentDescriptor<ReanimatedShadowNode>;
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
-    std::shared_ptr<const ComponentDescriptorProviderRegistry> registry);
+    const std::shared_ptr<const ComponentDescriptorProviderRegistry> &registry);
 
 } // namespace facebook::react
