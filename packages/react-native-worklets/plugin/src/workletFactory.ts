@@ -7,6 +7,7 @@ import type {
   File as BabelFile,
   FunctionExpression,
   Identifier,
+  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -30,6 +31,7 @@ import {
   newExpression,
   numericLiteral,
   objectExpression,
+  objectPattern,
   objectProperty,
   returnStatement,
   stringLiteral,
@@ -54,7 +56,7 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { factory: FunctionExpression; factoryCallArgs: Identifier[] } {
+): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -304,9 +306,20 @@ export function makeWorkletFactory(
     ...closureVariables.map((variableId) => cloneNode(variableId, true)),
   ];
 
+  const factoryParamObjectPattern = objectPattern(
+    factoryParams.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
   const factory = functionExpression(
     identifier(workletName + 'Factory'),
-    factoryParams,
+    [factoryParamObjectPattern],
     blockStatement(statements)
   );
 
@@ -315,7 +328,18 @@ export function makeWorkletFactory(
     ...closureVariables.map((variableId) => cloneNode(variableId, true)),
   ];
 
-  return { factory, factoryCallArgs };
+  const factoryCallParamPack = objectExpression(
+    factoryCallArgs.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
+  return { factory, factoryCallParamPack };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {

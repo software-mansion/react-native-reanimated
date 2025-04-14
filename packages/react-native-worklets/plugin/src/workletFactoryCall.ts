@@ -9,9 +9,9 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): CallExpression {
-  const { factory, factoryCallArgs } = makeWorkletFactory(path, state);
+  const { factory, factoryCallParamPack } = makeWorkletFactory(path, state);
 
-  const factoryCall = callExpression(factory, factoryCallArgs);
+  const factoryCall = callExpression(factory, [factoryCallParamPack]);
 
   addStackTraceDataToWorkletFactory(path, factoryCall);
 

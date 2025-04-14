@@ -742,12 +742,14 @@ var require_workletFactory = __commonJS({
         (0, types_12.cloneNode)(initDataId, true),
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
-      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams, (0, types_12.blockStatement)(statements));
+      const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = [
         (0, types_12.identifier)(initDataId.name),
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
-      return { factory, factoryCallArgs };
+      const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      return { factory, factoryCallParamPack };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
@@ -866,8 +868,8 @@ var require_workletFactoryCall = __commonJS({
     var types_12 = require("@babel/types");
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
-      const { factory, factoryCallArgs } = (0, workletFactory_1.makeWorkletFactory)(path, state);
-      const factoryCall = (0, types_12.callExpression)(factory, factoryCallArgs);
+      const { factory, factoryCallParamPack } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      const factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
       addStackTraceDataToWorkletFactory(path, factoryCall);
       const replacement = factoryCall;
       return replacement;
