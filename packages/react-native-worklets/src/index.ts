@@ -7,8 +7,6 @@ import { WorkletsModule } from './WorkletsModule';
 // universal source of truth for it.
 initializeUIRuntime(WorkletsModule);
 
-export type { CustomError } from './errors';
-export { createCustomError, registerCustomError } from './errors';
 export type { LoggerConfig } from './logger';
 export {
   logger,
