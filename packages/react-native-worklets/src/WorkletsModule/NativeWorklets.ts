@@ -20,6 +20,11 @@ class NativeWorklets {
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) => ShareableRef<TValue>;
+  #workletScheduleOnUI: <TValue>(shareable: ShareableRef<TValue>) => void;
+  #workletExecuteOnUIRuntimeSync: <TValue, TReturn>(shareable: ShareableRef<TValue>) => TReturn;
+  #workletCreateWorkletRuntime: (name: string, initializer: ShareableRef<() => void>) => WorkletRuntime;
+  #workletScheduleOnRuntime: <T>(workletRuntime: WorkletRuntime, shareableWorklet: ShareableRef<T>) => void;
+
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
@@ -34,6 +39,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#workletMakeShareableClone = this.#workletsModuleProxy.makeShareableClone;
+    this.#workletScheduleOnUI = this.#workletsModuleProxy.scheduleOnUI;
+    this.#workletExecuteOnUIRuntimeSync = this.#workletsModuleProxy.executeOnUIRuntimeSync;
+    this.#workletCreateWorkletRuntime = this.#workletsModuleProxy.createWorkletRuntime;
+    this.#workletScheduleOnRuntime = this.#workletsModuleProxy.scheduleOnRuntime;
   }
 
   makeShareableClone<TValue>(
@@ -49,24 +58,24 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(shareable);
+    return this.#workletScheduleOnUI(shareable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
     shareable: ShareableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
+    return this.#workletExecuteOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.#workletsModuleProxy.createWorkletRuntime(name, initializer);
+    return this.#workletCreateWorkletRuntime(name, initializer);
   }
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.#workletsModuleProxy.scheduleOnRuntime(
+    return this.#workletScheduleOnRuntime(
       workletRuntime,
       shareableWorklet
     );
