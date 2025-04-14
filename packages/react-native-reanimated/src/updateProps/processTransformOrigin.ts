@@ -35,7 +35,7 @@ export function processTransformOrigin(
   transformOriginIn: Array<string | number> | string | undefined
 ): Array<string | number> {
   'worklet';
-  let transformOrigin: Array<string | number> = ['50%', '50%', 0];
+  let transformOrigin: Array<string | number> = Array.isArray(transformOriginIn) ? transformOriginIn : ['50%', '50%', 0];
 
   if (typeof transformOriginIn === 'string') {
     const transformOriginString = transformOriginIn;
@@ -126,12 +126,16 @@ export function processTransformOrigin(
     }
 
     transformOrigin = transformOriginArray;
-  } else if (Array.isArray(transformOriginIn)) {
-    transformOrigin = transformOriginIn;
-  } else {
+  } 
+  
+  if (typeof transformOriginIn !== 'string' && !Array.isArray(transformOriginIn)) {
     throw new ReanimatedError(
       `Invalid transformOrigin type: ${typeof transformOriginIn}`
     );
+  }
+
+  if (__DEV__) {
+    validateTransformOrigin(transformOrigin);
   }
 
   return transformOrigin;

@@ -15,10 +15,7 @@ import type { Descriptor } from '../hook/commonTypes';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-import {
-  processTransformOrigin,
-  validateTransformOrigin,
-} from './processTransformOrigin';
+import { processTransformOrigin } from './processTransformOrigin';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -40,9 +37,6 @@ if (shouldBeUseWeb()) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
-      if (__DEV__) {
-        validateTransformOrigin(updates.transformOrigin);
-      }
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
