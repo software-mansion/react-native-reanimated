@@ -12,6 +12,7 @@
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 
 import type { StyleProps } from '.';
+import { ReanimatedError } from './errors';
 
 export const isLength = (value: string) => {
   'worklet';
@@ -132,14 +133,21 @@ export function processBoxShadow(props: StyleProps) {
 
   const rawBoxShadows = props.boxShadow;
 
-  if (rawBoxShadows === '' || rawBoxShadows == null) {
+  if (rawBoxShadows == null) {
     return result;
   }
 
-  const boxShadowList =
-    typeof rawBoxShadows === 'string'
-      ? parseBoxShadowString(rawBoxShadows.replace(/\n/g, ' '))
-      : rawBoxShadows;
+  let boxShadowList: Array<BoxShadowValue>;
+
+  if (typeof rawBoxShadows === 'string') {
+    boxShadowList = parseBoxShadowString(rawBoxShadows.replace(/\n/g, ' '));
+  } else if (Array.isArray(rawBoxShadows)) {
+    boxShadowList = rawBoxShadows;
+  } else {
+    throw new ReanimatedError(
+      `Box shadow value must be an array of shadow objects or a string. Received: ${JSON.stringify(rawBoxShadows)}`
+    );
+  }
 
   for (const rawBoxShadow of boxShadowList) {
     const parsedBoxShadow: ParsedBoxShadow = {
