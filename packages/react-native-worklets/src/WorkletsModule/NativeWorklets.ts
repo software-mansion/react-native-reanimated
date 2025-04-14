@@ -20,11 +20,19 @@ class NativeWorklets {
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) => ShareableRef<TValue>;
-  #workletScheduleOnUI: <TValue>(shareable: ShareableRef<TValue>) => void;
-  #workletExecuteOnUIRuntimeSync: <TValue, TReturn>(shareable: ShareableRef<TValue>) => TReturn;
-  #workletCreateWorkletRuntime: (name: string, initializer: ShareableRef<() => void>) => WorkletRuntime;
-  #workletScheduleOnRuntime: <T>(workletRuntime: WorkletRuntime, shareableWorklet: ShareableRef<T>) => void;
 
+  #workletScheduleOnUI: <TValue>(shareable: ShareableRef<TValue>) => void;
+  #workletExecuteOnUIRuntimeSync: <TValue, TReturn>(
+    shareable: ShareableRef<TValue>
+  ) => TReturn;
+  #workletCreateWorkletRuntime: (
+    name: string,
+    initializer: ShareableRef<() => void>
+  ) => WorkletRuntime;
+  #workletScheduleOnRuntime: <T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) => void;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
@@ -38,11 +46,25 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       );
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
-    this.#workletMakeShareableClone = this.#workletsModuleProxy.makeShareableClone;
-    this.#workletScheduleOnUI = this.#workletsModuleProxy.scheduleOnUI;
-    this.#workletExecuteOnUIRuntimeSync = this.#workletsModuleProxy.executeOnUIRuntimeSync;
-    this.#workletCreateWorkletRuntime = this.#workletsModuleProxy.createWorkletRuntime;
-    this.#workletScheduleOnRuntime = this.#workletsModuleProxy.scheduleOnRuntime;
+    this.#workletMakeShareableClone =
+      this.#workletsModuleProxy.makeShareableClone.bind(
+        this.#workletsModuleProxy
+      );
+    this.#workletScheduleOnUI = this.#workletsModuleProxy.scheduleOnUI.bind(
+      this.#workletsModuleProxy
+    );
+    this.#workletExecuteOnUIRuntimeSync =
+      this.#workletsModuleProxy.executeOnUIRuntimeSync.bind(
+        this.#workletsModuleProxy
+      );
+    this.#workletCreateWorkletRuntime =
+      this.#workletsModuleProxy.createWorkletRuntime.bind(
+        this.#workletsModuleProxy
+      );
+    this.#workletScheduleOnRuntime =
+      this.#workletsModuleProxy.scheduleOnRuntime.bind(
+        this.#workletsModuleProxy
+      );
   }
 
   makeShareableClone<TValue>(
@@ -75,9 +97,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.#workletScheduleOnRuntime(
-      workletRuntime,
-      shareableWorklet
-    );
+    return this.#workletScheduleOnRuntime(workletRuntime, shareableWorklet);
   }
 }
