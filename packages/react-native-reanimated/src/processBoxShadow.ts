@@ -1,12 +1,6 @@
 /* based on:
  * https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processBoxShadow.js
  */
-
-/* TODO: In Reanimated 4, we have another parser for boxShadow in CSS files
- * - it's much shorter and same as effective as this one
- * When there is a decision about extracting CSS Animations to separate package,
- * we need to unify those two parsers or at least make sure that they are consistent
- */
 'use strict';
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';

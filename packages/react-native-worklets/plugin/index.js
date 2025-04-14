@@ -385,6 +385,7 @@ var require_globals = __commonJS({
       "requestAnimationFrame",
       "setImmediate",
       "arguments",
+      "require",
       "HermesInternal",
       "ReanimatedError",
       "_WORKLET",
@@ -644,6 +645,7 @@ var require_workletFactory = __commonJS({
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
+    var fs_1 = require("fs");
     var path_1 = require("path");
     var globals_12 = require_globals();
     var transform_1 = require_transform();
@@ -653,7 +655,7 @@ var require_workletFactory = __commonJS({
     var REAL_VERSION = require("../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
-      var _a;
+      var _a, _b;
       removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
       const codeObject = (0, generator_1.default)(fun.node, {
@@ -684,8 +686,8 @@ var require_workletFactory = __commonJS({
         lineOffset -= closureVariables.length + 2;
       }
       const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => {
-        var _a2, _b;
-        return (_b = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b !== void 0 ? _b : false;
+        var _a2, _b2;
+        return (_b2 = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b2 !== void 0 ? _b2 : false;
       });
       (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
@@ -710,11 +712,6 @@ var require_workletFactory = __commonJS({
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-      if (shouldIncludeInitData) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
-      }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
       const statements = [
@@ -749,14 +746,47 @@ var require_workletFactory = __commonJS({
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      return { factory, factoryCallParamPack };
+      const newProg = (0, types_12.program)([
+        (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+        ]),
+        (0, types_12.exportDefaultDeclaration)(factory)
+      ]);
+      newProg.dupaProp = true;
+      const transformedProg = (_b = (0, core_1.transformFromAstSync)(newProg, void 0, {
+        filename: state.file.opts.filename,
+        presets: ["@babel/preset-typescript"],
+        plugins: [],
+        ast: false,
+        babelrc: false,
+        configFile: false,
+        comments: false
+      })) === null || _b === void 0 ? void 0 : _b.code;
+      (0, assert_1.strict)(transformedProg, "[Reanimated] `transformedProg` is undefined.");
+      const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
+      try {
+        (0, fs_1.mkdirSync)(filesDirPath, {});
+      } catch (e) {
+      }
+      const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      try {
+        (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+      } catch (_e) {
+      }
+      if (shouldIncludeInitData) {
+        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+        ]));
+      }
+      pathForStringDefinitions.parentPath.scope.crawl();
+      return { factoryCallParamPack, workletHash };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
       fun.traverse({
-        DirectiveLiteral(path) {
-          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
-            path.parentPath.remove();
+        DirectiveLiteral(nodePath) {
+          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
+            nodePath.parentPath.remove();
           }
         }
       });
@@ -866,10 +896,15 @@ var require_workletFactoryCall = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactoryCall = void 0;
     var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
-      const { factory, factoryCallParamPack } = (0, workletFactory_1.makeWorkletFactory)(path, state);
-      const factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
+      const { factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      const programPath = path.findParent((ancestorPath) => ancestorPath.isProgram());
+      (0, assert_1.strict)(programPath, "Program path not found");
+      const factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
+        (0, types_12.stringLiteral)(`react-native-worklets/generated/${workletHash}.js`)
+      ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
       addStackTraceDataToWorkletFactory(path, factoryCall);
       const replacement = factoryCall;
       return replacement;
@@ -1601,7 +1636,7 @@ var inlineStylesWarning_1 = require_inlineStylesWarning();
 var types_1 = require_types();
 var webOptimization_1 = require_webOptimization();
 var workletSubstitution_1 = require_workletSubstitution();
-module.exports = function() {
+module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(fun) {
     try {
       fun();
@@ -1619,6 +1654,10 @@ module.exports = function() {
     visitor: {
       CallExpression: {
         enter(path, state) {
+          var _a;
+          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, autoworkletization_1.processCalleesAutoworkletizableCallbacks)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -1629,6 +1668,10 @@ module.exports = function() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
+          var _a;
+          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
           });
@@ -1636,6 +1679,10 @@ module.exports = function() {
       },
       ObjectExpression: {
         enter(path, state) {
+          var _a;
+          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
@@ -1643,6 +1690,10 @@ module.exports = function() {
       },
       ClassDeclaration: {
         enter(path, state) {
+          var _a;
+          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, class_1.processIfWorkletClass)(path, state);
           });
@@ -1650,6 +1701,10 @@ module.exports = function() {
       },
       Program: {
         enter(path, state) {
+          var _a;
+          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             (0, file_1.processIfWorkletFile)(path, state);
           });

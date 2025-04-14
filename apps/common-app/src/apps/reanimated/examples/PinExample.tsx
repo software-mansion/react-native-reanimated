@@ -1,14 +1,17 @@
 import React from 'react';
-import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Platform, StyleSheet, Text, View } from 'react-native';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
+  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];
@@ -67,7 +70,7 @@ function Digit({ number, index }: DigitProps) {
   useDerivedValue(() => {
     if (Platform.OS === 'web') {
       if (aref && aref.current) {
-        aref.current.scrollTo({ y: digit.value * 200 });
+        aref.current.getNode().scrollTo({ y: digit.value * 200 });
       }
     } else {
       // TODO fix this
@@ -77,7 +80,7 @@ function Digit({ number, index }: DigitProps) {
 
   return (
     <View style={styles.scrollContainer}>
-      <Animated.ScrollView ref={aref} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView ref={aref}>
         {digits.map((i) => {
           return (
             <View style={styles.digitContainer} key={i}>
@@ -92,22 +95,25 @@ function Digit({ number, index }: DigitProps) {
 
 function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
   const x = useSharedValue(0);
-  const startX = useSharedValue(0);
   const max = useSharedValue(0);
 
-  const gesture = Gesture.Pan()
-    .onStart(() => {
-      startX.value = x.value;
-    })
-    .onUpdate((e) => {
-      let newVal = startX.value + e.translationX;
+  const handler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    { x: number }
+  >({
+    onStart: (_, ctx) => {
+      ctx.x = x.value;
+    },
+    onActive: (e, ctx) => {
+      let newVal = ctx.x + e.translationX;
       newVal = Math.min(max.value, newVal);
       newVal = Math.max(0, newVal);
       x.value = newVal;
-    })
-    .onEnd(() => {
+    },
+    onEnd: (_) => {
       progress.value = x.value / max.value;
-    });
+    },
+  });
 
   const stylez = useAnimatedStyle(() => {
     return {
@@ -120,7 +126,6 @@ function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
       width: max.value,
     };
   });
-
   return (
     <View style={styles.container}>
       <View
@@ -139,9 +144,9 @@ function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
             barStyle,
           ]}
         />
-        <GestureDetector gesture={gesture}>
+        <PanGestureHandler onGestureEvent={handler}>
           <Animated.View style={[styles.dot, stylez]} />
-        </GestureDetector>
+        </PanGestureHandler>
       </View>
     </View>
   );

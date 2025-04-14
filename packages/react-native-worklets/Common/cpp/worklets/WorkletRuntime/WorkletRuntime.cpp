@@ -5,8 +5,10 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <cxxreact/MessageQueueThread.h>
+#include <glog/logging.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
 #include <memory>
 #include <utility>
@@ -85,7 +87,7 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const std::string &valueUnpackerCode)
+    std::unique_ptr<const JSBigString> &&script)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -101,12 +103,13 @@ WorkletRuntime::WorkletRuntime(
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
 
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-      "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
-                           .asObject(rt)
-                           .asFunction(rt);
-  rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
+  try {
+    auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
+    std::string scriptName = "wojtyla";
+    rt.evaluateJavaScript(buffer, scriptName);
+  } catch (facebook::jsi::JSIException ex) {
+    LOG(INFO) << ex.what();
+  }
 }
 
 jsi::Value WorkletRuntime::executeSync(

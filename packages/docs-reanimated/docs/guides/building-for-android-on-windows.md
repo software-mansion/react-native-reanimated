@@ -57,7 +57,7 @@ Make sure to use latest supported version of Reanimated, depending on the setup 
 How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-52/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
 :::
 
-**If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](/docs/next/guides/compatibility).
+**If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](/docs/guides/compatibility).
 
 For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or 0.75 and **is not** compatible with React Native 0.76. If you want to use Reanimated with React Native 0.76, you need to upgrade to at least 3.16.0. It is recommended to use the latest available version (in this case, 3.16.7).
 

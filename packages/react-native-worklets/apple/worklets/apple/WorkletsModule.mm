@@ -6,6 +6,7 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
+#import <React/NSDataBigString.h>
 
 #import <React/RCTCallInvoker.h>
 
@@ -19,6 +20,7 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::unique_ptr<NSDataBigString> bundle_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -30,11 +32,15 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
+- (void)setBundleString:(NSData*) bundle {
+  bundle_ = std::make_unique<NSDataBigString>(bundle);
+}
+
 @synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   AssertJavaScriptQueue();
 
@@ -46,7 +52,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     throw error;
   });
 
-  std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
@@ -57,7 +62,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
-      valueUnpackerCodeStr,
+      std::move(bundle_),
       jsQueue,
       jsCallInvoker,
       jsScheduler,

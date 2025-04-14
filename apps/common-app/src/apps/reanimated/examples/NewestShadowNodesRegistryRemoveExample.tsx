@@ -1,6 +1,6 @@
 import React from 'react';
 import type { GestureResponderEvent } from 'react-native';
-import { StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -31,20 +31,22 @@ export default function NewestShadowNodesRegistryRemoveExample() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handleToggle}>
-      <View style={styles.container} collapsable={false}>
-        <TouchableWithoutFeedback onPress={handleAnimate}>
-          <Animated.View style={[styles.left, animatedStyle]} />
-        </TouchableWithoutFeedback>
-        {show && (
+    <View
+      style={styles.container}
+      onTouchStart={handleToggle}
+      collapsable={false}>
+      <Animated.View
+        style={[styles.left, animatedStyle]}
+        onTouchStart={handleAnimate}
+      />
+      {show && (
+        <View collapsable={false}>
           <View collapsable={false}>
-            <View collapsable={false}>
-              <Animated.View style={[styles.right, animatedStyle]} />
-            </View>
+            <Animated.View style={[styles.right, animatedStyle]} />
           </View>
-        )}
-      </View>
-    </TouchableWithoutFeedback>
+        </View>
+      )}
+    </View>
   );
 }
 

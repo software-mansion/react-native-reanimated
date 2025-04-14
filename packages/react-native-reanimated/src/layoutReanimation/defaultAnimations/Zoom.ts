@@ -95,7 +95,7 @@ export class ZoomInRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 0 }, { rotate: `${rotate}rad` }],
+          transform: [{ scale: 0 }, { rotate }],
           ...initialValues,
         },
         callback,
@@ -469,7 +469,7 @@ export class ZoomOutRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 1 }, { rotate: '0rad' }],
+          transform: [{ scale: 1 }, { rotate: '0' }],
           ...initialValues,
         },
         callback,

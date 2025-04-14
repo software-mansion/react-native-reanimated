@@ -2,7 +2,6 @@
 
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
-import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { isChromeDebugger } from '../PlatformChecker';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -22,7 +21,7 @@ function dummyListener() {
 }
 
 export class PropsFilter implements IPropsFilter {
-  private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
+  private _initialStyle = {};
 
   public filterNonAnimatedProps(
     component: React.Component<unknown, unknown> & IAnimatedComponentInternal
@@ -30,25 +29,22 @@ export class PropsFilter implements IPropsFilter {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
-
     for (const key in inputProps) {
       const value = inputProps[key];
       if (key === 'style') {
         const styleProp = inputProps.style;
         const styles = flattenArray<StyleProps>(styleProp ?? []);
-
         const processedStyle: StyleProps[] = styles.map((style) => {
           if (style && style.viewDescriptors) {
-            const handle = style as AnimatedStyleHandle;
-
+            // this is how we recognize styles returned by useAnimatedStyle
             if (component._isFirstRender) {
-              this._initialPropsMap.set(handle, {
-                ...handle.initial.value,
-                ...initialUpdaterRun(handle.initial.updater),
-              } as StyleProps);
+              this._initialStyle = {
+                ...style.initial.value,
+                ...this._initialStyle,
+                ...initialUpdaterRun<StyleProps>(style.initial.updater),
+              };
             }
-
-            return this._initialPropsMap.get(handle) ?? {};
+            return this._initialStyle;
           } else if (hasInlineStyles(style)) {
             return getInlineStyle(style, component._isFirstRender);
           } else {

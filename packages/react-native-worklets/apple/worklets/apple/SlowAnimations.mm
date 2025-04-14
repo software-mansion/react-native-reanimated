@@ -37,9 +37,11 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
   if (areSlowAnimationsEnabled) {
     currentTimestamp = (dragCoefChangedTimestamp + (currentTimestamp - dragCoefChangedTimestamp) / dragCoef);
   }
-#endif // TARGET_IPHONE_SIMULATOR
   currentTimestamp *= MILLISECONDS_IN_SECOND;
   return currentTimestamp;
+#else // TARGET_IPHONE_SIMULATOR
+  return currentTimestamp;
+#endif // TARGET_IPHONE_SIMULATOR
 }
 
 } // namespace worklets

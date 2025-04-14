@@ -1,11 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
+import { transformFromAstSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
   File as BabelFile,
-  FunctionExpression,
   Identifier,
   ObjectExpression,
   ReturnStatement,
@@ -16,7 +14,9 @@ import {
   assignmentExpression,
   blockStatement,
   cloneNode,
+  exportDefaultDeclaration,
   expressionStatement,
+  functionDeclaration,
   functionExpression,
   identifier,
   isBlockStatement,
@@ -33,6 +33,7 @@ import {
   objectExpression,
   objectPattern,
   objectProperty,
+  program,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -40,7 +41,8 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { mkdirSync, writeFileSync } from 'fs';
+import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
 import { workletTransformSync } from './transform';
@@ -49,6 +51,7 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const REAL_VERSION = require('../../package.json').version;
 
 const MOCK_VERSION = 'x.y.z';
@@ -56,7 +59,10 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
+): {
+  factoryCallParamPack: ObjectExpression;
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -187,13 +193,6 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
-  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -339,14 +338,68 @@ export function makeWorkletFactory(
     )
   );
 
-  return { factory, factoryCallParamPack };
+  const newProg = program([
+    variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]),
+    exportDefaultDeclaration(factory),
+  ]);
+
+  // @ts-expect-error wwww
+  newProg.dupaProp = true;
+
+  const transformedProg = transformFromAstSync(newProg, undefined, {
+    filename: state.file.opts.filename,
+    presets: ['@babel/preset-typescript'],
+    plugins: [],
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
+  })?.code;
+
+  assert(transformedProg, '[Reanimated] `transformedProg` is undefined.');
+
+  const filesDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    'generated'
+  );
+
+  try {
+    mkdirSync(filesDirPath, {});
+  } catch (e) {
+    // Nothing.
+  }
+
+  const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
+
+  try {
+    writeFileSync(dedicatedFilePath, transformedProg);
+  } catch (_e) {
+    // Nothing.
+  }
+
+  if (shouldIncludeInitData) {
+    pathForStringDefinitions.insertBefore(
+      variableDeclaration('const', [
+        variableDeclarator(initDataId, initDataObjectExpression),
+      ])
+    );
+  }
+
+  pathForStringDefinitions.parentPath.scope.crawl();
+
+  return { factoryCallParamPack, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });

@@ -780,9 +780,7 @@ void ReanimatedModuleProxy::commitUpdates(
     for (auto const &[family, props] : propsMap) {
       const auto surfaceId = family->getSurfaceId();
       auto &propsVector = propsMapBySurface[surfaceId][family];
-      for (const auto &prop : props) {
-        propsVector.emplace_back(prop);
-      }
+      propsVector.insert(propsVector.end(), props.begin(), props.end());
     }
   } else {
     for (auto const &[shadowNode, props] : updatesBatch) {

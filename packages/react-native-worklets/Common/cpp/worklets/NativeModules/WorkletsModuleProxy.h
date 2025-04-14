@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cxxreact/JSBigString.h>
 #include <cxxreact/MessageQueueThread.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
@@ -19,7 +20,7 @@ class WorkletsModuleProxy
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
-      const std::string &valueUnpackerCode,
+      std::unique_ptr<const JSBigString> script,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,

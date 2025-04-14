@@ -138,12 +138,12 @@ You can specify the iOS reference frame using an `IOSReferenceFrame` enum contai
 
 `useAnimatedSensor` returns an object containing these fields:
 
-| Name        | Type                                  | Description                                                                                                                                                                                                                                                    |
-| ----------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](/docs/next/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with [sensor(/docs/next/docs/next/device/useAnimatedSensor#sensortype) argument. |
-| unregister  | `() => void`                          | Allows to stop listening to sensor updates on call.                                                                                                                                                                                                            |
-| isAvailable | `boolean`                             | Indicates whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.                                                                                             |
-| config      | `SensorConfig`                        | An object containing sensor configuration.                                                                                                                                                                                                                     |
+| Name        | Type                                  | Description                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sensor      | `SharedValue<Value3D｜ValueRotation>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing the sensor measurements. The values returned by the sensor depend on the type of sensor you choose with [sensorType](/docs/device/useAnimatedSensor#sensortype) argument. |
+| unregister  | `() => void`                          | Allows to stop listening to sensor updates on call.                                                                                                                                                                                             |
+| isAvailable | `boolean`                             | Indicates whether sensor is available to use. You won't be able to use a sensor when it's missing from the device or the app doesn't have permission to access it.                                                                              |
+| config      | `SensorConfig`                        | An object containing sensor configuration.                                                                                                                                                                                                      |
 
 The shared value returned from the **rotation sensor** is an object contain Euler angles, a quaternion and an interface orientation:
 
@@ -214,7 +214,7 @@ import AnimatedSensorSrc from '!!raw-loader!@site/src/examples/AnimatedSensor';
 
 - Most of the sensors operate in resolutions up to 100Hz.
 
-- You can read the sensor data on both [UI thread](/docs/next/fundamentals/glossary#ui-thread) and [JavaScript th(/docs/next/docs/next/fundamentals/glossary#javascript-thread).
+- You can read the sensor data on both [UI thread](/docs/fundamentals/glossary#ui-thread) and [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
 ## Platform compatibility
 

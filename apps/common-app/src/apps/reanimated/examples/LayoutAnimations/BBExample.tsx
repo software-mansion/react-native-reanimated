@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Button,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   BounceIn,
   FadeInRight,
@@ -23,19 +18,18 @@ export default function BBExample() {
       <Button title="toggle" onPress={() => setShow(!show)} />
       <Button title="toggle" onPress={() => setShow2(!show2)} />
       {show && (
-        <TouchableWithoutFeedback onPress={() => setShow(!show)}>
+        <Animated.View
+          onTouchStart={() => setShow(!show)}
+          entering={BounceIn}
+          layout={LinearTransition}
+          style={styles.box}
+          exiting={FadeOutLeft.duration(1000)}>
           <Animated.View
-            entering={BounceIn}
-            layout={LinearTransition}
-            style={styles.box}
-            exiting={FadeOutLeft.duration(1000)}>
-            <Animated.View
-              style={styles.innerBox}
-              exiting={RotateOutDownLeft.duration(2000)}
-              entering={FadeInRight.delay(500)}
-            />
-          </Animated.View>
-        </TouchableWithoutFeedback>
+            style={styles.innerBox}
+            exiting={RotateOutDownLeft.duration(2000)}
+            entering={FadeInRight.delay(500)}
+          />
+        </Animated.View>
       )}
       {show2 && (
         <Animated.View

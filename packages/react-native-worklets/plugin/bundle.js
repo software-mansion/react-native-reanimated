@@ -10,4 +10,5 @@ esbuild.build({
   logLevel: 'warning',
   platform: 'node',
   sourcemap: 'linked',
+  minify: false,
 });

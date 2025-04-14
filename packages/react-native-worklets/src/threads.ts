@@ -82,7 +82,6 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
-  'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'

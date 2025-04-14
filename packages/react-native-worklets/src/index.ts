@@ -1,12 +1,18 @@
 'use strict';
 
+import { breakBundle } from './bundleBreaker';
 import { initializeUIRuntime } from './initializers';
+import { initializeWorkletRegistries } from './workletRegistry';
 import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
+initializeWorkletRegistries();
 initializeUIRuntime(WorkletsModule);
+breakBundle();
 
+export type { CustomError } from './errors';
+export { createCustomError, registerCustomError } from './errors';
 export type { LoggerConfig } from './logger';
 export {
   logger,
@@ -28,6 +34,11 @@ export {
   runOnUI,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
+export {
+  __getWorklet,
+  __registerWorkletFactory,
+  __registerWorkletInitData,
+} from './workletRegistry';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {

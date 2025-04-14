@@ -8,7 +8,7 @@ sidebar_label: 'About'
 
 ## What is Reanimated Babel Plugin?
 
-The Reanimated Babel Plugin transforms your code so that it can run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/next/fundamentals/glossary#to-workletize).
+The Reanimated Babel Plugin transforms your code so that it can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
 
 In short, a worklet is:
 

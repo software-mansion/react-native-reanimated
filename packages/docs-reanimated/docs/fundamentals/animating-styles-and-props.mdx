@@ -4,11 +4,11 @@ sidebar_position: 3
 
 # Animating styles and props
 
-In [the last section](/docs/next/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
+In [the last section](/docs/fundamentals/your-first-animation), we learned how to make simple animations, what shared values are and how to use them. Now, we'll learn a different way of passing animation styles to components. We'll also go over the difference between animating styles and props and how to handle them using `useAnimatedStyle` and `useAnimatedProps`.
 
 ## Animating styles
 
-As we learned in the previous section we can animate styles by [passing shared values inline](/docs/next/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
+As we learned in the previous section we can animate styles by [passing shared values inline](/docs/fundamentals/glossary#animations-in-inline-styling) to the elements' `style` property:
 
 ```jsx
 import Animated, { useSharedValue } from 'react-native-reanimated';
@@ -79,7 +79,7 @@ For example, let's say we would like to animate SVG elements. Instead of passing
 <Circle cx="50" cy="50" r="10" fill="blue" />
 ```
 
-Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](/docs/next/core/createAnimatedComponent):
+Reanimated comes with just a handful of built-in components like `Animated.View` or `Animated.ScrollView`. For components which aren't a part of Reanimated, to make their props animatable, we need to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
 
 ```jsx
 import Animated from 'react-native-reanimated';
@@ -132,4 +132,4 @@ In this section, we went through the differences between animating styles and pr
 
 ## What's next?
 
-In [the next section](/docs/next/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.
+In [the next section](/docs/fundamentals/customizing-animation), we'll learn more about animation functions and how to customize their behavior.

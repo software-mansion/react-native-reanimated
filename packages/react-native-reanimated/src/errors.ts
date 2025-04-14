@@ -1,33 +1,12 @@
-/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-function ReanimatedErrorConstructor(message: string): ReanimatedError {
-  'worklet';
-  const prefix = '[Reanimated]';
-  const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
-  errorInstance.name = 'ReanimatedError';
-  return errorInstance as ReanimatedError;
-}
+import { createCustomError, registerCustomError } from 'react-native-worklets';
 
-/**
- * Registers ReanimatedError in the global scope. Register only for Worklet
- * runtimes.
- */
+export const ReanimatedError = createCustomError('Reanimated');
+
+const ReanimatedErrorConstructor = ReanimatedError;
+
 export function registerReanimatedError() {
   'worklet';
-  if (globalThis._WORKLET) {
-    globalThis.ReanimatedError =
-      ReanimatedErrorConstructor as IReanimatedErrorConstructor;
-  }
+  registerCustomError(ReanimatedErrorConstructor, 'Reanimated');
 }
-
-export const ReanimatedError =
-  ReanimatedErrorConstructor as IReanimatedErrorConstructor;
-
-export interface IReanimatedErrorConstructor extends Error {
-  new (message?: string): ReanimatedError;
-  (message?: string): ReanimatedError;
-  readonly prototype: ReanimatedError;
-}
-
-export type ReanimatedError = Error & { name: 'Reanimated' }; // signed type

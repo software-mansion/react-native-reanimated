@@ -65,7 +65,7 @@ This option dictates the passed file location for a worklet's source map. If you
 
 Defaults to `false`.
 
-Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/next/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
+Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';

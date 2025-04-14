@@ -71,42 +71,6 @@ import AnimatedPropAdapterSrc from '!!raw-loader!@site/src/examples/AnimatedProp
 
 <CollapsibleCode showLines={[13, 25]} src={AnimatedPropAdapterSrc} />
 
-### Color-related properties
-
-Color-related properties that come from custom components won't work in most cases as these props are in a format incomprehensible for native side.
-For most commonly used color-related properties we integrated the color processing to our code, managed by our predefined list in [Colors.ts](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/src/Colors.ts#L332) file.
-
-However, when your desired color property is not on the list and you want to use it with `useAnimatedProps` - manual processing is necessary. You need to explicitly wrap such color properties with `processColor` function to ensure they are correctly interpreted by the native side.
-
-You can check full list of automatically processed props here - [Colors.ts](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/src/Colors.ts#L332)
-
-```jsx
-// highlight-next-line
-import { processColor } from 'react-native-reanimated';
-
-function App() {
-  const animatedProps = useAnimatedProps(() => {
-    const mainColor = interpolateColor(
-      colorProgress.value,
-      [0, 1],
-      ['red', 'blue']
-    );
-
-    const bgColor = interpolateColor(
-      colorProgress.value,
-      [0, 1],
-      ['green', 'yellow']
-    );
-
-    return {
-      // `colors` prop is not on our list - we need to process it manually
-      // highlight-next-line
-      colors: processColor([mainColor, bgColor]),
-    };
-  });
-}
-```
-
 ## Returns
 
 `useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.

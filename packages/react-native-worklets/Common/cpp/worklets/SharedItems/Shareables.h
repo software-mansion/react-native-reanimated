@@ -1,8 +1,10 @@
 #pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/Tools/JSISerializer.h>
 
 #include <jsi/jsi.h>
+#include <glog/logging.h>
 
 #include <memory>
 #include <string>
@@ -19,6 +21,17 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
 
+template <typename T>
+void printJSIValue(jsi::Runtime& rt, T&& arg) {
+    if constexpr (std::is_same_v<std::decay_t<T>, jsi::Value>) {
+        const jsi::Value& value = arg;  // Work directly with references
+          LOG(INFO) << "ARG " << stringifyJSIValue(rt, value);
+
+    } else {
+      LOG(INFO) << "SKIPPING ARG";
+    }
+}
+
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
 inline jsi::Value runOnRuntimeGuarded(
@@ -29,11 +42,16 @@ inline jsi::Value runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-#ifndef NDEBUG
-  return getCallGuard(rt).call(rt, function, args...);
-#else
+//#ifndef NDEBUG
+//  return getCallGuard(rt).call(rt, function, args...);
+//#else
+//  rt.global().getProperty(rt, "_log").asObject(rt).asFunction(rt).call(rt, function, 1);
+  // LOG(INFO) << "BEFORE INVOCATION " << stringifyJSIValue(rt, function);
+  // LOG(INFO) << "Number of arguments: " << sizeof...(args);
+
+  // (printJSIValue(rt, std::forward<Args>(args)), ...);
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+//#endif
 }
 
 inline void cleanupIfRuntimeExists(

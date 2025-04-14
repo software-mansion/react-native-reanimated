@@ -1,0 +1,20 @@
+diff --git a/dist/utils/loadMetroConfig.js b/dist/utils/loadMetroConfig.js
+index c0749e111d342611631c3eedc9c757936e8ff225..d057d6629708e425d9cebe4bf65f4a09cb7ec089 100644
+--- a/dist/utils/loadMetroConfig.js
++++ b/dist/utils/loadMetroConfig.js
+@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
+   value: true,
+ });
+ exports.default = loadMetroConfig;
++const path = require("path");
+ var _errors = require("./errors");
+ var _metroPlatformResolver = require("./metroPlatformResolver");
+ var _metroConfig = require("metro-config");
+@@ -33,6 +34,7 @@ function getOverrideConfig(ctx, config) {
+     resolver,
+     serializer: {
+       getModulesRunBeforeMainModule: () => [
++        path.resolve(require.resolve('react-native-worklets/src/bundleBreaker.ts')),
+         require.resolve(
+           _path.default.join(
+             ctx.reactNativePath,

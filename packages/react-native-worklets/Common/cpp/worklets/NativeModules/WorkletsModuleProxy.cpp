@@ -22,7 +22,7 @@ namespace worklets {
 
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
-    const std::string &valueUnpackerCode,
+    std::unique_ptr<const JSBigString> script,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -30,7 +30,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -40,7 +39,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsScheduler,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode_)),
+          std::move(script))),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
           std::move(forwardedRequestAnimationFrame))) {
@@ -113,7 +112,8 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       jsScheduler_,
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
-      valueUnpackerCode_);
+      // TODO: Pass the bundle here!
+      nullptr);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);

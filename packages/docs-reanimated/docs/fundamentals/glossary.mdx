@@ -20,7 +20,7 @@ function App() {
 }
 ```
 
-For components which aren't a part of Reanimated, to make their props and styles animatable, you have to wrap them with [`createAnimatedComponent`](/docs/next/core/createAnimatedComponent):
+For components which aren't a part of Reanimated, to make their props and styles animatable, you have to wrap them with [`createAnimatedComponent`](/docs/core/createAnimatedComponent):
 
 ```jsx
 import Animated from 'react-native-reanimated';
@@ -33,7 +33,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 Shared values are a driving factor of all your animations in Reanimated.
 
-They are defined using [`useSharedValue`](/docs/next/core/useSharedValue) hook:
+They are defined using [`useSharedValue`](/docs/core/useSharedValue) hook:
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -53,7 +53,7 @@ function App() {
 }
 ```
 
-It can be a value of any type. When used, the data stored in a shared value is automatically synchronized between the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread) and the [UI thread](/docs/next/fundamentals/glossary#ui-thread).
+It can be a value of any type. When used, the data stored in a shared value is automatically synchronized between the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 ## Animatable value
 
@@ -67,11 +67,11 @@ Animation functions are functions which let you create animations. They are buil
 
 Reanimated comes with 3 built-in animation functions:
 
-- [`withSpring`](/docs/next/animations/withSpring) lets you create spring-based animation
-- [`withTiming`](/docs/next/animations/withTiming) lets you create an animation based on duration and [easing](https://easings.net/)
-- [`withDecay`](/docs/next/animations/withDecay) lets you create animations that mimic objects in motion that move with a given deceleration rate
+- [`withSpring`](/docs/animations/withSpring) lets you create spring-based animation
+- [`withTiming`](/docs/animations/withTiming) lets you create an animation based on duration and [easing](https://easings.net/)
+- [`withDecay`](/docs/animations/withDecay) lets you create animations that mimic objects in motion that move with a given deceleration rate
 
-These functions can be combined with [animation modifiers](/docs/next/fundamentals/glossary#animation-modifier) to create rich and complex animations.
+These functions can be combined with [animation modifiers](/docs/fundamentals/glossary#animation-modifier) to create rich and complex animations.
 
 ## Animation modifier
 
@@ -79,16 +79,16 @@ Animation modifiers are functions used to customize animations. Also known as hi
 
 Reanimated comes with 3 built-in modifiers:
 
-- [`withDelay`](/docs/next/animations/withDelay) lets you add a delay before the animation starts
-- [`withRepeat`](/docs/next/animations/withRepeat) lets you repeat an animation certain number of times
-- [`withSequence`](/docs/next/animations/withSequence) lets you chain animation one after the other
-- [`withClamp`](/docs/next/animations/withClamp) lets you limit the animation boundaries to a specified range
+- [`withDelay`](/docs/animations/withDelay) lets you add a delay before the animation starts
+- [`withRepeat`](/docs/animations/withRepeat) lets you repeat an animation certain number of times
+- [`withSequence`](/docs/animations/withSequence) lets you chain animation one after the other
+- [`withClamp`](/docs/animations/withClamp) lets you limit the animation boundaries to a specified range
 
 ## Animation object
 
-An animation object is a value returned from [animation functions](/docs/next/fundamentals/glossary#animation-function) and [modifiers](/docs/next/fundamentals/glossary#animation-modifier) which holds the current state of the animation including its start and end conditions, as well as a `onFrame` function. These values allow to calculate the animation state for each frame.
+An animation object is a value returned from [animation functions](/docs/fundamentals/glossary#animation-function) and [modifiers](/docs/fundamentals/glossary#animation-modifier) which holds the current state of the animation including its start and end conditions, as well as a `onFrame` function. These values allow to calculate the animation state for each frame.
 
-When you pass an animation object to a [shared value](/docs/next/fundamentals/glossary#shared-value) it is automatically treated as an [animatable value](/docs/next/fundamentals/glossary#animatable-value).
+When you pass an animation object to a [shared value](/docs/fundamentals/glossary#shared-value) it is automatically treated as an [animatable value](/docs/fundamentals/glossary#animatable-value).
 
 For example, consider this code:
 
@@ -132,9 +132,9 @@ For a list of all available modifiers for each animation refer to the documentat
 
 ## Worklet
 
-Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
+Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
 
-Most of the time when working with Reanimated the code is automatically [workletized](/docs/next/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+Most of the time when working with Reanimated the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
 
 ```javascript
 const style = useAnimatedStyle(() => {
@@ -152,7 +152,7 @@ function myWorklet() {
 }
 ```
 
-[`runOnUI`](/docs/next/threading/runOnUI) lets you manually run worklets on the UI thread:
+[`runOnUI`](/docs/threading/runOnUI) lets you manually run worklets on the UI thread:
 
 ```javascript
 function myWorklet(greeting) {
@@ -168,7 +168,7 @@ function onPress() {
 
 ## to workletize
 
-To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](/docs/next/fundamentals/glossary#ui-thread).
+To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 Functions marked with `"worklet";` directive are automatically picked up and workletized by the Reanimated Babel plugin.
 
@@ -186,6 +186,6 @@ You can learn more about it by reading the [Threading model](https://reactnative
 
 ## Reanimated Babel plugin
 
-The plugin performs automatic [workletization](/docs/next/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
+The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
 You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).

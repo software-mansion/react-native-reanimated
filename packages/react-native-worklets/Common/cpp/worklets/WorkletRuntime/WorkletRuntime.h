@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cxxreact/JSBigString.h>
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
@@ -11,6 +12,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <glog/logging.h>
 
 using namespace facebook;
 using namespace react;
@@ -26,7 +29,7 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const bool supportsLocking,
-      const std::string &valueUnpackerCode);
+      std::unique_ptr<const JSBigString> &&script);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
