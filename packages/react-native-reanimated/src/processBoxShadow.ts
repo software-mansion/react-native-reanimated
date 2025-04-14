@@ -12,7 +12,11 @@
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 
 import type { StyleProps } from '.';
-import { processColor } from './Colors';
+
+export const isLength = (value: string) => {
+  'worklet';
+  return value.endsWith('px') || !isNaN(Number(value));
+};
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
   'worklet';
@@ -36,8 +40,47 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
     const args = rawBoxShadow.split(/\s+(?![^(]*\))/);
     for (const arg of args) {
       // check if arg is a color, and if so end parsing
-      const processedColor = processColor(arg);
-      if (processedColor != null) {
+
+      if (isLength(arg)) {
+        switch (lengthCount) {
+          case 0:
+            offsetX = arg;
+            lengthCount++;
+            break;
+          case 1:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            offsetY = arg;
+            lengthCount++;
+            break;
+          case 2:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            boxShadow.blurRadius = arg;
+            lengthCount++;
+            break;
+          case 3:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            boxShadow.spreadDistance = arg;
+            lengthCount++;
+            break;
+          default:
+            return [];
+        }
+      } else if (arg === 'inset') {
+        if (boxShadow.inset !== null) {
+          return [];
+        }
+        if (offsetX !== null) {
+          keywordDetectedAfterLength = true;
+        }
+        boxShadow.inset = true;
+        continue;
+      } else {
         if (boxShadow.color != null) {
           return [];
         }
@@ -46,47 +89,6 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
         }
         boxShadow.color = arg;
         continue;
-      }
-
-      if (arg === 'inset') {
-        if (boxShadow.inset != null) {
-          return [];
-        }
-        if (offsetX != null) {
-          keywordDetectedAfterLength = true;
-        }
-        boxShadow.inset = true;
-        continue;
-      }
-
-      switch (lengthCount) {
-        case 0:
-          offsetX = arg;
-          lengthCount++;
-          break;
-        case 1:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          offsetY = arg;
-          lengthCount++;
-          break;
-        case 2:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.blurRadius = arg;
-          lengthCount++;
-          break;
-        case 3:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.spreadDistance = arg;
-          lengthCount++;
-          break;
-        default:
-          return [];
       }
     }
 
@@ -108,11 +110,7 @@ function parseLength(length: string): number | null {
   const argsWithUnitsRegex = /([+-]?\d*(\.\d+)?)([\w\W]+)?/g;
   const match = argsWithUnitsRegex.exec(length);
 
-  if (!match || Number.isNaN(match[1])) {
-    return null;
-  }
-
-  if (match[3] != null && match[3] !== 'px') {
+  if (!match || !isLength(length)) {
     return null;
   }
 
