@@ -11,6 +11,7 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from './commonTypes';
+import type { IReanimatedErrorConstructor } from './errors';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
@@ -101,4 +102,5 @@ declare global {
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
+  var ReanimatedError: IReanimatedErrorConstructor;
 }
