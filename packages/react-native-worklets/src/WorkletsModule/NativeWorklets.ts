@@ -15,6 +15,7 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+
   #workletMakeShareableClone: <TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
@@ -22,13 +23,16 @@ class NativeWorklets {
   ) => ShareableRef<TValue>;
 
   #workletScheduleOnUI: <TValue>(shareable: ShareableRef<TValue>) => void;
+
   #workletExecuteOnUIRuntimeSync: <TValue, TReturn>(
     shareable: ShareableRef<TValue>
   ) => TReturn;
+
   #workletCreateWorkletRuntime: (
     name: string,
     initializer: ShareableRef<() => void>
   ) => WorkletRuntime;
+
   #workletScheduleOnRuntime: <T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
