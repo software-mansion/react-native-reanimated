@@ -40,8 +40,6 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
     // split rawBoxShadow string by all whitespaces that are not in parenthesis
     const args = rawBoxShadow.split(/\s+(?![^(]*\))/);
     for (const arg of args) {
-      // check if arg is a color, and if so end parsing
-
       if (isLength(arg)) {
         switch (lengthCount) {
           case 0:
