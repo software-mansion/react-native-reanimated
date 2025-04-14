@@ -131,7 +131,7 @@ export function processBoxShadow(props: StyleProps) {
 
   const rawBoxShadows = props.boxShadow;
 
-  if (rawBoxShadows == null) {
+  if (rawBoxShadows === null) {
     return result;
   }
 
