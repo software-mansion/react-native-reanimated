@@ -5,7 +5,7 @@ function WorkletsErrorConstructor(message?: string): WorkletsError {
   'worklet';
   const prefix = '[Worklets]';
   const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
-  errorInstance.name = `{prefix}Error`;
+  errorInstance.name = `WorkletsError`;
   return errorInstance as WorkletsError;
 }
 
