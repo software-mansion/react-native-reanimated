@@ -2,12 +2,12 @@
 
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
-#include "ShadowNodes.h"
+#include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
 
 namespace facebook::react {
 
 using ReanimatedViewComponentDescriptor =
-    ConcreteComponentDescriptor<ReanimatedViewCustomShadowNode>;
+    ConcreteComponentDescriptor<ReanimatedShadowNode>;
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
     std::shared_ptr<const ComponentDescriptorProviderRegistry> registry);
