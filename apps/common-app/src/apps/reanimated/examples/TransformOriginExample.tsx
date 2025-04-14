@@ -1,6 +1,5 @@
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  cancelAnimation,
   Easing,
   interpolate,
   useAnimatedStyle,
@@ -30,8 +29,6 @@ export default function TransformOriginExample() {
 
   const handlePress = (newOrigin: TransformOriginOption) => {
     currentOrigin.value = newOrigin;
-
-    cancelAnimation(progress);
     progress.value = 0;
     progress.value = withTiming(1, {
       duration: 800,
