@@ -9,13 +9,13 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): CallExpression {
-  const workletFactory = makeWorkletFactory(path, state);
+  const { factory, factoryCallParamPack } = makeWorkletFactory(path, state);
 
-  const workletFactoryCall = callExpression(workletFactory, []);
+  const factoryCall = callExpression(factory, [factoryCallParamPack]);
 
-  addStackTraceDataToWorkletFactory(path, workletFactoryCall);
+  addStackTraceDataToWorkletFactory(path, factoryCall);
 
-  const replacement = workletFactoryCall;
+  const replacement = factoryCall;
 
   return replacement;
 }
