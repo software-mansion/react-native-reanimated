@@ -9,7 +9,7 @@ body:
         Before you proceed:
 
         - Make sure to check whether there are similar issues in the repository
-        - Make sure `'react-native-reanimated/plugin'` is listed in your `babel.config.js`
+        - Make sure that either `'react-native-reanimated/plugin'` or `'react-native-worklets/plugin'` is listed in your `babel.config.js`
         - Make sure to clean cache in your project. Depending on your setup this could be done by:
           - `yarn start --reset-cache` or
           - `npm start -- --reset-cache` or
