@@ -20,7 +20,7 @@ import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { processBoxShadow } from '../processBoxShadow';
-import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
+import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
@@ -212,7 +212,7 @@ function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
-  if (!SHOULD_BE_USE_WEB && typeof newValues.boxShadow === 'string') {
+  if (!SHOULD_BE_USE_WEB && newValues.boxShadow) {
     processBoxShadow(newValues);
   }
   for (const key in newValues) {
