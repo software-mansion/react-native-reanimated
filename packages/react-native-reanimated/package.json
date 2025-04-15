@@ -148,7 +148,7 @@
     "prettier": "^3.3.3",
     "react": "19.0.0",
     "react-native": "0.79.0",
-    "react-native-builder-bob": "0.33.1",
+    "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
     "react-native-gesture-handler": "2.25.0",
     "react-native-web": "0.20.0",
     "react-native-worklets": "workspace:*",
