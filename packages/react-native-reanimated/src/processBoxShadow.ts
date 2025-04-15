@@ -71,7 +71,7 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
             return [];
         }
       } else if (arg === 'inset') {
-        if (boxShadow.inset != null) {
+        if (boxShadow.inset) {
           return [];
         }
         if (offsetX !== null) {
@@ -80,7 +80,7 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
         boxShadow.inset = true;
         continue;
       } else {
-        if (boxShadow.color != null) {
+        if (boxShadow.color) {
           return [];
         }
         if (offsetX != null) {
