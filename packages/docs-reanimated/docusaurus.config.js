@@ -143,15 +143,28 @@ const config = {
       return {
         name: 'svg-module-plugin',
         configureWebpack(config, isServer, utils) {
-          config.module.rules.push({
-            include: [
-              path.resolve(
-                __dirname,
-                'node_modules/@react-native/assets-registry/registry'
-              ),
-            ],
-          });
-          return config;
+          return {
+            module: {
+              rules: [
+                {
+                  include: [
+                    path.resolve(
+                      __dirname,
+                      'node_modules/@react-native/assets-registry/registry'
+                    ),
+                  ],
+                  use: {
+                    loader: require.resolve('babel-loader'),
+                    options: {
+                      babelrc: false,
+                      configFile: false,
+                      presets: [require.resolve('@babel/preset-flow')],
+                    },
+                  },
+                },
+              ],
+            },
+          };
         },
       };
     },
