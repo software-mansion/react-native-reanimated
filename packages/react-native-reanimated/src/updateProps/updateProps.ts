@@ -1,19 +1,21 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any */
 'use strict';
+
 import type { MutableRefObject } from 'react';
 
-import { processColorsInProps } from './Colors';
+import { processColorsInProps } from '../Colors';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
-} from './commonTypes';
-import { ReanimatedError } from './errors';
-import type { Descriptor } from './hook/commonTypes';
-import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
-import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
-import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
-import { runOnUIImmediately } from './threads';
+} from '../commonTypes';
+import { ReanimatedError } from '../errors';
+import type { Descriptor } from '../hook/commonTypes';
+import { isFabric, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+import { runOnUIImmediately } from '../threads';
+import { processTransformOrigin } from './processTransformOrigin';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -33,10 +35,8 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
-    if (updates.transformOrigin) {
-      if (!Array.isArray(updates.transformOrigin)) {
-        throw new ReanimatedError('Please use transformOrigin in array form');
-      }
+    if ('transformOrigin' in updates) {
+      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
@@ -131,26 +131,21 @@ if (shouldBeUseWeb()) {
       );
     }
   };
-  global.UpdatePropsManager = new Proxy({} as UpdatePropsManager, {
-    get: maybeThrowError,
-    set: () => {
-      maybeThrowError();
-      return false;
-    },
-  });
+  global.UpdatePropsManager = new Proxy(
+    {},
+    {
+      get: maybeThrowError,
+      set: () => {
+        maybeThrowError();
+        return false;
+      },
+    }
+  );
 } else {
   runOnUIImmediately(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
-}
-
-export interface UpdatePropsManager {
-  update(
-    viewDescriptors: ViewDescriptorsWrapper,
-    updates: StyleProps | AnimatedStyle<any>
-  ): void;
-  flush(): void;
 }
 
 /**

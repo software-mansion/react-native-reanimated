@@ -128,6 +128,7 @@ import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
+import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
@@ -613,6 +614,10 @@ export const EXAMPLES: Record<string, Example> = {
   PagerExample: {
     title: 'Pager example',
     screen: PagerExample,
+  },
+  TransformOriginExample: {
+    title: 'Transform origin example',
+    screen: TransformOriginExample,
   },
 
   // Layout Animations
