@@ -26,6 +26,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@expo/metro-runtime": "~4.0.0",
+    "@react-native/metro-config": "0.77.1",
     "@stylexjs/babel-plugin": "^0.10.0",
     "@types/eslint": "^8",
     "eslint": "^8.57.0",
