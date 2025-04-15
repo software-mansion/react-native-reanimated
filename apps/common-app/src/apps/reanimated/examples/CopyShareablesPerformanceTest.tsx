@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { Button, Keyboard,StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import {
+  Button,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import { makeShareableCloneRecursive } from 'react-native-reanimated';
 
 function createRandomObject(numberOfKeys: number) {
@@ -36,39 +44,41 @@ export default function CopyShareablesPerformanceTest() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Text style={styles.description}>
-        This test measures the performance of Reanimated's
-        makeShareableCloneRecursive function.{'\n\n'}
-        The test creates an array of objects with random numeric values and
-        measures how long it takes to make them shareable. You can configure:
-        {'\n'}• Number of objects: Total objects in the array{'\n'}• Number of
-        keys: Key-value pairs per object{'\n\n'}
-      </Text>
-      <View style={styles.textInputContainer}>
-        <View style={styles.textInputRow}>
-          <Text>Number of objects</Text>
-          <TextInput
-            keyboardType="numeric"
-            style={styles.textInput}
-            placeholder="Number of objects"
-            value={numberOfObjects.toString()}
-            onChangeText={(text) =>
-              setNumberOfObjects(text ? parseInt(text) : 0)
-            }
-          />
-        </View>
-        <View style={styles.textInputRow}>
-          <Text>Number of keys</Text>
-          <TextInput
-            keyboardType="numeric"
-            style={styles.textInput}
-            placeholder="Number of keys"
-            value={numberOfKeys.toString()}
-            onChangeText={(text) => setNumberOfKeys(text ? parseInt(text) : 0)}
-          />
-        </View>
+          This test measures the performance of Reanimated's
+          makeShareableCloneRecursive function.{'\n\n'}
+          The test creates an array of objects with random numeric values and
+          measures how long it takes to make them shareable. You can configure:
+          {'\n'}• Number of objects: Total objects in the array{'\n'}• Number of
+          keys: Key-value pairs per object{'\n\n'}
+        </Text>
+        <View style={styles.textInputContainer}>
+          <View style={styles.textInputRow}>
+            <Text>Number of objects</Text>
+            <TextInput
+              keyboardType="numeric"
+              style={styles.textInput}
+              placeholder="Number of objects"
+              value={numberOfObjects.toString()}
+              onChangeText={(text) =>
+                setNumberOfObjects(text ? parseInt(text) : 0)
+              }
+            />
+          </View>
+          <View style={styles.textInputRow}>
+            <Text>Number of keys</Text>
+            <TextInput
+              keyboardType="numeric"
+              style={styles.textInput}
+              placeholder="Number of keys"
+              value={numberOfKeys.toString()}
+              onChangeText={(text) =>
+                setNumberOfKeys(text ? parseInt(text) : 0)
+              }
+            />
+          </View>
         </View>
         <Button title="Measure performance" onPress={startTest} />
-        {time && <Text>Coping took {time.toFixed(2)} milliseconds</Text>}
+        {time && <Text>Copying took {time.toFixed(2)} milliseconds</Text>}
       </View>
     </TouchableWithoutFeedback>
   );
