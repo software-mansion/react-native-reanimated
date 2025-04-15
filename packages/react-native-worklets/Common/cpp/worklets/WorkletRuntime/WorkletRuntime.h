@@ -65,6 +65,8 @@ class WorkletRuntime : public jsi::HostObject,
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+  
+  std::unique_lock<std::recursive_mutex> createLock() const;
 
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;

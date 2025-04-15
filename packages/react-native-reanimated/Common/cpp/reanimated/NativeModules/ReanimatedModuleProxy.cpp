@@ -398,6 +398,7 @@ void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
+  const auto lock = workletsModuleProxy_->getUIWorkletRuntime()->createLock();
   jsi::Runtime &uiRuntime =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value timestamp{timestampMs};
@@ -685,6 +686,8 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+
+  const auto lock = workletsModuleProxy_->getUIWorkletRuntime()->createLock();
 
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
