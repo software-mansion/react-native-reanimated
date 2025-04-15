@@ -2,46 +2,6 @@
 
 import type { WorkletStackDetails } from './workletTypes';
 
-export type CustomError<TName extends string> = Error & { name: TName }; // signed type
-
-export interface CustomErrorConstructor<TName extends string> extends Error {
-  new (message?: string): CustomError<TName>;
-  (message?: string): CustomError<TName>;
-  readonly prototype: CustomError<TName>;
-}
-
-export function createCustomError<TName extends string>(
-  name: TName
-): CustomErrorConstructor<TName> {
-  const constructor = function CustomError(message?: string) {
-    'worklet';
-    const prefix = `[${name}]`;
-    // eslint-disable-next-line reanimated/use-worklets-error
-    const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
-    errorInstance.name = `${name}Error`;
-    return errorInstance;
-  };
-
-  Object.defineProperty(constructor, 'name', { value: `${name}Error` });
-
-  return constructor as CustomErrorConstructor<TName>;
-}
-
-/** Registers custom errors in global scope. Use it only for Worklet runtimes. */
-export function registerCustomError<TName extends string>(
-  constructor: CustomErrorConstructor<TName>,
-  name: TName
-) {
-  'worklet';
-  if (!globalThis._WORKLET) {
-    // eslint-disable-next-line reanimated/use-worklets-error
-    throw new Error(
-      '[Worklets] registerCustomError() must be called on a Worklet runtime'
-    );
-  }
-  (global as Record<string, unknown>)[`${name}Error`] = constructor;
-}
-
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
 export function registerWorkletStackDetails(

@@ -6,7 +6,7 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,9 +15,7 @@ import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
-import { LeakCheck } from './components/LeakCheck';
-
-export const NukeContext = createContext<() => void>(() => '');
+import { LeakCheck, NukeContext } from './components';
 
 export default function App() {
   const [nuked, setNuked] = useState(false);

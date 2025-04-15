@@ -48,6 +48,12 @@ Pod::Spec.new do |s|
       sss.header_dir = "reanimated"
       sss.header_mappings_dir = "apple/reanimated"
     end
+
+    ss.subspec "view" do |sv|
+      sv.source_files = "Common/NativeView/**/*.{mm,h,cpp}"
+      sv.header_dir = ""
+      sv.header_mappings_dir = "Common/NativeView"
+    end
   end
 
   gcc_debug_definitions = "$(inherited)"

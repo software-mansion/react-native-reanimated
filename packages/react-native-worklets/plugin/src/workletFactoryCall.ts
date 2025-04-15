@@ -22,8 +22,6 @@ export function makeWorkletFactoryCall(
   ) as NodePath<Program> | null;
   assert(programPath, 'Program path not found');
 
-  // addWorkletRegistryImports(programPath, state);
-
   const factoryCall = callExpression(
     memberExpression(
       callExpression(identifier('require'), [

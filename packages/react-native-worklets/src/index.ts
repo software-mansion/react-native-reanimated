@@ -11,8 +11,6 @@ initializeWorkletRegistries();
 initializeUIRuntime(WorkletsModule);
 breakBundle();
 
-export type { CustomError } from './errors';
-export { createCustomError, registerCustomError } from './errors';
 export type { LoggerConfig } from './logger';
 export {
   logger,

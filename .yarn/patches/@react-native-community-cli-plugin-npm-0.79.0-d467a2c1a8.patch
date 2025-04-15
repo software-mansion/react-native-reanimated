@@ -1,0 +1,12 @@
+diff --git a/dist/utils/loadMetroConfig.js b/dist/utils/loadMetroConfig.js
+index c0749e111d342611631c3eedc9c757936e8ff225..9e09462f430dc868b4d1c67548763c9fc131402c 100644
+--- a/dist/utils/loadMetroConfig.js
++++ b/dist/utils/loadMetroConfig.js
+@@ -33,6 +33,7 @@ function getOverrideConfig(ctx, config) {
+     resolver,
+     serializer: {
+       getModulesRunBeforeMainModule: () => [
++        require.resolve("react-native-worklets/src/bundleBreaker.ts"),
+         require.resolve(
+           _path.default.join(
+             ctx.reactNativePath,

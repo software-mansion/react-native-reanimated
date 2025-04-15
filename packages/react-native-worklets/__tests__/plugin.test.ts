@@ -424,7 +424,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('foo: _foo');
+      expect(code).toContain('foo: foo');
       expect(code).toMatchSnapshot();
     });
   });
@@ -2140,9 +2140,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.foo = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.foo = function');
       expect(code).toMatchSnapshot();
     });
 
@@ -2156,9 +2154,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.default = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.default = function');
       expect(code).toMatchSnapshot();
     });
 
@@ -2185,9 +2181,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.foo = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.foo = function');
       expect(code).toMatchSnapshot();
     });
 
@@ -2201,9 +2195,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.default = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.default = function');
       expect(code).toMatchSnapshot();
     });
 
@@ -2230,9 +2222,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.foo = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.foo = function');
       expect(code).toMatchSnapshot();
     });
 
@@ -2246,9 +2236,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData();
-      expect(code).toContain(
-        'exports.default = (0, _workletRegistry.__getWorklet)'
-      );
+      expect(code).toContain('exports.default = function');
       expect(code).toMatchSnapshot();
     });
 

@@ -14,8 +14,8 @@
     "common-app": "workspace:*",
     "expo": "^52.0.4",
     "react-dom": "19.0.0",
-    "react-native": "patch:react-native@npm%3A0.78.0#~/.yarn/patches/react-native-npm-0.78.0-3e6894e055.patch",
-    "react-native-web": "0.19.13"
+    "react-native": "patch:react-native@npm%3A0.79.0#~/.yarn/patches/react-native-npm-0.79.0-3bd84ed11a.patch",
+    "react-native-web": "0.20.0"
   },
   "devDependencies": {
     "@expo/metro-runtime": "~4.0.0",

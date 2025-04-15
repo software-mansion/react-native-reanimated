@@ -1,4 +1,5 @@
 /* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
@@ -25,7 +26,14 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = {
+      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
+      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
+      executeOnUIRuntimeSync:
+        global.__workletsModuleProxy.executeOnUIRuntimeSync,
+      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
+      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+    };
   }
 
   makeShareableClone<TValue>(
