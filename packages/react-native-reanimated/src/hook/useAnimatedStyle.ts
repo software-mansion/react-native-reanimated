@@ -212,7 +212,7 @@ function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
-  if (!SHOULD_BE_USE_WEB && typeof newValues.boxShadow === 'string') {
+  if (!SHOULD_BE_USE_WEB && newValues.boxShadow) {
     processBoxShadow(newValues);
   }
   for (const key in newValues) {
