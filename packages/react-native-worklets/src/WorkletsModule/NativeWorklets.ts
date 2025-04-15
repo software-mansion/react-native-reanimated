@@ -27,12 +27,13 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {} as WorkletsModuleProxy;
-    this.#workletsModuleProxy.scheduleOnUI = global.__workletsModuleProxy.scheduleOnUI
-    this.#workletsModuleProxy.scheduleOnRuntime = global.__workletsModuleProxy.scheduleOnRuntime
-    this.#workletsModuleProxy.executeOnUIRuntimeSync = global.__workletsModuleProxy.executeOnUIRuntimeSync
-    this.#workletsModuleProxy.createWorkletRuntime = global.__workletsModuleProxy.createWorkletRuntime
-    this.#workletsModuleProxy.makeShareableClone = global.__workletsModuleProxy.makeShareableClone
+    this.#workletsModuleProxy = {
+      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
+      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
+      executeOnUIRuntimeSync: global.__workletsModuleProxy.executeOnUIRuntimeSync,
+      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
+      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+    };
   }
 
   makeShareableClone<TValue>(
