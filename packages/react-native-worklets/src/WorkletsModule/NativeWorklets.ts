@@ -1,4 +1,5 @@
 /* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
@@ -30,7 +31,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#workletsModuleProxy = {
       scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
       scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync: global.__workletsModuleProxy.executeOnUIRuntimeSync,
+      executeOnUIRuntimeSync:
+        global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
     };
@@ -66,6 +68,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.#workletsModuleProxy.scheduleOnRuntime(workletRuntime, shareableWorklet);
+    return this.#workletsModuleProxy.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
+    );
   }
 }
