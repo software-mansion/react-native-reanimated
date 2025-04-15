@@ -1,10 +1,13 @@
 import type { NodePath } from '@babel/core';
 import { transformFromAstSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
+import type { Binding } from '@babel/traverse';
 import type {
   ExpressionStatement,
   File as BabelFile,
   Identifier,
+  ImportDeclaration,
+  ImportSpecifier,
   ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
@@ -16,9 +19,9 @@ import {
   cloneNode,
   exportDefaultDeclaration,
   expressionStatement,
-  functionDeclaration,
   functionExpression,
   identifier,
+  importDeclaration,
   isBlockStatement,
   isFunctionDeclaration,
   isFunctionExpression,
@@ -100,7 +103,11 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const { closureVariables, bindingsToImport } = makeArrayFromCapturedBindings(
+    transformed.ast,
+    fun,
+    state
+  );
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -338,15 +345,31 @@ export function makeWorkletFactory(
     )
   );
 
+  const imports = Array.from(bindingsToImport)
+    .filter(
+      (binding) =>
+        binding.path.isImportSpecifier() &&
+        binding.path.parentPath.isImportDeclaration()
+    )
+    .map((binding) =>
+      importDeclaration(
+        [cloneNode(binding.path.node as ImportSpecifier, true)],
+        stringLiteral(
+          require.resolve(
+            (binding.path.parentPath!.node as ImportDeclaration).source.value,
+            { paths: [dirname(state.file.opts.filename!)] }
+          )
+        )
+      )
+    );
+
   const newProg = program([
+    ...imports,
     variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]),
     exportDefaultDeclaration(factory),
   ]);
-
-  // @ts-expect-error wwww
-  newProg.dupaProp = true;
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
@@ -471,10 +494,15 @@ function makeWorkletName(
 
 function makeArrayFromCapturedBindings(
   ast: BabelFile,
-  fun: NodePath<WorkletizableFunction>
-): Identifier[] {
+  fun: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): {
+  closureVariables: Identifier[];
+  bindingsToImport: Set<Binding>;
+} {
   const closure = new Map<string, Identifier>();
   const isLocationAssignedMap = new Map<string, boolean>();
+  const bindingsToImport = new Set<Binding>();
 
   // this traversal looks for variables to capture
   traverse(ast, {
@@ -489,6 +517,25 @@ function makeArrayFromCapturedBindings(
       if (globals.has(name)) {
         return;
       }
+
+      const binding = fun.scope.getBinding(name);
+      if (binding) {
+        if (
+          binding.kind === 'module' &&
+          binding.constant &&
+          binding.path.isImportSpecifier() &&
+          binding.path.parentPath.isImportDeclaration() &&
+          state.opts.workletModules?.some((module) =>
+            (
+              binding.path.parentPath as NodePath<ImportDeclaration>
+            ).node.source.value.includes(module)
+          )
+        ) {
+          bindingsToImport.add(binding);
+          return;
+        }
+      }
+
       if (
         'id' in fun.node &&
         fun.node.id &&
@@ -551,7 +598,7 @@ function makeArrayFromCapturedBindings(
     },
   });
 
-  return Array.from(closure.values());
+  return { closureVariables: Array.from(closure.values()), bindingsToImport };
 }
 
 const extraPlugins = [

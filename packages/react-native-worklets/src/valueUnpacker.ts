@@ -16,6 +16,7 @@ export function valueUnpacker(
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     try {
+      // @ts-expect-error wwww
       const factory = globalThis.__r(workletHash).default;
       const worklet = factory(objectToUnpack.__closure);
       return worklet;

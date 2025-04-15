@@ -674,7 +674,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+      const { closureVariables, bindingsToImport } = makeArrayFromCapturedBindings(transformed.ast, fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -746,13 +746,14 @@ var require_workletFactory = __commonJS({
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(require.resolve(binding.path.parentPath.node.source.value, { paths: [(0, path_1.dirname)(state.file.opts.filename)] }))));
       const newProg = (0, types_12.program)([
+        ...imports,
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]),
         (0, types_12.exportDefaultDeclaration)(factory)
       ]);
-      newProg.dupaProp = true;
       const transformedProg = (_b = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: ["@babel/preset-typescript"],
@@ -828,17 +829,26 @@ var require_workletFactory = __commonJS({
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
     }
-    function makeArrayFromCapturedBindings(ast, fun) {
+    function makeArrayFromCapturedBindings(ast, fun, state) {
       const closure = /* @__PURE__ */ new Map();
       const isLocationAssignedMap = /* @__PURE__ */ new Map();
+      const bindingsToImport = /* @__PURE__ */ new Set();
       (0, core_1.traverse)(ast, {
         Identifier(path) {
+          var _a;
           if (!path.isReferencedIdentifier()) {
             return;
           }
           const name = path.node.name;
           if (globals_12.globals.has(name)) {
             return;
+          }
+          const binding = fun.scope.getBinding(name);
+          if (binding) {
+            if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_a = state.opts.workletModules) === null || _a === void 0 ? void 0 : _a.some((module3) => binding.path.parentPath.node.source.value.includes(module3)))) {
+              bindingsToImport.add(binding);
+              return;
+            }
           }
           if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
             return;
@@ -874,7 +884,7 @@ var require_workletFactory = __commonJS({
           isLocationAssignedMap.set(path.node.name, true);
         }
       });
-      return Array.from(closure.values());
+      return { closureVariables: Array.from(closure.values()), bindingsToImport };
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
