@@ -147,6 +147,7 @@ const config = {
             module: {
               rules: [
                 {
+                  test: /\.tsx?$/,
                   include: [
                     path.resolve(
                       __dirname,
