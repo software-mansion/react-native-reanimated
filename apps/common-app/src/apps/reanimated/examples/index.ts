@@ -23,6 +23,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -179,6 +180,12 @@ export const EXAMPLES: Record<string, Example> = {
     screen: InvalidValueAccessExample,
   },
 
+  CopyShareablesPerformanceTest: {
+    icon: '🔄',
+    title: 'Copy shareables performance test',
+    screen: CopyShareablesPerformanceTest,
+  },
+
   // About
 
   AboutExample: {
@@ -251,7 +258,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -510,7 +516,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -581,7 +586,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
