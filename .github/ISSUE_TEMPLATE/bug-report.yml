@@ -143,6 +143,16 @@ body:
         - Android emulator
         - Real device
 
+  - type: dropdown
+    id: emulator
+    attributes:
+      label: Host machine
+      description: What is the operating system of the machine you are developing your application on?
+      options:
+        - macOS
+        - Windows
+        - Linux
+
   - type: input
     id: device-model
     attributes:
