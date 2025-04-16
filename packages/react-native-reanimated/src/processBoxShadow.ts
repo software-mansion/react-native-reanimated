@@ -12,6 +12,12 @@
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 
 import type { StyleProps } from '.';
+import { ReanimatedError } from './errors';
+
+const isLength = (value: string) => {
+  'worklet';
+  return value.endsWith('px') || !isNaN(Number(value));
+};
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
   'worklet';
@@ -34,52 +40,54 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
     // split rawBoxShadow string by all whitespaces that are not in parenthesis
     const args = rawBoxShadow.split(/\s+(?![^(]*\))/);
     for (const arg of args) {
-      if (arg === 'inset') {
-        if (boxShadow.inset != null) {
+      if (isLength(arg)) {
+        switch (lengthCount) {
+          case 0:
+            offsetX = arg;
+            lengthCount++;
+            break;
+          case 1:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            offsetY = arg;
+            lengthCount++;
+            break;
+          case 2:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            boxShadow.blurRadius = arg;
+            lengthCount++;
+            break;
+          case 3:
+            if (keywordDetectedAfterLength) {
+              return [];
+            }
+            boxShadow.spreadDistance = arg;
+            lengthCount++;
+            break;
+          default:
+            return [];
+        }
+      } else if (arg === 'inset') {
+        if (boxShadow.inset) {
+          return [];
+        }
+        if (offsetX !== null) {
+          keywordDetectedAfterLength = true;
+        }
+        boxShadow.inset = true;
+        continue;
+      } else {
+        if (boxShadow.color) {
           return [];
         }
         if (offsetX != null) {
           keywordDetectedAfterLength = true;
         }
-        boxShadow.inset = true;
+        boxShadow.color = arg;
         continue;
-      }
-
-      switch (lengthCount) {
-        case 0:
-          offsetX = arg;
-          lengthCount++;
-          break;
-        case 1:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          offsetY = arg;
-          lengthCount++;
-          break;
-        case 2:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.blurRadius = arg;
-          lengthCount++;
-          break;
-        case 3:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.spreadDistance = arg;
-          lengthCount++;
-          break;
-        case 4:
-          if (keywordDetectedAfterLength) {
-            return [];
-          }
-          boxShadow.color = arg;
-          lengthCount++;
-          break;
-        default:
-          return [];
       }
     }
 
@@ -101,11 +109,7 @@ function parseLength(length: string): number | null {
   const argsWithUnitsRegex = /([+-]?\d*(\.\d+)?)([\w\W]+)?/g;
   const match = argsWithUnitsRegex.exec(length);
 
-  if (!match || Number.isNaN(match[1])) {
-    return null;
-  }
-
-  if (match[3] != null && match[3] !== 'px') {
+  if (!match || !isLength(length)) {
     return null;
   }
 
@@ -127,13 +131,21 @@ export function processBoxShadow(props: StyleProps) {
 
   const rawBoxShadows = props.boxShadow;
 
-  if (rawBoxShadows === '') {
+  if (rawBoxShadows === null) {
     return result;
   }
 
-  const boxShadowList = parseBoxShadowString(
-    (rawBoxShadows as string).replace(/\n/g, ' ')
-  );
+  let boxShadowList: Array<BoxShadowValue>;
+
+  if (typeof rawBoxShadows === 'string') {
+    boxShadowList = parseBoxShadowString(rawBoxShadows.replace(/\n/g, ' '));
+  } else if (Array.isArray(rawBoxShadows)) {
+    boxShadowList = rawBoxShadows;
+  } else {
+    throw new ReanimatedError(
+      `Box shadow value must be an array of shadow objects or a string. Received: ${JSON.stringify(rawBoxShadows)}`
+    );
+  }
 
   for (const rawBoxShadow of boxShadowList) {
     const parsedBoxShadow: ParsedBoxShadow = {
