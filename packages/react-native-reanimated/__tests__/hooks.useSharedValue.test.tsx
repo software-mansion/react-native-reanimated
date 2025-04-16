@@ -1,10 +1,10 @@
+import { render } from '@testing-library/react-native';
 import React from 'react';
-import renderer, { act } from 'react-test-renderer';
 
 import Animated, { useSharedValue } from '../src';
 
 describe('useSharedValue', () => {
-  it('retains value on rerender', async () => {
+  it('retains value on rerender', () => {
     // Given
     const initialValue = 0;
     const updatedValue = 1;
@@ -20,35 +20,23 @@ describe('useSharedValue', () => {
 
       React.useEffect(() => setOpacity(opacitySv.value), [opacitySv]);
 
-      return <Animated.View style={{ opacity }} />;
+      return <Animated.View style={{ opacity }} testID={'AnimatedView'} />;
     }
 
-    let wrapper!: renderer.ReactTestRenderer;
+    const component = render(<TestComponent key="box" value={initialValue} />);
 
-    // When rendering with initial value
-    await act(() => {
-      wrapper = renderer.create(
-        <TestComponent key="box" value={initialValue} />
-      );
-    });
+    const animatedView = component.getByTestId('AnimatedView');
 
-    const initialChild = wrapper.root.children[0];
-    expect(
-      typeof initialChild !== 'string'
-        ? initialChild.props.style.opacity
-        : false
-    ).toBe(initialValue);
+    expect(animatedView.props.style[0].opacity).toBe(initialValue);
 
-    // When rendering with updated value
-    await act(() => {
-      wrapper.update(<TestComponent key="box" value={updatedValue} />);
-    });
+    component.update(<TestComponent key="box" value={updatedValue} />);
+    const updatedChild = component.getByTestId('AnimatedView');
 
-    const updatedChild = wrapper.root.children[0];
-    expect(
-      typeof updatedChild !== 'string'
-        ? updatedChild.props.style.opacity
-        : false
-    ).toBe(initialValue);
+    expect(updatedChild.props.style[0].opacity).toBe(initialValue);
+
+    const rendered = render(
+      <TestComponent key="box" value={updatedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });
