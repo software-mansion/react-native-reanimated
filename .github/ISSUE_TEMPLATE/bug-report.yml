@@ -56,7 +56,7 @@ body:
     attributes:
       label: Reanimated version
       description: What version of react-native-reanimated are you using?
-      placeholder: 3.6.1
+      placeholder: 3.17.4
     validations:
       required: true
 
@@ -65,7 +65,7 @@ body:
     attributes:
       label: React Native version
       description: What version of react-native are you using?
-      placeholder: 0.73.1
+      placeholder: 0.79.0
     validations:
       required: true
 
@@ -86,9 +86,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Additonal information
+        ## Additional information
 
-        Providing as much information as possible greatly helps us with reproducting the issues.
+        Providing as much information as possible greatly helps us with reproducing the issues.
 
   - type: dropdown
     id: runtime
@@ -124,6 +124,7 @@ body:
     attributes:
       label: Build type
       description: What is the build configuration/variant of your native app and JavaScript bundle mode?
+      multiple: true
       options:
         - Debug app & dev bundle
         - Release app & production bundle
@@ -136,6 +137,7 @@ body:
     attributes:
       label: Device
       description: How are you running your application?
+      multiple: true
       options:
         - iOS simulator
         - Android emulator
@@ -154,6 +156,6 @@ body:
       label: Acknowledgements
       description: I searched for similar issues in the repository.
       options:
-        - 'Yes'
+        - "Yes"
     validations:
       required: true
