@@ -430,13 +430,18 @@ export default class AnimatedComponent
 }
 
 function filterOutAnimatedStyles(
-  style: NestedArray<StyleProps | AnimatedStyleHandle>
-): NestedArray<StyleProps> {
+  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
+): NestedArray<StyleProps | null | undefined> {
+  if (!style) {
+    return style;
+  }
   if (!Array.isArray(style)) {
     return style?.viewDescriptors ? {} : style;
   }
   return style
-    .filter((styleElement) => !('viewDescriptors' in styleElement))
+    .filter(
+      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
+    )
     .map((styleElement) => {
       if (Array.isArray(styleElement)) {
         return filterOutAnimatedStyles(styleElement);
