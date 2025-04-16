@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 import type React from 'react';
 import type {
@@ -87,7 +88,40 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-    this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
+    this.#reanimatedModuleProxy = {
+      registerSensor: global.__reanimatedModuleProxy.registerSensor,
+      unregisterSensor: global.__reanimatedModuleProxy.unregisterSensor,
+      registerEventHandler: global.__reanimatedModuleProxy.registerEventHandler,
+      unregisterEventHandler:
+        global.__reanimatedModuleProxy.unregisterEventHandler,
+      getViewProp: global.__reanimatedModuleProxy.getViewProp,
+      enableLayoutAnimations:
+        global.__reanimatedModuleProxy.enableLayoutAnimations,
+      configureProps: global.__reanimatedModuleProxy.configureProps,
+      subscribeForKeyboardEvents:
+        global.__reanimatedModuleProxy.subscribeForKeyboardEvents,
+      unsubscribeFromKeyboardEvents:
+        global.__reanimatedModuleProxy.unsubscribeFromKeyboardEvents,
+      setViewStyle: global.__reanimatedModuleProxy.setViewStyle,
+      markNodeAsRemovable: global.__reanimatedModuleProxy.markNodeAsRemovable,
+      unmarkNodeAsRemovable:
+        global.__reanimatedModuleProxy.unmarkNodeAsRemovable,
+      registerCSSKeyframes: global.__reanimatedModuleProxy.registerCSSKeyframes,
+      unregisterCSSKeyframes:
+        global.__reanimatedModuleProxy.unregisterCSSKeyframes,
+      applyCSSAnimations: global.__reanimatedModuleProxy.applyCSSAnimations,
+      unregisterCSSAnimations:
+        global.__reanimatedModuleProxy.unregisterCSSAnimations,
+      registerCSSTransition:
+        global.__reanimatedModuleProxy.registerCSSTransition,
+      updateCSSTransition: global.__reanimatedModuleProxy.updateCSSTransition,
+      unregisterCSSTransition:
+        global.__reanimatedModuleProxy.unregisterCSSTransition,
+      configureLayoutAnimationBatch:
+        global.__reanimatedModuleProxy.configureLayoutAnimationBatch,
+      setShouldAnimateExitingForTag:
+        global.__reanimatedModuleProxy.setShouldAnimateExitingForTag,
+    };
     executeOnUIRuntimeSync(function initializeUI() {
       'worklet';
       registerReanimatedError();

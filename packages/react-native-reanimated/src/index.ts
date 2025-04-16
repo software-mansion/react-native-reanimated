@@ -6,6 +6,7 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+export { unsubscribeFromKeyboardEvents } from './core';
 export type {
   DecayAnimation,
   DelayAnimation,
