@@ -19,6 +19,7 @@ function startObservingProgress(
 ): void {
   'worklet';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
+    console.log('Layout animation progress: ', sharedValue.value, 'tag: ', tag);
     global._notifyAboutProgress(tag, sharedValue.value);
   });
 }
@@ -52,6 +53,7 @@ function createLayoutAnimationManager(): {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
+      console.log('Layout animation start: ', tag, type, yogaValues);
       const style = config(yogaValues);
       let currentAnimation = style.animations;
 

@@ -300,6 +300,25 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         if (nodeForTag_.contains(parentTag)) {
           nodeForTag_[parentTag]->applyMutationToIndices(mutation);
         }
+        
+        if (layoutAnimationsManager_->hasLayoutAnimation(tag, SHARED_ELEMENT_TRANSITION)){
+          if (previousView){
+            ShadowView s = *previousView;
+            s.tag = myTag;
+            s.layoutMetrics.frame.origin.y += 100;
+            filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(1, s, 1));
+            layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[myTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[previousView->tag];
+            mutation.newChildShadowView.tag = myTag;
+            previousView->tag = myTag;
+            mutation.newChildShadowView.layoutMetrics.frame.origin.y += 100;
+            previousView->layoutMetrics.frame.origin.y += 100;
+            startSharedTransition(myTag, *previousView, mutation.newChildShadowView);
+            myTag+=2;
+            continue;
+          }
+          previousView = mutation.newChildShadowView;
+        }
 
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -787,6 +806,51 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         uiRuntime, "windowHeight", targetValues.windowHeight);
     strongThis->layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
+  });
+}
+
+void LayoutAnimationsProxy::startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after) const{
+  auto surfaceId = 1;
+
+  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
+                              before,
+                              after,
+                              surfaceId,
+                              tag]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto oldView = before;
+    Rect window{};
+    {
+      auto &mutex = strongThis->mutex;
+      auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+      strongThis->createLayoutAnimation(ShadowViewMutation::InsertMutation(1, after, 1), oldView, surfaceId, tag);
+      window = strongThis->surfaceManager.getWindow(surfaceId);
+    }
+
+    Snapshot currentValues(oldView, window);
+    Snapshot targetValues(after, window);
+
+    auto &uiRuntime = strongThis->uiRuntime_;
+    jsi::Object yogaValues(uiRuntime);
+    yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
+    yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
+    yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
+    yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
+    yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
+    yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
+    strongThis->layoutAnimationsManager_->startLayoutAnimation(uiRuntime, tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, yogaValues);
   });
 }
 

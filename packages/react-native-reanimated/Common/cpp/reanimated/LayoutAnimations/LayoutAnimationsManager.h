@@ -44,14 +44,15 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
 
- private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
 
+private:
   std::shared_ptr<JSLogger> jsLogger_;
 
   std::unordered_map<int, std::shared_ptr<Shareable>>
       enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>> sharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;

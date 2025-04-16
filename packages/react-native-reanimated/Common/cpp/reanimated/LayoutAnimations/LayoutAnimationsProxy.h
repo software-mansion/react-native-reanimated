@@ -42,6 +42,9 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+        mutable int myTag = 10001;
+//  mutable std::unordered_map<
+        mutable std::optional<ShadowView> previousView;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -64,7 +67,9 @@ struct LayoutAnimationsProxy
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-
+  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after)
+            const;
+        
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
       const;
   std::optional<SurfaceId> progressLayoutAnimation(

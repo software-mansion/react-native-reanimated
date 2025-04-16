@@ -117,6 +117,8 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
       return exitingAnimations_;
     case LAYOUT:
       return layoutAnimations_;
+    case SHARED_ELEMENT_TRANSITION:
+      return sharedTransitions_;
     default:
       assert(false);
   }

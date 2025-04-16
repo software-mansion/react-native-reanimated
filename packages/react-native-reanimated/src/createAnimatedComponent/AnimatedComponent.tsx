@@ -38,6 +38,7 @@ import JSPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
+import { LinearTransition } from '../layoutReanimation';
 
 let id = 0;
 
@@ -349,6 +350,18 @@ export default class AnimatedComponent
     const tag = this.getComponentViewTag();
 
     const { layout, entering, exiting } = this.props;
+
+    if (this.props.sharedTransitionTag) {
+      updateLayoutAnimations(
+        tag,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        maybeBuild(
+          LinearTransition.duration(2000),
+          this.props?.style,
+          this._displayName
+        )
+      );
+    }
     if (layout || entering || exiting) {
       if (!SHOULD_BE_USE_WEB) {
         enableLayoutAnimations(true, false);
