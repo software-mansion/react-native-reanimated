@@ -144,7 +144,7 @@ body:
         - Real device
 
   - type: dropdown
-    id: emulator
+    id: host-machine
     attributes:
       label: Host machine
       description: What is the operating system of the machine you are developing your application on?
