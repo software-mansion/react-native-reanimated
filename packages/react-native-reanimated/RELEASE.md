@@ -1,9 +1,11 @@
-## How am I supposed to release Reanimated - a Guide
+## How to release Reanimated
 
 1. Decide on the importance of this release and then choose a version number:
-   - **patch** (last number) - small adjustments, fixes, in most cases only JS code is modified.
-   - **minor** (middle number) - every other case e.g. new features.
-   - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered **from 1.** (e.g. _3.17.1-rc.1_).
+
+   - **patch** (last number) – small adjustments, fixes, in most cases only JS code is modified.
+   - **minor** (middle number) – every other case, e.g. new features.
+   - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered from 1 (e.g. `3.17.1-rc.1`).
+
 2. Make sure you're up-to-date:
 
    - `git checkout <current-stable>` e.g. `git checkout 3.17-stable`
@@ -13,19 +15,19 @@
 
    - `git switch -c @username/release/x.y.z`
 
-4. Set new version by running the following script in the repository root
+4. Set the new version by running the following script in the repository root:
 
    - `cd packages/react-native-reanimated && node ./scripts/set-reanimated-version.js x.y.z`
 
 5. Update the **Compatibility Table** in the documentation:
 
-   - You need to do this in separate PR as docs are hosted on `main`,
+   - You need to do this in a separate PR as docs are hosted on `main`,
    - Update both in Paper and Fabric section,
-   - Use **&ndash** (–) symbol instead of normal dash (-).
+   - Use `&ndash;` (–) symbol instead of normal dash (-).
 
 6. Run `bundle install && bundle exec pod install` in all example apps to update following files:
 
-   - `paper-example/ios/Podfile.lock`
+   - `paper-example/ios/Podfile.lock` (v3 only)
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
@@ -55,7 +57,7 @@
 
 12. Run the GitHub Actions responsible for building your package:
 
-    - [ NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
+    - [NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
     - Select your branch as the destination for the workflow:
       ![image](https://hackmd.io/_uploads/SJMK9HFTye.png 'title')
 
@@ -73,7 +75,7 @@
     - `npx @react-native-community/cli init MyApp --skip-install`
     - `cd MyApp`
     - `yarn add ~/Downloads/react-native-reanimated-x.y.z.tgz`
-    - Add `plugins: ['react-native-reanimated/plugin']` in `babel.config.js` - as in our [Getting Started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
+    - Add `plugins: ['react-native-worklets/plugin']` in `babel.config.js` - as in our [Getting Started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
     - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx`,
     - Open and build `ios/MyApp.xcworkspace` on iOS,
     - Run `open -a 'Android Studio'` and build on Android,
@@ -85,32 +87,31 @@
     - Set up using **Getting Started** tutorial from [Expo Docs](https://docs.expo.dev/workflow/web/),
     - `yarn add ~/Downloads/react-native-reanimated-x.y.z.tgz`
     - If you don't have `babel.config.js`, create it using [this instruction](https://docs.expo.dev/versions/latest/config/babel/),
-    - Add `plugins: ['react-native-reanimated/plugin']` in `babel.config.js` - as in our [Getting started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
+    - Add `plugins: ['react-native-worklets/plugin']` in `babel.config.js` - as in our [Getting started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
     - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx` - when using **expo-router** find and copy to `index.tsx`,
     - Run dev: `npx expo start --web`,
     - Run release: `npx expo export -p web && npx serve dist --single`.
 
 18. If something doesn't work you can fix it in this or in a separate PR (depending on the case), and repeat the steps.
-19. If everything works fine you can merge the PR ✅.
-20. Upload the package to NPM:
+19. If everything works fine you can merge the PR.
+20. Upload the package to npm:
 
     - Check package size and file list with `npm publish --dry-run react-native-reanimated-x.y.z.tgz` - see if there is anything suspicious,
     - Publish package with `npm publish react-native-reanimated-x.y.z.tgz`,
-    - If you don't have permission to `react-native-reanimated` on NPM ask **Krzysztof Magiera** (or one of the RNOS members with permission, currently: Krzysztof Piaskowy, Tomasz Zawadzki, Bartłomiej Błoniarz, Tomasz Żelawski, Mateusz Łopaciński, Patrycja Kalińska).
 
-21. Check that the NPM tags are set correctly:
+21. Check that the npm tags are set correctly:
 
     - The version tag list can be found [here](https://www.npmjs.com/package/react-native-reanimated?activeTab=versions).
     - It should look like this:
-      - `latest` -> newest Reanimated v3,
+      - `latest` &rarr; newest Reanimated v3,
       - `reanimated-2`,
       - `reanimated-1`,
-      - `next` -> Reanimated 4,
+      - `next` &rarr; Reanimated v4,
       - `nightly`,
       - `reanimated3-nightly`.
-    - If you see something's wrong run `npm dist-tag`.
+    - If you see something's wrong, run `npm dist-tag`.
 
-22. After publishing briefly test if it works, when downloaded from NPM:
+22. After publishing briefly test if it works, when downloaded from npm:
 
     - `yarn cache clean` (to make sure it's not downloading a local copy from the cache) ,
     - `yarn add react-native-reanimated@x.y.z`,
@@ -132,7 +133,7 @@
       - **Set as the latest release** - check if releasing v3, don't check when dealing with v2,
       - **Create discussion for this release** - rare case, mostly not used.
 
-24. Share the good news on Slack ✨,
+24. Share the good news on Slack.
 25. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).
 
-#### Congratulations on releasing new Reanimated!
+**Congratulations on releasing a new version of Reanimated!**
