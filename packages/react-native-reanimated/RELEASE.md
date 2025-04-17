@@ -59,11 +59,15 @@
 
     - [NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
     - Select your branch as the destination for the workflow:
-      ![image](https://hackmd.io/_uploads/SJMK9HFTye.png 'title')
+      
+      <img width="500" alt="upload_d3527584fe60bbd66cdd99dfbc34b118" src="https://github.com/user-attachments/assets/d25946c1-0279-430a-92b4-57a1307c1179" />
+
+
 
 13. Wait for the workflow to finish - it should take about 2 minutes.
 14. Select your workflow from the list and download artifacts.
-    ![image](https://hackmd.io/_uploads/B1MZoSYayl.png)
+    <img width="925" alt="upload_b4eaebea327e62c1c99d44b1984066b3" src="https://github.com/user-attachments/assets/cfd54b99-2cff-4f60-b818-f92a53e62c07" />
+
 
 15. Unzip your artifacts:
 
@@ -123,7 +127,9 @@
     - Go to the [Releases](https://github.com/software-mansion/react-native-reanimated/releases) tab in our repo,
     - Select **Draft a new release**,
     - Choose **tag** e.g. `3.17.2`:
-    - ![image](https://hackmd.io/_uploads/ryFexwtpye.png)
+      
+      <img width="346" alt="upload_7933257ba4df136251188391ad2693f0" src="https://github.com/user-attachments/assets/383648da-ef25-4b84-83b5-1c484a702488" />
+
     - Choose **target** - it will a be current stable branch e.g. `3.17-stable`,
     - Choose **previous tag** - it will be from previous release e.g. `3.17.1`,
     - Attach previously downloaded artifact (`.tgz`),
