@@ -46,12 +46,9 @@ export const processBoxShadow: ValueProcessor<
   if (value === 'none') {
     return;
   }
-  console.log('value', value);
 
   const parsedShadow =
     typeof value === 'string' ? parseBoxShadowString(value) : value;
-  console.log(typeof value === 'string');
-  console.log('parsedShadow', parsedShadow);
 
   if (!Array.isArray(parsedShadow)) {
     throw new ReanimatedError(ERROR_MESSAGES.notArrayObject(parsedShadow));
