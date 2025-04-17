@@ -1,7 +1,7 @@
 'use strict';
 import type { BoxShadowValue, ViewStyle } from 'react-native';
 
-import { parseBoxShadowString } from '../../../../utils';
+import { parseBoxShadowString } from '../../../../../common/utils';
 import { maybeAddSuffix } from '../../utils';
 import type { ValueProcessor } from '../types';
 

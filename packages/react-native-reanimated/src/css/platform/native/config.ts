@@ -1,10 +1,10 @@
 'use strict';
+import { processBoxShadow } from '../../../common/processors';
 import { IS_ANDROID } from '../../constants';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';
 import {
   processAspectRatio,
-  processBoxShadow,
   processColor,
   processFontWeight,
   processGap,

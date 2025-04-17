@@ -5,6 +5,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
+import { processBoxShadow } from '../common/processors';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -19,7 +20,6 @@ import { makeShareable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import { processBoxShadow } from '../processBoxShadow';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -212,11 +212,11 @@ function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
-  if (!SHOULD_BE_USE_WEB && newValues.boxShadow) {
-    processBoxShadow(newValues);
-  }
   for (const key in newValues) {
     const value = newValues[key];
+    if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
+      newValues[key] = processBoxShadow(value);
+    }
     if (isAnimated(value)) {
       frameTimestamp =
         global.__frameTimestamp || global._getAnimationTimestamp();

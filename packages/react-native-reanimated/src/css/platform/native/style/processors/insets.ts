@@ -1,7 +1,7 @@
 'use strict';
 import type { DimensionValue } from 'react-native';
 
-import type { ValueProcessor } from '../types';
+import type { ValueProcessor } from '../../../../../common/types';
 
 type InsetProcessor = ValueProcessor<
   DimensionValue,

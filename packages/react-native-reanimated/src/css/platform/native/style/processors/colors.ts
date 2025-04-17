@@ -2,9 +2,8 @@
 import type { ColorValue } from 'react-native';
 
 import { processColor as processColorInternal } from '../../../../../Colors';
+import type { Maybe, ValueProcessor } from '../../../../../common/types';
 import { ReanimatedError } from '../../../../errors';
-import type { Maybe } from '../../../../types';
-import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: Maybe<ColorValue | number>) =>

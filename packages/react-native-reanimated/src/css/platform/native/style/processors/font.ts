@@ -1,7 +1,7 @@
 'use strict';
+import type { ValueProcessor } from '../../../../../common/types';
 import { FONT_WEIGHT_MAPPINGS } from '../../../../constants';
 import { ReanimatedError } from '../../../../errors';
-import type { ValueProcessor } from '../types';
 
 const ERROR_MESSAGES = {
   invalidFontWeight: (weight: string | number) =>

@@ -1,17 +1,23 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
-import { processColor } from '../../../../../Colors';
-import { IS_ANDROID } from '../../../../constants';
-import { ReanimatedError } from '../../../../errors';
-import { parseBoxShadowString } from '../../../../utils';
+import { processColor } from '../../Colors';
+import { ReanimatedError } from '../../errors';
+import { IS_ANDROID } from '../constants';
 import type { ValueProcessor } from '../types';
+import { parseBoxShadowString } from '../utils';
 
 const ERROR_MESSAGES = {
-  notArrayObject: (value: object) =>
-    `Box shadow value must be an array of shadow objects or a string. Received: ${JSON.stringify(value)}`,
-  invalidColor: (color: string, boxShadow: string) =>
-    `Invalid color "${color}" in box shadow "${boxShadow}".`,
+  notArrayObject: (value: object) => {
+    'worklet';
+    const errMsg = `Box shadow value must be an array of shadow objects. Received: ${JSON.stringify(value)}`;
+    return errMsg;
+  },
+  invalidColor: (color: string, boxShadow: string) => {
+    'worklet';
+    const errMsg = `Invalid color "${color}" in box shadow "${boxShadow}".`;
+    return errMsg;
+  },
 };
 
 export type ProcessedBoxShadowValue = {
@@ -24,6 +30,7 @@ export type ProcessedBoxShadowValue = {
 };
 
 const parseBlurRadius = (value: string) => {
+  'worklet';
   if (IS_ANDROID) {
     // Android crashes when blurRadius is smaller than 1
     return Math.max(parseFloat(value), 1);
@@ -35,12 +42,16 @@ export const processBoxShadow: ValueProcessor<
   ReadonlyArray<BoxShadowValue> | string,
   ProcessedBoxShadowValue[]
 > = (value) => {
+  'worklet';
   if (value === 'none') {
     return;
   }
+  console.log('value', value);
 
   const parsedShadow =
     typeof value === 'string' ? parseBoxShadowString(value) : value;
+  console.log(typeof value === 'string');
+  console.log('parsedShadow', parsedShadow);
 
   if (!Array.isArray(parsedShadow)) {
     throw new ReanimatedError(ERROR_MESSAGES.notArrayObject(parsedShadow));
