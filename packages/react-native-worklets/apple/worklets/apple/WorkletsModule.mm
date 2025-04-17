@@ -31,6 +31,12 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
+- (void)checkBridgeless
+{
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
+  react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
+}
+
 @synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
@@ -38,9 +44,8 @@ RCT_EXPORT_MODULE(WorkletsModule);
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
   react_native_assert(self.bridge != nullptr);
+  [self checkBridgeless];
   react_native_assert(self.bridge.runtime != nullptr);
-  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
-  react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 
   AssertJavaScriptQueue();
 
@@ -84,6 +89,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   workletsModuleProxy_.reset();
 
   [super invalidate];
+}
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  [self checkBridgeless];
+  AssertJavaScriptQueue();
+  return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
 @end
