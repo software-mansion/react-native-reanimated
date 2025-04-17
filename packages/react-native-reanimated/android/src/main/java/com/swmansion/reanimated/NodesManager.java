@@ -15,7 +15,6 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
@@ -126,10 +125,6 @@ public class NodesManager implements EventDispatcherListener {
     UiThreadUtil.assertOnUiThread();
 
     try {
-      if (BuildConfig.REANIMATED_PROFILING) {
-        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
-      }
-
       double currentFrameTimeMs = frameTimeNanos / 1000000.;
       if (mSlowAnimationsEnabled) {
         currentFrameTimeMs =
@@ -164,9 +159,7 @@ public class NodesManager implements EventDispatcherListener {
         startUpdatingOnAnimationFrame();
       }
     } finally {
-      if (BuildConfig.REANIMATED_PROFILING) {
-        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
-      }
+      // no-op
     }
   }
 
@@ -178,10 +171,6 @@ public class NodesManager implements EventDispatcherListener {
   @Override
   public void onEventDispatch(Event event) {
     try {
-      if (BuildConfig.REANIMATED_PROFILING) {
-        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onEventDispatch");
-      }
-
       if (mNativeProxy == null) {
         return;
       }
@@ -200,9 +189,7 @@ public class NodesManager implements EventDispatcherListener {
         startUpdatingOnAnimationFrame();
       }
     } finally {
-      if (BuildConfig.REANIMATED_PROFILING) {
-        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
-      }
+      // no-op
     }
   }
 
