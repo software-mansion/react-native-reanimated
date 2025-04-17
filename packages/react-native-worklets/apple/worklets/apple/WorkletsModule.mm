@@ -7,6 +7,7 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
+#import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
 using worklets::RNRuntimeWorkletDecorator;
@@ -36,10 +37,13 @@ RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-  AssertJavaScriptQueue();
-
   react_native_assert(self.bridge != nullptr);
   react_native_assert(self.bridge.runtime != nullptr);
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
+  react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
+
+  AssertJavaScriptQueue();
+
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
