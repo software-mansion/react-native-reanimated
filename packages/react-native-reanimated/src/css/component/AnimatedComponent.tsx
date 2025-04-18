@@ -18,6 +18,7 @@ import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
+import { ReanimatedView } from '../../specs';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_JEST = isJest();
@@ -206,15 +207,17 @@ export default class AnimatedComponent<
     });
 
     return (
-      <ChildComponent
-        {...this.props}
-        {...props}
-        {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
-        // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-        // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-        ref={this._setComponentRef as (ref: Component) => void}
-      />
+      <ReanimatedView>
+        <ChildComponent
+          {...this.props}
+          {...props}
+          {...platformProps}
+          style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+          // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
+          // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
+          ref={this._setComponentRef as (ref: Component) => void}
+        />
+      </ReanimatedView>
     );
   }
 }
