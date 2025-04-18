@@ -1,5 +1,5 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common/types';
+import type { ValueProcessor } from '../../../../../common';
 import { ReanimatedError } from '../../../../errors';
 import type { TransformsArray } from '../../../../types';
 import {
@@ -161,7 +161,7 @@ function parseMatrix(values: (number | string)[]): TransformsArray {
 }
 
 export const processTransform: ValueProcessor<TransformsArray | string> = (
-  value: string | TransformsArray
+  value
 ) => {
   if (typeof value !== 'string') {
     return value;

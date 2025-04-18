@@ -1,5 +1,5 @@
 'use strict';
-import type { Maybe } from '../../../../common/types';
+import type { Maybe } from '../../../../common';
 import type { AnyRecord } from '../../../types';
 
 export type ValueProcessor<V> = (

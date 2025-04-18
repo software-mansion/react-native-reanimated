@@ -1,5 +1,5 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common/types';
+import type { ValueProcessor } from '../../../../../common';
 import { ReanimatedError } from '../../../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
 

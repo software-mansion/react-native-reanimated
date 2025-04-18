@@ -1,5 +1,5 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common/types';
+import type { ValueProcessor } from '../../../../../common';
 import { FONT_WEIGHT_MAPPINGS } from '../../../../constants';
 import { ReanimatedError } from '../../../../errors';
 

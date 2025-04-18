@@ -1,4 +1,5 @@
 'use strict';
+'worklet';
 import type { BoxShadowValue } from 'react-native';
 
 import { processColor } from '../../Colors';
@@ -8,16 +9,10 @@ import type { ValueProcessor } from '../types';
 import { parseBoxShadowString } from '../utils';
 
 const ERROR_MESSAGES = {
-  notArrayObject: (value: object) => {
-    'worklet';
-    const errMsg = `Box shadow value must be an array of shadow objects. Received: ${JSON.stringify(value)}`;
-    return errMsg;
-  },
-  invalidColor: (color: string, boxShadow: string) => {
-    'worklet';
-    const errMsg = `Invalid color "${color}" in box shadow "${boxShadow}".`;
-    return errMsg;
-  },
+  notArrayObject: (value: object) =>
+    `Box shadow value must be an array of shadow objects. Received: ${JSON.stringify(value)}`,
+  invalidColor: (color: string, boxShadow: string) =>
+    `Invalid color "${color}" in box shadow "${boxShadow}".`,
 };
 
 export type ProcessedBoxShadowValue = {
@@ -30,7 +25,6 @@ export type ProcessedBoxShadowValue = {
 };
 
 const parseBlurRadius = (value: string) => {
-  'worklet';
   if (IS_ANDROID) {
     // Android crashes when blurRadius is smaller than 1
     return Math.max(parseFloat(value), 1);
@@ -42,7 +36,6 @@ export const processBoxShadow: ValueProcessor<
   ReadonlyArray<BoxShadowValue> | string,
   ProcessedBoxShadowValue[]
 > = (value) => {
-  'worklet';
   if (value === 'none') {
     return;
   }

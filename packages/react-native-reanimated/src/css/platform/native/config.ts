@@ -1,5 +1,5 @@
 'use strict';
-import { processBoxShadow } from '../../../common/processors';
+import { processBoxShadow } from '../../../common';
 import { IS_ANDROID } from '../../constants';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';

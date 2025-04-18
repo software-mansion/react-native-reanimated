@@ -1,5 +1,5 @@
 'use strict';
-export { processBoxShadow } from '../../../../../common/processors';
+export { processBoxShadow } from '../../../../../common';
 export { processColor } from './colors';
 export { processFontWeight } from './font';
 export { processInset, processInsetBlock, processInsetInline } from './insets';

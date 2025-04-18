@@ -214,9 +214,6 @@ function styleUpdater(
   let hasNonAnimatedValues = false;
   for (const key in newValues) {
     const value = newValues[key];
-    if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
-      newValues[key] = processBoxShadow(value);
-    }
     if (isAnimated(value)) {
       frameTimestamp =
         global.__frameTimestamp || global._getAnimationTimestamp();
@@ -224,6 +221,13 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
+      /* TODO: Improve this config structure in the future
+       * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
+       * containing only properties that require processing and their associated processors
+       * */
+      if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
+        newValues[key] = processBoxShadow(value);
+      }
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
