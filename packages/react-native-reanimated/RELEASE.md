@@ -1,19 +1,26 @@
 ## How to release Reanimated
 
+Reanimated follows [semver](https://semver.org/) whenever applicable.
+
 1. Decide on the importance of this release and then choose a version number:
 
    - **patch** (last number) – small adjustments, fixes, in most cases only JS code is modified.
-   - **minor** (middle number) – every other case, e.g. new features.
+   - **minor** (middle number) – new features, all changes that applies to a patch release and fixes in the native code that couldn't be applied in a patch
    - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered from 1 (e.g. `3.17.1-rc.1`).
 
 2. Make sure you're up-to-date:
+   When releasing a patch or minor version, you ought to do it from the respective `x.x-stable branch`.
 
-   - `git checkout <current-stable>` e.g. `git checkout 3.17-stable`
-   - `git pull`
+   - For patches:
+     - `git switch <current-stable>` e.g. `git switch 3.17-stable` then `git pull`.
+   - For minors:
+     - If latest major, create another stable branch from `main`, i.e.:
+       `git switch main` then `git pull` then `git switch -c 4.20-stable`
+     - If older major, create another stable branch from the last one, i.e.: `git switch 3.17-stable` then `git pull` then `git switch -c 3.18-stable`.
 
 3. Create a new release branch:
 
-   - `git switch -c @username/release/x.y.z`
+   - `git switch -c @username/release/reanimated-x.y.z`
 
 4. Set the new version by running the following script in the repository root:
 
@@ -36,14 +43,15 @@
 
    - Android: `build.gradle`
    - iOS: `reanimated_utils.rb`
-   - By default we support the last three versions
+   - By default we support the last three minor versions
 
-8. Test if everything works:
+8. Testing:
 
    - Run the examples from Reanimated app, especially those affected by release changes.
    - Test each example app on each platform (if possible, run in both **release** and **debug** mode using **Android** and **iOS**).
+   - On rare cases it might be necessary to also test unusual configurations, i.e. **release** app with a **development** bundle. Please consult the team for more instructions here.
 
-9. If something doesn't work you can fix it in this or in a separate PR (depending on the case), and repeat the steps.
+9. In case of regressions, fix it in a separate PR, merge it then repeat relevant previous steps.
 10. Commit your changes:
 
     - `git add --all`
