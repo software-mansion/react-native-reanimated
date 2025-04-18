@@ -99,5 +99,6 @@ module.exports = {
     'jest/prefer-to-have-length': 'warn',
     'jest/valid-expect': 'error',
     'react/react-in-jsx-scope': 'off',
+    'lines-between-class-members': 'off',
   },
 };

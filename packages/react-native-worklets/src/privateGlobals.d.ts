@@ -7,10 +7,14 @@
 import type { callGuardDEV } from './initializers';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
+import type { ShareableRef } from './workletTypes';
 
+// TODO: TSDOC global variables.
 declare global {
   var __workletsCache: Map<number, () => unknown>;
   var __handleCache: WeakMap<object, unknown>;
+  var __shareableMappingCache: WeakMap<object, ShareableRef | symbol>;
+  var __shareableMappingFlag: symbol;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => () => unknown)
     | undefined;
