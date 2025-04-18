@@ -64,9 +64,6 @@ export const isNumber = (value: unknown): value is number =>
 export const isPercentage = (value: string | number): value is `${number}%` =>
   typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
 
-export const isLength = (value: string) =>
-  value.endsWith('px') || !isNaN(Number(value));
-
 export const isAngleValue = (
   value: string | number
 ): value is `${number}deg` | `${number}rad` =>

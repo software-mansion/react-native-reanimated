@@ -6,10 +6,11 @@ import Animated, {
   getAnimatedStyle,
   interpolate,
   interpolateColor,
+  processColor,
   useAnimatedStyle,
   useSharedValue,
 } from '../src';
-import { processBoxShadow } from '../src/processBoxShadow';
+import { processBoxShadow } from '../src/common/processors';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -184,17 +185,19 @@ describe('Test of boxShadow prop', () => {
       getDefaultStyle(),
     ]);
 
-    const unprocessedStyle = getAnimatedStyle(pressable) as ViewStyle;
+    const unprocessedStyle = getAnimatedStyle(pressable);
 
-    processBoxShadow(unprocessedStyle);
+    const parsedStyle = processBoxShadow(
+      (unprocessedStyle as ViewStyle).boxShadow!
+    );
 
-    expect(unprocessedStyle.boxShadow).toEqual([
+    expect(parsedStyle).toEqual([
       {
         offsetX: 0,
         offsetY: 4,
         blurRadius: 10,
         spreadDistance: 0,
-        color: 'rgba(255, 0, 0, 1)',
+        color: processColor('rgba(255, 0, 0, 1)'),
       },
     ]);
 
@@ -210,22 +213,22 @@ describe('Test of boxShadow prop', () => {
   test('two boxShadows string parsing', () => {
     const multipleBoxShadowStyle = getMultipleBoxShadowStyle();
 
-    processBoxShadow(multipleBoxShadowStyle);
+    const parsedStyle = processBoxShadow(multipleBoxShadowStyle.boxShadow);
 
-    expect(multipleBoxShadowStyle.boxShadow).toEqual([
+    expect(parsedStyle).toEqual([
       {
         offsetX: -10,
         offsetY: 6,
         blurRadius: 8,
         spreadDistance: 10,
-        color: 'rgba(255, 0, 0, 1)',
+        color: processColor('rgba(255, 0, 0, 1)'),
       },
       {
         offsetX: 10,
         offsetY: 0,
         blurRadius: 15,
         spreadDistance: 6,
-        color: 'rgba(0, 0, 255, 1)',
+        color: processColor('rgba(0, 0, 255, 1)'),
       },
     ]);
   });
