@@ -23,6 +23,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -109,8 +110,8 @@ import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
+import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WebWorkerExample from './WebWorkerExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
@@ -178,6 +179,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔒',
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
+  },
+
+  CopyShareablesPerformanceTest: {
+    icon: '🔄',
+    title: 'Copy shareables performance test',
+    screen: CopyShareablesPerformanceTest,
   },
 
   // About
@@ -252,7 +259,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -438,11 +444,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
-  },
   MatrixExample: {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',
@@ -516,7 +517,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -581,9 +581,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pager example',
     screen: PagerExample,
   },
+  TransformOriginExample: {
+    title: 'Transform origin example',
+    screen: TransformOriginExample,
+  },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
@@ -703,5 +706,5 @@ export const EXAMPLES: Record<string, Example> = {
   WebWorkerExample: {
     title: 'Web Worker',
     screen: WebWorkerExample,
-  },  
+  },
 } as const;

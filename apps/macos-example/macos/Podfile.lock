@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.2.0):
+  - react-native-safe-area-context (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1223,8 +1223,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.1.0)
-    - react-native-safe-area-context/fabric (= 5.1.0)
+    - react-native-safe-area-context/common (= 5.3.0)
+    - react-native-safe-area-context/fabric (= 5.3.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1233,7 +1233,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/common (5.1.0):
+  - react-native-safe-area-context/common (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1254,7 +1254,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/fabric (5.1.0):
+  - react-native-safe-area-context/fabric (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1561,7 +1561,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.24.0):
+  - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1626,9 +1626,32 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - RNReanimated/reanimated/apple (= 4.0.0-beta.3)
+    - RNReanimated/reanimated/view (= 4.0.0-beta.3)
     - RNWorklets
     - Yoga
   - RNReanimated/reanimated/apple (4.0.0-beta.3):
+    - DoubleConversion
+    - glog
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNWorklets
+    - Yoga
+  - RNReanimated/reanimated/view (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1670,9 +1693,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.11.1)
+    - RNSVG/common (= 15.11.2)
     - Yoga
-  - RNSVG/common (15.11.1):
+  - RNSVG/common (15.11.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -2006,8 +2029,8 @@ SPEC CHECKSUMS:
   React-jsitracing: 5709cb59ac54922a66002c8c4c5aabfa73bd158b
   React-logger: d2346d2c6056e50941ee0e91db9639188842fe34
   React-Mapbuffer: 42c1c6a2fcfc7993c96fd1540993ec5070fc870f
-  React-microtasksnativemodule: 74040ecf5ffab05e7276a3c73bc6aa423e152c1b
-  react-native-safe-area-context: 3e33e7c43c8b74dba436a5a32651cb8d7064c740
+  React-microtasksnativemodule: 88c6fca8e4ec000ea9f417df23798ae67bda047c
+  react-native-safe-area-context: 0d98866f8f42ecdd7db4ed72023ad0b87253cc12
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 89541f2dd4928c7a6e40a01a7771664e1ff61066
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147
@@ -2035,10 +2058,10 @@ SPEC CHECKSUMS:
   ReactCommon: 33aa3e538f80f05a4d91150f7d704f1accf9b2ec
   RNCAsyncStorage: befba0534e46dee5c3a5a58fe9bcf378c3c616ec
   RNCClipboard: d648682aad40632c1f6e365ce6b66f267b6df034
-  RNGestureHandler: ce289cd724a1a1bf8200bb381eced353f0b8010e
-  RNReanimated: 5063b5a505a28cae37aee2d7d88588e809fe2198
-  RNSVG: c0031b98e435eee6b89d166c7f28697bf72c58de
-  RNWorklets: c53cb050060e9fd91495c25970b96517f63437e8
+  RNGestureHandler: c6b441559fe02f0c07fe2720c9103a8532552ce1
+  RNReanimated: 9df9c04acd7738ec819a6e677e3c669c6170d1ca
+  RNSVG: a0d6f47aafa401209c2fef7e90fcd44d1f846b9a
+  RNWorklets: 94c2f671630f36a081f36d21f41c12fcb5d9ed8e
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 
