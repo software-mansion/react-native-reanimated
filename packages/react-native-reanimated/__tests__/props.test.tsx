@@ -31,6 +31,21 @@ const AnimatedComponent = () => {
     };
   });
 
+  const animatedBoxShadowStripped = useAnimatedStyle(() => {
+    const blurRadius = interpolate(pressed.value, [0, 1], [10, 0]);
+    const color = interpolateColor(
+      pressed.value,
+      [0, 1],
+      ['rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 1)']
+    );
+
+    const boxShadow = `0px 4px ${blurRadius}px ${color}`;
+
+    return {
+      boxShadow,
+    };
+  });
+
   const handlePress = () => {
     pressed.value = pressed.value === 0 ? 1 : 0;
   };
@@ -53,6 +68,20 @@ const AnimatedComponent = () => {
         onPress={handlePress}>
         <Text>Button</Text>
       </AnimatedPressable>
+      <AnimatedPressable
+        testID={'strippedPressable'}
+        style={[
+          animatedBoxShadowStripped,
+          {
+            width: 100,
+            height: 100,
+            backgroundColor: 'red',
+            boxShadow: '0px 4px 10px rgba(255, 0, 0, 1)',
+          },
+        ]}
+        onPress={handlePress}>
+        <Text>Stripped</Text>
+      </AnimatedPressable>
     </View>
   );
 };
@@ -61,6 +90,13 @@ const getDefaultStyle = () => ({
   padding: 16,
   backgroundColor: 'red',
   boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)',
+});
+
+const getStrippedStyle = () => ({
+  width: 100,
+  height: 100,
+  backgroundColor: 'red',
+  boxShadow: '0px 4px 10px rgba(255, 0, 0, 1)',
 });
 
 const getMultipleBoxShadowStyle = () => ({
@@ -97,6 +133,29 @@ describe('Test of boxShadow prop', () => {
     jest.advanceTimersByTime(600);
     style.boxShadow = '0px 4px 0px 0px rgba(0, 0, 255, 1)';
     expect(pressable).toHaveAnimatedStyle(style);
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
+  });
+
+  test('boxShadow string without spread', () => {
+    const style = getStrippedStyle();
+
+    const { getByTestId } = render(<AnimatedComponent />);
+    const strippedPressable = getByTestId('strippedPressable');
+
+    expect(strippedPressable.props.style).toEqual([
+      {
+        boxShadow: '0px 4px 10px rgba(255, 0, 0, 1)',
+      },
+      getStrippedStyle(),
+    ]);
+
+    expect(strippedPressable).toHaveAnimatedStyle(style);
+    fireEvent.press(strippedPressable);
+    jest.advanceTimersByTime(600);
+    style.boxShadow = '0px 4px 0px rgba(0, 0, 255, 1)';
+    expect(strippedPressable).toHaveAnimatedStyle(style);
   });
 
   test('boxShadow prop animation, get animated style', () => {
@@ -110,6 +169,9 @@ describe('Test of boxShadow prop', () => {
     expect((style as ViewStyle).boxShadow).toBe(
       '0px 4px 0px 0px rgba(0, 0, 255, 1)'
     );
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
   test('one boxShadow string parsing', () => {
     const { getByTestId } = render(<AnimatedComponent />);
@@ -140,6 +202,9 @@ describe('Test of boxShadow prop', () => {
     expect((style as ViewStyle).boxShadow).toBe(
       '0px 4px 10px 0px rgba(255, 0, 0, 1)'
     );
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('two boxShadows string parsing', () => {

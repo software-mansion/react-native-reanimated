@@ -5,6 +5,7 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './initializers';
+import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 
 declare global {
@@ -40,4 +41,5 @@ declare global {
     worklet: ShareableRef<() => void>
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
+  var WorkletsError: IWorkletsErrorConstructor;
 }

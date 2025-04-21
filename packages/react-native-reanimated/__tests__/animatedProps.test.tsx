@@ -69,7 +69,11 @@ describe('animatedProps', () => {
     const circle = getByTestId('circle');
 
     expect(circle).toHaveAnimatedProps({});
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
+
   test('Custom animated component', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const textInput = getByTestId('text');
@@ -81,5 +85,8 @@ describe('animatedProps', () => {
     jest.advanceTimersByTime(animationDuration);
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

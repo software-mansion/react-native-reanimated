@@ -11,6 +11,7 @@ import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
 import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -413,7 +414,8 @@ export default class AnimatedComponent
 
     const jestProps = IS_JEST
       ? {
-          jestInlineStyle: this.props.style,
+          jestInlineStyle:
+            this.props.style && filterOutAnimatedStyles(this.props.style),
           jestAnimatedStyle: this.jestAnimatedStyle,
           jestAnimatedProps: this.jestAnimatedProps,
         }
@@ -425,4 +427,25 @@ export default class AnimatedComponent
       ...jestProps,
     });
   }
+}
+
+function filterOutAnimatedStyles(
+  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
+): NestedArray<StyleProps | null | undefined> {
+  if (!style) {
+    return style;
+  }
+  if (!Array.isArray(style)) {
+    return style?.viewDescriptors ? {} : style;
+  }
+  return style
+    .filter(
+      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
+    )
+    .map((styleElement) => {
+      if (Array.isArray(styleElement)) {
+        return filterOutAnimatedStyles(styleElement);
+      }
+      return styleElement;
+    });
 }

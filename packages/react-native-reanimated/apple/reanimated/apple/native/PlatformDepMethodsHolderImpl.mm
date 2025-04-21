@@ -4,7 +4,7 @@
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
-#import <reanimated/apple/native/NativeMethods.h>
+#import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 namespace reanimated {
