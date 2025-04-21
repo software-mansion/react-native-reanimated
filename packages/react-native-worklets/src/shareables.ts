@@ -139,17 +139,9 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
-    // https://github.com/facebook/react-native/commit/20dba39dab4ef85eb28659a89b19750cec3193a4
+    // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
     if (isHostObject(Object.getPrototypeOf(value))) {
-      const plainJSObject = {
-        ...Object.getPrototypeOf(value),
-      };
-      Object.getOwnPropertyNames(value).forEach((key) => {
-        plainJSObject[key] = value[key as keyof typeof value];
-      });
-
-      return clonePlainJSObject(plainJSObject, shouldPersistRemote, depth);
-      // return cloneHostObject(Object.getPrototypeOf(value), shouldPersistRemote);
+      return cloneTurboModule(value, shouldPersistRemote, depth);
     }
     return cloneHostObject(value, shouldPersistRemote);
   }
@@ -339,22 +331,23 @@ function cloneContextObject<T extends object>(value: T): ShareableRef<T> {
   return handle as ShareableRef<T>;
 }
 
-function clonePlainJSObject<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean,
-  depth: number
-): ShareableRef<T> {
+function cloneObjectOwnProperties<T extends object>(value: T, shouldPersistRemote: boolean, depth: number): Record<string, unknown> {
   const clonedProps: Record<string, unknown> = {};
   for (const [key, element] of Object.entries(value)) {
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = makeShareableCloneRecursive(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
+    clonedProps[key] = makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1);
   }
+  return clonedProps;
+}
+
+function clonePlainJSObject<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
+  const clonedProps = cloneObjectOwnProperties(value, shouldPersistRemote, depth);
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,
     shouldPersistRemote,
@@ -364,6 +357,18 @@ function clonePlainJSObject<T extends object>(
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
+  return clone;
+}
+
+function cloneTurboModule<T extends object>(value: T, shouldPersistRemote: boolean, depth: number): ShareableRef<T> {
+  const clonedProto = Object.getPrototypeOf(value);
+  const clonedProps = cloneObjectOwnProperties(value, shouldPersistRemote, depth);
+  Object.setPrototypeOf(clonedProps, clonedProto);
+  const clone = WorkletsModule.makeShareableClone(
+    clonedProps,
+    shouldPersistRemote,
+    clonedProps
+  ) as ShareableRef<T>;
   return clone;
 }
 
