@@ -331,13 +331,21 @@ function cloneContextObject<T extends object>(value: T): ShareableRef<T> {
   return handle as ShareableRef<T>;
 }
 
-function cloneObjectOwnProperties<T extends object>(value: T, shouldPersistRemote: boolean, depth: number): Record<string, unknown> {
+function cloneObjectOwnProperties<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): Record<string, unknown> {
   const clonedProps: Record<string, unknown> = {};
   for (const [key, element] of Object.entries(value)) {
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1);
+    clonedProps[key] = makeShareableCloneRecursive(
+      element,
+      shouldPersistRemote,
+      depth + 1
+    );
   }
   return clonedProps;
 }
@@ -347,7 +355,11 @@ function clonePlainJSObject<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
-  const clonedProps = cloneObjectOwnProperties(value, shouldPersistRemote, depth);
+  const clonedProps = cloneObjectOwnProperties(
+    value,
+    shouldPersistRemote,
+    depth
+  );
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,
     shouldPersistRemote,
@@ -360,9 +372,17 @@ function clonePlainJSObject<T extends object>(
   return clone;
 }
 
-function cloneTurboModule<T extends object>(value: T, shouldPersistRemote: boolean, depth: number): ShareableRef<T> {
+function cloneTurboModule<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
   const clonedProto = Object.getPrototypeOf(value);
-  const clonedProps = cloneObjectOwnProperties(value, shouldPersistRemote, depth);
+  const clonedProps = cloneObjectOwnProperties(
+    value,
+    shouldPersistRemote,
+    depth
+  );
   Object.setPrototypeOf(clonedProps, clonedProto);
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,

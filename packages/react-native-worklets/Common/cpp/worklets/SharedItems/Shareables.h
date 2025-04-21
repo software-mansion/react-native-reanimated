@@ -207,13 +207,16 @@ class ShareableHostObject : public Shareable {
 
 class ShareableTurboModule : public Shareable {
  public:
-  ShareableTurboModule(jsi::Runtime &rt, const jsi::Object &properties, const std::shared_ptr<jsi::HostObject> &__proto__);
-  
+  ShareableTurboModule(
+      jsi::Runtime &rt,
+      const jsi::Object &properties,
+      const std::shared_ptr<jsi::HostObject> &__proto__);
+
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-   std::shared_ptr<ShareableHostObject> __proto__;
-   std::shared_ptr<ShareableObject> properties_;
+  std::shared_ptr<ShareableHostObject> __proto__;
+  std::shared_ptr<ShareableObject> properties_;
 };
 
 class ShareableHostFunction : public Shareable {
