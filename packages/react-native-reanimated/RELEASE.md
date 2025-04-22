@@ -5,7 +5,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 1. Decide on the importance of this release and then choose a version number:
 
    - **patch** (last number) – small adjustments, fixes, in most cases only JS code is modified.
-   - **minor** (middle number) – new features, all changes that applies to a patch release and fixes in the native code that couldn't be applied in a patch
+   - **minor** (middle number) – new features, all changes that applies to a patch release and fixes in the native code that couldn't be applied in a patch.
    - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered from 1 (e.g. `3.17.1-rc.1`).
 
 2. Make sure you're up-to-date:
@@ -34,7 +34,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 6. If releasing v3, run `bundle install && bundle exec pod install` in all example apps to update following files:
 
-   - `paper-example/ios/Podfile.lock` (v3 only)
+   - `paper-example/ios/Podfile.lock`
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
@@ -134,6 +134,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - Go to the [Releases](https://github.com/software-mansion/react-native-reanimated/releases) tab in our repo,
     - Select **Draft a new release**,
     - Choose **tag** e.g. `3.17.2`:
+
       <img width="346" alt="upload_7933257ba4df136251188391ad2693f0" src="https://github.com/user-attachments/assets/383648da-ef25-4b84-83b5-1c484a702488" />
 
     - Choose **target** - it will a be current stable branch e.g. `3.17-stable`,
