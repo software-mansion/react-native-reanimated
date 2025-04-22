@@ -1,7 +1,10 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common';
-import { ReanimatedError } from '../../../../errors';
-import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
+import { ReanimatedError } from '../../css/errors';
+import type {
+  NormalizedTransformOrigin,
+  TransformOrigin,
+  ValueProcessor,
+} from '..';
 
 type KeywordConversions = Record<string, `${number}%` | number>;
 

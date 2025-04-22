@@ -1,10 +1,13 @@
 'use strict';
-import { ReanimatedError } from '../../../../../errors';
 import type {
   NormalizedTransformOrigin,
   TransformOrigin,
-} from '../../../types';
-import { ERROR_MESSAGES, processTransformOrigin } from '../transformOrigin';
+} from '../../../../../../common';
+import {
+  ERROR_MESSAGES,
+  processTransformOrigin,
+} from '../../../../../../common';
+import { ReanimatedError } from '../../../../../errors';
 
 describe(processTransformOrigin, () => {
   describe('valid cases', () => {
