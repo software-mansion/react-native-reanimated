@@ -10,7 +10,8 @@ import { parseBoxShadowString } from '../utils';
 
 const ERROR_MESSAGES = {
   notArrayObject: (value: object) =>
-    `Box shadow value must be an array of shadow objects. Received: ${JSON.stringify(value)}`,
+    `Box shadow value must be a string or an array of shadow objects (e.g. [{ offsetX, offsetY, color }]). Received: ${JSON.stringify(value)}.`,
+
   invalidColor: (color: string, boxShadow: string) =>
     `Invalid color "${color}" in box shadow "${boxShadow}".`,
 };
