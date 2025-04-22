@@ -144,7 +144,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - When making at least a minor release or a patch release with numerous commits, please highlight the key changes beside the automatically generated notes, like [here](https://github.com/software-mansion/react-native-reanimated/releases/tag/3.17.0),
     - Make sure you've checked the right boxes:
       - **Set as pre-release** - select this when prereleasing (alpha, beta, rc),
-      - **Set as the latest release** - check if releasing v3, don't check when dealing with v2,
+      - **Set as the latest release** - check if releasing v3, don't check when dealing with v2.
 
 24. Share the good news with the team.
 25. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).
