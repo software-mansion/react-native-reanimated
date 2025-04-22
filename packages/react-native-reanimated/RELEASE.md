@@ -1,4 +1,4 @@
-## How to release Reanimated
+# Reanimated release guide
 
 Reanimated follows [semver](https://semver.org/) whenever applicable.
 
@@ -32,12 +32,14 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - Update both in Paper and Fabric section,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
 
-6. Run `bundle install && bundle exec pod install` in all example apps to update following files:
+6. If releasing v3, run `bundle install && bundle exec pod install` in all example apps to update following files:
 
    - `paper-example/ios/Podfile.lock` (v3 only)
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
+
+   If releasing v4, just run `yarn build` in the root directory.
 
 7. When releasing a minor version, update the minimal supported React Native version (general and New Architecture specific)
 
@@ -67,15 +69,11 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
     - [NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
     - Select your branch as the destination for the workflow:
-      
       <img width="500" alt="upload_d3527584fe60bbd66cdd99dfbc34b118" src="https://github.com/user-attachments/assets/d25946c1-0279-430a-92b4-57a1307c1179" />
-
-
 
 13. Wait for the workflow to finish - it should take about 2 minutes.
 14. Select your workflow from the list and download artifacts.
     <img width="925" alt="upload_b4eaebea327e62c1c99d44b1984066b3" src="https://github.com/user-attachments/assets/cfd54b99-2cff-4f60-b818-f92a53e62c07" />
-
 
 15. Unzip your artifacts:
 
@@ -103,6 +101,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx` - when using **expo-router** find and copy to `index.tsx`,
     - Run dev: `npx expo start --web`,
     - Run release: `npx expo export -p web && npx serve dist --single`.
+    - Run prebuild: `npx expo prebuild` to generate native code and ensure the app works correctly.
 
 18. If something doesn't work you can fix it in this or in a separate PR (depending on the case), and repeat the steps.
 19. If everything works fine you can merge the PR.
@@ -135,19 +134,18 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - Go to the [Releases](https://github.com/software-mansion/react-native-reanimated/releases) tab in our repo,
     - Select **Draft a new release**,
     - Choose **tag** e.g. `3.17.2`:
-      
       <img width="346" alt="upload_7933257ba4df136251188391ad2693f0" src="https://github.com/user-attachments/assets/383648da-ef25-4b84-83b5-1c484a702488" />
 
     - Choose **target** - it will a be current stable branch e.g. `3.17-stable`,
     - Choose **previous tag** - it will be from previous release e.g. `3.17.1`,
     - Attach previously downloaded artifact (`.tgz`),
     - Generate release notes,
+    - When making at least a minor release or a patch release with numerous commits, please highlight the key changes beside the automatically generated notes, like [here](https://github.com/software-mansion/react-native-reanimated/releases/tag/3.17.0),
     - Make sure you've checked the right boxes:
       - **Set as pre-release** - select this when prereleasing (alpha, beta, rc),
       - **Set as the latest release** - check if releasing v3, don't check when dealing with v2,
-      - **Create discussion for this release** - rare case, mostly not used.
 
-24. Share the good news on Slack.
+24. Share the good news with the team.
 25. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).
 
 **Congratulations on releasing a new version of Reanimated!**
