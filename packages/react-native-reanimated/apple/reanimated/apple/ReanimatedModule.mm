@@ -1,3 +1,4 @@
+#import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
@@ -131,6 +132,12 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
 }
 
+- (void)checkBridgeless
+{
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
+  react_native_assert(isBridgeless && "[Reanimated] react-native-reanimated only supports bridgeless mode");
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   REAAssertJavaScriptQueue();
@@ -143,6 +150,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsCallInvoker = _callInvoker.callInvoker;
 
   react_native_assert(self.bridge != nullptr);
+  [self checkBridgeless];
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
@@ -169,6 +177,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
+  [self checkBridgeless];
   REAAssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
