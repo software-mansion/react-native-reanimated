@@ -6,6 +6,7 @@ import type {
   TransformOrigin,
   ValueProcessor,
 } from '..';
+import { isLength } from '..';
 
 type KeywordConversions = Record<string, `${number}%` | number>;
 
@@ -16,6 +17,7 @@ export const ERROR_MESSAGES = {
     `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword.`,
   invalidKeyword: (keyword: string, axis: 'x' | 'y', validKeywords: string[]) =>
     `"${keyword}" is not a valid keyword for the ${axis}-axis. Must be one of: ${validKeywords.join(', ')}.`,
+  invalidZValue: (value: string) => `Invalid z-value: ${value}. Must be a px.`,
 };
 
 const HORIZONTAL_CONVERSIONS: KeywordConversions = {
@@ -107,6 +109,11 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
     (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
   ) {
     [components[0], components[1]] = [components[1], components[0]];
+  }
+
+  // Check if the z component is a valid value with px unit
+  if (typeof components[2] === 'string' && !isLength(components[2])) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidZValue(components[2]));
   }
 
   const result = [
