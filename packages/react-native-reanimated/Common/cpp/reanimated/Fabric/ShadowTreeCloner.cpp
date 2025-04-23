@@ -22,19 +22,17 @@ Props::Shared mergeProps(
   const auto &propsVector = it->second;
   auto newProps = shadowNode.getProps();
 
-   #ifdef ANDROID
-     if (propsVector.size() > 1) {
-       folly::dynamic newPropsDynamic = folly::dynamic::object;
-       LOG(INFO) << "Props vector size: " << propsVector.size();
-       for (const auto &props : propsVector) {
-           LOG(INFO) << "Props: " << (props.operator folly::dynamic());
-         newPropsDynamic = folly::dynamic::merge(
-             props.operator folly::dynamic(), newPropsDynamic);
-       }
-       return shadowNode.getComponentDescriptor().cloneProps(
-           propsParserContext, newProps, RawProps(newPropsDynamic));
-     }
-   #endif
+#ifdef ANDROID
+  if (propsVector.size() > 1) {
+    folly::dynamic newPropsDynamic = folly::dynamic::object;
+    for (const auto &props : propsVector) {
+      newPropsDynamic = folly::dynamic::merge(
+          props.operator folly::dynamic(), newPropsDynamic);
+    }
+    return shadowNode.getComponentDescriptor().cloneProps(
+        propsParserContext, newProps, RawProps(newPropsDynamic));
+  }
+#endif
 
   for (const auto &props : propsVector) {
     newProps = shadowNode.getComponentDescriptor().cloneProps(
