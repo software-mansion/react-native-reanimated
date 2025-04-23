@@ -1,5 +1,4 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common';
 import { ReanimatedError } from '../../../../errors';
 import type { TransformsArray } from '../../../../types';
 import {
@@ -8,6 +7,7 @@ import {
   isNumberArray,
   isPercentage,
 } from '../../../../utils';
+import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {
   invalidTransform: (transform: string) =>

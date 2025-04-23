@@ -1,6 +1,6 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common';
 import { ReanimatedError } from '../../../../errors';
+import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {
   unsupportedAspectRatio: (ratio: string | number) =>

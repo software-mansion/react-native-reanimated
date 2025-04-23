@@ -1,6 +1,10 @@
 'use strict';
-import type { ValueProcessor } from '../../../../common/types';
+import type { Maybe } from '../../../../common';
 import type { AnyRecord, ConfigPropertyAlias } from '../../../types';
+
+export type ValueProcessor<V, R = V> = (
+  value: V
+) => Maybe<R> | Record<string, R>;
 
 export type BuildHandler<P extends AnyRecord> = (props: P) => P;
 
