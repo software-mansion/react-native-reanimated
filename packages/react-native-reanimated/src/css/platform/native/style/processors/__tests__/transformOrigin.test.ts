@@ -109,12 +109,12 @@ describe(processTransformOrigin, () => {
           {
             name: 'with mixed x and y values',
             cases: [
-              { input: 'left top 0', output: [0, 0, 0] },
-              { input: 'right 0 0', output: ['100%', 0, 0] },
-              { input: '100% bottom 25', output: ['100%', '100%', 25] },
-              { input: 'left 100 100', output: [0, 100, 100] },
-              { input: '25 25% 25', output: [25, '25%', 25] },
-              { input: '25% 25 25', output: ['25%', 25, 25] },
+              { input: 'left top 0px', output: [0, 0, 0] },
+              { input: 'right 0 0px', output: ['100%', 0, 0] },
+              { input: '100% bottom 25px', output: ['100%', '100%', 25] },
+              { input: 'left 100 100px', output: [0, 100, 100] },
+              { input: '25 25% 25px', output: [25, '25%', 25] },
+              { input: '25% 25 25px', output: ['25%', 25, 25] },
             ],
           },
         ],
@@ -223,17 +223,11 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: 'left top invalid',
-                message: ERROR_MESSAGES.invalidComponent(
-                  'invalid',
-                  'left top invalid'
-                ),
+                message: ERROR_MESSAGES.invalidZValue('invalid'),
               },
               {
                 input: 'left 100% 25%',
-                message: ERROR_MESSAGES.invalidComponent(
-                  '25%',
-                  'left 100% 25%'
-                ),
+                message: ERROR_MESSAGES.invalidZValue('25%'),
               },
             ],
           },
