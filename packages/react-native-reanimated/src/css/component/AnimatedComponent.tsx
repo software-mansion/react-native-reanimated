@@ -13,11 +13,14 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
+import { ReanimatedModule } from '../../ReanimatedModule';
+import { ReanimatedView } from '../../specs';
+import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
-import { ReanimatedView } from '../../specs';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -44,6 +47,7 @@ export default class AnimatedComponent<
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
+    ReanimatedModule.setViewStyle(0, {});
     this.ChildComponent = ChildComponent;
   }
 
@@ -203,17 +207,15 @@ export default class AnimatedComponent<
     });
 
     return (
-      <ReanimatedView>
-        <ChildComponent
-          {...this.props}
-          {...props}
-          {...platformProps}
-          style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
-          // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-          // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-          ref={this._setComponentRef as (ref: Component) => void}
-        />
-      </ReanimatedView>
+      <ChildComponent
+        {...this.props}
+        {...props}
+        {...platformProps}
+        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
+        // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
+        ref={this._setComponentRef as (ref: Component) => void}
+      />
     );
   }
 }

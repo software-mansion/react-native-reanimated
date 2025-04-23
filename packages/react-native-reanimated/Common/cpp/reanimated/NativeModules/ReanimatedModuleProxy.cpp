@@ -930,7 +930,7 @@ void ReanimatedModuleProxy::initializeFabric(
 
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   scheduler->getContextContainer()->insert(
-      "ReanimatedModuleProxy", cssAnimationsRegistry_);
+      "ReanimatedModuleProxy", shared_from_this());
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

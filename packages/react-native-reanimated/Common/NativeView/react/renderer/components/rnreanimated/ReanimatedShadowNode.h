@@ -6,13 +6,9 @@
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/LayoutContext.h>
 
-#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-
 #include <jsi/jsi.h>
 
 namespace facebook::react {
-
-using namespace reanimated;
 
 JSI_EXPORT extern const char ReanimatedViewComponentName[];
 
@@ -25,9 +21,6 @@ using ReanimatedViewShadowNodeBase = ConcreteViewShadowNode<
 class ReanimatedShadowNode final : public ReanimatedViewShadowNodeBase {
  public:
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
-
-  void initialize(const std::shared_ptr<CSSAnimationsRegistry>
-                      &reanimatedModuleProxy) const;
   void layout(LayoutContext layoutContext) override;
 };
 
