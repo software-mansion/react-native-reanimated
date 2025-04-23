@@ -55,7 +55,7 @@ function validateResult(
   result: Array<null | `${number}%` | number>,
   components: (string | number)[],
   transformOrigin: TransformOrigin
-): NormalizedTransformOrigin {
+): void {
   const nullIdx = result.indexOf(null);
 
   if (nullIdx !== -1) {
@@ -90,8 +90,6 @@ function validateResult(
       ERROR_MESSAGES.invalidComponent(components[2], transformOrigin)
     );
   }
-
-  return result as NormalizedTransformOrigin;
 }
 
 export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
@@ -117,5 +115,9 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
     parseComponent(components[2] ?? 0),
   ];
 
-  return validateResult(result, components, value);
+  if (__DEV__) {
+    validateResult(result, components, value);
+  }
+
+  return result as NormalizedTransformOrigin;
 };
