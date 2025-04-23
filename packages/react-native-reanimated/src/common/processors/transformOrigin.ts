@@ -1,5 +1,6 @@
 'use strict';
-import { ReanimatedError } from '../../css/errors';
+'worklet';
+import { ReanimatedError } from '../../errors';
 import type {
   NormalizedTransformOrigin,
   TransformOrigin,
