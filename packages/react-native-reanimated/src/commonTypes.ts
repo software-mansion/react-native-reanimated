@@ -159,6 +159,7 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  sharedTransitionTag?: string;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;

@@ -11,7 +11,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
     const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
     if (type == ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
       continue;
@@ -20,6 +20,10 @@ void LayoutAnimationsManager::configureAnimationBatch(
       getConfigsForType(type).erase(tag);
     } else {
       getConfigsForType(type)[tag] = config;
+    }
+    
+    if (type == SHARED_ELEMENT_TRANSITION){
+      sharedTransitionManager_->tagToName_[tag] = sharedTag;
     }
   }
 }
@@ -122,6 +126,50 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     default:
       assert(false);
   }
+}
+
+std::optional<ShadowView> SharedTransitionManager::add(const ShadowView& shadowView){
+  auto& group = groups_[tagToName_[shadowView.tag]];
+  std::optional<ShadowView> result;
+  if (!group.stack_.empty()){
+    result = group.tagToView_[group.stack_.top()];
+  }
+  group.stack_.push(shadowView.tag);
+  group.tagToView_[shadowView.tag] = shadowView;
+  
+  return result;
+}
+
+std::optional<std::pair<ShadowView, ShadowView>> SharedTransitionManager::remove(Tag tag){
+  auto& group = groups_[tagToName_[tag]];
+  std::optional<std::pair<ShadowView, ShadowView>> result;
+  if (group.stack_.size()>1){
+    std::pair<ShadowView, ShadowView> p;
+    p.first = group.tagToView_[group.stack_.top()];
+    group.stack_.pop();
+    p.second = group.tagToView_[group.stack_.top()];
+    result = p;
+  } else if (group.stack_.size() == 1){
+    group.stack_.pop();
+  }
+  
+  return result;
+}
+
+int SharedTransitionManager::createTransitionContainer(SharedTag sharedTag){
+  containers_.push_back(sharedTag);
+  return containers_.size();
+}
+
+int SharedTransitionManager::removeTransitionContainer(SharedTag sharedTag){
+  for (int i=0; i<containers_.size(); i++){
+    if (containers_[i] == sharedTag){
+      containers_.erase(containers_.begin() + i);
+      return i;
+    }
+  }
+  
+  return -1;
 }
 
 } // namespace reanimated

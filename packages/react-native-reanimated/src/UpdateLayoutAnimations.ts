@@ -56,7 +56,8 @@ export let updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
   config?: Keyframe | LayoutAnimationFunction,
-  isUnmounting?: boolean
+  isUnmounting?: boolean,
+  sharedTransitionTag?: string
 ) => void;
 
 if (shouldBeUseWeb()) {
@@ -65,12 +66,19 @@ if (shouldBeUseWeb()) {
   };
 } else {
   const updateLayoutAnimationsManager = createUpdateManager();
-  updateLayoutAnimations = (viewTag, type, config, isUnmounting) =>
+  updateLayoutAnimations = (
+    viewTag,
+    type,
+    config,
+    isUnmounting,
+    sharedTransitionTag
+  ) =>
     updateLayoutAnimationsManager.update(
       {
         viewTag,
         type,
         config: config ? makeShareableCloneRecursive(config) : undefined,
+        sharedTransitionTag,
       },
       isUnmounting
     );

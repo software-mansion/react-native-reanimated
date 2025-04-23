@@ -359,7 +359,9 @@ export default class AnimatedComponent
           LinearTransition.duration(2000),
           this.props?.style,
           this._displayName
-        )
+        ),
+        undefined,
+        this.props.sharedTransitionTag
       );
     }
     if (layout || entering || exiting) {

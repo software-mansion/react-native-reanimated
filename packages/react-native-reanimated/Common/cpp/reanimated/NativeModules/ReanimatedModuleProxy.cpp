@@ -367,6 +367,10 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           config,
           "[Reanimated] Layout animation config must be an object.");
     }
+    auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
+    if (!sharedTag.isUndefined()){
+      batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();

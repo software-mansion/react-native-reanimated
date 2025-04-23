@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <stack>
 
 namespace reanimated {
 
@@ -43,8 +44,9 @@ struct LayoutAnimationsProxy
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
         mutable int myTag = 10001;
+        std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 //  mutable std::unordered_map<
-        mutable std::optional<ShadowView> previousView;
+//        mutable std::optional<ShadowView> previousView;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -56,7 +58,8 @@ struct LayoutAnimationsProxy
       ContextContainer::Shared contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
-      : layoutAnimationsManager_(layoutAnimationsManager),
+        : sharedTransitionManager_(layoutAnimationsManager->sharedTransitionManager_),
+        layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),

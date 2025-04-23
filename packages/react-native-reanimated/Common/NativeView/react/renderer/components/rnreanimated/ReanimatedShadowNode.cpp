@@ -1,4 +1,5 @@
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
+#include <react/renderer/dom/DOM.h>
 
 namespace facebook::react {
 

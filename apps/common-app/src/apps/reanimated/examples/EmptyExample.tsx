@@ -33,6 +33,9 @@ function Card({
   nextScreen,
 }: CardProps) {
   const goNext = (screenName: keyof ParamList) => {
+    if (nextScreen === 'Screen1') {
+      navigation.goBack();
+    }
     navigation.navigate(screenName, {
       title,
       sharedTransitionTag: transitionTag,
@@ -55,7 +58,7 @@ function Card({
 function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
-      {[...Array(1)].map((_, i) => (
+      {[...Array(2)].map((_, i) => (
         <Card
           key={i}
           navigation={navigation}
