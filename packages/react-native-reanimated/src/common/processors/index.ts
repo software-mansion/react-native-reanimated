@@ -1,3 +1,3 @@
 'use strict';
-export * from './shadows';
+export * from './processBoxShadow';
 export * from './transformOrigin';

@@ -1,13 +1,7 @@
 'use strict';
-import type {
-  NormalizedTransformOrigin,
-  TransformOrigin,
-} from '../../../../../../common';
-import {
-  ERROR_MESSAGES,
-  processTransformOrigin,
-} from '../../../../../../common';
-import { ReanimatedError } from '../../../../../errors';
+import { ReanimatedError } from '../../../errors';
+import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
+import { ERROR_MESSAGES, processTransformOrigin } from '../transformOrigin';
 
 describe(processTransformOrigin, () => {
   describe('valid cases', () => {
@@ -176,7 +170,17 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: 'invalid',
-                message: ERROR_MESSAGES.invalidComponent('invalid', 'invalid'),
+                message: ERROR_MESSAGES.invalidComponent(
+                  'x',
+                  'invalid',
+                  'invalid'
+                ),
+              },
+              {
+                input: ['100px'], // don't allow px values if transformOrigin is an array
+                message: ERROR_MESSAGES.invalidComponent('x', '100px', [
+                  '100px',
+                ]),
               },
             ],
           },
@@ -191,25 +195,26 @@ describe(processTransformOrigin, () => {
               {
                 input: 'left invalid',
                 message: ERROR_MESSAGES.invalidComponent(
+                  'y',
                   'invalid',
                   'left invalid'
                 ),
               },
               {
                 input: '100% left',
-                message: ERROR_MESSAGES.invalidKeyword('left', 'y', [
-                  'top',
-                  'center',
-                  'bottom',
-                ]),
+                message: ERROR_MESSAGES.invalidComponent(
+                  'y',
+                  'left',
+                  '100% left'
+                ),
               },
               {
                 input: 'top 100%',
-                message: ERROR_MESSAGES.invalidKeyword('top', 'x', [
-                  'left',
-                  'center',
-                  'right',
-                ]),
+                message: ERROR_MESSAGES.invalidComponent(
+                  'x',
+                  'top',
+                  'top 100%'
+                ),
               },
             ],
           },
@@ -224,6 +229,7 @@ describe(processTransformOrigin, () => {
               {
                 input: 'left top invalid',
                 message: ERROR_MESSAGES.invalidComponent(
+                  'z',
                   'invalid',
                   'left top invalid'
                 ),
@@ -231,8 +237,17 @@ describe(processTransformOrigin, () => {
               {
                 input: 'left 100% 25%',
                 message: ERROR_MESSAGES.invalidComponent(
+                  'z',
                   '25%',
                   'left 100% 25%'
+                ),
+              },
+              {
+                input: '100px 100px 100%',
+                message: ERROR_MESSAGES.invalidComponent(
+                  'z',
+                  '100%',
+                  '100px 100px 100%'
                 ),
               },
             ],
