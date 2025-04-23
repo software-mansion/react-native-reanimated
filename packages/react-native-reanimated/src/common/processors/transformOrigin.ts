@@ -5,8 +5,8 @@ import type {
   NormalizedTransformOrigin,
   TransformOrigin,
   ValueProcessor,
-} from '..';
-import { isLength } from '..';
+} from '../types';
+import { isLength } from '../utils';
 
 type KeywordConversions = Record<string, `${number}%` | number>;
 
