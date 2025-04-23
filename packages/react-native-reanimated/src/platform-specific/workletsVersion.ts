@@ -3,7 +3,7 @@
 import semverSatisfies from 'semver/functions/satisfies';
 
 import { ReanimatedError } from '../errors';
-import { acceptedWorkletsVerison } from './jsVersion';
+import { acceptedWorkletsVersion } from './jsVersion';
 
 export function assertWorkletsVersion() {
   let workletsVersion: string | undefined;
@@ -25,7 +25,7 @@ export function assertWorkletsVersion() {
     return;
   }
 
-  const acceptedRange = `${acceptedWorkletsVerison.min} - ${acceptedWorkletsVerison.max}`;
+  const acceptedRange = `${acceptedWorkletsVersion.min} - ${acceptedWorkletsVersion.max}`;
 
   if (!semverSatisfies(workletsVersion, acceptedRange)) {
     throw new ReanimatedError(

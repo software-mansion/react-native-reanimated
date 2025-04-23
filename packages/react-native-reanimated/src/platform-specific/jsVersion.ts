@@ -7,10 +7,10 @@
 export const jsVersion = '4.0.0-beta.3';
 
 /**
- * Extra checks for comforming with the version of `react-native-worklets`. Even
+ * Extra checks for conforming with the version of `react-native-worklets`. Even
  * if the App compiles there could be ABI mismatches.
  */
-export const acceptedWorkletsVerison = {
+export const acceptedWorkletsVersion = {
   min: '0.3.0' satisfies ValidVersion,
   // TODO: Placeholding "infinity" version for now.
   // Set it to a proper value when releasing stable Reanimated 4.
