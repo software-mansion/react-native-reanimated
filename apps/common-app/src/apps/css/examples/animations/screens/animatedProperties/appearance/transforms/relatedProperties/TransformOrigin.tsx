@@ -147,10 +147,7 @@ export default function TransformOrigin() {
                 },
                 {
                   title: 'Mixed units',
-                  transformOrigins: [
-                    [120, '-20px'],
-                    ['-50px', 60],
-                  ],
+                  transformOrigins: ['120, -20px', '-50px, 60'],
                 },
               ],
               title: 'Two values',

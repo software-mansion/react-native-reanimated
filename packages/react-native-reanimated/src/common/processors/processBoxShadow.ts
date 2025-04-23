@@ -1,15 +1,17 @@
 'use strict';
+'worklet';
 import type { BoxShadowValue } from 'react-native';
 
-import { processColor } from '../../../../../Colors';
-import { IS_ANDROID } from '../../../../constants';
-import { ReanimatedError } from '../../../../errors';
-import { parseBoxShadowString } from '../../../../utils';
+import { processColor } from '../../Colors';
+import { ReanimatedError } from '../../errors';
+import { IS_ANDROID } from '../constants';
 import type { ValueProcessor } from '../types';
+import { parseBoxShadowString } from '../utils';
 
 const ERROR_MESSAGES = {
   notArrayObject: (value: object) =>
-    `Box shadow value must be an array of shadow objects or a string. Received: ${JSON.stringify(value)}`,
+    `Box shadow value must be a string or an array of shadow objects (e.g. [{ offsetX, offsetY, color }]). Received: ${JSON.stringify(value)}.`,
+
   invalidColor: (color: string, boxShadow: string) =>
     `Invalid color "${color}" in box shadow "${boxShadow}".`,
 };
