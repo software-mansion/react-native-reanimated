@@ -20,7 +20,7 @@ export function assertWorkletsVersion() {
 
   workletsVersion = workletsVersion!;
 
-  if (workletsVersion?.includes('nightly')) {
+  if (workletsVersion.includes('nightly')) {
     // Don't perform any checks for nightly versions, the user knows what they're doing.
     return;
   }

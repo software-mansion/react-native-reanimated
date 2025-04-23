@@ -5,6 +5,7 @@
  * keep this in sync with the version declared in `package.json`
  */
 export const jsVersion = '4.0.0-beta.3';
+
 /**
  * Extra checks for comforming with the version of `react-native-worklets`. Even
  * if the App compiles there could be ABI mismatches.
