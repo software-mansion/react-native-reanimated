@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-reanimated",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "license": "MIT",
   "types": "lib",
