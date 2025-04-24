@@ -17,8 +17,6 @@ import type {
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
-  initialize(): void;
-
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,

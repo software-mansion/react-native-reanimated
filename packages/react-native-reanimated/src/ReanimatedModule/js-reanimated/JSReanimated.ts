@@ -41,10 +41,6 @@ class JSReanimated implements IReanimatedModule {
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
-  initialize() {
-    // noop
-  }
-
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
     _eventName: string,

@@ -18,7 +18,6 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { ReanimatedModule } from '../../ReanimatedModule';
 import { ReanimatedView } from '../../specs';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
@@ -50,7 +49,6 @@ export default class AnimatedComponent<
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
-    ReanimatedModule.initialize();
     this.ChildComponent = ChildComponent;
   }
 
