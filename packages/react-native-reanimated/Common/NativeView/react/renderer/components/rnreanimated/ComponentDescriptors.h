@@ -3,6 +3,7 @@
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
+
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 namespace facebook::react {
@@ -15,22 +16,26 @@ class ReanimatedViewComponentDescriptor
   explicit ReanimatedViewComponentDescriptor(
       const ComponentDescriptorParameters &parameters)
       : ConcreteComponentDescriptor<ReanimatedShadowNode>(parameters),
-        reanimatedModuleProxy_(
-            getReanimatedModuleProxy(parameters.contextContainer)) {}
+        reanimatedModuleProxy_(parameters.contextContainer
+                                   ->find<std::weak_ptr<ReanimatedModuleProxy>>(
+                                       "ReanimatedModuleProxy")) {}
 
   void adopt(ShadowNode &shadowNode) const override {
-    // We can access the reanimatedModuleProxy_ here
-    LOG(INFO) << "ReanimatedModuleProxy: " << !!reanimatedModuleProxy_;
+    if (!reanimatedModuleProxy_.has_value()) {
+      return;
+    }
+    const auto &weakPtr = reanimatedModuleProxy_.value();
+    if (weakPtr.expired()) {
+      return;
+    }
+
+    const auto proxy = weakPtr.lock();
+
+    LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
   }
 
  private:
-  std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
-
-  static std::shared_ptr<ReanimatedModuleProxy> getReanimatedModuleProxy(
-      const std::shared_ptr<const ContextContainer> &contextContainer) {
-    return contextContainer->at<std::shared_ptr<ReanimatedModuleProxy>>(
-        "ReanimatedModuleProxy");
-  }
+  std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
