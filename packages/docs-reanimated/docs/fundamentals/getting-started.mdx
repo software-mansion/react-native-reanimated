@@ -82,7 +82,7 @@ And that's it! Reanimated 4 is now configured in your Expo project.
 
 ### React Native Community CLI
 
-When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-reanimated/plugin` plugin to your `babel.config.js`.
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
   module.exports = {
@@ -91,14 +91,14 @@ When using [React Native Community CLI](https://github.com/react-native-communit
     ],
     plugins: [
       ...
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
     ],
   };
 ```
 
 :::caution
 
-`react-native-reanimated/plugin` has to be listed last.
+`react-native-worklets/plugin` has to be listed last.
 
 :::
 
@@ -167,11 +167,11 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          'react-native-reanimated/plugin',
+          'react-native-worklets/plugin',
       ],
   };
 ```
 
-Make sure to list `react-native-reanimated/plugin` last.
+Make sure to list `react-native-worklets/plugin` last.
 
 More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/next/guides/web-support) guide.
