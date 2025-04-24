@@ -116,7 +116,7 @@ function tryModifyConvertedPlainObject() {
     prop: 1,
   };
   makeShareableCloneRecursive(obj);
-  // obj.prop = 2; // should warn because it's frozen
+  obj.prop = 2; // should warn because it's frozen
 }
 
 function tryModifyConvertedRegExpLiteral() {

@@ -88,8 +88,17 @@ jsi::Value makeShareableClone(
                                 .getPropertyAsFunction(rt, "getPrototypeOf");
       auto objectPrototype = getPrototypeOf.call(rt, object).asObject(rt);
 
-      if (objectPrototype.isHostObject(rt)) {
-        shareable = std::make_shared<ShareableTurboModule>(
+      if (objectPrototype.isHostObject<ShareableJSRef>(rt)) {
+        auto value = objectPrototype.getHostObject<ShareableJSRef>(rt)->value();
+        auto hostObjectPtr = dynamic_cast<ShareableHostObject*>(value.get());
+
+        if (hostObjectPtr) {
+          shareable = std::make_shared<ShareableTurboModuleLike>(rt, object, hostObjectPtr->getHostObject());
+        } else {
+          throw std::runtime_error("[Worklets] Failed to cast ShareableJSRef to ShareableHostObject");
+        }
+      } else if (objectPrototype.isHostObject(rt)) {
+        shareable = std::make_shared<ShareableTurboModuleLike>(
             rt, object, objectPrototype.getHostObject(rt));
       } else if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
@@ -247,26 +256,26 @@ jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, hostObject_);
 }
 
-ShareableTurboModule::ShareableTurboModule(
+ShareableTurboModuleLike::ShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &properties,
     const std::shared_ptr<jsi::HostObject> &proto)
-    : Shareable(TurboModuleObjectType) {
-  // set properties prototype to empty object, we store prototype in __proto__
+    : Shareable(TurboModuleObjectLikeType) {
+  // We must get rid of the Host Object prototype as `ShareableObject` expects the prototype to be that of a plain object.
   auto setPrototypeOf = rt.global()
                             .getPropertyAsObject(rt, "Object")
                             .getPropertyAsFunction(rt, "setPrototypeOf");
   auto emptyObject = jsi::Object(rt);
   setPrototypeOf.call(rt, properties, emptyObject);
 
-  __proto__ = std::make_shared<ShareableHostObject>(rt, proto);
+  proto_ = std::make_shared<ShareableHostObject>(rt, proto);
   properties_ = std::make_shared<ShareableObject>(rt, properties);
 }
 
-jsi::Value ShareableTurboModule::toJSValue(jsi::Runtime &rt) {
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
   jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
 
-  auto prototype = __proto__->toJSValue(rt);
+  auto prototype = proto_->toJSValue(rt);
   auto setPrototypeOf = rt.global()
                             .getPropertyAsObject(rt, "Object")
                             .getPropertyAsFunction(rt, "setPrototypeOf");
