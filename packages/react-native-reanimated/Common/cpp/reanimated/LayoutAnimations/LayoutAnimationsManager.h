@@ -36,7 +36,6 @@ struct SharedTransitionManager{
   std::vector<SharedTag> containers_;
   
   SharedTransitionGroup getGroupForTag();
-  std::unordered_map<Tag, std::pair<Tag, Tag> tagsForContainer;
   std::optional<ShadowView> add(const ShadowView& shadowView);
   std::optional<std::pair<ShadowView, ShadowView>> remove(Tag tag);
   int createTransitionContainer(SharedTag sharedTag);
