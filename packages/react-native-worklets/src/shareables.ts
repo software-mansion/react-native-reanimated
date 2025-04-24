@@ -1,5 +1,5 @@
 'use strict';
-import { registerWorkletStackDetails } from '.';
+import { registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {

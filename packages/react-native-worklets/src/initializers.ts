@@ -2,7 +2,7 @@
 
 import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
-import { reportFatalErrorOnJS } from '.';
+import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
