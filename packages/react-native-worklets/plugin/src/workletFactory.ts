@@ -44,7 +44,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { mkdirSync, writeFileSync, existsSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
@@ -355,7 +355,10 @@ export function makeWorkletFactory(
       importDeclaration(
         [cloneNode(binding.path.node as ImportSpecifier, true)],
         stringLiteral(
-          (binding.path.parentPath!.node as ImportDeclaration).source.value
+          require.resolve(
+            (binding.path.parentPath!.node as ImportDeclaration).source.value,
+            { paths: [dirname(state.file.opts.filename!)] }
+          )
         )
       )
     );
@@ -386,33 +389,16 @@ export function makeWorkletFactory(
   );
 
   try {
-    if (!existsSync(filesDirPath)) {
-      mkdirSync(filesDirPath, {});
-    }
+    mkdirSync(filesDirPath, {});
   } catch (e) {
     // Nothing.
   }
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
-  // @ts-expect-error wwww
-  if (!state.file.metadata.virtualModules) {
-    // @ts-expect-error wwww
-    state.file.metadata.virtualModules = new Map();
-  }
-  // @ts-expect-error wwww
-  state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
-
   try {
-    // If a file exists, abort the process.
-    if (!existsSync(dedicatedFilePath)) {
-      // temporary
-      writeFileSync(dedicatedFilePath, transformedProg);
-      console.error('Saved worklet to file ', dedicatedFilePath);
-      // console.error('babel time', new Date().toISOString());
-    }
+    writeFileSync(dedicatedFilePath, transformedProg);
   } catch (_e) {
-    console.error('Error while writing worklet to file: ', _e);
     // Nothing.
   }
 

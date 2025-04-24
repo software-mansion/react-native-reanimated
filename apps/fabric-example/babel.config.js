@@ -2,13 +2,7 @@
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    [
-      'react-native-worklets/plugin',
-      {
-        processNestedWorklets: true,
-        workletModules: ['react-native-worklets'],
-      },
-    ],
+    ['react-native-worklets/plugin', { processNestedWorklets: true }],
     [
       'module-resolver',
       {

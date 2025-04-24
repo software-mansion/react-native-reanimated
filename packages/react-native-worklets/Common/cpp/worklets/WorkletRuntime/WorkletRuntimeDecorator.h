@@ -16,8 +16,7 @@ class WorkletRuntimeDecorator {
   static void decorate(
       jsi::Runtime &rt,
       const std::string &name,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<jsi::HostObject> &workletsModuleProxy);
+      const std::shared_ptr<JSScheduler> &jsScheduler);
 };
 
 } // namespace worklets

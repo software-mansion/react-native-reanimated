@@ -20,16 +20,13 @@ class WorkletsModuleProxy
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
+      std::unique_ptr<const JSBigString> script,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
-
-  void init(
-      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame,
-      std::unique_ptr<const JSBigString> script);
+          &&forwardedRequestAnimationFrame);
 
   ~WorkletsModuleProxy() override;
 

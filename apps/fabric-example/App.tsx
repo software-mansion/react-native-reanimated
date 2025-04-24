@@ -1,11 +1,3 @@
-import { makeShareableCloneRecursive, runOnUI } from 'react-native-worklets';
+import App from 'common-app';
 
-export default function App() {
-  runOnUI(() => {
-    'worklet';
-    makeShareableCloneRecursive({});
-    console.log('Hello from worklet');
-  })();
-
-  return null;
-}
+export default App;

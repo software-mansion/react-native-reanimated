@@ -1,3 +1,4 @@
+const { exec } = require('shelljs');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
@@ -11,6 +12,14 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
+let hasInitialized = false;
+
+function initialize() {
+  exec(
+    'yarn react-native bundle --reset-cache --entry-file index.js  --bundle-output /dev/null --dev true --platform ios --minify false'
+  );
+}
+
 /**
  * Metro configuration https://reactnative.dev/docs/metro
  *
@@ -23,7 +32,7 @@ const config = {
   },
   serializer: {
     getModulesRunBeforeMainModule() {
-      return [require.resolve('react-native-worklets/src/bundleBreaker.ts')];
+      return [require.resolve('react-native-worklets/src/index.ts')];
     },
     createModuleIdFactory() {
       let nextId = 0;
@@ -47,30 +56,14 @@ const config = {
     enhanceMiddleware: (middleware) => {
       return androidAssetsResolutionFix.applyMiddleware(middleware);
     },
-  },
-  resolver: {
-    resolveRequest: (context, realModuleName, platform) => {
-      if (
-        realModuleName.includes('react-native-worklets/generated/512113696378')
-      ) {
-        console.log(context.fileSystemLookup(require.resolve(realModuleName)));
-        return {
-          type: 'sourceFile',
-          filePath: require.resolve(realModuleName),
-        };
+    rewriteRequestUrl: (url) => {
+      // To get the whole bundle on initial load.
+      if (!hasInitialized) {
+        initialize();
+        hasInitialized = true;
       }
-      const print = realModuleName.includes('react-native-worklets/generated');
 
-      let ret;
-      try {
-        ret = context.resolveRequest(context, realModuleName, platform);
-      } catch (e) {
-        // print && console.error('moduleName', realModuleName);
-        // print && console.error('metro time', new Date().toISOString());
-        // print && console.error('error', e);
-        throw e;
-      }
-      return ret;
+      return url;
     },
   },
 };

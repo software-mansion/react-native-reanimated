@@ -29,8 +29,7 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const bool supportsLocking,
-      std::unique_ptr<const JSBigString> &&script,
-      const std::shared_ptr<jsi::HostObject> &workletsModuleProxy);
+      std::unique_ptr<const JSBigString> &&script);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;

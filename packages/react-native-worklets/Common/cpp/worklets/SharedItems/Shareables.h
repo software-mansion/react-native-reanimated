@@ -42,9 +42,9 @@ inline jsi::Value runOnRuntimeGuarded(
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
-   #ifndef NDEBUG
-     return getCallGuard(rt).call(rt, function, args...);
-   #else
+  // #ifndef NDEBUG
+  //   return getCallGuard(rt).call(rt, function, args...);
+  // #else
   //   rt.global().getProperty(rt, "_log").asObject(rt).asFunction(rt).call(rt,
   //   function, 1);
   //  LOG(INFO) << "BEFORE INVOCATION " << stringifyJSIValue(rt, function);
@@ -52,7 +52,7 @@ inline jsi::Value runOnRuntimeGuarded(
 
   // (printJSIValue(rt, std::forward<Args>(args)), ...);
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-   #endif
+  // #endif
 }
 
 inline void cleanupIfRuntimeExists(

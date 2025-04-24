@@ -1,4 +1,3 @@
-#include "WorkletsModuleProxy.h"
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -23,32 +22,27 @@ namespace worklets {
 
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
+    std::unique_ptr<const JSBigString> script,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::function<void(std::function<void(const double)>)>
+        &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler) {}
-
-void WorkletsModuleProxy::init(
-    jsi::Runtime &rnRuntime,
-    std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame,
-    std::unique_ptr<const JSBigString> script) {
-  uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
-      rnRuntime,
-      jsQueue_,
-      jsScheduler_,
-      "Reanimated UI runtime",
-      true /* supportsLocking */,
-      std::move(script),
-      // TODO: This creates a retain cycle and a memory leak.
-      shared_from_this());
-  animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
-      uiWorkletRuntime_->getJSIRuntime(),
-      std::move(forwardedRequestAnimationFrame));
+      uiScheduler_(uiScheduler),
+      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+          rnRuntime,
+          jsQueue,
+          jsScheduler,
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          std::move(script))),
+      animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
+          uiWorkletRuntime_->getJSIRuntime(),
+          std::move(forwardedRequestAnimationFrame))) {
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
@@ -119,8 +113,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
       // TODO: Pass the bundle here!
-      nullptr,
-      shared_from_this());
+      nullptr);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
