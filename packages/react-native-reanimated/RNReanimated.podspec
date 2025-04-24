@@ -54,14 +54,6 @@ Pod::Spec.new do |s|
     end
   end
 
-  # React Native doesn't expose these flags, but not having them
-  # can lead to runtime errors due to ABI mismatches.
-  # There's also
-  #   HERMESVM_PROFILER_OPCODE
-  #   HERMESVM_PROFILER_BB
-  # which shouldn't be defined in standard setups.
-  hermes_debug_hidden_flags = '$(inherited) HERMES_ENABLE_DEBUGGER=1'
-
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -78,7 +70,7 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => hermes_debug_hidden_flags,
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => '$(inherited)',
     "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => '$(inherited)',
   }
   s.compiler_flags = "#{folly_flags} #{boost_compiler_flags}"
