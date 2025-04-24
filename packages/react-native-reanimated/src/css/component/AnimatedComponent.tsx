@@ -50,7 +50,7 @@ export default class AnimatedComponent<
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
-    ReanimatedModule.setViewStyle(0, {});
+    ReanimatedModule.setViewStyle(0, {}); // TODO - figure out a better way to trigger turbo module initialization
     this.ChildComponent = ChildComponent;
   }
 

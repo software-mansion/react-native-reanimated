@@ -9,6 +9,7 @@
 namespace facebook::react {
 
 using namespace reanimated;
+using namespace css;
 
 class ReanimatedViewComponentDescriptor
     : public ConcreteComponentDescriptor<ReanimatedShadowNode> {
