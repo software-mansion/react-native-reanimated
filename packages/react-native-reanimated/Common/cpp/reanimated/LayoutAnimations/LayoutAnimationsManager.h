@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <stack>
 
 namespace reanimated {
 
@@ -53,7 +54,7 @@ struct LayoutAnimationConfig {
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-  : jsLogger_(jsLogger), sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
+  : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),  jsLogger_(jsLogger) {}
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);

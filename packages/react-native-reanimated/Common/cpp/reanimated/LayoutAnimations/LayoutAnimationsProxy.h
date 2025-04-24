@@ -53,6 +53,8 @@ struct LayoutAnimationsProxy
   mutable std::unordered_map<Tag, int> leastRemoved;
         mutable int myTag = 10001;
         mutable std::vector<Tag> sharedContainersToRemove_;
+        mutable std::unordered_map<Tag, Tag> restoreMap_;
+        mutable std::vector<Tag> tagsToRestore_;
         std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
@@ -84,7 +86,7 @@ struct LayoutAnimationsProxy
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after)
+  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
             const;
         
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
@@ -99,7 +101,7 @@ struct LayoutAnimationsProxy
         
         LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
         
-        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, ShadowView> &map) const;
+        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const;
         
         LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
 
@@ -126,6 +128,10 @@ struct LayoutAnimationsProxy
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,
       const PropsParserContext &propsParserContext) const;
+
+    std::shared_ptr<ShadowView> cloneViewWithOpacity(
+            facebook::react::ShadowViewMutation &mutation,
+            const PropsParserContext &propsParserContext) const;
   void maybeRestoreOpacity(
       LayoutAnimation &layoutAnimation,
       const jsi::Object &newStyle) const;
