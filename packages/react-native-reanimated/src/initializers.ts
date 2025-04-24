@@ -1,3 +1,4 @@
+'use strict';
 import { isWeb } from './PlatformChecker';
 import type { IReanimatedModule } from './ReanimatedModule';
 
