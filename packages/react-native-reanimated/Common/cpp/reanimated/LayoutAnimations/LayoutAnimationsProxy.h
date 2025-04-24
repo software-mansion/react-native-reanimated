@@ -22,6 +22,14 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
+struct LightNode {
+  using Unshared = std::shared_ptr<LightNode>;
+  ShadowView previous;
+  ShadowView current;
+  std::weak_ptr<LightNode> parent;
+  std::vector<std::shared_ptr<LightNode>> children;
+};
+
 struct LayoutAnimation {
 #if REACT_NATIVE_MINOR_VERSION >= 78
   std::shared_ptr<ShadowView> finalView, currentView;
@@ -44,9 +52,11 @@ struct LayoutAnimationsProxy
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
         mutable int myTag = 10001;
+        mutable std::vector<Tag> sharedContainersToRemove_;
         std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
+        mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -63,7 +73,11 @@ struct LayoutAnimationsProxy
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler) {}
+        uiScheduler_(uiScheduler) {
+          lightNodes_[1] = std::make_shared<LightNode>();
+          lightNodes_[11] = std::make_shared<LightNode>();
+
+        }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
       const;
@@ -80,6 +94,14 @@ struct LayoutAnimationsProxy
       const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
+        
+        Tag findVisible(std::shared_ptr<LightNode> node,int& count) const;
+        
+        LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
+        
+        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, ShadowView> &map) const;
+        
+        LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
 
   void parseRemoveMutations(
       std::unordered_map<Tag, ShadowView> &movedViews,
