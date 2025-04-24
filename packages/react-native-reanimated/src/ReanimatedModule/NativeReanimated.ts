@@ -94,6 +94,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     })();
   }
 
+  initialize() {
+    // noop - just to trigger the construction of the class object
+  }
+
   registerSensor(
     sensorType: number,
     interval: number,
@@ -246,6 +250,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
+  initialize(): void {}
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
   enableLayoutAnimations(): void {}
