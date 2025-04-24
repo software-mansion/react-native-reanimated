@@ -4,7 +4,12 @@ import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
+import {
+  IS_JEST,
+  IS_WEB,
+  ReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -13,10 +18,8 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import { ReanimatedView } from '../../specs';
-import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
@@ -206,7 +209,7 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
-    return (
+    const child = (
       <ChildComponent
         {...this.props}
         {...props}
@@ -217,5 +220,17 @@ export default class AnimatedComponent<
         ref={this._setComponentRef as (ref: Component) => void}
       />
     );
+
+    if (IS_WEB) {
+      return child;
+    }
+
+    return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    display: 'contents',
+  },
+});
