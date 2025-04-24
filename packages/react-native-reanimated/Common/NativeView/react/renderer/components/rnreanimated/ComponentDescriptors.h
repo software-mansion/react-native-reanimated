@@ -25,12 +25,10 @@ class ReanimatedViewComponentDescriptor
     if (!reanimatedModuleProxy_.has_value()) {
       return;
     }
-    const auto &weakPtr = reanimatedModuleProxy_.value();
-    if (weakPtr.expired()) {
+    const auto &proxy = reanimatedModuleProxy_.value().lock();
+    if (!proxy) {
       return;
     }
-
-    const auto proxy = weakPtr.lock();
 
     // LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
   }

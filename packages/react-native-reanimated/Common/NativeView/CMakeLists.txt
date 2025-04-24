@@ -45,7 +45,7 @@ target_link_libraries(react_codegen_rnreanimated log ReactAndroid::jsi fbjni jsi
 target_link_libraries(react_codegen_rnreanimated react-native-reanimated::reanimated)
 target_link_libraries(react_codegen_rnreanimated react-native-worklets::worklets)
 
-  target_link_libraries(react_codegen_rnreanimated ReactAndroid::reactnative)
+target_link_libraries(react_codegen_rnreanimated ReactAndroid::reactnative)
 
 target_compile_options(
   react_codegen_rnreanimated
