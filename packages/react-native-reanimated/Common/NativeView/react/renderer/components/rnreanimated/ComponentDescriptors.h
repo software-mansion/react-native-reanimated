@@ -6,6 +6,8 @@
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
+#include <memory>
+
 namespace facebook::react {
 
 using namespace reanimated;
@@ -30,7 +32,7 @@ class ReanimatedViewComponentDescriptor
 
     const auto proxy = weakPtr.lock();
 
-    LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
+    // LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
   }
 
  private:
