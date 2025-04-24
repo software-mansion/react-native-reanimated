@@ -7,6 +7,7 @@ import type {
 } from 'react-native-worklets';
 import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
 
+import { ReanimatedError, registerReanimatedError } from '../common';
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
@@ -19,7 +20,6 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../css/platform/native';
-import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';

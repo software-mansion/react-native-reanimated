@@ -3,7 +3,7 @@ import type { ColorValue } from 'react-native';
 
 import { processColor as processColorInternal } from '../../../../../Colors';
 import type { Maybe } from '../../../../../common';
-import { ReanimatedError } from '../../../../errors';
+import { ReanimatedError } from '../../../../../common';
 import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {

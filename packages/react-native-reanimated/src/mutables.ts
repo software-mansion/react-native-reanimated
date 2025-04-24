@@ -7,8 +7,8 @@ import {
   shareableMappingCache,
 } from 'react-native-worklets';
 
+import { ReanimatedError } from './common';
 import type { Mutable } from './commonTypes';
-import { ReanimatedError } from './errors';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';

@@ -9,10 +9,10 @@ import {
   rgbaColor,
   RGBtoHSV,
 } from './Colors';
+import { ReanimatedError } from './common';
 import type { SharedValue } from './commonTypes';
 import { makeMutable } from './core';
 import culori from './culori';
-import { ReanimatedError } from './errors';
 import { useSharedValue } from './hook/useSharedValue';
 import { Extrapolation, interpolate } from './interpolation';
 

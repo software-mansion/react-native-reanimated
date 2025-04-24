@@ -1,8 +1,8 @@
 'use strict';
 import { logger } from 'react-native-worklets';
 
+import { ReanimatedError } from '../../../common';
 import { isWindowAvailable } from '../../../PlatformChecker';
-import { ReanimatedError } from '../../errors';
 
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 

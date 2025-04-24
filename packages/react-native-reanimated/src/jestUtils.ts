@@ -3,13 +3,13 @@
 
 import type { ReactTestInstance } from 'react-test-renderer';
 
+import { ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { ReanimatedError } from './errors';
 import type { DefaultStyle } from './hook/commonTypes';
 import { isJest } from './PlatformChecker';
 

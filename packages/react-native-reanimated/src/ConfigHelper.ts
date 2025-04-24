@@ -2,8 +2,8 @@
 import type { LoggerConfig } from 'react-native-worklets';
 import { updateLoggerConfig } from 'react-native-worklets';
 
+import { ReanimatedError } from './common';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
-import { ReanimatedError } from './errors';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { PropsAllowlists } from './propsAllowlists';
 

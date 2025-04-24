@@ -1,7 +1,7 @@
 'use strict';
 import { logger } from 'react-native-worklets';
 
-import { ReanimatedError } from '../../errors';
+import { ReanimatedError } from '../../common';
 import { isWindowAvailable } from '../../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { setElementPosition, snapshots } from './componentStyle';

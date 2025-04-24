@@ -6,6 +6,7 @@ import type {
 } from 'react-native-worklets';
 import { logger, WorkletsModule } from 'react-native-worklets';
 
+import { ReanimatedError } from '../../common';
 import type {
   ShadowNodeWrapper,
   StyleProps,
@@ -18,7 +19,6 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
-import { ReanimatedError } from '../../errors';
 import {
   isChromeDebugger,
   isJest,

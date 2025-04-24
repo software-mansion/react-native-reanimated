@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
+import { ReanimatedError } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -13,7 +14,6 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';

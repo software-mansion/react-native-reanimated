@@ -5,13 +5,12 @@ import type { MutableRefObject } from 'react';
 import { runOnUI } from 'react-native-worklets';
 
 import { processColorsInProps } from '../Colors';
-import { processTransformOrigin } from '../common';
+import { processTransformOrigin, ReanimatedError } from '../common';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import { ReanimatedError } from '../errors';
 import type { Descriptor } from '../hook/commonTypes';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';

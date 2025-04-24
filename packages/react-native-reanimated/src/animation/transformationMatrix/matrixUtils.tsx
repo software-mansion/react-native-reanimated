@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from '../../errors';
+import { ReanimatedError } from '../../common';
 
 type FixedLengthArray<
   T,

@@ -3,7 +3,7 @@
 import type { BoxShadowValue } from 'react-native';
 
 import { processColor } from '../../Colors';
-import { ReanimatedError } from '../../errors';
+import { ReanimatedError } from '..';
 import { IS_ANDROID } from '../constants';
 import type { ValueProcessor } from '../types';
 import { parseBoxShadowString } from '../utils';
