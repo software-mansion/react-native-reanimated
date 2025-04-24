@@ -17,9 +17,7 @@ class ReanimatedViewComponentDescriptor
   explicit ReanimatedViewComponentDescriptor(
       const ComponentDescriptorParameters &parameters)
       : ConcreteComponentDescriptor<ReanimatedShadowNode>(parameters),
-        reanimatedModuleProxy_(parameters.contextContainer
-                                   ->find<std::weak_ptr<ReanimatedModuleProxy>>(
-                                       "ReanimatedModuleProxy")) {}
+        reanimatedModuleProxy_(findReanimatedModuleProxy(parameters)) {}
 
   void adopt(ShadowNode &shadowNode) const override {
     if (!reanimatedModuleProxy_.has_value()) {
@@ -37,6 +35,12 @@ class ReanimatedViewComponentDescriptor
 
  private:
   std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
+
+  std::optional<std::weak_ptr<ReanimatedModuleProxy>> findReanimatedModuleProxy(
+      const ComponentDescriptorParameters &parameters) {
+    return parameters.contextContainer
+        ->find<std::weak_ptr<ReanimatedModuleProxy>>("ReanimatedModuleProxy");
+  }
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
