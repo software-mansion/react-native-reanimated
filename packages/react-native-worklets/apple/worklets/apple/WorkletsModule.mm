@@ -62,12 +62,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
-      std::move(bundle_),
       jsQueue,
       jsCallInvoker,
       jsScheduler,
-      uiScheduler,
-      std::move(forwardedRequestAnimationFrame));
+      uiScheduler);
+  workletsModuleProxy_->init(rnRuntime, std::move(forwardedRequestAnimationFrame), std::move(bundle_));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 
   return @YES;

@@ -7,9 +7,11 @@ import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
-initializeWorkletRegistries();
-initializeUIRuntime(WorkletsModule);
-breakBundle();
+if (!globalThis._WORKLET) {
+  initializeWorkletRegistries();
+  initializeUIRuntime(WorkletsModule);
+  breakBundle();
+}
 
 export type { LoggerConfig } from './logger';
 export {

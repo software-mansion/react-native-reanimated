@@ -87,7 +87,8 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    std::unique_ptr<const JSBigString> &&script)
+    std::unique_ptr<const JSBigString> &&script,
+    const std::shared_ptr<jsi::HostObject> &workletsModuleProxy)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -101,7 +102,7 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
+  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler, workletsModuleProxy);
 
   try {
     auto buffer = std::make_shared<BigStringBuffer>(std::move(script));

@@ -746,7 +746,7 @@ var require_workletFactory = __commonJS({
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(require.resolve(binding.path.parentPath.node.source.value, { paths: [(0, path_1.dirname)(state.file.opts.filename)] }))));
+      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const newProg = (0, types_12.program)([
         ...imports,
         (0, types_12.variableDeclaration)("const", [
@@ -766,13 +766,23 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(transformedProg, "[Reanimated] `transformedProg` is undefined.");
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
       try {
-        (0, fs_1.mkdirSync)(filesDirPath, {});
+        if (!(0, fs_1.existsSync)(filesDirPath)) {
+          (0, fs_1.mkdirSync)(filesDirPath, {});
+        }
       } catch (e) {
       }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      if (!state.file.metadata.virtualModules) {
+        state.file.metadata.virtualModules = /* @__PURE__ */ new Map();
+      }
+      state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
       try {
-        (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+        if (!(0, fs_1.existsSync)(dedicatedFilePath)) {
+          (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+          console.error("Saved worklet to file ", dedicatedFilePath);
+        }
       } catch (_e) {
+        console.error("Error while writing worklet to file: ", _e);
       }
       if (shouldIncludeInitData) {
         pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
