@@ -59,8 +59,8 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => hermes_debug_hidden_flags,
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => hermes_debug_hidden_flags,
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
