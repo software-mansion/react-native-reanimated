@@ -375,7 +375,8 @@ function clonePlainJSObject<T extends object>(
 }
 
 /**
-  * TurboModuleLike objects are JS objects that have a TurboModule as their prototype. 
+ * TurboModuleLike objects are JS objects that have a TurboModule as their
+ * prototype.
  */
 function cloneTurboModuleLike<T extends object>(
   value: T,
