@@ -1875,7 +1875,7 @@ SPEC CHECKSUMS:
   ReactCommon: 7490617e54cc60ef0aecee2beaa1f44d4b413e61
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNGestureHandler: 3aebdd5727d76b567572472b9e52c29536ee0eef
-  RNReanimated: 8339401089607d70471849bb56af2f76e29dd230
+  RNReanimated: bea62941075e67f082b170bb3779c1dde9507ea3
   RNSVG: 67de7abef81f367387b708ba6d2acefe7d4f5895
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Yoga: b84121efc79fe86699a15c8ae59e5a6a8bca05c8
