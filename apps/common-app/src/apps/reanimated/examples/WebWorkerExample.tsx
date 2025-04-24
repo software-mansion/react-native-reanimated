@@ -87,6 +87,13 @@ export default function WebWorkerExample() {
         }}
         title="perform heavy computation"
       />
+
+      <Button
+        onPress={() => {
+          myWorker.terminate();
+        }}
+        title="terminate worker"
+      />
     </View>
   );
 }

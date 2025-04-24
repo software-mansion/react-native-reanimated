@@ -5,7 +5,6 @@
 #include <jsi/jsi.h>
 
 #include <memory>
-
 namespace worklets {
 
 class WorkletRuntimeCollector : public jsi::HostObject {
@@ -21,6 +20,10 @@ class WorkletRuntimeCollector : public jsi::HostObject {
 
   ~WorkletRuntimeCollector() {
     WorkletRuntimeRegistry::unregisterRuntime(runtime_);
+  }
+
+  static void terminate(jsi::Runtime &rt) {
+    WorkletRuntimeRegistry::unregisterRuntime(rt);
   }
 
   static void install(jsi::Runtime &rt) {

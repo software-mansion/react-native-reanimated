@@ -8,7 +8,6 @@ export function performHeavyComputation() {
     console.log('done');
   }
 
-
   export const myWorker = new Worker(() => {
     'worklet';
     let state = 0;

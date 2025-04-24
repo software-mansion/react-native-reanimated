@@ -49,4 +49,10 @@ void AsyncQueue::push(std::function<void()> &&job) {
   state_->cv.notify_one();
 }
 
+void AsyncQueue::empty() {
+  std::unique_lock<std::mutex> lock(state_->mutex);
+  state_->running = false;
+  state_->queue = {};
+}
+
 } // namespace worklets

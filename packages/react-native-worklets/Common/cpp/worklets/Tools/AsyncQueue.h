@@ -27,6 +27,7 @@ class AsyncQueue {
   ~AsyncQueue();
 
   void push(std::function<void()> &&job);
+  void empty();
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;

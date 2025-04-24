@@ -35,6 +35,10 @@ class WorkletsModuleProxy
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
 
+  void terminateWorkletRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue) override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)

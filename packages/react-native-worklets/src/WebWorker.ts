@@ -1,10 +1,15 @@
 import { createWorkletRuntime, runOnRuntime } from './runtimes';
-import { runOnJS } from './threads';
+import { runOnJS, runOnUI } from './threads';
 import { WorkletRuntime } from './workletTypes';
+import { WorkletsModule } from './WorkletsModule';
 
 export class Worker {
   onmessage: (e: MessageEvent<unknown>) => void = () => {};
   private runtime: WorkletRuntime;
+
+  public terminate = () => {
+    WorkletsModule.terminateWorkletRuntime(this.runtime);
+  };
 
   constructor(script: () => void) {
     this.runtime = createWorkletRuntime('Worker runtime');
