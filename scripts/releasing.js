@@ -59,6 +59,19 @@ function getVersion(rawArgs, packageJsonPath) {
 
 /**
  * @param {string[]} rawArgs
+ * @returns {{ flags: Flags; customVersion: string }}
+ */
+function getFlags(rawArgs) {
+  const args = buildArgs(rawArgs);
+  const argsResult = processArgs(args)
+
+  processFlags(argsResult.flags)
+
+  return argsResult
+}
+
+/**
+ * @param {string[]} rawArgs
  * @returns {Arg[]}
  */
 function buildArgs(rawArgs) {
@@ -128,19 +141,6 @@ function processFlags({ help, nightly, fresh, custom }) {
   if (!custom && !nightly && !fresh) {
     throw new Error('Version not set.');
   }
-}
-
-/**
- * @param {string[]} rawArgs
- * @returns {{ flags: Flags; customVersion: string }}
- */
-function getFlags(rawArgs) {
-  const args = buildArgs(rawArgs);
-  const argsResult = processArgs(args)
-
-  processFlags(argsResult.flags)
-
-  return argsResult
 }
 
 module.exports = {
