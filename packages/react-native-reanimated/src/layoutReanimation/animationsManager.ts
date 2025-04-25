@@ -19,7 +19,7 @@ function startObservingProgress(
 ): void {
   'worklet';
   sharedValue.addListener(tag + TAG_OFFSET, () => {
-    console.log('Layout animation progress: ', sharedValue.value, 'tag: ', tag);
+    // console.log('Layout animation progress: ', sharedValue.value, 'tag: ', tag);
     global._notifyAboutProgress(tag, sharedValue.value);
   });
 }

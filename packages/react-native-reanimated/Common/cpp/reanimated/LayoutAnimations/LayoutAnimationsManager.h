@@ -34,14 +34,13 @@ struct SharedTransitionGroup {
 struct SharedTransitionManager{
   std::unordered_map<std::string, SharedTransitionGroup> groups_;
   std::unordered_map<Tag, std::string> tagToName_;
+  std::unordered_map<Tag, std::string> nativeIDToName_;
   std::vector<SharedTag> containers_;
   
-  SharedTransitionGroup getGroupForTag();
-  std::optional<ShadowView> add(const ShadowView& shadowView);
-  std::optional<std::pair<ShadowView, ShadowView>> remove(Tag tag);
-  int createTransitionContainer(SharedTag sharedTag);
-  int removeTransitionContainer(SharedTag sharedTag);
-  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
+//  SharedTransitionGroup getGroupForTag();
+//  int createTransitionContainer(SharedTag sharedTag);
+//  int removeTransitionContainer(SharedTag sharedTag);
+//  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
 };
 
 struct LayoutAnimationConfig {
@@ -79,6 +78,8 @@ private:
 
   std::unordered_map<int, std::shared_ptr<Shareable>>
       enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Shareable>> sharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;

@@ -92,6 +92,21 @@ export default class AnimatedComponent
       this.jestAnimatedProps = { value: {} };
     }
 
+    if (this.props.sharedTransitionTag) {
+      console.log("'Shared transition tag: ", this.props.sharedTransitionTag);
+      updateLayoutAnimations(
+        this.reanimatedID,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        maybeBuild(
+          LinearTransition.duration(2000),
+          this.props?.style,
+          this._displayName
+        ),
+        undefined,
+        this.props.sharedTransitionTag
+      );
+    }
+
     const entering = this.props.entering;
     const skipEntering = this.context?.current;
     if (
@@ -351,19 +366,6 @@ export default class AnimatedComponent
 
     const { layout, entering, exiting } = this.props;
 
-    if (this.props.sharedTransitionTag) {
-      updateLayoutAnimations(
-        tag,
-        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-        maybeBuild(
-          LinearTransition.duration(2000),
-          this.props?.style,
-          this._displayName
-        ),
-        undefined,
-        this.props.sharedTransitionTag
-      );
-    }
     if (layout || entering || exiting) {
       if (!SHOULD_BE_USE_WEB) {
         enableLayoutAnimations(true, false);

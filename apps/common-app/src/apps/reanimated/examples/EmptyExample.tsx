@@ -1,324 +1,312 @@
-'use strict';
-import type { ParamListBase } from '@react-navigation/native';
+// import type {
+//   NativeStackNavigationProp,
+//   NativeStackScreenProps,
+// } from '@react-navigation/native-stack';
+// import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// import * as React from 'react';
+// import { StyleSheet, TouchableNativeFeedback, View } from 'react-native';
+// import { Pressable } from 'react-native-gesture-handler';
+// import Animated from 'react-native-reanimated';
+
+// type ParamList = {
+//   Screen1?: object;
+//   Screen2: {
+//     title: string;
+//     sharedTransitionTag: string;
+//   };
+// };
+
+// const photo = require('./assets/image.jpg');
+
+// const Stack = createNativeStackNavigator<ParamList>();
+
+// interface CardProps {
+//   navigation: NativeStackNavigationProp<ParamList>;
+//   title: string;
+//   transitionTag: string;
+//   isOpen?: boolean;
+//   nextScreen: keyof ParamList;
+// }
+
+// function Card({
+//   navigation,
+//   title,
+//   transitionTag,
+//   isOpen = false,
+//   nextScreen,
+// }: CardProps) {
+//   const goNext = (screenName: keyof ParamList) => {
+//     navigation.navigate(screenName, {
+//       title,
+//       sharedTransitionTag: transitionTag,
+//     });
+//   };
+
+//   return (
+//     <Pressable
+//       onPress={() => {
+//         goNext(nextScreen);
+//       }}>
+//       <Animated.View
+//         style={isOpen ? styles.open : styles.closed}
+//         sharedTransitionTag={transitionTag + '1'}>
+//         {/* <Animated.Text
+//           sharedTransitionTag={transitionTag + '2'}
+//           style={styles.text}>
+//           {title}
+//         </Animated.Text> */}
+//         {/* <Animated.Image
+//           sharedTransitionTag={transitionTag + '3'}
+//           source={photo}
+//           style={[styles.fullWidth, { height: isOpen ? 300 : 100 }]}
+//         /> */}
+//         {/* <Animated.Text
+//           sharedTransitionTag={transitionTag + '4'}
+//           style={[styles.fullWidth, { height: isOpen ? 100 : 0 }]}>
+//           Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas aliquid,
+//           earum non, dignissimos fugit rerum exercitationem ab consequatur,
+//           error animi veritatis delectus. Nostrum sapiente distinctio possimus
+//           vel nam facilis ut?
+//         </Animated.Text> */}
+//       </Animated.View>
+//     </Pressable>
+//   );
+// }
+
+// function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+//   return (
+//     <Animated.ScrollView style={styles.flexOne}>
+//       {[...Array(1)].map((_, i) => (
+//         <Card
+//           key={i}
+//           navigation={navigation}
+//           title={'Title' + i}
+//           transitionTag={'tag' + i}
+//           nextScreen="Screen2"
+//         />
+//       ))}
+//     </Animated.ScrollView>
+//   );
+// }
+
+// function Screen2({
+//   route,
+//   navigation,
+// }: NativeStackScreenProps<ParamList, 'Screen2'>) {
+//   const { title, sharedTransitionTag } = route.params;
+
+//   return (
+//     <View style={styles.flexOne}>
+//       <Card
+//         navigation={navigation}
+//         title={title}
+//         transitionTag={sharedTransitionTag}
+//         isOpen={true}
+//         nextScreen="Screen1"
+//       />
+//     </View>
+//   );
+// }
+
+// export default function CardExample() {
+//   return (
+//     <Stack.Navigator
+//       screenOptions={{
+//         statusBarTranslucent: false,
+//         // animation: 'none',
+//       }}>
+//       <Stack.Screen
+//         name="Screen1"
+//         component={Screen1}
+//         options={{ headerShown: false }}
+//       />
+//       <Stack.Screen
+//         name="Screen2"
+//         component={Screen2}
+//         options={{ headerShown: true }}
+//       />
+//     </Stack.Navigator>
+//   );
+// }
+// const styles = StyleSheet.create({
+//   flexOne: {
+//     flex: 1,
+//   },
+//   open: {
+//     height: 500,
+//     marginTop: 100,
+//     backgroundColor: 'green',
+//   },
+//   closed: {
+//     height: 120,
+//     marginTop: 20,
+//     backgroundColor: 'green',
+//   },
+//   text: {
+//     width: '100%',
+//     height: 20,
+//   },
+//   fullWidth: {
+//     width: '100%',
+//   },
+// });
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated, { Layout } from 'react-native-reanimated';
+import React from 'react';
+import type {
+  ListRenderItemInfo,
+  TouchableWithoutFeedbackProps,
+} from 'react-native';
+import {
+  Button,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated from 'react-native-reanimated';
 
-const Stack = createNativeStackNavigator();
-const Context = createContext({
-  theme: true,
-  disabled: false,
-  modals: false,
-  toggleTheme: () => {},
-  toggleDisabled: () => {},
-  toggleModals: () => {},
-});
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
-function getTheme(theme: boolean, disabled: boolean) {
-  const style = theme
-    ? { backgroundColor: 'purple' }
-    : { backgroundColor: 'pink' };
-  // const config = { duration: 1300 };
-  // const customTransition = SharedTransition.custom((values) => {
-  //   'worklet';
-  //   return {
-  //     width: withSpring(values.targetWidth, config),
-  //     height: withSpring(values.targetHeight, config),
-  //     originX: withSpring(values.targetOriginX, config),
-  //     originY: withSpring(values.targetOriginY, config),
-  //     borderRadius: withSpring(values.targetBorderRadius, config),
-  //   };
-  // })
-  //   .progressAnimation((values, progress) => {
-  //     'worklet';
-  //     const getValue = (
-  //       progress: number,
-  //       target: number,
-  //       current: number
-  //     ): number => {
-  //       return (
-  //         (2 * progress * progress - progress) * (target - current) + current
-  //       );
-  //     };
-  //     return {
-  //       width: getValue(progress, values.targetWidth, values.currentWidth),
-  //       height: getValue(progress, values.targetHeight, values.currentHeight),
-  //       originX: getValue(
-  //         progress,
-  //         values.targetOriginX,
-  //         values.currentOriginX
-  //       ),
-  //       originY: getValue(
-  //         progress,
-  //         values.targetOriginY,
-  //         values.currentOriginY
-  //       ),
-  //       borderRadius: getValue(
-  //         progress,
-  //         values.targetBorderRadius,
-  //         values.currentBorderRadius
-  //       ),
-  //     };
-  //   })
-  //   .defaultTransitionType(SharedTransitionType.ANIMATION);
-  // const transition = disabled
-  //   ? undefined
-  //   : theme
-  //     ? customTransition
-  //     : new SharedTransition();
+type Item = {
+  id: string;
+  title: string;
+};
 
-  return { style };
+type ListItemWithParent<T> = {
+  item: T;
+  parentItem: ListRenderItemInfo<T>;
+};
+
+type ParamList = {
+  Screen1?: object;
+  Screen2: { sharedTransitionTag: string };
+};
+
+const Stack = createNativeStackNavigator<ParamList>();
+
+const DATA: Item[] = [
+  { id: 'a1', title: 'a1' },
+  { id: 'a2', title: 'a2' },
+  { id: 'a3', title: 'a3' },
+  { id: 'a4', title: 'a4' },
+  { id: 'a5', title: 'a5' },
+  { id: 'a6', title: 'a6' },
+  { id: 'a7', title: 'a7' },
+  { id: 'a8', title: 'a8' },
+  { id: 'a9', title: 'a9' },
+];
+const photo = require('./assets/image.jpg');
+
+interface ItemProps extends ListItemWithParent<Item> {
+  onPress: TouchableWithoutFeedbackProps['onPress'];
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const { theme, disabled, modals, toggleTheme, toggleDisabled, toggleModals } =
-    useContext(Context);
-  const { style } = useMemo(() => getTheme(theme, disabled), [theme, disabled]);
-  return (
-    <Animated.ScrollView style={styles.flexOne}>
-      <Text style={styles.text}>Current theme: {theme ? 1 : 2}</Text>
-      <Button title="toggle theme" onPress={toggleTheme} />
-      <Button
-        title={(disabled ? 'enable' : 'disable') + ' transition'}
-        onPress={toggleDisabled}
+const Item = ({ item, parentItem, onPress }: ItemProps) => (
+  <TouchableOpacity onPress={onPress}>
+    <Text style={styles.title}>{item.title}</Text>
+    <Animated.View
+      style={styles.item}
+      sharedTransitionTag={item.id + '-' + parentItem.index}>
+      <Animated.Image
+        sharedTransitionTag={item.id + '-' + parentItem.index + 'image'}
+        source={photo}
+        style={styles.itemImage}
       />
-      <Button
-        title={(!modals ? 'enable' : 'disable') + ' modals'}
-        onPress={toggleModals}
-      />
-      <Animated.View
-        key={0}
-        style={[styles.boxScreenOne, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag'}
-        layout={Layout}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag'}
-          style={styles.text}>
-          0
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        key={theme ? 1 : 2}
-        style={[styles.boxScreenOne, style]}
-        sharedTransitionTag={disabled ? undefined : theme ? 'tag1' : 'tag2'}
-        layout={Layout}>
-        <Animated.Text
-          sharedTransitionTag={
-            disabled ? undefined : theme ? 'textTag1' : 'textTag2'
-          }
-          style={styles.text}>
-          {theme ? 1 : 2}
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        key={theme ? 2 : 1}
-        style={[styles.boxScreenOne, style]}
-        sharedTransitionTag={disabled ? undefined : theme ? 'tag2' : 'tag1'}
-        layout={Layout}>
-        <Animated.Text
-          sharedTransitionTag={
-            disabled ? undefined : theme ? 'textTag2' : 'textTag1'
-          }
-          style={styles.text}>
-          {theme ? 2 : 1}
-        </Animated.Text>
-      </Animated.View>
-      <Button
-        onPress={() => navigation.navigate('Screen2')}
-        title="go to screen2"
-      />
-      <Button
-        onPress={() => navigation.navigate('Screen3')}
-        title="go to screen3"
-      />
-    </Animated.ScrollView>
-  );
-}
+    </Animated.View>
+  </TouchableOpacity>
+);
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const { theme, disabled, toggleTheme, toggleDisabled } = useContext(Context);
-  const { style } = useMemo(() => getTheme(theme, disabled), [theme, disabled]);
+function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+  const renderItem = ({ item, parentItem }: ListItemWithParent<Item>) => {
+    return (
+      <Item
+        item={item}
+        parentItem={parentItem}
+        onPress={() => {
+          navigation.navigate('Screen2', {
+            sharedTransitionTag: item.id + '-' + parentItem.index,
+          });
+        }}
+      />
+    );
+  };
+
   return (
     <View style={styles.flexOne}>
-      <Text style={styles.text}>Current theme: {theme ? 1 : 2}</Text>
-      <Button title="toggle theme" onPress={toggleTheme} />
-      <Button
-        title={(disabled ? 'enable' : 'disable') + ' transition'}
-        onPress={toggleDisabled}
-      />
-      <Animated.View
-        style={[styles.boxScreenTwo, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag'}
-          style={styles.text}>
-          0
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        style={[styles.boxScreenTwo, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag1'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag1'}
-          style={styles.text}>
-          1
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        style={[styles.boxScreenTwo, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag2'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag2'}
-          style={styles.text}>
-          2
-        </Animated.Text>
-      </Animated.View>
-      <Button
-        title="go to Screen3"
-        onPress={() => navigation.navigate('Screen3')}
-      />
-      <Button
-        title="go to Screen1"
-        onPress={() => navigation.popTo('Screen1')}
+      <FlatList
+        data={[...new Array(3)]}
+        renderItem={(parentItem: ListItemWithParent<Item>['parentItem']) => (
+          <FlatList
+            data={DATA}
+            renderItem={(
+              item: Optional<ListItemWithParent<Item>, 'parentItem'>
+            ) => {
+              item.parentItem = parentItem;
+              return renderItem(item as ListItemWithParent<Item>);
+            }}
+            keyExtractor={(item) => item.id}
+            horizontal={true}
+          />
+        )}
       />
     </View>
   );
 }
 
-function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const { theme, disabled, toggleTheme, toggleDisabled } = useContext(Context);
-  const { style } = useMemo(() => getTheme(theme, disabled), [theme, disabled]);
+function Screen2({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen2'>) {
   return (
     <View style={styles.flexOne}>
-      <Text style={styles.text}>Current theme: {theme ? 1 : 2}</Text>
-      <Button title="toggle theme" onPress={toggleTheme} />
-      <Button
-        title={(disabled ? 'enable' : 'disable') + ' transition'}
-        onPress={toggleDisabled}
-      />
-      <Animated.View
-        style={[styles.boxScreenThree, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag'}
-          style={styles.text}>
-          0
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        style={[styles.boxScreenThree, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag1'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag1'}
-          style={styles.text}>
-          1
-        </Animated.Text>
-      </Animated.View>
-      <Animated.View
-        style={[styles.boxScreenThree, style]}
-        sharedTransitionTag={disabled ? undefined : 'tag2'}>
-        <Animated.Text
-          sharedTransitionTag={disabled ? undefined : 'textTag2'}
-          style={styles.text}>
-          2
-        </Animated.Text>
-      </Animated.View>
-      <Button
-        onPress={() => navigation.popTo('Screen1')}
-        title="go to screen1"
-      />
-      <Button
-        title="go to Screen2"
-        onPress={() => navigation.popTo('Screen2')}
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
+      <Animated.Image
+        sharedTransitionTag={route.params.sharedTransitionTag + 'image'}
+        source={photo}
+        style={styles.imageScreenTwo}
       />
     </View>
   );
 }
 
-export default function ReducedMotionSharedExample() {
-  const [theme, setTheme] = useState(true);
-  const [disabled, setDisabled] = useState(false);
-  const [modals, setModals] = useState(false);
-
-  const toggleTheme = useCallback(() => setTheme((theme) => !theme), []);
-  const toggleDisabled = useCallback(() => setDisabled((d) => !d), []);
-  const toggleModals = useCallback(() => setModals((m) => !m), []);
-
-  const Provider = Context;
-
+export default function FlatListExample() {
   return (
-    <Provider
-      value={{
-        theme,
-        disabled,
-        modals,
-        toggleTheme,
-        toggleDisabled,
-        toggleModals,
-      }}>
-      <Stack.Navigator
-        screenOptions={{
-          presentation: modals ? 'modal' : undefined,
-          animation: 'flip',
-        }}>
-        <Stack.Screen
-          name="Screen1"
-          component={Screen1}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Screen2"
-          component={Screen2}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Screen3"
-          component={Screen3}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </Provider>
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Screen1"
+        component={Screen1}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Screen2"
+        component={Screen2}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   flexOne: { flex: 1 },
-  boxScreenOne: {
-    height: 80,
-    width: 150,
-    margin: 20,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    borderRadius: 10,
-  },
-  boxScreenTwo: {
-    height: 80,
-    width: 300,
-    margin: 20,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    borderRadius: 10,
-  },
-  boxScreenThree: {
+  item: {
+    width: 180,
     height: 100,
-    width: 300,
-    margin: 20,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    borderRadius: 30,
+    marginVertical: 5,
+    marginHorizontal: 5,
+    overflow: 'hidden',
   },
-  text: {
-    fontSize: 18,
-    margin: 30,
-    fontWeight: 'bold',
-    alignSelf: 'center',
+  itemImage: {
+    width: '100%',
+    maxHeight: 100,
+    borderRadius: 10,
+  },
+  title: {
+    fontSize: 10,
+  },
+  imageScreenTwo: {
+    width: '100%',
+    height: 200,
   },
 });

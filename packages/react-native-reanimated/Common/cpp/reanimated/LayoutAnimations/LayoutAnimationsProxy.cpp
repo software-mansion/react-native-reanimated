@@ -6,6 +6,8 @@
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <glog/logging.h>
+#include <react/renderer/components/scrollview/ScrollViewShadowNode.h>
 
 #include <set>
 #include <utility>
@@ -67,6 +69,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)){
     ShadowView copy = node->current;
     copy.layoutMetrics = getAbsoluteMetrics(node);
+//      __android_log_print(ANDROID_LOG_DEBUG, "bb", "calculated y: %f for tag: %d", copy.layoutMetrics.frame.origin.y, node->current.tag);
     map[sharedTransitionManager_->tagToName_[node->current.tag]] = {copy, node->parent.lock()->current.tag};
   }
   for (auto& child: node->children){
@@ -75,9 +78,25 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
 }
 
 LayoutMetrics LayoutAnimationsProxy::getAbsoluteMetrics(LightNode::Unshared node) const{
+//    __android_log_print(ANDROID_LOG_DEBUG, "bb", "get absolute metrics for tag: %d", node->current.tag);
+//    __android_log_print(ANDROID_LOG_DEBUG, "bb", "start y: %f", node->current.layoutMetrics.frame.origin.y);
   auto result = node->current.layoutMetrics;
   auto parent = node->parent.lock();
   while (parent){
+//      __android_log_print(ANDROID_LOG_DEBUG, "bb", "component: %s tag: %d y: %f", parent->current.componentName, parent->current.tag, parent->current.layoutMetrics.frame.origin.y);
+    if (!strcmp(parent->current.componentName, "ScrollView")){
+      auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(parent->current.state);
+      auto data = state->getData();
+//      LOG(INFO) << node->current.tag << " content offset:" << data.contentOffset.x << " " << data.contentOffset.y;
+      result.frame.origin -= data.contentOffset;
+    }
+    if (!strcmp(parent->current.componentName, "RNSScreen") && parent->children.size()>=2){
+      auto p =parent->parent.lock();
+      if (p){
+//          __android_log_print(ANDROID_LOG_DEBUG, "bb", "screen height: %f stack height: %f diff: %f", parent->current.layoutMetrics.frame.size.height, p->current.layoutMetrics.frame.size.height, p->current.layoutMetrics.frame.size.height - parent->current.layoutMetrics.frame.size.height);
+        result.frame.origin.y += (p->current.layoutMetrics.frame.size.height - parent->current.layoutMetrics.frame.size.height);
+      }
+    }
     result.frame.origin.x += parent->current.layoutMetrics.frame.origin.x;
     result.frame.origin.y += parent->current.layoutMetrics.frame.origin.y;
     parent = parent->parent.lock();
@@ -97,6 +116,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
+//        __android_log_print(ANDROID_LOG_DEBUG, "bb", "pullTransaction mutations: %d", (int)mutations.size());
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
@@ -112,11 +132,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       {
         ReanimatedSystraceSection s("moj narzut 1");
         
-        
-        beforeTopScreen = findTopScreen(lightNodes_[surfaceId]);
+        auto root = lightNodes_[surfaceId];
+        beforeTopScreen = findTopScreen(root);
         
         if (beforeTopScreen){
-            LOG(INFO) << "before: " << beforeTopScreen->current.tag;
+//            LOG(INFO) << "before: " << beforeTopScreen->current.tag;
           findSharedElementsOnScreen(beforeTopScreen, beforeMap);
         }
         
@@ -126,6 +146,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
               auto& node = lightNodes_[mutation.newChildShadowView.tag];
 //              node->previous = mutation.oldChildShadowView;
               node->current = mutation.newChildShadowView;
+              if (!strcmp(node->current.componentName, "ScrollView")){
+                auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(node->current.state);
+                auto data = state->getData();
+//                LOG(INFO) << node->current.tag << " update content offset:" << data.contentOffset.x << " " << data.contentOffset.y;
+              }
               break;
             }
             case ShadowViewMutation::Create:{
@@ -139,6 +164,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
               break;
             }
             case ShadowViewMutation::Insert:{
+              transferConfigFromNativeID(
+                  mutation.newChildShadowView.props->nativeId,
+                  mutation.newChildShadowView.tag);
               auto& node = lightNodes_[mutation.newChildShadowView.tag];
               auto& parent = lightNodes_[mutation.parentTag];
               parent->children.insert(parent->children.begin()+mutation.index, node);
@@ -157,12 +185,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
           }
         }
         
-        auto root = lightNodes_[surfaceId];
+        root = lightNodes_[surfaceId];
         
         afterTopScreen = findTopScreen(root);
         
         if (afterTopScreen){
-            LOG(INFO) << "after: " << afterTopScreen->current.tag;
+//            LOG(INFO) << "after: " << afterTopScreen->current.tag;
           findSharedElementsOnScreen(afterTopScreen, afterMap);
         }
       }
@@ -591,9 +619,6 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           continue;
         }
 
-        transferConfigFromNativeID(
-            mutation.newChildShadowView.props->nativeId,
-            mutation.newChildShadowView.tag);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           filteredMutations.push_back(mutation);
           continue;

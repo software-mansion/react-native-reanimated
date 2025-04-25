@@ -127,7 +127,6 @@ function ItemSeparator() {
 const Stack = createStack<RootStackParamList>();
 
 const screenOptions = {
-  headerShown: false,
   headerLeft: IS_MACOS ? undefined : () => <BackButton />,
   headerRight: IS_MACOS ? undefined : () => <DrawerButton />,
 };
