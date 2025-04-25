@@ -40,12 +40,16 @@ target_include_directories(
   ${REACT_COMMON_DIR}
 )
 
-target_link_libraries(react_codegen_rnreanimated log ReactAndroid::jsi fbjni jsi)
-
-target_link_libraries(react_codegen_rnreanimated react-native-reanimated::reanimated)
-target_link_libraries(react_codegen_rnreanimated react-native-worklets::worklets)
-
-target_link_libraries(react_codegen_rnreanimated ReactAndroid::reactnative)
+target_link_libraries(
+  react_codegen_rnreanimated
+  log
+  ReactAndroid::jsi
+  ReactAndroid::reactnative
+  fbjni
+  jsi
+  react-native-reanimated::reanimated
+  react-native-worklets::worklets
+)
 
 target_compile_options(
   react_codegen_rnreanimated
