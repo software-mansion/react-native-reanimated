@@ -69,7 +69,6 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)){
     ShadowView copy = node->current;
     copy.layoutMetrics = getAbsoluteMetrics(node);
-//      __android_log_print(ANDROID_LOG_DEBUG, "bb", "calculated y: %f for tag: %d", copy.layoutMetrics.frame.origin.y, node->current.tag);
     map[sharedTransitionManager_->tagToName_[node->current.tag]] = {copy, node->parent.lock()->current.tag};
   }
   for (auto& child: node->children){
@@ -78,12 +77,9 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
 }
 
 LayoutMetrics LayoutAnimationsProxy::getAbsoluteMetrics(LightNode::Unshared node) const{
-//    __android_log_print(ANDROID_LOG_DEBUG, "bb", "get absolute metrics for tag: %d", node->current.tag);
-//    __android_log_print(ANDROID_LOG_DEBUG, "bb", "start y: %f", node->current.layoutMetrics.frame.origin.y);
   auto result = node->current.layoutMetrics;
   auto parent = node->parent.lock();
   while (parent){
-//      __android_log_print(ANDROID_LOG_DEBUG, "bb", "component: %s tag: %d y: %f", parent->current.componentName, parent->current.tag, parent->current.layoutMetrics.frame.origin.y);
     if (!strcmp(parent->current.componentName, "ScrollView")){
       auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(parent->current.state);
       auto data = state->getData();
@@ -93,7 +89,6 @@ LayoutMetrics LayoutAnimationsProxy::getAbsoluteMetrics(LightNode::Unshared node
     if (!strcmp(parent->current.componentName, "RNSScreen") && parent->children.size()>=2){
       auto p =parent->parent.lock();
       if (p){
-//          __android_log_print(ANDROID_LOG_DEBUG, "bb", "screen height: %f stack height: %f diff: %f", parent->current.layoutMetrics.frame.size.height, p->current.layoutMetrics.frame.size.height, p->current.layoutMetrics.frame.size.height - parent->current.layoutMetrics.frame.size.height);
         result.frame.origin.y += (p->current.layoutMetrics.frame.size.height - parent->current.layoutMetrics.frame.size.height);
       }
     }
@@ -116,7 +111,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-//        __android_log_print(ANDROID_LOG_DEBUG, "bb", "pullTransaction mutations: %d", (int)mutations.size());
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
