@@ -61,13 +61,12 @@ export class WebWorker<Tin = unknown, Tout = unknown> extends EventEmitter {
 
     runOnRuntime(this.runtime, () => {
       'worklet';
-      // Define postMessage in the worklet scope
-      // It should handle data destined for the main thread's onmessage (type Tout)
+      // Define postMessage in the worklet scope can be called inside the script function to send message from the worker to the main thread
       (global as WorkletGlobalScope<Tin, Tout>).postMessage = (data: Tout) => {
         runOnJS(callOnmessage)({ data });
       };
 
-      // Execute the user-provided script in the worklet context
+      // Execute the user-provided script in the worklet context - should define the onmessage handler
       script();
     })();
   }
