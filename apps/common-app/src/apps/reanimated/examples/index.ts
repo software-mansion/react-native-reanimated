@@ -103,6 +103,23 @@ import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import ShareablesExample from './ShareablesExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
+import CardExample from './SharedElementTransitions/Card';
+import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
+import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
+import FlatListExample from './SharedElementTransitions/FlatList';
+import ImageStackExample from './SharedElementTransitions/ImageStack';
+import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
+import ManyScreensExample from './SharedElementTransitions/ManyScreens';
+import ManyTagsExample from './SharedElementTransitions/ManyTags';
+import ModalsExample from './SharedElementTransitions/Modals';
+import NestedRotationExample from './SharedElementTransitions/NestedRotation';
+import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
+import RestoreStateExample from './SharedElementTransitions/RestoreState';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
+import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import SharedStyleExample from './SharedStyleExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
@@ -460,7 +477,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
   },
   LogExample: {
     icon: '⌨',
@@ -692,5 +708,76 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+
+  // Shared Element Transitions
+
+  CardExample: {
+    title: '[SET] Card',
+    screen: CardExample,
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom transition',
+    screen: CustomTransitionExample,
+  },
+  LayoutAnimationExample: {
+    title: '[SET] Layout Animation',
+    screen: LayoutAnimationExample,
+  },
+  ManyScreensExample: {
+    title: '[SET] Many screens',
+    screen: ManyScreensExample,
+  },
+  ManyTagsExample: {
+    title: '[SET] Many tags',
+    screen: ManyTagsExample,
+  },
+  NestedStacksExample: {
+    title: '[SET] Nested stacks',
+    screen: NestedStacksExample,
+  },
+  ModalsExample: {
+    title: '[SET] Modals',
+    screen: ModalsExample,
+  },
+  FlatListExample: {
+    title: '[SET] FlatList',
+    screen: FlatListExample,
+  },
+  ImageStackExample: {
+    title: '[SET] Image Stack',
+    screen: ImageStackExample,
+  },
+  RestoreStateExample: {
+    title: '[SET] Restore State',
+    screen: RestoreStateExample,
+  },
+  DuplicateTagsExample: {
+    title: '[SET] Duplicate Tags',
+    screen: DuplicateTagsExample,
+  },
+  ReducedMotionSharedExample: {
+    title: '[SET] Reduced Motion',
+    screen: ReducedMotionSharedExample,
+  },
+  TransitionRestartExample: {
+    title: '[SET] Transition Restart',
+    screen: TransitionRestartExample,
+  },
+  ChangeThemeSharedExample: {
+    title: '[SET] Change theme',
+    screen: ChangeThemeSharedExample,
+  },
+  NestedRotationSharedExample: {
+    title: '[SET] Nested Transforms',
+    screen: NestedRotationExample,
+  },
+  BorderRadiiExample: {
+    title: '[SET] Border Radii',
+    screen: BorderRadiiExample,
+  },
+  TabNavigatorExample: {
+    title: '[SET] Tab Navigator',
+    screen: TabNavigatorExample,
   },
 } as const;
