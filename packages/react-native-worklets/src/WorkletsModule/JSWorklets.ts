@@ -54,4 +54,10 @@ class JSWorklets implements IWorkletsModule {
       'scheduleOnRuntime is not available in JSWorklets.'
     );
   }
+
+  terminateWorkletRuntime(_runtime: WorkletRuntime) {
+    throw new WorkletsError(
+      'terminateWorkletRuntime is not available in JSWorklets.'
+    );
+  }
 }

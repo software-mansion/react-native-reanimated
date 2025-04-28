@@ -1,22 +1,24 @@
-// @ts-ignore
-import { Worker } from 'react-native-worklets';
+import { WebWorker } from 'react-native-worklets';
 
 export function performHeavyComputation() {
+  console.log('Starting heavy computation');
     for (let i = 0; i < 500_000_000; i++) {
       Math.sqrt(i);
     }
-    console.log('done');
+    console.log('Done');
   }
 
-  export const myWorker = new Worker(() => {
+  export const myWorker = new WebWorker<string, Record<string, unknown>>('Worker #1', () => {
     'worklet';
     let state = 0;
 
-    console.log('Hello from worker');
-
-    onmessage = (e) => {
+    onmessage = (e: { data: string }) => {
       state = state + 1;
-      console.log(`Worker started job ${state}`);
+      console.log(`Worker started job ${state} with data: ${e.data}`);
+      if (e.data === 'error') {
+        throw new Error('Error from worker!!!');
+      }
+      console.log('Starting heavy computation');
       for (let i = 0; i < 500_000_000; i++) {
         Math.sqrt(i);
       }
@@ -24,8 +26,10 @@ export function performHeavyComputation() {
     };
   });
 
-  console.log(myWorker.toString());
+  myWorker.onmessage = (e: { data: Record<string, unknown> }) => {
+    console.log('JS received:', e.data);
+  };
 
-  myWorker.onmessage = (e) => {
-    console.log('JS', e.data);
+  myWorker.onerror = (e: { data: string }) => {
+    console.error('JS received error:', e);
   };

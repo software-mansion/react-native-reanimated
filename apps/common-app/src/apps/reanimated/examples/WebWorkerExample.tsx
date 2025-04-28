@@ -1,62 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import type { LayoutAnimationFunction } from 'react-native-reanimated';
-import Animated, {
-  makeMutable,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
 import { myWorker, performHeavyComputation } from './WebWorker';
 
-function CustomLayoutTransition(): LayoutAnimationFunction {
-  const isEven = makeMutable(1);
-  return (values) => {
-    'worklet';
-    const isEvenLocal = isEven.value;
-    isEven.value = 1 - isEven.value;
-
-    return {
-      animations: {
-        originX: withDelay(
-          isEvenLocal ? 1000 : 0,
-          withTiming(values.targetOriginX, { duration: 1000 })
-        ),
-        originY: withDelay(
-          isEvenLocal ? 0 : 1000,
-          withTiming(values.targetOriginY, { duration: 1000 })
-        ),
-        width: withTiming(values.targetWidth, { duration: 1000 }),
-        height: withTiming(values.targetHeight, { duration: 1000 }),
-      },
-      initialValues: {
-        originX: values.currentOriginX,
-        originY: values.currentGlobalOriginY,
-        width: values.currentWidth,
-        height: values.currentHeight,
-        backgroundColor: 'red',
-      },
-    };
-  };
-}
-
-function Box({ label, state }: { label: string; state: boolean }) {
-  const layoutTransition = useMemo(CustomLayoutTransition, []);
-  return (
-    <Animated.View
-      layout={layoutTransition}
-      style={[styles.box, { height: state ? 30 : 60 }]}>
-      <Text> {label} </Text>
-    </Animated.View>
-  );
-}
-
 export default function WebWorkerExample() {
-  const [state, setState] = useState(true);
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setState((prevState) => !prevState);
-    }, 3000); // Toggle every 3 seconds
+      setCounter((prevCounter) => prevCounter + 1);
+    }, 1000); // Toggle every 3 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -64,35 +16,36 @@ export default function WebWorkerExample() {
 
   return (
     <View style={styles.marginTop}>
-      <View style={styles.height}>
-        <View
-          style={[{ flexDirection: state ? 'row' : 'column' }, styles.border]}>
-          <Box key="a" label="A" state={state} />
-          <Box key="b" label="B" state={state} />
-          <Box key="c" label="C" state={state} />
-          <Box key="d" label="D" state={state} />
-        </View>
+      <View style={styles.counterContainer}>  
+        <Text>Counter on main thread: {counter}</Text>
       </View>
 
       <Button
         onPress={() => {
-          myWorker.postMessage('started');
+          myWorker.postMessage(counter.toString());
         }}
-        title="send message"
+        title="Send message to worker (run heavy computation on worker)"
       />
 
       <Button
         onPress={() => {
           performHeavyComputation();
         }}
-        title="perform heavy computation"
+        title="Perform heavy computation on main thread"
       />
 
       <Button
         onPress={() => {
           myWorker.terminate();
         }}
-        title="terminate worker"
+        title="Terminate worker (finish current job and terminate)"
+      />
+
+      <Button
+        onPress={() => {
+          myWorker.postMessage('error');
+        }}
+        title="Trigger error in worker"
       />
     </View>
   );
@@ -115,5 +68,13 @@ const styles = StyleSheet.create({
   },
   border: {
     borderWidth: 1,
+  },
+  counterContainer: {
+    marginBottom: 20,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
 });
