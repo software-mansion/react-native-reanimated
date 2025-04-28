@@ -141,8 +141,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 //              node->previous = mutation.oldChildShadowView;
               node->current = mutation.newChildShadowView;
               if (!strcmp(node->current.componentName, "ScrollView")){
-                auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(node->current.state);
-                auto data = state->getData();
+//                auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(node->current.state);
+//                auto data = state->getData();
 //                LOG(INFO) << node->current.tag << " update content offset:" << data.contentOffset.x << " " << data.contentOffset.y;
               }
               break;
@@ -186,6 +186,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         if (afterTopScreen){
 //            LOG(INFO) << "after: " << afterTopScreen->current.tag;
           findSharedElementsOnScreen(afterTopScreen, afterMap);
+          
         }
       }
   std::vector<std::shared_ptr<MutationNode>> roots;
@@ -251,10 +252,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
               const auto [after, afterParentTag] = afterMap[sharedTag];
               ShadowView s = before;
               s.tag = myTag;
-              //            s.layoutMetrics.frame.origin.y += 100;
-//              auto m = ShadowViewMutation::UpdateMutation(before, before, beforeParentTag);
-//              m = ShadowViewMutation::UpdateMutation(before, *cloneViewWithoutOpacity(m, propsParserContext), beforeParentTag);
-//              filteredMutations.push_back(m);
               filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, 1));
               filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
@@ -273,7 +270,23 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
               copy2.tag = myTag;
               startSharedTransition(myTag, copy2, copy, surfaceId);
               restoreMap_[myTag] = after.tag;
+              sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
               myTag+=2;
+            }
+          }
+        } else if (mutations.size() && beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag == afterTopScreen->current.tag){
+          for (auto& [sharedTag, p]: afterMap){
+            auto& [shadowView, beforeParentTag] = p;
+            
+            auto copy = shadowView;
+            auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
+            copy.tag = fakeTag;
+            if (!layoutAnimations_.contains(fakeTag)){
+              continue;
+            }
+            auto& la = layoutAnimations_[fakeTag];
+            if (la.finalView->layoutMetrics != copy.layoutMetrics){
+              startSharedTransition(fakeTag, copy, copy, surfaceId);
             }
           }
         }

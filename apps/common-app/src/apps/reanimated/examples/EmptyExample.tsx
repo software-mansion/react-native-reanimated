@@ -282,7 +282,7 @@ export default function FlatListExample() {
       <Stack.Screen
         name="Screen2"
         component={Screen2}
-        options={{ headerShown: false }}
+        options={{ headerShown: true }}
       />
     </Stack.Navigator>
   );
