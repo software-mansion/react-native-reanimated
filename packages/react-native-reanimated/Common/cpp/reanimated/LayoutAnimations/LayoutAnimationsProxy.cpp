@@ -250,28 +250,35 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
             if (afterMap.contains(sharedTag)){
               const auto before = shadowView;
               const auto [after, afterParentTag] = afterMap[sharedTag];
-              ShadowView s = before;
-              s.tag = myTag;
-              filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, 1));
-              filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
-              auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
-              m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
-              filteredMutations.push_back(m);
-              auto node = std::make_shared<LightNode>();
-              node->current = s;
-              lightNodes_[myTag] = node;
-              auto& parent = lightNodes_[surfaceId];
-              parent->children.insert(parent->children.begin()+1, node);
-              layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[myTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
+              auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
+              auto shouldCreateContainer = (fakeTag == -1 || !layoutAnimations_.contains(fakeTag));
+              if (shouldCreateContainer){
+                ShadowView s = before;
+                s.tag = myTag;
+                filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
+                filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, 1));
+                filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
+                auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
+                m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
+                filteredMutations.push_back(m);
+                auto node = std::make_shared<LightNode>();
+                node->current = s;
+                lightNodes_[myTag] = node;
+                auto& parent = lightNodes_[surfaceId];
+                parent->children.insert(parent->children.begin()+1, node);
+                fakeTag = myTag;
+              }
+              layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[fakeTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
               ShadowView copy = after;
-              copy.tag = myTag;
+              copy.tag = fakeTag;
               auto copy2 = before;
-              copy2.tag = myTag;
-              startSharedTransition(myTag, copy2, copy, surfaceId);
-              restoreMap_[myTag] = after.tag;
-              sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
-              myTag+=2;
+              copy2.tag = fakeTag;
+              startSharedTransition(fakeTag, copy2, copy, surfaceId);
+              restoreMap_[fakeTag] = after.tag;
+              if (shouldCreateContainer){
+                sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
+                myTag+=2;
+              }
             }
           }
         } else if (mutations.size() && beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag == afterTopScreen->current.tag){
