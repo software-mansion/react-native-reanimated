@@ -20,8 +20,19 @@ using ReanimatedViewShadowNodeBase = ConcreteViewShadowNode<
 
 class ReanimatedShadowNode final : public ReanimatedViewShadowNodeBase {
  public:
-  using ConcreteViewShadowNode::ConcreteViewShadowNode;
+  ReanimatedShadowNode(
+      const ShadowNodeFragment &fragment,
+      const ShadowNodeFamily::Shared &family,
+      ShadowNodeTraits traits);
+
+  ReanimatedShadowNode(
+      const ShadowNode &sourceShadowNode,
+      const ShadowNodeFragment &fragment);
+
   void layout(LayoutContext layoutContext) override;
+
+ private:
+  void initialize();
 };
 
 } // namespace facebook::react
