@@ -63,6 +63,7 @@ type withTimingType = <T extends AnimatableValue>(
  * @param toValue - The value on which the animation will come at rest -
  *   {@link AnimatableValue}.
  * @param config - The timing animation configuration - {@link TimingConfig}.
+ *   Defaults to {@link TimingConfig} default values.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}.
  * @returns An [animation
