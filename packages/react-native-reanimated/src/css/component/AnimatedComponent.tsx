@@ -16,8 +16,13 @@ import { isJest, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedView } from '../../specs';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
+import {
+  markNodeAsRemovable,
+  normalizeCSSTransitionProperties,
+  unmarkNodeAsRemovable,
+} from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import { filterCSSAndStyleProperties } from '../utils';
 import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -207,12 +212,13 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
+    const style = props?.style ?? this.props.style;
+
     const child = (
       <ChildComponent
-        {...this.props}
-        {...props}
+        {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={filterNonCSSStyleProps(style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}
@@ -223,7 +229,21 @@ export default class AnimatedComponent<
       return child;
     }
 
-    return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
+    // TODO - improve later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [animationProperties, transitionProperties] =
+      filterCSSAndStyleProperties(StyleSheet.flatten(style) ?? {});
+
+    return (
+      <ReanimatedView
+        style={styles.container}
+        cssTransition={
+          transitionProperties &&
+          normalizeCSSTransitionProperties(transitionProperties)
+        }>
+        {child}
+      </ReanimatedView>
+    );
   }
 }
 
