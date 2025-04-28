@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-worklets",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "devDependencies": {
     "@babel/cli": "^7.20.0",

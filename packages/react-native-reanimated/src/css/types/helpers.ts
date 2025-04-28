@@ -3,8 +3,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyRecord = Record<string, any>;
 
-export type Maybe<T> = T | null | undefined;
-
 export type NoUndef<T> = T extends undefined ? never : T;
 
 export type Repeat<
