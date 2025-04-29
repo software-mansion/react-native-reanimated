@@ -30,7 +30,6 @@ class ReanimatedViewComponentDescriptor
       return;
     }
 
-    // LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
   }
 
  private:
