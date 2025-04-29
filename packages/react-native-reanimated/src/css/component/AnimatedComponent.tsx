@@ -226,12 +226,13 @@ export default class AnimatedComponent<
 
     // TODO - improve later
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [animationProperties, transitionProperties] =
+    const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(StyleSheet.flatten(style) ?? {});
 
     return (
       <ReanimatedView
         style={styles.container}
+        jsStyle={filteredStyle}
         cssTransition={
           transitionProperties &&
           normalizeCSSTransitionProperties(transitionProperties)
