@@ -65,16 +65,15 @@ CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config) {
 }
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig) {
+    const folly::dynamic &partialConfig) {
   PartialCSSTransitionConfig result;
 
-  if (newConfig.count("properties")) {
-    result.properties = getProperties(newConfig);
+  if (partialConfig.count("properties")) {
+    result.properties = getProperties(partialConfig);
   }
-  if (newConfig.count("settings")) {
+  if (partialConfig.count("settings")) {
     result.settings =
-        parseCSSTransitionPropertiesSettings(newConfig["settings"]);
+        parseCSSTransitionPropertiesSettings(partialConfig["settings"]);
   }
 
   return result;

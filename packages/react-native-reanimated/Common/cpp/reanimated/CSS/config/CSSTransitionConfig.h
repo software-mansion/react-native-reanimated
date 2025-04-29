@@ -37,7 +37,6 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
 CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config);
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig);
+    const folly::dynamic &partialConfig);
 
 } // namespace reanimated::css
