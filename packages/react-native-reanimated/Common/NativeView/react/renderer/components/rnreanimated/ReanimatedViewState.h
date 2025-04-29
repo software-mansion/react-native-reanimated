@@ -4,10 +4,18 @@
 #include <folly/dynamic.h>
 #endif
 
+#include <reanimated/CSS/core/CSSTransition.h>
+
+#include <optional>
+
 namespace facebook::react {
+
+using namespace reanimated::css;
 
 class ReanimatedViewState {
  public:
+  std::shared_ptr<CSSTransition> cssTransition;
+
   ReanimatedViewState() = default;
 
 #ifdef ANDROID
