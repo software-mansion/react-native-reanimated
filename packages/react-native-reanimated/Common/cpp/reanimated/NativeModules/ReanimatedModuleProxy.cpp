@@ -459,10 +459,11 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
+  auto dynamic = dynamicFromValue(rt, keyframesConfig);
+  auto keyframes =
+      parseCSSAnimationKeyframesConfig(dynamic, viewStylesRepository_);
   cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(
-          dynamicFromValue(rt, keyframesConfig), viewStylesRepository_));
+      animationName.asString(rt).utf8(rt), std::move(keyframes));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(

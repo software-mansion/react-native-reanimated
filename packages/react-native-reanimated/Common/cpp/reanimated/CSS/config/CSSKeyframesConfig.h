@@ -6,6 +6,7 @@
 
 #include <folly/dynamic.h>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace reanimated::css {
@@ -16,13 +17,6 @@ struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
   std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions;
 };
-
-std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
-    const folly::dynamic &config,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-
-std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
-    const folly::dynamic &config);
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     const folly::dynamic &config,
