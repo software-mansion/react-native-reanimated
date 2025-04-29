@@ -81,7 +81,7 @@ class ValueInterpolator : public PropertyInterpolator {
     keyframes_.reserve(parsedKeyframes.size());
 
     for (const auto &[offset, value] : parsedKeyframes) {
-      if (value.empty()) {
+      if (value.isNull()) {
         keyframes_.push_back(KeyframeType{offset, std::nullopt});
       } else {
         keyframes_.push_back(KeyframeType{offset, ValueType(value)});
