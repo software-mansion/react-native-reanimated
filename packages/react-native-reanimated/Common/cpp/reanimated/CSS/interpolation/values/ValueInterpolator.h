@@ -74,17 +74,17 @@ class ValueInterpolator : public PropertyInterpolator {
     return reversingAdjustedStartValue_.value() == ValueType(propertyValue);
   }
 
-  void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override {
-    const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
+  void updateKeyframes(const folly::dynamic &keyframes) override {
+    const auto parsedKeyframes = parseDynamicKeyframes(keyframes);
 
     keyframes_.clear();
     keyframes_.reserve(parsedKeyframes.size());
 
     for (const auto &[offset, value] : parsedKeyframes) {
-      if (value.isUndefined()) {
+      if (value.empty()) {
         keyframes_.push_back(KeyframeType{offset, std::nullopt});
       } else {
-        keyframes_.push_back(KeyframeType{offset, ValueType(rt, value)});
+        keyframes_.push_back(KeyframeType{offset, ValueType(value)});
       }
     }
   }
