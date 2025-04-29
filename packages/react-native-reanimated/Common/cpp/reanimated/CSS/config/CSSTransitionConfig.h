@@ -4,6 +4,7 @@
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <folly/dynamic.h>
 #include <string>
 #include <unordered_map>
 
@@ -33,18 +34,10 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
     const std::string &propName);
 
-TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
-
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
-    jsi::Runtime &rt,
-    const jsi::Object &settings);
-
-CSSTransitionConfig parseCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
+CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config);
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &partialConfig);
+    const folly::dynamic &oldConfig,
+    const folly::dynamic &newConfig);
 
 } // namespace reanimated::css
