@@ -14,7 +14,9 @@ using namespace reanimated::css;
 
 class ReanimatedViewState {
  public:
-  const std::optional<CSSTransition> cssTransition;
+  std::shared_ptr<CSSTransition> cssTransition;
+
+  ReanimatedViewState() = default;
 
 #ifdef ANDROID
   ReanimatedViewState(

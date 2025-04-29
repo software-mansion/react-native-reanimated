@@ -29,9 +29,6 @@ class ReanimatedShadowNode final : public ReanimatedViewShadowNodeBase {
       const ShadowNodeFragment &fragment);
 
   void layout(LayoutContext layoutContext) override;
-
- private:
-  void initialize();
 };
 
 } // namespace facebook::react
