@@ -8,7 +8,7 @@ export default function WebWorkerExample() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCounter((prevCounter) => prevCounter + 1);
-    }, 1000); // Toggle every 3 seconds
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);

@@ -1,5 +1,5 @@
 import { createWorkletRuntime, runOnRuntime } from './runtimes';
-import { runOnJS } from './threads';
+import { runOnJS, runOnUI } from './threads';
 import type { WorkletRuntime } from './workletTypes';
 import { WorkletsModule } from './WorkletsModule';
 import EventEmitter from 'react-native/Libraries/vendor/emitter/EventEmitter';

@@ -132,7 +132,6 @@ void WorkletRuntime::terminate() {
   if (this->queue_) {
     this->queue_->empty();
   }
-  WorkletRuntimeCollector::terminate(*runtime_);
 }
 
 jsi::Value WorkletRuntime::get(
