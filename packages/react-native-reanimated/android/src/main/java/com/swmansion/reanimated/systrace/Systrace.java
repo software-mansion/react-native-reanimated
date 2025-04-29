@@ -2,7 +2,7 @@ package com.swmansion.reanimated.systrace;
 
 import androidx.tracing.Trace;
 
-/** A stripped copy of Systrace from React Native to suppor profiling of Reanimated. */
+/** A stripped copy of Systrace from React Native to support profiling of Reanimated. */
 public class Systrace {
 
   public static final long TRACE_TAG_REACT_JAVA_BRIDGE = 0L;
