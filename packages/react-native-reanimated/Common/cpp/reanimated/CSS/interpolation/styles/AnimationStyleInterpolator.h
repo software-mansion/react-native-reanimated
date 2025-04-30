@@ -12,7 +12,7 @@ namespace reanimated::css {
 // same as interpolating record properties
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
-  explicit AnimationStyleInterpolator()
+  AnimationStyleInterpolator()
       : RecordPropertiesInterpolator(PROPERTY_INTERPOLATORS_CONFIG, {}) {}
 };
 

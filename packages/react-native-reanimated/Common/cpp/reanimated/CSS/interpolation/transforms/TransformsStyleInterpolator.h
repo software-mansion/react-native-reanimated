@@ -30,18 +30,16 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<TransformInterpolators> &interpolators);
 
   folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const override;
+      const PropertyInterpolatorUpdateContext &context) const override;
   folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const override;
+      const PropertyInterpolatorUpdateContext &context) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
   bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const override;
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const override;
+      const PropertyInterpolatorUpdateContext &context) const override;
 
   void updateKeyframes(const folly::dynamic &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -81,17 +79,15 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   size_t getIndexOfCurrentKeyframe(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
-      const ShadowNode::Shared &shadowNode) const;
+      const PropertyInterpolatorUpdateContext &context) const;
   TransformOperations interpolateOperations(
-      const ShadowNode::Shared &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
-      const TransformOperations &toOperations) const;
+      const TransformOperations &toOperations,
+      const PropertyInterpolatorUpdateContext &context) const;
 
   static folly::dynamic convertResultToDynamic(
       const TransformOperations &operations);
-  TransformInterpolatorUpdateContext createUpdateContext(
-      const ShadowNode::Shared &shadowNode) const;
 };
 
 } // namespace reanimated::css

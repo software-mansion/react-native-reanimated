@@ -16,6 +16,7 @@ class TransformInterpolator {
   struct UpdateContext {
     const ShadowNode::Shared &node;
     const std::shared_ptr<Interpolators> &interpolators;
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
   };
 
   virtual ~TransformInterpolator() = default;

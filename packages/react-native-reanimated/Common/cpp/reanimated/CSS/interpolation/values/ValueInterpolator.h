@@ -10,11 +10,6 @@
 
 namespace reanimated::css {
 
-struct ValueInterpolatorUpdateContext {
-  const ShadowNode::Shared &node;
-  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
-};
-
 template <typename TValue>
 struct is_css_value : std::is_base_of<CSSValue, TValue> {};
 
@@ -42,14 +37,14 @@ class ValueInterpolator : public PropertyInterpolator {
   virtual ~ValueInterpolator() = default;
 
   folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const override {
-    return viewStylesRepository_->getStyleProp(
-        shadowNode->getTag(), propertyPath_);
+      const PropertyInterpolatorUpdateContext &context) const override {
+    return context.viewStylesRepository->getStyleProp(
+        context.node->getTag(), propertyPath_);
   }
 
   folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const override {
-    auto styleValue = getStyleValue(shadowNode);
+      const PropertyInterpolatorUpdateContext &context) const override {
+    auto styleValue = getStyleValue(context);
 
     if (styleValue.isNull()) {
       return defaultStyleValue_.toDynamic();
@@ -119,10 +114,8 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const override {
-    const auto toIndex = getToKeyframeIndex(progressProvider);
+      const PropertyInterpolatorUpdateContext &context) const override {
+    const auto toIndex = getToKeyframeIndex(context.progressProvider);
     const auto fromIndex = toIndex - 1;
 
     const auto &fromKeyframe = keyframes_[fromIndex];
@@ -132,13 +125,13 @@ class ValueInterpolator : public PropertyInterpolator {
     std::optional<ValueType> toValue = toKeyframe.value;
 
     if (!fromValue.has_value()) {
-      fromValue = getFallbackValue(shadowNode);
+      fromValue = getFallbackValue(context);
     }
     if (!toValue.has_value()) {
-      toValue = getFallbackValue(shadowNode);
+      toValue = getFallbackValue(context);
     }
 
-    const auto keyframeProgress = progressProvider->getKeyframeProgress(
+    const auto keyframeProgress = context.progressProvider->getKeyframeProgress(
         fromKeyframe.offset, toKeyframe.offset);
 
     if (keyframeProgress == 1.0) {
@@ -149,10 +142,7 @@ class ValueInterpolator : public PropertyInterpolator {
     }
 
     return interpolateValue(
-               keyframeProgress,
-               fromValue.value(),
-               toValue.value(),
-               {.node = shadowNode})
+               keyframeProgress, fromValue.value(), toValue.value(), context)
         .toDynamic();
   }
 
@@ -160,10 +150,10 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueType defaultStyleValue_;
 
   virtual ValueType interpolateValue(
-      double progress,
+      const double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
-      const ValueInterpolatorUpdateContext &context) const {
+      const PropertyInterpolatorUpdateContext &context) const {
     return fromValue.interpolate(progress, toValue);
   }
 
@@ -171,8 +161,9 @@ class ValueInterpolator : public PropertyInterpolator {
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
   std::optional<ValueType> reversingAdjustedStartValue_;
 
-  ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
-    const auto styleValue = getStyleValue(shadowNode);
+  ValueType getFallbackValue(
+      const PropertyInterpolatorUpdateContext &context) const {
+    const auto styleValue = getStyleValue(context);
     return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }
 

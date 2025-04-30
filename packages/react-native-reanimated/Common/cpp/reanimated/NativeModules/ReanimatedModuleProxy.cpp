@@ -46,16 +46,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      updatesRegistryManager_(
-          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
+      updatesRegistryManager_(
+          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      cssAnimationsRegistry_(
+          std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          staticPropsRegistry_,
+          viewStylesRepository_,
+          getAnimationTimestamp_)),
       operationsLoop_(std::make_shared<OperationsLoop>(getAnimationTimestamp_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -460,11 +462,9 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
-  auto dynamic = dynamicFromValue(rt, keyframesConfig);
-  auto keyframes =
-      parseCSSAnimationKeyframesConfig(dynamic, viewStylesRepository_);
   cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt), std::move(keyframes));
+      animationName.asString(rt).utf8(rt),
+      parseCSSAnimationKeyframesConfig(dynamicFromValue(rt, keyframesConfig)));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
@@ -534,8 +534,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
 
   auto transition = std::make_shared<CSSTransition>(
       std::move(shadowNode),
-      parseCSSTransitionConfig(dynamicFromValue(rt, transitionConfig)),
-      viewStylesRepository_);
+      parseCSSTransitionConfig(dynamicFromValue(rt, transitionConfig)));
 
   cssTransitionsRegistry_->add(transition);
   maybeRunCSSLoop();

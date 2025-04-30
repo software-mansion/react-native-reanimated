@@ -29,7 +29,7 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
-      const ValueInterpolatorUpdateContext &context) const override {
+      const PropertyInterpolatorUpdateContext &context) const override {
     return fromValue.interpolate(
         progress,
         toValue,
