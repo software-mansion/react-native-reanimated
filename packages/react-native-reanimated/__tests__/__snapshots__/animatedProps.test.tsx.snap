@@ -49,7 +49,6 @@ exports[`animatedProps Custom animated component 1`] = `
     </RNSVGGroup>
   </RNSVGSvgView>
   <TextInput
-    animatedProps={"{}"}
     collapsable={false}
     defaultValue="Box width: 20"
     jestAnimatedProps={
@@ -180,7 +179,6 @@ exports[`animatedProps SVG component cannot be tested 1`] = `
     </RNSVGGroup>
   </RNSVGSvgView>
   <TextInput
-    animatedProps={"{}"}
     collapsable={false}
     defaultValue="Box width: 20"
     jestAnimatedProps={
