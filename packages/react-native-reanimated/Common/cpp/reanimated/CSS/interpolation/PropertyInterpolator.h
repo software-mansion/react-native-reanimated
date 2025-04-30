@@ -14,9 +14,9 @@
 namespace reanimated::css {
 
 struct PropertyInterpolatorUpdateContext {
-  const ShadowNode::Shared &node;
-  const std::shared_ptr<KeyframeProgressProvider> &progressProvider;
-  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+  ShadowNode::Shared node;
+  std::shared_ptr<KeyframeProgressProvider> progressProvider;
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository;
 };
 
 class PropertyInterpolator {
