@@ -27,8 +27,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<TransformInterpolators> &interpolators,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<TransformInterpolators> &interpolators);
 
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;

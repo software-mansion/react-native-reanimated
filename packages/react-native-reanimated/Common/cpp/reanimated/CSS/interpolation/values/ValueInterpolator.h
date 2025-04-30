@@ -12,6 +12,7 @@ namespace reanimated::css {
 
 struct ValueInterpolatorUpdateContext {
   const ShadowNode::Shared &node;
+  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
 };
 
 template <typename TValue>
@@ -35,9 +36,8 @@ class ValueInterpolator : public PropertyInterpolator {
 
   explicit ValueInterpolator(
       const PropertyPath &propertyPath,
-      const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : PropertyInterpolator(propertyPath, viewStylesRepository),
+      const ValueType &defaultStyleValue)
+      : PropertyInterpolator(propertyPath),
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
 

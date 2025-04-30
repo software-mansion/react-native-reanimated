@@ -4,11 +4,8 @@
 
 namespace reanimated::css {
 
-PropertyInterpolator::PropertyInterpolator(
-    PropertyPath propertyPath,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : propertyPath_(std::move(propertyPath)),
-      viewStylesRepository_(viewStylesRepository) {}
+PropertyInterpolator::PropertyInterpolator(PropertyPath propertyPath)
+    : propertyPath_(std::move(propertyPath)) {}
 
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;

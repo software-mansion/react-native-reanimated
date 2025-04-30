@@ -16,8 +16,7 @@ class CSSTransition {
  public:
   CSSTransition(
       ShadowNode::Shared shadowNode,
-      const CSSTransitionConfig &config,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const CSSTransitionConfig &config);
 
   Tag getViewTag() const;
   ShadowNode::Shared getShadowNode() const;
@@ -38,7 +37,6 @@ class CSSTransition {
 
  private:
   const ShadowNode::Shared shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
   TransitionProgressProvider progressProvider_;

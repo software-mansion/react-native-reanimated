@@ -3,10 +3,8 @@
 namespace reanimated::css {
 
 std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
-    const folly::dynamic &config,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  const auto styleInterpolator =
-      std::make_shared<AnimationStyleInterpolator>(viewStylesRepository);
+    const folly::dynamic &config) {
+  const auto styleInterpolator = std::make_shared<AnimationStyleInterpolator>();
 
   styleInterpolator->updateKeyframes(config["keyframesStyle"]);
 
@@ -30,11 +28,8 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
 }
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
-    const folly::dynamic &config,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  return {
-      getStyleInterpolator(config, viewStylesRepository),
-      getKeyframeTimingFunctions(config)};
+    const folly::dynamic &config) {
+  return {getStyleInterpolator(config), getKeyframeTimingFunctions(config)};
 }
 
 } // namespace reanimated::css

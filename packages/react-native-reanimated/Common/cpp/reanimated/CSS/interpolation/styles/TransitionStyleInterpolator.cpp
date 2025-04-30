@@ -2,10 +2,6 @@
 
 namespace reanimated::css {
 
-TransitionStyleInterpolator::TransitionStyleInterpolator(
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
-
 std::unordered_set<std::string>
 TransitionStyleInterpolator::getReversedPropertyNames(
     const folly::dynamic &newPropertyValues) const {
@@ -76,10 +72,7 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     if (shouldCreateInterpolator) {
       const auto newInterpolator = createPropertyInterpolator(
-          propertyName,
-          {},
-          PROPERTY_INTERPOLATORS_CONFIG,
-          viewStylesRepository_);
+          propertyName, {}, PROPERTY_INTERPOLATORS_CONFIG);
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 

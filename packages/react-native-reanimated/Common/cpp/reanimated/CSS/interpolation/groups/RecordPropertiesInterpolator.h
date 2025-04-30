@@ -13,8 +13,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
   RecordPropertiesInterpolator(
       const InterpolatorFactoriesRecord &factories,
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const PropertyPath &propertyPath);
   virtual ~RecordPropertiesInterpolator() = default;
 
   bool equalsReversingAdjustedStartValue(

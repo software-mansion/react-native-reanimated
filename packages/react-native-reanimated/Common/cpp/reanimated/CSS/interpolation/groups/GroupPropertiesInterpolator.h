@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
@@ -10,9 +9,7 @@ namespace reanimated::css {
 
 class GroupPropertiesInterpolator : public PropertyInterpolator {
  public:
-  GroupPropertiesInterpolator(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  GroupPropertiesInterpolator(const PropertyPath &propertyPath);
 
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;

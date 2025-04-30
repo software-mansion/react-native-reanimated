@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
@@ -14,9 +13,7 @@ namespace reanimated::css {
 
 class PropertyInterpolator {
  public:
-  explicit PropertyInterpolator(
-      PropertyPath propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  explicit PropertyInterpolator(PropertyPath propertyPath);
 
   virtual folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const = 0;
@@ -40,7 +37,6 @@ class PropertyInterpolator {
 
  protected:
   const PropertyPath propertyPath_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };
 
 class PropertyInterpolatorFactory {
@@ -52,9 +48,7 @@ class PropertyInterpolatorFactory {
   virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const = 0;
+      const PropertyPath &propertyPath) const = 0;
 };
 
 using PropertyInterpolatorsRecord =
