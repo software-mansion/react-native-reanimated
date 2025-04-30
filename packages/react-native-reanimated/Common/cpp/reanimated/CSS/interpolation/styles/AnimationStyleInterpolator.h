@@ -12,12 +12,8 @@ namespace reanimated::css {
 // same as interpolating record properties
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
-  explicit AnimationStyleInterpolator(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : RecordPropertiesInterpolator(
-            PROPERTY_INTERPOLATORS_CONFIG,
-            {},
-            viewStylesRepository) {}
+  explicit AnimationStyleInterpolator()
+      : RecordPropertiesInterpolator(PROPERTY_INTERPOLATORS_CONFIG, {}) {}
 };
 
 } // namespace reanimated::css

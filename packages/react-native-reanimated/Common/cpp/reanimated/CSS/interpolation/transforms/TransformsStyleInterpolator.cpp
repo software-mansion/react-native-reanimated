@@ -7,10 +7,8 @@ const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<TransformInterpolators> &interpolators,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(propertyPath, viewStylesRepository),
-      interpolators_(interpolators) {}
+    const std::shared_ptr<TransformInterpolators> &interpolators)
+    : PropertyInterpolator(propertyPath), interpolators_(interpolators) {}
 
 folly::dynamic TransformsStyleInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {

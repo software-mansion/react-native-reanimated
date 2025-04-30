@@ -17,13 +17,9 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
   ResolvableValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       RelativeTo relativeTo,
       std::string relativeProperty)
-      : ValueInterpolator<AllowedTypes...>(
-            propertyPath,
-            defaultStyleValue,
-            viewStylesRepository),
+      : ValueInterpolator<AllowedTypes...>(propertyPath, defaultStyleValue),
         relativeTo_(relativeTo),
         relativeProperty_(std::move(relativeProperty)) {}
   virtual ~ResolvableValueInterpolator() = default;
@@ -38,7 +34,7 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
         progress,
         toValue,
         {.node = context.node,
-         .viewStylesRepository = this->viewStylesRepository_,
+         .viewStylesRepository = context.viewStylesRepository,
          .relativeProperty = relativeProperty_,
          .relativeTo = relativeTo_});
   }

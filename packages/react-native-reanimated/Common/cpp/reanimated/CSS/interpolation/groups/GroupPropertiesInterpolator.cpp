@@ -3,9 +3,8 @@
 namespace reanimated::css {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
-    const PropertyPath &propertyPath,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(propertyPath, viewStylesRepository) {}
+    const PropertyPath &propertyPath)
+    : PropertyInterpolator(propertyPath) {}
 
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
