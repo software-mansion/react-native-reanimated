@@ -70,7 +70,7 @@ function HomeScreen({
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
   return (
     <Animated.View style={homeStyles.background}>
-      <StatusBar barStyle="dark-content" animated />
+      {/* <StatusBar barStyle="dark-content" animated /> */}
       <Animated.Text
         style={homeStyles.headline}
         entering={FadeInUp.delay(150).duration(600)}>
