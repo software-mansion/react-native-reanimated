@@ -77,11 +77,9 @@ export class WebWorker<Tin = unknown, Tout = unknown> extends EventEmitter {
 
     runOnRuntime(this.runtime, (d: Tin) => {
       'worklet';
-      // Call the onmessage handler defined within the worklet's script
       try {
         (global as WorkletGlobalScope<Tin, Tout>).onmessage?.({ data: d });
       } catch (e: unknown) {
-        // Use emitError wrapper
         if (e instanceof Error) {
           runOnJS(emitError)({ data: e.message });
         } else {
