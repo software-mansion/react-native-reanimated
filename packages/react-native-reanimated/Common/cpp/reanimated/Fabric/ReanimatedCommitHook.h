@@ -6,7 +6,6 @@
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
-#include <chrono>
 #include <memory>
 
 using namespace facebook::react;
