@@ -4,6 +4,7 @@
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <folly/dynamic.h>
 #include <memory>
 #include <optional>
 #include <string>
@@ -48,8 +49,6 @@ struct CSSAnimationUpdates {
   CSSAnimationSettingsUpdatesMap settingsUpdates;
 };
 
-CSSAnimationUpdates parseCSSAnimationUpdates(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
+CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config);
 
 } // namespace reanimated::css

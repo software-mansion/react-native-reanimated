@@ -2,12 +2,14 @@
 
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <folly/dynamic.h>
+
 namespace reanimated::css {
 
-double getDuration(jsi::Runtime &rt, const jsi::Object &config);
+double getDuration(const folly::dynamic &config);
 
-EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config);
+EasingFunction getTimingFunction(const folly::dynamic &config);
 
-double getDelay(jsi::Runtime &rt, const jsi::Object &config);
+double getDelay(const folly::dynamic &config);
 
 } // namespace reanimated::css

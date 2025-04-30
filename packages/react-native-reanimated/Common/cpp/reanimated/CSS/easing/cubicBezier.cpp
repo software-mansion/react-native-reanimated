@@ -65,12 +65,12 @@ EasingFunction cubicBezier(
   };
 }
 
-EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
-  const auto x1 = easingConfig.getProperty(rt, "x1").asNumber();
-  const auto y1 = easingConfig.getProperty(rt, "y1").asNumber();
-  const auto x2 = easingConfig.getProperty(rt, "x2").asNumber();
-  const auto y2 = easingConfig.getProperty(rt, "y2").asNumber();
-  return cubicBezier(x1, y1, x2, y2);
+EasingFunction cubicBezier(const folly::dynamic &easingConfig) {
+  return cubicBezier(
+      easingConfig["x1"].asDouble(),
+      easingConfig["y1"].asDouble(),
+      easingConfig["x2"].asDouble(),
+      easingConfig["y2"].asDouble());
 }
 
 } // namespace reanimated::css

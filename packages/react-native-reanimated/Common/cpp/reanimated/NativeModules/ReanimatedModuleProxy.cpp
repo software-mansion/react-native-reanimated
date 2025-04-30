@@ -459,10 +459,11 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
+  auto dynamic = dynamicFromValue(rt, keyframesConfig);
+  auto keyframes =
+      parseCSSAnimationKeyframesConfig(dynamic, viewStylesRepository_);
   cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, viewStylesRepository_));
+      animationName.asString(rt).utf8(rt), std::move(keyframes));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
@@ -478,7 +479,8 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   cssAnimationsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
-  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
+  const auto updates =
+      parseCSSAnimationUpdates(dynamicFromValue(rt, animationUpdates));
 
   CSSAnimationsMap newAnimations;
 
@@ -531,7 +533,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
 
   auto transition = std::make_shared<CSSTransition>(
       std::move(shadowNode),
-      parseCSSTransitionConfig(rt, transitionConfig),
+      parseCSSTransitionConfig(dynamicFromValue(rt, transitionConfig)),
       viewStylesRepository_);
 
   cssTransitionsRegistry_->add(transition);
@@ -544,7 +546,8 @@ void ReanimatedModuleProxy::updateCSSTransition(
     const jsi::Value &configUpdates) {
   cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->updateSettings(
-      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
+      viewTag.asNumber(),
+      parsePartialCSSTransitionConfig(dynamicFromValue(rt, configUpdates)));
   maybeRunCSSLoop();
 }
 
