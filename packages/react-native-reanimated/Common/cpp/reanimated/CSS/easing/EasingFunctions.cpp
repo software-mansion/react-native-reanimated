@@ -46,13 +46,9 @@ EasingFunction createParametrizedEasingFunction(
   std::vector<double> pointsX;
   std::vector<double> pointsY;
 
-  const auto points = easingConfig["points"];
-  const auto pointsCount = points.size();
-
-  for (size_t i = 0; i < pointsCount; i++) {
-    const auto pointObj = points[i];
-    pointsX.push_back(pointObj["x"].asDouble());
-    pointsY.push_back(pointObj["y"].asDouble());
+  for (const auto &point : easingConfig["points"]) {
+    pointsX.push_back(point["x"].asDouble());
+    pointsY.push_back(point["y"].asDouble());
   }
 
   if (easingName == "linear") {
