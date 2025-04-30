@@ -19,7 +19,8 @@ class TransitionStyleInterpolator {
 
   folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider) const;
+      const TransitionProgressProvider &transitionProgressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
   void discardFinishedInterpolators(
       const TransitionProgressProvider &transitionProgressProvider);

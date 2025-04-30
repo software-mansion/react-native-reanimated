@@ -2,23 +2,31 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {
+
+struct PropertyInterpolatorUpdateContext {
+  const ShadowNode::Shared &node;
+  const std::shared_ptr<KeyframeProgressProvider> &progressProvider;
+  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+};
 
 class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(PropertyPath propertyPath);
 
   virtual folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
   virtual folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
   virtual bool equalsReversingAdjustedStartValue(
@@ -31,9 +39,7 @@ class PropertyInterpolator {
       const folly::dynamic &lastUpdateValue) = 0;
 
   virtual folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
 
  protected:
   const PropertyPath propertyPath_;

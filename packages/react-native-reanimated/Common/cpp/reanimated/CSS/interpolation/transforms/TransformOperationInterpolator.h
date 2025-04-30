@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
 #include <string>

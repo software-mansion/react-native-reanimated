@@ -32,12 +32,16 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getResetStyle() const;
+  folly::dynamic getCurrentInterpolationStyle(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
+  folly::dynamic getResetStyle(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
   void run(double timestamp);
-  folly::dynamic update(double timestamp);
+  folly::dynamic update(
+      double timestamp,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);
@@ -49,6 +53,9 @@ class CSSAnimation {
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+
+  PropertyInterpolatorUpdateContext getUpdateContext(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 };
 
 } // namespace reanimated::css

@@ -27,12 +27,17 @@ TransitionStyleInterpolator::getReversedPropertyNames(
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const ShadowNode::Shared &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider) const {
+    const TransitionProgressProvider &transitionProgressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return mapInterpolators(
       transitionProgressProvider,
       [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
           const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-        return interpolator->interpolate(shadowNode, progressProvider);
+        return interpolator->interpolate({
+            .node = shadowNode,
+            .viewStylesRepository = viewStylesRepository,
+            .progressProvider = progressProvider,
+        });
       });
 }
 

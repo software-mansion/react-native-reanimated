@@ -1,7 +1,5 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <utility>
-
 namespace reanimated::css {
 
 PropertyInterpolator::PropertyInterpolator(PropertyPath propertyPath)
