@@ -116,6 +116,8 @@ import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import ModalsExample from './SharedElementTransitions/Modals';
 import NestedRotationExample from './SharedElementTransitions/NestedRotation';
 import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import ProfilesExample from './SharedElementTransitions/Profiles';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
@@ -522,6 +524,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👮‍♂️',
     title: 'React Strict DOM',
     screen: StrictDOMExample,
+  },
+  ProfilesExample: {
+    icon: '🙆‍♂️',
+    title: 'Profiles',
+    screen: ProfilesExample,
+  },
+  ProgressTransitionExample: {
+    icon: '☕',
+    title: 'Progress transition',
+    screen: ProgressTransitionExample,
   },
 
   // Old examples
