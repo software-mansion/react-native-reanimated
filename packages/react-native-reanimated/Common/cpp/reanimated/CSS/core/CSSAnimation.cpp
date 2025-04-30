@@ -143,8 +143,8 @@ PropertyInterpolatorUpdateContext CSSAnimation::getUpdateContext(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return PropertyInterpolatorUpdateContext{
       .node = shadowNode_,
-      .viewStylesRepository = viewStylesRepository,
       .progressProvider = progressProvider_,
+      .viewStylesRepository = viewStylesRepository,
   };
 }
 

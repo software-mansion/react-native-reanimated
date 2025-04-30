@@ -35,8 +35,8 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
           const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
         return interpolator->interpolate({
             .node = shadowNode,
-            .viewStylesRepository = viewStylesRepository,
             .progressProvider = progressProvider,
+            .viewStylesRepository = viewStylesRepository,
         });
       });
 }

@@ -115,8 +115,8 @@ class TransformOperationInterpolator<TOperation>
     return {
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
-        .relativeProperty = relativeProperty_,
         .relativeTo = relativeTo_,
+        .relativeProperty = relativeProperty_,
     };
   }
 };

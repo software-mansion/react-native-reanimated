@@ -33,10 +33,12 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
     return fromValue.interpolate(
         progress,
         toValue,
-        {.node = context.node,
-         .viewStylesRepository = context.viewStylesRepository,
-         .relativeProperty = relativeProperty_,
-         .relativeTo = relativeTo_});
+        {
+            .node = context.node,
+            .viewStylesRepository = context.viewStylesRepository,
+            .relativeTo = relativeTo_,
+            .relativeProperty = relativeProperty_,
+        });
   }
 
  private:
