@@ -48,6 +48,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+      eventLoop_(std::make_shared<EventLoop>(getAnimationTimestamp_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
@@ -929,7 +930,7 @@ void ReanimatedModuleProxy::initializeFabric(
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, eventLoop_);
 
   const auto scheduler =
       reinterpret_cast<Scheduler *>(uiManager_->getDelegate());

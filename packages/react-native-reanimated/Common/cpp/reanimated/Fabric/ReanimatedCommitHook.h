@@ -1,10 +1,12 @@
 #pragma once
 
+#include <reanimated/Fabric/EventLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
+#include <chrono>
 #include <memory>
 
 using namespace facebook::react;
@@ -18,7 +20,8 @@ class ReanimatedCommitHook
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
+      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy,
+      const std::shared_ptr<EventLoop> &eventLoop);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -37,7 +40,7 @@ class ReanimatedCommitHook
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
-
+  std::shared_ptr<EventLoop> eventLoop_;
   SurfaceId currentMaxSurfaceId_ = -1;
 
   std::mutex mutex_; // Protects `currentMaxSurfaceId_`.
