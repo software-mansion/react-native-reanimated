@@ -1,24 +1,33 @@
 #pragma once
 
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
-#include <vector>
+#include <utility>
 
 namespace reanimated {
 
 class EventLoop {
  public:
+  explicit EventLoop(
+      const GetAnimationTimestampFunction &getAnimationTimestamp);
+
   using Operation = std::function<bool(double timestamp)>;
-  using OperationHandle = unsigned long;
+  using OperationHandle = uint64_t;
 
-  OperationHandle add(Operation operation);
+  double getTimestamp() const;
+
+  OperationHandle add(Operation &&operation);
   void remove(OperationHandle handle);
-
-  void update(double timestamp);
+  void update();
 
  private:
   std::unordered_map<OperationHandle, Operation> operations_;
+  double timestamp_{0};
+
+  GetAnimationTimestampFunction getAnimationTimestamp_;
   OperationHandle nextHandle_{0};
 };
 
