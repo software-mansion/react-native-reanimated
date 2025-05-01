@@ -16,11 +16,11 @@ ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy,
-    const std::shared_ptr<EventLoop> &eventLoop)
+    const std::shared_ptr<OperationsLoop> &operationsLoop)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy),
-      eventLoop_(eventLoop) {
+      operationsLoop_(operationsLoop) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -58,7 +58,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   // Update the event loop in the commit hook to ensure that all operations
   // will be updated in the same batch with the same timestamp
-  eventLoop_->update();
+  operationsLoop_->update();
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
