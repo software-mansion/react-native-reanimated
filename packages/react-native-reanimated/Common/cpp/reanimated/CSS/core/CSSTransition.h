@@ -22,22 +22,19 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic getCurrentInterpolationStyle(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
   TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
+  folly::dynamic getCurrentFrameProps(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  folly::dynamic run(
+  void run(
       double timestamp,
       const ChangedProps &changedProps,
-      const folly::dynamic &lastUpdateValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-  folly::dynamic update(
-      double timestamp,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const folly::dynamic &lastUpdateValue);
+  void update(double timestamp);
 
  private:
   const ShadowNode::Shared shadowNode_;

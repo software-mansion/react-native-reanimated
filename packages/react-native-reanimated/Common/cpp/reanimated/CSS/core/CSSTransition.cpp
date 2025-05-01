@@ -27,12 +27,6 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle(
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
-  return styleInterpolator_.interpolate(
-      shadowNode_, progressProvider_, viewStylesRepository);
-}
-
 TransitionProperties CSSTransition::getProperties() const {
   return properties_;
 }
@@ -73,6 +67,12 @@ PropertyNames CSSTransition::getAllowedProperties(
   return {allAllowedProps.begin(), allAllowedProps.end()};
 }
 
+folly::dynamic CSSTransition::getCurrentFrameProps(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  return styleInterpolator_.interpolate(
+      shadowNode_, progressProvider_, viewStylesRepository);
+}
+
 void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   if (config.properties.has_value()) {
     updateTransitionProperties(config.properties.value());
@@ -82,11 +82,10 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
 }
 
-folly::dynamic CSSTransition::run(
+void CSSTransition::run(
     const double timestamp,
     const ChangedProps &changedProps,
-    const folly::dynamic &lastUpdateValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+    const folly::dynamic &lastUpdateValue) {
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
@@ -94,22 +93,17 @@ folly::dynamic CSSTransition::run(
       styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
       changedProps, lastUpdateValue);
-  return update(timestamp, viewStylesRepository);
+  update(timestamp);
 }
 
-folly::dynamic CSSTransition::update(
-    const double timestamp,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+void CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(
-      shadowNode_, progressProvider_, viewStylesRepository);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
   // And remove finished progress providers after they were used to calculate
   // the last frame of the transition
   progressProvider_.discardFinishedProgressProviders();
-  return result;
 }
 
 void CSSTransition::updateTransitionProperties(
