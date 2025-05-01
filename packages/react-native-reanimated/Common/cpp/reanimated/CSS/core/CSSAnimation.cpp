@@ -91,8 +91,7 @@ folly::dynamic CSSAnimation::getCurrentFrameProps(
 }
 
 void CSSAnimation::run(const double timestamp) {
-  if (progressProvider_->getState() ==
-      AnimationProgressState::Finished) {
+  if (progressProvider_->getState() == AnimationProgressState::Finished) {
     return;
   }
   progressProvider_->play(timestamp);
