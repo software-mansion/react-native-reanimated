@@ -40,8 +40,8 @@ double CSSAnimation::getStartTimestamp(const double timestamp) const {
   return progressProvider_->getStartTimestamp(timestamp);
 }
 
-AnimationProgressState CSSAnimation::getState(double timestamp) const {
-  return progressProvider_->getState(timestamp);
+AnimationProgressState CSSAnimation::getState() const {
+  return progressProvider_->getState();
 }
 
 bool CSSAnimation::isReversed() const {
@@ -70,42 +70,36 @@ folly::dynamic CSSAnimation::getForwardsFillStyle() const {
                       : styleInterpolator_->getLastKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle(
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
-  return styleInterpolator_->interpolate(
-      getUpdateContext(viewStylesRepository));
-}
-
 folly::dynamic CSSAnimation::getResetStyle(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return styleInterpolator_->getResetStyle(
       getUpdateContext(viewStylesRepository));
 }
 
+folly::dynamic CSSAnimation::getCurrentFrameProps(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  // Check if the animation has not started yet because of the delay
+  // (In general, it shouldn't be activated until the delay has passed but we
+  // add this check to make sure that animation doesn't start with the negative
+  // progress)
+  if (progressProvider_->getState() == AnimationProgressState::Pending) {
+    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
+  }
+
+  return styleInterpolator_->interpolate(
+      getUpdateContext(viewStylesRepository));
+}
+
 void CSSAnimation::run(const double timestamp) {
-  if (progressProvider_->getState(timestamp) ==
+  if (progressProvider_->getState() ==
       AnimationProgressState::Finished) {
     return;
   }
   progressProvider_->play(timestamp);
 }
 
-folly::dynamic CSSAnimation::update(
-    const double timestamp,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+void CSSAnimation::update(const double timestamp) {
   progressProvider_->update(timestamp);
-
-  // Check if the animation has not started yet because of the delay
-  // (In general, it shouldn't be activated until the delay has passed but we
-  // add this check to make sure that animation doesn't start with the negative
-  // progress)
-  if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
-  }
-
-  return styleInterpolator_->interpolate(
-      getUpdateContext(viewStylesRepository));
 }
 
 void CSSAnimation::updateSettings(

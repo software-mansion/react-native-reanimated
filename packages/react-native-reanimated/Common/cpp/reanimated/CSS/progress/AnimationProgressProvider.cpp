@@ -18,11 +18,7 @@ AnimationProgressProvider::AnimationProgressProvider(
       easingFunction_(std::move(easingFunction)),
       keyframeEasingFunctions_(keyframeEasingFunctions) {}
 
-AnimationProgressState AnimationProgressProvider::getState(
-    const double timestamp) const {
-  if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
-  }
+AnimationProgressState AnimationProgressProvider::getState() const {
   if (pauseTimestamp_ > 0) {
     return AnimationProgressState::Paused;
   }
