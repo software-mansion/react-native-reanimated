@@ -48,8 +48,7 @@ void CSSTransitionsRegistry::updateSettings(
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
     updateInUpdatesRegistry(
-        transition,
-        transition->getCurrentInterpolationStyle(viewStylesRepository_));
+        transition, transition->getCurrentFrameProps(viewStylesRepository_));
   }
 }
 
@@ -63,15 +62,16 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
 
-    const folly::dynamic &updates =
-        transition->update(timestamp, viewStylesRepository_);
+    transition->update(timestamp);
+    const auto updates =
+        transition->getCurrentFrameProps(viewStylesRepository_);
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one
     // of properties has finished and the other one is still delayed
-    const auto &minDelay = transition->getMinDelay(timestamp);
+    const auto minDelay = transition->getMinDelay(timestamp);
     if (minDelay > 0) {
       delayedTransitionsManager_.add(
           timestamp + transition->getMinDelay(timestamp), viewTag);
@@ -140,11 +140,10 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates =
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
-      const auto &transitionStartStyle = transition->run(
-          strongThis->getCurrentTimestamp_(),
-          changedProps,
-          lastUpdates,
-          strongThis->viewStylesRepository_);
+      transition->run(
+          strongThis->getCurrentTimestamp_(), changedProps, lastUpdates);
+      const auto &transitionStartStyle =
+          transition->getCurrentFrameProps(strongThis->viewStylesRepository_);
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }
