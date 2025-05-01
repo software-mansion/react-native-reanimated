@@ -9,9 +9,9 @@
 
 namespace reanimated {
 
-class EventLoop {
+class OperationsLoop {
  public:
-  explicit EventLoop(
+  explicit OperationsLoop(
       const GetAnimationTimestampFunction &getAnimationTimestamp);
 
   using Operation = std::function<bool(double timestamp)>;

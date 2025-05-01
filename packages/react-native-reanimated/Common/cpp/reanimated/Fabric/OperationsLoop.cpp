@@ -1,25 +1,26 @@
-#include <reanimated/Fabric/EventLoop.h>
+#include <reanimated/Fabric/OperationsLoop.h>
 
 namespace reanimated {
 
-EventLoop::EventLoop(const GetAnimationTimestampFunction &getAnimationTimestamp)
+OperationsLoop::OperationsLoop(
+    const GetAnimationTimestampFunction &getAnimationTimestamp)
     : getAnimationTimestamp_(getAnimationTimestamp) {}
 
-double EventLoop::getTimestamp() const {
+double OperationsLoop::getTimestamp() const {
   return timestamp_;
 }
 
-EventLoop::OperationHandle EventLoop::add(Operation &&operation) {
+OperationsLoop::OperationHandle OperationsLoop::add(Operation &&operation) {
   OperationHandle handle = nextHandle_++;
   operations_[handle] = std::move(operation);
   return handle;
 }
 
-void EventLoop::remove(OperationHandle handle) {
+void OperationsLoop::remove(OperationHandle handle) {
   operations_.erase(handle);
 }
 
-void EventLoop::update() {
+void OperationsLoop::update() {
   timestamp_ = getAnimationTimestamp_();
 
   // Create a copy of the operations map

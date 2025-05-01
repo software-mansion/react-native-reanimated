@@ -56,7 +56,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-      eventLoop_(std::make_shared<EventLoop>(getAnimationTimestamp_)),
+      operationsLoop_(std::make_shared<OperationsLoop>(getAnimationTimestamp_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -930,7 +930,10 @@ void ReanimatedModuleProxy::initializeFabric(
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_, eventLoop_);
+      uiManager_,
+      updatesRegistryManager_,
+      layoutAnimationsProxy_,
+      operationsLoop_);
 
   const auto scheduler =
       reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
