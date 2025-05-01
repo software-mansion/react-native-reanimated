@@ -56,7 +56,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
-  // Update the event loop in the commit hook to ensure that all operations
+  // Update the operations loop in the commit hook to ensure that all operations
   // will be updated in the same batch with the same timestamp
   operationsLoop_->update();
 
