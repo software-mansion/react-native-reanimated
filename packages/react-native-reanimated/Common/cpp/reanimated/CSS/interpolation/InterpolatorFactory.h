@@ -37,11 +37,9 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
+      const PropertyPath &propertyPath) const override {
     return std::make_shared<ValueInterpolator<AllowedTypes...>>(
-        propertyPath, defaultValue_, viewStylesRepository);
+        propertyPath, defaultValue_);
   }
 
  private:
@@ -66,15 +64,9 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
+      const PropertyPath &propertyPath) const override {
     return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
-        propertyPath,
-        defaultValue_,
-        viewStylesRepository,
-        relativeTo_,
-        relativeProperty_);
+        propertyPath, defaultValue_, relativeTo_, relativeProperty_);
   }
 
  private:

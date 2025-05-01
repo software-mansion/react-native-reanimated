@@ -5,8 +5,7 @@ namespace reanimated::css {
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
     const PropertyPath &propertyPath,
-    const InterpolatorFactoriesRecord &factories,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+    const InterpolatorFactoriesRecord &factories) {
   auto it = factories.find(propertyName);
 
   if (it == factories.cend()) {
@@ -18,19 +17,17 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(propertyName);
 
-  return it->second->create(newPath, viewStylesRepository);
+  return it->second->create(newPath);
 }
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     size_t arrayIndex,
     const PropertyPath &propertyPath,
-    const InterpolatorFactoriesArray &factories,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+    const InterpolatorFactoriesArray &factories) {
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(std::to_string(arrayIndex));
 
-  return factories[arrayIndex % factories.size()]->create(
-      newPath, viewStylesRepository);
+  return factories[arrayIndex % factories.size()]->create(newPath);
 }
 
 } // namespace reanimated::css

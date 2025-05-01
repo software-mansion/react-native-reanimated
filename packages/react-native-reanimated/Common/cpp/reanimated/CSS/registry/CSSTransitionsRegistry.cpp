@@ -4,9 +4,11 @@ namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const GetAnimationTimestampFunction &getCurrentTimestamp)
     : getCurrentTimestamp_(getCurrentTimestamp),
-      staticPropsRegistry_(staticPropsRegistry) {}
+      staticPropsRegistry_(staticPropsRegistry),
+      viewStylesRepository_(viewStylesRepository) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
@@ -46,7 +48,8 @@ void CSSTransitionsRegistry::updateSettings(
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
     updateInUpdatesRegistry(
-        transition, transition->getCurrentInterpolationStyle());
+        transition,
+        transition->getCurrentInterpolationStyle(viewStylesRepository_));
   }
 }
 
@@ -60,7 +63,8 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
 
-    const folly::dynamic &updates = transition->update(timestamp);
+    const folly::dynamic &updates =
+        transition->update(timestamp, viewStylesRepository_);
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
     }
@@ -137,7 +141,10 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &lastUpdates =
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
       const auto &transitionStartStyle = transition->run(
-          changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
+          strongThis->getCurrentTimestamp_(),
+          changedProps,
+          lastUpdates,
+          strongThis->viewStylesRepository_);
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }

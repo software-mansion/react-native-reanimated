@@ -14,15 +14,13 @@ namespace reanimated::css {
 
 class TransitionStyleInterpolator {
  public:
-  TransitionStyleInterpolator(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-
   std::unordered_set<std::string> getReversedPropertyNames(
       const folly::dynamic &newPropertyValues) const;
 
   folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider) const;
+      const TransitionProgressProvider &transitionProgressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
   void discardFinishedInterpolators(
       const TransitionProgressProvider &transitionProgressProvider);
@@ -36,8 +34,6 @@ class TransitionStyleInterpolator {
   using MapInterpolatorsCallback = std::function<folly::dynamic(
       const std::shared_ptr<PropertyInterpolator> &,
       const std::shared_ptr<KeyframeProgressProvider> &)>;
-
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
 

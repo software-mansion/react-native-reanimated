@@ -4,10 +4,8 @@ namespace reanimated::css {
 
 RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const InterpolatorFactoriesRecord &factories,
-    const PropertyPath &propertyPath,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
-      factories_(factories) {}
+    const PropertyPath &propertyPath)
+    : GroupPropertiesInterpolator(propertyPath), factories_(factories) {}
 
 bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
@@ -81,8 +79,8 @@ folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
 void RecordPropertiesInterpolator::maybeCreateInterpolator(
     const std::string &propertyName) {
   if (interpolators_.find(propertyName) == interpolators_.end()) {
-    const auto newInterpolator = createPropertyInterpolator(
-        propertyName, propertyPath_, factories_, viewStylesRepository_);
+    const auto newInterpolator =
+        createPropertyInterpolator(propertyName, propertyPath_, factories_);
     interpolators_.emplace(propertyName, newInterpolator);
   }
 }

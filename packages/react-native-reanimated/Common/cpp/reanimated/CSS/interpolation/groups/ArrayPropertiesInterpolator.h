@@ -12,8 +12,7 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
   ArrayPropertiesInterpolator(
       const InterpolatorFactoriesArray &factories,
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const PropertyPath &propertyPath);
   virtual ~ArrayPropertiesInterpolator() = default;
 
   bool equalsReversingAdjustedStartValue(

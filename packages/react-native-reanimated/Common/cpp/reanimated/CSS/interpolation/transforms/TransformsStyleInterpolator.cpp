@@ -7,20 +7,18 @@ const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<TransformInterpolators> &interpolators,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(propertyPath, viewStylesRepository),
-      interpolators_(interpolators) {}
+    const std::shared_ptr<TransformInterpolators> &interpolators)
+    : PropertyInterpolator(propertyPath), interpolators_(interpolators) {}
 
 folly::dynamic TransformsStyleInterpolator::getStyleValue(
-    const ShadowNode::Shared &shadowNode) const {
-  return viewStylesRepository_->getStyleProp(
-      shadowNode->getTag(), propertyPath_);
+    const PropertyInterpolatorUpdateContext &context) const {
+  return context.viewStylesRepository->getStyleProp(
+      context.node->getTag(), propertyPath_);
 }
 
 folly::dynamic TransformsStyleInterpolator::getResetStyle(
-    const ShadowNode::Shared &shadowNode) const {
-  auto styleValue = getStyleValue(shadowNode);
+    const PropertyInterpolatorUpdateContext &context) const {
+  auto styleValue = getStyleValue(context);
 
   if (!styleValue.isArray()) {
     return convertResultToDynamic(defaultStyleValue_);
@@ -68,9 +66,8 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
 }
 
 folly::dynamic TransformsStyleInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
-  const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
+    const PropertyInterpolatorUpdateContext &context) const {
+  const auto currentIndex = getIndexOfCurrentKeyframe(context.progressProvider);
 
   // Get or create the current keyframe
   auto keyframe = keyframes_[currentIndex];
@@ -78,7 +75,7 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
       !keyframe->toOperations.has_value()) {
     // If the value is nullopt, we would have to read it from the view style
     // and build the keyframe again
-    const auto fallbackValue = getFallbackValue(shadowNode);
+    const auto fallbackValue = getFallbackValue(context);
     keyframe = createTransformKeyframe(
         keyframe->fromOffset,
         keyframe->toOffset,
@@ -88,11 +85,11 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
 
   // Interpolate the current keyframe
   TransformOperations result = interpolateOperations(
-      shadowNode,
-      progressProvider->getKeyframeProgress(
+      context.progressProvider->getKeyframeProgress(
           keyframe->fromOffset, keyframe->toOffset),
       keyframe->fromOperations.value(),
-      keyframe->toOperations.value());
+      keyframe->toOperations.value(),
+      context);
 
   return convertResultToDynamic(result);
 }
@@ -335,8 +332,8 @@ size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const ShadowNode::Shared &shadowNode) const {
-  const auto &styleValue = getStyleValue(shadowNode);
+    const PropertyInterpolatorUpdateContext &context) const {
+  const auto &styleValue = getStyleValue(context);
   return parseTransformOperations(styleValue).value_or(TransformOperations{});
 }
 
@@ -347,14 +344,14 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
 }
 
 TransformOperations TransformsStyleInterpolator::interpolateOperations(
-    const ShadowNode::Shared &shadowNode,
     const double keyframeProgress,
     const TransformOperations &fromOperations,
-    const TransformOperations &toOperations) const {
+    const TransformOperations &toOperations,
+    const PropertyInterpolatorUpdateContext &context) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
   const auto transformUpdateContext = TransformInterpolatorUpdateContext{
-      shadowNode, viewStylesRepository_, interpolators_};
+      context.node, interpolators_, context.viewStylesRepository};
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];

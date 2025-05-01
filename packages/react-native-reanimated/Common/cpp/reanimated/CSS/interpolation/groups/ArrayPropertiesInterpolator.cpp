@@ -4,10 +4,8 @@ namespace reanimated::css {
 
 ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const InterpolatorFactoriesArray &factories,
-    const PropertyPath &propertyPath,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
-      factories_(factories) {}
+    const PropertyPath &propertyPath)
+    : GroupPropertiesInterpolator(propertyPath), factories_(factories) {}
 
 bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
@@ -87,10 +85,7 @@ void ArrayPropertiesInterpolator::resizeInterpolators(size_t valuesCount) {
 
   while (interpolators_.size() < valuesCount) {
     interpolators_.emplace_back(createPropertyInterpolator(
-        interpolators_.size(),
-        propertyPath_,
-        factories_,
-        viewStylesRepository_));
+        interpolators_.size(), propertyPath_, factories_));
   }
 }
 

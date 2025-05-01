@@ -16,10 +16,10 @@ enum class RelativeTo {
 };
 
 struct CSSResolvableValueInterpolationContext {
-  const ShadowNode::Shared &node;
-  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+  ShadowNode::Shared node;
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository;
+  RelativeTo relativeTo;
   const std::string &relativeProperty;
-  const RelativeTo relativeTo;
 };
 
 struct CSSValue {

@@ -3,23 +3,22 @@
 namespace reanimated::css {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
-    const PropertyPath &propertyPath,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(propertyPath, viewStylesRepository) {}
+    const PropertyPath &propertyPath)
+    : PropertyInterpolator(propertyPath) {}
 
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const PropertyInterpolatorUpdateContext &context) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.getStyleValue(shadowNode);
+        return interpolator.getStyleValue(context);
       });
 }
 
 folly::dynamic GroupPropertiesInterpolator::getResetStyle(
-    const ShadowNode::Shared &shadowNode) const {
+    const PropertyInterpolatorUpdateContext &context) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.getResetStyle(shadowNode);
+        return interpolator.getResetStyle(context);
       });
 }
 
@@ -38,11 +37,10 @@ folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
 }
 
 folly::dynamic GroupPropertiesInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+    const PropertyInterpolatorUpdateContext &context) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.interpolate(shadowNode, progressProvider);
+        return interpolator.interpolate(context);
       });
 }
 

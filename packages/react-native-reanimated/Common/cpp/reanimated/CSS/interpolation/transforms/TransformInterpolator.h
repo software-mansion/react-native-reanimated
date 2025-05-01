@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
 #include <unordered_map>
@@ -16,8 +15,8 @@ class TransformInterpolator {
 
   struct UpdateContext {
     const ShadowNode::Shared &node;
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
     const std::shared_ptr<Interpolators> &interpolators;
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
   };
 
   virtual ~TransformInterpolator() = default;

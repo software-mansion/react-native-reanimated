@@ -24,6 +24,9 @@ class CSSAnimationsRegistry
     : public UpdatesRegistry,
       std::enable_shared_from_this<CSSAnimationsRegistry> {
  public:
+  CSSAnimationsRegistry(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+
   using SettingsUpdates =
       std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
@@ -59,6 +62,8 @@ class CSSAnimationsRegistry
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
