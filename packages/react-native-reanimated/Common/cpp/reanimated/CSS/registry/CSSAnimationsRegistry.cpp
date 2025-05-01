@@ -185,13 +185,14 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
-    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
+    if (animation->getState() == AnimationProgressState::Pending) {
       animation->run(timestamp);
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp, viewStylesRepository_);
-    const auto newState = animation->getState(timestamp);
+    animation->update(timestamp);
+    const auto updates = animation->getCurrentFrameProps(viewStylesRepository_);
+    const auto newState = animation->getState();
 
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
@@ -241,7 +242,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   if (startTimestamp > timestamp) {
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
-    if (animation->getState(timestamp) != AnimationProgressState::Paused) {
+    if (animation->getState() != AnimationProgressState::Paused) {
       delayedAnimationsManager_.add(startTimestamp, animation);
     }
   } else {
@@ -279,7 +280,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     const auto startTimestamp = animation->getStartTimestamp(timestamp);
 
     folly::dynamic style;
-    const auto &currentState = animation->getState(timestamp);
+    const auto &currentState = animation->getState();
     if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
       style = animation->getBackwardsFillStyle();
     } else if (
@@ -290,7 +291,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished &&
          animation->hasForwardsFillMode())) {
-      style = animation->getCurrentInterpolationStyle(viewStylesRepository_);
+      style = animation->getCurrentFrameProps(viewStylesRepository_);
     }
 
     if (!shadowNode) {

@@ -26,25 +26,23 @@ class CSSAnimation {
   ShadowNode::Shared getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
-  AnimationProgressState getState(double timestamp) const;
+  AnimationProgressState getState() const;
   bool isReversed() const;
 
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
   folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getCurrentInterpolationStyle(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
   folly::dynamic getResetStyle(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
+  folly::dynamic getCurrentFrameProps(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
-  void run(double timestamp);
-  folly::dynamic update(
-      double timestamp,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);
+  void run(double timestamp);
+  void update(double timestamp);
 
  private:
   const std::string name_;

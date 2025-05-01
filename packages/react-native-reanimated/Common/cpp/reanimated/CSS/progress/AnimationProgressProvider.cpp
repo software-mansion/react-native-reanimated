@@ -37,11 +37,7 @@ double AnimationProgressProvider::getGlobalProgress() const {
   return applyAnimationDirection(rawProgress_.value_or(0));
 }
 
-AnimationProgressState AnimationProgressProvider::getState(
-    const double timestamp) const {
-  if (shouldFinish(timestamp)) {
-    return AnimationProgressState::Finished;
-  }
+AnimationProgressState AnimationProgressProvider::getState() const {
   if (pauseTimestamp_ > 0) {
     return AnimationProgressState::Paused;
   }

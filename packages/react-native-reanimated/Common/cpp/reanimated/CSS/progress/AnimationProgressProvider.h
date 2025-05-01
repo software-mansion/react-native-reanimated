@@ -37,7 +37,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
   AnimationDirection getDirection() const;
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
-  AnimationProgressState getState(double timestamp) const;
+  AnimationProgressState getState() const;
   double getPauseTimestamp() const;
   double getTotalPausedTime(double timestamp) const;
   double getStartTimestamp(double timestamp) const;
