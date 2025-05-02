@@ -4,7 +4,7 @@
 #include <folly/dynamic.h>
 #endif
 
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/manager/CSSTransitionManager.h>
 
 #include <memory>
 #include <optional>
@@ -15,7 +15,7 @@ using namespace reanimated::css;
 
 class ReanimatedViewState {
  public:
-  std::shared_ptr<CSSTransition> cssTransition;
+  std::optional<CSSTransitionManager> cssTransitionManager;
 
   ReanimatedViewState() = default;
 

@@ -33,6 +33,12 @@ class ReanimatedViewComponentDescriptor
     //  LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
   }
 
+  State::Shared createInitialState(
+      const Props::Shared &props,
+      const ShadowNodeFamily::Shared &family) const override {
+    return nullptr;
+  }
+
  private:
   std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
 
