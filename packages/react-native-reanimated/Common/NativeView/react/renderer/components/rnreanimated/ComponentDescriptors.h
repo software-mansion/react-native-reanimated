@@ -4,6 +4,8 @@
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/Fabric/OperationsLoop.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <memory>
@@ -19,29 +21,21 @@ class ReanimatedViewComponentDescriptor
   explicit ReanimatedViewComponentDescriptor(
       const ComponentDescriptorParameters &parameters);
 
+  std::shared_ptr<OperationsLoop> getOperationsLoop() const;
+  std::shared_ptr<ViewStylesRepository> getViewStylesRepository() const;
+
   void adopt(ShadowNode &shadowNode) const override;
 
   State::Shared createInitialState(
-      const Props::Shared &props,
+      const Props::Shared & /*props*/,
       const ShadowNodeFamily::Shared &family) const override;
 
  private:
-  std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
+  std::shared_ptr<OperationsLoop> operationsLoop_;
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  template <typename F>
-  void withProxy(F &&callback) const {
-    if (!reanimatedModuleProxy_.has_value()) {
-      return;
-    }
-    const auto &proxy = reanimatedModuleProxy_.value().lock();
-    if (!proxy) {
-      return;
-    }
-    callback(proxy);
-  }
-
-  std::optional<std::weak_ptr<ReanimatedModuleProxy>> findReanimatedModuleProxy(
-      const ComponentDescriptorParameters &parameters);
+  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
+  void dummyInitialize();
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(

@@ -4,23 +4,22 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/Fabric/OperationsLoop.h>
 
+#include <folly/dynamic.h>
 #include <memory>
+#include <optional>
 
 namespace reanimated::css {
 
 class CSSTransitionManager {
  public:
-  explicit CSSTransitionManager(
-      const CSSTransitionConfig &config,
-      const ShadowNode::Shared &shadowNode,
+  CSSTransitionManager(
       std::shared_ptr<OperationsLoop> operationsLoop,
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
   folly::dynamic getCurrentFrameProps() const;
-  void updateTransition(const PartialCSSTransitionConfig &config);
 
  private:
-  CSSTransition transition_;
+  std::optional<CSSTransition> transition_;
   OperationsLoop::OperationHandle operationHandle_{0};
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
