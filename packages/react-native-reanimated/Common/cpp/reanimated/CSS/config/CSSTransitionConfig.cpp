@@ -19,19 +19,19 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
   return std::nullopt;
 }
 
-TransitionProperties getProperties(const folly::dynamic &config) {
-  if (config["properties"].isArray()) {
-    PropertyNames properties;
-    const auto &propertiesArray = config["properties"];
-
-    for (const auto &property : propertiesArray) {
-      properties.emplace_back(property.asString());
-    }
-
-    return properties;
+TransitionProperties parseProperties(const folly::dynamic &properties) {
+  if (!properties.isArray()) {
+    return std::nullopt;
   }
 
-  return std::nullopt;
+  PropertyNames result;
+  result.reserve(properties.size());
+
+  for (const auto &property : properties) {
+    result.push_back(property.asString());
+  }
+
+  return result;
 }
 
 bool getAllowDiscrete(const folly::dynamic &config) {
@@ -60,16 +60,37 @@ CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
 
 CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config) {
   return CSSTransitionConfig{
-      getProperties(config),
+      parseProperties(config["properties"]),
       parseCSSTransitionPropertiesSettings(config["settings"])};
 }
 
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
+std::optional<CSSTransitionConfigUpdates> getParsedCSSTransitionConfigUpdates(
+    const folly::dynamic &oldConfig,
+    const folly::dynamic &newConfig) {
+  CSSTransitionConfigUpdates result;
+
+  if (oldConfig["properties"] != newConfig["properties"]) {
+    result.properties = parseProperties(newConfig["properties"]);
+  }
+  if (oldConfig["settings"] != newConfig["settings"]) {
+    result.settings =
+        parseCSSTransitionPropertiesSettings(newConfig["settings"]);
+  }
+
+  if (!result.properties.has_value() && !result.settings.has_value()) {
+    return std::nullopt;
+  }
+
+  return result;
+}
+
+// TODO - remove this implementation when CSS refactor is finished
+CSSTransitionConfigUpdates getParsedCSSTransitionConfigUpdates(
     const folly::dynamic &partialConfig) {
-  PartialCSSTransitionConfig result;
+  CSSTransitionConfigUpdates result;
 
   if (partialConfig.count("properties")) {
-    result.properties = getProperties(partialConfig);
+    result.properties = parseProperties(partialConfig["properties"]);
   }
   if (partialConfig.count("settings")) {
     result.settings =

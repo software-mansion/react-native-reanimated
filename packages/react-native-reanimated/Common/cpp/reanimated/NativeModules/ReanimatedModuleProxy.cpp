@@ -540,13 +540,11 @@ void ReanimatedModuleProxy::registerCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   cssTransitionsRegistry_->lock();
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
-      std::move(shadowNode),
       parseCSSTransitionConfig(dynamicFromValue(rt, transitionConfig)));
 
-  cssTransitionsRegistry_->add(transition);
+  cssTransitionsRegistry_->add(shadowNodeFromValue(rt, shadowNodeWrapper), transition);
   maybeRunCSSLoop();
 }
 
@@ -557,7 +555,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
   cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->updateSettings(
       viewTag.asNumber(),
-      parsePartialCSSTransitionConfig(dynamicFromValue(rt, configUpdates)));
+      getParsedCSSTransitionConfigUpdates(dynamicFromValue(rt, configUpdates)));
   maybeRunCSSLoop();
 }
 

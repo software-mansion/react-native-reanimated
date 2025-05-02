@@ -2,22 +2,11 @@
 
 namespace reanimated::css {
 
-CSSTransition::CSSTransition(
-    const ShadowNode::Shared shadowNode,
-    const CSSTransitionConfig &config)
-    : shadowNode_(std::move(shadowNode)),
-      properties_(config.properties),
+CSSTransition::CSSTransition(const CSSTransitionConfig &config)
+    : properties_(config.properties),
       settings_(config.settings),
       progressProvider_(TransitionProgressProvider()),
       styleInterpolator_(TransitionStyleInterpolator()) {}
-
-Tag CSSTransition::getViewTag() const {
-  return shadowNode_->getTag();
-}
-
-ShadowNode::Shared CSSTransition::getShadowNode() const {
-  return shadowNode_;
-}
 
 double CSSTransition::getMinDelay(double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
@@ -68,12 +57,13 @@ PropertyNames CSSTransition::getAllowedProperties(
 }
 
 folly::dynamic CSSTransition::getCurrentFrameProps(
+    const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return styleInterpolator_.interpolate(
-      shadowNode_, progressProvider_, viewStylesRepository);
+      shadowNode, progressProvider_, viewStylesRepository);
 }
 
-void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
+void CSSTransition::updateSettings(const CSSTransitionConfigUpdates &config) {
   if (config.properties.has_value()) {
     updateTransitionProperties(config.properties.value());
   }
