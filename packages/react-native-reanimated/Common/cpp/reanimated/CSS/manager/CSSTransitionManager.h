@@ -7,6 +7,7 @@
 #include <folly/dynamic.h>
 #include <memory>
 #include <optional>
+#include <utility>
 
 namespace reanimated::css {
 
