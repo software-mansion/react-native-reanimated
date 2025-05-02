@@ -25,7 +25,7 @@ struct CSSTransitionConfig {
   CSSTransitionPropertiesSettings settings;
 };
 
-struct PartialCSSTransitionConfig {
+struct CSSTransitionConfigUpdates {
   std::optional<TransitionProperties> properties;
   std::optional<CSSTransitionPropertiesSettings> settings;
 };
@@ -36,7 +36,12 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
 
 CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config);
 
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
+std::optional<CSSTransitionConfigUpdates> getParsedCSSTransitionConfigUpdates(
+    const folly::dynamic &oldConfig,
+    const folly::dynamic &newConfig);
+
+// TODO - remove this implementation when CSS refactor is finished
+CSSTransitionConfigUpdates getParsedCSSTransitionConfigUpdates(
     const folly::dynamic &partialConfig);
 
 } // namespace reanimated::css
