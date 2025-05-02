@@ -18,7 +18,7 @@ using namespace css;
 
 class ReanimatedViewStateData {
  public:
-  std::unique_ptr<CSSTransitionManager> cssTransitionManager;
+  std::shared_ptr<CSSTransitionManager> cssTransitionManager;
 
   ReanimatedViewStateData() = default;
 
