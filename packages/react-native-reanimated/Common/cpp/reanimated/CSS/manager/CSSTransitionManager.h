@@ -17,7 +17,7 @@ class CSSTransitionManager {
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
   folly::dynamic getCurrentFrameProps() const;
-  void updateTransition(const CSSTransitionConfig &config);
+  void updateTransition(const PartialCSSTransitionConfig &config);
 
  private:
   CSSTransition transition_;

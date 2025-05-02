@@ -15,7 +15,8 @@ folly::dynamic CSSTransitionManager::getCurrentFrameProps() const {
   return transition_.getCurrentFrameProps(viewStylesRepository_);
 }
 
-void CSSTransitionManager::updateTransition(const CSSTransitionConfig &config) {
+void CSSTransitionManager::updateTransition(
+    const PartialCSSTransitionConfig &config) {
   transition_.updateSettings(config);
 }
 

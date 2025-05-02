@@ -17,11 +17,19 @@ class ReanimatedViewComponentDescriptor
     : public ConcreteComponentDescriptor<ReanimatedShadowNode> {
  public:
   explicit ReanimatedViewComponentDescriptor(
-      const ComponentDescriptorParameters &parameters)
-      : ConcreteComponentDescriptor<ReanimatedShadowNode>(parameters),
-        reanimatedModuleProxy_(findReanimatedModuleProxy(parameters)) {}
+      const ComponentDescriptorParameters &parameters);
 
-  void adopt(ShadowNode &shadowNode) const override {
+  void adopt(ShadowNode &shadowNode) const override;
+
+  State::Shared createInitialState(
+      const Props::Shared &props,
+      const ShadowNodeFamily::Shared &family) const override;
+
+ private:
+  std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
+
+  template <typename F>
+  void withProxy(F &&callback) const {
     if (!reanimatedModuleProxy_.has_value()) {
       return;
     }
@@ -29,24 +37,11 @@ class ReanimatedViewComponentDescriptor
     if (!proxy) {
       return;
     }
-
-    //  LOG(INFO) << "We can access the proxy: " << proxy->getCssTimestamp();
+    callback(proxy);
   }
-
-  State::Shared createInitialState(
-      const Props::Shared &props,
-      const ShadowNodeFamily::Shared &family) const override {
-    return nullptr;
-  }
-
- private:
-  std::optional<std::weak_ptr<ReanimatedModuleProxy>> reanimatedModuleProxy_;
 
   std::optional<std::weak_ptr<ReanimatedModuleProxy>> findReanimatedModuleProxy(
-      const ComponentDescriptorParameters &parameters) {
-    return parameters.contextContainer
-        ->find<std::weak_ptr<ReanimatedModuleProxy>>("ReanimatedModuleProxy");
-  }
+      const ComponentDescriptorParameters &parameters);
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
