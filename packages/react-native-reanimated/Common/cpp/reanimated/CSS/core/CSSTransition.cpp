@@ -3,7 +3,7 @@
 namespace reanimated::css {
 
 CSSTransition::CSSTransition(
-    ShadowNode::Shared shadowNode,
+    const ShadowNode::Shared shadowNode,
     const CSSTransitionConfig &config)
     : shadowNode_(std::move(shadowNode)),
       properties_(config.properties),

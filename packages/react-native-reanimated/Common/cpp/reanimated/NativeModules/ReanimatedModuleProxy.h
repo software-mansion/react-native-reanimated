@@ -59,6 +59,9 @@ class ReanimatedModuleProxy
 
   ~ReanimatedModuleProxy();
 
+  std::shared_ptr<OperationsLoop> getOperationsLoop() const;
+  std::shared_ptr<ViewStylesRepository> getViewStylesRepository() const;
+
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &worklet,
