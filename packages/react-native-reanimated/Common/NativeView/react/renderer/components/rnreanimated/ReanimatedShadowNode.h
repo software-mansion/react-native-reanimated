@@ -18,7 +18,9 @@ using ReanimatedViewShadowNodeBase = ConcreteViewShadowNode<
     ReanimatedViewEventEmitter,
     ReanimatedViewStateData>;
 
-class ReanimatedShadowNode final : public ReanimatedViewShadowNodeBase {
+class ReanimatedShadowNode final
+    : public ReanimatedViewShadowNodeBase,
+      public std::enable_shared_from_this<ReanimatedShadowNode> {
  public:
   ReanimatedShadowNode(
       const ShadowNodeFragment &fragment,

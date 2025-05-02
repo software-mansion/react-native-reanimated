@@ -28,14 +28,18 @@ class CSSTransitionsRegistry
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void add(const std::shared_ptr<CSSTransition> &transition);
-  void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void add(
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<CSSTransition> &transition);
+  void updateSettings(Tag viewTag, const CSSTransitionConfigUpdates &config);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);
 
  private:
-  using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
+  using Registry = std::unordered_map<
+      Tag,
+      std::pair<std::shared_ptr<CSSTransition>, ShadowNode::Shared>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
@@ -46,12 +50,9 @@ class CSSTransitionsRegistry
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
   void activateDelayedTransitions(double timestamp);
-  void scheduleOrActivateTransition(
-      const std::shared_ptr<CSSTransition> &transition);
+  void scheduleOrActivateTransition(Tag viewTag);
   PropsObserver createPropsObserver(Tag viewTag);
-  void updateInUpdatesRegistry(
-      const std::shared_ptr<CSSTransition> &transition,
-      const folly::dynamic &updates);
+  void updateInUpdatesRegistry(Tag viewTag, const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css
