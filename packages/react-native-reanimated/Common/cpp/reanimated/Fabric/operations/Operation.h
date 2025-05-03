@@ -2,14 +2,19 @@
 
 #include <deque>
 #include <functional>
+#include <memory>
 
 namespace reanimated {
 
-class OperationsLoop; // Forward declaration
+class OperationsLoop;
 
 class Operation {
  public:
   using Step = std::function<bool(double timestamp)>;
+
+  bool isCompleted() const {
+    return steps_.empty();
+  }
 
  private:
   // OperationsLoop needs to access the steps_ private property
@@ -17,23 +22,23 @@ class Operation {
   // OperationBuilder needs to access the addStep private method
   friend class OperationBuilder;
 
-  void addStep(double delay, Step &&step);
+  void appendStep(double delay, Step &&step);
+  void prependStep(double delay, Step &&step);
+
   std::deque<std::pair<double, Step>> steps_;
 };
 
 class OperationBuilder {
  public:
-  OperationBuilder &doOnce(std::function<void(double)> &&op);
+  OperationBuilder &doOnce(std::function<void(double)> op);
   OperationBuilder &waitFor(double delaySeconds);
   OperationBuilder &waitFor(std::function<double()> delayProvider);
-  OperationBuilder &doWhile(std::function<bool(double)> &&op);
+  OperationBuilder &doWhile(std::function<bool(double)> op);
 
-  operator Operation() && {
-    return std::move(operation_);
-  }
+  std::unique_ptr<Operation> build() &&;
 
  private:
-  Operation operation_;
+  std::unique_ptr<Operation> operation_{std::make_unique<Operation>()};
 };
 
 } // namespace reanimated
