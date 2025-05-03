@@ -19,7 +19,11 @@ class OperationsLoop {
 
   double getTimestamp() const;
 
-  OperationHandle add(Operation &&operation);
+  OperationHandle schedule(Operation &&operation);
+
+  template <typename... Operations>
+  OperationHandle scheduleSequence(Operations &&...operations);
+
   void remove(OperationHandle handle);
   void update();
 

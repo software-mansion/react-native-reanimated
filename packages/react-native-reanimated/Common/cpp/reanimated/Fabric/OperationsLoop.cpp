@@ -10,10 +10,33 @@ double OperationsLoop::getTimestamp() const {
   return timestamp_;
 }
 
-OperationsLoop::OperationHandle OperationsLoop::add(Operation &&operation) {
+OperationsLoop::OperationHandle OperationsLoop::schedule(
+    Operation &&operation) {
   OperationHandle handle = nextHandle_++;
   operations_[handle] = std::move(operation);
   return handle;
+}
+
+template <typename... Operations>
+OperationsLoop::OperationHandle OperationsLoop::scheduleSequence(
+    Operations &&...operations) {
+  auto sequenceQueue = std::make_shared<std::deque<Operation>>();
+  (sequenceQueue->emplace_back(std::forward<Operations>(operations)), ...);
+
+  Operation sequenceOperation =
+      [sequenceQueue](double timestamp) mutable -> bool {
+    while (!sequenceQueue->empty()) {
+      auto &currentOp = sequenceQueue->front();
+      if (!currentOp(timestamp)) {
+        sequenceQueue->pop_front();
+      } else {
+        break;
+      }
+    }
+    return !sequenceQueue->empty();
+  };
+
+  return schedule(std::move(sequenceOperation));
 }
 
 void OperationsLoop::remove(OperationHandle handle) {

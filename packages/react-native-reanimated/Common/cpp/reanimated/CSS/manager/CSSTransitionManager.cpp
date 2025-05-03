@@ -25,8 +25,14 @@ folly::dynamic CSSTransitionManager::getCurrentFrameProps(
 void CSSTransitionManager::update(
     const ReanimatedViewProps &oldProps,
     const ReanimatedViewProps &newProps) {
-  const auto &newConfig = newProps.cssTransition;
+  updateTransitionInstance(oldProps.cssTransition, newProps.cssTransition);
+  // Run transition if at least one of transition properties has changed
+  runTransitionForChangedProperties(oldProps.jsStyle, newProps.jsStyle);
+}
 
+void CSSTransitionManager::updateTransitionInstance(
+    const folly::dynamic &oldConfig,
+    const folly::dynamic &newConfig) {
   if (!transition_) {
     if (!newConfig.empty()) {
       createTransition(newConfig);
@@ -34,15 +40,29 @@ void CSSTransitionManager::update(
   } else if (newConfig.empty()) {
     removeTransition();
     return;
+  } else {
+    const auto &oldConfig = oldProps.cssTransition;
+    updateTransition(oldConfig, newConfig);
+  }
+}
+
+void CSSTransitionManager::runTransitionForChangedProperties(
+    const folly::dynamic &oldProps,
+    const folly::dynamic &newProps) {
+  const auto allowedProperties =
+      transition_->getAllowedProperties(oldProps, newProps);
+  if (allowedProperties.empty()) {
+    return;
   }
 
-  // TODO - improve not to compare dynamics
-  const auto &oldConfig = oldProps.cssTransition;
-  if (newConfig != oldConfig) {
-    LOG(INFO) << "update transition settings";
-  }
+  auto changedProps = getChangedProps(oldProps, newProps, allowedProperties);
 
-  // TODO - get transition props and check if the transition should be triggered
+  if (!changedProps.changedPropertyNames.empty()) {
+    // Remove the currently running transition from the loop (if there was one)
+    // and schedule a new one with the changed props
+    operationsLoop_->remove(operationHandle_);
+    runTransition(std::move(changedProps));
+  }
 }
 
 void CSSTransitionManager::createTransition(const folly::dynamic &config) {
@@ -54,7 +74,29 @@ void CSSTransitionManager::removeTransition() {
   transition_ = std::nullopt;
 }
 
-void CSSTransitionManager::scheduleOrActivateTransition(
-    const CSSTransition &transition) {}
+void CSSTransitionManager::updateTransition(
+    const folly::dynamic &oldConfig,
+    const folly::dynamic &newConfig) {
+  const auto updates =
+      getParsedCSSTransitionConfigUpdates(oldConfig, newConfig);
+  transition_->updateSettings(updates);
+}
+
+void CSSTransitionManager::runTransition(folly::dynamic &&changedProps) {
+  operationHandle_ =
+      operationsLoop_->createOperation()
+          .doOnce([transition = transition_,
+                   props = std::move(changedProps)](double timestamp) mutable {
+            transition->run(timestamp, props);
+          })
+          .waitFor([transition = transition_](double timestamp) {
+            return transition->getMinDelay(timestamp);
+          })
+          .doWhile([transition = transition_](double timestamp) mutable {
+            transition->update(timestamp);
+            return transition->getState() == TransitionProgressState::Running;
+          })
+          .schedule();
+}
 
 } // namespace reanimated::css

@@ -36,7 +36,7 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
 
 CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config);
 
-std::optional<CSSTransitionConfigUpdates> getParsedCSSTransitionConfigUpdates(
+CSSTransitionConfigUpdates getParsedCSSTransitionConfigUpdates(
     const folly::dynamic &oldConfig,
     const folly::dynamic &newConfig);
 

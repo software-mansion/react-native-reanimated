@@ -10,6 +10,7 @@
 #include <folly/dynamic.h>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <utility>
 
 namespace reanimated::css {
@@ -30,17 +31,26 @@ class CSSTransitionManager {
       const ReanimatedViewProps &newProps);
 
  private:
-  std::optional<CSSTransition> transition_;
-  OperationsLoop::OperationHandle operationHandle_{0};
+  std::shared_ptr<CSSTransition> transition_;
+  OperationsLoop::OperationHandle operationHandle_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
+  void updateTransitionInstance(
+      const folly::dynamic &oldConfig,
+      const folly::dynamic &newConfig);
+  void runTransitionForChangedProperties(
+      const folly::dynamic &oldProps,
+      const folly::dynamic &newProps);
+
   void createTransition(const folly::dynamic &config);
   void removeTransition();
-  // void updateTransition(const CSSTransition &transition);
-  void scheduleOrActivateTransition(const CSSTransition &transition);
+  void updateTransition(
+      const folly::dynamic &oldConfig,
+      const folly::dynamic &newConfig);
+  void runTransition(folly::dynamic &&changedProps);
 };
 
 } // namespace reanimated::css
