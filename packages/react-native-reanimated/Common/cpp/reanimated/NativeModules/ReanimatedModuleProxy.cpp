@@ -75,7 +75,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   double start = getAnimationTimestamp_();
   auto op = OperationBuilder().doOnce([this, start](double timestamp) {
     LOG(INFO) << "[1] doOnce: " << timestamp << " " << start;
-  });
+  }).build();
   // .waitFor(1.0)
   // .doWhile([this, start](double timestamp) {
   //   LOG(INFO) << "[2] doWhile: " << timestamp << " " << start;

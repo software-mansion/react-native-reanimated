@@ -13,30 +13,34 @@ class AtomicQueue {
     std::unique_ptr<T> data;
     std::atomic<Node *> next;
 
-    explicit Node(T &&value)
+    explicit Node(T &&value) noexcept
         : data(std::make_unique<T>(std::move(value))), next(nullptr) {}
 
-    Node() : next(nullptr) {} // Dummy node
+    Node() noexcept : next(nullptr) {} // Dummy node
   };
 
   std::atomic<Node *> head_;
   std::atomic<Node *> tail_;
 
  public:
-  AtomicQueue() {
+  AtomicQueue() noexcept {
     auto dummy = new Node();
     head_.store(dummy, std::memory_order_relaxed);
     tail_.store(dummy, std::memory_order_relaxed);
   }
 
-  ~AtomicQueue() {
-    Node *node = head_.load();
+  ~AtomicQueue() noexcept {
+    Node *node = head_.load(std::memory_order_acquire);
     while (node) {
-      Node *next = node->next.load();
+      Node *next = node->next.load(std::memory_order_acquire);
       delete node;
       node = next;
     }
   }
+
+  // Prevent copying
+  AtomicQueue(const AtomicQueue &) = delete;
+  AtomicQueue &operator=(const AtomicQueue &) = delete;
 
   void enqueue(T value) {
     Node *newNode = new Node(std::move(value));
