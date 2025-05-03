@@ -2,8 +2,8 @@
 
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
+#include <reanimated/Fabric/operations/DelayedItemsManager.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
