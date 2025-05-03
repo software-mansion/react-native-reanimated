@@ -2,7 +2,7 @@
 
 #include <reanimated/Fabric/operations/AtomicQueue.h>
 #include <reanimated/Fabric/operations/DelayedItemsManager.h>
-#include <reanimated/Fabric/operations/Operation.h>
+#include <reanimated/Fabric/operations/OperationBuilder.h>
 
 #include <atomic>
 #include <memory>
@@ -24,14 +24,13 @@ class OperationsLoop {
   void update();
 
  private:
-  using OperationPair = std::pair<OperationHandle, std::unique_ptr<Operation>>;
-  using OperationsMap =
-      std::unordered_map<OperationHandle, std::unique_ptr<Operation>>;
-
-  AtomicQueue<OperationPair> additionRequests_;
+  AtomicQueue<std::pair<OperationHandle, std::unique_ptr<Operation>>>
+      additionRequests_;
   AtomicQueue<OperationHandle> removalRequests_;
-  DelayedItemsManager<OperationPair> delayedOperations_;
-  OperationsMap activeOperations_;
+  DelayedItemsManager<OperationHandle, std::unique_ptr<Operation>>
+      delayedOperations_;
+  std::unordered_map<OperationHandle, std::unique_ptr<Operation>>
+      activeOperations_;
 
   double timestamp_{0};
   GetAnimationTimestampFunction getTimestamp_;

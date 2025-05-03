@@ -7,49 +7,64 @@
 #include <unordered_map>
 #include <utility>
 
-namespace reanimated::css {
+namespace reanimated {
 
-template <typename TValue>
+template <typename TId, typename TValue = TId>
 struct DelayedItem {
   double timestamp;
+  TId id;
   TValue value;
 
-  template <typename T>
-  DelayedItem(double timestamp, T &&value)
-      : timestamp(timestamp), value(std::forward<T>(value)) {}
+  DelayedItem(double timestamp, TId id, TValue value)
+      : timestamp(timestamp), id(std::move(id)), value(std::move(value)) {}
 };
 
-template <typename TValue>
+template <typename TId, typename TValue = TId>
 struct DelayedItemComparator {
   bool operator()(
-      const DelayedItem<TValue> &lhs,
-      const DelayedItem<TValue> &rhs) const {
-    if (lhs.timestamp == rhs.timestamp) {
-      // This just ensures that set treats items as distinct when timestamps are
-      // equal and doesn't remove one of them.
-      return std::less<const TValue *>{}(
-          std::addressof(lhs.value), std::addressof(rhs.value));
+      const DelayedItem<TId, TValue> &lhs,
+      const DelayedItem<TId, TValue> &rhs) const noexcept {
+    if (lhs.timestamp != rhs.timestamp) {
+      return lhs.timestamp < rhs.timestamp;
     }
-    return lhs.timestamp < rhs.timestamp;
+
+    return std::less<const void *>()(
+        std::addressof(lhs.id), std::addressof(rhs.id));
   }
 };
 
-template <typename TValue>
+// Allow specifying just TId (for cases when value is used as id)
+template <typename TId, typename TValue = TId>
 class DelayedItemsManager {
-  using Item = DelayedItem<TValue>;
-  using ItemSet = std::set<Item, DelayedItemComparator<TValue>>;
-  using ItemMap = std::unordered_map<TValue, typename ItemSet::iterator>;
+  using Item = DelayedItem<TId, TValue>;
+  using ItemSet = std::set<Item, DelayedItemComparator<TId, TValue>>;
+  using ItemMap = std::unordered_map<TId, typename ItemSet::iterator>;
 
   ItemSet itemsSet_;
   ItemMap itemsMap_;
 
  public:
-  template <typename T>
-  void add(double timestamp, T &&value) {
-    auto [it, inserted] = itemsSet_.emplace(timestamp, std::forward<T>(value));
+  DelayedItemsManager() noexcept = default;
+  DelayedItemsManager(DelayedItemsManager &&) noexcept = default;
+  DelayedItemsManager &operator=(DelayedItemsManager &&) noexcept = default;
+
+  DelayedItemsManager(const DelayedItemsManager &) = delete;
+  DelayedItemsManager &operator=(const DelayedItemsManager &) = delete;
+
+  void add(double timestamp, TId id, TValue value) {
+    auto [it, inserted] =
+        itemsSet_.emplace(timestamp, std::move(id), std::move(value));
     if (inserted) {
-      itemsMap_[it->value] = it;
+      itemsMap_.emplace(it->id, it);
     }
+  }
+
+  // Overloaded add method (timestamp, value) when TId and TValue are same
+  void add(double timestamp, TValue value) {
+    static_assert(
+        std::is_same_v<TId, TValue>,
+        "Single-argument add() is only available when TId and TValue are the same type");
+    add(timestamp, std::move(value), std::move(value));
   }
 
   Item pop() {
@@ -57,18 +72,18 @@ class DelayedItemsManager {
       throw std::runtime_error(
           "[Reanimated] No delayed items available to pop");
     }
-    auto it = itemsSet_.begin();
-    Item result{it->timestamp, std::move(const_cast<TValue &>(it->value))};
-    itemsMap_.erase(it->value);
-    itemsSet_.erase(it);
-    return result;
+
+    auto node = itemsSet_.extract(itemsSet_.begin());
+    itemsMap_.erase(node.value().id);
+    return std::move(node.value());
   }
 
-  bool remove(const TValue &value) {
-    auto it = itemsMap_.find(value);
+  bool remove(const TId &id) noexcept {
+    auto it = itemsMap_.find(id);
     if (it == itemsMap_.end()) {
       return false;
     }
+
     itemsSet_.erase(it->second);
     itemsMap_.erase(it);
     return true;
@@ -90,4 +105,4 @@ class DelayedItemsManager {
   }
 };
 
-} // namespace reanimated::css
+} // namespace reanimated

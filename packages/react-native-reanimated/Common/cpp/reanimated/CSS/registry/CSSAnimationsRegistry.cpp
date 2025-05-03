@@ -307,7 +307,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   while (!delayedAnimationsManager_.empty() &&
          delayedAnimationsManager_.top().timestamp <= timestamp) {
-    const auto [_, animation] = delayedAnimationsManager_.pop();
+    const auto animation = delayedAnimationsManager_.pop().value;
     const auto viewTag = animation->getShadowNode()->getTag();
 
     // Add only these animations which weren't removed in the meantime

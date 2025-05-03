@@ -19,16 +19,17 @@ void OperationsLoop::remove(OperationHandle handle) {
 
 void OperationsLoop::processAdditionRequests() {
   auto requests = additionRequests_.dequeueAll();
-  for (const auto &[handle, op] : requests) {
+  for (auto &[handle, op] : requests) {
     if (!op || op->steps_.empty()) {
       continue;
     }
 
     double delay = op->steps_.front().first;
     if (delay == 0.0) {
-      activeOperations_[handle] = std::move(op);
+      activeOperations_.emplace(handle, std::move(op));
     } else {
-      delayedOperations_.add(timestamp_ + delay, {handle, std::move(op)});
+      delayedOperations_.add(
+          timestamp_ + delay, handle, std::move(op));
     }
   }
 }
@@ -36,17 +37,15 @@ void OperationsLoop::processAdditionRequests() {
 void OperationsLoop::activateDelayedOperations() {
   while (!delayedOperations_.empty() &&
          delayedOperations_.top().timestamp <= timestamp_) {
-    auto [handle, op] = delayedOperations_.pop();
-    activeOperations_[handle] = std::move(op);
+    auto item = delayedOperations_.pop();
+    activeOperations_[item.id] = std::move(item.value);
   }
 }
 
 void OperationsLoop::processRemovalRequests() {
   for (const auto handle : removalRequests_.dequeueAll()) {
     activeOperations_.erase(handle);
-    delayedOperations_.remove_if([handle](const OperationPair &scheduledOp) {
-      return scheduledOp.first == handle;
-    });
+    delayedOperations_.remove(handle);
   }
 }
 
