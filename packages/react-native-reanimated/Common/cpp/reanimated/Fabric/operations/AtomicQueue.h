@@ -6,15 +6,15 @@
 
 namespace reanimated {
 
-template <typename T>
+template <typename TItem>
 class AtomicQueue {
  private:
   struct Node {
-    std::unique_ptr<T> data;
+    std::unique_ptr<TItem> data;
     std::atomic<Node *> next;
 
-    explicit Node(T &&value) noexcept
-        : data(std::make_unique<T>(std::move(value))), next(nullptr) {}
+    explicit Node(TItem &&value) noexcept
+        : data(std::make_unique<TItem>(std::move(value))), next(nullptr) {}
 
     Node() noexcept : next(nullptr) {} // Dummy node
   };
@@ -42,23 +42,21 @@ class AtomicQueue {
   AtomicQueue(const AtomicQueue &) = delete;
   AtomicQueue &operator=(const AtomicQueue &) = delete;
 
-  void enqueue(T value) {
+  void enqueue(TItem value) {
     Node *newNode = new Node(std::move(value));
     Node *prevTail = tail_.exchange(newNode, std::memory_order_acq_rel);
     prevTail->next.store(newNode, std::memory_order_release);
   }
 
-  std::vector<T> dequeueAll() {
-    // Exchange the head pointer with a new dummy node to ensure that new
-    // nodes aren't added to the currently dequeued nodes batch
+  std::vector<TItem> dequeueAll() {
     Node *newDummy = new Node();
-    Node *detachedHead = head_.exchange(newDummy, std::memory_order_acq_rel);
 
-    std::vector<T> items;
-    Node *current = detachedHead->next.load(std::memory_order_acquire);
+    Node *oldTail = tail_.exchange(newDummy, std::memory_order_acq_rel);
+    Node *oldHead = head_.exchange(newDummy, std::memory_order_acq_rel);
 
-    // Iterate over the detached nodes queue and store their data in the items
-    // vector
+    std::vector<TItem> items;
+    Node *current = oldHead->next.load(std::memory_order_acquire);
+
     while (current) {
       items.emplace_back(std::move(*current->data));
       Node *temp = current;
@@ -66,7 +64,8 @@ class AtomicQueue {
       delete temp;
     }
 
-    delete detachedHead; // delete the old dummy node
+    // Delete the detached dummy node
+    delete oldHead;
 
     return items;
   }

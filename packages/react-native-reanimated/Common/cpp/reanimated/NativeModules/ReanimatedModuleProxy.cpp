@@ -73,19 +73,32 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 
   double start = getAnimationTimestamp_();
-  auto op = OperationBuilder().doOnce([this, start](double timestamp) {
-    LOG(INFO) << "[1] doOnce: " << timestamp << " " << start;
-  }).build();
-  // .waitFor(1.0)
-  // .doWhile([this, start](double timestamp) {
-  //   LOG(INFO) << "[2] doWhile: " << timestamp << " " << start;
-  //   return timestamp < start + 10.0;
-  // })
-  // .waitFor(2.0)
-  // .doOnce([this, start](double timestamp) {
-  //   LOG(INFO) << "[3] doOnce: " << timestamp << " " << start;
-  // });
+  auto op = OperationBuilder()
+                .doOnce([start](double timestamp) {
+                  LOG(INFO) << "[1] doOnce: " << timestamp << " " << start;
+                })
+                .waitFor(2500.0)
+                .doWhile([start](double timestamp) {
+                  LOG(INFO) << "[2] doWhile: " << timestamp << " " << start
+                            << " continue: " << (timestamp < start + 5000.0);
+                  return timestamp < start + 5000.0;
+                })
+                .waitFor([]() { return 2000.0; })
+                .doOnce([start](double timestamp) {
+                  LOG(INFO) << "[3] doOnce: " << timestamp << " " << start;
+                })
+                .build();
+
   const auto handle = operationsLoop_->schedule(std::move(op));
+
+  operationsLoop_->schedule(
+      OperationBuilder()
+          .waitFor(4000.0)
+          .doOnce([handle, operationsLoop = operationsLoop_](double timestamp) {
+            LOG(INFO) << "[4] remove: " << timestamp << " " << handle;
+            operationsLoop->remove(handle);
+          })
+          .build());
 }
 
 std::shared_ptr<OperationsLoop> ReanimatedModuleProxy::getOperationsLoop()
