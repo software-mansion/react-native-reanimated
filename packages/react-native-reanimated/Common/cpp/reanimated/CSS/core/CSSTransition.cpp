@@ -8,7 +8,7 @@ CSSTransition::CSSTransition(const CSSTransitionConfig &config)
       progressProvider_(TransitionProgressProvider()),
       styleInterpolator_(TransitionStyleInterpolator()) {}
 
-double CSSTransition::getMinDelay(double timestamp) const {
+double CSSTransition::getMinDelay(const double timestamp) const {
   return progressProvider_.getMinDelay(timestamp);
 }
 
@@ -83,7 +83,6 @@ void CSSTransition::run(
       styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
       changedProps, lastUpdateValue);
-  update(timestamp);
 }
 
 void CSSTransition::update(const double timestamp) {
