@@ -20,16 +20,16 @@ class Operation {
   Operation(Operation &&) = default;
   Operation &operator=(Operation &&) = default;
 
-  Operation &&doOnce(std::function<void(double)> op) &&;
+  Operation &&doOnce(std::function<void(double)> callback) &&;
   Operation &&waitFor(double delaySeconds) &&;
-  Operation &&waitFor(std::function<double()> delayProvider) &&;
-  Operation &&doWhile(std::function<bool(double)> op) &&;
+  Operation &&waitFor(std::function<double(double)> delayProvider) &&;
+  Operation &&doWhile(std::function<bool(double)> callback) &&;
 
   // Build method returns a unique_ptr<Operation>
   std::unique_ptr<Operation> build() &&;
 
  private:
-  using Step = std::function<bool(double)>;
+  using Step = std::function<bool(double, Operation &)>;
 
   friend class OperationsLoop;
 

@@ -4,26 +4,38 @@ namespace reanimated {
 
 // Public operation builder methods
 
-Operation &&Operation::doOnce(std::function<void(double)> op) && {
-  steps_.emplace_back(0.0, [op = std::move(op)](double timestamp) {
-    op(timestamp);
-    return false;
-  });
+Operation &&Operation::doOnce(std::function<void(double)> callback) && {
+  steps_.emplace_back(
+      0, [callback = std::move(callback)](double timestamp, Operation &) {
+        callback(timestamp);
+        return false;
+      });
   return std::move(*this);
 }
 
 Operation &&Operation::waitFor(double delaySeconds) && {
-  steps_.emplace_back(delaySeconds, [](double) { return false; });
+  steps_.emplace_back(delaySeconds, [](double, Operation &) { return false; });
   return std::move(*this);
 }
 
-Operation &&Operation::waitFor(std::function<double()> delayProvider) && {
-  steps_.emplace_back(delayProvider(), [](double) { return false; });
+Operation &&Operation::waitFor(std::function<double(double)> delayProvider) && {
+  steps_.emplace_back(
+      0,
+      [delayProvider = std::move(delayProvider)](
+          double timestamp, Operation &op) {
+        op.steps_.emplace_front(
+            delayProvider(timestamp),
+            [](double, Operation &) { return false; });
+        return false;
+      });
   return std::move(*this);
 }
 
-Operation &&Operation::doWhile(std::function<bool(double)> op) && {
-  steps_.emplace_back(0.0, std::move(op));
+Operation &&Operation::doWhile(std::function<bool(double)> callback) && {
+  steps_.emplace_back(
+      0, [callback = std::move(callback)](double timestamp, Operation &) {
+        return callback(timestamp);
+      });
   return std::move(*this);
 }
 
@@ -48,7 +60,7 @@ std::pair<bool, double> Operation::update(const double timestamp) {
       return {true, delay};
     }
 
-    const bool shouldRepeat = step(timestamp);
+    const bool shouldRepeat = step(timestamp, *this);
     if (shouldRepeat) {
       // If the step needs repetition, re-add it immediately for the next update
       // cycle.
