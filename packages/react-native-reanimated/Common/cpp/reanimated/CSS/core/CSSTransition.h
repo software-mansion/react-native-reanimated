@@ -14,7 +14,7 @@ namespace reanimated::css {
 
 class CSSTransition {
  public:
-  CSSTransition(const CSSTransitionConfig &config);
+  explicit CSSTransition(const CSSTransitionConfig &config);
 
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
