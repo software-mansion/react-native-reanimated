@@ -14,6 +14,9 @@ struct DelayedItem {
   double timestamp;
   TId id;
   TValue value;
+
+  DelayedItem(double timestamp, TId id, TValue value)
+      : timestamp(timestamp), id(std::move(id)), value(std::move(value)) {}
 };
 
 template <typename TId, typename TValue = TId>
@@ -25,6 +28,9 @@ struct DelayedItemComparator {
       return lhs.timestamp < rhs.timestamp;
     }
 
+    // This comparison is just needed to distinguish items in the set. They
+    // must not be treated as equal in order to store multiple instances with
+    // the same timestamp
     return std::less<>()(std::addressof(lhs.id), std::addressof(rhs.id));
   }
 };
