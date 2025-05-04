@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/Fabric/OperationsLoop.h>
+#include <reanimated/Fabric/operations/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 

@@ -6,7 +6,7 @@
 
 #include <reanimated/CSS/manager/CSSTransitionManager.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/Fabric/OperationsLoop.h>
+#include <reanimated/Fabric/operations/OperationsLoop.h>
 
 #include <memory>
 #include <optional>

@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/CSSTransition.h>
-#include <reanimated/Fabric/OperationsLoop.h>
+#include <reanimated/Fabric/operations/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <memory>

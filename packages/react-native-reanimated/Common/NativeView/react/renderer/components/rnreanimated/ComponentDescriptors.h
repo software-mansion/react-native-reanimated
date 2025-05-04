@@ -5,7 +5,7 @@
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/Fabric/OperationsLoop.h>
+#include <reanimated/Fabric/operations/OperationsLoop.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <memory>
