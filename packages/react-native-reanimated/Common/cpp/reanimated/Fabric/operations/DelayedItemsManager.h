@@ -14,9 +14,6 @@ struct DelayedItem {
   double timestamp;
   TId id;
   TValue value;
-
-  DelayedItem(double timestamp, TId id, TValue value)
-      : timestamp(timestamp), id(std::move(id)), value(std::move(value)) {}
 };
 
 template <typename TId, typename TValue = TId>
@@ -28,7 +25,7 @@ struct DelayedItemComparator {
       return lhs.timestamp < rhs.timestamp;
     }
 
-    return std::less<const void *>()(
+    return std::less<>()(
         std::addressof(lhs.id), std::addressof(rhs.id));
   }
 };

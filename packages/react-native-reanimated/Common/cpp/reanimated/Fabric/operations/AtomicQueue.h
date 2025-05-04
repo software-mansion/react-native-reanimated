@@ -10,29 +10,30 @@ template <typename TItem>
 class AtomicQueue {
  private:
   struct Node {
-    std::unique_ptr<TItem> data;
-    std::atomic<Node *> next;
+    std::shared_ptr<TItem> data;
+    std::shared_ptr<Node> next;
 
-    explicit Node(TItem &&value) noexcept
-        : data(std::make_unique<TItem>(std::move(value))), next(nullptr) {}
+    explicit Node(TItem &&value)
+        : data(std::make_shared<TItem>(std::move(value))), next(nullptr) {}
 
-    Node() noexcept : next(nullptr) {} // Dummy node
+    Node() : next(nullptr) {} // Dummy node
   };
 
   std::atomic<Node *> head_;
   std::atomic<Node *> tail_;
 
  public:
-  AtomicQueue() noexcept {
+  AtomicQueue() {
     auto dummy = new Node();
     head_.store(dummy, std::memory_order_relaxed);
     tail_.store(dummy, std::memory_order_relaxed);
   }
 
-  ~AtomicQueue() noexcept {
-    Node *node = head_.load(std::memory_order_acquire);
+  ~AtomicQueue() {
+    // Clean up all nodes
+    Node *node = head_.load();
     while (node) {
-      Node *next = node->next.load(std::memory_order_acquire);
+      Node *next = node->next ? node->next.get() : nullptr;
       delete node;
       node = next;
     }
@@ -43,29 +44,30 @@ class AtomicQueue {
   AtomicQueue &operator=(const AtomicQueue &) = delete;
 
   void enqueue(TItem value) {
-    Node *newNode = new Node(std::move(value));
-    Node *prevTail = tail_.exchange(newNode, std::memory_order_acq_rel);
-    prevTail->next.store(newNode, std::memory_order_release);
+    auto newNode = new Node(std::move(value));
+    auto prevTail = tail_.exchange(newNode, std::memory_order_acq_rel);
+    prevTail->next = std::shared_ptr<Node>(newNode);
   }
 
   std::vector<TItem> dequeueAll() {
-    Node *newDummy = new Node();
+    // Update the tail first to ensure that all enqueued operations during the
+    // dequeueAll handling are added to the new queue and won't be included in
+    // the currently dequeued batch
+    auto newDummy = new Node();
+    tail_.exchange(newDummy, std::memory_order_acq_rel);
 
-    Node *oldTail = tail_.exchange(newDummy, std::memory_order_acq_rel);
-    Node *oldHead = head_.exchange(newDummy, std::memory_order_acq_rel);
+    // Exchange the head to get the current batch
+    auto oldHead = head_.exchange(newDummy, std::memory_order_acq_rel);
 
+    // Dequeue all items into a vector
     std::vector<TItem> items;
-    Node *current = oldHead->next.load(std::memory_order_acquire);
-
+    auto current = oldHead->next;
     while (current) {
       items.emplace_back(std::move(*current->data));
-      Node *temp = current;
-      current = current->next.load(std::memory_order_acquire);
-      delete temp;
+      current = current->next;
     }
 
-    // Delete the detached dummy node
-    delete oldHead;
+    delete oldHead; // Clean up dummy node
 
     return items;
   }

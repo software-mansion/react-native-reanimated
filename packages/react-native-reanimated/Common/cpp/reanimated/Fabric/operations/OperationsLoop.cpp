@@ -1,21 +1,19 @@
-#include <glog/logging.h>
 #include <reanimated/Fabric/operations/OperationsLoop.h>
 
 namespace reanimated {
 
 OperationsLoop::OperationsLoop(
-    const GetAnimationTimestampFunction &getAnimationTimestamp)
-    : getTimestamp_(getAnimationTimestamp) {}
+        GetAnimationTimestampFunction getAnimationTimestamp)
+        : getTimestamp_(std::move(getAnimationTimestamp)) {}
 
 OperationsLoop::OperationHandle OperationsLoop::schedule(
-    std::unique_ptr<Operation> operation) {
+    std::unique_ptr<ExecutableOperation> operation) {
   OperationHandle handle = nextHandle_.fetch_add(1, std::memory_order_relaxed);
   additionRequests_.enqueue({handle, std::move(operation)});
   return handle;
 }
 
 void OperationsLoop::remove(OperationHandle handle) {
-  LOG(INFO) << "[5] remove: " << handle;
   removalRequests_.enqueue(handle);
 }
 
@@ -42,7 +40,6 @@ void OperationsLoop::activateDelayedOperations() {
 
 void OperationsLoop::processRemovalRequests() {
   for (const auto handle : removalRequests_.dequeueAll()) {
-    LOG(INFO) << "[6] processRemovalRequests: " << handle;
     activeOperations_.erase(handle);
     delayedOperations_.remove(handle);
   }
@@ -63,7 +60,6 @@ void OperationsLoop::executeActiveOperations() {
         break; // exit loop immediately if operation is delayed
       }
 
-      // Extract step safely (move out first)
       auto currentStep = std::move(step);
       operation->steps_.pop_front();
 
