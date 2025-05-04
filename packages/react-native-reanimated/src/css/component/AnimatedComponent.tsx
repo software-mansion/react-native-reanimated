@@ -19,6 +19,7 @@ import { CSSManager } from '../managers';
 import {
   markNodeAsRemovable,
   normalizeCSSTransitionProperties,
+  styleBuilder,
   unmarkNodeAsRemovable,
 } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
@@ -237,7 +238,7 @@ export default class AnimatedComponent<
     return (
       <ReanimatedView
         style={styles.container}
-        jsStyle={filteredStyle}
+        jsStyle={styleBuilder.buildFrom(filteredStyle)}
         cssTransition={
           transitionProperties &&
           normalizeCSSTransitionProperties(transitionProperties)
