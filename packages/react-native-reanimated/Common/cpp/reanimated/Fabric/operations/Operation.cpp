@@ -2,44 +2,63 @@
 
 namespace reanimated {
 
-// ExecutableOperation
+// Public operation builder methods
 
-ExecutableOperation::ExecutableOperation(
-    std::deque<std::pair<double, Step>> steps)
-    : steps_(std::move(steps)) {}
-
-// Operation (builder)
-
-Operation &Operation::doOnce(std::function<void(double)> op) {
-  steps_.emplace_back(0, [op = std::move(op)](double timestamp) {
+Operation &&Operation::doOnce(std::function<void(double)> op) && {
+  steps_.emplace_back(0.0, [op = std::move(op)](double timestamp) {
     op(timestamp);
     return false;
   });
-  return *this;
+  return std::move(*this);
 }
 
-Operation &Operation::waitFor(double delaySeconds) {
+Operation &&Operation::waitFor(double delaySeconds) && {
   steps_.emplace_back(delaySeconds, [](double) { return false; });
-  return *this;
+  return std::move(*this);
 }
 
-Operation &Operation::waitFor(std::function<double()> delayProvider) {
-  steps_.emplace_back(
-      0, [this, delayProvider = std::move(delayProvider)](double) {
-        steps_.emplace_front(delayProvider(), [](double) { return false; });
-        return false;
-      });
-  return *this;
+Operation &&Operation::waitFor(std::function<double()> delayProvider) && {
+  steps_.emplace_back(delayProvider(), [](double) { return false; });
+  return std::move(*this);
 }
 
-Operation &Operation::doWhile(std::function<bool(double)> op) {
-  steps_.emplace_back(0, std::move(op));
-  return *this;
+Operation &&Operation::doWhile(std::function<bool(double)> op) && {
+  steps_.emplace_back(0.0, std::move(op));
+  return std::move(*this);
 }
 
-std::unique_ptr<ExecutableOperation> Operation::build() {
-  return std::unique_ptr<ExecutableOperation>(
-      new ExecutableOperation(std::move(steps_)));
+std::unique_ptr<Operation> Operation::build() && {
+  return std::make_unique<Operation>(std::move(*this));
+}
+
+// Methods used by OperationsLoop only
+
+bool Operation::isEmpty() const {
+  return steps_.empty();
+}
+
+std::pair<bool, double> Operation::update(const double timestamp) {
+  while (!steps_.empty()) {
+    auto [delay, step] = std::move(steps_.front());
+    steps_.pop_front();
+
+    if (delay > 0) {
+      // Reset delay to avoid repeated delay applications
+      steps_.emplace_front(0, std::move(step));
+      return {true, delay};
+    }
+
+    const bool shouldRepeat = step(timestamp);
+    if (shouldRepeat) {
+      // If the step needs repetition, re-add it immediately for the next update
+      // cycle.
+      steps_.emplace_front(0, std::move(step));
+      return {false, 0}; // Don't deactivate or delay the step if should repeat
+    }
+  }
+
+  // No more steps to execute; operation is complete.
+  return {true, 0}; // Deactivate the operation
 }
 
 } // namespace reanimated

@@ -3,13 +3,15 @@
 namespace reanimated {
 
 OperationsLoop::OperationsLoop(
-        GetAnimationTimestampFunction getAnimationTimestamp)
-        : getTimestamp_(std::move(getAnimationTimestamp)) {}
+    GetAnimationTimestampFunction getAnimationTimestamp)
+    : getTimestamp_(std::move(getAnimationTimestamp)) {}
 
 OperationsLoop::OperationHandle OperationsLoop::schedule(
-    std::unique_ptr<ExecutableOperation> operation) {
+    std::unique_ptr<Operation> operation) {
   OperationHandle handle = nextHandle_.fetch_add(1, std::memory_order_relaxed);
-  additionRequests_.enqueue({handle, std::move(operation)});
+  if (operation) {
+    additionRequests_.enqueue({handle, std::move(operation)});
+  }
   return handle;
 }
 
@@ -20,9 +22,6 @@ void OperationsLoop::remove(OperationHandle handle) {
 void OperationsLoop::processAdditionRequests() {
   auto requests = additionRequests_.dequeueAll();
   for (auto &[handle, op] : requests) {
-    if (!op || op->steps_.empty()) {
-      continue;
-    }
     activeOperations_.emplace(handle, std::move(op));
   }
 }
@@ -31,10 +30,7 @@ void OperationsLoop::activateDelayedOperations() {
   while (!delayedOperations_.empty() &&
          delayedOperations_.top().timestamp <= timestamp_) {
     auto item = delayedOperations_.pop();
-    if (item.value && !item.value->steps_.empty()) {
-      item.value->steps_.front().first = 0.0;
-      activeOperations_[item.id] = std::move(item.value);
-    }
+    activeOperations_[item.id] = std::move(item.value);
   }
 }
 
@@ -48,31 +44,10 @@ void OperationsLoop::processRemovalRequests() {
 void OperationsLoop::executeActiveOperations() {
   for (auto it = activeOperations_.begin(); it != activeOperations_.end();) {
     auto &[handle, operation] = *it;
-    bool shouldDeactivate = !operation || operation->steps_.empty();
+    const auto [shouldDeactivate, delay] = operation->update(timestamp_);
 
-    while (!shouldDeactivate) {
-      auto &[delay, step] = operation->steps_.front();
-
-      if (delay > 0.0) {
-        delayedOperations_.add(
-            timestamp_ + delay, handle, std::move(operation));
-        shouldDeactivate = true;
-        break; // exit loop immediately if operation is delayed
-      }
-
-      auto currentStep = std::move(step);
-      operation->steps_.pop_front();
-
-      bool shouldRepeat = currentStep(timestamp_);
-
-      if (shouldRepeat) {
-        operation->steps_.emplace_front(0.0, std::move(currentStep));
-        break; // stop executing more steps in this update call
-      }
-
-      if (operation->steps_.empty()) {
-        shouldDeactivate = true;
-      }
+    if (delay > 0) {
+      delayedOperations_.add(timestamp_ + delay, handle, std::move(operation));
     }
 
     if (shouldDeactivate) {

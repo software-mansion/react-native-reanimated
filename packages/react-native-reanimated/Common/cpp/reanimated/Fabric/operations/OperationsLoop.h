@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 namespace reanimated {
 
@@ -19,17 +20,17 @@ class OperationsLoop {
 
   using OperationHandle = uint64_t;
 
-  OperationHandle schedule(std::unique_ptr<ExecutableOperation> operation);
+  OperationHandle schedule(std::unique_ptr<Operation> operation);
   void remove(OperationHandle handle);
   void update();
 
  private:
-  AtomicQueue<std::pair<OperationHandle, std::unique_ptr<ExecutableOperation>>>
+  AtomicQueue<std::pair<OperationHandle, std::unique_ptr<Operation>>>
       additionRequests_;
   AtomicQueue<OperationHandle> removalRequests_;
-  DelayedItemsManager<OperationHandle, std::unique_ptr<ExecutableOperation>>
+  DelayedItemsManager<OperationHandle, std::unique_ptr<Operation>>
       delayedOperations_;
-  std::unordered_map<OperationHandle, std::unique_ptr<ExecutableOperation>>
+  std::unordered_map<OperationHandle, std::unique_ptr<Operation>>
       activeOperations_;
 
   double timestamp_{0};

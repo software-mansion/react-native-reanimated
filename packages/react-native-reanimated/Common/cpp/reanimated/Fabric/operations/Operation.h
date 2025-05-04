@@ -3,34 +3,39 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <utility>
 
 namespace reanimated {
 
-class ExecutableOperation {
- public:
-  using Step = std::function<bool(double)>;
-
- private:
-  friend class Operation;
-  friend class OperationsLoop;
-
-  explicit ExecutableOperation(std::deque<std::pair<double, Step>> steps);
-
-  std::deque<std::pair<double, Step>> steps_;
-};
+class OperationsLoop; // forward declaration
 
 class Operation {
  public:
-  using Step = std::function<bool(double)>;
+  Operation() = default;
 
-  Operation &doOnce(std::function<void(double)> op);
-  Operation &waitFor(double delaySeconds);
-  Operation &waitFor(std::function<double()> delayProvider);
-  Operation &doWhile(std::function<bool(double)> op);
+  // Don't allow copying
+  Operation(const Operation &) = delete;
+  Operation &operator=(const Operation &) = delete;
 
-  std::unique_ptr<ExecutableOperation> build();
+  Operation(Operation &&) = default;
+  Operation &operator=(Operation &&) = default;
+
+  Operation &&doOnce(std::function<void(double)> op) &&;
+  Operation &&waitFor(double delaySeconds) &&;
+  Operation &&waitFor(std::function<double()> delayProvider) &&;
+  Operation &&doWhile(std::function<bool(double)> op) &&;
+
+  // Build method returns a unique_ptr<Operation>
+  std::unique_ptr<Operation> build() &&;
 
  private:
+  using Step = std::function<bool(double)>;
+
+  friend class OperationsLoop;
+
+  bool isEmpty() const;
+  std::pair<bool, double> update(double timestamp);
+
   std::deque<std::pair<double, Step>> steps_;
 };
 
