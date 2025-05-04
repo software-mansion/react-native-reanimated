@@ -25,8 +25,7 @@ struct DelayedItemComparator {
       return lhs.timestamp < rhs.timestamp;
     }
 
-    return std::less<>()(
-        std::addressof(lhs.id), std::addressof(rhs.id));
+    return std::less<>()(std::addressof(lhs.id), std::addressof(rhs.id));
   }
 };
 

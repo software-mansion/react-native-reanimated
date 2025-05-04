@@ -71,33 +71,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-
-  double start = getAnimationTimestamp_();
-  auto op = Operation()
-                .doOnce([start](double timestamp) {
-                  LOG(INFO) << "[1] doOnce: " << timestamp << " " << start;
-                })
-                .waitFor(2500.0)
-                .doWhile([start](double timestamp) {
-                  LOG(INFO) << "[2] doWhile: " << timestamp << " " << start
-                            << " continue: " << (timestamp < start + 5000.0);
-                  return timestamp < start + 5000.0;
-                })
-                .waitFor([]() { return 2000.0; })
-                .doOnce([start](double timestamp) {
-                  LOG(INFO) << "[3] doOnce: " << timestamp << " " << start;
-                })
-                .build();
-
-  const auto handle = operationsLoop_->schedule(std::move(op));
-
-  operationsLoop_->schedule(
-      Operation()
-          .waitFor(4000.0)
-          .doOnce([handle, operationsLoop = operationsLoop_](double timestamp) {
-            operationsLoop->remove(handle);
-          })
-          .build());
 }
 
 std::shared_ptr<OperationsLoop> ReanimatedModuleProxy::getOperationsLoop()
