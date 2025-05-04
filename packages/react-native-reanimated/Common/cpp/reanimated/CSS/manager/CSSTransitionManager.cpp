@@ -39,9 +39,7 @@ void CSSTransitionManager::updateTransitionInstance(
     }
   } else if (newConfig.empty()) {
     removeTransition();
-    return;
   } else {
-    const auto &oldConfig = oldProps.cssTransition;
     updateTransition(oldConfig, newConfig);
   }
 }
@@ -66,12 +64,13 @@ void CSSTransitionManager::runTransitionForChangedProperties(
 }
 
 void CSSTransitionManager::createTransition(const folly::dynamic &config) {
-  transition_ = CSSTransition(parseCSSTransitionConfig(config));
+  transition_ =
+      std::make_shared<CSSTransition>(parseCSSTransitionConfig(config));
 }
 
 void CSSTransitionManager::removeTransition() {
   operationsLoop_->remove(operationHandle_);
-  transition_ = std::nullopt;
+  transition_ = nullptr;
 }
 
 void CSSTransitionManager::updateTransition(
@@ -79,24 +78,28 @@ void CSSTransitionManager::updateTransition(
     const folly::dynamic &newConfig) {
   const auto updates =
       getParsedCSSTransitionConfigUpdates(oldConfig, newConfig);
-  transition_->updateSettings(updates);
+  if (updates.has_value()) {
+    transition_->updateSettings(updates.value());
+  }
 }
 
-void CSSTransitionManager::runTransition(folly::dynamic &&changedProps) {
-  operationHandle_ = operationsLoop_->schedule(
-      Operation()
-          .doOnce([transition = transition_,
-                   props = std::move(changedProps)](double timestamp) mutable {
-            transition->run(timestamp, props);
-          })
-          .waitFor([transition = transition_](double timestamp) {
-            return transition->getMinDelay(timestamp);
-          })
-          .doWhile([transition = transition_](double timestamp) mutable {
-            transition->update(timestamp);
-            return transition->getState() == TransitionProgressState::Running;
-          })
-          .build());
+void CSSTransitionManager::runTransition(ChangedProps &&changedProps) {
+  // operationHandle_ = operationsLoop_->schedule(
+  //     Operation()
+  //         .doOnce([transition = transition_,
+  //                  props = std::move(changedProps)](double timestamp) mutable
+  //                  {
+  //           transition->run(timestamp, props, folly::dynamic());
+  //         })
+  //         .waitFor([transition = transition_](double timestamp) {
+  //           return transition->getMinDelay(timestamp);
+  //         })
+  //         .doWhile([transition = transition_](double timestamp) mutable {
+  //           transition->update(timestamp);
+  //           return transition->getState() ==
+  //           TransitionProgressState::Running;
+  //         })
+  //         .build());
 }
 
 } // namespace reanimated::css

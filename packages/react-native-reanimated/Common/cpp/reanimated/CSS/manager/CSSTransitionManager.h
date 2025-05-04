@@ -48,7 +48,7 @@ class CSSTransitionManager {
   void updateTransition(
       const folly::dynamic &oldConfig,
       const folly::dynamic &newConfig);
-  void runTransition(folly::dynamic &&changedProps);
+  void runTransition(ChangedProps &&changedProps);
 };
 
 } // namespace reanimated::css
