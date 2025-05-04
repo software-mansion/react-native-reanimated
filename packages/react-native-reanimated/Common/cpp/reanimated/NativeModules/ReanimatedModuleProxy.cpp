@@ -73,7 +73,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 
   double start = getAnimationTimestamp_();
-  auto op = OperationBuilder()
+  auto op = Operation()
                 .doOnce([start](double timestamp) {
                   LOG(INFO) << "[1] doOnce: " << timestamp << " " << start;
                 })
@@ -92,10 +92,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   const auto handle = operationsLoop_->schedule(std::move(op));
 
   operationsLoop_->schedule(
-      OperationBuilder()
+      Operation()
           .waitFor(4000.0)
           .doOnce([handle, operationsLoop = operationsLoop_](double timestamp) {
-            LOG(INFO) << "[4] remove: " << timestamp << " " << handle;
             operationsLoop->remove(handle);
           })
           .build());
