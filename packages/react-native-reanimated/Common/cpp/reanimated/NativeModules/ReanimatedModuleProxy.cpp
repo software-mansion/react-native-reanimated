@@ -544,7 +544,8 @@ void ReanimatedModuleProxy::registerCSSTransition(
   auto transition = std::make_shared<CSSTransition>(
       parseCSSTransitionConfig(dynamicFromValue(rt, transitionConfig)));
 
-  cssTransitionsRegistry_->add(shadowNodeFromValue(rt, shadowNodeWrapper), transition);
+  cssTransitionsRegistry_->add(
+      shadowNodeFromValue(rt, shadowNodeWrapper), transition);
   maybeRunCSSLoop();
 }
 
@@ -707,6 +708,8 @@ void ReanimatedModuleProxy::performOperations() {
     auto lock = updatesRegistryManager_->lock();
 
     if (shouldUpdateCssAnimations_) {
+      operationsLoop_->update();
+
       currentCssTimestamp_ = getAnimationTimestamp_();
       cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
@@ -937,10 +940,7 @@ void ReanimatedModuleProxy::initializeFabric(
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_,
-      updatesRegistryManager_,
-      layoutAnimationsProxy_,
-      operationsLoop_);
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 
   const auto scheduler =
       reinterpret_cast<Scheduler *>(uiManager_->getDelegate());

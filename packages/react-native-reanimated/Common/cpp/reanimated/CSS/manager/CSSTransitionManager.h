@@ -22,8 +22,7 @@ class CSSTransitionManager {
 
   ~CSSTransitionManager();
 
-  folly::dynamic getCurrentFrameProps(
-      const ShadowNode::Shared &shadowNode) const;
+  folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
 
   void update(
       const ReanimatedViewProps &oldProps,
@@ -32,6 +31,10 @@ class CSSTransitionManager {
  private:
   std::shared_ptr<CSSTransition> transition_;
   OperationsLoop::OperationHandle operationHandle_;
+
+  // TODO - think of better way of running interrupted transitions without
+  // storing last frame result
+  folly::dynamic lastFrameProps_ = folly::dynamic::object();
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

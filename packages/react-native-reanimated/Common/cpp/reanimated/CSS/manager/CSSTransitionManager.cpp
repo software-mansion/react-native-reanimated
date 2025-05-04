@@ -15,19 +15,25 @@ CSSTransitionManager::~CSSTransitionManager() {
 }
 
 folly::dynamic CSSTransitionManager::getCurrentFrameProps(
-    const ShadowNode::Shared &shadowNode) const {
+    const ShadowNode::Shared &shadowNode) {
   if (!transition_) {
-    return folly::dynamic();
+    lastFrameProps_ = folly::dynamic::object();
+  } else {
+    lastFrameProps_ =
+        transition_->getCurrentFrameProps(shadowNode, viewStylesRepository_);
   }
-  return transition_->getCurrentFrameProps(shadowNode, viewStylesRepository_);
+
+  return lastFrameProps_;
 }
 
 void CSSTransitionManager::update(
     const ReanimatedViewProps &oldProps,
     const ReanimatedViewProps &newProps) {
   updateTransitionInstance(oldProps.cssTransition, newProps.cssTransition);
-  // Run transition if at least one of transition properties has changed
-  runTransitionForChangedProperties(oldProps.jsStyle, newProps.jsStyle);
+  if (transition_) {
+    // Run transition if at least one of transition properties has changed
+    runTransitionForChangedProperties(oldProps.jsStyle, newProps.jsStyle);
+  }
 }
 
 void CSSTransitionManager::updateTransitionInstance(
@@ -79,27 +85,26 @@ void CSSTransitionManager::updateTransition(
   const auto updates =
       getParsedCSSTransitionConfigUpdates(oldConfig, newConfig);
   if (updates.has_value()) {
-    transition_->updateSettings(updates.value());
+    transition_->updateSettings(std::move(updates.value()));
   }
 }
 
 void CSSTransitionManager::runTransition(ChangedProps &&changedProps) {
-  // operationHandle_ = operationsLoop_->schedule(
-  //     Operation()
-  //         .doOnce([transition = transition_,
-  //                  props = std::move(changedProps)](double timestamp) mutable
-  //                  {
-  //           transition->run(timestamp, props, folly::dynamic());
-  //         })
-  //         .waitFor([transition = transition_](double timestamp) {
-  //           return transition->getMinDelay(timestamp);
-  //         })
-  //         .doWhile([transition = transition_](double timestamp) mutable {
-  //           transition->update(timestamp);
-  //           return transition->getState() ==
-  //           TransitionProgressState::Running;
-  //         })
-  //         .build());
+  operationHandle_ = operationsLoop_->schedule(
+      Operation()
+          .doOnce([transition = transition_,
+                   lastFrameProps = lastFrameProps_,
+                   props = std::move(changedProps)](double timestamp) mutable {
+            transition->run(timestamp, props, lastFrameProps);
+          })
+          .waitFor([transition = transition_](double timestamp) {
+            return transition->getMinDelay(timestamp);
+          })
+          .doWhile([transition = transition_](double timestamp) mutable {
+            transition->update(timestamp);
+            return transition->getState() == TransitionProgressState::Running;
+          })
+          .build());
 }
 
 } // namespace reanimated::css
