@@ -4,6 +4,7 @@
 #include <folly/dynamic.h>
 #endif
 
+#include <react/renderer/components/rnreanimated/managers/CSSAnimationsManager.h>
 #include <react/renderer/components/rnreanimated/managers/CSSTransitionManager.h>
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>

@@ -12,7 +12,7 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   const auto &newProps =
       static_cast<const ReanimatedViewProps &>(*this->getProps());
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(folly::dynamic::object(), newProps);
+  state.cssAnimationsManager->update(ReanimatedViewProps(), newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
