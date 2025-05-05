@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, cubicBezier } from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');
 const countryside = require('./assets/countryside.jpg');
@@ -86,6 +86,27 @@ function HomeScreen({
         influence on high culture. It is regarded as the birthplace of the
         Italian Renaissance and of the foundations of the Italian language.
       </Text>
+      <View style={styles.newArchEnabledContainer}>
+        <View style={styles.indicatorContainer}>
+          <Animated.View
+            style={[
+              styles.indicator,
+              {
+                animationName: {
+                  '75%, 100%': {
+                    transform: [{ scale: 2 }],
+                    opacity: 0,
+                  },
+                },
+                animationDuration: '1s',
+                animationTimingFunction: cubicBezier(0, 0, 0.2, 1),
+                animationIterationCount: 'infinite',
+              },
+            ]}></Animated.View>
+          <View style={styles.indicator}></View>
+        </View>
+        <Text style={styles.indicatorText}>New Architecture Enabled</Text>
+      </View>
     </Animated.ScrollView>
   );
 }
@@ -216,5 +237,27 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginLeft: 20,
     borderRadius: 15,
+  },
+  newArchEnabledContainer: {
+    padding: 16,
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  indicatorContainer: {
+    marginRight: 28,
+  },
+  indicator: {
+    marginTop: 2,
+    width: 14,
+    height: 14,
+    backgroundColor: '#22c55e',
+    borderRadius: 99,
+    position: 'absolute',
+  },
+  indicatorText: {
+    fontSize: 16,
+    color: '#16a34a',
+    fontWeight: 'bold',
   },
 });
