@@ -21,6 +21,8 @@ export function registerWorkletsError() {
   }
 }
 
+// This can be fixed by replacing explicit casting.
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const WorkletsError =
   WorkletsErrorConstructor as IWorkletsErrorConstructor;
 
