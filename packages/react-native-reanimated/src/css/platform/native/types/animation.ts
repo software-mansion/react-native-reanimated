@@ -57,4 +57,4 @@ export type CSSAnimationUpdates = {
 
 // TODO - remove no longer needed types after finishing CSS refactor
 export type NormalizedSingleCSSAnimationConfig =
-  NormalizedSingleCSSAnimationSettings & { animationName: string };
+  NormalizedSingleCSSAnimationSettings & { name: string };

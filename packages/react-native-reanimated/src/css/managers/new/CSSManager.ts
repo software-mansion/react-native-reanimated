@@ -1,25 +1,22 @@
 'use strict';
-import type { NormalizedCSSTransitionConfig } from '../../platform/native';
-import {
-  normalizeCSSTransitionProperties,
-  styleBuilder,
-} from '../../platform/native';
+import { styleBuilder } from '../../platform/native';
 import type { CSSStyle, PlainStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import NewCSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionManager from './CSSTransitionManager';
 
 export default class NewCSSManager implements ICSSManager {
   private jsStyle: PlainStyle | null = null;
-  private cssTransition: NormalizedCSSTransitionConfig | null = null;
 
   private readonly animationsManager = new NewCSSAnimationsManager();
+  private readonly transitionManager = new CSSTransitionManager();
 
   getProps() {
     return {
       jsStyle: this.jsStyle,
-      cssTransition: this.cssTransition,
-      cssAnimations: this.cssAnimations,
+      cssTransition: this.transitionManager.getConfig(),
+      cssAnimations: this.animationsManager.getConfig(),
     };
   }
 
@@ -29,10 +26,8 @@ export default class NewCSSManager implements ICSSManager {
     const normalizedStyle = styleBuilder.buildFrom(filteredStyle);
 
     this.jsStyle = normalizedStyle;
-    this.cssTransition =
-      transitionProperties &&
-      normalizeCSSTransitionProperties(transitionProperties);
     this.animationsManager.update(animationProperties);
+    this.transitionManager.update(transitionProperties);
   }
 
   unmountCleanup(): void {

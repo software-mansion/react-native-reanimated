@@ -52,10 +52,6 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     }
   }
 
-  unmountCleanup(): void {
-    // noop
-  }
-
   private detach() {
     if (this.transitionConfig) {
       unregisterCSSTransition(this.viewTag);
