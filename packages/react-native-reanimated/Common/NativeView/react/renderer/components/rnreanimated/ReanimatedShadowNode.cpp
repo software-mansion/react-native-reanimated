@@ -9,11 +9,9 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFamily::Shared &family,
     ShadowNodeTraits traits)
     : ReanimatedViewShadowNodeBase(fragment, family, traits) {
-  const auto &newProps =
-      static_cast<const ReanimatedViewProps &>(*this->getProps());
-  const auto &state = getStateData();
-  state.cssAnimationsManager->update(ReanimatedViewProps(), newProps);
-  LOG(INFO) << "Mount: " << newProps.cssAnimations;
+  // TODO - create css animations if view has them on the initial render
+  // transition won't be ever fired on the initial render so we don't need to
+  // handle it here
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -34,7 +32,6 @@ ReanimatedShadowNode::ReanimatedShadowNode(
 
   const auto &state = getStateData();
   state.cssTransitionManager->update(oldProps, newProps);
-  state.cssAnimationsManager->update(oldProps, newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
