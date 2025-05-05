@@ -21,11 +21,11 @@ bool CSSTransitionsRegistry::hasUpdates() const {
 }
 
 void CSSTransitionsRegistry::add(
+    const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<CSSTransition> &transition) {
-  const auto &shadowNode = transition->getShadowNode();
   const auto viewTag = shadowNode->getTag();
 
-  registry_.insert({viewTag, transition});
+  registry_.insert({viewTag, {transition, shadowNode}});
   PropsObserver observer = createPropsObserver(viewTag);
   staticPropsRegistry_->setObserver(viewTag, std::move(observer));
 }
@@ -40,15 +40,16 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 
 void CSSTransitionsRegistry::updateSettings(
     const Tag viewTag,
-    const PartialCSSTransitionConfig &config) {
-  const auto &transition = registry_[viewTag];
+    const CSSTransitionConfigUpdates &config) {
+  const auto &[transition, shadowNode] = registry_[viewTag];
   transition->updateSettings(config);
 
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
     updateInUpdatesRegistry(
-        transition, transition->getCurrentFrameProps(viewStylesRepository_));
+        viewTag,
+        transition->getCurrentFrameProps(shadowNode, viewStylesRepository_));
   }
 }
 
@@ -60,13 +61,13 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   for (auto it = runningTransitionTags_.begin();
        it != runningTransitionTags_.end();) {
     const auto &viewTag = *it;
-    const auto &transition = registry_[viewTag];
+    const auto &[transition, shadowNode] = registry_[viewTag];
 
     transition->update(timestamp);
     const auto updates =
-        transition->getCurrentFrameProps(viewStylesRepository_);
+        transition->getCurrentFrameProps(shadowNode, viewStylesRepository_);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode(), updates);
+      addUpdatesToBatch(shadowNode, updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -98,9 +99,8 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
   }
 }
 
-void CSSTransitionsRegistry::scheduleOrActivateTransition(
-    const std::shared_ptr<CSSTransition> &transition) {
-  const auto viewTag = transition->getViewTag();
+void CSSTransitionsRegistry::scheduleOrActivateTransition(const Tag viewTag) {
+  const auto &transition = registry_[viewTag].first;
   const auto currentTimestamp = getCurrentTimestamp_();
   const auto minDelay = transition->getMinDelay(currentTimestamp);
 
@@ -123,7 +123,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       return;
     }
 
-    const auto &transition = strongThis->registry_[viewTag];
+    const auto &[transition, shadowNode] = strongThis->registry_[viewTag];
     const auto allowedProperties =
         transition->getAllowedProperties(oldProps, newProps);
 
@@ -137,23 +137,22 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
 
-      const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates =
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
       transition->run(
           strongThis->getCurrentTimestamp_(), changedProps, lastUpdates);
-      const auto &transitionStartStyle =
-          transition->getCurrentFrameProps(strongThis->viewStylesRepository_);
-      strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
-      strongThis->scheduleOrActivateTransition(transition);
+      const auto &transitionStartStyle = transition->getCurrentFrameProps(
+          shadowNode, strongThis->viewStylesRepository_);
+      strongThis->updateInUpdatesRegistry(viewTag, transitionStartStyle);
+      strongThis->scheduleOrActivateTransition(viewTag);
     }
   };
 }
 
 void CSSTransitionsRegistry::updateInUpdatesRegistry(
-    const std::shared_ptr<CSSTransition> &transition,
+    const Tag viewTag,
     const folly::dynamic &updates) {
-  const auto &shadowNode = transition->getShadowNode();
+  const auto &[transition, shadowNode] = registry_[viewTag];
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto &transitionProperties = transition->getProperties();
 

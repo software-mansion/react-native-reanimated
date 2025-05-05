@@ -4,7 +4,8 @@
 #include <folly/dynamic.h>
 #endif
 
-#include <reanimated/CSS/manager/CSSTransitionManager.h>
+#include <react/renderer/components/rnreanimated/managers/CSSTransitionManager.h>
+
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/operations/OperationsLoop.h>
 
