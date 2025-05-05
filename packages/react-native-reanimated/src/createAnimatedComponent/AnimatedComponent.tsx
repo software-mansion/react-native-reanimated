@@ -134,6 +134,10 @@ export default class AnimatedComponent
         !this.props.entering ||
         getReducedMotionFromConfig(this.props.entering as CustomConfig)
       ) {
+        if (this._componentDOMRef) {
+          this._componentDOMRef.style.visibility = 'initial';
+        }
+
         this._isFirstRender = false;
         return;
       }
