@@ -1,6 +1,6 @@
-#include <reanimated/CSS/manager/CSSTransitionManager.h>
+#include <react/renderer/components/rnreanimated/managers/CSSTransitionManager.h>
 
-namespace reanimated::css {
+namespace facebook::react {
 
 CSSTransitionManager::CSSTransitionManager(
     std::shared_ptr<OperationsLoop> operationsLoop,
@@ -107,4 +107,4 @@ void CSSTransitionManager::runTransition(ChangedProps &&changedProps) {
           .build());
 }
 
-} // namespace reanimated::css
+} // namespace facebook::react
