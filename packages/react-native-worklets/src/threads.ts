@@ -9,10 +9,13 @@ import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction } from './workletTypes';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_JEST = isJest();
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** An array of [worklet, args, resolve (optional)] pairs. */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 let _runOnUIQueue: Array<
   [WorkletFunction<unknown[], unknown>, unknown[], ((value: unknown) => void)?]
 > = [];
@@ -50,6 +53,7 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const callMicrotasks = SHOULD_BE_USE_WEB
   ? () => {
       // on web flushing is a noop as immediates are handled by the browser

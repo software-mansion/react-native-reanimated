@@ -2,6 +2,7 @@
 
 import type { WorkletStackDetails } from './workletTypes';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables,@ericcornelissen/top/no-top-level-side-effects
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
 export function registerWorkletStackDetails(

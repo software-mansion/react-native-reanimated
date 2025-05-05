@@ -2,6 +2,7 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { ShareableRef } from './workletTypes';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
@@ -23,10 +24,12 @@ During cloning we use `Object.entries` to iterate over the keys which throws an 
 For convenience we moved this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const cache = SHOULD_BE_USE_WEB
   ? null
   : new WeakMap<object, ShareableRef | symbol>();
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const shareableMappingCache = SHOULD_BE_USE_WEB
   ? {
       set() {

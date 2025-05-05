@@ -12,6 +12,7 @@ import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletRuntime } from './workletTypes';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**

@@ -5,6 +5,7 @@ import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 initializeUIRuntime(WorkletsModule);
 
 export type { LoggerConfig } from './logger';
