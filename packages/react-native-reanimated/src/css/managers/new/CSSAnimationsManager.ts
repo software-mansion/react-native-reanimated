@@ -23,7 +23,7 @@ type ProcessedAnimation = {
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private attachedAnimationKeyframes: CSSKeyframesRuleImpl[] = [];
-  private animationConfigs: NormalizedSingleCSSAnimationConfig[] = [];
+  private animationConfigs: NormalizedSingleCSSAnimationConfig[] | null = null;
 
   private readonly id: number;
 
@@ -34,7 +34,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.id = CSSAnimationsManager.nextId++;
   }
 
-  getConfig(): NormalizedSingleCSSAnimationConfig[] {
+  getConfig(): NormalizedSingleCSSAnimationConfig[] | null {
     return this.animationConfigs;
   }
 
@@ -66,7 +66,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     if (this.attachedAnimationKeyframes.length > 0) {
       this.unregisterKeyframesUsage();
       this.attachedAnimationKeyframes = [];
-      this.animationConfigs = [];
+      this.animationConfigs = null;
     }
   }
 
