@@ -1,5 +1,7 @@
 'use strict';
 
-import WorkletsTurboModule from './NativeWorkletsModule';
+import RNWorkletsTurboModule from './NativeWorkletsModule';
 
-export { WorkletsTurboModule };
+export const WorkletsTurboModule = globalThis._WORKLET
+  ? ({} as any)
+  : RNWorkletsTurboModule;

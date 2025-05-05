@@ -674,7 +674,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, bindingsToImport } = makeArrayFromCapturedBindings(transformed.ast, fun, state);
+      const { closureVariables, bindingsToImport } = getClosure(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -746,7 +746,7 @@ var require_workletFactory = __commonJS({
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(require.resolve(binding.path.parentPath.node.source.value, { paths: [(0, path_1.dirname)(state.file.opts.filename)] }))));
+      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const newProg = (0, types_12.program)([
         ...imports,
         (0, types_12.variableDeclaration)("const", [
@@ -766,13 +766,23 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(transformedProg, "[Reanimated] `transformedProg` is undefined.");
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
       try {
-        (0, fs_1.mkdirSync)(filesDirPath, {});
+        if (!(0, fs_1.existsSync)(filesDirPath)) {
+          (0, fs_1.mkdirSync)(filesDirPath, {});
+        }
       } catch (e) {
       }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      if (!state.file.metadata.virtualModules) {
+        state.file.metadata.virtualModules = /* @__PURE__ */ new Map();
+      }
+      state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
       try {
-        (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+        if (!(0, fs_1.existsSync)(dedicatedFilePath)) {
+          (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+          console.error("Saved worklet to file ", dedicatedFilePath);
+        }
       } catch (_e) {
+        console.error("Error while writing worklet to file: ", _e);
       }
       if (shouldIncludeInitData) {
         pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
@@ -829,62 +839,41 @@ var require_workletFactory = __commonJS({
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
     }
-    function makeArrayFromCapturedBindings(ast, fun, state) {
-      const closure = /* @__PURE__ */ new Map();
-      const isLocationAssignedMap = /* @__PURE__ */ new Map();
+    function getClosure(fun, state) {
+      const closureVariables = /* @__PURE__ */ new Set();
       const bindingsToImport = /* @__PURE__ */ new Set();
-      (0, core_1.traverse)(ast, {
+      fun.traverse({
         Identifier(path) {
-          var _a;
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
+          var _a, _b;
           const name = path.node.name;
-          if (globals_12.globals.has(name)) {
+          if (!path.isReferencedIdentifier() || path.key === "typeName") {
             return;
-          }
-          const binding = fun.scope.getBinding(name);
-          if (binding) {
-            if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_a = state.opts.workletModules) === null || _a === void 0 ? void 0 : _a.some((module3) => binding.path.parentPath.node.source.value.includes(module3)))) {
-              bindingsToImport.add(binding);
-              return;
-            }
           }
           if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
             return;
           }
-          const parentNode = path.parent;
-          if ((0, types_12.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
+          if (fun.scope.hasOwnBinding(path.node.name)) {
             return;
           }
-          if ((0, types_12.isObjectProperty)(parentNode) && (0, types_12.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
+          if (path.scope.hasOwnBinding(path.node.name)) {
             return;
           }
-          let currentScope = path.scope;
-          while (currentScope != null) {
-            if (currentScope.bindings[name] != null) {
-              return;
+          const binding = fun.scope.getBinding(path.node.name);
+          if (binding) {
+            if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_a = state.opts.workletModules) === null || _a === void 0 ? void 0 : _a.some((module3) => binding.path.parentPath.node.source.value.includes(module3)))) {
+              console.log("binding", name, "id" in fun.node && ((_b = fun.node.id) === null || _b === void 0 ? void 0 : _b.name));
+              bindingsToImport.add(binding);
+            } else {
+              if (globals_12.globals.has(name)) {
+                return;
+              }
+              closureVariables.add(name);
             }
-            currentScope = currentScope.parent;
           }
-          closure.set(name, (0, types_12.cloneNode)(path.node, true));
-          isLocationAssignedMap.set(name, false);
         }
-      });
-      fun.traverse({
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const node = closure.get(path.node.name);
-          if (!node || isLocationAssignedMap.get(path.node.name)) {
-            return;
-          }
-          node.loc = path.node.loc;
-          isLocationAssignedMap.set(path.node.name, true);
-        }
-      });
-      return { closureVariables: Array.from(closure.values()), bindingsToImport };
+      }, state);
+      const retClosureVariables = Array.from(closureVariables).map((name) => (0, types_12.identifier)(name));
+      return { closureVariables: retClosureVariables, bindingsToImport };
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),

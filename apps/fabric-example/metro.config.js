@@ -1,4 +1,3 @@
-const { exec } = require('shelljs');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
@@ -12,14 +11,6 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
-let hasInitialized = false;
-
-function initialize() {
-  exec(
-    'yarn react-native bundle --reset-cache --entry-file index.js  --bundle-output /dev/null --dev true --platform ios --minify false'
-  );
-}
-
 /**
  * Metro configuration https://reactnative.dev/docs/metro
  *
@@ -32,7 +23,7 @@ const config = {
   },
   serializer: {
     getModulesRunBeforeMainModule() {
-      return [require.resolve('react-native-worklets/src/index.ts')];
+      return [require.resolve('react-native-worklets/src/bundleBreaker.ts')];
     },
     createModuleIdFactory() {
       let nextId = 0;
@@ -55,15 +46,6 @@ const config = {
   server: {
     enhanceMiddleware: (middleware) => {
       return androidAssetsResolutionFix.applyMiddleware(middleware);
-    },
-    rewriteRequestUrl: (url) => {
-      // To get the whole bundle on initial load.
-      if (!hasInitialized) {
-        initialize();
-        hasInitialized = true;
-      }
-
-      return url;
     },
   },
 };

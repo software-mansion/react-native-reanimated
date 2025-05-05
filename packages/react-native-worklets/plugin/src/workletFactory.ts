@@ -44,7 +44,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
@@ -103,11 +103,13 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const { closureVariables, bindingsToImport } = makeArrayFromCapturedBindings(
-    transformed.ast,
-    fun,
-    state
-  );
+  // const { closureVariables, bindingsToImport } = makeArrayFromCapturedBindings(
+  //   transformed.ast,
+  //   fun,
+  //   state
+  // );
+
+  const { closureVariables, bindingsToImport } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -355,10 +357,7 @@ export function makeWorkletFactory(
       importDeclaration(
         [cloneNode(binding.path.node as ImportSpecifier, true)],
         stringLiteral(
-          require.resolve(
-            (binding.path.parentPath!.node as ImportDeclaration).source.value,
-            { paths: [dirname(state.file.opts.filename!)] }
-          )
+          (binding.path.parentPath!.node as ImportDeclaration).source.value
         )
       )
     );
@@ -389,16 +388,33 @@ export function makeWorkletFactory(
   );
 
   try {
-    mkdirSync(filesDirPath, {});
+    if (!existsSync(filesDirPath)) {
+      mkdirSync(filesDirPath, {});
+    }
   } catch (e) {
     // Nothing.
   }
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
+  // @ts-expect-error wwww
+  if (!state.file.metadata.virtualModules) {
+    // @ts-expect-error wwww
+    state.file.metadata.virtualModules = new Map();
+  }
+  // @ts-expect-error wwww
+  state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
+
   try {
-    writeFileSync(dedicatedFilePath, transformedProg);
+    // If a file exists, abort the process.
+    if (!existsSync(dedicatedFilePath)) {
+      // temporary
+      writeFileSync(dedicatedFilePath, transformedProg);
+      console.error('Saved worklet to file ', dedicatedFilePath);
+      // console.error('babel time', new Date().toISOString());
+    }
   } catch (_e) {
+    console.error('Error while writing worklet to file: ', _e);
     // Nothing.
   }
 
@@ -599,6 +615,67 @@ function makeArrayFromCapturedBindings(
   });
 
   return { closureVariables: Array.from(closure.values()), bindingsToImport };
+}
+
+function getClosure(
+  fun: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): {
+  closureVariables: Identifier[];
+  bindingsToImport: Set<Binding>;
+} {
+  const closureVariables = new Set<string>();
+  const bindingsToImport = new Set<Binding>();
+  fun.traverse(
+    {
+      Identifier(path) {
+        const name = path.node.name;
+        if (!path.isReferencedIdentifier() || path.key === 'typeName') {
+          return;
+        }
+
+        if ('id' in fun.node && fun.node.id && fun.node.id.name === name) {
+          return;
+        }
+        if (fun.scope.hasOwnBinding(path.node.name)) {
+          return;
+        }
+        if (path.scope.hasOwnBinding(path.node.name)) {
+          return;
+        }
+        const binding = fun.scope.getBinding(path.node.name);
+        if (binding) {
+          if (
+            binding.kind === 'module' &&
+            binding.constant &&
+            binding.path.isImportSpecifier() &&
+            binding.path.parentPath.isImportDeclaration() &&
+            state.opts.workletModules?.some((module) =>
+              (
+                binding.path.parentPath as NodePath<ImportDeclaration>
+              ).node.source.value.includes(module)
+            )
+          ) {
+            console.log('binding', name, 'id' in fun.node && fun.node.id?.name);
+            bindingsToImport.add(binding);
+          } else {
+            // console.log('closure', name);
+            if (globals.has(name)) {
+              return;
+            }
+            closureVariables.add(name);
+          }
+        }
+      },
+    },
+    state
+  );
+
+  const retClosureVariables = Array.from(closureVariables).map((name) =>
+    identifier(name)
+  );
+
+  return { closureVariables: retClosureVariables, bindingsToImport };
 }
 
 const extraPlugins = [
