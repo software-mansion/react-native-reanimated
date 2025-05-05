@@ -43,6 +43,12 @@ export default class CSSKeyframesRegistry {
         keyframesRule,
         refIds: new Set([refId]),
       });
+
+      // Store the keyframes to name mapping in order to reuse the same
+      // animation name when possible (when the same inline keyframes object
+      // is used)
+      this.cssTextToNameMap_.set(keyframesRule.cssText, keyframesRule.name);
+
       // Register animation keyframes only if they are not already registered
       // (when they are added for the first time)
       // TODO - batch css keyframes registration calls
@@ -64,6 +70,7 @@ export default class CSSKeyframesRegistry {
 
     if (refIds.size === 0) {
       this.registry_.delete(animationName);
+      this.cssTextToNameMap_.delete(entry.keyframesRule.cssText);
       // Unregister animation keyframes if there are no more references to them
       // (no more views that have an animation with this name)
       unregisterCSSKeyframes(animationName);
