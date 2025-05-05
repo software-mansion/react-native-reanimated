@@ -12,7 +12,10 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated::css {
+namespace facebook::react {
+
+using namespace reanimated;
+using namespace css;
 
 class CSSTransitionManager {
  public:
@@ -54,4 +57,4 @@ class CSSTransitionManager {
   void runTransition(ChangedProps &&changedProps);
 };
 
-} // namespace reanimated::css
+} // namespace facebook::react
