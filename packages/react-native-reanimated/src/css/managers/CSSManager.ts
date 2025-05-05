@@ -38,8 +38,8 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(transitionProperties);
-    this.cssAnimationsManager.update(animationProperties);
+    this.cssTransitionsManager.update(transitionProperties ?? null);
+    this.cssAnimationsManager.update(animationProperties ?? null);
 
     // If the current update is not the fist one, we want to update CSS
     // animations and transitions first and update the style then to make
@@ -53,6 +53,5 @@ export default class CSSManager implements ICSSManager {
 
   unmountCleanup(): void {
     this.cssAnimationsManager.unmountCleanup();
-    this.cssTransitionsManager.unmountCleanup();
   }
 }

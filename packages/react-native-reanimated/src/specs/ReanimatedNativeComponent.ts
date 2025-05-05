@@ -6,6 +6,7 @@ import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNati
 interface NativeProps extends ViewProps {
   jsStyle: UnsafeMixed;
   cssTransition: UnsafeMixed;
+  cssAnimations: UnsafeMixed;
 }
 
 export default codegenNativeComponent<NativeProps>('ReanimatedView', {
