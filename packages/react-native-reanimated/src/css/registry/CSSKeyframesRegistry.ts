@@ -13,28 +13,39 @@ import {
  * last view that uses them.
  */
 export default class CSSKeyframesRegistry {
+  private readonly cssTextToNameMap_: Map<string, string> = new Map();
   private readonly registry_: Map<
     string,
     {
       keyframesRule: CSSKeyframesRuleImpl;
-      viewTags: Set<number>;
+      refIds: Set<number>;
     }
   > = new Map();
 
-  has(animationName: string) {
-    return this.registry_.has(animationName);
+  get(key: string /* animation name or css text */) {
+    const result = this.registry_.get(key);
+    if (result) {
+      return result;
+    }
+
+    const animationName = this.cssTextToNameMap_.get(key);
+    if (animationName) {
+      return this.registry_.get(animationName);
+    }
   }
 
-  add(keyframesRule: CSSKeyframesRuleImpl, viewTag: number) {
-    if (this.has(keyframesRule.name)) {
-      this.registry_.get(keyframesRule.name)!.viewTags.add(viewTag);
+  add(keyframesRule: CSSKeyframesRuleImpl, refId: number) {
+    const existingKeyframesRule = this.get(keyframesRule.name);
+    if (existingKeyframesRule) {
+      existingKeyframesRule.refIds.add(refId);
     } else {
       this.registry_.set(keyframesRule.name, {
         keyframesRule,
-        viewTags: new Set([viewTag]),
+        refIds: new Set([refId]),
       });
       // Register animation keyframes only if they are not already registered
       // (when they are added for the first time)
+      // TODO - batch css keyframes registration calls
       registerCSSKeyframes(
         keyframesRule.name,
         keyframesRule.normalizedKeyframesConfig
@@ -42,16 +53,16 @@ export default class CSSKeyframesRegistry {
     }
   }
 
-  remove(animationName: string, viewTag: number) {
+  remove(animationName: string, refId: number) {
     const entry = this.registry_.get(animationName);
     if (!entry) {
       return;
     }
 
-    const viewTags = entry.viewTags;
-    viewTags.delete(viewTag);
+    const refIds = entry.refIds;
+    refIds.delete(refId);
 
-    if (viewTags.size === 0) {
+    if (refIds.size === 0) {
       this.registry_.delete(animationName);
       // Unregister animation keyframes if there are no more references to them
       // (no more views that have an animation with this name)
