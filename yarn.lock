@@ -2872,6 +2872,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ericcornelissen/eslint-plugin-top@npm:^3.5.1":
+  version: 3.5.1
+  resolution: "@ericcornelissen/eslint-plugin-top@npm:3.5.1"
+  peerDependencies:
+    eslint: 8.x || 9.x
+  checksum: 10/386815b73d3eacb054a4cc82b8d5754b88d0b01b3db2ad603de99383c2b4923567970d25abf0e8bed2ae0ae8a04a72bdcd6b05960148731a72bac18f9b244fbd
+  languageName: node
+  linkType: hard
+
 "@es-joy/jsdoccomment@npm:~0.48.0":
   version: 0.48.0
   resolution: "@es-joy/jsdoccomment@npm:0.48.0"
@@ -18796,6 +18805,7 @@ __metadata:
     "@babel/plugin-transform-template-literals": "npm:^7.0.0-0"
     "@babel/plugin-transform-unicode-regex": "npm:^7.0.0-0"
     "@babel/preset-typescript": "npm:^7.16.7"
+    "@ericcornelissen/eslint-plugin-top": "npm:^3.5.1"
     "@react-native-community/cli": "npm:19.0.0"
     "@react-native/eslint-config": "npm:0.80.0-rc.2"
     "@types/jest": "npm:^29.5.5"
