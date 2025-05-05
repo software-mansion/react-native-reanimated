@@ -109,6 +109,7 @@ import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
 import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
 import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
 import FlatListExample from './SharedElementTransitions/FlatList';
+import GalleryExample from './SharedElementTransitions/Gallery';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import ManyScreensExample from './SharedElementTransitions/ManyScreens';
@@ -534,6 +535,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
+  },
+  GalleryExample: {
+    icon: '🇮🇹',
+    title: 'Gallery',
+    screen: GalleryExample,
   },
 
   // Old examples
