@@ -25,10 +25,6 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.setElementTransition(transitionProperties);
   }
 
-  unmountCleanup() {
-    // noop
-  }
-
   private detach() {
     this.element.style.transition = '';
     this.element.style.transitionProperty = '';

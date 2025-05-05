@@ -53,6 +53,5 @@ export default class CSSManager implements ICSSManager {
 
   unmountCleanup(): void {
     this.cssAnimationsManager.unmountCleanup();
-    this.cssTransitionsManager.unmountCleanup();
   }
 }

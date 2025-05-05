@@ -235,6 +235,7 @@ export default class AnimatedComponent<
     }
 
     if (!this._CSSManagerNew) {
+      this._updateStyles(this.props);
       this._CSSManagerNew ??= new NewCSSManager();
       this._CSSManagerNew.update(this._cssStyle);
     }
