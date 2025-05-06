@@ -64,4 +64,6 @@ struct CSSAnimationConfig {
   AnimationPlayState playState;
 };
 
+CSSAnimationConfig parseCSSAnimationConfig(const folly::dynamic &config);
+
 } // namespace reanimated::css
