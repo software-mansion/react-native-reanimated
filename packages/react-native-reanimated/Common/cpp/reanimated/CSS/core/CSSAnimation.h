@@ -4,6 +4,7 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <memory>
 #include <string>
@@ -15,10 +16,8 @@ namespace reanimated::css {
 class CSSAnimation {
  public:
   CSSAnimation(
-      jsi::Runtime &rt,
-      std::string name,
-      const CSSKeyframesConfig &keyframesConfig,
-      const CSSAnimationSettings &settings,
+      const CSSAnimationConfig &config,
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
       double timestamp);
 
   const std::string &getName() const;
