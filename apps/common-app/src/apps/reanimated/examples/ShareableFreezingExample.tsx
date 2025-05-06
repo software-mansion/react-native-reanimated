@@ -15,6 +15,10 @@ export default function FreezingShareables() {
           <Text style={styles.text}>🤫</Text>
           <Text>Should not show a warning.</Text>
         </View>
+        <View style={styles.warningTextContainer}>
+          <Text style={styles.text}>🚨</Text>
+          <Text>Should throw an error.</Text>
+        </View>
       </View>
       <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
@@ -38,10 +42,14 @@ export default function FreezingShareables() {
         />
       </View>
       <View style={styles.textAndButton}>
+        <Text style={styles.text}>🚨</Text>
+        <Button title="Modify host object" onPress={tryModifyHostObject} />
+      </View>
+      <View style={styles.textAndButton}>
         <Text style={styles.text}>🤫</Text>
         <Button
-          title="Modify converted turbo module"
-          onPress={tryModifyConvertedTurboModule}
+          title="Modify converted turbo module like"
+          onPress={tryModifyConvertedTurboModuleLike}
         />
       </View>
       <View style={styles.textAndButton}>
@@ -96,7 +104,7 @@ function tryModifyConvertedRemoteFunction() {
   obj.prop = 2; // should warn because it's frozen
 }
 
-function tryModifyConvertedTurboModule() {
+function tryModifyConvertedTurboModuleLike() {
   // @ts-expect-error It's ok
   const proto = globalThis.__reanimatedModuleProxy;
   const obj = {
@@ -107,6 +115,13 @@ function tryModifyConvertedTurboModule() {
     console.warn('No host object found.');
     return;
   }
+  makeShareableCloneRecursive(obj);
+  obj.prop = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyHostObject() {
+  // @ts-expect-error It's ok
+  const obj = globalThis.__reanimatedModuleProxy;
   makeShareableCloneRecursive(obj);
   obj.prop = 2; // shouldn't warn because it's not frozen
 }

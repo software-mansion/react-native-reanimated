@@ -88,18 +88,7 @@ jsi::Value makeShareableClone(
                                 .getPropertyAsFunction(rt, "getPrototypeOf");
       auto objectPrototype = getPrototypeOf.call(rt, object).asObject(rt);
 
-      if (objectPrototype.isHostObject<ShareableJSRef>(rt)) {
-        auto value = objectPrototype.getHostObject<ShareableJSRef>(rt)->value();
-        auto hostObjectPtr = dynamic_cast<ShareableHostObject *>(value.get());
-
-        if (hostObjectPtr) {
-          shareable = std::make_shared<ShareableTurboModuleLike>(
-              rt, object, hostObjectPtr->getHostObject());
-        } else {
-          throw std::runtime_error(
-              "[Worklets] Failed to cast ShareableJSRef to ShareableHostObject");
-        }
-      } else if (objectPrototype.isHostObject(rt)) {
+      if (objectPrototype.isHostObject(rt)) {
         shareable = std::make_shared<ShareableTurboModuleLike>(
             rt, object, objectPrototype.getHostObject(rt));
       } else if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
@@ -260,7 +249,7 @@ jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
 
 ShareableTurboModuleLike::ShareableTurboModuleLike(
     jsi::Runtime &rt,
-    const jsi::Object &properties,
+    const jsi::Object &object,
     const std::shared_ptr<jsi::HostObject> &proto)
     : Shareable(TurboModuleObjectLikeType) {
   // We must get rid of the Host Object prototype as `ShareableObject` expects
@@ -269,10 +258,10 @@ ShareableTurboModuleLike::ShareableTurboModuleLike(
                             .getPropertyAsObject(rt, "Object")
                             .getPropertyAsFunction(rt, "setPrototypeOf");
   auto emptyObject = jsi::Object(rt);
-  setPrototypeOf.call(rt, properties, emptyObject);
+  setPrototypeOf.call(rt, object, emptyObject);
 
-  proto_ = std::make_shared<ShareableHostObject>(rt, proto);
-  properties_ = std::make_shared<ShareableObject>(rt, properties);
+  proto_ = std::make_unique<ShareableHostObject>(rt, proto);
+  properties_ = std::make_unique<ShareableObject>(rt, object);
 }
 
 jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {

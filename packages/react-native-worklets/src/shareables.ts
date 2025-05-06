@@ -141,7 +141,6 @@ function makeShareableCloneRecursiveNative<T>(
   if (isHostObject(value)) {
     // RN has introduced a new representation of the turbo module as a JS object whose prototype is the host object
     // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
-    // We need to handle this case separately as it's not a plain JS object and we need to treat it as a host object.
     if (isHostObject(Object.getPrototypeOf(value))) {
       return cloneTurboModuleLike(value, shouldPersistRemote, depth);
     }
@@ -337,19 +336,27 @@ function cloneObjectOwnProperties<T extends object>(
   value: T,
   shouldPersistRemote: boolean,
   depth: number
-): Record<string, unknown> {
-  const clonedProps: Record<string, unknown> = {};
-  for (const [key, element] of Object.entries(value)) {
-    if (key === '__initData' && clonedProps.__initData !== undefined) {
-      continue;
-    }
-    clonedProps[key] = makeShareableCloneRecursive(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
-  }
-  return clonedProps;
+): {
+  [K in keyof T]: ShareableRef<T[keyof T]>;
+} {
+  return Object.entries(value).reduce(
+    (acc, [key, element]) => {
+      if (
+        key === '__initData' &&
+        '__initData' in acc &&
+        acc.__initData !== undefined
+      ) {
+        return acc;
+      }
+      acc[key as keyof T] = makeShareableCloneRecursive(
+        element,
+        shouldPersistRemote,
+        depth + 1
+      );
+      return acc;
+    },
+    {} as { [K in keyof T]: ShareableRef<T[keyof T]> }
+  );
 }
 
 function clonePlainJSObject<T extends object>(
@@ -383,7 +390,8 @@ function cloneTurboModuleLike<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
-  // We do not call makeShareableClone on the proto, because we are converting the prototype to a SharableHostObject on the C++ side
+  // We do not call makeShareableClone on the proto, because we are
+  // converting the prototype to a SharableHostObject on the C++ side
   const clonedProto = Object.getPrototypeOf(value);
   const clonedProps = cloneObjectOwnProperties(
     value,
