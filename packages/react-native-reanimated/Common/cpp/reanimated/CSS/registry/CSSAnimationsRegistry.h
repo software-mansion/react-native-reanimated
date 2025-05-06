@@ -53,6 +53,7 @@ class CSSAnimationsRegistry
   struct RegistryEntry {
     const CSSAnimationsVector animationsVector;
     const AnimationToIndexMap animationToIndexMap;
+    const ShadowNode::Shared shadowNode;
   };
 
   using Registry = std::unordered_map<Tag, RegistryEntry>;
@@ -61,7 +62,8 @@ class CSSAnimationsRegistry
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
-  DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+  DelayedItemsManager<std::shared_ptr<CSSAnimation>, Tag>
+      delayedAnimationsManager_;
 
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
@@ -78,16 +80,19 @@ class CSSAnimationsRegistry
       double timestamp);
 
   void updateViewAnimations(
-      Tag viewTag,
+      const ShadowNode::Shared &shadowNode,
       const std::vector<size_t> &animationIndices,
       double timestamp,
       bool addToBatch);
   void scheduleOrActivateAnimation(
+      Tag viewTag,
       size_t animationIndex,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
   void removeViewAnimations(Tag viewTag);
-  void applyViewAnimationsStyle(Tag viewTag, double timestamp);
+  void applyViewAnimationsStyle(
+      const ShadowNode::Shared &shadowNode,
+      double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(double timestamp);
 
