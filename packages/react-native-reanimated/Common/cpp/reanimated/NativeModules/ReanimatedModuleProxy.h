@@ -60,6 +60,8 @@ class ReanimatedModuleProxy
   ~ReanimatedModuleProxy();
 
   std::shared_ptr<OperationsLoop> getOperationsLoop() const;
+  std::shared_ptr<CSSKeyframesRegistry> getCssAnimationKeyframesRegistry()
+      const;
   std::shared_ptr<ViewStylesRepository> getViewStylesRepository() const;
 
   jsi::Value registerEventHandler(

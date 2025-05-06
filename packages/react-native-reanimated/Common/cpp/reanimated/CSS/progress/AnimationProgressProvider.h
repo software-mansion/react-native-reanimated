@@ -42,7 +42,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
     easingFunction_ = easingFunction;
   }
 
-  AnimationDirection getDirection() const {
+    AnimationDirection getDirection() const {
     return direction_;
   }
   double getGlobalProgress() const override {

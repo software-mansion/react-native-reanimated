@@ -36,19 +36,22 @@ State::Shared ReanimatedViewComponentDescriptor::createInitialState(
     const Props::Shared & /*props*/,
     const ShadowNodeFamily::Shared &family) const {
   auto state = std::make_shared<ReanimatedViewStateData>();
-  state->initialize(operationsLoop_, viewStylesRepository_);
+  state->initialize(
+      operationsLoop_, cssAnimationKeyframesRegistry_, viewStylesRepository_);
   return std::make_shared<ConcreteState>(state, family);
 }
 
 void ReanimatedViewComponentDescriptor::initialize(
     const std::shared_ptr<ReanimatedModuleProxy> &proxy) {
   operationsLoop_ = proxy->getOperationsLoop();
+  cssAnimationKeyframesRegistry_ = proxy->getCssAnimationKeyframesRegistry();
   viewStylesRepository_ = proxy->getViewStylesRepository();
 }
 
 void ReanimatedViewComponentDescriptor::dummyInitialize() {
   // TODO - think of a better way to handle this case when we don't have a proxy
   operationsLoop_ = std::make_shared<OperationsLoop>([]() { return 0; });
+  cssAnimationKeyframesRegistry_ = std::make_shared<CSSKeyframesRegistry>();
   viewStylesRepository_ = std::make_shared<ViewStylesRepository>(
       std::make_shared<StaticPropsRegistry>(),
       std::make_shared<AnimatedPropsRegistry>());

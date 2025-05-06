@@ -27,6 +27,8 @@ class ReanimatedViewStateData {
 
   void initialize(
       const std::shared_ptr<OperationsLoop> &operationsLoop,
+      const std::shared_ptr<CSSKeyframesRegistry>
+          &cssAnimationKeyframesRegistry,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 #ifdef ANDROID

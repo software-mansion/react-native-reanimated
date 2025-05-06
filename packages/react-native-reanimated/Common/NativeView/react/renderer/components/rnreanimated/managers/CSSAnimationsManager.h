@@ -20,6 +20,7 @@ class CSSAnimationsManager {
  public:
   CSSAnimationsManager(
       std::shared_ptr<OperationsLoop> operationsLoop,
+      std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry,
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
   ~CSSAnimationsManager();
@@ -29,10 +30,26 @@ class CSSAnimationsManager {
   void update(const ReanimatedViewProps &newProps);
 
  private:
-  std::vector<CSSAnimation> animations_;
+  using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
+  using NameToAnimationsMap = std::unordered_map<std::string, AnimationsVector>;
+
+  AnimationsVector animations_;
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
+  std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  std::vector<CSSAnimationConfig> parseAnimationConfigs(
+      const folly::dynamic &cssAnimations) const;
+  NameToAnimationsMap createCurrentNameToAnimationsMap() const;
+  AnimationsVector createNewAnimationsVector(
+      NameToAnimationsMap &nameToAnimationsMap,
+      const std::vector<CSSAnimationConfig> &animationConfigs);
+
+  std::shared_ptr<CSSAnimation> createAnimation(
+      const CSSAnimationConfig &animationConfig,
+      double timestamp);
+  void removeAnimation(const std::shared_ptr<CSSAnimation> &animation);
 };
 
 } // namespace facebook::react
