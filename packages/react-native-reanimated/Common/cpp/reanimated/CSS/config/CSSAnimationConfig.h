@@ -51,4 +51,17 @@ struct CSSAnimationUpdates {
 
 CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config);
 
+// TODO - clean up this file once the new CSS implementation is ready
+
+struct CSSAnimationConfig {
+  std::string name;
+  double duration;
+  EasingFunction easingFunction;
+  double delay;
+  double iterationCount;
+  AnimationDirection direction;
+  AnimationFillMode fillMode;
+  AnimationPlayState playState;
+};
+
 } // namespace reanimated::css
