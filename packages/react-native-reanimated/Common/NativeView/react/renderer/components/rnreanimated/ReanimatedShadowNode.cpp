@@ -12,7 +12,7 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   const auto &newProps =
       static_cast<const ReanimatedViewProps &>(*this->getProps());
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(ReanimatedViewProps(), newProps);
+  state.cssAnimationsManager->update(newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -33,7 +33,7 @@ ReanimatedShadowNode::ReanimatedShadowNode(
 
   const auto &state = getStateData();
   state.cssTransitionManager->update(oldProps, newProps);
-  state.cssAnimationsManager->update(oldProps, newProps);
+  state.cssAnimationsManager->update(newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
