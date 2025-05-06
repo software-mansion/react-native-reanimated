@@ -6,13 +6,11 @@ namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
     std::string name,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
     : name_(std::move(name)),
-      shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
@@ -30,10 +28,6 @@ CSSAnimation::CSSAnimation(
 
 const std::string &CSSAnimation::getName() const {
   return name_;
-}
-
-ShadowNode::Shared CSSAnimation::getShadowNode() const {
-  return shadowNode_;
 }
 
 double CSSAnimation::getStartTimestamp(const double timestamp) const {
@@ -71,12 +65,14 @@ folly::dynamic CSSAnimation::getForwardsFillStyle() const {
 }
 
 folly::dynamic CSSAnimation::getResetStyle(
+    const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return styleInterpolator_->getResetStyle(
-      getUpdateContext(viewStylesRepository));
+      getUpdateContext(shadowNode, viewStylesRepository));
 }
 
 folly::dynamic CSSAnimation::getCurrentFrameProps(
+    const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   // Check if the animation has not started yet because of the delay
   // (In general, it shouldn't be activated until the delay has passed but we
@@ -87,7 +83,7 @@ folly::dynamic CSSAnimation::getCurrentFrameProps(
   }
 
   return styleInterpolator_->interpolate(
-      getUpdateContext(viewStylesRepository));
+      getUpdateContext(shadowNode, viewStylesRepository));
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -134,9 +130,10 @@ void CSSAnimation::updateSettings(
 }
 
 PropertyInterpolatorUpdateContext CSSAnimation::getUpdateContext(
+    const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return PropertyInterpolatorUpdateContext{
-      .node = shadowNode_,
+      .node = shadowNode,
       .progressProvider = progressProvider_,
       .viewStylesRepository = viewStylesRepository,
   };

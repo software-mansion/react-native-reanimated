@@ -18,9 +18,7 @@ folly::dynamic CSSAnimationsManager::getCurrentFrameProps(
   return folly::dynamic::object();
 }
 
-void CSSAnimationsManager::update(
-    const ReanimatedViewProps &oldProps,
-    const ReanimatedViewProps &newProps) {
+void CSSAnimationsManager::update(const ReanimatedViewProps &newProps) {
   // TODO - implement
   // LOG(INFO) << "CSSAnimationsManager::update: " << oldProps.cssAnimations <<
   // " "

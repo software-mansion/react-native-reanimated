@@ -2,12 +2,14 @@
 
 #include <react/renderer/components/rnreanimated/Props.h>
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
-#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/config/CSSAnimationConfig.h>
+#include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/Fabric/operations/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace facebook::react {
 
@@ -24,11 +26,11 @@ class CSSAnimationsManager {
 
   folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
 
-  void update(
-      const ReanimatedViewProps &oldProps,
-      const ReanimatedViewProps &newProps);
+  void update(const ReanimatedViewProps &newProps);
 
  private:
+  std::vector<CSSAnimation> animations_;
+
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };

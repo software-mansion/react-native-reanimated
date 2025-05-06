@@ -16,14 +16,12 @@ class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
       std::string name,
       const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 
   const std::string &getName() const;
-  ShadowNode::Shared getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState() const;
@@ -35,8 +33,10 @@ class CSSAnimation {
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getForwardsFillStyle() const;
   folly::dynamic getResetStyle(
+      const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
   folly::dynamic getCurrentFrameProps(
+      const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
   void updateSettings(
@@ -47,13 +47,13 @@ class CSSAnimation {
 
  private:
   const std::string name_;
-  const ShadowNode::Shared shadowNode_;
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 
   PropertyInterpolatorUpdateContext getUpdateContext(
+      const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 };
 
