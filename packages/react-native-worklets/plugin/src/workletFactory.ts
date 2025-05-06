@@ -1,10 +1,9 @@
 import type { NodePath } from '@babel/core';
-import { transformFromAstSync, traverse } from '@babel/core';
+import { transformFromAstSync } from '@babel/core';
 import generate from '@babel/generator';
 import type { Binding } from '@babel/traverse';
 import type {
   ExpressionStatement,
-  File as BabelFile,
   Identifier,
   ImportDeclaration,
   ImportSpecifier,
@@ -26,10 +25,7 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  isMemberExpression,
-  isObjectExpression,
   isObjectMethod,
-  isObjectProperty,
   memberExpression,
   newExpression,
   numericLiteral,
@@ -109,7 +105,11 @@ export function makeWorkletFactory(
   //   state
   // );
 
-  const { closureVariables, bindingsToImport } = getClosure(fun, state);
+  const {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -347,7 +347,7 @@ export function makeWorkletFactory(
     )
   );
 
-  const imports = Array.from(bindingsToImport)
+  const libraryImports = Array.from(libraryBindingsToImport)
     .filter(
       (binding) =>
         binding.path.isImportSpecifier() &&
@@ -361,6 +361,35 @@ export function makeWorkletFactory(
         )
       )
     );
+
+  const filesDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    'generated'
+  );
+
+  const relativeImports = Array.from(relativeBindingsToImport)
+    .filter(
+      (binding) =>
+        binding.path.isImportSpecifier() &&
+        binding.path.parentPath.isImportDeclaration()
+    )
+    .map((binding) => {
+      const resolved = resolve(
+        dirname(state.file.opts.filename!),
+        (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
+          .value
+      );
+      const relatived = relative(filesDirPath, resolved);
+
+      console.log('relative resolved', relatived);
+      return importDeclaration(
+        [cloneNode(binding.path.node as ImportSpecifier, true)],
+        stringLiteral(relatived)
+      );
+    });
+
+  const imports = [...libraryImports, ...relativeImports];
+  // const imports = libraryImports;
 
   const newProg = program([
     ...imports,
@@ -381,11 +410,6 @@ export function makeWorkletFactory(
   })?.code;
 
   assert(transformedProg, '[Reanimated] `transformedProg` is undefined.');
-
-  const filesDirPath = resolve(
-    dirname(require.resolve('react-native-worklets/package.json')),
-    'generated'
-  );
 
   try {
     if (!existsSync(filesDirPath)) {
@@ -508,124 +532,126 @@ function makeWorkletName(
   return { workletName, reactName };
 }
 
-function makeArrayFromCapturedBindings(
-  ast: BabelFile,
-  fun: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
-): {
-  closureVariables: Identifier[];
-  bindingsToImport: Set<Binding>;
-} {
-  const closure = new Map<string, Identifier>();
-  const isLocationAssignedMap = new Map<string, boolean>();
-  const bindingsToImport = new Set<Binding>();
+// function makeArrayFromCapturedBindings(
+//   ast: BabelFile,
+//   fun: NodePath<WorkletizableFunction>,
+//   state: ReanimatedPluginPass
+// ): {
+//   closureVariables: Identifier[];
+//   bindingsToImport: Set<Binding>;
+// } {
+//   const closure = new Map<string, Identifier>();
+//   const isLocationAssignedMap = new Map<string, boolean>();
+//   const bindingsToImport = new Set<Binding>();
 
-  // this traversal looks for variables to capture
-  traverse(ast, {
-    Identifier(path) {
-      // we only capture variables that were declared outside of the scope
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (globals.has(name)) {
-        return;
-      }
+//   // this traversal looks for variables to capture
+//   traverse(ast, {
+//     Identifier(path) {
+//       // we only capture variables that were declared outside of the scope
+//       if (!path.isReferencedIdentifier()) {
+//         return;
+//       }
+//       const name = path.node.name;
+//       // if the function is named and was added to globals we don't want to add it to closure
+//       // hence we check if identifier has that name
+//       if (globals.has(name)) {
+//         return;
+//       }
 
-      const binding = fun.scope.getBinding(name);
-      if (binding) {
-        if (
-          binding.kind === 'module' &&
-          binding.constant &&
-          binding.path.isImportSpecifier() &&
-          binding.path.parentPath.isImportDeclaration() &&
-          state.opts.workletModules?.some((module) =>
-            (
-              binding.path.parentPath as NodePath<ImportDeclaration>
-            ).node.source.value.includes(module)
-          )
-        ) {
-          bindingsToImport.add(binding);
-          return;
-        }
-      }
+//       const binding = fun.scope.getBinding(name);
+//       if (binding) {
+//         if (
+//           binding.kind === 'module' &&
+//           binding.constant &&
+//           binding.path.isImportSpecifier() &&
+//           binding.path.parentPath.isImportDeclaration() &&
+//           state.opts.workletModules?.some((module) =>
+//             (
+//               binding.path.parentPath as NodePath<ImportDeclaration>
+//             ).node.source.value.includes(module)
+//           )
+//         ) {
+//           bindingsToImport.add(binding);
+//           return;
+//         }
+//       }
 
-      if (
-        'id' in fun.node &&
-        fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's own name
-      ) {
-        return;
-      }
+//       if (
+//         'id' in fun.node &&
+//         fun.node.id &&
+//         fun.node.id.name === name // we don't want to capture function's own name
+//       ) {
+//         return;
+//       }
 
-      const parentNode = path.parent;
+//       const parentNode = path.parent;
 
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
+//       if (
+//         isMemberExpression(parentNode) &&
+//         parentNode.property === path.node &&
+//         !parentNode.computed
+//       ) {
+//         return;
+//       }
 
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
+//       if (
+//         isObjectProperty(parentNode) &&
+//         isObjectExpression(path.parentPath.parent) &&
+//         path.node !== parentNode.value
+//       ) {
+//         return;
+//       }
 
-      let currentScope = path.scope;
+//       let currentScope = path.scope;
 
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, cloneNode(path.node, true));
-      isLocationAssignedMap.set(name, false);
-    },
-  });
+//       while (currentScope != null) {
+//         if (currentScope.bindings[name] != null) {
+//           return;
+//         }
+//         currentScope = currentScope.parent;
+//       }
+//       closure.set(name, cloneNode(path.node, true));
+//       isLocationAssignedMap.set(name, false);
+//     },
+//   });
 
-  /*
-  For reasons I don't exactly understand, the above traversal will cause the whole 
-  bundle to crash if we traversed original node instead of generated
-  AST. This is why we need to traverse it again, but this time we set
-  location for each identifier that was captured to their original counterpart, since
-  AST has its location set relative as if it was a separate file.
-  */
-  fun.traverse({
-    Identifier(path) {
-      // So it won't refer to something like:
-      // const obj = {unexistingVariable: 1};
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const node = closure.get(path.node.name);
-      if (!node || isLocationAssignedMap.get(path.node.name)) {
-        return;
-      }
-      node.loc = path.node.loc;
-      isLocationAssignedMap.set(path.node.name, true);
-    },
-  });
+//   /*
+//   For reasons I don't exactly understand, the above traversal will cause the whole
+//   bundle to crash if we traversed original node instead of generated
+//   AST. This is why we need to traverse it again, but this time we set
+//   location for each identifier that was captured to their original counterpart, since
+//   AST has its location set relative as if it was a separate file.
+//   */
+//   fun.traverse({
+//     Identifier(path) {
+//       // So it won't refer to something like:
+//       // const obj = {unexistingVariable: 1};
+//       if (!path.isReferencedIdentifier()) {
+//         return;
+//       }
+//       const node = closure.get(path.node.name);
+//       if (!node || isLocationAssignedMap.get(path.node.name)) {
+//         return;
+//       }
+//       node.loc = path.node.loc;
+//       isLocationAssignedMap.set(path.node.name, true);
+//     },
+//   });
 
-  return { closureVariables: Array.from(closure.values()), bindingsToImport };
-}
+//   return { closureVariables: Array.from(closure.values()), bindingsToImport };
+// }
 
 function getClosure(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): {
   closureVariables: Identifier[];
-  bindingsToImport: Set<Binding>;
+  libraryBindingsToImport: Set<Binding>;
+  relativeBindingsToImport: Set<Binding>;
 } {
   const closureVariables = new Set<string>();
-  const bindingsToImport = new Set<Binding>();
+  const libraryBindingsToImport = new Set<Binding>();
+  const relativeBindingsToImport = new Set<Binding>();
   fun.traverse(
     {
       Identifier(path) {
@@ -650,14 +676,39 @@ function getClosure(
             binding.constant &&
             binding.path.isImportSpecifier() &&
             binding.path.parentPath.isImportDeclaration() &&
-            state.opts.workletModules?.some((module) =>
-              (
-                binding.path.parentPath as NodePath<ImportDeclaration>
-              ).node.source.value.includes(module)
+            state.opts.workletModules?.some(
+              (module) =>
+                (
+                  binding.path.parentPath as NodePath<ImportDeclaration>
+                ).node.source.value.includes(module)
+              // ||
+              // (state.filename!.includes(module) &&
+              //   (
+              //     binding.path.parentPath as NodePath<ImportDeclaration>
+              //   ).node.source.value.startsWith('.'))
             )
           ) {
+            console.log(
+              'library binding',
+              name,
+              'id' in fun.node && fun.node.id?.name
+            );
+            libraryBindingsToImport.add(binding);
+          } else if (
+            binding.kind === 'module' &&
+            binding.constant &&
+            binding.path.isImportSpecifier() &&
+            binding.path.parentPath.isImportDeclaration() &&
+            state.opts.workletModules?.some(
+              (module) =>
+                state.filename!.includes(module) &&
+                (
+                  binding.path.parentPath as NodePath<ImportDeclaration>
+                ).node.source.value.startsWith('.')
+            ) // relative import
+          ) {
             console.log('binding', name, 'id' in fun.node && fun.node.id?.name);
-            bindingsToImport.add(binding);
+            relativeBindingsToImport.add(binding);
           } else {
             // console.log('closure', name);
             if (globals.has(name)) {
@@ -675,7 +726,11 @@ function getClosure(
     identifier(name)
   );
 
-  return { closureVariables: retClosureVariables, bindingsToImport };
+  return {
+    closureVariables: retClosureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  };
 }
 
 const extraPlugins = [

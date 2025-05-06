@@ -2,15 +2,20 @@
 
 import { breakBundle } from './bundleBreaker';
 import { initializeUIRuntime } from './initializers';
+import { valueUnpacker } from './valueUnpacker';
 import { initializeWorkletRegistries } from './workletRegistry';
 import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
+  console.log(Object.keys(globalThis));
   initializeWorkletRegistries();
   initializeUIRuntime(WorkletsModule);
+  globalThis.__valueUnpacker = valueUnpacker;
+} else if (!globalThis._BROKEN) {
   breakBundle();
+  globalThis._BROKEN = true;
 }
 
 export type { LoggerConfig } from './logger';
@@ -22,11 +27,7 @@ export {
 } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
-export {
-  makeShareable,
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

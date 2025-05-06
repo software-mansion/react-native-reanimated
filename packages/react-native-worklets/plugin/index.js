@@ -674,7 +674,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, bindingsToImport } = getClosure(fun, state);
+      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = getClosure(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -746,7 +746,15 @@ var require_workletFactory = __commonJS({
         ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const imports = Array.from(bindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
+      const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
+        const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
+        const relatived = (0, path_1.relative)(filesDirPath, resolved);
+        console.log("relative resolved", relatived);
+        return (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(relatived));
+      });
+      const imports = [...libraryImports, ...relativeImports];
       const newProg = (0, types_12.program)([
         ...imports,
         (0, types_12.variableDeclaration)("const", [
@@ -764,7 +772,6 @@ var require_workletFactory = __commonJS({
         comments: false
       })) === null || _b === void 0 ? void 0 : _b.code;
       (0, assert_1.strict)(transformedProg, "[Reanimated] `transformedProg` is undefined.");
-      const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
       try {
         if (!(0, fs_1.existsSync)(filesDirPath)) {
           (0, fs_1.mkdirSync)(filesDirPath, {});
@@ -841,10 +848,11 @@ var require_workletFactory = __commonJS({
     }
     function getClosure(fun, state) {
       const closureVariables = /* @__PURE__ */ new Set();
-      const bindingsToImport = /* @__PURE__ */ new Set();
+      const libraryBindingsToImport = /* @__PURE__ */ new Set();
+      const relativeBindingsToImport = /* @__PURE__ */ new Set();
       fun.traverse({
         Identifier(path) {
-          var _a, _b;
+          var _a, _b, _c, _d;
           const name = path.node.name;
           if (!path.isReferencedIdentifier() || path.key === "typeName") {
             return;
@@ -861,8 +869,11 @@ var require_workletFactory = __commonJS({
           const binding = fun.scope.getBinding(path.node.name);
           if (binding) {
             if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_a = state.opts.workletModules) === null || _a === void 0 ? void 0 : _a.some((module3) => binding.path.parentPath.node.source.value.includes(module3)))) {
-              console.log("binding", name, "id" in fun.node && ((_b = fun.node.id) === null || _b === void 0 ? void 0 : _b.name));
-              bindingsToImport.add(binding);
+              console.log("library binding", name, "id" in fun.node && ((_b = fun.node.id) === null || _b === void 0 ? void 0 : _b.name));
+              libraryBindingsToImport.add(binding);
+            } else if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_c = state.opts.workletModules) === null || _c === void 0 ? void 0 : _c.some((module3) => state.filename.includes(module3) && binding.path.parentPath.node.source.value.startsWith(".")))) {
+              console.log("binding", name, "id" in fun.node && ((_d = fun.node.id) === null || _d === void 0 ? void 0 : _d.name));
+              relativeBindingsToImport.add(binding);
             } else {
               if (globals_12.globals.has(name)) {
                 return;
@@ -873,7 +884,11 @@ var require_workletFactory = __commonJS({
         }
       }, state);
       const retClosureVariables = Array.from(closureVariables).map((name) => (0, types_12.identifier)(name));
-      return { closureVariables: retClosureVariables, bindingsToImport };
+      return {
+        closureVariables: retClosureVariables,
+        libraryBindingsToImport,
+        relativeBindingsToImport
+      };
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),

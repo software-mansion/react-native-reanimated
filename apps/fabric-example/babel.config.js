@@ -6,7 +6,7 @@ module.exports = {
       'react-native-worklets/plugin',
       {
         processNestedWorklets: true,
-        workletModules: ['react-native-worklets'],
+        // workletModules: ['react-native-worklets'],
       },
     ],
     [

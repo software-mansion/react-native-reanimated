@@ -1,9 +1,6 @@
 'use strict';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import {
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+import { makeShareableCloneRecursive } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -87,7 +84,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (
+    __DEV__ &&
+    !SHOULD_BE_USE_WEB &&
+    !isWorkletFunction(worklet) &&
+    !worklet.__bundleData
+  ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
@@ -150,8 +152,15 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
     return WorkletsModule.executeOnUIRuntimeSync(
       makeShareableCloneRecursive(() => {
         'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
+        try {
+          const result = worklet(...args);
+          return makeShareableCloneRecursive(result);
+        } catch (error) {
+          globalThis._log('Error in executeOnUIRuntimeSync');
+          globalThis._log(error);
+          globalThis._log(worklet);
+          throw error;
+        }
       })
     );
   };
@@ -226,6 +235,11 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     fun = (fun as FunDevRemote).__remoteFunction;
   }
 
+  if (globalThis._WORKLET) {
+    globalThis._log('runOnJS type');
+    globalThis._log(typeof fun);
+  }
+
   const scheduleOnJS =
     typeof fun === 'function'
       ? global._scheduleHostFunctionOnJS
@@ -238,7 +252,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
         | WorkletFunction<Args, ReturnValue>,
       args.length > 0
         ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+          (makeShareableCloneRecursive(args) as unknown as unknown[])
         : undefined
     );
   };

@@ -71,6 +71,15 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableImport(
+    jsi::Runtime &rt,
+    const jsi::Value &what,
+    const jsi::Value &from) {
+  auto shareableImport = std::make_shared<ShareableImport>(
+      rt, what.asString(rt), from.asString(rt));
+  return ShareableJSRef::newHostObject(rt, shareableImport);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

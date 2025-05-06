@@ -5,7 +5,7 @@
  */
 
 import type { LogBoxStatic } from 'react-native';
-import { LogBox as RNLogBox } from 'react-native';
+// import { LogBox as RNLogBox } from 'react-native';
 
 export type LogBoxLogLevel = 'warn' | 'error' | 'fatal' | 'syntax';
 
@@ -45,11 +45,11 @@ interface LogBoxExtended extends LogBoxStatic {
   addLog(data: LogData): void;
 }
 
-const LogBox = RNLogBox as LogBoxExtended;
+// const LogBox = RNLogBox as LogBoxExtended;
 
 const noop = () => {
   // do nothing
 };
 
 // Do nothing when addLogBoxLog is called if LogBox is not available
-export const addLogBoxLog = LogBox?.addLog?.bind(LogBox) ?? noop;
+// export const addLogBoxLog = LogBox?.addLog?.bind(LogBox) ?? noop;

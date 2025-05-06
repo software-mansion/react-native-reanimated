@@ -17,7 +17,7 @@ class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -33,6 +33,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableImport: global.__workletsModuleProxy.makeShareableImport,
     };
   }
 
@@ -46,6 +47,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableImport(from: string, to: string) {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

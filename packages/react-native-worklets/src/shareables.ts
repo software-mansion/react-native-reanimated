@@ -9,11 +9,7 @@ import {
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type {
-  FlatShareableRef,
-  ShareableRef,
-  WorkletFunction,
-} from './workletTypes';
+import type { ShareableRef, WorkletFunction } from './workletTypes';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -37,6 +33,7 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 }
 
 function getFromCache(value: object) {
+  'worklet';
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
@@ -118,13 +115,24 @@ function makeShareableCloneRecursiveNative<T>(
   shouldPersistRemote = false,
   depth = 0
 ): ShareableRef<T> {
+  if (globalThis._WORKLET) {
+    globalThis._log('makeShareableCloneRecursive');
+    globalThis._log(value);
+  }
   detectCyclicObject(value, depth);
 
   const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
   if ((!isObject && !isFunction) || value === null) {
-    return clonePrimitive(value, shouldPersistRemote);
+    if (globalThis._WORKLET) {
+      globalThis._log('makeShareableCloneRecursive - primitive');
+    }
+    const primitive = clonePrimitive(value, shouldPersistRemote);
+    if (globalThis._WORKLET) {
+      globalThis._log('cloned primitive');
+    }
+    return primitive;
   }
 
   const cached = getFromCache(value);
@@ -135,7 +143,21 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
+  if (isFunction && value.__bundleData) {
+    console.log('bundle data');
+    const bundleData = value.__bundleData;
+    // const clone = clonePlainJSObject(bundleData, shouldPersistRemote, depth);
+    // shareableMappingCache.set(value, clone);
+    const clone = WorkletsModule.makeShareableImport(
+      bundleData.what,
+      bundleData.from
+    );
+    shareableMappingCache.set(value, clone);
+    shareableMappingCache.set(clone);
+    return clone as ShareableRef<T>;
+  }
   if (isFunction && !isWorkletFunction(value)) {
+    console.log('cloning remote function', value);
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
@@ -165,6 +187,11 @@ function makeShareableCloneRecursiveNative<T>(
   }
   return inaccessibleObject(value);
 }
+
+makeShareableCloneRecursiveNative.__bundleData = {
+  what: 'makeShareableCloneRecursive',
+  from: '../../packages/react-native-worklets/src/index.ts',
+};
 
 export interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
@@ -452,16 +479,16 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<T> = {
-  __remoteFunction: FlatShareableRef<T>;
-};
+// type RemoteFunction<T> = {
+//   __remoteFunction: FlatShareableRef<T>;
+// };
 
-function isRemoteFunction<T>(value: {
-  __remoteFunction?: unknown;
-}): value is RemoteFunction<T> {
-  'worklet';
-  return !!value.__remoteFunction;
-}
+// function isRemoteFunction<T>(value: {
+//   __remoteFunction?: unknown;
+// }): value is RemoteFunction<T> {
+//   'worklet';
+//   return !!value.__remoteFunction;
+// }
 
 /**
  * We freeze
@@ -478,7 +505,13 @@ function isRemoteFunction<T>(value: {
  * should use shared values instead.
  */
 function freezeObjectInDev<T extends object>(value: T) {
+  'worklet';
   if (!__DEV__) {
+    return;
+  }
+  if (globalThis._WORKLET) {
+    globalThis._log('freezeObjectInDev');
+    globalThis._log(value);
     return;
   }
   Object.entries(value).forEach(([key, element]) => {
@@ -500,52 +533,6 @@ function freezeObjectInDev<T extends object>(value: T) {
     });
   });
   Object.preventExtensions(value);
-}
-
-export function makeShareableCloneOnUIRecursive<T>(
-  value: T
-): FlatShareableRef<T> {
-  'worklet';
-  if (SHOULD_BE_USE_WEB) {
-    // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
-    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
-    return value;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  function cloneRecursive(value: T): FlatShareableRef<T> {
-    if (
-      (typeof value === 'object' && value !== null) ||
-      typeof value === 'function'
-    ) {
-      if (isHostObject(value)) {
-        // We call `_makeShareableClone` to wrap the provided HostObject
-        // inside ShareableJSRef.
-        return global._makeShareableClone(
-          value,
-          undefined
-        ) as FlatShareableRef<T>;
-      }
-      if (isRemoteFunction<T>(value)) {
-        // RemoteFunctions are created by us therefore they are
-        // a Shareable out of the box and there is no need to
-        // call `_makeShareableClone`.
-        return value.__remoteFunction;
-      }
-      if (Array.isArray(value)) {
-        return global._makeShareableClone(
-          value.map(cloneRecursive),
-          undefined
-        ) as FlatShareableRef<T>;
-      }
-      const toAdapt: Record<string, FlatShareableRef<T>> = {};
-      for (const [key, element] of Object.entries(value)) {
-        toAdapt[key] = cloneRecursive(element);
-      }
-      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
-    }
-    return global._makeShareableClone(value, undefined);
-  }
-  return cloneRecursive(value);
 }
 
 function makeShareableJS<T extends object>(value: T): T {

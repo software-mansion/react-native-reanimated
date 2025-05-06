@@ -39,6 +39,11 @@ class WorkletsModuleProxy
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
 
+  jsi::Value makeShareableImport(
+      jsi::Runtime &rt,
+      const jsi::Value &what,
+      const jsi::Value &from) override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
