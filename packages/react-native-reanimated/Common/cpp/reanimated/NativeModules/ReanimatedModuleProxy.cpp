@@ -78,6 +78,11 @@ std::shared_ptr<OperationsLoop> ReanimatedModuleProxy::getOperationsLoop()
   return operationsLoop_;
 }
 
+std::shared_ptr<CSSKeyframesRegistry>
+ReanimatedModuleProxy::getCssAnimationKeyframesRegistry() const {
+  return cssAnimationKeyframesRegistry_;
+}
+
 std::shared_ptr<ViewStylesRepository>
 ReanimatedModuleProxy::getViewStylesRepository() const {
   return viewStylesRepository_;
@@ -472,6 +477,7 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
+  LOG(INFO) << "registerCSSKeyframes: " << animationName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->add(
       animationName.asString(rt).utf8(rt),
       parseCSSAnimationKeyframesConfig(dynamicFromValue(rt, keyframesConfig)));
@@ -480,6 +486,8 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName) {
+  LOG(INFO) << "unregisterCSSKeyframes: "
+            << animationName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
 }
 
@@ -507,7 +515,6 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       CSSAnimationConfig config{
-          animationNames[index],
           settings.duration,
           settings.easingFunction,
           settings.delay,
@@ -515,6 +522,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
           settings.direction,
           settings.fillMode,
           settings.playState,
+          animationNames[index],
       };
 
       const auto animation = std::make_shared<CSSAnimation>(

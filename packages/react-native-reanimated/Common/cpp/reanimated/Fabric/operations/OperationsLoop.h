@@ -20,6 +20,8 @@ class OperationsLoop {
 
   using OperationHandle = uint64_t;
 
+  double getFrameTimestamp() const;
+
   OperationHandle schedule(std::unique_ptr<Operation> operation);
   void remove(OperationHandle handle);
   void update();

@@ -22,6 +22,8 @@ class ReanimatedViewComponentDescriptor
       const ComponentDescriptorParameters &parameters);
 
   std::shared_ptr<OperationsLoop> getOperationsLoop() const;
+  std::shared_ptr<CSSKeyframesRegistry> getCssAnimationKeyframesRegistry()
+      const;
   std::shared_ptr<ViewStylesRepository> getViewStylesRepository() const;
 
   void adopt(ShadowNode &shadowNode) const override;
@@ -32,6 +34,7 @@ class ReanimatedViewComponentDescriptor
 
  private:
   std::shared_ptr<OperationsLoop> operationsLoop_;
+  std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
