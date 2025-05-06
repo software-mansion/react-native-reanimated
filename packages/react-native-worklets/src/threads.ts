@@ -12,17 +12,13 @@ import type { WorkletFunction } from './workletTypes';
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-// TODO: Remove it after removing runOnUI
-/** An array of [worklet, args] pairs. */
-let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
-
-/** An array of [worklet, args, resolve] pairs. */
-let _runOnUIAsyncQueue: Array<
+/** An array of [worklet, args, resolve (optional)] pairs. */
+let _runOnUIQueue: Array<
   [
     WorkletFunction<unknown[], unknown>,
     unknown[],
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-    (value: any | PromiseLike<any>) => void,
+    ((value: any | PromiseLike<any>) => void)?,
   ]
 > = [];
 
@@ -317,17 +313,19 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         makeShareableCloneRecursive(args);
       }
 
-      _runOnUIAsyncQueue.push([worklet as WorkletFunction, args, resolve]);
-      if (_runOnUIAsyncQueue.length === 1) {
+      _runOnUIQueue.push([worklet as WorkletFunction, args, resolve]);
+      if (_runOnUIQueue.length === 1) {
         queueMicrotask(() => {
-          const queue = _runOnUIAsyncQueue.slice();
-          _runOnUIAsyncQueue = [];
+          const queue = _runOnUIQueue.slice();
+          _runOnUIQueue = [];
           WorkletsModule.scheduleOnUI(
             makeShareableCloneRecursive(() => {
               'worklet';
               queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
                 const result = workletFunction(...workletArgs);
-                runOnJS(jobResolve)(result);
+                if (jobResolve) {
+                  runOnJS(jobResolve)(result);
+                }
               });
               callMicrotasks();
             })
