@@ -34,6 +34,8 @@ class CSSAnimationsManager {
   using NameToAnimationsMap = std::unordered_map<std::string, AnimationsVector>;
 
   AnimationsVector animations_;
+  std::unordered_map<std::string, OperationsLoop::OperationHandle>
+      operationHandles_;
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
@@ -49,7 +51,8 @@ class CSSAnimationsManager {
   std::shared_ptr<CSSAnimation> createAnimation(
       const CSSAnimationConfig &animationConfig,
       double timestamp);
-  void removeAnimation(const std::shared_ptr<CSSAnimation> &animation);
+  void removeAnimationOperation(const std::shared_ptr<CSSAnimation> &animation);
+  void updateAnimationOperation(const std::shared_ptr<CSSAnimation> &animation);
 };
 
 } // namespace facebook::react

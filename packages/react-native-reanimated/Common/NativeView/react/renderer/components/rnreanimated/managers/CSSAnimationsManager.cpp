@@ -12,7 +12,7 @@ CSSAnimationsManager::CSSAnimationsManager(
 
 CSSAnimationsManager::~CSSAnimationsManager() {
   for (const auto &animation : animations_) {
-    removeAnimation(animation);
+    removeAnimationOperation(animation);
   }
 }
 
@@ -42,7 +42,7 @@ void CSSAnimationsManager::update(const ReanimatedViewProps &newProps) {
   // Remove all remaining animations in the map
   for (const auto &[_, animations] : nameToAnimationsMap) {
     for (const auto &animation : animations) {
-      removeAnimation(animation);
+      removeAnimationOperation(animation);
     }
   }
 }
@@ -87,14 +87,21 @@ CSSAnimationsManager::createNewAnimationsVector(
 
     if (it == nameToAnimationsMap.end()) {
       // Create a new animation the animation with the same name doesn't exist
-      result.push_back(createAnimation(animationConfig, timestamp));
+      const auto animation = createAnimation(animationConfig, timestamp);
+      updateAnimationOperation(animation);
+      result.push_back(std::move(animation));
     } else {
       // Update the animation with the settings from the new config
       auto &animations = it->second;
-      const auto &animation = animations.back();
-      animation->updateSettings(animationConfig, timestamp);
-      result.push_back(animation);
+      const auto animation = std::move(animations.back());
       animations.pop_back();
+
+      const auto stateChanged =
+          animation->updateSettings(animationConfig, timestamp);
+      if (stateChanged) {
+        updateAnimationOperation(animation);
+      }
+      result.push_back(std::move(animation));
 
       if (animations.empty()) {
         nameToAnimationsMap.erase(it);
@@ -112,9 +119,47 @@ std::shared_ptr<CSSAnimation> CSSAnimationsManager::createAnimation(
       animationConfig, cssAnimationKeyframesRegistry_, timestamp);
 }
 
-void CSSAnimationsManager::removeAnimation(
+void CSSAnimationsManager::removeAnimationOperation(
     const std::shared_ptr<CSSAnimation> &animation) {
-  // TODO - implement
+  const auto it = operationHandles_.find(animation->getName());
+  if (it != operationHandles_.end()) {
+    operationsLoop_->remove(it->second);
+    operationHandles_.erase(it);
+  }
+}
+
+void CSSAnimationsManager::updateAnimationOperation(
+    const std::shared_ptr<CSSAnimation> &animation) {
+  // Remove the operation if it exists
+  removeAnimationOperation(animation);
+
+  const auto state = animation->getState();
+  if (state == AnimationProgressState::Finished ||
+      state == AnimationProgressState::Paused) {
+    return;
+  }
+
+  // Schedule a new operation to update the animation on every frame
+  operationHandles_[animation->getName()] = operationsLoop_->schedule(
+      Operation()
+          .doOnce([animation](double timestamp) {
+            if (animation->getState() == AnimationProgressState::Pending) {
+              animation->run(timestamp);
+            }
+          })
+          .waitFor([animation](double timestamp) {
+            const auto startTimestamp = animation->getStartTimestamp(timestamp);
+            if (startTimestamp > timestamp &&
+                animation->getState() != AnimationProgressState::Paused) {
+              return startTimestamp - timestamp;
+            }
+            return 0.0;
+          })
+          .doWhile([animation](double timestamp) {
+            animation->update(timestamp);
+            return animation->getState() == AnimationProgressState::Running;
+          })
+          .build());
 }
 
 } // namespace facebook::react
