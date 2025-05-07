@@ -4,6 +4,7 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
+import type { ValueUnpacker } from './workletTypes';
 import type { callGuardDEV } from './initializers';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
@@ -30,6 +31,7 @@ declare global {
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };
+  var __valueUnpacker: ValueUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;

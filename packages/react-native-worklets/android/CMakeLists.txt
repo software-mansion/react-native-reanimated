@@ -134,3 +134,9 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
     NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
   target_link_libraries(worklets ${V8EXECUTOR_LIB})
 endif()
+
+file(READ "${CMAKE_SOURCE_DIR}/resources/valueUnpacker.js" VALUE_UNPACKER_CODE)
+
+configure_file("${COMMON_CPP_DIR}/worklets/resources/valueUnpacker.h.in" "${BUILD_DIR}/valueUnpacker/worklets/valueUnpacker.h" @ONLY)
+
+target_include_directories(worklets PRIVATE "${BUILD_DIR}/valueUnpacker")

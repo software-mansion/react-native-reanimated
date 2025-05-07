@@ -19,7 +19,6 @@ class WorkletsModuleProxy
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
-      const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,

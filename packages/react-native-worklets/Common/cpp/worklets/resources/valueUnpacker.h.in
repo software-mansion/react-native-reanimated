@@ -1,0 +1,9 @@
+#pragma once
+
+namespace worklets {
+
+const char *value_unpacker_code = R"VALUE_UNPACKER(
+@VALUE_UNPACKER_CODE@
+)VALUE_UNPACKER";
+
+}

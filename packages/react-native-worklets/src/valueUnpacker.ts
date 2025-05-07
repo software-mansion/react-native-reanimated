@@ -1,15 +1,11 @@
 /* eslint-disable reanimated/use-worklets-error */
-'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
-import { isWorkletFunction } from './workletFunction';
 import type { WorkletFunction } from './workletTypes';
 
-function valueUnpacker(
+function __valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string
 ): unknown {
-  'worklet';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
   if (workletsCache === undefined) {
@@ -79,34 +75,4 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
 interface ObjectToUnpack extends WorkletFunction {
   _recur: unknown;
-}
-
-type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: unknown, category?: string],
-  unknown
->;
-
-if (__DEV__ && !shouldBeUseWeb()) {
-  const testWorklet = (() => {
-    'worklet';
-  }) as WorkletFunction<[], void>;
-  if (!isWorkletFunction(testWorklet)) {
-    throw new Error(
-      `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
-    );
-  }
-  if (!isWorkletFunction(valueUnpacker)) {
-    throw new Error('[Worklets] `valueUnpacker` is not a worklet');
-  }
-  const closure = (valueUnpacker as ValueUnpacker).__closure;
-  if (closure === undefined) {
-    throw new Error('[Worklets] `valueUnpacker` closure is undefined');
-  }
-  if (Object.keys(closure).length !== 0) {
-    throw new Error('[Worklets] `valueUnpacker` must have empty closure');
-  }
-}
-
-export function getValueUnpackerCode() {
-  return (valueUnpacker as ValueUnpacker).__initData.code;
 }
