@@ -128,10 +128,12 @@ void CSSAnimation::updateSettings(
   }
 }
 
-void CSSAnimation::updateSettings(
+bool CSSAnimation::updateSettings(
     const CSSAnimationSettings &settings,
     const double timestamp) {
   // TODO - improve
+  const auto oldState = progressProvider_->getState();
+
   progressProvider_->setDuration(settings.duration);
   progressProvider_->setEasingFunction(settings.easingFunction);
   progressProvider_->setDelay(settings.delay);
@@ -145,6 +147,12 @@ void CSSAnimation::updateSettings(
   } else {
     progressProvider_->play(timestamp);
   }
+
+  progressProvider_->update(timestamp);
+
+  // Return true if the animation progress state has changed after the settings
+  // update
+  return oldState != progressProvider_->getState();
 }
 
 PropertyInterpolatorUpdateContext CSSAnimation::getUpdateContext(
