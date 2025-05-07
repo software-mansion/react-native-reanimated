@@ -40,7 +40,7 @@ const transformFrom = generate(transformed.ast, {
 });
 
 fs.writeFileSync(
-  path.resolve(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.h'),
+  path.resolve(__dirname, '../Common/cpp/worklets/Resources/ValueUnpacker.h'),
   `#pragma once
 
 #include <string>
@@ -53,8 +53,8 @@ extern const std::string ValueUnpackerCode;
 );
 
 fs.writeFileSync(
-  path.resolve(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.cpp'),
-  `#include "<worklets/Resources/valueUnpacker.h>
+  path.resolve(__dirname, '../Common/cpp/worklets/Resources/ValueUnpacker.cpp'),
+  `#include <worklets/Resources/ValueUnpacker.h>
 
 namespace worklets {
 
