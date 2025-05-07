@@ -11,5 +11,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['lib', 'android/resources'],
+  ignorePatterns: ['lib'],
 };

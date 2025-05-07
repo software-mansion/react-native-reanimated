@@ -1,0 +1,69 @@
+const { transformFileSync, traverse } = require('@babel/core');
+const generate = require('@babel/generator').default;
+const path = require('path');
+const fs = require('fs');
+
+const transformed = transformFileSync(
+  path.join(__dirname, '../src/valueUnpacker.ts'),
+  {
+    presets: [
+      [
+        '@babel/preset-env',
+        {
+          modules: false,
+        },
+      ],
+      '@babel/preset-typescript',
+    ],
+    sourceType: 'unambiguous',
+    code: false,
+    ast: true,
+    comments: false,
+  }
+);
+
+// @ts-expect-error
+traverse(transformed.ast, {
+  Program(path) {
+    path.get('directives').forEach((directive) => {
+      directive.remove();
+    });
+  },
+});
+
+// @ts-expect-error
+const transformFrom = generate(transformed.ast, {
+  comments: false,
+  compact: false,
+});
+
+fs.writeFileSync(
+  path.join(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.h'),
+  `#pragma once
+
+#include <string>
+
+namespace worklets {
+extern const std::string ValueUnpackerCode;
+}
+`,
+  'utf8'
+);
+
+fs.writeFileSync(
+  path.join(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.cpp'),
+  `#include "valueUnpacker.h"
+
+namespace worklets {
+
+const std::string ValueUnpackerCode = 
+    R"VALUE_UNPACKER(` +
+    transformFrom.code +
+    `)VALUE_UNPACKER";
+} // namespace worklets
+`,
+
+  {
+    encoding: 'utf8',
+  }
+);

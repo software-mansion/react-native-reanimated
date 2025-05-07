@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "bob build && yarn build:resources",
-    "build:resources": "yarn babel ./src/valueUnpacker.ts --out-file ./android/resources/valueUnpacker.js",
+    "build:resources": "node ./scripts/export-value-unpacker.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",

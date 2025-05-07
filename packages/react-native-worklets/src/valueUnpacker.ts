@@ -1,11 +1,14 @@
 /* eslint-disable reanimated/use-worklets-error */
+'use strict';
 import type { WorkletFunction } from './workletTypes';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function __valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string
 ): unknown {
+  'use strict';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
   if (workletsCache === undefined) {

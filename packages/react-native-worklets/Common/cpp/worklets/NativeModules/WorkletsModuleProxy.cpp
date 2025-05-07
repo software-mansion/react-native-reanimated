@@ -5,7 +5,7 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-#include <worklets/valueUnpacker.h>
+#include <worklets/Resources/valueUnpacker.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -30,7 +30,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      valueUnpackerCode_(value_unpacker_code),
+      valueUnpackerCode_(ValueUnpackerCode),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
