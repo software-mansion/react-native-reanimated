@@ -431,6 +431,51 @@ var require_globals = __commonJS({
   }
 });
 
+// lib/closure.js
+var require_closure = __commonJS({
+  "lib/closure.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.getClosure = void 0;
+    var globals_12 = require_globals();
+    function getClosure(funPath, state) {
+      const closureVariables = /* @__PURE__ */ new Set();
+      funPath.traverse({
+        ReferencedIdentifier(idPath) {
+          if (idPath.isJSXIdentifier()) {
+            return;
+          }
+          if (idPath.key === "typeName") {
+            return;
+          }
+          const name = idPath.node.name;
+          if (closureVariables.has(name)) {
+            return;
+          }
+          if (globals_12.globals.has(name)) {
+            return;
+          }
+          if ("id" in funPath.node) {
+            const id = idPath.scope.getBindingIdentifier(name);
+            if (id && id === funPath.node.id) {
+              return;
+            }
+          }
+          if (funPath.scope.hasOwnBinding(idPath.node.name)) {
+            return;
+          }
+          if (idPath.scope.hasOwnBinding(idPath.node.name)) {
+            return;
+          }
+          closureVariables.add(name);
+        }
+      }, state);
+      return Array.from(closureVariables);
+    }
+    exports2.getClosure = getClosure;
+  }
+});
+
 // lib/transform.js
 var require_transform = __commonJS({
   "lib/transform.js"(exports2) {
@@ -528,13 +573,13 @@ var require_workletStringCode = __commonJS({
             return;
           }
           const constructorName = path.node.callee.name;
-          if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
+          if (!closureVariables.some((variable) => variable === constructorName) || parsedClasses.has(constructorName)) {
             return;
           }
-          const index = closureVariables.findIndex((variable) => variable.name === constructorName);
+          const index = closureVariables.findIndex((variable) => variable === constructorName);
           closureVariables.splice(index, 1);
           const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
-          closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
+          closureVariables.push(workletClassFactoryName);
           (0, types_12.assertBlockStatement)(expression.body);
           expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
             (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
@@ -555,7 +600,7 @@ var require_workletStringCode = __commonJS({
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
-          getClosurePlugin(closureVariables),
+          getClosurePlugin(closureVariables.map((name) => (0, types_12.identifier)(name))),
           ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
         ],
         extraPresets: state.opts.extraPresets,
@@ -640,12 +685,11 @@ var require_workletFactory = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactory = void 0;
-    var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var path_1 = require("path");
-    var globals_12 = require_globals();
+    var closure_1 = require_closure();
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -672,7 +716,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+      const closureVariables = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -721,7 +765,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => variable.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable), (0, types_12.memberExpression)((0, types_12.identifier)(variable.slice(0, variable.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable), (0, types_12.identifier)(variable), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -740,13 +784,13 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = [
         (0, types_12.cloneNode)(initDataId, true),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+        ...closureVariables.map((variable) => (0, types_12.identifier)(variable))
       ];
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = [
         (0, types_12.identifier)(initDataId.name),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+        ...closureVariables.map((variable) => (0, types_12.identifier)(variable))
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       return { factory, factoryCallParamPack };
@@ -797,54 +841,6 @@ var require_workletFactory = __commonJS({
       const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
-    }
-    function makeArrayFromCapturedBindings(ast, fun) {
-      const closure = /* @__PURE__ */ new Map();
-      const isLocationAssignedMap = /* @__PURE__ */ new Map();
-      (0, core_1.traverse)(ast, {
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const name = path.node.name;
-          if (globals_12.globals.has(name)) {
-            return;
-          }
-          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
-            return;
-          }
-          const parentNode = path.parent;
-          if ((0, types_12.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
-            return;
-          }
-          if ((0, types_12.isObjectProperty)(parentNode) && (0, types_12.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
-            return;
-          }
-          let currentScope = path.scope;
-          while (currentScope != null) {
-            if (currentScope.bindings[name] != null) {
-              return;
-            }
-            currentScope = currentScope.parent;
-          }
-          closure.set(name, (0, types_12.cloneNode)(path.node, true));
-          isLocationAssignedMap.set(name, false);
-        }
-      });
-      fun.traverse({
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const node = closure.get(path.node.name);
-          if (!node || isLocationAssignedMap.get(path.node.name)) {
-            return;
-          }
-          node.loc = path.node.loc;
-          isLocationAssignedMap.set(path.node.name, true);
-        }
-      });
-      return Array.from(closure.values());
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
@@ -1601,16 +1597,16 @@ var inlineStylesWarning_1 = require_inlineStylesWarning();
 var types_1 = require_types();
 var webOptimization_1 = require_webOptimization();
 var workletSubstitution_1 = require_workletSubstitution();
-module.exports = function() {
+module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(fun) {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Reanimated] Babel plugin exception: ${e}`);
+      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
     }
   }
   return {
-    name: "reanimated",
+    name: "worklets",
     pre() {
       runWithTaggedExceptions(() => {
         (0, globals_1.initializeState)(this);

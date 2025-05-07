@@ -537,6 +537,7 @@ describe('babel plugin', () => {
 
     it('workletizes getter', () => {
       const input = html`<script>
+        const x = 5;
         class Foo {
           get bar() {
             'worklet';
@@ -1608,7 +1609,7 @@ describe('babel plugin', () => {
         });
       </script>`;
 
-      expect(() => runPlugin(input)).toThrow('[Reanimated]');
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 

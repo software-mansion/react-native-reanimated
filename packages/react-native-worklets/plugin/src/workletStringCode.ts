@@ -42,7 +42,7 @@ const MOCK_SOURCE_MAP = 'mock source map';
 export function buildWorkletString(
   fun: BabelFile,
   state: ReanimatedPluginPass,
-  closureVariables: Array<Identifier>,
+  closureVariables: string[],
   workletName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
@@ -78,20 +78,18 @@ export function buildWorkletString(
       }
       const constructorName = path.node.callee.name;
       if (
-        !closureVariables.some(
-          (variable) => variable.name === constructorName
-        ) ||
+        !closureVariables.some((variable) => variable === constructorName) ||
         parsedClasses.has(constructorName)
       ) {
         return;
       }
       const index = closureVariables.findIndex(
-        (variable) => variable.name === constructorName
+        (variable) => variable === constructorName
       );
       closureVariables.splice(index, 1);
       const workletClassFactoryName =
         constructorName + workletClassFactorySuffix;
-      closureVariables.push(identifier(workletClassFactoryName));
+      closureVariables.push(workletClassFactoryName);
 
       assertBlockStatement(expression.body);
       expression.body.body.unshift(
@@ -135,7 +133,7 @@ export function buildWorkletString(
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
-      getClosurePlugin(closureVariables),
+      getClosurePlugin(closureVariables.map((name) => identifier(name))),
       ...(state.opts.extraPlugins ?? []),
     ],
     extraPresets: state.opts.extraPresets,
