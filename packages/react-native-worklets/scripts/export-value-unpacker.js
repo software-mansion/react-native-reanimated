@@ -26,6 +26,8 @@ const transformed = transformFileSync(
 traverse(transformed.ast, {
   Program(path) {
     path.get('directives').forEach((directive) => {
+      // We must strip top-level directives since
+      // they cannot be present in top-level code.
       directive.remove();
     });
   },
