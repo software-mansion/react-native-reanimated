@@ -108,7 +108,6 @@ CSSAnimationsManager::createNewAnimationsVector(
 std::shared_ptr<CSSAnimation> CSSAnimationsManager::createAnimation(
     const CSSAnimationConfig &animationConfig,
     const double timestamp) {
-  LOG(INFO) << "createAnimation: " << animationConfig.name;
   return std::make_shared<CSSAnimation>(
       animationConfig, cssAnimationKeyframesRegistry_, timestamp);
 }
