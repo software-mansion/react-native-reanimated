@@ -35,6 +35,10 @@ jobs:
       # Setup repo
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Print tree
+        working-directory: packages/react-native-worklets/Common
+        run: tree
       - name: Build Reanimated for TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn build
