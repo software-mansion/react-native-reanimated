@@ -41,7 +41,7 @@ using worklets::WorkletsModuleProxy;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
@@ -55,7 +55,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     throw error;
   });
 
-  std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
@@ -66,7 +65,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
-      valueUnpackerCodeStr,
       jsQueue,
       jsCallInvoker,
       jsScheduler,
