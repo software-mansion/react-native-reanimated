@@ -21,6 +21,7 @@ const IS_WEB = isWeb();
  * @param animatedRef - An [animated
  *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef)
  *   attached to an Animated.ScrollView component.
+ * @param providedOffset - Initial offset. Defaults to `0`.
  * @returns A shared value which holds the current offset of the `ScrollView`.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
  */
