@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const transformed = transformFileSync(
-  path.join(__dirname, '../src/valueUnpacker.ts'),
+  path.resolve(__dirname, '../src/valueUnpacker.ts'),
   {
     presets: [
       [
@@ -38,7 +38,7 @@ const transformFrom = generate(transformed.ast, {
 });
 
 fs.writeFileSync(
-  path.join(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.h'),
+  path.resolve(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.h'),
   `#pragma once
 
 #include <string>
@@ -51,7 +51,7 @@ extern const std::string ValueUnpackerCode;
 );
 
 fs.writeFileSync(
-  path.join(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.cpp'),
+  path.resolve(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.cpp'),
   `#include "valueUnpacker.h"
 
 namespace worklets {

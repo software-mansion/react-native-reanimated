@@ -2,10 +2,10 @@
 #include <react/renderer/uimanager/primitives.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Resources/valueUnpacker.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-#include <worklets/Resources/valueUnpacker.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -30,7 +30,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      valueUnpackerCode_(ValueUnpackerCode),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -39,8 +38,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsQueue,
           jsScheduler,
           "Reanimated UI runtime",
-          true /* supportsLocking */,
-          valueUnpackerCode_)),
+          true /* supportsLocking */)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
           std::move(forwardedRequestAnimationFrame))) {
@@ -112,8 +110,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
-      true /* supportsLocking */,
-      valueUnpackerCode_);
+      true /* supportsLocking */);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);

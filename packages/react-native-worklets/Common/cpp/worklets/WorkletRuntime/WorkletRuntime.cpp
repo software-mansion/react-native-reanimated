@@ -1,3 +1,4 @@
+#include <worklets/Resources/valueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
@@ -84,8 +85,7 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking,
-    const std::string &valueUnpackerCode)
+    const bool supportsLocking)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -101,12 +101,9 @@ WorkletRuntime::WorkletRuntime(
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
 
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-      "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
-                           .asObject(rt)
-                           .asFunction(rt);
-  rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
+  auto valueUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 }
 
 jsi::Value WorkletRuntime::executeSync(

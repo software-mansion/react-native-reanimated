@@ -25,8 +25,7 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
-      const bool supportsLocking,
-      const std::string &valueUnpackerCode);
+      const bool supportsLocking);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
