@@ -273,7 +273,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> | undefined {
+): (...args: Args) => Promise<ReturnValue> {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
     throw new WorkletsError(

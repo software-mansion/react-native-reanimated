@@ -11,14 +11,12 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnUIAsync } from 'react-native-worklets';
 
 export default function WorkletRuntimeExample() {
   return (
     <View style={styles.container}>
       <AnimationDemo />
       <RunOnUIRunOnJSDemo />
-      <RunOnUIAsyncDemo />
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
       <ThrowErrorDemo />
@@ -192,25 +190,6 @@ function RunOnRuntimeLongRunningTasksDemo() {
   };
 
   return <Button title="Long-running tasks" onPress={handlePress} />;
-}
-
-function RunOnUIAsyncDemo() {
-  const handlePress = async () => {
-    console.log('Starting...');
-    const result = await runOnUIAsync(() => {
-      'worklet';
-      const until = performance.now() + 1000;
-      while (performance.now() < until) {
-        // do nothing
-      }
-      return 'Hello from UI thread!';
-    })();
-    console.log('Finished!');
-    console.log('Result:', result);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  return <Button title="runOnUIAsync" onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
