@@ -13,10 +13,10 @@ class ReanimatedViewState {
 #ifdef ANDROID
   ReanimatedViewState(
       ReanimatedViewState const &previousState,
-      folly::dynamic data) {};
+      folly::dynamic data) {}
   folly::dynamic getDynamic() const {
     return {};
-  };
+  }
 #endif
 };
 

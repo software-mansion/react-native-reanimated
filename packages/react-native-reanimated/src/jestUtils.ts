@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 'use strict';
 
+import type { ViewProps } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 
 import type {
@@ -16,12 +17,17 @@ import { isJest } from './PlatformChecker';
 // Mock ReanimatedView
 jest.mock(
   'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
-  () => ({})
+  () => {
+    return function ReanimatedViewMock(props: ViewProps) {
+      return props.children;
+    };
+  }
 );
-jest.mock(
-  'react-native-reanimated/src/specs/ReanimatedNativeComponent',
-  () => ({})
-);
+jest.mock('react-native-reanimated/src/specs/ReanimatedNativeComponent', () => {
+  return function ReanimatedViewMock(props: ViewProps) {
+    return props.children;
+  };
+});
 
 declare global {
   namespace jest {
