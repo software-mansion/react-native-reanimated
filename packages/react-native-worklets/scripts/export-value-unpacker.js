@@ -54,7 +54,7 @@ extern const std::string ValueUnpackerCode;
 
 fs.writeFileSync(
   path.resolve(__dirname, '../Common/cpp/worklets/Resources/valueUnpacker.cpp'),
-  `#include "valueUnpacker.h"
+  `#include "<worklets/Resources/valueUnpacker.h>
 
 namespace worklets {
 
@@ -65,7 +65,5 @@ const std::string ValueUnpackerCode =
 } // namespace worklets
 `,
 
-  {
-    encoding: 'utf8',
-  }
+  'utf8'
 );
