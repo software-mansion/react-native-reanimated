@@ -477,7 +477,6 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
-  LOG(INFO) << "registerCSSKeyframes: " << animationName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->add(
       animationName.asString(rt).utf8(rt),
       parseCSSAnimationKeyframesConfig(dynamicFromValue(rt, keyframesConfig)));
@@ -486,8 +485,6 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName) {
-  LOG(INFO) << "unregisterCSSKeyframes: "
-            << animationName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
 }
 
