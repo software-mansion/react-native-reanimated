@@ -14,14 +14,16 @@ import type { DefaultStyle } from './hook/commonTypes';
 import { isJest } from './PlatformChecker';
 
 // Mock ReanimatedView
-jest.mock(
-  'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
-  () => ({})
-);
-jest.mock(
-  'react-native-reanimated/src/specs/ReanimatedNativeComponent',
-  () => ({})
-);
+if (isJest()) {
+  jest.mock(
+    'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
+  jest.mock(
+    'react-native-reanimated/src/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
+}
 
 declare global {
   namespace jest {
