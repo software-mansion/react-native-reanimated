@@ -163,14 +163,15 @@ CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config) {
 
 CSSAnimationConfig parseCSSAnimationConfig(const folly::dynamic &config) {
   return {
-      getName(config),
-      getDuration(config),
-      getTimingFunction(config),
-      getDelay(config),
-      getIterationCount(config),
-      getDirection(config),
-      getFillMode(config),
-      getPlayState(config)};
+      CSSAnimationSettings{
+          getDuration(config),
+          getTimingFunction(config),
+          getDelay(config),
+          getIterationCount(config),
+          getDirection(config),
+          getFillMode(config),
+          getPlayState(config)},
+      getName(config)};
 }
 
 } // namespace reanimated::css
