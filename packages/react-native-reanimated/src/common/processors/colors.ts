@@ -8,7 +8,7 @@
 /* eslint no-bitwise: 0 */
 import type { StyleProps } from '../../commonTypes';
 import { makeShareable } from '../../core';
-import { IS_ANDROID } from '..';
+import { IS_ANDROID } from '../constants';
 
 interface RGB {
   r: number;
