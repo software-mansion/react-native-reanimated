@@ -58,6 +58,8 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     }
   }
 
+  shadowNode.setUseRuntimeShadowNodeReferenceUpdateOnThread(false);
+
   return shadowNode.clone(
       {mergeProps(shadowNode, propsMap, *family),
        std::make_shared<ShadowNode::ListOfShared>(children),
