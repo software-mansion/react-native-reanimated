@@ -67,11 +67,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(
-            jsContext,
-            mMessageQueueThread,
-            jsCallInvokerHolder,
-            mAndroidUIScheduler);
+        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
     return true;
   }
 

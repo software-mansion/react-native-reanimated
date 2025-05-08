@@ -43,10 +43,8 @@ fs.writeFileSync(
   path.resolve(__dirname, '../Common/cpp/worklets/Resources/ValueUnpacker.h'),
   `#pragma once
 
-#include <string>
-
 namespace worklets {
-extern const std::string ValueUnpackerCode;
+extern const char ValueUnpackerCode[];
 }
 `,
   'utf8'
@@ -58,7 +56,7 @@ fs.writeFileSync(
 
 namespace worklets {
 
-const std::string ValueUnpackerCode =
+const char ValueUnpackerCode[] =
     R"VALUE_UNPACKER(` +
     transformFrom.code +
     `)VALUE_UNPACKER";

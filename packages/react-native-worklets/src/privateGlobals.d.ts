@@ -4,10 +4,10 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { ValueUnpacker } from './workletTypes';
 import type { callGuardDEV } from './initializers';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
+import type { ValueUnpacker } from './workletTypes';
 
 declare global {
   var __workletsCache: Map<number, () => unknown>;
