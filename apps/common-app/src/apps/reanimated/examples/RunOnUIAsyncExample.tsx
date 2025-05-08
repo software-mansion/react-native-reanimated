@@ -74,16 +74,14 @@ const RunOnUIAsyncExample: React.FC = () => {
         <Button
           title={isSorting ? 'Sorting...' : 'Sort Cards on UI Thread'}
           onPress={() => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            handleSortPress();
+            handleSortPress().catch(() => {});
           }}
           disabled={isSorting || isShuffling}
         />
         <Button
           title={isShuffling ? 'Shuffling...' : 'Shuffle Cards on UI Thread'}
           onPress={() => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            handleShufflePress();
+            handleShufflePress().catch(() => {});
           }}
           disabled={isSorting || isShuffling}
         />

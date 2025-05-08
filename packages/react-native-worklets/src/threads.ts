@@ -14,12 +14,7 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** An array of [worklet, args, resolve (optional)] pairs. */
 let _runOnUIQueue: Array<
-  [
-    WorkletFunction<unknown[], unknown>,
-    unknown[],
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-    ((value: any | PromiseLike<any>) => void)?,
-  ]
+  [WorkletFunction<unknown[], unknown>, unknown[], ((value: unknown) => void)?]
 > = [];
 
 export function setupMicrotasks() {
@@ -313,7 +308,11 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         makeShareableCloneRecursive(args);
       }
 
-      _runOnUIQueue.push([worklet as WorkletFunction, args, resolve]);
+      _runOnUIQueue.push([
+        worklet as WorkletFunction,
+        args,
+        resolve as (value: unknown) => void,
+      ]);
       if (_runOnUIQueue.length === 1) {
         queueMicrotask(() => {
           const queue = _runOnUIQueue.slice();
