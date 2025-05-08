@@ -93,7 +93,7 @@ const RunOnUIAsyncExample: React.FC = () => {
           const backgroundColor = interpolateColor(
             card.value,
             [0, 1000],
-            ['#ADD8E6', '#00008B'] // Light Blue to Dark Blue
+            ['#008000', '#000080'] // dark green to dark blue
           );
           return (
             <Animated.View
