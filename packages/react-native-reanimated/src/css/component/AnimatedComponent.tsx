@@ -46,13 +46,31 @@ export default class AnimatedComponent<
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  reanimatedContext: { current: -1 };
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
-    this.ChildComponent = ChildComponent;
+    // console.log(props.reanimatedContext)
+    this.reanimatedContext = props.reanimatedContext ? props.reanimatedContext : { current: -1 };
+
+    class ChildComponentClassWrapper extends Component {
+      innerComponentRef = null as AnimatedComponentRef | null;
+      render() {
+        return <ChildComponent 
+          {...this.props}
+          ref={(r: any) => {
+            this.innerComponentRef = r;
+          }}
+        />;
+      }
+    }
+    this.ChildComponent = ChildComponentClassWrapper;
   }
 
   getComponentViewTag() {
+    if (this.reanimatedContext.current > 0) {
+      return this.reanimatedContext.current;
+    }
     return this._getViewInfo().viewTag as number;
   }
 
@@ -79,7 +97,7 @@ export default class AnimatedComponent<
       shadowNodeWrapper = null;
       viewConfig = null;
     } else {
-      const hostInstance = findHostInstance(this);
+      const hostInstance = findHostInstance(this._componentRef);
       if (!hostInstance) {
         /* 
           findHostInstance can return null for a component that doesn't render anything 
@@ -93,8 +111,11 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag;
+      if (this.reanimatedContext?.current == -1) {
+        this.reanimatedContext.current = viewTag;
+      }
       viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(this._componentRef, hostInstance);
     }
     this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
     if (DOMElement) {
@@ -105,6 +126,15 @@ export default class AnimatedComponent<
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {
+    if (ref) {
+      if (ref !== this._componentRef) {
+        this._componentRef = this._resolveComponentRef(ref);
+        // if ref is changed, reset viewInfo
+        this._viewInfo = undefined;
+      }
+      this._onSetLocalRef();
+    }
+
     const forwardedRef = this.props.forwardedRef;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
@@ -112,28 +142,17 @@ export default class AnimatedComponent<
       forwardedRef(ref);
     } else if (typeof forwardedRef === 'object' && forwardedRef) {
       // Handle createRef-based refs
-      forwardedRef.current = ref;
+      forwardedRef.current = ref?.innerComponentRef ?? ref;
     }
-
-    if (!ref) {
-      // component has been unmounted
-      return;
-    }
-    if (ref !== this._componentRef) {
-      this._componentRef = this._resolveComponentRef(ref);
-      // if ref is changed, reset viewInfo
-      this._viewInfo = undefined;
-    }
-    this._onSetLocalRef();
   };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
     const componentRef = ref as AnimatedComponentRef;
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
+    if (componentRef?.innerComponentRef?.getAnimatableRef) {
       this._hasAnimatedRef = true;
-      return componentRef.getAnimatableRef();
+      return componentRef.innerComponentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
     if (SHOULD_BE_USE_WEB) {
@@ -212,6 +231,7 @@ export default class AnimatedComponent<
         {...this.props}
         {...props}
         {...platformProps}
+        reanimatedContext={this.reanimatedContext}
         style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
@@ -222,6 +242,8 @@ export default class AnimatedComponent<
     if (IS_WEB) {
       return child;
     }
+
+    // return child;
 
     return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
   }

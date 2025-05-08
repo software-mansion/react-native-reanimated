@@ -194,11 +194,11 @@ export default class AnimatedComponent
   _updateFromNative(props: StyleProps) {
     if (this._options?.setNativeProps) {
       this._options.setNativeProps(
-        this._componentRef as AnimatedComponentRef,
+        this._componentRef.innerComponentRef as AnimatedComponentRef,
         props
       );
     } else {
-      (this._componentRef as AnimatedComponentRef)?.setNativeProps?.(props);
+      (this._componentRef.innerComponentRef as AnimatedComponentRef)?.setNativeProps?.(props);
     }
   }
 

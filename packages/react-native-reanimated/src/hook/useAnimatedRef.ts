@@ -52,6 +52,9 @@ export function useAnimatedRef<
     const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
       component
     ) => {
+      if (component?.innerComponentRef) {
+        component = component?.innerComponentRef;
+      }
       // enters when ref is set by attaching to a component
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
@@ -68,7 +71,6 @@ export function useAnimatedRef<
         // TODO: remove casting
         fun.getTag = () =>
           findNodeHandle(getComponentOrScrollable(component) as Component)!;
-
         fun.current = component;
       }
       return tag.value;
