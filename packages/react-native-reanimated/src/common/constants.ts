@@ -11,7 +11,7 @@ function isChromeDebugger(): boolean {
   );
 }
 
-export function isWindowAvailable() {
+function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
   // this function shouldn't be used to conditionally render components
   // https://www.joshwcomeau.com/react/the-perils-of-rehydration/
@@ -19,14 +19,14 @@ export function isWindowAvailable() {
   return typeof window !== 'undefined';
 }
 
-export const IS_ANDROID = Platform.OS === 'android';
-export const IS_IOS = Platform.OS === 'ios';
-export const IS_WEB = Platform.OS === 'web';
-export const IS_JEST = !!process.env.JEST_WORKER_ID;
-export const IS_WINDOWS = Platform.OS === 'windows';
+export const IS_ANDROID: boolean = Platform.OS === 'android';
+export const IS_IOS: boolean = Platform.OS === 'ios';
+export const IS_WEB: boolean = Platform.OS === 'web';
+export const IS_JEST: boolean = !!process.env.JEST_WORKER_ID;
+export const IS_WINDOWS: boolean = Platform.OS === 'windows';
 
-export const IS_CHROME_DEBUGGER = isChromeDebugger();
-export const IS_WINDOW_AVAILABLE = isWindowAvailable();
+export const IS_CHROME_DEBUGGER: boolean = isChromeDebugger();
+export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
 
 export const SHOULD_BE_USE_WEB =
   IS_JEST || IS_CHROME_DEBUGGER || IS_WEB || IS_WINDOWS;

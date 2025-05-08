@@ -3,7 +3,7 @@
 
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { ReanimatedError } from './common';
+import { IS_JEST, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -11,7 +11,6 @@ import type {
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
 import type { DefaultStyle } from './hook/commonTypes';
-import { isJest } from './PlatformChecker';
 
 // Mock ReanimatedView
 jest.mock(
@@ -285,7 +284,7 @@ export const advanceAnimationByFrame = (count: number) => {
   jest.runOnlyPendingTimers();
 };
 
-const requireFunction = isJest()
+const requireFunction = IS_JEST
   ? require
   : () => {
       throw new ReanimatedError(

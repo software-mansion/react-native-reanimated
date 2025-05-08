@@ -1,8 +1,7 @@
 'use strict';
 import { logger } from 'react-native-worklets';
 
-import { ReanimatedError } from '../../../common';
-import { isWindowAvailable } from '../../../PlatformChecker';
+import { IS_WINDOW_AVAILABLE, ReanimatedError } from '../../../common';
 
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
@@ -12,7 +11,7 @@ const cssNameList: string[] = [];
 
 export function configureWebCSSAnimations() {
   if (
-    !isWindowAvailable() || // Without this check SSR crashes because document is undefined (NextExample on CI)
+    !IS_WINDOW_AVAILABLE || // Without this check SSR crashes because document is undefined (NextExample on CI)
     document.getElementById(CSS_ANIMATIONS_STYLE_TAG_ID) !== null
   ) {
     return;
@@ -43,7 +42,7 @@ function getStyleSheet() {
 export function insertCSSAnimation(animationName: string, keyframes: string) {
   // Without window availability check SSR crashes because document is undefined
   // (NextExample on CI)
-  if (!isWindowAvailable() || cssNameToIndex.has(animationName)) {
+  if (!IS_WINDOW_AVAILABLE || cssNameToIndex.has(animationName)) {
     return;
   }
 
@@ -74,7 +73,7 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
 
 export function removeCSSAnimation(animationName: string) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
-  if (!isWindowAvailable()) {
+  if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 

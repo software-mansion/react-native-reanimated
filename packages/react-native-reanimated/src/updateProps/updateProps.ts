@@ -5,14 +5,18 @@ import type { MutableRefObject } from 'react';
 import { runOnUI } from 'react-native-worklets';
 
 import { processColorsInProps } from '../Colors';
-import { processTransformOrigin, ReanimatedError } from '../common';
+import {
+  IS_JEST,
+  processTransformOrigin,
+  ReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
@@ -22,7 +26,7 @@ let updateProps: (
   isAnimatedProps?: boolean
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
@@ -88,11 +92,11 @@ function createUpdatePropsManager() {
   };
 }
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
-    if (!isJest()) {
+    if (!IS_JEST) {
       throw new ReanimatedError(
         '`UpdatePropsManager` is not available on non-native platform.'
       );
