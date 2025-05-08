@@ -7,7 +7,11 @@ import type {
 } from 'react-native-worklets';
 import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
 
-import { ReanimatedError, registerReanimatedError } from '../common';
+import {
+  ReanimatedError,
+  registerReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
@@ -23,14 +27,11 @@ import type {
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
-
-const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -79,7 +80,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!globalThis.RN$Bridgeless && !IS_WEB) {
+    if (!globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );

@@ -2,12 +2,9 @@
 import type { LoggerConfig } from 'react-native-worklets';
 import { updateLoggerConfig } from 'react-native-worklets';
 
-import { ReanimatedError } from './common';
+import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
-import { shouldBeUseWeb } from './PlatformChecker';
 import { PropsAllowlists } from './propsAllowlists';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {

@@ -6,9 +6,9 @@
  */
 
 /* eslint no-bitwise: 0 */
+import { IS_ANDROID } from './common';
 import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
-import { isAndroid } from './PlatformChecker';
 
 interface RGB {
   r: number;
@@ -659,8 +659,6 @@ export function isColor(value: unknown): boolean {
   }
   return processColorInitially(value) != null;
 }
-
-const IS_ANDROID = isAndroid();
 
 export function processColor(color: unknown): number | null | undefined {
   'worklet';

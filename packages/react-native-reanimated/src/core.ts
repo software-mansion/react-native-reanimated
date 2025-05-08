@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError } from './common';
+import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -16,7 +16,6 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import { shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
@@ -33,7 +32,6 @@ export {
 } from 'react-native-worklets';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
 export const isReanimated3 = () => true;
