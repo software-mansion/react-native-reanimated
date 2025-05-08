@@ -9,6 +9,8 @@ export function breakBundle() {
     // TODO: Try storing a raw pointer to the valueUnpacker and see what happens.
     // @ts-expect-error wwwww
     globalThis.__valueUnpacker = valueUnpacker;
+    // @ts-expect-error wwwww
+    globalThis._BROKEN = true;
 
     initializeWorkletRegistries();
     setupCallGuard();

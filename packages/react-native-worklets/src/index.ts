@@ -12,9 +12,12 @@ if (!globalThis._WORKLET) {
   console.log(Object.keys(globalThis));
   initializeWorkletRegistries();
   initializeUIRuntime(WorkletsModule);
+  // @ts-ignore www
   globalThis.__valueUnpacker = valueUnpacker;
+  // @ts-ignore www
 } else if (!globalThis._BROKEN) {
   breakBundle();
+  // @ts-ignore www
   globalThis._BROKEN = true;
 }
 
