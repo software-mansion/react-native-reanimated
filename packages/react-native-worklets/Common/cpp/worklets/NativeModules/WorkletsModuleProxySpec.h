@@ -3,6 +3,7 @@
 #include <ReactCommon/CallInvoker.h>
 #include <ReactCommon/TurboModule.h>
 #include <memory>
+#include <string>
 
 using namespace facebook;
 using namespace react;
