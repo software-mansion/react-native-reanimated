@@ -4,6 +4,8 @@
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
+#include <memory>
+
 namespace facebook::react {
 
 using ReanimatedViewComponentDescriptor =

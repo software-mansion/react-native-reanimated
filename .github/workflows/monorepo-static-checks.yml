@@ -35,5 +35,5 @@ jobs:
           cache: 'yarn'
 
       # Checks
-      - name: Check formatting
-        run: yarn format:root
+      - name: Lint
+        run: yarn lint:root
