@@ -157,9 +157,9 @@ export default class AnimatedComponent<
     // Case for SVG components on Web
     if (SHOULD_BE_USE_WEB) {
       if (componentRef && componentRef.elementRef) {
-        this._componentDOMRef = componentRef.elementRef.current;
+        this._componentDOMRef = componentRef.innerComponentRef.elementRef.current;
       } else {
-        this._componentDOMRef = ref as HTMLElement;
+        this._componentDOMRef = ref.innerComponentRef as HTMLElement;
       }
     }
     return componentRef;
@@ -242,8 +242,6 @@ export default class AnimatedComponent<
     if (IS_WEB) {
       return child;
     }
-
-    // return child;
 
     return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
   }

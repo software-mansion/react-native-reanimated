@@ -28,7 +28,10 @@ if (shouldBeUseWeb()) {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
-      _updatePropsJS(updates, component, isAnimatedProps);
+      _updatePropsJS(
+        updates,
+        component.innerComponentRef ? component.innerComponentRef : component,
+        isAnimatedProps);
     });
   };
 } else {
