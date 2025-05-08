@@ -34,6 +34,10 @@ jobs:
         with:
           cache: 'yarn'
 
+      # Setup repo
+      - name: Install dependencies
+        run: yarn install --immutable
+
       # Checks
       - name: Lint
         run: yarn lint:root
