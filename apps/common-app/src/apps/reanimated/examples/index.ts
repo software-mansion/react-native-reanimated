@@ -147,7 +147,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RunOnUIAsyncExample: {
     icon: '👷‍♂️',
-    title: 'RunOnUIAsyncExample',
+    title: 'runOnUIAsync',
     screen: RunOnUIAsyncExample,
   },
   WorkletRuntimeExample: {
