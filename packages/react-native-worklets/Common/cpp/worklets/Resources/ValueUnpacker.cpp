@@ -2,7 +2,7 @@
 
 namespace worklets {
 
-const std::string ValueUnpackerCode = 
+const std::string ValueUnpackerCode =
     R"VALUE_UNPACKER(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
   'use strict';
 

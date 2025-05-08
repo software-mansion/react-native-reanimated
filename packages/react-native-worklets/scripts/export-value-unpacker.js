@@ -58,7 +58,7 @@ fs.writeFileSync(
 
 namespace worklets {
 
-const std::string ValueUnpackerCode = 
+const std::string ValueUnpackerCode =
     R"VALUE_UNPACKER(` +
     transformFrom.code +
     `)VALUE_UNPACKER";
