@@ -10,6 +10,8 @@ export interface WorkletsModuleProxy {
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 
+  makeShareableString(string: string): ShareableRef<string>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

@@ -35,6 +35,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableString: global.__workletsModuleProxy.makeShareableString,
     };
   }
 
@@ -48,6 +49,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableString(string: string) {
+    return this.#workletsModuleProxy.makeShareableString(string);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

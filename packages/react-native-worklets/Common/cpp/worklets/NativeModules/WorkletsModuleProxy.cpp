@@ -66,6 +66,12 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableString(
+    jsi::Runtime &rt,
+    const jsi::String &string) {
+  return worklets::makeShareableString(rt, string);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

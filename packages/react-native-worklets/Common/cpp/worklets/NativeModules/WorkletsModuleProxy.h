@@ -35,6 +35,9 @@ class WorkletsModuleProxy
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
 
+  jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string)
+      override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
