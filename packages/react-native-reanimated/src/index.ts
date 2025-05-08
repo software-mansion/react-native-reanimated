@@ -29,8 +29,9 @@ export {
   withSpring,
   withTiming,
 } from './animation';
-export type { ParsedColorArray } from './common';
-export { convertToRGBA, isColor, processColor } from './common';
+export type { ParsedColorArray } from './Colors';
+export { convertToRGBA, isColor } from './Colors';
+export { processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,

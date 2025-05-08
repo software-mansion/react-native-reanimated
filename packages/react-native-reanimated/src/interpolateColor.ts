@@ -4,12 +4,11 @@ import {
   green,
   hsvToColor,
   opacity,
-  processColor,
-  ReanimatedError,
   red,
   rgbaColor,
   RGBtoHSV,
-} from './common';
+} from './Colors';
+import { processColor, ReanimatedError } from './common';
 import type { SharedValue } from './commonTypes';
 import { makeMutable } from './core';
 import culori from './culori';

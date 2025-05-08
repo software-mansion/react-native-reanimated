@@ -8,17 +8,16 @@ import {
   shareableMappingCache,
 } from 'react-native-worklets';
 
-import type { ParsedColorArray } from '../common';
+import type { ParsedColorArray } from '../Colors';
 import {
   clampRGBA,
   convertToRGBA,
   isColor,
-  ReanimatedError,
   rgbaArrayToRGBAColor,
-  SHOULD_BE_USE_WEB,
   toGammaSpace,
   toLinearSpace,
-} from '../common';
+} from '../Colors';
+import { ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,

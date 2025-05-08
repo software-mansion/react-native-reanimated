@@ -2,10 +2,11 @@
 'worklet';
 import type { BoxShadowValue } from 'react-native';
 
-import { processColor, ReanimatedError } from '..';
 import { IS_ANDROID } from '../constants';
+import { ReanimatedError } from '../errors';
 import type { ValueProcessor } from '../types';
 import { parseBoxShadowString } from '../utils';
+import { processColor } from './colors';
 
 const ERROR_MESSAGES = {
   notArrayObject: (value: object) =>
