@@ -2,8 +2,12 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import { processColorsInProps } from '../Colors';
-import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import {
+  IS_CHROME_DEBUGGER,
+  IS_JEST,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,

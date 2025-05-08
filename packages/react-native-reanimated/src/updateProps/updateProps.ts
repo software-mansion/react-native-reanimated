@@ -4,9 +4,9 @@
 import type { MutableRefObject } from 'react';
 import { runOnUI } from 'react-native-worklets';
 
-import { processColorsInProps } from '../Colors';
 import {
   IS_JEST,
+  processColorsInProps,
   processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,

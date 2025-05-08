@@ -6,9 +6,9 @@
  */
 
 /* eslint no-bitwise: 0 */
-import { IS_ANDROID } from './common';
-import type { StyleProps } from './commonTypes';
-import { makeShareable } from './core';
+import type { StyleProps } from '../../commonTypes';
+import { makeShareable } from '../../core';
+import { IS_ANDROID } from '..';
 
 interface RGB {
   r: number;
