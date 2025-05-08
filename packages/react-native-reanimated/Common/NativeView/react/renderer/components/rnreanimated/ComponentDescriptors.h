@@ -1,8 +1,8 @@
 #pragma once
 
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
-#include <react/renderer/core/ConcreteComponentDescriptor.h>
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
+#include <react/renderer/core/ConcreteComponentDescriptor.h>
 
 namespace facebook::react {
 
