@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { runOnJS } from 'react-native-reanimated';
+import Animated, { interpolateColor, runOnJS } from 'react-native-reanimated';
 import { runOnUIAsync } from 'react-native-worklets';
 
 interface Card {
@@ -26,10 +26,6 @@ const RunOnUIAsyncExample: React.FC = () => {
 
   const sortCardsOnUIWorklet = (currentCards: Card[]): Card[] => {
     'worklet';
-    const startTime = performance.now();
-    while (performance.now() - startTime < 1000) {
-      // Simulate intensive work
-    }
     const sorted = [...currentCards].sort((a, b) => a.value - b.value);
     return sorted;
   };
@@ -37,10 +33,6 @@ const RunOnUIAsyncExample: React.FC = () => {
   const shuffleCardsOnUIWorklet = (currentCards: Card[]): Card[] => {
     'worklet';
     const shuffled = [...currentCards];
-    const startTime = performance.now();
-    while (performance.now() - startTime < 1000) {
-      // Simulate intensive work
-    }
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -97,11 +89,20 @@ const RunOnUIAsyncExample: React.FC = () => {
         />
       </View>
       <ScrollView contentContainerStyle={styles.gridContainer}>
-        {cards.map((card) => (
-          <View key={card.id} style={styles.card}>
-            <Text style={styles.cardText}>{card.value}</Text>
-          </View>
-        ))}
+        {cards.map((card) => {
+          const backgroundColor = interpolateColor(
+            card.value,
+            [0, 1000],
+            ['#ADD8E6', '#00008B'] // Light Blue to Dark Blue
+          );
+          return (
+            <Animated.View
+              key={card.id}
+              style={[styles.card, { backgroundColor }]}>
+              <Text style={styles.cardText}>{card.value}</Text>
+            </Animated.View>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -122,9 +123,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   card: {
-    width: `${100 / NUM_COLUMNS - 2}%`, // Adjust for margin
-    aspectRatio: 1, // Square cards
-    backgroundColor: 'blue',
+    width: `${100 / NUM_COLUMNS - 2}%`,
+    aspectRatio: 1,
     margin: '1%',
     justifyContent: 'center',
     alignItems: 'center',
