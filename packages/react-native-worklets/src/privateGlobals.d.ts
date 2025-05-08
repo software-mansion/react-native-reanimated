@@ -25,6 +25,7 @@ declare global {
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
+  var _makeShareableString: (value: string) => FlatShareableRef<string>;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;

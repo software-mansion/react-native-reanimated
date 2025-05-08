@@ -25,14 +25,7 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {
-      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
-      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync:
-        global.__workletsModuleProxy.executeOnUIRuntimeSync,
-      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
-      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
-    };
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
   }
 
   makeShareableClone<TValue>(
@@ -45,6 +38,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

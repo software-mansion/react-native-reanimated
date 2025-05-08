@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -39,7 +40,8 @@ static inline std::vector<jsi::Value> parseArgs(
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
-    const std::shared_ptr<JSScheduler> &jsScheduler) {
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -50,6 +52,9 @@ void WorkletRuntimeDecorator::decorate(
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
   rt.global().setProperty(rt, "_IS_FABRIC", true);
+
+  rt.global().setProperty(
+      rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
@@ -93,6 +98,13 @@ void WorkletRuntimeDecorator::decorate(
         auto shouldRetainRemote = jsi::Value::undefined();
         return makeShareableClone(
             rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableString",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableString(rt, value.asString(rt));
       });
 
   jsi_utils::installJsiFunction(
