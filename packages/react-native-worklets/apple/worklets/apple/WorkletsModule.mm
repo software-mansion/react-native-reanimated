@@ -8,6 +8,7 @@
 #import <worklets/apple/WorkletsModule.h>
 #import <React/NSDataBigString.h>
 
+#import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
 using worklets::RNRuntimeWorkletDecorator;
@@ -36,16 +37,24 @@ using worklets::WorkletsModuleProxy;
   bundle_ = std::make_unique<NSDataBigString>(bundle);
 }
 
+- (void)checkBridgeless
+{
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
+  react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
+}
+
 @synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
+  react_native_assert(self.bridge != nullptr);
+  [self checkBridgeless];
+  react_native_assert(self.bridge.runtime != nullptr);
+
   AssertJavaScriptQueue();
 
-  react_native_assert(self.bridge != nullptr);
-  react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
@@ -84,6 +93,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   workletsModuleProxy_.reset();
 
   [super invalidate];
+}
+
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
+{
+  [self checkBridgeless];
+  AssertJavaScriptQueue();
+  return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
 @end

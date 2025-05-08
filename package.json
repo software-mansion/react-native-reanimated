@@ -38,6 +38,6 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/community-cli-plugin@npm:0.79.0": "patch:@react-native/community-cli-plugin@npm%3A0.79.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.79.0-d467a2c1a8.patch"
+    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.79.1#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.79.1-7bacb8c651.patch"
   }
 }

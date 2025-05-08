@@ -93,23 +93,24 @@
     "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
-    "react-native-is-edge-to-edge": "1.1.7"
+    "react-native-is-edge-to-edge": "1.1.7",
+    "semver": "^7.7.1"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
     "react": "*",
     "react-native": "*",
-    "react-native-worklets": "0.2.0"
+    "react-native-worklets": ">=0.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/types": "^7.20.0",
-    "@react-native/babel-preset": "0.79.0",
-    "@react-native/eslint-config": "0.79.0",
-    "@react-native/metro-config": "0.79.0",
-    "@react-native/typescript-config": "0.79.0",
+    "@react-native/babel-preset": "0.79.1",
+    "@react-native/eslint-config": "0.79.1",
+    "@react-native/metro-config": "0.79.1",
+    "@react-native/typescript-config": "0.79.1",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^13.0.1",
@@ -121,6 +122,7 @@
     "@types/node": "^18.0.0",
     "@types/react": "^19.0.10",
     "@types/react-test-renderer": "^19.0.0",
+    "@types/semver": "^7",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "@typescript-eslint/rule-tester": "^6.21.0",
@@ -147,7 +149,7 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.0.0",
-    "react-native": "patch:react-native@npm%3A0.79.0#~/.yarn/patches/react-native-npm-0.79.0-3bd84ed11a.patch",
+    "react-native": "patch:react-native@npm%3A0.79.1#~/.yarn/patches/react-native-npm-0.79.1-42625ce8f6.patch",
     "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
     "react-native-gesture-handler": "2.25.0",
     "react-native-web": "0.20.0",
