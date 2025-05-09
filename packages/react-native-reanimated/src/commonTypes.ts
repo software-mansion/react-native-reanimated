@@ -449,3 +449,16 @@ export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValueRecursive<T['style']>
   : Record<string, unknown>;
+
+type HostInstanceFabric = {
+  __internalInstanceHandle?: Record<string, unknown>;
+  __nativeTag?: number;
+  _viewConfig?: Record<string, unknown>;
+};
+
+type HostInstancePaper = {
+  _nativeTag?: number;
+  viewConfig?: Record<string, unknown>;
+};
+
+export type HostInstance = HostInstanceFabric & HostInstancePaper;

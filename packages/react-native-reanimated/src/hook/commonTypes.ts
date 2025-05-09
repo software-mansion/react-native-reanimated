@@ -14,14 +14,14 @@ import type {
   AnimatedStyle,
   ShadowNodeWrapper,
 } from '../commonTypes';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type { AnimatedProps, IChildComponentClassWrapper } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export type DependencyList = Array<unknown> | undefined;
 
 export interface Descriptor {
-  tag: number | ReanimatedHTMLElement;
+  tag: number | ReanimatedHTMLElement | IChildComponentClassWrapper;
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 

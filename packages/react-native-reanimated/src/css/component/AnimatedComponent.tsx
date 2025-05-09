@@ -7,6 +7,8 @@ import { Platform, StyleSheet } from 'react-native';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
+  IChildComponentClassWrapper,
+  ICSSAnimatedComponentInternal,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
@@ -27,6 +29,7 @@ const IS_WEB = isWeb();
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
   style?: StyleProp<PlainStyle>;
+  reanimatedContext?: { current: number };
 };
 
 // TODO - change these ugly underscore prefixed methods and properties to real
@@ -34,25 +37,41 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // to the main one)
 export default class AnimatedComponent<
   P extends AnyRecord = AnimatedComponentProps,
-> extends Component<P> {
+> extends Component<P> implements ICSSAnimatedComponentInternal {
   ChildComponent: AnyComponent;
 
   _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
-  _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-  _hasAnimatedRef = false;
+  _componentRef: IChildComponentClassWrapper | AnimatedComponentRef | null = null;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  reanimatedContext: { current: number };
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
-    this.ChildComponent = ChildComponent;
+    this.reanimatedContext = props.reanimatedContext ? props.reanimatedContext : { current: -1 };
+
+    class ChildComponentClassWrapper extends Component implements IChildComponentClassWrapper {
+      innerComponentRef: AnimatedComponentRef | null = null;
+      render() {
+        return <ChildComponent 
+          {...this.props}
+          ref={(r: any) => {
+            this.innerComponentRef = r;
+          }}
+        />;
+      }
+    }
+    this.ChildComponent = ChildComponentClassWrapper;
   }
 
   getComponentViewTag() {
+    if (this.reanimatedContext.current > 0) {
+      return this.reanimatedContext.current;
+    }
     return this._getViewInfo().viewTag as number;
   }
 
@@ -93,6 +112,9 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag;
+      if (this.reanimatedContext.current == -1) {
+        this.reanimatedContext.current = viewTag as number;
+      }
       viewConfig = viewInfo.viewConfig;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
@@ -104,46 +126,43 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  _setComponentRef = (ref: Component | HTMLElement) => {
+  _setComponentRef = (ref: IChildComponentClassWrapper | null) => {
+    if (ref) {
+      if (ref !== this._componentRef) {
+        this._componentRef = this._resolveComponentRef(ref);
+        // if ref is changed, reset viewInfo
+        this._viewInfo = undefined;
+      }
+      this._onSetLocalRef();
+    }
+
     const forwardedRef = this.props.forwardedRef;
     // Forward to user ref prop (if one has been specified)
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
-      forwardedRef(ref);
+      forwardedRef(ref); // TODO - check if this is correct
     } else if (typeof forwardedRef === 'object' && forwardedRef) {
       // Handle createRef-based refs
-      forwardedRef.current = ref;
+      forwardedRef.current = ref?.innerComponentRef ?? ref;
     }
-
-    if (!ref) {
-      // component has been unmounted
-      return;
-    }
-    if (ref !== this._componentRef) {
-      this._componentRef = this._resolveComponentRef(ref);
-      // if ref is changed, reset viewInfo
-      this._viewInfo = undefined;
-    }
-    this._onSetLocalRef();
   };
 
-  _resolveComponentRef = (ref: Component | HTMLElement | null) => {
-    const componentRef = ref as AnimatedComponentRef;
+  _resolveComponentRef = (ref: IChildComponentClassWrapper | null): IChildComponentClassWrapper | AnimatedComponentRef | null => {
+    const innerComponentRef = ref?.innerComponentRef as AnimatedComponentRef;
     // Component can specify ref which should be animated when animated version of the component is created.
     // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
-      this._hasAnimatedRef = true;
-      return componentRef.getAnimatableRef();
+    if (innerComponentRef?.getAnimatableRef) {
+      return innerComponentRef.getAnimatableRef();
     }
     // Case for SVG components on Web
     if (SHOULD_BE_USE_WEB) {
-      if (componentRef && componentRef.elementRef) {
-        this._componentDOMRef = componentRef.elementRef.current;
+      if (innerComponentRef?.elementRef) {
+        this._componentDOMRef = innerComponentRef.elementRef.current;
       } else {
-        this._componentDOMRef = ref as HTMLElement;
+        this._componentDOMRef = ref?.innerComponentRef as HTMLElement;
       }
     }
-    return componentRef;
+    return ref;
   };
 
   _updateStyles(props: P) {
@@ -212,6 +231,7 @@ export default class AnimatedComponent<
         {...this.props}
         {...props}
         {...platformProps}
+        reanimatedContext={this.reanimatedContext}
         style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way

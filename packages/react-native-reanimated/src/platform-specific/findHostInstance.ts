@@ -1,21 +1,9 @@
 /* eslint-disable camelcase */
 'use strict';
 
-import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
+import { HostInstance } from '../commonTypes';
+import type { IChildComponentClassWrapper, ICSSAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
-
-type HostInstanceFabric = {
-  __internalInstanceHandle?: Record<string, unknown>;
-  __nativeTag?: number;
-  _viewConfig?: Record<string, unknown>;
-};
-
-type HostInstancePaper = {
-  _nativeTag?: number;
-  viewConfig?: Record<string, unknown>;
-};
-
-export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (!maybeNativeRef) {
@@ -56,11 +44,11 @@ function resolveFindHostInstance_DEPRECATED() {
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  component: IAnimatedComponentInternal | React.Component
-): HostInstance {
+  component: ICSSAnimatedComponentInternal
+): HostInstance | null {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(
-    (component as IAnimatedComponentInternal)._componentRef as HostInstance
+    (component._componentRef as IChildComponentClassWrapper)?.innerComponentRef as HostInstance
   );
   if (hostInstance !== undefined) {
     return hostInstance;
@@ -73,9 +61,5 @@ export function findHostInstance(
     the ref provided by this method. It is the component's responsibility to ensure that this is 
     a valid React ref.
   */
-  return findHostInstance_DEPRECATED(
-    (component as IAnimatedComponentInternal)._hasAnimatedRef
-      ? (component as IAnimatedComponentInternal)._componentRef
-      : component
-  );
+  return findHostInstance_DEPRECATED(component._componentRef);
 }

@@ -27,6 +27,7 @@ import {
 } from '../../PlatformChecker';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
+import { ICSSAnimatedComponentInternal } from '../../createAnimatedComponent/commonTypes';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -261,7 +262,7 @@ class JSReanimated implements IReanimatedModule {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
-    _component?: React.Component,
+    _component?: React.Component | ICSSAnimatedComponentInternal,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');

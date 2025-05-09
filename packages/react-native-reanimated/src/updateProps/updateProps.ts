@@ -16,6 +16,7 @@ import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 import { processTransformOrigin } from './processTransformOrigin';
+import { IChildComponentClassWrapper } from '../createAnimatedComponent/commonTypes';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -27,8 +28,11 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
-      const component = viewDescriptor.tag as ReanimatedHTMLElement;
-      _updatePropsJS(updates, component, isAnimatedProps);
+      const component = viewDescriptor.tag;
+      _updatePropsJS(
+        updates,
+        ((component as IChildComponentClassWrapper).innerComponentRef ? (component as IChildComponentClassWrapper).innerComponentRef : component) as ReanimatedHTMLElement,
+        isAnimatedProps);
     });
   };
 } else {

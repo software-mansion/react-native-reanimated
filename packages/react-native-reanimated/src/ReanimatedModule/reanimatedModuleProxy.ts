@@ -14,6 +14,7 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../css/platform/native';
+import { ICSSAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -95,7 +96,7 @@ export interface IReanimatedModule
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined,
+    component: React.Component | ICSSAnimatedComponentInternal,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

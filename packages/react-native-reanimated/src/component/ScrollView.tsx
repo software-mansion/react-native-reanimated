@@ -32,7 +32,7 @@ export function AnimatedScrollView({
   const animatedRef = (
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useAnimatedRef<ScrollView>()
+        useAnimatedRef()
       : ref
   ) as AnimatedRef<AnimatedScrollView>;
 

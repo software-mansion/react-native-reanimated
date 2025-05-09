@@ -4,6 +4,7 @@ import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
   AnimatedComponentRef,
+  IChildComponentClassWrapper,
   INativeEventsManager,
   InitialComponentProps,
   ManagedAnimatedComponent,
@@ -48,7 +49,7 @@ export class NativeEventsManager implements INativeEventsManager {
       });
       // We don't need to unregister from current (new) props, because their events weren't registered yet
       // Replace the view tag
-      this.#eventViewTag = computedEventTag;
+      // this.#eventViewTag = computedEventTag;
       // Attach the events with a new viewTag
       this.attachEvents();
       return;
@@ -79,13 +80,19 @@ export class NativeEventsManager implements INativeEventsManager {
 
   private getEventViewTag(componentUpdate: boolean = false) {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
-    const componentAnimatedRef = this.#managedComponent
-      ._componentRef as AnimatedComponentRef & {
+    let componentAnimatedRef: AnimatedComponentRef & {
       // Fabric
       __nativeTag?: number;
       // Paper
       _nativeTag?: number;
     };
+    const componentRef = this.#managedComponent._componentRef as IChildComponentClassWrapper;
+    if (componentRef?.innerComponentRef) {
+      componentAnimatedRef = componentRef.innerComponentRef as AnimatedComponentRef
+    } else {
+      componentAnimatedRef = this.#managedComponent._componentRef as AnimatedComponentRef;
+    }
+    // console.log('componentAnimatedRef', componentAnimatedRef);
     if (componentAnimatedRef.getScrollableNode) {
       /*
         In most cases, getScrollableNode() returns a view tag, and findNodeHandle is not required. 
