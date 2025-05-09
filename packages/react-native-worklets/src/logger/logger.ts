@@ -1,6 +1,6 @@
 'use strict';
 import type { LogBoxLogLevel, LogData } from './LogBox';
-import { addLogBoxLog } from './LogBox';
+// import { addLogBoxLog } from './LogBox';
 
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
@@ -72,7 +72,7 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
  * @param data - The details of the log.
  */
 export function logToLogBoxAndConsole(data: LogData) {
-  addLogBoxLog(data);
+  // addLogBoxLog(data);
   logToConsole(data);
 }
 

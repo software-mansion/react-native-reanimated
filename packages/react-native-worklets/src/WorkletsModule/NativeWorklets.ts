@@ -3,7 +3,6 @@
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -18,9 +17,8 @@ class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -35,6 +33,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableImport: global.__workletsModuleProxy.makeShareableImport,
     };
   }
 
@@ -48,6 +47,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableImport(from: string, to: string) {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

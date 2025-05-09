@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cxxreact/JSBigString.h>
 #include <cxxreact/MessageQueueThread.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
@@ -19,13 +20,16 @@ class WorkletsModuleProxy
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
-      const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler);
+
+  void init(
+      jsi::Runtime &rnRuntime,
       std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+          &&forwardedRequestAnimationFrame,
+      std::unique_ptr<const JSBigString> script);
 
   ~WorkletsModuleProxy() override;
 
@@ -34,6 +38,11 @@ class WorkletsModuleProxy
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
+
+  jsi::Value makeShareableImport(
+      jsi::Runtime &rt,
+      const jsi::Value &what,
+      const jsi::Value &from) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 

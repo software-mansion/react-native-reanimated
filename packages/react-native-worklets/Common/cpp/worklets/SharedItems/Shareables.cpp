@@ -254,6 +254,19 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
       rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
+jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
+  try {
+    return rt.global()
+        .getPropertyAsFunction(rt, "__r")
+        .call(rt, jsi::String::createFromUtf8(rt, from_))
+        .asObject(rt)
+        .getProperty(rt, jsi::String::createFromUtf8(rt, what_));
+  } catch (jsi::JSIException ex) {
+    LOG(INFO) << ex.what();
+    return jsi::Value::undefined();
+  }
+}
+
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
     return jsi::Value(rt, *function_);

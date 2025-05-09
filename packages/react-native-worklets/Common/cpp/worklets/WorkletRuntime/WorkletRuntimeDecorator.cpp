@@ -39,7 +39,8 @@ static inline std::vector<jsi::Value> parseArgs(
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
-    const std::shared_ptr<JSScheduler> &jsScheduler) {
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<jsi::HostObject> &workletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -50,6 +51,11 @@ void WorkletRuntimeDecorator::decorate(
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
   rt.global().setProperty(rt, "_IS_FABRIC", true);
+
+  rt.global().setProperty(
+      rt,
+      "__workletsModuleProxy",
+      jsi::Object::createFromHostObject(rt, workletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,

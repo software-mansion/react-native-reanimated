@@ -4,9 +4,9 @@ const {
 } = require('react-native-reanimated/metro-config');
 const {
   getMetroAndroidAssetsResolutionFix,
+  // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
-
 const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
@@ -20,6 +20,28 @@ const config = {
   watchFolders: [root],
   transformer: {
     publicPath: androidAssetsResolutionFix.publicPath,
+  },
+  serializer: {
+    getModulesRunBeforeMainModule() {
+      return [require.resolve('react-native-worklets/src/bundleBreaker.ts')];
+    },
+    createModuleIdFactory() {
+      let nextId = 0;
+      const idFileMap = new Map();
+      return (ppath) => {
+        if (idFileMap.has(ppath)) {
+          return idFileMap.get(ppath);
+        }
+        if (ppath.includes('react-native-worklets/generated/')) {
+          const base = path.basename(ppath, '.js');
+          const id = Number(base);
+          idFileMap.set(ppath, id);
+          return id;
+        }
+        idFileMap.set(ppath, nextId++);
+        return idFileMap.get(ppath);
+      };
+    },
   },
   server: {
     enhanceMiddleware: (middleware) => {

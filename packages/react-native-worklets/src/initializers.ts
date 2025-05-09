@@ -3,12 +3,12 @@
 import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { reportFatalErrorOnJS } from './errors';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
+// import {
+//   // DEFAULT_LOGGER_CONFIG,
+//   // logToLogBoxAndConsole,
+//   // registerLoggerConfig,
+//   // replaceLoggerImplementation,
+// } from './logger';
 import {
   isChromeDebugger,
   isJest,
@@ -28,28 +28,30 @@ const IS_CHROME_DEBUGGER = isChromeDebugger();
 // is defined).
 function overrideLogFunctionImplementation() {
   'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(logToLogBoxAndConsole)(data);
-  });
+  // replaceLoggerImplementation((data) => {
+  //   'worklet';
+  //   runOnJS(logToLogBoxAndConsole)(data);
+  // });
 }
 
 // Register logger config and replace the log function implementation in
 // the React runtime global scope
-registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-overrideLogFunctionImplementation();
+if (!globalThis._WORKLET) {
+  // registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+  overrideLogFunctionImplementation();
+}
 
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
   global._WORKLET = false;
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
-} else {
+} else if (!globalThis._WORKLET) {
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  // executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
   executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 
@@ -161,6 +163,9 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
+  }
+  if (globalThis._WORKLET) {
+    return;
   }
 
   if (!SHOULD_BE_USE_WEB) {

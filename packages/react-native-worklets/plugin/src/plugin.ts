@@ -21,7 +21,7 @@ import { WorkletizableFunction } from './types';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
-module.exports = function (): PluginItem {
+module.exports = function WorkletsBabelPlugin(): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
     try {
       fun();
@@ -41,6 +41,9 @@ module.exports = function (): PluginItem {
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
+          if (state.file.opts.filename?.includes('generatedWorklets')) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processCalleesAutoworkletizableCallbacks(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -54,6 +57,9 @@ module.exports = function (): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
+          if (state.file.opts.filename?.includes('generatedWorklets')) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processIfWithWorkletDirective(path, state) ||
               processIfAutoworkletizableCallback(path, state);
@@ -62,6 +68,9 @@ module.exports = function (): PluginItem {
       },
       ObjectExpression: {
         enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
+          if (state.file.opts.filename?.includes('generatedWorklets')) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processIfWorkletContextObject(path, state);
           });
@@ -69,6 +78,9 @@ module.exports = function (): PluginItem {
       },
       ClassDeclaration: {
         enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
+          if (state.file.opts.filename?.includes('generatedWorklets')) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processIfWorkletClass(path, state);
           });
@@ -76,6 +88,9 @@ module.exports = function (): PluginItem {
       },
       Program: {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
+          if (state.file.opts.filename?.includes('generatedWorklets')) {
+            return;
+          }
           runWithTaggedExceptions(() => {
             processIfWorkletFile(path, state);
           });
