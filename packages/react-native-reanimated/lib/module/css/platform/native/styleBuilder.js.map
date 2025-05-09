@@ -1,0 +1,1 @@
+{"version":3,"names":["PROPERTIES_CONFIG","createStyleBuilder","styleBuilder"],"sourceRoot":"../../../../../src","sources":["css/platform/native/styleBuilder.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,iBAAiB,QAAQ,aAAU;AAC5C,SAASC,kBAAkB,QAAQ,kBAAS;AAE5C,MAAMC,YAAY,GAAGD,kBAAkB,CAACD,iBAAiB,CAAC;AAE1D,eAAeE,YAAY","ignoreList":[]}
