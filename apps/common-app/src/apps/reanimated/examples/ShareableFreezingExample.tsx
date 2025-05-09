@@ -1,16 +1,25 @@
 import React from 'react';
-import {
-  Button,
-  StyleSheet,
-  Text,
-  TurboModuleRegistry,
-  View,
-} from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import { makeShareableCloneRecursive } from 'react-native-reanimated';
 
 export default function FreezingShareables() {
   return (
     <View style={styles.container}>
+      <View style={styles.warning}>
+        <Text>Open debugger to view warnings.</Text>
+        <View style={styles.warningTextContainer}>
+          <Text style={styles.text}>⚠️</Text>
+          <Text>Should show a warning.</Text>
+        </View>
+        <View style={styles.warningTextContainer}>
+          <Text style={styles.text}>🤫</Text>
+          <Text>Should not show a warning.</Text>
+        </View>
+        <View style={styles.warningTextContainer}>
+          <Text style={styles.text}>🚨</Text>
+          <Text>Should throw an error.</Text>
+        </View>
+      </View>
       <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
@@ -26,17 +35,21 @@ export default function FreezingShareables() {
         />
       </View>
       <View style={styles.textAndButton}>
-        <Text style={styles.text}>🤫</Text>
-        <Button
-          title="Modify converted host object"
-          onPress={tryModifyConvertedHostObject}
-        />
-      </View>
-      <View style={styles.textAndButton}>
         <Text style={styles.text}>⚠️</Text>
         <Button
           title="Modify converted plain object"
           onPress={tryModifyConvertedPlainObject}
+        />
+      </View>
+      <View style={styles.textAndButton}>
+        <Text style={styles.text}>🚨</Text>
+        <Button title="Modify host object" onPress={tryModifyHostObject} />
+      </View>
+      <View style={styles.textAndButton}>
+        <Text style={styles.text}>🤫</Text>
+        <Button
+          title="Modify converted turbo module like"
+          onPress={tryModifyConvertedTurboModuleLike}
         />
       </View>
       <View style={styles.textAndButton}>
@@ -91,14 +104,25 @@ function tryModifyConvertedRemoteFunction() {
   obj.prop = 2; // should warn because it's frozen
 }
 
-function tryModifyConvertedHostObject() {
-  const obj = TurboModuleRegistry.get('Clipboard');
+function tryModifyConvertedTurboModuleLike() {
+  // @ts-expect-error It's ok
+  const proto = globalThis.__reanimatedModuleProxy;
+  const obj = {
+    prop: 1,
+  };
+  Object.setPrototypeOf(obj, proto);
   if (!obj) {
     console.warn('No host object found.');
     return;
   }
   makeShareableCloneRecursive(obj);
+  obj.prop = 2; // shouldn't warn because it's not frozen
+}
+
+function tryModifyHostObject() {
   // @ts-expect-error It's ok
+  const obj = globalThis.__reanimatedModuleProxy;
+  makeShareableCloneRecursive(obj);
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
@@ -155,6 +179,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  warningTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   textAndButton: {
     width: '90%',
     flexDirection: 'row',
@@ -163,5 +191,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 32,
     marginRight: 10,
+  },
+  warning: {
+    width: '90%',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    padding: 10,
   },
 });
