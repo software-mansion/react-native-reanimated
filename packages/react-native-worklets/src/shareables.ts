@@ -179,6 +179,12 @@ function makeShareableCloneRecursiveNative<T>(
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
   }
+  if (value instanceof Set) {
+    return cloneSet(value);
+  }
+  if (value instanceof Map) {
+    return cloneMap(value);
+  }
   return inaccessibleObject(value);
 }
 
@@ -452,6 +458,36 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
     },
   }) as unknown as ShareableRef<T>;
   shareableMappingCache.set(value, handle);
+
+  return handle;
+}
+
+function cloneSet<TSet extends Set<unknown>>(set: TSet): ShareableRef<TSet> {
+  const elements = Array.from(set);
+
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      return new Set(elements);
+    },
+  }) as unknown as ShareableRef<TSet>;
+  shareableMappingCache.set(set, handle);
+
+  return handle;
+}
+
+function cloneMap<TMap extends Map<unknown, unknown>>(
+  map: TMap
+): ShareableRef<TMap> {
+  const entries = Array.from(map.entries());
+
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      return new Map(entries);
+    },
+  }) as unknown as ShareableRef<TMap>;
+  shareableMappingCache.set(map, handle);
 
   return handle;
 }
