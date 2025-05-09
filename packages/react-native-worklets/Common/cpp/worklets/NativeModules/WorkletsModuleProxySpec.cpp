@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 
 #include <utility>
@@ -15,6 +16,15 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableClone)(
   return static_cast<WorkletsModuleProxySpec *>(&turboModule)
       ->makeShareableClone(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableString)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableString(rt, std::move(args[0]).asString(rt));
 }
 
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
@@ -59,6 +69,8 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
     : TurboModule("NativeWorklets", jsInvoker) {
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(makeShareableClone)};
+  methodMap_["makeShareableString"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableString)};
   methodMap_["scheduleOnUI"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =

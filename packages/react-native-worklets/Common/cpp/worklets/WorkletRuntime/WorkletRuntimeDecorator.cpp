@@ -97,6 +97,13 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableString",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableString(rt, value.asString(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,

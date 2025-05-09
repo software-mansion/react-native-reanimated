@@ -145,6 +145,8 @@ jsi::Value makeShareableClone(
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
+jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
