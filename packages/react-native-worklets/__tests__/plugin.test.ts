@@ -2102,6 +2102,20 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes recursion', () => {
+      const input = html`<script>
+        function recursiveWorklet() {
+          if (!globalThis._WORKLET) {
+            runOnUI(recursiveWorklet)();
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for file workletization', () => {

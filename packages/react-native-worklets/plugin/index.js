@@ -794,9 +794,16 @@ var require_workletFactory = __commonJS({
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = [
         (0, types_12.identifier)(initDataId.name),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+        ...closureVariables.map((variableId) => {
+          const clonedId = (0, types_12.cloneNode)(variableId, true);
+          if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+            clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
+          }
+          return clonedId;
+        })
       ];
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      factory.workletized = true;
       return { factory, factoryCallParamPack };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
@@ -1110,8 +1117,9 @@ var require_autoworkletization = __commonJS({
     exports2.processCalleesAutoworkletizableCallbacks = processCalleesAutoworkletizableCallbacks;
     function processArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
+        var _a;
         const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject);
-        if (!maybeWorklet) {
+        if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
           return;
         }
         if ((0, types_2.isWorkletizableFunctionPath)(maybeWorklet)) {

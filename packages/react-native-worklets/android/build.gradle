@@ -27,7 +27,12 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }

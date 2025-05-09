@@ -319,7 +319,16 @@ export function makeWorkletFactory(
 
   const factoryCallArgs = [
     identifier(initDataId.name),
-    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+    ...closureVariables.map((variableId) => {
+      const clonedId = cloneNode(variableId, true);
+      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
+        clonedId.name = clonedId.name.slice(
+          0,
+          clonedId.name.length - workletClassFactorySuffix.length
+        );
+      }
+      return clonedId;
+    }),
   ];
 
   const factoryCallParamPack = objectExpression(
@@ -332,6 +341,10 @@ export function makeWorkletFactory(
       )
     )
   );
+
+  // @ts-expect-error We must mark the factory as workletized
+  // to avoid further workletization inside the factory.
+  factory.workletized = true;
 
   return { factory, factoryCallParamPack };
 }
