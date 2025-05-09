@@ -26,6 +26,7 @@ export {
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
+  runOnUIAsync,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
