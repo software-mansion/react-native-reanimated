@@ -4,6 +4,7 @@ import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
   AnimatedComponentRef,
+  IChildComponentClassWrapper,
   INativeEventsManager,
   InitialComponentProps,
   ManagedAnimatedComponent,
@@ -85,10 +86,11 @@ export class NativeEventsManager implements INativeEventsManager {
       // Paper
       _nativeTag?: number;
     };
-    if (this.#managedComponent._componentRef.innerComponentRef) {
-      componentAnimatedRef = this.#managedComponent._componentRef.innerComponentRef
+    const componentRef = this.#managedComponent._componentRef as IChildComponentClassWrapper;
+    if (componentRef?.innerComponentRef) {
+      componentAnimatedRef = componentRef.innerComponentRef as AnimatedComponentRef
     } else {
-      componentAnimatedRef = this.#managedComponent._componentRef;
+      componentAnimatedRef = this.#managedComponent._componentRef as AnimatedComponentRef;
     }
     // console.log('componentAnimatedRef', componentAnimatedRef);
     if (componentAnimatedRef.getScrollableNode) {

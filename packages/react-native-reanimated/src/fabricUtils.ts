@@ -1,10 +1,10 @@
 'use strict';
 /* eslint-disable */
 
-import type { ShadowNodeWrapper } from './commonTypes';
+import type { HostInstance, ShadowNodeWrapper } from './commonTypes';
+import type { ICSSAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import {
   findHostInstance,
-  HostInstance,
 } from './platform-specific/findHostInstance';
 
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
@@ -12,7 +12,7 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component,
+  ref: ICSSAnimatedComponentInternal,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
   if (getInternalInstanceHandleFromPublicInstance === undefined) {

@@ -30,6 +30,7 @@ import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
+import { ICSSAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 
 const IS_WEB = shouldBeUseWeb();
 
@@ -133,11 +134,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined, // required on Fabric
+    component: ICSSAnimatedComponentInternal, // required on Fabric
     callback?: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(
-      component as React.Component
+      component
     );
     return this.#reanimatedModuleProxy.getViewProp(
       shadowNodeWrapper,

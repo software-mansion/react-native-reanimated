@@ -12,6 +12,7 @@ import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { ViewConfig } from '../ConfigHelper';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { HostInstance } from 'react-native';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
@@ -93,12 +94,23 @@ export type AnimatedComponentProps<
 export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => AnimatedComponentRef;
-  getAnimatableRef?: () => AnimatedComponentRef;
+  getAnimatableRef?: () => Component;
   // Case for SVG components on Web
   elementRef?: React.RefObject<HTMLElement>;
 }
 
-export interface IAnimatedComponentInternal {
+export interface IChildComponentClassWrapper extends React.Component {
+  innerComponentRef: AnimatedComponentRef | HostInstance | HTMLElement | null;
+}
+export interface ICSSAnimatedComponentInternal {
+  _componentRef: IChildComponentClassWrapper | AnimatedComponentRef | null;
+  /**
+   * Used for Layout Animations and Animated Styles. It is not related to event
+   * handling.
+   */
+  getComponentViewTag: () => number;
+}
+export interface IAnimatedComponentInternal extends ICSSAnimatedComponentInternal {
   ChildComponent: AnyComponent;
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
@@ -107,8 +119,6 @@ export interface IAnimatedComponentInternal {
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   jestAnimatedProps: { value: AnimatedProps };
-  _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _hasAnimatedRef: boolean;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
@@ -116,11 +126,6 @@ export interface IAnimatedComponentInternal {
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
-  /**
-   * Used for Layout Animations and Animated Styles. It is not related to event
-   * handling.
-   */
-  getComponentViewTag: () => number;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

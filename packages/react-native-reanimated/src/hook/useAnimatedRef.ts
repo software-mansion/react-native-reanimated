@@ -13,6 +13,7 @@ import { isWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
+import { IChildComponentClassWrapper } from '../createAnimatedComponent/commonTypes';
 
 const IS_WEB = isWeb();
 
@@ -42,7 +43,7 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export function useAnimatedRef<
-  TComponent extends Component,
+  TComponent extends IChildComponentClassWrapper,
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
@@ -53,15 +54,15 @@ export function useAnimatedRef<
       component
     ) => {
       if (component?.innerComponentRef) {
-        component = component?.innerComponentRef;
+        component = component?.innerComponentRef as TComponent;
       }
       // enters when ref is set by attaching to a component
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
           return IS_WEB
-            ? getComponentOrScrollable(component)
+            ? getComponentOrScrollable(component as MaybeScrollableComponent)
             : getShadowNodeWrapperFromRef(
-                getComponentOrScrollable(component) as Component
+                getComponentOrScrollable(component as MaybeScrollableComponent)
               );
         };
 
@@ -70,7 +71,8 @@ export function useAnimatedRef<
         // On Fabric we have to unwrap the tag from the shadow node wrapper
         // TODO: remove casting
         fun.getTag = () =>
-          findNodeHandle(getComponentOrScrollable(component) as Component)!;
+          findNodeHandle(getComponentOrScrollable(component as MaybeScrollableComponent)) as number;
+
         fun.current = component;
       }
       return tag.value;
