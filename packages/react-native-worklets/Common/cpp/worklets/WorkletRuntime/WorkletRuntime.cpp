@@ -128,6 +128,12 @@ jsi::Value WorkletRuntime::executeSync(
   return shareableResult->toJSValue(rt);
 }
 
+void WorkletRuntime::terminate() {
+  if (this->queue_) {
+    this->queue_->empty();
+  }
+}
+
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,
     const jsi::PropNameID &propName) {

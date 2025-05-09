@@ -5,7 +5,6 @@
 #include <jsi/jsi.h>
 
 #include <memory>
-
 namespace worklets {
 
 class WorkletRuntimeCollector : public jsi::HostObject {

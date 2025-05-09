@@ -54,6 +54,16 @@ static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnRuntime)(
       ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(terminateWorkletRuntime)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->terminateWorkletRuntime(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
 WorkletsModuleProxySpec::WorkletsModuleProxySpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeWorklets", jsInvoker) {
@@ -67,6 +77,8 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(createWorkletRuntime)};
   methodMap_["scheduleOnRuntime"] =
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(scheduleOnRuntime)};
+  methodMap_["terminateWorkletRuntime"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(terminateWorkletRuntime)};
 }
 
 } // namespace worklets

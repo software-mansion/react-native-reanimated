@@ -113,6 +113,7 @@ import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
+import WebWorkerExample from './WebWorkerExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -707,5 +708,9 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  WebWorkerExample: {
+    title: 'Web Worker',
+    screen: WebWorkerExample,
   },
 } as const;

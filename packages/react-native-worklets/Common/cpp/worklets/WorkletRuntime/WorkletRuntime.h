@@ -58,6 +58,8 @@ class WorkletRuntime : public jsi::HostObject,
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
+  void terminate();
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
@@ -68,7 +70,7 @@ class WorkletRuntime : public jsi::HostObject,
 
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
-  const std::shared_ptr<jsi::Runtime> runtime_;
+  std::shared_ptr<jsi::Runtime> runtime_;
 #ifndef NDEBUG
   const bool supportsLocking_;
 #endif

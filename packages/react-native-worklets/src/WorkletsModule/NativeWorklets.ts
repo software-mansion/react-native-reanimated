@@ -35,6 +35,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      terminateWorkletRuntime:
+        global.__workletsModuleProxy.terminateWorkletRuntime,
     };
   }
 
@@ -72,5 +74,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       workletRuntime,
       shareableWorklet
     );
+  }
+
+  terminateWorkletRuntime(workletRuntime: WorkletRuntime) {
+    return this.#workletsModuleProxy.terminateWorkletRuntime(workletRuntime);
   }
 }

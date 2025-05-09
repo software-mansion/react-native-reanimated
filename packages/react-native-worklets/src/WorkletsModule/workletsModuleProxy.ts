@@ -25,6 +25,8 @@ export interface WorkletsModuleProxy {
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<TValue>
   ): void;
+
+  terminateWorkletRuntime(workletRuntime: WorkletRuntime): void;
 }
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}

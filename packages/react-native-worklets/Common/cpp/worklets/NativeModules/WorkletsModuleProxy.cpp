@@ -120,6 +120,13 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
+void WorkletsModuleProxy::terminateWorkletRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  workletRuntime->terminate();
+}
+
 jsi::Value WorkletsModuleProxy::scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,

@@ -37,3 +37,4 @@ export type {
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
+export { WebWorker } from './WebWorker';

@@ -39,6 +39,10 @@ class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) = 0;
+
+  virtual void terminateWorkletRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue) = 0;
 };
 
 } // namespace worklets
