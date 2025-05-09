@@ -123,6 +123,10 @@ function makeShareableCloneRecursiveNative<T>(
   const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
+  if (typeof value === 'string') {
+    return cloneString(value) as ShareableRef<T>;
+  }
+
   if ((!isObject && !isFunction) || value === null) {
     return clonePrimitive(value, shouldPersistRemote);
   }
@@ -198,6 +202,10 @@ function clonePrimitive<T>(
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
   return WorkletsModule.makeShareableClone(value, shouldPersistRemote);
+}
+
+function cloneString(value: string): ShareableRef<string> {
+  return WorkletsModule.makeShareableString(value);
 }
 
 function cloneArray<T extends unknown[]>(
@@ -543,6 +551,11 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
+
+    if (typeof value === 'string') {
+      return global._makeShareableString(value);
+    }
+
     return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);

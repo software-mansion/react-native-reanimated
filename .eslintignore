@@ -1,4 +1,4 @@
 build
-.yarn
 packages
 apps
+.yarn
