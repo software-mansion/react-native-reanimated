@@ -551,6 +551,11 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
+
+    if (typeof value === 'string') {
+      return global._makeShareableString(value);
+    }
+
     return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);

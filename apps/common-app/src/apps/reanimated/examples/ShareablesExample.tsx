@@ -97,10 +97,10 @@ function StringDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
+    const testString = 'test';
     runOnUI(() => {
       'worklet';
       try {
-        const testString = 'test';
         if (testString === 'test') {
           runOnJS(isOk)();
         } else {
