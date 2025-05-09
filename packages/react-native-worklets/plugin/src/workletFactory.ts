@@ -35,10 +35,7 @@ import {
 import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
-import {
-  getClosureEXPERIMENTAL,
-  makeArrayFromCapturedBindings,
-} from './closure';
+import { getClosure } from './closure';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -91,9 +88,7 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = state.opts.experimentalBundling
-    ? getClosureEXPERIMENTAL(fun, state)
-    : makeArrayFromCapturedBindings(transformed.ast, fun);
+  const closureVariables = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)

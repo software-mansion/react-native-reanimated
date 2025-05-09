@@ -436,22 +436,22 @@ var require_closure = __commonJS({
   "lib/closure.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.makeArrayFromCapturedBindings = exports2.getClosureEXPERIMENTAL = void 0;
-    var core_1 = require("@babel/core");
+    exports2.getClosure = void 0;
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
-    function getClosureEXPERIMENTAL(funPath, state) {
-      const closureVariables = /* @__PURE__ */ new Set();
+    function getClosure(funPath, state) {
+      const capturedNames = /* @__PURE__ */ new Set();
+      const closureVariables = new Array();
       funPath.traverse({
+        "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
+          typePath.skip();
+        },
         ReferencedIdentifier(idPath) {
           if (idPath.isJSXIdentifier()) {
             return;
           }
-          if (idPath.key !== null && TypeScriptKeys.has(idPath.key)) {
-            return;
-          }
           const name = idPath.node.name;
-          if (closureVariables.has(name)) {
+          if (capturedNames.has(name)) {
             return;
           }
           if (globals_12.globals.has(name)) {
@@ -470,73 +470,13 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          while (scope) {
-            if (scope.hasOwnBinding(name)) {
-              closureVariables.add(name);
-              return;
-            }
-            scope = scope.parent;
-          }
+          capturedNames.add(name);
+          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
         }
       }, state);
-      return Array.from(closureVariables).map((name) => (0, types_12.identifier)(name));
+      return closureVariables;
     }
-    exports2.getClosureEXPERIMENTAL = getClosureEXPERIMENTAL;
-    var TypeScriptKeys = /* @__PURE__ */ new Set([
-      "exprName",
-      "id",
-      "parameterName",
-      "typeName"
-    ]);
-    function makeArrayFromCapturedBindings(ast, fun) {
-      const closure = /* @__PURE__ */ new Map();
-      const isLocationAssignedMap = /* @__PURE__ */ new Map();
-      (0, core_1.traverse)(ast, {
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const name = path.node.name;
-          if (globals_12.globals.has(name)) {
-            return;
-          }
-          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
-            return;
-          }
-          const parentNode = path.parent;
-          if ((0, types_12.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
-            return;
-          }
-          if ((0, types_12.isObjectProperty)(parentNode) && (0, types_12.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
-            return;
-          }
-          let currentScope = path.scope;
-          while (currentScope != null) {
-            if (currentScope.bindings[name] != null) {
-              return;
-            }
-            currentScope = currentScope.parent;
-          }
-          closure.set(name, (0, types_12.cloneNode)(path.node, true));
-          isLocationAssignedMap.set(name, false);
-        }
-      });
-      fun.traverse({
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const node = closure.get(path.node.name);
-          if (!node || isLocationAssignedMap.get(path.node.name)) {
-            return;
-          }
-          node.loc = path.node.loc;
-          isLocationAssignedMap.set(path.node.name, true);
-        }
-      });
-      return Array.from(closure.values());
-    }
-    exports2.makeArrayFromCapturedBindings = makeArrayFromCapturedBindings;
+    exports2.getClosure = getClosure;
   }
 });
 
@@ -780,7 +720,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const closureVariables = state.opts.experimentalBundling ? (0, closure_1.getClosureEXPERIMENTAL)(fun, state) : (0, closure_1.makeArrayFromCapturedBindings)(transformed.ast, fun);
+      const closureVariables = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
