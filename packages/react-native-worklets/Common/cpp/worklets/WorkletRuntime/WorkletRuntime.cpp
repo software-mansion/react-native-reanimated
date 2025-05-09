@@ -85,6 +85,7 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
+    const bool isDevBundle,
     const std::string &valueUnpackerCode)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
@@ -99,7 +100,7 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
+  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler, isDevBundle);
 
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
