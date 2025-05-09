@@ -5103,8 +5103,8 @@ exports[`babel plugin for worklet nesting transpiles nested worklets embedded in
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12945515374490_init_data = {
-  code: "function null2(){const{runOnJS,runOnUI,_worklet_7185083753711_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}))();}",
+var _worklet_5239381324954_init_data = {
+  code: "function null2(){const{runOnJS,_worklet_7185083753711_init_data,runOnUI}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}))();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -5116,10 +5116,10 @@ var _worklet_2520605269387_init_data = {
   version: "x.y.z"
 };
 runOnUI(function null2Factory(_ref) {
-  var _worklet_12945515374490_init_data = _ref._worklet_12945515374490_init_data,
+  var _worklet_5239381324954_init_data = _ref._worklet_5239381324954_init_data,
     runOnJS = _ref.runOnJS,
-    runOnUI = _ref.runOnUI,
-    _worklet_7185083753711_init_data = _ref._worklet_7185083753711_init_data;
+    _worklet_7185083753711_init_data = _ref._worklet_7185083753711_init_data,
+    runOnUI = _ref.runOnUI;
   var _e = [new global.Error(), -4, -27];
   var null2 = function null2() {
     console.log('Hello from UI thread');
@@ -5158,18 +5158,18 @@ runOnUI(function null2Factory(_ref) {
   };
   null2.__closure = {
     runOnJS: runOnJS,
-    runOnUI: runOnUI,
-    _worklet_7185083753711_init_data: _worklet_7185083753711_init_data
+    _worklet_7185083753711_init_data: _worklet_7185083753711_init_data,
+    runOnUI: runOnUI
   };
-  null2.__workletHash = 12945515374490;
-  null2.__initData = _worklet_12945515374490_init_data;
+  null2.__workletHash = 5239381324954;
+  null2.__initData = _worklet_5239381324954_init_data;
   null2.__stackDetails = _e;
   return null2;
 }({
-  _worklet_12945515374490_init_data: _worklet_12945515374490_init_data,
+  _worklet_5239381324954_init_data: _worklet_5239381324954_init_data,
   runOnJS: runOnJS,
-  runOnUI: runOnUI,
-  _worklet_7185083753711_init_data: _worklet_7185083753711_init_data
+  _worklet_7185083753711_init_data: _worklet_7185083753711_init_data,
+  runOnUI: runOnUI
 }))();"
 `;
 
@@ -5233,16 +5233,16 @@ var _worklet_5639712570574_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_6711346608890_init_data = {
-  code: "function null3(){const{_worklet_3230974749144_init_data,_worklet_5639712570574_init_data}=this.__closure;const bar=function null2Factory({_worklet_5639712570574_init_data:_worklet_5639712570574_init_data,_worklet_3230974749144_init_data:_worklet_3230974749144_init_data}){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory({_worklet_3230974749144_init_data:_worklet_3230974749144_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}({_worklet_3230974749144_init_data:_worklet_3230974749144_init_data});};null2.__closure={_worklet_3230974749144_init_data:_worklet_3230974749144_init_data};null2.__workletHash=5639712570574;null2.__initData=_worklet_5639712570574_init_data;null2.__stackDetails=_e;return null2;}({_worklet_5639712570574_init_data:_worklet_5639712570574_init_data,_worklet_3230974749144_init_data:_worklet_3230974749144_init_data});bar();}",
+var _worklet_14678677712570_init_data = {
+  code: "function null3(){const{_worklet_5639712570574_init_data,_worklet_3230974749144_init_data}=this.__closure;const bar=function null2Factory({_worklet_5639712570574_init_data:_worklet_5639712570574_init_data,_worklet_3230974749144_init_data:_worklet_3230974749144_init_data}){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function null1Factory({_worklet_3230974749144_init_data:_worklet_3230974749144_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}({_worklet_3230974749144_init_data:_worklet_3230974749144_init_data});};null2.__closure={_worklet_3230974749144_init_data:_worklet_3230974749144_init_data};null2.__workletHash=5639712570574;null2.__initData=_worklet_5639712570574_init_data;null2.__stackDetails=_e;return null2;}({_worklet_5639712570574_init_data:_worklet_5639712570574_init_data,_worklet_3230974749144_init_data:_worklet_3230974749144_init_data});bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function null3Factory(_ref) {
-  var _worklet_6711346608890_init_data = _ref._worklet_6711346608890_init_data,
-    _worklet_3230974749144_init_data = _ref._worklet_3230974749144_init_data,
-    _worklet_5639712570574_init_data = _ref._worklet_5639712570574_init_data;
+  var _worklet_14678677712570_init_data = _ref._worklet_14678677712570_init_data,
+    _worklet_5639712570574_init_data = _ref._worklet_5639712570574_init_data,
+    _worklet_3230974749144_init_data = _ref._worklet_3230974749144_init_data;
   var _e = [new global.Error(), -3, -27];
   var null3 = function null3() {
     var bar = function null2Factory(_ref2) {
@@ -5279,17 +5279,17 @@ var foo = function null3Factory(_ref) {
     bar();
   };
   null3.__closure = {
-    _worklet_3230974749144_init_data: _worklet_3230974749144_init_data,
-    _worklet_5639712570574_init_data: _worklet_5639712570574_init_data
+    _worklet_5639712570574_init_data: _worklet_5639712570574_init_data,
+    _worklet_3230974749144_init_data: _worklet_3230974749144_init_data
   };
-  null3.__workletHash = 6711346608890;
-  null3.__initData = _worklet_6711346608890_init_data;
+  null3.__workletHash = 14678677712570;
+  null3.__initData = _worklet_14678677712570_init_data;
   null3.__stackDetails = _e;
   return null3;
 }({
-  _worklet_6711346608890_init_data: _worklet_6711346608890_init_data,
-  _worklet_3230974749144_init_data: _worklet_3230974749144_init_data,
-  _worklet_5639712570574_init_data: _worklet_5639712570574_init_data
+  _worklet_14678677712570_init_data: _worklet_14678677712570_init_data,
+  _worklet_5639712570574_init_data: _worklet_5639712570574_init_data,
+  _worklet_3230974749144_init_data: _worklet_3230974749144_init_data
 });"
 `;
 
