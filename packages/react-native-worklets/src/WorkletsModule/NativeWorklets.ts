@@ -51,8 +51,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  makeShareableString(string: string) {
-    return this.#workletsModuleProxy.makeShareableString(string);
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

@@ -26,7 +26,7 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeShareableString(_string: string): ShareableRef<string> {
+  makeShareableString(): ShareableRef<string> {
     throw new WorkletsError(
       'makeShareableString should never be called in JSWorklets.'
     );

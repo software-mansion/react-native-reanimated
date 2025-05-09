@@ -9,12 +9,12 @@ export default function ShareablesExample() {
     <View style={styles.container}>
       <View style={styles.statusInfoBox}>
         <View style={styles.statusInfoRow}>
-          <Text style={styles.statusInfoText}>🟢 - ok</Text>
-          <Text style={styles.statusInfoText}>🚫 - error</Text>
+          <Text style={styles.statusInfoText}>🟢 - Ok</Text>
+          <Text style={styles.statusInfoText}>🚫 - Throws</Text>
         </View>
         <View style={styles.statusInfoRow}>
-          <Text style={styles.statusInfoText}>🔴 - not_ok</Text>
-          <Text style={styles.statusInfoText}>⚪ - not_checked</Text>
+          <Text style={styles.statusInfoText}>🔴 - Failed</Text>
+          <Text style={styles.statusInfoText}>⚪ - Pending</Text>
         </View>
       </View>
 
