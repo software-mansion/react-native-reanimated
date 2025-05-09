@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -12,15 +13,10 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_JEST = isJest();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;

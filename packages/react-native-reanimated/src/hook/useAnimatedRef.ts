@@ -7,14 +7,12 @@ import {
   shareableMappingCache,
 } from 'react-native-worklets';
 
+import { IS_WEB } from '../common';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { isWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-
-const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];

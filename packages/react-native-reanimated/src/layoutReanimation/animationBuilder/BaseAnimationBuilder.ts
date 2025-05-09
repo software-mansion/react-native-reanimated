@@ -1,13 +1,13 @@
 'use strict';
 import { withDelay } from '../../animation';
 import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../common';
 import type {
   AnimationFunction,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
 
 export class BaseAnimationBuilder {
   durationV?: number;

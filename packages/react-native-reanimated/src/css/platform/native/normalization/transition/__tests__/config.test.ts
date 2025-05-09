@@ -1,6 +1,6 @@
 'use strict';
+import { ReanimatedError } from '../../../../../../common';
 import { cubicBezier } from '../../../../../easings';
-import { ReanimatedError } from '../../../../../errors';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,

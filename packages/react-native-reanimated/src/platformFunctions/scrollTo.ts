@@ -2,12 +2,12 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
+import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
 
 type ScrollTo = <T extends Component>(
@@ -57,14 +57,14 @@ function scrollToDefault() {
   logger.warn('scrollTo() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
   scrollTo = scrollToNative as unknown as ScrollTo;
-} else if (isJest()) {
+} else if (IS_JEST) {
   scrollTo = scrollToJest;
-} else if (isChromeDebugger()) {
+} else if (IS_CHROME_DEBUGGER) {
   scrollTo = scrollToChromeDebugger;
 } else {
   scrollTo = scrollToDefault;

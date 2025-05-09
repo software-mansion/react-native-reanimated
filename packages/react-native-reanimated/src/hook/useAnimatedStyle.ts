@@ -5,7 +5,12 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { processBoxShadow } from '../common/processors';
+import {
+  IS_JEST,
+  processBoxShadow,
+  ReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -18,8 +23,6 @@ import type {
 } from '../commonTypes';
 import { makeShareable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import { ReanimatedError } from '../errors';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -37,8 +40,6 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -545,7 +546,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       }) as WorkletFunction<[], Style>;
     }
 
-    if (isJest()) {
+    if (IS_JEST) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
@@ -592,7 +593,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
-    animatedStyleHandle.current = isJest()
+    animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,

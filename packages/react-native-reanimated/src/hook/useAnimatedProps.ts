@@ -1,6 +1,6 @@
 'use strict';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
 
@@ -48,6 +48,6 @@ const useAnimatedPropsNative = useAnimatedStyle;
  *   property of an Animated component that you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */
-export const useAnimatedProps: UseAnimatedProps = shouldBeUseWeb()
+export const useAnimatedProps: UseAnimatedProps = SHOULD_BE_USE_WEB
   ? (useAnimatedPropsJS as UseAnimatedProps)
   : useAnimatedPropsNative;

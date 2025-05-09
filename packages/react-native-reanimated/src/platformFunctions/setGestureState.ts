@@ -2,7 +2,7 @@
 
 import { logger } from 'react-native-worklets';
 
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 
@@ -29,11 +29,11 @@ function setGestureStateDefault() {
   logger.warn('setGestureState() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   setGestureState = setGestureStateNative;
-} else if (isJest()) {
+} else if (IS_JEST) {
   setGestureState = setGestureStateJest;
-} else if (isChromeDebugger()) {
+} else if (IS_CHROME_DEBUGGER) {
   setGestureState = setGestureStateChromeDebugger;
 } else {
   setGestureState = setGestureStateDefault;

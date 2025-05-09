@@ -1,6 +1,9 @@
 'use strict';
-import { processBoxShadow, processTransformOrigin } from '../../../common';
-import { IS_ANDROID } from '../../constants';
+import {
+  IS_ANDROID,
+  processBoxShadow,
+  processTransformOrigin,
+} from '../../../common';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';
 import {

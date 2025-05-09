@@ -6,8 +6,8 @@ import type {
 import {
   ERROR_MESSAGES,
   processTransformOrigin,
+  ReanimatedError,
 } from '../../../../../../common';
-import { ReanimatedError } from '../../../../../errors';
 
 describe(processTransformOrigin, () => {
   describe('valid cases', () => {
