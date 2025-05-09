@@ -104,6 +104,27 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableNumber",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableNumber(rt, value.asNumber());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBoolean",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableBoolean(rt, value.asBool());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBigInt",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableBigInt(rt, value.asBigInt(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
