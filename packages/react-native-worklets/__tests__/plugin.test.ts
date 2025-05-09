@@ -537,6 +537,7 @@ describe('babel plugin', () => {
 
     it('workletizes getter', () => {
       const input = html`<script>
+        const x = 5;
         class Foo {
           get bar() {
             'worklet';
@@ -1608,7 +1609,7 @@ describe('babel plugin', () => {
         });
       </script>`;
 
-      expect(() => runPlugin(input)).toThrow('[Reanimated]');
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 
@@ -2095,6 +2096,20 @@ describe('babel plugin', () => {
         const secondReference = () => ({});
         const firstReference = secondReference;
         const animatedStyle = useAnimatedStyle(firstReference);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes recursion', () => {
+      const input = html`<script>
+        function recursiveWorklet() {
+          if (!globalThis._WORKLET) {
+            runOnUI(recursiveWorklet)();
+          }
+        }
       </script>`;
 
       const { code } = runPlugin(input);
