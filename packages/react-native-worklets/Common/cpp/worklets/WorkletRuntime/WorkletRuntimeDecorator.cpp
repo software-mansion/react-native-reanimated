@@ -40,7 +40,7 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool bundleFlavor) {
+    const bool isDevBundle) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -52,7 +52,7 @@ void WorkletRuntimeDecorator::decorate(
   // react-native-screens 4.9.0 depends on it
   rt.global().setProperty(rt, "_IS_FABRIC", true);
 
-  rt.global().setProperty(rt, "__DEV__", bundleFlavor);
+  rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,

@@ -30,7 +30,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      bundleFlavor_(
+      isDevBundle_(
           rnRuntime.global().getProperty(rnRuntime, "__DEV__").asBool()),
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
@@ -42,7 +42,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsScheduler,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          bundleFlavor_,
+          isDevBundle_,
           valueUnpackerCode_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
@@ -116,7 +116,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       jsScheduler_,
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
-      bundleFlavor_,
+      isDevBundle_,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");

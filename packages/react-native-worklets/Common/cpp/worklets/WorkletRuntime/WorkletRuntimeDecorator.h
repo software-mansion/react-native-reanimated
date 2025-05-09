@@ -17,7 +17,7 @@ class WorkletRuntimeDecorator {
       jsi::Runtime &rt,
       const std::string &name,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const bool bundleFlavor);
+      const bool isDevBundle);
 };
 
 } // namespace worklets

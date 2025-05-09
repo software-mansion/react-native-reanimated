@@ -26,7 +26,7 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const bool supportsLocking,
-      const bool bundleFlavor,
+      const bool isDevBundle,
       const std::string &valueUnpackerCode);
 
   jsi::Runtime &getJSIRuntime() const {
