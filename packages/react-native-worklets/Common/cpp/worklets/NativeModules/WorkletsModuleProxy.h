@@ -67,7 +67,12 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
+  [[nodiscard]] inline bool getBundleFlavor() const {
+    return bundleFlavor_;
+  }
+
  private:
+  const bool bundleFlavor_;
   const std::string valueUnpackerCode_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
