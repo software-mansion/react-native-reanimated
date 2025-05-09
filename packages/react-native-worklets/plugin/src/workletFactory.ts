@@ -35,7 +35,10 @@ import {
 import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
-import { getClosure } from './closure';
+import {
+  getClosureEXPERIMENTAL,
+  makeArrayFromCapturedBindings,
+} from './closure';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -88,7 +91,9 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = getClosure(fun, state);
+  const closureVariables = state.opts.experimentalBundling
+    ? getClosureEXPERIMENTAL(fun, state)
+    : makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -210,22 +215,22 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
-            variable.endsWith(workletClassFactorySuffix)
+            variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
-                  identifier(variable),
+                  identifier(variable.name),
                   memberExpression(
                     identifier(
-                      variable.slice(
+                      variable.name.slice(
                         0,
-                        variable.length - workletClassFactorySuffix.length
+                        variable.name.length - workletClassFactorySuffix.length
                       )
                     ),
-                    identifier(variable)
+                    identifier(variable.name)
                   )
                 )
               : objectProperty(
-                  identifier(variable),
-                  identifier(variable),
+                  cloneNode(variable, true),
+                  cloneNode(variable, true),
                   false,
                   true
                 )
@@ -297,7 +302,7 @@ export function makeWorkletFactory(
 
   const factoryParams = [
     cloneNode(initDataId, true),
-    ...closureVariables.map((variable) => identifier(variable)),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
   ];
 
   const factoryParamObjectPattern = objectPattern(
@@ -319,7 +324,7 @@ export function makeWorkletFactory(
 
   const factoryCallArgs = [
     identifier(initDataId.name),
-    ...closureVariables.map((variable) => identifier(variable)),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
   ];
 
   const factoryCallParamPack = objectExpression(

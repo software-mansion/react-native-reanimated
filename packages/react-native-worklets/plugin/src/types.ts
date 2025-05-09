@@ -25,6 +25,7 @@ export interface ReanimatedPluginOptions {
   disableSourceMaps?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
+  experimentalBundling?: boolean;
 }
 
 export interface ReanimatedPluginPass {
