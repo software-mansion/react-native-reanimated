@@ -120,6 +120,21 @@ jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) {
+  auto shareable = std::make_shared<ShareableScalar>(number);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
+  auto shareable = std::make_shared<ShareableScalar>(boolean);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
+  auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

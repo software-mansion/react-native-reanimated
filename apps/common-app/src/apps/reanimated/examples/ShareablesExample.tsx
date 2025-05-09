@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 type Status = 'ok' | 'not_ok' | 'error' | undefined;
@@ -26,17 +32,21 @@ export default function ShareablesExample() {
         <Text style={[styles.headerText, styles.columnActual]}>Actual</Text>
       </View>
 
-      <StringDemo />
-      <CyclicObjectDemo />
-      <InaccessibleObjectDemo />
-      <RemoteNamedFunctionSyncCallDemo />
-      <RemoteAnonymousFunctionSyncCallDemo />
-      <BigIntDemo />
-      <ArrayBufferDemo />
-      <TypedArrayDemo />
-      <BigIntTypedArrayDemo />
-      <DataViewDemo />
-      <ErrorDemo />
+      <ScrollView style={styles.scrollView}>
+        <StringDemo />
+        <BooleanDemo />
+        <BigIntDemo />
+        <NumberDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
+        <ArrayBufferDemo />
+        <TypedArrayDemo />
+        <BigIntTypedArrayDemo />
+        <DataViewDemo />
+        <ErrorDemo />
+      </ScrollView>
     </View>
   );
 }
@@ -102,6 +112,66 @@ function StringDemo() {
       'worklet';
       try {
         if (testString === 'test') {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function NumberDemo() {
+  const title = 'Number';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const number = 123;
+    runOnUI(() => {
+      'worklet';
+      try {
+        if (number === 123) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function BooleanDemo() {
+  const title = 'Boolean';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const bool = true;
+    runOnUI(() => {
+      'worklet';
+      try {
+        if (bool === true) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();
@@ -572,5 +642,9 @@ const styles = StyleSheet.create({
   statusTextIcon: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  scrollView: {
+    flex: 1,
+    padding: 10,
   },
 });
