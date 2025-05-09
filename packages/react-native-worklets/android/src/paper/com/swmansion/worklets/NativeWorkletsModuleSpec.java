@@ -22,5 +22,5 @@ public abstract class NativeWorkletsModuleSpec extends ReactContextBaseJavaModul
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   @DoNotStrip
-  public abstract boolean installTurboModule(String valueUnpackerCode);
+  public abstract boolean installTurboModule();
 }

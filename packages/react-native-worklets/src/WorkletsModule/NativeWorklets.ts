@@ -1,9 +1,7 @@
-/* eslint-disable reanimated/use-reanimated-error */
 /* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -19,8 +17,7 @@ class NativeWorklets {
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(

@@ -14,7 +14,6 @@ using namespace react;
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis,
     jsi::Runtime *rnRuntime,
-    const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
@@ -23,7 +22,6 @@ WorkletsModule::WorkletsModule(
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
-          valueUnpackerCode,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           jsScheduler,
@@ -35,7 +33,6 @@ WorkletsModule::WorkletsModule(
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
-    const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
@@ -49,7 +46,6 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   return makeCxxInstance(
       jThis,
       rnRuntime,
-      valueUnpackerCode,
       messageQueueThread,
       jsCallInvoker,
       jsScheduler,
