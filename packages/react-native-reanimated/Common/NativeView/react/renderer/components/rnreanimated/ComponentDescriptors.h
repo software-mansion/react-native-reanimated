@@ -25,6 +25,11 @@ class ReanimatedViewComponentDescriptor
   std::shared_ptr<ViewStylesRepository> getViewStylesRepository() const;
 
   void adopt(ShadowNode &shadowNode) const override;
+      void appendChild(
+          const ShadowNode::Shared& parentShadowNode,
+                       const ShadowNode::Shared& childShadowNode) const override;
+      
+      
 
   State::Shared createInitialState(
       const Props::Shared & /*props*/,
@@ -33,6 +38,7 @@ class ReanimatedViewComponentDescriptor
  private:
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
 
   void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
   void dummyInitialize();

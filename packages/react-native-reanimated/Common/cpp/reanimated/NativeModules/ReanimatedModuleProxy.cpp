@@ -697,6 +697,7 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
+  LOG(INFO) << "performOperations";
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
   jsi::Runtime &rt =
@@ -718,6 +719,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(updatesBatch);
+    LOG(INFO) << "flush animated props registry";
 
     if (shouldUpdateCssAnimations_) {
       cssTransitionsRegistry_->lock();

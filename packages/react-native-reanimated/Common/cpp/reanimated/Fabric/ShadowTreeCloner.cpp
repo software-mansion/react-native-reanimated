@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
 
 #include <ranges>
 #include <utility>
@@ -56,6 +57,13 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
       children[index] = cloneShadowTreeWithNewPropsRecursive(
           *children[index], childrenMap, propsMap);
     }
+  }
+  
+  auto constReanimatedNode = dynamic_cast<const ReanimatedShadowNode*>(&shadowNode);
+  
+  if (constReanimatedNode){
+    auto reanimatedNode = const_cast<ReanimatedShadowNode*>(constReanimatedNode);
+//    reanimatedNode->
   }
 
   return shadowNode.clone(

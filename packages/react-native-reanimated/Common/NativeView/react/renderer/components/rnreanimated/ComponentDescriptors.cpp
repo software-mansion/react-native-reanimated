@@ -30,7 +30,30 @@ ReanimatedViewComponentDescriptor::getViewStylesRepository() const {
   return viewStylesRepository_;
 }
 
-void ReanimatedViewComponentDescriptor::adopt(ShadowNode &shadowNode) const {}
+void ReanimatedViewComponentDescriptor::adopt(ShadowNode &shadowNode) const {
+  auto& reanimatedNode = static_cast<ReanimatedShadowNode&>(shadowNode);
+  if (animatedPropsRegistry_ && !reanimatedNode.animatedPropsRegistry_){
+    reanimatedNode.animatedPropsRegistry_ = animatedPropsRegistry_;
+  }
+}
+
+void ReanimatedViewComponentDescriptor::appendChild(
+    const ShadowNode::Shared &parentShadowNode,
+    const ShadowNode::Shared &childShadowNode) const {
+      ConcreteComponentDescriptor<ReanimatedShadowNode>::appendChild(parentShadowNode, childShadowNode);
+//  auto &bbShadowNode = const_cast<BBShadowNode &>(
+//      reinterpret_cast<const BBShadowNode &>(*childShadowNode));
+//                     auto props =
+//                     animatedPropsRegistry_->get(childShadowNode->getTag());
+//      if (props != nullptr){
+//        auto newProps =
+//        childShadowNode->getComponentDescriptor().
+//        cloneProps(PropsParserContext(childShadowNode->getSurfaceId(),
+//                                      *childShadowNode->getContextContainer()),
+//                   childShadowNode->getProps(), RawProps(props));
+//        bbShadowNode.updateProps(newProps);
+//      }
+}
 
 State::Shared ReanimatedViewComponentDescriptor::createInitialState(
     const Props::Shared & /*props*/,
@@ -44,6 +67,7 @@ void ReanimatedViewComponentDescriptor::initialize(
     const std::shared_ptr<ReanimatedModuleProxy> &proxy) {
   operationsLoop_ = proxy->getOperationsLoop();
   viewStylesRepository_ = proxy->getViewStylesRepository();
+  animatedPropsRegistry_ = proxy->getAnimatedPropsRegistry();
 }
 
 void ReanimatedViewComponentDescriptor::dummyInitialize() {

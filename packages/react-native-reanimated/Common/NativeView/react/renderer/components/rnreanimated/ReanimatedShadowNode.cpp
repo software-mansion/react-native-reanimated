@@ -47,4 +47,36 @@ void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
   YogaLayoutableShadowNode::layout(layoutContext);
 }
 
+void ReanimatedShadowNode::updateChildProps(const ShadowNode::Shared &child) const {
+  auto &bbShadowNode = const_cast<BBShadowNode &>(
+      reinterpret_cast<const BBShadowNode &>(*child));
+  if (animatedPropsRegistry_){
+    auto props =
+    animatedPropsRegistry_->get(child->getTag());
+    if (props != nullptr){
+      auto newProps =
+      child->getComponentDescriptor().
+      cloneProps(PropsParserContext(child->getSurfaceId(),
+                                    *child->getContextContainer()),
+                 child->getProps(), RawProps(props));
+      bbShadowNode.updateProps(newProps);
+    }
+  } else {
+    LOG(INFO) << "niedobrze";
+  }
+  
+}
+
+void ReanimatedShadowNode::replaceChild(const ShadowNode &oldChild, const ShadowNode::Shared &newChild, size_t suggestedIndex){
+  YogaLayoutableShadowNode::replaceChild(oldChild, newChild, suggestedIndex);
+
+  updateChildProps(newChild);
+}
+
+void ReanimatedShadowNode::appendChild(const ShadowNode::Shared &child){
+  YogaLayoutableShadowNode::appendChild(child);
+
+  updateChildProps(child);
+}
+
 } // namespace facebook::react

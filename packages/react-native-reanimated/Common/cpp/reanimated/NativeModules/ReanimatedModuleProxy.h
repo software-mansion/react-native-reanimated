@@ -209,6 +209,10 @@ class ReanimatedModuleProxy
 
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
+        
+        const std::shared_ptr<AnimatedPropsRegistry> getAnimatedPropsRegistry(){
+          return animatedPropsRegistry_;
+        }
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
