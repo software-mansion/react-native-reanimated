@@ -241,17 +241,9 @@ export default class AnimatedComponent<
     }
 
     return (
-      <ReanimatedView
-        {...this._CSSManagerNew?.getProps()}
-        style={styles.container}>
+      <ReanimatedView {...this._CSSManagerNew?.getProps()}>
         {child}
       </ReanimatedView>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    display: 'contents',
-  },
-});

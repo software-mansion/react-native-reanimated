@@ -9,14 +9,14 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFamily::Shared &family,
     ShadowNodeTraits traits)
     : ReanimatedViewShadowNodeBase(fragment, family, traits) {
-  const auto &state = getStateData();
-  if (!state.isInitialized()) {
-    return;
-  }
+  // const auto &state = getStateData();
+  // if (!state.isInitialized()) {
+  //   return;
+  // }
 
-  const auto &newProps =
-      static_cast<const ReanimatedViewProps &>(*this->getProps());
-  state.cssAnimationsManager->update(newProps);
+  // const auto &newProps =
+  //     static_cast<const ReanimatedViewProps &>(*this->getProps());
+  // state.cssAnimationsManager->update(newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -24,24 +24,25 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFragment &fragment)
     : ReanimatedViewShadowNodeBase(sourceShadowNode, fragment) {
   const auto &state = getStateData();
-  if (!state.isInitialized()) {
-    return;
-  }
+  // if (!state.isInitialized()) {
+  //   return;
+  // }
 
-  const auto &oldProps =
-      static_cast<const ReanimatedViewProps &>(*sourceShadowNode.getProps());
-  const auto &newProps =
-      static_cast<const ReanimatedViewProps &>(*this->getProps());
+  // const auto &oldProps =
+  //     static_cast<const ReanimatedViewProps &>(*sourceShadowNode.getProps());
+  // const auto &newProps =
+  //     static_cast<const ReanimatedViewProps &>(*this->getProps());
 
-  // Check if props object is the same first - it will be the same e.g. if
-  // commit to the ShadowTree was made from reanimated and props on the JS side
-  // didn't change
-  if (&oldProps == &newProps) {
-    return;
-  }
+  // // Check if props object is the same first - it will be the same e.g. if
+  // // commit to the ShadowTree was made from reanimated and props on the JS
+  // side
+  // // didn't change
+  // if (&oldProps == &newProps) {
+  //   return;
+  // }
 
-  state.cssTransitionManager->update(oldProps, newProps);
-  state.cssAnimationsManager->update(newProps);
+  // state.cssTransitionManager->update(oldProps, newProps);
+  // state.cssAnimationsManager->update(newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {

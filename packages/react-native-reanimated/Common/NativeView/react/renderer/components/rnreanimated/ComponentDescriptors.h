@@ -21,7 +21,13 @@ class ReanimatedViewComponentDescriptor
   explicit ReanimatedViewComponentDescriptor(
       const ComponentDescriptorParameters &parameters);
 
-  void adopt(ShadowNode &shadowNode) const override;
+  std::shared_ptr<ShadowNode> createShadowNode(
+      const ShadowNodeFragment &fragment,
+      const ShadowNodeFamily::Shared &family) const override;
+
+  ShadowNode::Unshared cloneShadowNode(
+      const ShadowNode &sourceShadowNode,
+      const ShadowNodeFragment &fragment) const override;
 
   State::Shared createInitialState(
       const Props::Shared & /*props*/,
@@ -29,8 +35,11 @@ class ReanimatedViewComponentDescriptor
 
  private:
   std::shared_ptr<ReanimatedModuleProxy> proxy_;
+  Props::Shared reanimatedNodeProps_;
 
   void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
+  ShadowNodeFragment createShadowNodeFragment(
+      const ShadowNodeFragment &fragment) const;
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
