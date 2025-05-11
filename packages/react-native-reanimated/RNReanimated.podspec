@@ -8,7 +8,6 @@ assert_minimal_react_native_version($config)
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
 assert_new_architecture_enabled($new_arch_enabled)
 
-folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32"
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''

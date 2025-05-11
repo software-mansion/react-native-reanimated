@@ -114,7 +114,7 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+CLASSPATH="\\\"\\\""
 
 
 # Determine the Java command to use to start the JVM.

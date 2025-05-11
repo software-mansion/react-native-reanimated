@@ -1,0 +1,18 @@
+diff --git a/android/src/main/jni/CMakeLists.txt b/android/src/main/jni/CMakeLists.txt
+index 5a5ecaf0633c0d5e95dadb6060ea6378d7fc32eb..896368080e19b307525af1b88818835c7a5813ba 100644
+--- a/android/src/main/jni/CMakeLists.txt
++++ b/android/src/main/jni/CMakeLists.txt
+@@ -26,11 +26,13 @@ target_include_directories(
+ )
+ 
+ find_package(ReactAndroid REQUIRED CONFIG)
++find_package(fbjni REQUIRED CONFIG)
+ if (ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+   target_link_libraries(
+     ${PACKAGE_NAME}
+     ReactAndroid::reactnative
+     ReactAndroid::jsi
++    fbjni::fbjni
+   )
+ elseif (ReactAndroid_VERSION_MINOR GREATER_EQUAL 75)
+   target_link_libraries(
