@@ -512,15 +512,15 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       CSSAnimationConfig config{
-          settings.duration,
-          settings.easingFunction,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          settings.fillMode,
-          settings.playState,
-          animationNames[index],
-      };
+          CSSAnimationSettings{
+              settings.duration,
+              settings.easingFunction,
+              settings.delay,
+              settings.iterationCount,
+              settings.direction,
+              settings.fillMode,
+              settings.playState},
+          animationNames[index]};
 
       const auto animation = std::make_shared<CSSAnimation>(
           config, cssAnimationKeyframesRegistry_, timestamp);
