@@ -104,6 +104,9 @@ const VALID_ARRAY_VIEWS_NAMES = [
   'DataView',
 ];
 
+const CLONED_UNDEFINED_JS_REF = cloneUndefined();
+const CLONED_NULL_JS_REF = cloneNull()
+
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
@@ -140,11 +143,11 @@ function makeShareableCloneRecursiveNative<T>(
   }
 
   if (value === undefined) {
-    return cloneUndefined() as ShareableRef<T>;
+    return CLONED_UNDEFINED_JS_REF as ShareableRef<T>;
   }
 
   if (value === null) {
-    return cloneNull() as ShareableRef<T>;
+    return CLONED_NULL_JS_REF as ShareableRef<T>;
   }
 
   if ((!isObject && !isFunction) || value === null) {
