@@ -9193,7 +9193,7 @@ __metadata:
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
     react-native-screens: "patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch"
-    react-native-svg: "patch:react-native-svg@npm%3A15.11.2#~/.yarn/patches/react-native-svg-npm-15.11.2-2f39703239.patch"
+    react-native-svg: "npm:15.12.0"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
     react-test-renderer: "npm:19.1.0"
@@ -18743,9 +18743,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-svg@npm:15.11.2":
-  version: 15.11.2
-  resolution: "react-native-svg@npm:15.11.2"
+"react-native-svg@npm:15.12.0":
+  version: 15.12.0
+  resolution: "react-native-svg@npm:15.12.0"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
@@ -18753,21 +18753,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/bab86df8fdd4f500ad3f242558726693b0409b5e9b2a97cb3e9b5c1dfdcef01fe73fd36f01926ef20b19f99928b6ab1fb9e942bbeb1308aab27aa0d6c4877a5e
-  languageName: node
-  linkType: hard
-
-"react-native-svg@patch:react-native-svg@npm%3A15.11.2#~/.yarn/patches/react-native-svg-npm-15.11.2-2f39703239.patch":
-  version: 15.11.2
-  resolution: "react-native-svg@patch:react-native-svg@npm%3A15.11.2#~/.yarn/patches/react-native-svg-npm-15.11.2-2f39703239.patch::version=15.11.2&hash=0d7469"
-  dependencies:
-    css-select: "npm:^5.1.0"
-    css-tree: "npm:^1.1.3"
-    warn-once: "npm:0.1.1"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/8f47698ff0248d065c48f4ef69b2a809284fbf927111a7c0c9b203fd4436da715cdc1effbe48e1131c36deaed6904b24b201fbbd674503b09c24624aac378fd7
+  checksum: 10/e7df04154fcb76a5a7b0b4e376395f44cc4b90ca6df9d04cff8835546b0a501acf31c2d468742f4accf9ba6fe9e5efd8e5880133d518ad6fc1f3164d79674c8f
   languageName: node
   linkType: hard
 
