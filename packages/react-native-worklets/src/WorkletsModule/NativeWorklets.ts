@@ -39,6 +39,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
       makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
       makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
+      makeShareableUndefined:
+        global.__workletsModuleProxy.makeShareableUndefined,
+      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
     };
   }
 
@@ -68,6 +71,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableBigInt(bigInt: bigint) {
     return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableUndefined() {
+    return this.#workletsModuleProxy.makeShareableUndefined();
+  }
+
+  makeShareableNull() {
+    return this.#workletsModuleProxy.makeShareableNull();
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

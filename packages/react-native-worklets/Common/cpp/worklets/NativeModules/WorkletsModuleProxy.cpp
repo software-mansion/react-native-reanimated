@@ -90,6 +90,14 @@ jsi::Value WorkletsModuleProxy::makeShareableBigInt(
   return worklets::makeShareableBigInt(rt, bigint);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableUndefined(jsi::Runtime &rt) {
+  return worklets::makeShareableUndefined(rt);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
+  return worklets::makeShareableNull(rt);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
