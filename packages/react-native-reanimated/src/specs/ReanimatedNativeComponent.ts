@@ -1,6 +1,6 @@
 'use strict';
 import type { ViewProps } from 'react-native';
-import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
+import { codegenNativeComponent } from 'react-native';
 
 interface NativeProps extends ViewProps {}
 
