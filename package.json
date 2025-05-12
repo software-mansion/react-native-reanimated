@@ -40,6 +40,6 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/gradle-plugin": "0.80.0-rc.0"
+    "@react-native/gradle-plugin": "0.80.0-rc.1"
   }
 }

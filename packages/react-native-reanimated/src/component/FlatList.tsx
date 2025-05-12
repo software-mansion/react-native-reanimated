@@ -82,7 +82,6 @@ const FlatListRender = function <Item = any>(
   // We set it to 1, so we have peace until
   // there are 960 fps screens.
   if (!('scrollEventThrottle' in restProps)) {
-    // @ts-expect-error scrollEventThrottle is not in FlatListProps
     restProps.scrollEventThrottle = 1;
   }
 
@@ -95,10 +94,10 @@ const FlatListRender = function <Item = any>(
   );
 
   const animatedFlatList = (
+    // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
     <AnimatedFlatList
       ref={ref}
       {...restProps}
-      // @ts-expect-error CellRendererComponent is not in FlatListProps
       CellRendererComponent={CellRendererComponent}
     />
   );
