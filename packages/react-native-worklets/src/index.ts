@@ -7,8 +7,6 @@ import { WorkletsModule } from './WorkletsModule';
 // universal source of truth for it.
 initializeUIRuntime(WorkletsModule);
 
-export type { CustomError } from './errors';
-export { createCustomError, registerCustomError } from './errors';
 export type { LoggerConfig } from './logger';
 export {
   logger,
@@ -28,6 +26,7 @@ export {
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
+  runOnUIAsync,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';

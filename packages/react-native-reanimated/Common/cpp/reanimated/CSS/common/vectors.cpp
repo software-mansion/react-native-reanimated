@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/vectors.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double &Vector3D::operator[](const size_t idx) {
   return vec[idx];
@@ -98,4 +98,4 @@ std::ostream &operator<<(std::ostream &os, const Vector4D &vector) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
+} // namespace reanimated::css

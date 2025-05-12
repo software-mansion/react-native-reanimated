@@ -1,6 +1,6 @@
 #include <reanimated/CSS/easing/linear.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double interpolateValue(
     double x,
@@ -29,4 +29,4 @@ EasingFunction linear(
   };
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

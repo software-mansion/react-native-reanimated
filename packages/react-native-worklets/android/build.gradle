@@ -1,3 +1,4 @@
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -26,7 +27,12 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
@@ -194,21 +200,18 @@ android {
             externalNativeBuild {
                 cmake {
                     if (JS_RUNTIME == "hermes") {
+                        //  React Native doesn't expose these flags, but not having them
+                        //  can lead to runtime errors due to ABI mismatches.
+                        //  There's also
+                        //    HERMESVM_PROFILER_OPCODE
+                        //    HERMESVM_PROFILER_BB
+                        //  which shouldn't be defined in standard setups.
                         arguments "-DHERMES_ENABLE_DEBUGGER=1"
-                    } else {
-                        arguments "-DHERMES_ENABLE_DEBUGGER=0"
                     }
                 }
             }
             packagingOptions {
                 doNotStrip "**/**/*.so"
-            }
-        }
-        release {
-            externalNativeBuild {
-                cmake {
-                    arguments "-DHERMES_ENABLE_DEBUGGER=0"
-                }
             }
         }
     }
@@ -255,6 +258,22 @@ android {
                 }
             }
         }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!IS_REANIMATED_EXAMPLE_APP) {
+                    return
+                }
+                def packageDir = new File("${project.projectDir}/..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${packageDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
     }
 }
 

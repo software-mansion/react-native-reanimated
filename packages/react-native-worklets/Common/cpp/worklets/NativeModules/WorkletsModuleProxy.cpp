@@ -1,7 +1,3 @@
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -15,6 +11,10 @@
 #endif // __ANDROID__
 
 #include <jsi/jsi.h>
+
+#include <memory>
+#include <string>
+#include <utility>
 
 using namespace facebook;
 
@@ -64,6 +64,30 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
   // confusion.
   return worklets::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableString(
+    jsi::Runtime &rt,
+    const jsi::String &string) {
+  return worklets::makeShareableString(rt, string);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableNumber(
+    jsi::Runtime &rt,
+    double number) {
+  return worklets::makeShareableNumber(rt, number);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableBoolean(
+    jsi::Runtime &rt,
+    bool boolean) {
+  return worklets::makeShareableBoolean(rt, boolean);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableBigInt(
+    jsi::Runtime &rt,
+    const jsi::BigInt &bigint) {
+  return worklets::makeShareableBigInt(rt, bigint);
 }
 
 void WorkletsModuleProxy::scheduleOnUI(

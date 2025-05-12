@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class AnimationDirection { Normal, Reverse, Alternate, AlternateReverse };
 enum class AnimationFillMode { None, Forwards, Backwards, Both };
@@ -52,4 +52,4 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
     const jsi::Value &config);
 
-} // namespace reanimated
+} // namespace reanimated::css

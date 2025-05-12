@@ -5,6 +5,7 @@ const lightCodeTheme = require('./src/theme/CodeBlock/highlighting-light.js');
 const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
 const webpack = require('webpack');
+const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -61,8 +62,8 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/index.css'),
         },
-        googleAnalytics: {
-          trackingID: 'UA-41044622-6',
+        gtag: {
+          trackingID: 'G-RNYQG9GVFJ',
           anonymizeIP: true,
         },
         blog: {
@@ -138,6 +139,36 @@ const config = {
       },
     }),
   plugins: [
+    function svgModulePlugin() {
+      return {
+        name: 'svg-module-plugin',
+        configureWebpack(config, isServer, utils) {
+          return {
+            module: {
+              rules: [
+                {
+                  test: /\.js?$/,
+                  include: [
+                    path.resolve(
+                      __dirname,
+                      'node_modules/@react-native/assets-registry/registry'
+                    ),
+                  ],
+                  use: {
+                    loader: require.resolve('babel-loader'),
+                    options: {
+                      babelrc: false,
+                      configFile: false,
+                      presets: [require.resolve('@babel/preset-flow')],
+                    },
+                  },
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
     ].filter(Boolean),

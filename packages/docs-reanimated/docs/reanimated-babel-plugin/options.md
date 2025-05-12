@@ -39,7 +39,7 @@ module.exports = {
   plugins: [
     ...
     [
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
       {
         relativeSourceLocation: true,
         disableInlineStylesWarning: true,
@@ -65,7 +65,7 @@ This option dictates the passed file location for a worklet's source map. If you
 
 Defaults to `false`.
 
-Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
+Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/next/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';
@@ -188,7 +188,7 @@ JS THREAD
 
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/3.14.0/packages/react-native-reanimated/plugin/src/globals.ts).
+There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/4.0.0-beta.3/packages/react-native-worklets/plugin/src/globals.ts).
 
 ### substituteWebPlatformChecks
 

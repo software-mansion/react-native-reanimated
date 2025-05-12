@@ -142,9 +142,9 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_scheduleRemoteFunctionOnJS',
   '_scheduleOnRuntime',
   '_makeShareableClone',
-  '_updatePropsFabric',
-  '_measureFabric',
-  '_dispatchCommandFabric',
+  '_updateProps',
+  '_measure',
+  '_dispatchCommand',
   '_setGestureState',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
@@ -177,7 +177,7 @@ export function initializeGlobals() {
  *
  * ```js
  * plugins: [
- *   ['react-native-reanimated/plugin', { globals: ['myHostFunction'] }],
+ *   ['react-native-worklets/plugin', { globals: ['myHostFunction'] }],
  * ];
  * ```
  */

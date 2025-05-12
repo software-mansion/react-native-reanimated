@@ -35,12 +35,12 @@ function dispatchCommandNative(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return;
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandJest() {

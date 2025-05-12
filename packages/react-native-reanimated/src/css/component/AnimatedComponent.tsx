@@ -1,5 +1,5 @@
 'use strict';
-import type { ComponentProps, MutableRefObject, Ref } from 'react';
+import type { ComponentProps, Ref } from 'react';
 import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
@@ -10,12 +10,12 @@ import type {
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
@@ -43,6 +43,7 @@ export default class AnimatedComponent<
   _hasAnimatedRef = false;
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
+  _willUnmount: boolean = false;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -101,24 +102,28 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  _setComponentRef = setAndForwardRef<Component | HTMLElement>({
-    getForwardedRef: () =>
-      this.props.forwardedRef as MutableRefObject<
-        Component<Record<string, unknown>, Record<string, unknown>, unknown>
-      >,
-    setLocalRef: (ref) => {
-      if (!ref) {
-        // component has been unmounted
-        return;
-      }
-      if (ref !== this._componentRef) {
-        this._componentRef = this._resolveComponentRef(ref);
-        // if ref is changed, reset viewInfo
-        this._viewInfo = undefined;
-      }
-      this._onSetLocalRef();
-    },
-  });
+  _setComponentRef = (ref: Component | HTMLElement) => {
+    const forwardedRef = this.props.forwardedRef;
+    // Forward to user ref prop (if one has been specified)
+    if (typeof forwardedRef === 'function') {
+      // Handle function-based refs. String-based refs are handled as functions.
+      forwardedRef(ref);
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
+      // Handle createRef-based refs
+      forwardedRef.current = ref;
+    }
+
+    if (!ref) {
+      // component has been unmounted
+      return;
+    }
+    if (ref !== this._componentRef) {
+      this._componentRef = this._resolveComponentRef(ref);
+      // if ref is changed, reset viewInfo
+      this._viewInfo = undefined;
+    }
+    this._onSetLocalRef();
+  };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
     const componentRef = ref as AnimatedComponentRef;
@@ -146,16 +151,39 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    if (!IS_JEST) {
-      if (!this._CSSManager) {
-        this._CSSManager = new CSSManager(this._getViewInfo());
-      }
-      this._CSSManager?.attach(this._cssStyle);
+    const viewTag = this._viewInfo?.viewTag;
+    if (
+      !SHOULD_BE_USE_WEB &&
+      this._willUnmount &&
+      typeof viewTag === 'number'
+    ) {
+      unmarkNodeAsRemovable(viewTag);
     }
+
+    if (!IS_JEST) {
+      this._CSSManager ??= new CSSManager(this._getViewInfo());
+      this._CSSManager?.update(this._cssStyle);
+    }
+
+    this._willUnmount = false;
   }
 
   componentWillUnmount() {
-    this._CSSManager?.detach();
+    if (!IS_JEST && this._CSSManager) {
+      this._CSSManager.unmountCleanup();
+    }
+
+    const wrapper = this._viewInfo?.shadowNodeWrapper;
+    if (!SHOULD_BE_USE_WEB && wrapper) {
+      // Mark node as removable on the native (C++) side, but only actually remove it
+      // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
+      // animations/transitions/props while handling cases where the node might be
+      // remounted (e.g., when frozen) after componentWillUnmount is called.
+
+      markNodeAsRemovable(wrapper);
+    }
+
+    this._willUnmount = true;
   }
 
   shouldComponentUpdate(nextProps: P) {

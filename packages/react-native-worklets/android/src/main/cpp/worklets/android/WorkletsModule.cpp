@@ -4,6 +4,8 @@
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
+#include <utility>
+
 namespace worklets {
 
 using namespace facebook;

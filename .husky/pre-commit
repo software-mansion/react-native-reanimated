@@ -52,16 +52,14 @@ PLUGIN_PATH="packages/react-native-worklets/plugin"
 if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
   print "Changes spotted. Building Reanimated Babel plugin files..."
 
-  yarn workspace babel-plugin-reanimated build
+  yarn workspace babel-plugin-worklets build
 
-  PLUGIN_OUTPUT_PATHS=("$PLUGIN_PATH/index.js" "$REANIMATED_PATH/plugin/index.js")
+  PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
   HAS_COMMITTED_CHANGES=false
-  for PLUGIN_OUTPUT_PATH in "${PLUGIN_OUTPUT_PATHS[@]}"; do
-    if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
-      git add "$PLUGIN_PATH"
-      HAS_COMMITTED_CHANGES=true
-    fi
-  done
+  if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
+    git add "$PLUGIN_PATH"
+    HAS_COMMITTED_CHANGES=true
+  fi
 
   if [ "$HAS_COMMITTED_CHANGES" = true ]; then
     print "Non-committed changes were automatically added to the commit."

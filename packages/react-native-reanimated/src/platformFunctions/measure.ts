@@ -29,7 +29,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return null;
   }
 
@@ -41,7 +41,7 @@ function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const measured = global._measureFabric!(viewTag as ShadowNodeWrapper);
+  const measured = global._measure!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
     logger.warn(
       `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`

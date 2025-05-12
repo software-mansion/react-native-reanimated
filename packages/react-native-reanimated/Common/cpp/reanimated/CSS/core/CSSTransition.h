@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSTransition {
  public:
@@ -24,6 +24,7 @@ class CSSTransition {
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   folly::dynamic getCurrentInterpolationStyle() const;
+  TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
@@ -47,4 +48,4 @@ class CSSTransition {
   bool isAllowedProperty(const std::string &propertyName) const;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

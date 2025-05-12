@@ -1,4 +1,5 @@
 /* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
@@ -27,7 +28,18 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = {
+      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
+      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
+      executeOnUIRuntimeSync:
+        global.__workletsModuleProxy.executeOnUIRuntimeSync,
+      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
+      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableString: global.__workletsModuleProxy.makeShareableString,
+      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
+      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
+      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
+    };
   }
 
   makeShareableClone<TValue>(
@@ -40,6 +52,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
+  }
+
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return this.#workletsModuleProxy.makeShareableBoolean(bool);
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

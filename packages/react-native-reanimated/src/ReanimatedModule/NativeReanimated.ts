@@ -23,6 +23,7 @@ import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
+import { assertWorkletsVersion } from '../platform-specific/workletsVersion';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
 import type {
@@ -61,6 +62,7 @@ class NativeReanimatedModule implements IReanimatedModule {
     // These checks have to split since version checking depend on the execution order
     if (__DEV__) {
       assertSingleReanimatedInstance();
+      assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
@@ -187,8 +189,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
+  }
+
+  unmarkNodeAsRemovable(viewTag: number) {
+    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
   registerCSSKeyframes(
@@ -252,7 +258,8 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
 
   unsubscribeFromKeyboardEvents(): void {}
   setViewStyle(): void {}
-  removeViewStyle(): void {}
+  markNodeAsRemovable(): void {}
+  unmarkNodeAsRemovable(): void {}
   registerCSSKeyframes(): void {}
   unregisterCSSKeyframes(): void {}
   applyCSSAnimations(): void {}

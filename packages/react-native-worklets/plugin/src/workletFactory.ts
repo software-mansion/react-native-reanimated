@@ -7,6 +7,7 @@ import type {
   File as BabelFile,
   FunctionExpression,
   Identifier,
+  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -30,6 +31,7 @@ import {
   newExpression,
   numericLiteral,
   objectExpression,
+  objectPattern,
   objectProperty,
   returnStatement,
   stringLiteral,
@@ -54,7 +56,7 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): FunctionExpression {
+): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -92,7 +94,7 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -110,7 +112,7 @@ export function makeWorkletFactory(
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    variables,
+    closureVariables,
     workletName,
     transformed.map
   );
@@ -118,13 +120,13 @@ export function makeWorkletFactory(
   const workletHash = hash(funString);
 
   let lineOffset = 1;
-  if (variables.length > 0) {
+  if (closureVariables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
     // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
-    lineOffset -= variables.length + 2;
+    lineOffset -= closureVariables.length + 2;
   }
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
@@ -213,7 +215,7 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          variables.map((variable) =>
+          closureVariables.map((variable) =>
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -227,7 +229,12 @@ export function makeWorkletFactory(
                     identifier(variable.name)
                   )
                 )
-              : objectProperty(identifier(variable.name), variable, false, true)
+              : objectProperty(
+                  cloneNode(variable, true),
+                  cloneNode(variable, true),
+                  false,
+                  true
+                )
           )
         )
       )
@@ -255,7 +262,7 @@ export function makeWorkletFactory(
             identifier('__initData'),
             false
           ),
-          initDataId
+          cloneNode(initDataId, true)
         )
       )
     );
@@ -294,9 +301,45 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const newFun = functionExpression(undefined, [], blockStatement(statements));
+  const factoryParams = [
+    cloneNode(initDataId, true),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+  ];
 
-  return newFun;
+  const factoryParamObjectPattern = objectPattern(
+    factoryParams.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
+  const factory = functionExpression(
+    identifier(workletName + 'Factory'),
+    [factoryParamObjectPattern],
+    blockStatement(statements)
+  );
+
+  const factoryCallArgs = [
+    identifier(initDataId.name),
+    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+  ];
+
+  const factoryCallParamPack = objectExpression(
+    factoryCallArgs.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
+  return { factory, factoryCallParamPack };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
@@ -427,7 +470,7 @@ function makeArrayFromCapturedBindings(
         }
         currentScope = currentScope.parent;
       }
-      closure.set(name, path.node);
+      closure.set(name, cloneNode(path.node, true));
       isLocationAssignedMap.set(name, false);
     },
   });

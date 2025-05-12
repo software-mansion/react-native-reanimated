@@ -13,8 +13,12 @@ export function setViewStyle(viewTag: number, style: StyleProps) {
   ReanimatedModule.setViewStyle(viewTag, style);
 }
 
-export function removeViewStyle(viewTag: number) {
-  ReanimatedModule.removeViewStyle(viewTag);
+export function markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+  ReanimatedModule.markNodeAsRemovable(shadowNodeWrapper);
+}
+
+export function unmarkNodeAsRemovable(viewTag: number) {
+  ReanimatedModule.unmarkNodeAsRemovable(viewTag);
 }
 
 // ANIMATIONS

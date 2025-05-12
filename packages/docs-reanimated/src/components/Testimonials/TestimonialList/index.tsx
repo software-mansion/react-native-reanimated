@@ -39,7 +39,7 @@ const items = [
     link: 'https://twitter.com/bran_aust/status/1754907731536863670',
     image: {
       alt: 'brandon austin',
-      src: 'https://pbs.twimg.com/profile_images/1807358745401286656/u6hI6CYo_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1886569538356977664/HSO3O8hT_400x400.jpg',
     },
   },
   {

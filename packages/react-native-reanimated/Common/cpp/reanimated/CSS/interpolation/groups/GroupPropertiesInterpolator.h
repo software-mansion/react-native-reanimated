@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class GroupPropertiesInterpolator : public PropertyInterpolator {
  public:
@@ -32,4 +32,4 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       const = 0;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

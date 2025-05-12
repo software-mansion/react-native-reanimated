@@ -2,11 +2,12 @@
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSStyle } from '../types';
+import type { ICSSManager } from '../types/interfaces';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager.web';
 import CSSTransitionsManager from './CSSTransitionsManager.web';
 
-export default class CSSManager {
+export default class CSSManager implements ICSSManager {
   private readonly element: ReanimatedHTMLElement;
 
   private readonly animationsManager: CSSAnimationsManager;
@@ -17,10 +18,6 @@ export default class CSSManager {
 
     this.animationsManager = new CSSAnimationsManager(this.element);
     this.transitionsManager = new CSSTransitionsManager(this.element);
-  }
-
-  attach(style: CSSStyle): void {
-    this.update(style);
   }
 
   update(style: CSSStyle): void {
@@ -36,8 +33,8 @@ export default class CSSManager {
     }
   }
 
-  detach(): void {
-    this.animationsManager.detach();
-    this.transitionsManager.detach();
+  unmountCleanup(): void {
+    this.animationsManager.unmountCleanup();
+    this.transitionsManager.unmountCleanup();
   }
 }

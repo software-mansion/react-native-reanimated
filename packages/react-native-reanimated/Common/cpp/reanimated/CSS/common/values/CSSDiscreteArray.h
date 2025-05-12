@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace worklets;
 
@@ -46,4 +46,4 @@ struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

@@ -36,13 +36,13 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
   processColorsInProps(updates);
-  global._updatePropsFabric!([{ shadowNodeWrapper, updates }]);
+  global._updateProps!([{ shadowNodeWrapper, updates }]);
 }
 
 function setNativePropsJest() {
