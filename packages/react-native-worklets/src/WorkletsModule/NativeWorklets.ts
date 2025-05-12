@@ -8,7 +8,10 @@ import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+export interface IWorkletsModule extends WorkletsModuleProxy {
+  shareableUndefined: ShareableRef<undefined>;
+  shareableNull: ShareableRef<null>;
+}
 
 export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
@@ -16,6 +19,8 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  shareableUndefined: ShareableRef<undefined>;
+  shareableNull: ShareableRef<null>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
@@ -43,6 +48,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
     };
+    this.shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.shareableUndefined =
+      this.#workletsModuleProxy.makeShareableUndefined();
   }
 
   makeShareableClone<TValue>(
@@ -74,11 +82,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   makeShareableUndefined() {
-    return this.#workletsModuleProxy.makeShareableUndefined();
+    return this.shareableUndefined;
   }
 
   makeShareableNull() {
-    return this.#workletsModuleProxy.makeShareableNull();
+    return this.shareableNull;
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
