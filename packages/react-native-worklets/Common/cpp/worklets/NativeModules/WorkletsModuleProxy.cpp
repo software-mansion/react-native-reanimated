@@ -20,6 +20,8 @@ using namespace facebook;
 
 namespace worklets {
 
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool;
+
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
     const std::string &valueUnpackerCode,
@@ -30,8 +32,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      isDevBundle_(
-          rnRuntime.global().getProperty(rnRuntime, "__DEV__").asBool()),
+      isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
@@ -130,6 +131,14 @@ jsi::Value WorkletsModuleProxy::scheduleOnRuntime(
     const jsi::Value &shareableWorkletValue) {
   worklets::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
+}
+
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool {
+  auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
+  if (rtDev.isBool()) {
+    return rtDev.asBool();
+  }
+  return false;
 }
 
 } // namespace worklets
