@@ -5,19 +5,6 @@ namespace facebook::react {
 ReanimatedViewComponentDescriptor::ReanimatedViewComponentDescriptor(
     const ComponentDescriptorParameters &parameters)
     : ConcreteComponentDescriptor<ReanimatedShadowNode>(parameters) {
-  const auto &reanimatedModuleProxy =
-      parameters.contextContainer->find<std::weak_ptr<ReanimatedModuleProxy>>(
-          "ReanimatedModuleProxy");
-
-  if (!reanimatedModuleProxy.has_value()) {
-    return;
-  }
-  const auto &proxy = reanimatedModuleProxy.value().lock();
-  if (!proxy) {
-    return;
-  }
-
-  proxy_ = proxy;
   reanimatedNodeProps_ = cloneProps(
       // cloneProps needs PropsParserContext to be passed. It can be anything
       // here as it is not used while parsing the display: contents prop, so we
@@ -31,26 +18,44 @@ std::shared_ptr<ShadowNode> ReanimatedViewComponentDescriptor::createShadowNode(
     const ShadowNodeFragment &fragment,
     const ShadowNodeFamily::Shared &family) const {
   return ConcreteComponentDescriptor::createShadowNode(
-      createShadowNodeFragment(fragment), family);
+      createReanimatedNodeFragment(fragment, *family), family);
 }
 
 ShadowNode::Unshared ReanimatedViewComponentDescriptor::cloneShadowNode(
     const ShadowNode &sourceShadowNode,
     const ShadowNodeFragment &fragment) const {
   return ConcreteComponentDescriptor::cloneShadowNode(
-      sourceShadowNode, createShadowNodeFragment(fragment));
+      sourceShadowNode,
+      createReanimatedNodeFragment(fragment, sourceShadowNode.getFamily()));
 }
 
 State::Shared ReanimatedViewComponentDescriptor::createInitialState(
-    const Props::Shared & /*props*/,
+    const Props::Shared &props,
     const ShadowNodeFamily::Shared &family) const {
-  auto state = std::make_shared<ReanimatedViewStateData>();
-  state->initialize(proxy_);
-  return std::make_shared<ConcreteState>(state, family);
+  return std::make_shared<const ConcreteState>(
+      std::make_shared<ReanimatedViewStateData>(getProxy()), family);
 }
 
-ShadowNodeFragment ReanimatedViewComponentDescriptor::createShadowNodeFragment(
-    const ShadowNodeFragment &fragment) const {
+void ReanimatedViewComponentDescriptor::adopt(ShadowNode &shadowNode) const {}
+
+std::shared_ptr<ReanimatedModuleProxy>
+ReanimatedViewComponentDescriptor::getProxy() const {
+  // Sometimes ReanimatedModuleProxy is initialized before
+  // ReanimatedViewComponentDescriptor and sometimes after it. Because of that,
+  // we cannot get the proxy instance in the constructor and need to use this
+  // getter function. Each of ReanimatedViewComponentDescriptor methods is
+  // called after ReanimatedModuleProxy is already added to the context
+  // container, so we can safely call this getter function anywhere in the
+  // component descriptor except for the constructor.
+  return contextContainer_
+      ->at<std::weak_ptr<ReanimatedModuleProxy>>("ReanimatedModuleProxy")
+      .lock();
+}
+
+ShadowNodeFragment
+ReanimatedViewComponentDescriptor::createReanimatedNodeFragment(
+    const ShadowNodeFragment &fragment,
+    const ShadowNodeFamily &family) const {
   return ShadowNodeFragment{
       .props = reanimatedNodeProps_,
       .children = fragment.children,

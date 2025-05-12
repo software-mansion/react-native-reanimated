@@ -2,7 +2,7 @@
 import type { ComponentProps, Ref } from 'react';
 import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
@@ -211,27 +211,15 @@ export default class AnimatedComponent<
 
   render(props?: ComponentProps<AnyComponent>) {
     const { ChildComponent } = this;
+    const { style, ...restProps } = props ?? this.props;
+    const filteredStyle = filterNonCSSStyleProps(style);
 
-    const platformProps = Platform.select({
-      web: {},
-      default: { collapsable: false },
-    });
-
-    const style = props?.style ?? this.props.style;
-
-    const child = (
-      <ChildComponent
-        {...(props ?? this.props)}
-        {...platformProps}
-        style={filterNonCSSStyleProps(style)}
-        // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-        // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-        ref={this._setComponentRef as (ref: Component) => void}
-      />
-    );
+    // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
+    // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
+    const ref = this._setComponentRef as (ref: Component) => void;
 
     if (IS_WEB) {
-      return child;
+      return <ChildComponent {...restProps} style={filteredStyle} ref={ref} />;
     }
 
     if (!this._CSSManagerNew) {
@@ -242,7 +230,12 @@ export default class AnimatedComponent<
 
     return (
       <ReanimatedView {...this._CSSManagerNew?.getProps()}>
-        {child}
+        <ChildComponent
+          {...restProps}
+          collapsable={false}
+          ref={ref}
+          style={filteredStyle}
+        />
       </ReanimatedView>
     );
   }

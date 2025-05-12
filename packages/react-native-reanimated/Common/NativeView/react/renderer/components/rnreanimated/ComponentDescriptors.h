@@ -2,6 +2,7 @@
 
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <react/renderer/components/rnreanimated/ReanimatedShadowNode.h>
+#include <react/renderer/components/rnreanimated/ReanimatedViewStateData.h>
 #include <react/renderer/core/ConcreteComponentDescriptor.h>
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -33,13 +34,17 @@ class ReanimatedViewComponentDescriptor
       const Props::Shared & /*props*/,
       const ShadowNodeFamily::Shared &family) const override;
 
+ protected:
+  virtual void adopt(ShadowNode &shadowNode) const override;
+
  private:
-  std::shared_ptr<ReanimatedModuleProxy> proxy_;
   Props::Shared reanimatedNodeProps_;
 
-  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
-  ShadowNodeFragment createShadowNodeFragment(
-      const ShadowNodeFragment &fragment) const;
+  std::shared_ptr<ReanimatedModuleProxy> getProxy() const;
+
+  ShadowNodeFragment createReanimatedNodeFragment(
+      const ShadowNodeFragment &fragment,
+      const ShadowNodeFamily &family) const;
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(

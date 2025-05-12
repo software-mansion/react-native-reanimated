@@ -19,19 +19,16 @@ namespace facebook::react {
 using namespace reanimated;
 using namespace css;
 
-class ReanimatedViewStateData {
- public:
+struct ReanimatedViewStateData final {
   std::shared_ptr<CSSTransitionManager> cssTransitionManager;
   std::shared_ptr<CSSAnimationsManager> cssAnimationsManager;
 
-  ReanimatedViewStateData() = default;
-
-  bool isInitialized() const;
-  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
+  ReanimatedViewStateData(); // This constructor is required by React Native
+  ReanimatedViewStateData(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
 
 #ifdef ANDROID
   ReanimatedViewStateData(
-      ReanimatedViewStateData const &previousState,
+      const ReanimatedViewStateData &sourceData,
       folly::dynamic data) {}
   folly::dynamic getDynamic() const {
     return {};
@@ -39,7 +36,7 @@ class ReanimatedViewStateData {
 #endif
 
  private:
-  bool initialized_ = false;
+  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
 };
 
 } // namespace facebook::react
