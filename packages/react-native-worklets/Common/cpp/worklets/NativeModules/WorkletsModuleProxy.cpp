@@ -66,6 +66,30 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableString(
+    jsi::Runtime &rt,
+    const jsi::String &string) {
+  return worklets::makeShareableString(rt, string);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableNumber(
+    jsi::Runtime &rt,
+    double number) {
+  return worklets::makeShareableNumber(rt, number);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableBoolean(
+    jsi::Runtime &rt,
+    bool boolean) {
+  return worklets::makeShareableBoolean(rt, boolean);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableBigInt(
+    jsi::Runtime &rt,
+    const jsi::BigInt &bigint) {
+  return worklets::makeShareableBigInt(rt, bigint);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
