@@ -41,7 +41,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsScheduler,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          isDevBundle_),
+          isDevBundle_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
           std::move(forwardedRequestAnimationFrame))) {
