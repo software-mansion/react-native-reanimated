@@ -2,16 +2,16 @@ const { cat, exec } = require('shelljs');
 
 /**
  * @typedef {object} Arg
- * @property {string} value - argument value
- * @property {boolean} handled - is argument known
+ * @property {string} value - Argument value
+ * @property {boolean} handled - Is argument known
  */
 
 /**
  * @typedef {object} Flags
- * @property {boolean} help - whether help option was passed
- * @property {boolean} nightly - whether nightly option was passed
- * @property {boolean} fresh - whether fresh option was passed
- * @property {boolean} custom - whether custom version was passed
+ * @property {boolean} help - Whether help option was passed
+ * @property {boolean} nightly - Whether nightly option was passed
+ * @property {boolean} fresh - Whether fresh option was passed
+ * @property {boolean} custom - Whether custom version was passed
  */
 
 /**
@@ -20,7 +20,10 @@ const { cat, exec } = require('shelljs');
  * @returns {{ currentVersion: string; newVersion: string }}
  */
 function getVersion(rawArgs, packageJsonPath) {
-  const { flags: { custom, nightly, fresh }, customVersion } = getFlags(rawArgs)
+  const {
+    flags: { custom, nightly, fresh },
+    customVersion,
+  } = getFlags(rawArgs);
   const packageJson = JSON.parse(cat(packageJsonPath));
   const currentVersion = packageJson.version;
 
@@ -63,11 +66,11 @@ function getVersion(rawArgs, packageJsonPath) {
  */
 function getFlags(rawArgs) {
   const args = buildArgs(rawArgs);
-  const argsResult = processArgs(args)
+  const argsResult = processArgs(args);
 
-  processFlags(argsResult.flags)
+  processFlags(argsResult.flags);
 
-  return argsResult
+  return argsResult;
 }
 
 /**
@@ -88,7 +91,7 @@ function processArgs(args) {
     nightly: false,
     fresh: false,
     custom: false,
-  }
+  };
 
   let customVersion = '';
 
@@ -119,9 +122,7 @@ function processArgs(args) {
   return { flags, customVersion };
 }
 
-/**
- * @param {Flags} flags
- */
+/** @param {Flags} flags */
 function processFlags({ help, nightly, fresh, custom }) {
   if (help) {
     console.warn(
