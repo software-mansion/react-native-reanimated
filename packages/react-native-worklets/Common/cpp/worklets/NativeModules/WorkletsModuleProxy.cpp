@@ -158,11 +158,8 @@ jsi::Value WorkletsModuleProxy::scheduleOnRuntime(
 }
 
 auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool {
-  auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
-  if (rtDev.isBool()) {
-    return rtDev.asBool();
-  }
-  return false;
+  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
+  return rtDev.isBool() && rtDev.asBool();
 }
 
 } // namespace worklets
