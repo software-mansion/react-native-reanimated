@@ -77,7 +77,12 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
+  [[nodiscard]] inline bool isDevBundle() const {
+    return isDevBundle_;
+  }
+
  private:
+  const bool isDevBundle_;
   const std::string valueUnpackerCode_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
