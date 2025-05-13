@@ -11,8 +11,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <jsi/jsi.h>
-
 #include <string>
 #include <utility>
 
