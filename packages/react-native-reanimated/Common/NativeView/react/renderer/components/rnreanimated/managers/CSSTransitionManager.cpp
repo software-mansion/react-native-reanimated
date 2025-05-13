@@ -90,17 +90,18 @@ void CSSTransitionManager::updateTransition(
 }
 
 void CSSTransitionManager::runTransition(ChangedProps &&changedProps) {
+  const auto &transition = transition_;
   operationHandle_ = operationsLoop_->schedule(
       Operation()
-          .doOnce([transition = transition_,
+          .doOnce([transition,
                    lastFrameProps = lastFrameProps_,
                    props = std::move(changedProps)](double timestamp) mutable {
             transition->run(timestamp, props, lastFrameProps);
           })
-          .waitFor([transition = transition_](double timestamp) {
+          .waitFor([transition](double timestamp) {
             return transition->getMinDelay(timestamp);
           })
-          .doWhile([transition = transition_](double timestamp) mutable {
+          .doWhile([transition](double timestamp) mutable {
             transition->update(timestamp);
             return transition->getState() == TransitionProgressState::Running;
           })

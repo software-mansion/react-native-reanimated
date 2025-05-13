@@ -78,6 +78,11 @@ std::shared_ptr<OperationsLoop> ReanimatedModuleProxy::getOperationsLoop()
   return operationsLoop_;
 }
 
+std::shared_ptr<CSSKeyframesRegistry>
+ReanimatedModuleProxy::getCssAnimationKeyframesRegistry() const {
+  return cssAnimationKeyframesRegistry_;
+}
+
 std::shared_ptr<ViewStylesRepository>
 ReanimatedModuleProxy::getViewStylesRepository() const {
   return viewStylesRepository_;
@@ -507,15 +512,15 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       CSSAnimationConfig config{
-          animationNames[index],
-          settings.duration,
-          settings.easingFunction,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          settings.fillMode,
-          settings.playState,
-      };
+          CSSAnimationSettings{
+              settings.duration,
+              settings.easingFunction,
+              settings.delay,
+              settings.iterationCount,
+              settings.direction,
+              settings.fillMode,
+              settings.playState},
+          animationNames[index]};
 
       const auto animation = std::make_shared<CSSAnimation>(
           config, cssAnimationKeyframesRegistry_, timestamp);
