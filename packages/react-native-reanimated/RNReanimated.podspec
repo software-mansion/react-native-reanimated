@@ -72,7 +72,7 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
-  s.compiler_flags = "#{folly_flags} #{boost_compiler_flags}"
+  s.compiler_flags = boost_compiler_flags
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',
@@ -89,7 +89,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{fabric_flags} #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
 
