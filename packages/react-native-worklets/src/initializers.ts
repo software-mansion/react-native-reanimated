@@ -48,12 +48,12 @@ if (SHOULD_BE_USE_WEB) {
   global._getAnimationTimestamp = () => performance.now();
 } else {
   if (__DEV__) {
-    const testWorklet = (() => {
+    const testWorklet = () => {
       'worklet';
-    }) as WorkletFunction<[], void>;
+    };
     if (!isWorkletFunction(testWorklet)) {
-      throw new Error(
-        `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      throw new WorkletsError(
+        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
       );
     }
   }
