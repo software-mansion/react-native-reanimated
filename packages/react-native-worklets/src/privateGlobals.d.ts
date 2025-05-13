@@ -28,6 +28,18 @@ declare global {
   var _makeShareableNumber: (value: number) => FlatShareableRef<number>;
   var _makeShareableBoolean: (value: boolean) => FlatShareableRef<boolean>;
   var _makeShareableBigInt: (value: bigint) => FlatShareableRef<bigint>;
+  var _makeShareableObject: <T extends object>(
+    value: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
+  var _makeShareableArray: <T extends unknown[]>(
+    value: T
+  ) => FlatShareableRef<T>;
+  var _makeShareableHostObject: <T extends object>(
+    value: T
+  ) => FlatShareableRef<T>;
+  var _makeShareableInitializer: (value: object) => FlatShareableRef<object>;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;

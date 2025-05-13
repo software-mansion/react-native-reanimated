@@ -90,6 +90,34 @@ jsi::Value WorkletsModuleProxy::makeShareableBigInt(
   return worklets::makeShareableBigInt(rt, bigint);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote) {
+  return worklets::makeShareableArray(rt, array, shouldRetainRemote);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  return worklets::makeShareableObject(
+      rt, value, shouldRetainRemote, nativeStateSource);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableHostObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableHostObject(rt, value);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject) {
+  return worklets::makeShareableInitializer(rt, initializerObject);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

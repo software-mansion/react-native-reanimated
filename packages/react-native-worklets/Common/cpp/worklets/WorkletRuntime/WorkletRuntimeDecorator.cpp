@@ -125,6 +125,38 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableHostObject",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableHostObject(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableObject",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote,
+         const jsi::Value &nativeStateSource) {
+        return makeShareableObject(
+            rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArray(
+                   rt, value.asObject(rt).asArray(rt), jsi::Value::undefined())
+            .asObject(rt);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableInitializer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableInitializer(rt, value.asObject(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,

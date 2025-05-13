@@ -54,7 +54,7 @@ jsi::Value makeShareableClone(
         shareable = std::make_shared<ShareableWorklet>(rt, object);
       }
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      shareable = std::make_shared<ShareableHandle>(rt, object);
+      shareable = std::make_shared<ShareableInitializer>(rt, object);
     } else if (object.isFunction(rt)) {
       auto function = object.asFunction(rt);
       if (function.isHostFunction(rt)) {
@@ -132,6 +132,67 @@ jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
 
 jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
   auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote) {
+  std::shared_ptr<Shareable> shareable;
+  if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+    shareable = std::make_shared<RetainingShareable<ShareableArray>>(rt, array);
+  } else {
+    shareable = std::make_shared<ShareableArray>(rt, array);
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  std::shared_ptr<Shareable> shareable;
+  auto object = value.asObject(rt);
+  // TODO: remove it once we have makeShareableWorklet function implemented
+  if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+    if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+      shareable =
+          std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+    } else {
+      shareable = std::make_shared<ShareableWorklet>(rt, object);
+    }
+  } else if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+    shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+        rt, object, nativeStateSource);
+  } else {
+    shareable =
+        std::make_shared<ShareableObject>(rt, object, nativeStateSource);
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value) {
+  auto object = value.asObject(rt);
+  if (object.isHostObject<ShareableJSRef>(rt)) {
+    return object;
+  }
+
+  auto shareable =
+      std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject) {
+  if (initializerObject.getProperty(rt, "__init").isUndefined()) {
+    throw std::runtime_error(
+        "[Worklets] Attempted to convert an initializer object that doesn't have __init property.");
+  }
+  auto shareable =
+      std::make_shared<ShareableInitializer>(rt, initializerObject);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -290,7 +351,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   }
 }
 
-jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
+jsi::Value ShareableInitializer::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->toJSValue(rt);
     auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(

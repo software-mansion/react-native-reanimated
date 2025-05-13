@@ -35,6 +35,25 @@ class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::BigInt &bigint) = 0;
 
+  virtual jsi::Value makeShareableArray(
+      jsi::Runtime &rt,
+      const jsi::Array &array,
+      const jsi::Value &shouldRetainRemote) = 0;
+
+  virtual jsi::Value makeShareableObject(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) = 0;
+
+  virtual jsi::Value makeShareableHostObject(
+      jsi::Runtime &rt,
+      const jsi::Value &value) = 0;
+
+  virtual jsi::Value makeShareableInitializer(
+      jsi::Runtime &rt,
+      const jsi::Object &initializerObject) = 0;
+
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
 

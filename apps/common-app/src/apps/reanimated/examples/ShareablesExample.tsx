@@ -37,15 +37,19 @@ export default function ShareablesExample() {
         <BooleanDemo />
         <BigIntDemo />
         <NumberDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
+        <ArrayDemo />
+        <PlainObjectDemo />
+        <RegexDemo />
+        <HostObjectDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
         <DataViewDemo />
         <ErrorDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
       </ScrollView>
     </View>
   );
@@ -369,6 +373,143 @@ function ArrayBufferDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function ArrayDemo() {
+  const title = 'Array';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const array = [1, 2, 3];
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          array.length === 3,
+          array[0] === 1,
+          array[1] === 2,
+          array[2] === 3,
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function PlainObjectDemo() {
+  const title = 'Plain object';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const obj = { a: 1, b: 2, c: 3 };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [obj.a === 1, obj.b === 2, obj.c === 3];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function RegexDemo() {
+  const title = 'Regex';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const regex = /test/;
+    // eslint-disable-next-line prefer-regex-literals
+    const regex2 = new RegExp('test2');
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [regex.test('test'), regex2.test('test2')];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function HostObjectDemo() {
+  const title = 'HostObject';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    // @ts-expect-error It's ok
+    const hostObject = globalThis.__reanimatedModuleProxy;
+    const hostObjectKeys = Object.keys(hostObject);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          hostObjectKeys.length === Object.keys(hostObject).length,
+          ...hostObjectKeys.map((key) => hostObject[key] !== undefined),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
   return (
     <DemoItemRow
       title={title}

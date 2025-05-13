@@ -45,6 +45,24 @@ class WorkletsModuleProxy
   jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
       override;
 
+  jsi::Value makeShareableArray(
+      jsi::Runtime &rt,
+      const jsi::Array &array,
+      const jsi::Value &shouldRetainRemote) override;
+
+  jsi::Value makeShareableObject(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) override;
+
+  jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value)
+      override;
+
+  jsi::Value makeShareableInitializer(
+      jsi::Runtime &rt,
+      const jsi::Object &initializerObject) override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)

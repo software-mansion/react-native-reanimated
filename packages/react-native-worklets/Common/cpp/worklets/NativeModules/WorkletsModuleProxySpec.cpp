@@ -54,6 +54,44 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableBigInt)(
       ->makeShareableBigInt(rt, std::move(args[0]).asBigInt(rt));
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableArray)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableArray(
+          rt, std::move(args[0]).asObject(rt).asArray(rt), std::move(args[1]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableObject)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableObject(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableHostObject)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableHostObject(rt, std::move(args[0]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableInitializer)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableInitializer(rt, std::move(args[0]).asObject(rt));
+}
+
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -104,6 +142,14 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBoolean)};
   methodMap_["makeShareableBigInt"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBigInt)};
+  methodMap_["makeShareableArray"] =
+      MethodMetadata{2, WORKLETS_SPEC_PREFIX(makeShareableArray)};
+  methodMap_["makeShareableObject"] =
+      MethodMetadata{2, WORKLETS_SPEC_PREFIX(makeShareableObject)};
+  methodMap_["makeShareableHostObject"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableHostObject)};
+  methodMap_["makeShareableInitializer"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableInitializer)};
   methodMap_["scheduleOnUI"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =
