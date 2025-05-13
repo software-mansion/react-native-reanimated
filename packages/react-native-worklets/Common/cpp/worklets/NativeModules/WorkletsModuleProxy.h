@@ -46,7 +46,12 @@ class WorkletsModuleProxy
   [[nodiscard]] std::shared_ptr<jsi::HostObject> createJSIWorkletsModuleProxy()
       const;
 
+  [[nodiscard]] inline bool isDevBundle() const {
+    return isDevBundle_;
+  }
+
  private:
+  const bool isDevBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

@@ -20,6 +20,8 @@ using namespace facebook;
 
 namespace worklets {
 
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool;
+
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
@@ -28,7 +30,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
-    : jsQueue_(jsQueue),
+    : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
+      jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
@@ -37,7 +40,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsQueue_,
           jsScheduler_,
           "Reanimated UI runtime",
-          true /* supportsLocking */)),
+          true /* supportsLocking */,
+          isDevBundle_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
           std::move(forwardedRequestAnimationFrame))) {
@@ -49,13 +53,18 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 std::shared_ptr<jsi::HostObject>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   return std::make_shared<JSIWorkletsModuleProxy>(
-      jsQueue_, jsScheduler_, uiScheduler_, uiWorkletRuntime_);
+      isDevBundle_, jsQueue_, jsScheduler_, uiScheduler_, uiWorkletRuntime_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   animationFrameBatchinator_.reset();
   jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
+}
+
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool {
+  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
+  return rtDev.isBool() && rtDev.asBool();
 }
 
 } // namespace worklets

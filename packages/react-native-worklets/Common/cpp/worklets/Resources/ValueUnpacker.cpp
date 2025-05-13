@@ -1,3 +1,7 @@
+// This file was generated with
+// `packages/react-native-worklets/scripts/export-value-unpacker.js`.
+// Please do not modify it directly.
+
 #include <worklets/Resources/ValueUnpacker.h>
 
 namespace worklets {

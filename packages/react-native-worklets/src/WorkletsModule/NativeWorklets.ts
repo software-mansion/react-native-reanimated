@@ -44,6 +44,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.makeShareableString(str);
   }
 
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return this.#workletsModuleProxy.makeShareableBoolean(bool);
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }

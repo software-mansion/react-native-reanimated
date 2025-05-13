@@ -147,6 +147,12 @@ jsi::Value makeShareableClone(
 
 jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string);
 
+jsi::Value makeShareableNumber(jsi::Runtime &rt, double number);
+
+jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean);
+
+jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

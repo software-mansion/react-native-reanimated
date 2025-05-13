@@ -7,12 +7,7 @@ const transformed = transformFileSync(
   path.resolve(__dirname, '../src/valueUnpacker.ts'),
   {
     presets: [
-      [
-        '@babel/preset-env',
-        {
-          modules: false,
-        },
-      ],
+      ['@babel/preset-env', { modules: false }],
       '@babel/preset-typescript',
     ],
     sourceType: 'unambiguous',
@@ -40,19 +35,12 @@ const transformFrom = generate(transformed.ast, {
 });
 
 fs.writeFileSync(
-  path.resolve(__dirname, '../Common/cpp/worklets/Resources/ValueUnpacker.h'),
-  `#pragma once
-
-namespace worklets {
-extern const char ValueUnpackerCode[];
-}
-`,
-  'utf8'
-);
-
-fs.writeFileSync(
   path.resolve(__dirname, '../Common/cpp/worklets/Resources/ValueUnpacker.cpp'),
-  `#include <worklets/Resources/ValueUnpacker.h>
+  `// This file was generated with
+// \`packages/react-native-worklets/scripts/export-value-unpacker.js\`.
+// Please do not modify it directly.
+
+#include <worklets/Resources/ValueUnpacker.h>
 
 namespace worklets {
 
@@ -62,6 +50,5 @@ const char ValueUnpackerCode[] =
     `)VALUE_UNPACKER";
 } // namespace worklets
 `,
-
   'utf8'
 );

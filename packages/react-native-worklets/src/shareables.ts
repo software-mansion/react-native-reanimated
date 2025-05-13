@@ -127,6 +127,18 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneString(value) as ShareableRef<T>;
   }
 
+  if (typeof value === 'number') {
+    return cloneNumber(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'boolean') {
+    return cloneBoolean(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'bigint') {
+    return cloneBigInt(value) as ShareableRef<T>;
+  }
+
   if ((!isObject && !isFunction) || value === null) {
     return clonePrimitive(value, shouldPersistRemote);
   }
@@ -206,6 +218,18 @@ function clonePrimitive<T>(
 
 function cloneString(value: string): ShareableRef<string> {
   return WorkletsModule.makeShareableString(value);
+}
+
+function cloneNumber(value: number): ShareableRef<number> {
+  return WorkletsModule.makeShareableNumber(value);
+}
+
+function cloneBoolean(value: boolean): ShareableRef<boolean> {
+  return WorkletsModule.makeShareableBoolean(value);
+}
+
+function cloneBigInt(value: bigint): ShareableRef<bigint> {
+  return WorkletsModule.makeShareableBigInt(value);
 }
 
 function cloneArray<T extends unknown[]>(
@@ -554,6 +578,18 @@ export function makeShareableCloneOnUIRecursive<T>(
 
     if (typeof value === 'string') {
       return global._makeShareableString(value);
+    }
+
+    if (typeof value === 'number') {
+      return global._makeShareableNumber(value);
+    }
+
+    if (typeof value === 'boolean') {
+      return global._makeShareableBoolean(value);
+    }
+
+    if (typeof value === 'bigint') {
+      return global._makeShareableBigInt(value);
     }
 
     return global._makeShareableClone(value, undefined);

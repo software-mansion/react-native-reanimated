@@ -87,7 +87,8 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking)
+    const bool supportsLocking,
+    const bool isDevBundle)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -106,7 +107,11 @@ WorkletRuntime::WorkletRuntime(
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
-      rt, name, jsScheduler, std::move(optimizedJsiWorkletsModuleProxy));
+      rt,
+      name,
+      jsScheduler,
+      isDevBundle,
+      std::move(optimizedJsiWorkletsModuleProxy));
 
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);

@@ -12,6 +12,12 @@ export interface WorkletsModuleProxy {
 
   makeShareableString(str: string): ShareableRef<string>;
 
+  makeShareableNumber(num: number): ShareableRef<number>;
+
+  makeShareableBoolean(bool: boolean): ShareableRef<boolean>;
+
+  makeShareableBigInt(bigInt: bigint): ShareableRef<bigint>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

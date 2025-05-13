@@ -25,6 +25,7 @@ namespace worklets {
 class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:
   explicit JSIWorkletsModuleProxy(
+      const bool isDevBundle,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -39,10 +40,11 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
  private:
+  const bool isDevBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
-  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };
 
 } // namespace worklets

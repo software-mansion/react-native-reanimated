@@ -17,6 +17,7 @@ class WorkletRuntimeDecorator {
       jsi::Runtime &rt,
       const std::string &name,
       const std::shared_ptr<JSScheduler> &jsScheduler,
+      const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy);
 };
 
