@@ -16,10 +16,7 @@ class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
-      WorkletsTurboModule?.installTurboModule();
-    }
-    if (global.__workletsModuleProxy === undefined) {
+    if (WorkletsTurboModule === null || global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
         `Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`

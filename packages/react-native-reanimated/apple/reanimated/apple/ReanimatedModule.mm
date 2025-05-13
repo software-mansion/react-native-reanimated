@@ -137,12 +137,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(isBridgeless && "[Reanimated] react-native-reanimated only supports bridgeless mode");
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
-{
-  // TODO: remove this method
-  return @YES;
-}
-
 - (void)installJSIBindingsWithRuntime:(facebook::jsi::Runtime &)rnRuntime
                           callInvoker:(const std::shared_ptr<facebook::react::CallInvoker> &)jsCallInvoker
 {
