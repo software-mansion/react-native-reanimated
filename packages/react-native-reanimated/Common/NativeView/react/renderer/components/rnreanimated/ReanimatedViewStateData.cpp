@@ -2,16 +2,20 @@
 
 namespace facebook::react {
 
-bool ReanimatedViewStateData::isInitialized() const {
-  return initialized_;
+ReanimatedViewStateData::ReanimatedViewStateData() {
+  // We throw an error here, because we cannot create ReanimatedViewStateData
+  // without proxy. React Native requires this constructor to be present.
+  throw std::runtime_error(
+      "[Reanimated] Cannot create ReanimatedViewStateData without proxy");
+}
+
+ReanimatedViewStateData::ReanimatedViewStateData(
+    const std::shared_ptr<ReanimatedModuleProxy> &proxy) {
+  initialize(proxy);
 }
 
 void ReanimatedViewStateData::initialize(
     const std::shared_ptr<ReanimatedModuleProxy> &proxy) {
-  if (!proxy) {
-    return;
-  }
-
   const auto operationsLoop = proxy->getOperationsLoop();
   const auto cssAnimationKeyframesRegistry =
       proxy->getCssAnimationKeyframesRegistry();

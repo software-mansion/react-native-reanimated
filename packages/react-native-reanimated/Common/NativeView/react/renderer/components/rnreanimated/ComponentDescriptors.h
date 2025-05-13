@@ -28,9 +28,7 @@ class ReanimatedViewComponentDescriptor
       const ShadowNodeFamily::Shared &family) const override;
 
  private:
-  std::shared_ptr<ReanimatedModuleProxy> proxy_;
-
-  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
+  std::shared_ptr<ReanimatedModuleProxy> getProxy() const;
 };
 
 void rnreanimated_registerComponentDescriptorsFromCodegen(
