@@ -71,6 +71,7 @@ const config = {
           blogSidebarTitle: 'Examples',
           blogSidebarCount: 'ALL',
           showReadingTime: false,
+          onUntruncatedBlogPosts: 'ignore',
         },
       }),
     ],

@@ -34,6 +34,7 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
+    "prism-react-renderer": "^2.1.0",
     "clsx": "^2.1.0",
     "glob": "^10.4.2",
     "raf": "^3.4.1",
