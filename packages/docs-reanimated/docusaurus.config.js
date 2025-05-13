@@ -189,17 +189,17 @@ const config = {
               new webpack.DefinePlugin({
                 ...processMock,
                 __DEV__: 'false',
-                setImmediate: () => {},
               }),
             ],
             module: {
               rules: [
                 {
-                  test: /\.txt/,
+                  test: /\.txt$/,
                   type: 'asset/source',
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
                 },
               ],
             },
