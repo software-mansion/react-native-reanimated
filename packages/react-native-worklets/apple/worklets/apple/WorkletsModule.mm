@@ -37,25 +37,26 @@ using worklets::WorkletsModuleProxy;
   react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 }
 
-@synthesize callInvoker = _callInvoker;
-
 RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
+  // TODO: remove this method
+  return @YES;
+}
+
+- (void)installJSIBindingsWithRuntime:(facebook::jsi::Runtime &)rnRuntime
+                          callInvoker:(const std::shared_ptr<facebook::react::CallInvoker> &)jsCallInvoker
+{
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
-  react_native_assert(self.bridge.runtime != nullptr);
 
   AssertJavaScriptQueue();
-
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
 
-  auto jsCallInvoker = _callInvoker.callInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
@@ -66,8 +67,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime, jsQueue, jsCallInvoker, jsScheduler, uiScheduler, std::move(forwardedRequestAnimationFrame));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
-
-  return @YES;
 }
 
 - (void)invalidate
