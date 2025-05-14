@@ -12,7 +12,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
-import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
@@ -25,10 +24,8 @@ import com.swmansion.reanimated.nativeProxy.EventHandler;
 import com.swmansion.reanimated.nativeProxy.SensorSetter;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
-import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -86,21 +83,13 @@ public class NativeProxy {
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
-    CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
-    mHybridData =
-        initHybrid(
-            workletsModule,
-            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-            callInvokerHolder,
-            fabricUIManager);
+    mHybridData = initHybrid(workletsModule, fabricUIManager);
     checkCppVersion();
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       WorkletsModule workletsModule,
-      long jsContext,
-      CallInvokerHolderImpl jsCallInvokerHolder,
       FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);

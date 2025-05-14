@@ -18,24 +18,13 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
-    jsi::Runtime *rnRuntime,
-    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
-      rnRuntime_(rnRuntime),
-      workletsModuleProxy_(workletsModuleProxy),
-      reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
-          workletsModuleProxy,
-          *rnRuntime,
-          jsCallInvoker,
-          getPlatformDependentMethods(),
-          getIsReducedMotion())) {
-  reanimatedModuleProxy_->init(getPlatformDependentMethods());
-  const auto &uiManager =
-      fabricUIManager->getBinding()->getScheduler()->getUIManager();
-  reanimatedModuleProxy_->initializeFabric(uiManager);
+      workletsModuleProxy_(jWorkletsModule->cthis()->getWorkletsModuleProxy()),
+      uiManager_(
+          fabricUIManager->getBinding()->getScheduler()->getUIManager()) {
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
   //     [reanimatedModuleProxy,
@@ -65,19 +54,9 @@ NativeProxy::~NativeProxy() {
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
-    jlong jsContext,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-        jsCallInvokerHolder,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
-  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
-  return makeCxxInstance(
-      jThis,
-      workletsModuleProxy,
-      (jsi::Runtime *)jsContext,
-      jsCallInvoker,
-      fabricUIManager);
+  return makeCxxInstance(jThis, jWorkletsModule, fabricUIManager);
 }
 
 #ifndef NDEBUG
@@ -124,6 +103,14 @@ NativeProxy::getBindingsInstaller() {
   return jni::make_local(BindingsInstallerHolder::newObjectCxxArgs(
       [&](jsi::Runtime &rnRuntime,
           const std::shared_ptr<CallInvoker> &jsCallInvoker) {
+        reanimatedModuleProxy_ = std::make_shared<ReanimatedModuleProxy>(
+            workletsModuleProxy_,
+            rnRuntime,
+            jsCallInvoker,
+            getPlatformDependentMethods(),
+            getIsReducedMotion());
+        reanimatedModuleProxy_->init(getPlatformDependentMethods());
+        reanimatedModuleProxy_->initializeFabric(uiManager_);
         WorkletRuntimeCollector::install(rnRuntime);
         RNRuntimeDecorator::decorate(
             rnRuntime,
