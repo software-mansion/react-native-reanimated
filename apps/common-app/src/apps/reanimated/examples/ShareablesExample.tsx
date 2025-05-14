@@ -43,10 +43,7 @@ export default function ShareablesExample() {
         <HostObjectDemo />
         <UndefinedDemo />
         <NullDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
+        <RemoteFunctionDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
@@ -367,6 +364,36 @@ function RemoteAnonymousFunctionSyncCallDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function RemoteFunctionDemo() {
+  const title = 'Remote function';
+  const { status, isOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const remoteFunction = () => {
+      console.log('remote function');
+    };
+    runOnUI(() => {
+      'worklet';
+      const uiRemoteFunction = remoteFunction;
+      if (uiRemoteFunction === remoteFunction) {
+        runOnJS(isOk)();
+      } else {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
   return (
     <DemoItemRow
       title={title}

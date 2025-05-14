@@ -147,6 +147,15 @@ static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnRuntime)(
       ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableFunction)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableFunction(rt, std::move(args[0]));
+}
+
 WorkletsModuleProxySpec::WorkletsModuleProxySpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeWorklets", jsInvoker) {
@@ -180,6 +189,8 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(createWorkletRuntime)};
   methodMap_["scheduleOnRuntime"] =
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(scheduleOnRuntime)};
+  methodMap_["makeShareableFunction"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableFunction)};
 }
 
 } // namespace worklets

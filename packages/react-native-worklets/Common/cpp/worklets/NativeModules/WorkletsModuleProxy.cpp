@@ -127,6 +127,12 @@ jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
   return worklets::makeShareableNull(rt);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableFunction(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableFunction(rt, value);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

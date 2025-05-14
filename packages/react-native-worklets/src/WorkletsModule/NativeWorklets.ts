@@ -47,6 +47,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableUndefined:
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
+      makeShareableFunction: global.__workletsModuleProxy.makeShareableFunction,
     };
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
@@ -108,6 +109,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableInitializer(initializer: object): ShareableRef<object> {
     return this.#workletsModuleProxy.makeShareableInitializer(initializer);
+  }
+
+  makeShareableFunction(fun: object): ShareableRef<object> {
+    return this.#workletsModuleProxy.makeShareableFunction(fun);
   }
 
   makeShareableUndefined() {

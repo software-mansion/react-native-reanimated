@@ -160,7 +160,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value, shouldPersistRemote);
+    return cloneRemoteFunction(value);
   }
   if (isHostObject(value)) {
     return cloneHostObject(value);
@@ -307,20 +307,13 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+function cloneRemoteFunction<T extends object>(value: T): ShareableRef<T> {
+  const clone = WorkletsModule.makeShareableFunction(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
-  return clone;
+  return clone as ShareableRef<T>;
 }
 
 function cloneHostObject<T extends object>(value: T): ShareableRef<T> {

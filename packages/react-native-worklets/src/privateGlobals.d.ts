@@ -43,6 +43,7 @@ declare global {
   var _makeShareableInitializer: (value: object) => FlatShareableRef<object>;
   var _makeShareableUndefined: () => FlatShareableRef<undefined>;
   var _makeShareableNull: () => FlatShareableRef<null>;
+  var _makeShareableFunction: (value: object) => FlatShareableRef<object>;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;

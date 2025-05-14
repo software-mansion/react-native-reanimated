@@ -206,6 +206,20 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableFunction(jsi::Runtime &rt, const jsi::Value &value) {
+  auto object = value.asObject(rt);
+  auto function = object.asFunction(rt);
+  std::shared_ptr<Shareable> shareable;
+  if (function.isHostFunction(rt)) {
+    shareable =
+        std::make_shared<ShareableHostFunction>(rt, std::move(function));
+  } else {
+    shareable =
+        std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
