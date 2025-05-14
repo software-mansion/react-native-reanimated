@@ -72,12 +72,12 @@ void WorkletsModule::invalidateCpp() {
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
-      makeNativeMethod("getBindingsInstallerCpp", WorkletsModule::getBindingsInstallerCpp),
+      makeNativeMethod("getBindingsInstaller", WorkletsModule::getBindingsInstaller),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
   });
 }
 
-jni::local_ref<BindingsInstallerHolder::javaobject> WorkletsModule::getBindingsInstallerCpp() {
+jni::local_ref<BindingsInstallerHolder::javaobject> WorkletsModule::getBindingsInstaller() {
   return jni::make_local(
     BindingsInstallerHolder::newObjectCxxArgs([&](jsi::Runtime& runtime, const std::shared_ptr<CallInvoker>& callInvoker) {
       RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);

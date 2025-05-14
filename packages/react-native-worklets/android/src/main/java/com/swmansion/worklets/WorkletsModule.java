@@ -103,10 +103,5 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @NonNull
   @Override
-  public BindingsInstallerHolder getBindingsInstaller() {
-    return getBindingsInstallerCpp();
-  }
-
-  @NonNull
-  private native BindingsInstallerHolder getBindingsInstallerCpp();
+  public native BindingsInstallerHolder getBindingsInstaller();
 }

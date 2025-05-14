@@ -46,7 +46,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
-  jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstallerCpp();
+  jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstaller();
 
   void invalidateCpp();
 
