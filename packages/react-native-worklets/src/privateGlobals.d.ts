@@ -12,11 +12,6 @@ import type { ValueUnpacker } from './workletTypes';
 declare global {
   var __workletsCache: Map<number, () => unknown>;
   var __handleCache: WeakMap<object, unknown>;
-  var __getWorklet: (
-    hash: number,
-    initData: object,
-    ...args: unknown[]
-  ) => unknown;
   var evalWithSourceMap:
     | ((js: string, sourceURL: string, sourceMap: string) => () => unknown)
     | undefined;

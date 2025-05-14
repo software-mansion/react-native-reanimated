@@ -1,10 +1,5 @@
 import type { NodePath } from '@babel/traverse';
-import type {
-  CallExpression,
-  Identifier,
-  ObjectExpression,
-  ObjectProperty,
-} from '@babel/types';
+import type { CallExpression } from '@babel/types';
 import {
   identifier,
   isExportNamedDeclaration,
@@ -69,19 +64,6 @@ export function replaceWithFactoryCall(
     ]);
     toReplace.replaceWith(replacement);
   }
-
-  // const bindingPaths = (
-  //   ((toReplace.get('arguments') as any)[1] as NodePath<ObjectExpression>).get(
-  //     'properties'
-  //   ) as NodePath<ObjectProperty>[]
-  // ).map((propertyPath) => {
-  //   const bindingPath = propertyPath.get('value');
-  //   return bindingPath as NodePath<Identifier>;
-  // });
-
-  // bindingPaths.forEach((bindingPath) => {
-  //   toReplace.scope.registerBinding('unknown', bindingPath);
-  // });
 }
 
 function needsDeclaration(nodePath: NodePath<unknown>): boolean {

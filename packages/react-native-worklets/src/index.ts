@@ -39,11 +39,6 @@ export {
   runOnUIAsync,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
-export {
-  __getWorklet,
-  __registerWorkletFactory,
-  __registerWorkletInitData,
-} from './workletRegistry';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
