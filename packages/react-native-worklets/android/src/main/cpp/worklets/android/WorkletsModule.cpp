@@ -16,7 +16,6 @@ WorkletsModule::WorkletsModule(
     jsi::Runtime *rnRuntime,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
@@ -24,7 +23,6 @@ WorkletsModule::WorkletsModule(
           *rnRuntime,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
-          jsScheduler,
           uiScheduler,
           getForwardedRequestAnimationFrame())) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
@@ -40,15 +38,12 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
         androidUIScheduler) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
-  auto jsScheduler =
-      std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
       rnRuntime,
       messageQueueThread,
       jsCallInvoker,
-      jsScheduler,
       uiScheduler);
 }
 
