@@ -740,12 +740,6 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = [
         (0, types_12.cloneNode)(initDataId, true),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
-      ];
-      const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
-      const factoryCallArgs = [
-        (0, types_12.identifier)(initDataId.name),
         ...closureVariables.map((variableId) => {
           const clonedId = (0, types_12.cloneNode)(variableId, true);
           if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
@@ -754,6 +748,9 @@ var require_workletFactory = __commonJS({
           return clonedId;
         })
       ];
+      const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
+      const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       factory.workletized = true;
       return { factory, factoryCallParamPack };
