@@ -44,6 +44,8 @@ WorkletsModule::getForwardedRequestAnimationFrame() {
 
 void WorkletsModule::invalidateCpp() {
   javaPart_.reset();
+  messageQueueThread_.reset();
+  uiScheduler_.reset();
   workletsModuleProxy_.reset();
 }
 

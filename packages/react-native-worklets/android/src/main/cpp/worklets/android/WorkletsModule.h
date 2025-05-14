@@ -55,8 +55,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
-  const std::shared_ptr<MessageQueueThread> messageQueueThread_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<MessageQueueThread> messageQueueThread_;
+  std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
 
