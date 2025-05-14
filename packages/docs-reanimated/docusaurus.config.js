@@ -130,6 +130,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
+        additionalLanguages: ['bash'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
