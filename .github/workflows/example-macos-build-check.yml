@@ -13,9 +13,7 @@ on:
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
-      - apps/macos-example/package.json
-      - apps/macos-example/ios/**
-      - apps/macos-example/macos/**
+      - apps/macos-example/**
   merge_group:
     branches:
       - main
@@ -32,9 +30,7 @@ on:
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
-      - apps/macos-example/package.json
-      - apps/macos-example/ios/**
-      - apps/macos-example/macos/**
+      - apps/macos-example/**
   workflow_call:
   workflow_dispatch:
 

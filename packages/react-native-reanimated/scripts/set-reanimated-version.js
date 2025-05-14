@@ -1,16 +1,28 @@
 const fs = require('fs');
 const path = require('path');
-const getVersion = require('../../../scripts/releasing').getVersion;
+const { getFlags, getVersion } = require('../../../scripts/releasing');
 
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 
-const { currentVersion, newVersion } = getVersion(
-  process.argv,
-  packageJsonPath
-);
-
+const { argv } = process;
+const { currentVersion, newVersion } = getVersion(argv, packageJsonPath);
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+
 packageJson.version = newVersion;
+
+if (getFlags(argv).flags.nightly) {
+  const workletsPackageJsonPath = path.resolve(
+    __dirname,
+    '../../react-native-worklets/package.json'
+  );
+  const { newVersion: newWorkletsVersion } = getVersion(
+    argv,
+    workletsPackageJsonPath
+  );
+
+  packageJson.peerDependencies['react-native-worklets'] = newWorkletsVersion;
+}
+
 const newPackageJson = JSON.stringify(packageJson, null, 2) + '\n';
 fs.writeFileSync(packageJsonPath, newPackageJson, 'utf-8');
 

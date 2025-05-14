@@ -1,9 +1,7 @@
-/* eslint-disable reanimated/use-reanimated-error */
 /* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -19,8 +17,7 @@ class NativeWorklets {
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -35,6 +32,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.executeOnUIRuntimeSync,
       createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
       makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableString: global.__workletsModuleProxy.makeShareableString,
+      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
+      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
+      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
     };
   }
 
@@ -48,6 +49,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
+  }
+
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return this.#workletsModuleProxy.makeShareableBoolean(bool);
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

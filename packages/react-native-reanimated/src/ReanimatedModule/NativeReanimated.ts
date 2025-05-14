@@ -27,6 +27,7 @@ import type {
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
+import { assertWorkletsVersion } from '../platform-specific/workletsVersion';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IReanimatedModule,
@@ -62,6 +63,7 @@ class NativeReanimatedModule implements IReanimatedModule {
     // These checks have to split since version checking depend on the execution order
     if (__DEV__) {
       assertSingleReanimatedInstance();
+      assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {

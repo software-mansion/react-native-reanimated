@@ -13,6 +13,7 @@ on:
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
+      - apps/tvos-example/**
   merge_group:
     branches:
       - main
@@ -29,6 +30,7 @@ on:
       - packages/react-native-worklets/scripts/worklets_utils.rb
       - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
+      - apps/tvos-example/**
   workflow_call:
   workflow_dispatch:
 
@@ -64,4 +66,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: xcodebuild -workspace TVOSExample.xcworkspace -configuration Debug -scheme TVOSExample -destination "generic/platform=tvOS Simulator" -quiet
+        run: xcodebuild -workspace TVOSExample.xcworkspace -configuration Debug -scheme "Debug TVOSExample" -destination "generic/platform=tvOS Simulator" -quiet

@@ -6481,6 +6481,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver@npm:^7":
+  version: 7.7.0
+  resolution: "@types/semver@npm:7.7.0"
+  checksum: 10/ee4514c6c852b1c38f951239db02f9edeea39f5310fad9396a00b51efa2a2d96b3dfca1ae84c88181ea5b7157c57d32d7ef94edacee36fbf975546396b85ba5b
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12, @types/semver@npm:^7.5.0":
   version: 7.5.8
   resolution: "@types/semver@npm:7.5.8"
@@ -18121,6 +18128,7 @@ __metadata:
     "@types/node": "npm:^18.0.0"
     "@types/react": "npm:^19.0.10"
     "@types/react-test-renderer": "npm:^19.0.0"
+    "@types/semver": "npm:^7"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     "@typescript-eslint/parser": "npm:^6.19.0"
     "@typescript-eslint/rule-tester": "npm:^6.21.0"
@@ -18155,6 +18163,7 @@ __metadata:
     react-native-web: "npm:0.20.0"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.0.0"
+    semver: "npm:^7.7.1"
     shelljs: "npm:^0.8.5"
     ts-prune: "npm:^0.10.3"
     typescript: "npm:~5.3.0"
@@ -18162,7 +18171,7 @@ __metadata:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.1.0
+    react-native-worklets: ">=0.3.0"
   languageName: unknown
   linkType: soft
 
@@ -18226,6 +18235,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "react-native-worklets@workspace:packages/react-native-worklets"
   dependencies:
+    "@babel/cli": "npm:^7.20.0"
+    "@babel/core": "npm:^7.25.2"
     "@react-native-community/cli": "npm:18.0.0"
     "@react-native/eslint-config": "npm:0.76.5"
     "@types/jest": "npm:^29.5.5"
@@ -19140,6 +19151,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 10/36b1fbe1a2b6f873559cd57b238f1094a053dbfd997ceeb8757d79d1d2089c56d1321b9f1069ce263dc64cfa922fa1d2ad566b39426fe1ac6c723c1487589e10
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
+  bin:
+    semver: bin/semver.js
+  checksum: 10/4cfa1eb91ef3751e20fc52e47a935a0118d56d6f15a837ab814da0c150778ba2ca4f1a4d9068b33070ea4273629e615066664c2cfcd7c272caf7a8a0f6518b2c
   languageName: node
   linkType: hard
 
