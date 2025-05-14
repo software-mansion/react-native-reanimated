@@ -737,14 +737,17 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = [
         (0, types_12.cloneNode)(initDataId, true),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
+        ...closureVariables.map((variableId) => {
+          const clonedId = (0, types_12.cloneNode)(variableId, true);
+          if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+            clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
+          }
+          return clonedId;
+        })
       ];
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
-      const factoryCallArgs = [
-        (0, types_12.identifier)(initDataId.name),
-        ...closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true))
-      ];
+      const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
@@ -797,6 +800,7 @@ var require_workletFactory = __commonJS({
         ]));
       }
       pathForStringDefinitions.parentPath.scope.crawl();
+      factory.workletized = true;
       return { factoryCallParamPack, workletHash };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
@@ -1159,8 +1163,9 @@ var require_autoworkletization = __commonJS({
     exports2.processCalleesAutoworkletizableCallbacks = processCalleesAutoworkletizableCallbacks;
     function processArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
+        var _a;
         const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject);
-        if (!maybeWorklet) {
+        if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
           return;
         }
         if ((0, types_2.isWorkletizableFunctionPath)(maybeWorklet)) {
@@ -1655,11 +1660,11 @@ module.exports = function WorkletsBabelPlugin() {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Reanimated] Babel plugin exception: ${e}`);
+      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
     }
   }
   return {
-    name: "reanimated",
+    name: "worklets",
     pre() {
       runWithTaggedExceptions(() => {
         (0, globals_1.initializeState)(this);

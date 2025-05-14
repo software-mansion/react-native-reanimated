@@ -124,6 +124,30 @@ function makeShareableCloneRecursiveNative<T>(
   const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
+  if (typeof value === 'string') {
+    return cloneString(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'number') {
+    return cloneNumber(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'boolean') {
+    return cloneBoolean(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'bigint') {
+    return cloneBigInt(value) as ShareableRef<T>;
+  }
+
+  if (value === undefined) {
+    return cloneUndefined() as ShareableRef<T>;
+  }
+
+  if (value === null) {
+    return cloneNull() as ShareableRef<T>;
+  }
+
   if ((!isObject && !isFunction) || value === null) {
     if (globalThis._WORKLET) {
       globalThis._log('makeShareableCloneRecursive - primitive');
@@ -143,8 +167,10 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
+  // @ts-expect-error www
   if (isFunction && value.__bundleData) {
     console.log('bundle data');
+    // @ts-expect-error www
     const bundleData = value.__bundleData;
     // const clone = clonePlainJSObject(bundleData, shouldPersistRemote, depth);
     // shareableMappingCache.set(value, clone);
@@ -225,6 +251,30 @@ function clonePrimitive<T>(
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
   return WorkletsModule.makeShareableClone(value, shouldPersistRemote);
+}
+
+function cloneString(value: string): ShareableRef<string> {
+  return WorkletsModule.makeShareableString(value);
+}
+
+function cloneNumber(value: number): ShareableRef<number> {
+  return WorkletsModule.makeShareableNumber(value);
+}
+
+function cloneBoolean(value: boolean): ShareableRef<boolean> {
+  return WorkletsModule.makeShareableBoolean(value);
+}
+
+function cloneBigInt(value: bigint): ShareableRef<bigint> {
+  return WorkletsModule.makeShareableBigInt(value);
+}
+
+function cloneUndefined(): ShareableRef<undefined> {
+  return WorkletsModule.makeShareableUndefined();
+}
+
+function cloneNull(): ShareableRef<null> {
+  return WorkletsModule.makeShareableNull();
 }
 
 function cloneArray<T extends unknown[]>(

@@ -26,12 +26,12 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Reanimated] Babel plugin exception: ${e as string}`);
+      throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
     }
   }
 
   return {
-    name: 'reanimated',
+    name: 'worklets',
 
     pre(this: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {

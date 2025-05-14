@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-reanimated-error */
 /* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
@@ -15,6 +14,8 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  #shareableUndefined: ShareableRef<undefined>;
+  #shareableNull: ShareableRef<null>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
@@ -26,15 +27,10 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {
-      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
-      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync:
-        global.__workletsModuleProxy.executeOnUIRuntimeSync,
-      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
-      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
-      makeShareableImport: global.__workletsModuleProxy.makeShareableImport,
-    };
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.#shareableUndefined =
+      this.#workletsModuleProxy.makeShareableUndefined();
   }
 
   makeShareableClone<TValue>(
@@ -49,8 +45,32 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  makeShareableImport(from: string, to: string) {
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
     return this.#workletsModuleProxy.makeShareableImport(from, to);
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
+  }
+
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return this.#workletsModuleProxy.makeShareableBoolean(bool);
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableUndefined() {
+    return this.#shareableUndefined;
+  }
+
+  makeShareableNull() {
+    return this.#shareableNull;
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

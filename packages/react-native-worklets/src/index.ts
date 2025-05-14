@@ -2,7 +2,7 @@
 
 import { breakBundle } from './bundleBreaker';
 import { initializeUIRuntime } from './initializers';
-import { valueUnpacker } from './valueUnpacker';
+import { __valueUnpacker } from './valueUnpacker';
 import { initializeWorkletRegistries } from './workletRegistry';
 import { WorkletsModule } from './WorkletsModule';
 
@@ -13,7 +13,7 @@ if (!globalThis._WORKLET) {
   initializeWorkletRegistries();
   initializeUIRuntime(WorkletsModule);
   // @ts-ignore www
-  globalThis.__valueUnpacker = valueUnpacker;
+  globalThis.__valueUnpacker = __valueUnpacker;
   // @ts-ignore www
 } else if (!globalThis._BROKEN) {
   breakBundle();
@@ -36,6 +36,7 @@ export {
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
+  runOnUIAsync,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export {

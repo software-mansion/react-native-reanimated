@@ -1,5 +1,4 @@
 // This file is needed for manual tests of the plugin.
-
 const workletsPlugin = require('./index.js');
 
 /** @type {import('@babel/core').TransformOptions} */

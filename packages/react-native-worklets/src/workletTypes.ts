@@ -66,3 +66,8 @@ export interface WorkletFactory<
     ...closureVariables: TClosureVariables
   ): WorkletFunction<TArgs, TReturn>;
 }
+
+export type ValueUnpacker = WorkletFunction<
+  [objectToUnpack: unknown, category?: string],
+  unknown
+>;
