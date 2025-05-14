@@ -20,7 +20,7 @@
   "scripts": {
     "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
-    "format:root": "prettier --write --list-different .",
+    "format:root": "prettier --write --list-different --ignore-path .gitignore, --ignore-path .prettierignore.root --ignore-path .prettierignore .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
