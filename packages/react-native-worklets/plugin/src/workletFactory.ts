@@ -1,13 +1,8 @@
 import type { NodePath } from '@babel/core';
-import { transformFromAstSync } from '@babel/core';
 import generate from '@babel/generator';
-import type { Binding } from '@babel/traverse';
 import type {
   ExpressionStatement,
   FunctionExpression,
-  Identifier,
-  ImportDeclaration,
-  ImportSpecifier,
   ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
@@ -17,11 +12,9 @@ import {
   assignmentExpression,
   blockStatement,
   cloneNode,
-  exportDefaultDeclaration,
   expressionStatement,
   functionExpression,
   identifier,
-  importDeclaration,
   isBlockStatement,
   isFunctionDeclaration,
   isFunctionExpression,
@@ -33,7 +26,6 @@ import {
   objectExpression,
   objectPattern,
   objectProperty,
-  program,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -41,13 +33,13 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { basename, dirname, relative, resolve } from 'path';
+import { basename, relative } from 'path';
 
 import { getClosure } from './closure';
+import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
-import { generatedWorkletsDir, workletClassFactorySuffix } from './types';
+import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
@@ -376,109 +368,6 @@ export function makeWorkletFactory(
   factory.workletized = true;
 
   return { factory, factoryCallParamPack, workletHash };
-}
-
-function generateWorkletFile(
-  libraryBindingsToImport: Set<Binding>,
-  relativeBindingsToImport: Set<Binding>,
-  initDataId: Identifier,
-  initDataObjectExpression: ObjectExpression,
-  factory: FunctionExpression,
-  workletHash: number,
-  pathForStringDefinitions: NodePath<ExpressionStatement>,
-  shouldIncludeInitData: boolean,
-  state: ReanimatedPluginPass
-) {
-  if (state.opts.experimentalBundling) {
-    const libraryImports = Array.from(libraryBindingsToImport)
-      .filter(
-        (binding) =>
-          binding.path.isImportSpecifier() &&
-          binding.path.parentPath.isImportDeclaration()
-      )
-      .map((binding) =>
-        importDeclaration(
-          [cloneNode(binding.path.node as ImportSpecifier, true)],
-          stringLiteral(
-            (binding.path.parentPath!.node as ImportDeclaration).source.value
-          )
-        )
-      );
-
-    const filesDirPath = resolve(
-      dirname(require.resolve('react-native-worklets/package.json')),
-      generatedWorkletsDir
-    );
-
-    const relativeImports = Array.from(relativeBindingsToImport)
-      .filter(
-        (binding) =>
-          binding.path.isImportSpecifier() &&
-          binding.path.parentPath.isImportDeclaration()
-      )
-      .map((binding) => {
-        const resolved = resolve(
-          dirname(state.file.opts.filename!),
-          (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
-            .value
-        );
-        const relatived = relative(filesDirPath, resolved);
-
-        console.log('relative resolved', relatived);
-        return importDeclaration(
-          [cloneNode(binding.path.node as ImportSpecifier, true)],
-          stringLiteral(relatived)
-        );
-      });
-
-    const imports = [...libraryImports, ...relativeImports];
-
-    const newProg = program([
-      ...imports,
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ]),
-      exportDefaultDeclaration(factory),
-    ]);
-
-    const transformedProg = transformFromAstSync(newProg, undefined, {
-      filename: state.file.opts.filename,
-      presets: ['@babel/preset-typescript'],
-      plugins: [],
-      ast: false,
-      babelrc: false,
-      configFile: false,
-      comments: false,
-    })?.code;
-
-    assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
-
-    try {
-      if (!existsSync(filesDirPath)) {
-        mkdirSync(filesDirPath, {});
-      }
-    } catch (_e) {
-      // Nothing.
-    }
-
-    const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
-
-    try {
-      writeFileSync(dedicatedFilePath, transformedProg);
-    } catch (_e) {
-      // Nothing.
-    }
-
-    if (shouldIncludeInitData) {
-      pathForStringDefinitions.insertBefore(
-        variableDeclaration('const', [
-          variableDeclarator(initDataId, initDataObjectExpression),
-        ])
-      );
-    }
-
-    pathForStringDefinitions.parentPath.scope.crawl();
-  }
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {

@@ -18,6 +18,7 @@ export function getClosure(
   const closureVariables = new Array<Identifier>();
   const libraryBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
+
   funPath.traverse(
     {
       'TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration'(typePath) {
@@ -95,8 +96,8 @@ function isImport(binding: Binding): boolean {
   );
 }
 
-function isImportRelative(binding: Binding): boolean {
+function isImportRelative(imported: Binding): boolean {
   return (
-    binding.path.parentPath as NodePath<ImportDeclaration>
+    imported.path.parentPath as NodePath<ImportDeclaration>
   ).node.source.value.startsWith('.');
 }
