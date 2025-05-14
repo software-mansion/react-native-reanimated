@@ -63,6 +63,10 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     mHybridData = initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
   }
 
+  @NonNull
+  @Override
+  public native BindingsInstallerHolder getBindingsInstaller();
+
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
   }
@@ -95,8 +99,4 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @Override
   public void onHostDestroy() {}
-
-  @NonNull
-  @Override
-  public native BindingsInstallerHolder getBindingsInstaller();
 }
