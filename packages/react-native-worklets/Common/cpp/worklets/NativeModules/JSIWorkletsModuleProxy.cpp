@@ -116,9 +116,13 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableBoolean"));
   propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableNull"));
+  propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableNumber"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableString"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableUndefined"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -183,6 +187,16 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableNumber(rt, args[0].asNumber());
         });
   }
+  if (name == "makeShareableNull") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) { return makeShareableNull(rt); });
+  }
   if (name == "makeShareableString") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -194,6 +208,16 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           return makeShareableString(rt, args[0].asString(rt));
         });
+  }
+  if (name == "makeShareableUndefined") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) { return makeShareableUndefined(rt); });
   }
   if (name == "scheduleOnUI") {
     return jsi::Function::createFromHostFunction(
