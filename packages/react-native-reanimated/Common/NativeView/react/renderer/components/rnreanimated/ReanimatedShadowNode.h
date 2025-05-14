@@ -6,8 +6,6 @@
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/LayoutContext.h>
 
-#include <jsi/jsi.h>
-
 namespace facebook::react {
 
 JSI_EXPORT extern const char ReanimatedViewComponentName[];

@@ -19,82 +19,81 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
   return std::nullopt;
 }
 
-TransitionProperties parseProperties(const folly::dynamic &properties) {
-  if (!properties.isArray()) {
-    return std::nullopt;
+TransitionProperties parseProperties(
+    jsi::Runtime &rt,
+    const jsi::Object &config) {
+  const auto transitionProperty = config.getProperty(rt, "properties");
+
+  if (transitionProperty.isObject()) {
+    PropertyNames properties;
+
+    const auto propertiesArray = transitionProperty.asObject(rt).asArray(rt);
+    const auto propertiesCount = propertiesArray.size(rt);
+    for (size_t i = 0; i < propertiesCount; ++i) {
+      properties.emplace_back(
+          propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    }
+
+    return properties;
   }
 
-  PropertyNames result;
-  result.reserve(properties.size());
-
-  for (const auto &property : properties) {
-    result.push_back(property.asString());
-  }
-
-  return result;
+  return std::nullopt;
 }
 
-bool getAllowDiscrete(const folly::dynamic &config) {
-  return config["allowDiscrete"].asBool();
+bool parseAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "allowDiscrete").asBool();
 }
 
 CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
-    const folly::dynamic &settings) {
+    jsi::Runtime &rt,
+    const jsi::Object &settings) {
   CSSTransitionPropertiesSettings result;
 
-  for (const auto &pair : settings.items()) {
-    const std::string propertyName = pair.first.asString();
-    const auto &propertySettings = pair.second;
+  const auto propertyNames = settings.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertySettings =
+        settings.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName))
+            .asObject(rt);
 
     result.emplace(
         propertyName,
         CSSTransitionPropertySettings{
-            getDuration(propertySettings),
-            getTimingFunction(propertySettings),
-            getDelay(propertySettings),
-            getAllowDiscrete(propertySettings)});
+            parseDuration(rt, propertySettings),
+            parseTimingFunction(rt, propertySettings),
+            parseDelay(rt, propertySettings),
+            parseAllowDiscrete(rt, propertySettings)});
   }
 
   return result;
 }
 
-CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config) {
+CSSTransitionConfig parseCSSTransitionConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto configObj = config.asObject(rt);
   return CSSTransitionConfig{
-      parseProperties(config["properties"]),
-      parseCSSTransitionPropertiesSettings(config["settings"])};
+      parseProperties(rt, configObj),
+      parseCSSTransitionPropertiesSettings(
+          rt, configObj.getProperty(rt, "settings").asObject(rt))};
 }
 
-std::optional<CSSTransitionConfigUpdates> getParsedCSSTransitionConfigUpdates(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig) {
-  CSSTransitionConfigUpdates result;
-
-  if (oldConfig["properties"] != newConfig["properties"]) {
-    result.properties = parseProperties(newConfig["properties"]);
-  }
-  if (oldConfig["settings"] != newConfig["settings"]) {
-    result.settings =
-        parseCSSTransitionPropertiesSettings(newConfig["settings"]);
-  }
-
-  if (!result.properties.has_value() && !result.settings.has_value()) {
-    return std::nullopt;
-  }
-
-  return result;
-}
-
-// TODO - remove this implementation when CSS refactor is finished
 CSSTransitionConfigUpdates getParsedCSSTransitionConfigUpdates(
-    const folly::dynamic &partialConfig) {
+    jsi::Runtime &rt,
+    const jsi::Value &partialConfig) {
+  const auto partialObj = partialConfig.asObject(rt);
+
   CSSTransitionConfigUpdates result;
 
-  if (partialConfig.count("properties")) {
-    result.properties = parseProperties(partialConfig["properties"]);
+  if (partialObj.hasProperty(rt, "properties")) {
+    result.properties = parseProperties(rt, partialObj);
   }
-  if (partialConfig.count("settings")) {
-    result.settings =
-        parseCSSTransitionPropertiesSettings(partialConfig["settings"]);
+  if (partialObj.hasProperty(rt, "settings")) {
+    result.settings = parseCSSTransitionPropertiesSettings(
+        rt, partialObj.getProperty(rt, "settings").asObject(rt));
   }
 
   return result;

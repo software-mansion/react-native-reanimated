@@ -4,7 +4,9 @@ namespace facebook::react {
 
 ReanimatedViewComponentDescriptor::ReanimatedViewComponentDescriptor(
     const ComponentDescriptorParameters &parameters)
-    : ConcreteComponentDescriptor<ReanimatedShadowNode>(parameters) {}
+    : ConcreteComponentDescriptor<ReanimatedShadowNode>(
+          parameters,
+          {true /* useRawPropsJsiValue */}) {}
 
 void ReanimatedViewComponentDescriptor::adopt(ShadowNode &shadowNode) const {}
 

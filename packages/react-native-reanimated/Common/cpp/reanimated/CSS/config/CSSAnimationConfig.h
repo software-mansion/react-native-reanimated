@@ -49,14 +49,14 @@ struct CSSAnimationUpdates {
   CSSAnimationSettingsUpdatesMap settingsUpdates;
 };
 
-CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config);
+CSSAnimationUpdates parseCSSAnimationUpdates(
+    jsi::Runtime &rt,
+    const jsi::Value &config);
 
 // TODO - clean up this file once the new CSS implementation is ready
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
   std::string name;
 };
-
-CSSAnimationConfig parseCSSAnimationConfig(const folly::dynamic &config);
 
 } // namespace reanimated::css
