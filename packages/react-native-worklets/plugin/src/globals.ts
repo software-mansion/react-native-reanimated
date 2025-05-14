@@ -112,6 +112,7 @@ const notCapturedIdentifiers = [
   'requestAnimationFrame',
   'setImmediate',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+  'require',
 
   // Hermes
   'HermesInternal',

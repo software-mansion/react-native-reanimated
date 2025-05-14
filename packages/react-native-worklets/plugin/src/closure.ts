@@ -1,5 +1,6 @@
 import type { NodePath } from '@babel/core';
-import type { Identifier } from '@babel/types';
+import type { Binding } from '@babel/traverse';
+import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
@@ -8,9 +9,16 @@ import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): Identifier[] {
+): {
+  closureVariables: Identifier[];
+  libraryBindingsToImport: Set<Binding>;
+  relativeBindingsToImport: Set<Binding>;
+} {
   const capturedNames = new Set<string>();
   const closureVariables = new Array<Identifier>();
+  const libraryBindingsToImport = new Set<Binding>();
+  const relativeBindingsToImport = new Set<Binding>();
+
   funPath.traverse(
     {
       'TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration'(typePath) {
@@ -31,6 +39,14 @@ export function getClosure(
           return;
         }
 
+        const binding = idPath.scope.getBinding(name);
+        if (!binding) {
+          // Implicitly bound variable from the global scope.
+          capturedNames.add(name);
+          closureVariables.push(cloneNode(idPath.node as Identifier, true));
+          return;
+        }
+
         if ('id' in funPath.node) {
           // We must handle recursion and
           // not capture the function itself.
@@ -48,6 +64,15 @@ export function getClosure(
           scope = scope.parent;
         }
 
+        if (state.opts.experimentalBundling && isImport(binding)) {
+          if (isImportRelative(binding)) {
+            relativeBindingsToImport.add(binding);
+          } else {
+            libraryBindingsToImport.add(binding);
+          }
+          return;
+        }
+
         capturedNames.add(name);
         closureVariables.push(cloneNode(idPath.node as Identifier, true));
       },
@@ -55,5 +80,24 @@ export function getClosure(
     state
   );
 
-  return closureVariables;
+  return {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  };
+}
+
+function isImport(binding: Binding): boolean {
+  return (
+    binding.kind === 'module' &&
+    binding.constant &&
+    binding.path.isImportSpecifier() &&
+    binding.path.parentPath.isImportDeclaration()
+  );
+}
+
+function isImportRelative(imported: Binding): boolean {
+  return (
+    imported.path.parentPath as NodePath<ImportDeclaration>
+  ).node.source.value.startsWith('.');
 }

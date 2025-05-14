@@ -60,3 +60,6 @@ lib/
 # React Native Codegen
 apple/generated
 android/generated
+
+# worklets
+generatedWorklets/

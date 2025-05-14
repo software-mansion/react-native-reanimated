@@ -36,6 +36,7 @@ import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
 import { getClosure } from './closure';
+import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -50,7 +51,11 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
+): {
+  factory: FunctionExpression;
+  factoryCallParamPack: ObjectExpression;
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -88,7 +93,11 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = getClosure(fun, state);
+  const {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -181,7 +190,10 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
+
+  if (state.opts.experimentalBundling) {
+    // Nothing.
+  } else if (shouldIncludeInitData) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -339,11 +351,23 @@ export function makeWorkletFactory(
     )
   );
 
+  generateWorkletFile(
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+    initDataId,
+    initDataObjectExpression,
+    factory,
+    workletHash,
+    pathForStringDefinitions as NodePath<ExpressionStatement>,
+    shouldIncludeInitData,
+    state
+  );
+
   // @ts-expect-error We must mark the factory as workletized
   // to avoid further workletization inside the factory.
   factory.workletized = true;
 
-  return { factory, factoryCallParamPack };
+  return { factory, factoryCallParamPack, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
