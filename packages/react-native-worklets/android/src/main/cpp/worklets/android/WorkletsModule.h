@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ReactCommon/BindingsInstallerHolder.h>
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
@@ -46,6 +47,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
   void installTurboModuleCpp();
+
+  jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstallerCpp();
 
   void invalidateCpp();
 

@@ -65,6 +65,10 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
+
+    // TODO: remove this call once ReanimatedModule is migrated to TurboModuleWithJSIBindings
+    ReanimatedTurboModule?.installTurboModule();
+  
     if (ReanimatedTurboModule === null || global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.

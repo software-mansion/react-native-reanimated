@@ -1,5 +1,6 @@
 package com.swmansion.worklets;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -10,6 +11,8 @@ import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
+import com.facebook.react.turbomodule.core.interfaces.TurboModuleWithJSIBindings;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
@@ -18,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener, TurboModuleWithJSIBindings {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -106,4 +109,13 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @Override
   public void onHostDestroy() {}
+
+  @NonNull
+  @Override
+  public BindingsInstallerHolder getBindingsInstaller() {
+    return getBindingsInstallerCpp();
+  }
+
+  @NonNull
+  private native BindingsInstallerHolder getBindingsInstallerCpp();
 }

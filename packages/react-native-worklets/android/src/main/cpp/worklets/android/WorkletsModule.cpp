@@ -51,7 +51,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 }
 
 void WorkletsModule::installTurboModuleCpp() {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
+  // TODO: remove this method
 }
 
 std::function<void(std::function<void(const double)>)>
@@ -76,9 +76,18 @@ void WorkletsModule::invalidateCpp() {
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+      makeNativeMethod("getBindingsInstallerCpp", WorkletsModule::getBindingsInstallerCpp),
       makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
   });
+}
+
+jni::local_ref<BindingsInstallerHolder::javaobject> WorkletsModule::getBindingsInstallerCpp() {
+  return jni::make_local(
+    BindingsInstallerHolder::newObjectCxxArgs([&](jsi::Runtime& runtime, const std::shared_ptr<CallInvoker>& callInvoker) {
+      RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
+    })
+  );
 }
 
 } // namespace worklets
