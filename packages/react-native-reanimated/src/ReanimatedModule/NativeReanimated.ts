@@ -68,7 +68,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 
     // TODO: remove this call once ReanimatedModule is migrated to TurboModuleWithJSIBindings
     if (isAndroid()) {
-    ReanimatedTurboModule?.installTurboModule();
+      ReanimatedTurboModule?.installTurboModule();
     }
 
     if (
