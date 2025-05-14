@@ -1,11 +1,13 @@
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
+import { transformFromAstSync } from '@babel/core';
 import generate from '@babel/generator';
+import type { Binding } from '@babel/traverse';
 import type {
   ExpressionStatement,
-  File as BabelFile,
   FunctionExpression,
   Identifier,
+  ImportDeclaration,
+  ImportSpecifier,
   ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
@@ -15,23 +17,23 @@ import {
   assignmentExpression,
   blockStatement,
   cloneNode,
+  exportDefaultDeclaration,
   expressionStatement,
   functionExpression,
   identifier,
+  importDeclaration,
   isBlockStatement,
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  isMemberExpression,
-  isObjectExpression,
   isObjectMethod,
-  isObjectProperty,
   memberExpression,
   newExpression,
   numericLiteral,
   objectExpression,
   objectPattern,
   objectProperty,
+  program,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -39,7 +41,8 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { basename, dirname, relative, resolve } from 'path';
 
 import { globals } from './globals';
 import { workletTransformSync } from './transform';
@@ -56,7 +59,11 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
+): {
+  factory: FunctionExpression;
+  factoryCallParamPack: ObjectExpression;
+} | {  factoryCallParamPack: ObjectExpression;
+  workletHash: number;} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -94,7 +101,11 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -187,13 +198,15 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
-  }
+
+  
+  // if (shouldIncludeInitData) {
+  //   pathForStringDefinitions.insertBefore(
+  //     variableDeclaration('const', [
+  //       variableDeclarator(initDataId, initDataObjectExpression),
+  //     ])
+  //   );
+  // }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -345,18 +358,127 @@ export function makeWorkletFactory(
     )
   );
 
+  // const libraryImports = Array.from(libraryBindingsToImport)
+  //   .filter(
+  //     (binding) =>
+  //       binding.path.isImportSpecifier() &&
+  //       binding.path.parentPath.isImportDeclaration()
+  //   )
+  //   .map((binding) =>
+  //     importDeclaration(
+  //       [cloneNode(binding.path.node as ImportSpecifier, true)],
+  //       stringLiteral(
+  //         (binding.path.parentPath!.node as ImportDeclaration).source.value
+  //       )
+  //     )
+  //   );
+
+  // const filesDirPath = resolve(
+  //   dirname(require.resolve('react-native-worklets/package.json')),
+  //   'generated'
+  // );
+
+  // const relativeImports = Array.from(relativeBindingsToImport)
+  //   .filter(
+  //     (binding) =>
+  //       binding.path.isImportSpecifier() &&
+  //       binding.path.parentPath.isImportDeclaration()
+  //   )
+  //   .map((binding) => {
+  //     const resolved = resolve(
+  //       dirname(state.file.opts.filename!),
+  //       (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
+  //         .value
+  //     );
+  //     const relatived = relative(filesDirPath, resolved);
+
+  //     console.log('relative resolved', relatived);
+  //     return importDeclaration(
+  //       [cloneNode(binding.path.node as ImportSpecifier, true)],
+  //       stringLiteral(relatived)
+  //     );
+  //   });
+
+  // const imports = [...libraryImports, ...relativeImports];
+  // // const imports = libraryImports;
+
+  // const newProg = program([
+  //   ...imports,
+  //   variableDeclaration('const', [
+  //     variableDeclarator(initDataId, initDataObjectExpression),
+  //   ]),
+  //   exportDefaultDeclaration(factory),
+  // ]);
+
+  // const transformedProg = transformFromAstSync(newProg, undefined, {
+  //   filename: state.file.opts.filename,
+  //   presets: ['@babel/preset-typescript'],
+  //   plugins: [],
+  //   ast: false,
+  //   babelrc: false,
+  //   configFile: false,
+  //   comments: false,
+  // })?.code;
+
+  // assert(transformedProg, '[Reanimated] `transformedProg` is undefined.');
+
+  // try {
+  //   if (!existsSync(filesDirPath)) {
+  //     mkdirSync(filesDirPath, {});
+  //   }
+  // } catch (e) {
+  //   // Nothing.
+  // }
+
+  // const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
+
+  // // @ts-expect-error wwww
+  // if (!state.file.metadata.virtualModules) {
+  //   // @ts-expect-error wwww
+  //   state.file.metadata.virtualModules = new Map();
+  // }
+  // // @ts-expect-error wwww
+  // state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
+
+  // try {
+  //   // If a file exists, abort the process.
+  //   if (!existsSync(dedicatedFilePath)) {
+  //     // temporary
+  //     writeFileSync(dedicatedFilePath, transformedProg);
+  //     console.error('Saved worklet to file ', dedicatedFilePath);
+  //     // console.error('babel time', new Date().toISOString());
+  //   }
+  // } catch (_e) {
+  //   console.error('Error while writing worklet to file: ', _e);
+  //   // Nothing.
+  // }
+
+  // if (shouldIncludeInitData) {
+  //   pathForStringDefinitions.insertBefore(
+  //     variableDeclaration('const', [
+  //       variableDeclarator(initDataId, initDataObjectExpression),
+  //     ])
+  //   );
+  // }
+
+  // pathForStringDefinitions.parentPath.scope.crawl();
+
   // @ts-expect-error We must mark the factory as workletized
   // to avoid further workletization inside the factory.
   factory.workletized = true;
 
+  // return { factoryCallParamPack, workletHash };
   return { factory, factoryCallParamPack };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });
@@ -424,91 +546,6 @@ function makeWorkletName(
   reactName = reactName || toIdentifier(suffix);
 
   return { workletName, reactName };
-}
-
-function makeArrayFromCapturedBindings(
-  ast: BabelFile,
-  fun: NodePath<WorkletizableFunction>
-): Identifier[] {
-  const closure = new Map<string, Identifier>();
-  const isLocationAssignedMap = new Map<string, boolean>();
-
-  // this traversal looks for variables to capture
-  traverse(ast, {
-    Identifier(path) {
-      // we only capture variables that were declared outside of the scope
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (globals.has(name)) {
-        return;
-      }
-      if (
-        'id' in fun.node &&
-        fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's own name
-      ) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, cloneNode(path.node, true));
-      isLocationAssignedMap.set(name, false);
-    },
-  });
-
-  /*
-  For reasons I don't exactly understand, the above traversal will cause the whole 
-  bundle to crash if we traversed original node instead of generated
-  AST. This is why we need to traverse it again, but this time we set
-  location for each identifier that was captured to their original counterpart, since
-  AST has its location set relative as if it was a separate file.
-  */
-  fun.traverse({
-    Identifier(path) {
-      // So it won't refer to something like:
-      // const obj = {unexistingVariable: 1};
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const node = closure.get(path.node.name);
-      if (!node || isLocationAssignedMap.get(path.node.name)) {
-        return;
-      }
-      node.loc = path.node.loc;
-      isLocationAssignedMap.set(path.node.name, true);
-    },
-  });
-
-  return Array.from(closure.values());
 }
 
 const extraPlugins = [

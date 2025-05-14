@@ -1,6 +1,12 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression } from '@babel/types';
-import { callExpression } from '@babel/types';
+import type { CallExpression, Program } from '@babel/types';
+import {
+  callExpression,
+  identifier,
+  memberExpression,
+  stringLiteral,
+} from '@babel/types';
+import { strict as assert } from 'assert';
 
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { makeWorkletFactory } from './workletFactory';
@@ -9,9 +15,23 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): CallExpression {
-  const { factory, factoryCallParamPack } = makeWorkletFactory(path, state);
+  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
 
-  const factoryCall = callExpression(factory, [factoryCallParamPack]);
+  const programPath = path.findParent((ancestorPath) =>
+    ancestorPath.isProgram()
+  ) as NodePath<Program> | null;
+  assert(programPath, 'Program path not found');
+
+  const factoryCall = callExpression(
+    memberExpression(
+      callExpression(identifier('require'), [
+        stringLiteral(`react-native-worklets/generated/${workletHash}.js`),
+      ]),
+      identifier('default')
+    ),
+
+    [factoryCallParamPack]
+  );
 
   addStackTraceDataToWorkletFactory(path, factoryCall);
 
