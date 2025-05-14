@@ -50,11 +50,6 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
-
-  // cleanup all animated sensors here, since NativeProxy
-  // has already been destroyed when AnimatedSensorModule's
-  // destructor is ran
-  reanimatedModuleProxy_->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -305,8 +300,11 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 }
 
 void NativeProxy::invalidateCpp() {
-  workletsModuleProxy_.reset();
+  // cleanup all animated sensors here, since the next line resets
+  // the pointer and it will be too late after it
+  reanimatedModuleProxy_->cleanupSensors();
   reanimatedModuleProxy_.reset();
+  javaPart_ = nullptr;
 }
 
 } // namespace reanimated
