@@ -38,7 +38,6 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 }
 
 function getFromCache(value: object) {
-  'worklet';
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
