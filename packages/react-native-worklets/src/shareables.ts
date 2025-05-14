@@ -166,14 +166,7 @@ function makeShareableCloneRecursiveNative<T>(
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
-    const bundleData = (value as WorkletImport).__bundleData;
-    const clone = WorkletsModule.makeShareableImport(
-      bundleData.source,
-      bundleData.imported
-    );
-    shareableMappingCache.set(value as object, clone);
-    shareableMappingCache.set(clone);
-    return clone as ShareableRef<T>;
+    return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value, shouldPersistRemote);
@@ -486,6 +479,21 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   shareableMappingCache.set(value, handle);
 
   return handle;
+}
+
+function cloneImport<TValue extends WorkletImport>(
+  value: TValue
+): ShareableRef<TValue> {
+  const {source, imported} = value.__bundleData;
+  const clone = WorkletsModule.makeShareableImport(
+    source,
+    imported
+  ) as ShareableRef<TValue>;
+    
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  return clone;
 }
 
 function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
