@@ -1,0 +1,5 @@
+# This file is needed to make `yarn prettier .`  and `yarn eslint`
+# called in root not try to format everything in the monorepo.
+
+packages/
+apps/

@@ -1,5 +1,0 @@
-# This file is needed to make `yarn prettier .` called in root not try
-# to format everything in the monorepo.
-
-packages/
-apps/

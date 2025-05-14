@@ -2,6 +2,7 @@ build/
 .yarn/
 
 # Worklets
+packages/react-native-worklets/plugin/lib/
 packages/react-native-worklets/plugin/index.js
 packages/react-native-worklets/plugin/index.js.map
 
