@@ -89,8 +89,7 @@ public class NativeProxy {
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      WorkletsModule workletsModule,
-      FabricUIManager fabricUIManager);
+      WorkletsModule workletsModule, FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
