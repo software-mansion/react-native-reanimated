@@ -135,6 +135,16 @@ jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
+  auto shareable = std::make_shared<ShareableScalar>();
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableNull(jsi::Runtime &rt) {
+  auto shareable = std::make_shared<ShareableScalar>(nullptr);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

@@ -18,6 +18,10 @@ export interface WorkletsModuleProxy {
 
   makeShareableBigInt(bigInt: bigint): ShareableRef<bigint>;
 
+  makeShareableUndefined(): ShareableRef<undefined>;
+
+  makeShareableNull(): ShareableRef<null>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(
