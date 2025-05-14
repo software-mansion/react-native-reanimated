@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
+import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -12,6 +13,7 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
 import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.soloader.SoLoader;
@@ -104,7 +106,8 @@ public class NativeProxy {
 
   public native void performOperations();
 
-  protected native void installJSIBindings();
+  @NonNull
+  protected native BindingsInstallerHolder getBindingsInstaller();
 
   private native void invalidateCpp();
 

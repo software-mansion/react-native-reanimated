@@ -1,13 +1,17 @@
 package com.swmansion.reanimated;
 
+import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
+import com.facebook.react.turbomodule.core.interfaces.TurboModuleWithJSIBindings;
 import com.swmansion.worklets.WorkletsModule;
 
 @ReactModule(name = ReanimatedModule.NAME)
-public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
+public class ReanimatedModule extends NativeReanimatedModuleSpec
+    implements LifecycleEventListener, TurboModuleWithJSIBindings {
   private final NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
 
@@ -45,14 +49,21 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
     return mNodesManager;
   }
 
+  // TODO: remove this method
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
-    mNodesManager.getNativeProxy().installJSIBindings();
+    // TODO: move somewhere else
     if (BuildConfig.DEBUG) {
       mNodesManager.getNativeProxy().checkCppVersion();
     }
     return true;
+  }
+
+  @NonNull
+  @Override
+  public BindingsInstallerHolder getBindingsInstaller() {
+    return mNodesManager.getNativeProxy().getBindingsInstaller();
   }
 
   @ReactMethod

@@ -114,19 +114,26 @@ void NativeProxy::injectCppVersion() {
 }
 #endif // NDEBUG
 
-void NativeProxy::installJSIBindings() {
-  jsi::Runtime &rnRuntime = *rnRuntime_;
-  WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(
-      rnRuntime,
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-      reanimatedModuleProxy_);
+jni::local_ref<BindingsInstallerHolder::javaobject>
+NativeProxy::getBindingsInstaller() {
+  return jni::make_local(BindingsInstallerHolder::newObjectCxxArgs(
+      [&](jsi::Runtime &rnRuntime,
+          const std::shared_ptr<CallInvoker> &jsCallInvoker) {
+        WorkletRuntimeCollector::install(rnRuntime);
+        RNRuntimeDecorator::decorate(
+            rnRuntime,
+            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+            reanimatedModuleProxy_);
+
+    // TODO: move somewhere else
 #ifndef NDEBUG
-  checkJavaVersion(rnRuntime);
-  injectCppVersion();
+        checkJavaVersion(rnRuntime);
+        injectCppVersion();
 #endif // NDEBUG
 
-  registerEventHandler();
+        // TODO: move somewhere else
+        registerEventHandler();
+      }));
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
@@ -148,7 +155,7 @@ bool NativeProxy::getIsReducedMotion() {
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
-       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+       makeNativeMethod("getBindingsInstaller", NativeProxy::getBindingsInstaller),
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),

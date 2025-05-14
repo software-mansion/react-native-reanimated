@@ -51,7 +51,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
-  void installJSIBindings();
+  jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstaller();
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
