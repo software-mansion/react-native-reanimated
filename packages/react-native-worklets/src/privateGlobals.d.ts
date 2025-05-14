@@ -7,6 +7,7 @@
 import type { callGuardDEV } from './initializers';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
+import type { ValueUnpacker } from './workletTypes';
 
 declare global {
   var __workletsCache: Map<number, () => unknown>;
@@ -36,6 +37,7 @@ declare global {
   var __ErrorUtils: {
     reportFatalError: (error: Error) => void;
   };
+  var __valueUnpacker: ValueUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
