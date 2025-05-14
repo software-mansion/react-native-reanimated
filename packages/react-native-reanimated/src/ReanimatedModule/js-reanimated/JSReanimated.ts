@@ -19,11 +19,7 @@ import type {
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
-import {
-  isJest,
-  isWeb,
-  isWindowAvailable,
-} from '../../PlatformChecker';
+import { isJest, isWeb, isWindowAvailable } from '../../PlatformChecker';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
