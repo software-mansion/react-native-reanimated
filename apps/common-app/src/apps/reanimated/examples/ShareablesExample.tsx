@@ -43,10 +43,6 @@ export default function ShareablesExample() {
         <HostObjectDemo />
         <UndefinedDemo />
         <NullDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
