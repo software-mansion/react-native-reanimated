@@ -53,10 +53,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
-    // TODO: move somewhere else
-    if (BuildConfig.DEBUG) {
-      mNodesManager.getNativeProxy().checkCppVersion();
-    }
     return true;
   }
 

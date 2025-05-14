@@ -45,6 +45,11 @@ NativeProxy::NativeProxy(
   //     });
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
+  registerEventHandler();
+#ifndef NDEBUG
+  checkJavaVersion();
+  injectCppVersion();
+#endif // NDEBUG
 }
 
 NativeProxy::~NativeProxy() {
@@ -76,7 +81,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 #ifndef NDEBUG
-void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+void NativeProxy::checkJavaVersion() {
   std::string javaVersion;
   try {
     javaVersion =
@@ -124,15 +129,6 @@ NativeProxy::getBindingsInstaller() {
             rnRuntime,
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
             reanimatedModuleProxy_);
-
-    // TODO: move somewhere else
-#ifndef NDEBUG
-        checkJavaVersion(rnRuntime);
-        injectCppVersion();
-#endif // NDEBUG
-
-        // TODO: move somewhere else
-        registerEventHandler();
       }));
 }
 
