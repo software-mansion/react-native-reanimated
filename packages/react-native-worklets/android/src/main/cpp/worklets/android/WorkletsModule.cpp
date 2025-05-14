@@ -40,11 +40,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
-      jThis,
-      rnRuntime,
-      messageQueueThread,
-      jsCallInvoker,
-      uiScheduler);
+      jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler);
 }
 
 std::function<void(std::function<void(const double)>)>
