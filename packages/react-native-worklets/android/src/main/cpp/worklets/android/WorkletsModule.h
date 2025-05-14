@@ -24,10 +24,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
-      jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
           androidUIScheduler);
 
@@ -40,11 +37,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  private:
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
-      jsi::Runtime *rnRuntime,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
+          androidUIScheduler);
 
   jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstaller();
 
@@ -60,7 +55,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
-  jsi::Runtime *rnRuntime_;
+  const std::shared_ptr<MessageQueueThread> messageQueueThread_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
 

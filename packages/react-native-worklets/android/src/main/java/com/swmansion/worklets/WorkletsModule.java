@@ -9,18 +9,17 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
 import com.facebook.react.turbomodule.core.interfaces.TurboModuleWithJSIBindings;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener, TurboModuleWithJSIBindings {
+public class WorkletsModule extends NativeWorkletsModuleSpec
+    implements LifecycleEventListener, TurboModuleWithJSIBindings {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -34,7 +33,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     return mHybridData;
   }
 
-  private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
@@ -47,20 +45,18 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      long jsContext,
-      MessageQueueThread messageQueueThread,
-      CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler);
+      MessageQueueThread messageQueueThread, AndroidUIScheduler androidUIScheduler);
 
   @OptIn(markerClass = FrameworkAPI.class)
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-    mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
+
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
-    var jsContext = Objects.requireNonNull(reactContext.getJavaScriptContextHolder()).get();
-    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(reactContext);
-    mHybridData = initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
+
+    WorkletsMessageQueueThread messageQueueThread = new WorkletsMessageQueueThread();
+    mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
+    mHybridData = initHybrid(messageQueueThread, mAndroidUIScheduler);
   }
 
   @NonNull
