@@ -10,8 +10,11 @@ export interface WorkletsModuleProxy {
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 
-  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue>;
-  
+  makeShareableImport<TValue>(
+    source: string,
+    imported: string
+  ): ShareableRef<TValue>;
+
   makeShareableString(str: string): ShareableRef<string>;
 
   makeShareableNumber(num: number): ShareableRef<number>;

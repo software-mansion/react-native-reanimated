@@ -147,9 +147,9 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
 
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const jsi::String &from,
-    const jsi::String &what) {
-  auto shareable = std::make_shared<ShareableImport>(rt, from, what);
+    const jsi::String &source,
+    const jsi::String &imported) {
+  auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -293,16 +293,18 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
-  try {
-    return rt.global()
-        .getPropertyAsFunction(rt, "__r")
-        .call(rt, jsi::String::createFromUtf8(rt, from_))
-        .asObject(rt)
-        .getProperty(rt, jsi::String::createFromUtf8(rt, what_));
-  } catch (jsi::JSIException ex) {
-    LOG(INFO) << ex.what();
+  const auto metroRequire = rt.global().getProperty(rt, "__r");
+  if (metroRequire.isUndefined()) {
     return jsi::Value::undefined();
   }
+
+  const auto source = jsi::String::createFromUtf8(rt, source_);
+  const auto imported = jsi::String::createFromUtf8(rt, imported_);
+  return metroRequire.asObject(rt)
+      .asFunction(rt)
+      .call(rt, source)
+      .asObject(rt)
+      .getProperty(rt, imported);
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {

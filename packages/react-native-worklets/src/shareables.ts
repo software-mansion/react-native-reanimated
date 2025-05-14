@@ -9,7 +9,11 @@ import {
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { ShareableRef, WorkletFunction } from './workletTypes';
+import type {
+  ShareableRef,
+  WorkletFunction,
+  WorkletImport,
+} from './workletTypes';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -167,18 +171,13 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
-  // @ts-expect-error www
-  if (isFunction && value.__bundleData) {
-    console.log('bundle data');
-    // @ts-expect-error www
-    const bundleData = value.__bundleData;
-    // const clone = clonePlainJSObject(bundleData, shouldPersistRemote, depth);
-    // shareableMappingCache.set(value, clone);
+  if (isFunction &&  (value as WorkletImport).__bundleData ) {
+    const bundleData = (value as WorkletImport).__bundleData;
     const clone = WorkletsModule.makeShareableImport(
-      bundleData.what,
-      bundleData.from
+      bundleData.source,
+      bundleData.imported
     );
-    shareableMappingCache.set(value, clone);
+    shareableMappingCache.set(value as object, clone);
     shareableMappingCache.set(clone);
     return clone as ShareableRef<T>;
   }
