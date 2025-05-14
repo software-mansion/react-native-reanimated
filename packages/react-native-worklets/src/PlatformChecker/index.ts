@@ -31,4 +31,4 @@ if (globalThis._WORKLET) {
   shouldBeUseWeb = RNShouldBeUseWeb;
 }
 
-export { isJest, isChromeDebugger, isWeb, shouldBeUseWeb };
+export { isChromeDebugger, isJest, isWeb, shouldBeUseWeb };
