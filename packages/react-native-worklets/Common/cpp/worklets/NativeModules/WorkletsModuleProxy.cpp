@@ -26,19 +26,18 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
       isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
-      jsScheduler_(jsScheduler),
+      jsScheduler_(std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
           jsQueue,
-          jsScheduler,
+          jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
           isDevBundle_)),

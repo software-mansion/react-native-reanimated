@@ -51,7 +51,6 @@ RCT_EXPORT_MODULE(WorkletsModule);
     throw error;
   });
 
-  auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
@@ -59,7 +58,7 @@ RCT_EXPORT_MODULE(WorkletsModule);
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, jsScheduler, uiScheduler, std::move(forwardedRequestAnimationFrame));
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 }
 

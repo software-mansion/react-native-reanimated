@@ -61,14 +61,10 @@ WorkletsModule::getBindingsInstaller() {
   return jni::make_local(BindingsInstallerHolder::newObjectCxxArgs(
       [&](jsi::Runtime &rnRuntime,
           const std::shared_ptr<CallInvoker> &jsCallInvoker) {
-        // TODO: create jsScheduler in WorkletsModuleProxy constructor
-        const auto jsScheduler =
-            std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
         workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
             rnRuntime,
             messageQueueThread_,
             jsCallInvoker,
-            jsScheduler,
             uiScheduler_,
             getForwardedRequestAnimationFrame());
         RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
