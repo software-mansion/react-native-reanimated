@@ -1,10 +1,12 @@
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 
+#include <utility>
+
 namespace worklets {
 
 void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy) {
+    jsi::Object &&jsiWorkletsModuleProxy) {
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
   // TODO: Remove _IS_FABRIC sometime in the future
@@ -12,9 +14,7 @@ void RNRuntimeWorkletDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", true);
 
   rnRuntime.global().setProperty(
-      rnRuntime,
-      "__workletsModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
+      rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 }
 
 } // namespace worklets

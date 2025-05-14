@@ -1,5 +1,6 @@
 #include <react/jni/JMessageQueueThread.h>
 
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
@@ -27,7 +28,12 @@ WorkletsModule::WorkletsModule(
           jsScheduler,
           uiScheduler,
           getForwardedRequestAnimationFrame())) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
+  auto jsiWorkletsModuleProxy =
+      workletsModuleProxy_->createJSIWorkletsModuleProxy();
+  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
+      *rnRuntime_, std::move(jsiWorkletsModuleProxy));
+  RNRuntimeWorkletDecorator::decorate(
+      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy));
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
