@@ -50,6 +50,18 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableUndefined(): ShareableRef<undefined> {
+    throw new WorkletsError(
+      'makeShareableUndefined should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableNull(): ShareableRef<null> {
+    throw new WorkletsError(
+      'makeShareableNull should never be called in JSWorklets.'
+    );
+  }
+
   scheduleOnUI<TValue>(worklet: ShareableRef<TValue>) {
     // TODO: `requestAnimationFrame` should be used exclusively in Reanimated
 
