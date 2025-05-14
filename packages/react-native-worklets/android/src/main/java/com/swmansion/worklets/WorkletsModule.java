@@ -51,10 +51,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
-
-    WorkletsMessageQueueThread messageQueueThread = new WorkletsMessageQueueThread();
+    MessageQueueThread messageQueueThread = new WorkletsMessageQueueThread();
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mHybridData = initHybrid(messageQueueThread, mAndroidUIScheduler);
   }
