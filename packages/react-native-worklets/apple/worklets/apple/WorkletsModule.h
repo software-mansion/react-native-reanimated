@@ -10,6 +10,6 @@
 
 - (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
 
-- (void)setBundleString:(NSData*)bundle;
+- (void)setBundleString:(NSData *)bundle;
 
 @end

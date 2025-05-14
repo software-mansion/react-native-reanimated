@@ -3,14 +3,12 @@
 import { breakBundle } from './bundleBreaker';
 import { initializeUIRuntime } from './initializers';
 import { __valueUnpacker } from './valueUnpacker';
-import { initializeWorkletRegistries } from './workletRegistry';
 import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
   console.log(Object.keys(globalThis));
-  initializeWorkletRegistries();
   initializeUIRuntime(WorkletsModule);
   // @ts-ignore www
   globalThis.__valueUnpacker = __valueUnpacker;

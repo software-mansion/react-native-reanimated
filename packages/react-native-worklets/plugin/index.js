@@ -245,7 +245,7 @@ var require_types = __commonJS({
   "lib/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.workletClassFactorySuffix = exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    exports2.generatedWorkletsDir = exports2.workletClassFactorySuffix = exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
     var types_12 = require("@babel/types");
     exports2.WorkletizableFunction = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";
     exports2.WorkletizableObject = "ObjectExpression";
@@ -266,6 +266,7 @@ var require_types = __commonJS({
     }
     exports2.isWorkletizableObjectNode = isWorkletizableObjectNode;
     exports2.workletClassFactorySuffix = "__classFactory";
+    exports2.generatedWorkletsDir = "__generatedWorklets";
   }
 });
 
@@ -429,6 +430,151 @@ var require_globals = __commonJS({
       }
     }
     exports2.addCustomGlobals = addCustomGlobals;
+  }
+});
+
+// lib/closure.js
+var require_closure = __commonJS({
+  "lib/closure.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.getClosure = void 0;
+    var types_12 = require("@babel/types");
+    var globals_12 = require_globals();
+    function getClosure(funPath, state) {
+      const capturedNames = /* @__PURE__ */ new Set();
+      const closureVariables = new Array();
+      const libraryBindingsToImport = /* @__PURE__ */ new Set();
+      const relativeBindingsToImport = /* @__PURE__ */ new Set();
+      funPath.traverse({
+        "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
+          typePath.skip();
+        },
+        ReferencedIdentifier(idPath) {
+          if (idPath.isJSXIdentifier()) {
+            return;
+          }
+          const name = idPath.node.name;
+          if (capturedNames.has(name)) {
+            return;
+          }
+          if (globals_12.globals.has(name)) {
+            return;
+          }
+          const binding = idPath.scope.getBinding(name);
+          if (!binding) {
+            capturedNames.add(name);
+            closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            return;
+          }
+          if ("id" in funPath.node) {
+            const id = idPath.scope.getBindingIdentifier(name);
+            if (id && id === funPath.node.id) {
+              return;
+            }
+          }
+          let scope = idPath.scope;
+          while (scope !== funPath.scope.parent) {
+            if (scope.hasOwnBinding(name)) {
+              return;
+            }
+            scope = scope.parent;
+          }
+          if (state.opts.experimentalBundling && isImport(binding)) {
+            if (isImportRelative(binding)) {
+              relativeBindingsToImport.add(binding);
+            } else {
+              libraryBindingsToImport.add(binding);
+            }
+            return;
+          }
+          capturedNames.add(name);
+          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+        }
+      }, state);
+      return {
+        closureVariables,
+        libraryBindingsToImport,
+        relativeBindingsToImport
+      };
+    }
+    exports2.getClosure = getClosure;
+    function isImport(binding) {
+      return binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration();
+    }
+    function isImportRelative(imported) {
+      return imported.path.parentPath.node.source.value.startsWith(".");
+    }
+  }
+});
+
+// lib/generate.js
+var require_generate = __commonJS({
+  "lib/generate.js"(exports2) {
+    "use strict";
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.generateWorkletFile = void 0;
+    var core_1 = require("@babel/core");
+    var types_12 = require("@babel/types");
+    var assert_1 = __importDefault(require("assert"));
+    var fs_1 = require("fs");
+    var path_1 = require("path");
+    var types_2 = require_types();
+    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, shouldIncludeInitData, state) {
+      var _a;
+      if (state.opts.experimentalBundling) {
+        const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+        const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+        const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
+          const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
+          const importPath = (0, path_1.relative)(filesDirPath, resolved);
+          return (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(importPath));
+        });
+        const imports = [...libraryImports, ...relativeImports];
+        const newProg = (0, types_12.program)([
+          ...imports,
+          (0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+          ]),
+          (0, types_12.exportDefaultDeclaration)(factory)
+        ]);
+        const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
+          filename: state.file.opts.filename,
+          presets: ["@babel/preset-typescript"],
+          plugins: [],
+          ast: false,
+          babelrc: false,
+          configFile: false,
+          comments: false
+        })) === null || _a === void 0 ? void 0 : _a.code;
+        (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
+        try {
+          if (!(0, fs_1.existsSync)(filesDirPath)) {
+            (0, fs_1.mkdirSync)(filesDirPath, {});
+          }
+        } catch (_e) {
+        }
+        const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+        if (!state.file.metadata.virtualModules) {
+          state.file.metadata.virtualModules = /* @__PURE__ */ new Map();
+        }
+        state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
+        try {
+          (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
+        } catch (_e) {
+        }
+        if (shouldIncludeInitData) {
+          pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+            (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+          ]));
+        }
+        pathForStringDefinitions.parentPath.scope.crawl();
+      }
+    }
+    exports2.generateWorkletFile = generateWorkletFile;
   }
 });
 
@@ -641,13 +787,12 @@ var require_workletFactory = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactory = void 0;
-    var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
-    var fs_1 = require("fs");
     var path_1 = require("path");
-    var globals_12 = require_globals();
+    var closure_1 = require_closure();
+    var generate_1 = require_generate();
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -655,7 +800,7 @@ var require_workletFactory = __commonJS({
     var REAL_VERSION = require("../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
-      var _a, _b;
+      var _a;
       removeWorkletDirective(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
       const codeObject = (0, generator_1.default)(fun.node, {
@@ -674,7 +819,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = getClosure(fun, state);
+      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -686,8 +831,8 @@ var require_workletFactory = __commonJS({
         lineOffset -= closureVariables.length + 2;
       }
       const pathForStringDefinitions = fun.parentPath.isProgram() ? fun : fun.findParent((path) => {
-        var _a2, _b2;
-        return (_b2 = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b2 !== void 0 ? _b2 : false;
+        var _a2, _b;
+        return (_b = (_a2 = path.parentPath) === null || _a2 === void 0 ? void 0 : _a2.isProgram()) !== null && _b !== void 0 ? _b : false;
       });
       (0, assert_1.strict)(pathForStringDefinitions, "[Reanimated] `pathForStringDefinitions` is null.");
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "[Reanimated] `pathForStringDefinitions.parentPath` is null.");
@@ -712,6 +857,12 @@ var require_workletFactory = __commonJS({
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
+      if (state.opts.experimentalBundling) {
+      } else if (shouldIncludeInitData) {
+        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
+        ]));
+      }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
       const statements = [
@@ -749,59 +900,9 @@ var require_workletFactory = __commonJS({
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
-      const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), "generated");
-      const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
-        const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
-        const relatived = (0, path_1.relative)(filesDirPath, resolved);
-        console.log("relative resolved", relatived);
-        return (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(relatived));
-      });
-      const imports = [...libraryImports, ...relativeImports];
-      const newProg = (0, types_12.program)([
-        ...imports,
-        (0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]),
-        (0, types_12.exportDefaultDeclaration)(factory)
-      ]);
-      const transformedProg = (_b = (0, core_1.transformFromAstSync)(newProg, void 0, {
-        filename: state.file.opts.filename,
-        presets: ["@babel/preset-typescript"],
-        plugins: [],
-        ast: false,
-        babelrc: false,
-        configFile: false,
-        comments: false
-      })) === null || _b === void 0 ? void 0 : _b.code;
-      (0, assert_1.strict)(transformedProg, "[Reanimated] `transformedProg` is undefined.");
-      try {
-        if (!(0, fs_1.existsSync)(filesDirPath)) {
-          (0, fs_1.mkdirSync)(filesDirPath, {});
-        }
-      } catch (e) {
-      }
-      const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
-      if (!state.file.metadata.virtualModules) {
-        state.file.metadata.virtualModules = /* @__PURE__ */ new Map();
-      }
-      state.file.metadata.virtualModules.set(dedicatedFilePath, newProg);
-      try {
-        if (!(0, fs_1.existsSync)(dedicatedFilePath)) {
-          (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
-          console.error("Saved worklet to file ", dedicatedFilePath);
-        }
-      } catch (_e) {
-        console.error("Error while writing worklet to file: ", _e);
-      }
-      if (shouldIncludeInitData) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
-      }
-      pathForStringDefinitions.parentPath.scope.crawl();
+      (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, shouldIncludeInitData, state);
       factory.workletized = true;
-      return { factoryCallParamPack, workletHash };
+      return { factory, factoryCallParamPack, workletHash };
     }
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
@@ -850,50 +951,6 @@ var require_workletFactory = __commonJS({
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
     }
-    function getClosure(fun, state) {
-      const closureVariables = /* @__PURE__ */ new Set();
-      const libraryBindingsToImport = /* @__PURE__ */ new Set();
-      const relativeBindingsToImport = /* @__PURE__ */ new Set();
-      fun.traverse({
-        Identifier(path) {
-          var _a, _b, _c, _d;
-          const name = path.node.name;
-          if (!path.isReferencedIdentifier() || path.key === "typeName") {
-            return;
-          }
-          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
-            return;
-          }
-          if (fun.scope.hasOwnBinding(path.node.name)) {
-            return;
-          }
-          if (path.scope.hasOwnBinding(path.node.name)) {
-            return;
-          }
-          const binding = fun.scope.getBinding(path.node.name);
-          if (binding) {
-            if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_a = state.opts.workletModules) === null || _a === void 0 ? void 0 : _a.some((module3) => binding.path.parentPath.node.source.value.includes(module3)))) {
-              console.log("library binding", name, "id" in fun.node && ((_b = fun.node.id) === null || _b === void 0 ? void 0 : _b.name));
-              libraryBindingsToImport.add(binding);
-            } else if (binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration() && ((_c = state.opts.workletModules) === null || _c === void 0 ? void 0 : _c.some((module3) => state.filename.includes(module3) && binding.path.parentPath.node.source.value.startsWith(".")))) {
-              console.log("binding", name, "id" in fun.node && ((_d = fun.node.id) === null || _d === void 0 ? void 0 : _d.name));
-              relativeBindingsToImport.add(binding);
-            } else {
-              if (globals_12.globals.has(name)) {
-                return;
-              }
-              closureVariables.add(name);
-            }
-          }
-        }
-      }, state);
-      const retClosureVariables = Array.from(closureVariables).map((name) => (0, types_12.identifier)(name));
-      return {
-        closureVariables: retClosureVariables,
-        libraryBindingsToImport,
-        relativeBindingsToImport
-      };
-    }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
       require.resolve("@babel/plugin-transform-arrow-functions"),
@@ -914,15 +971,17 @@ var require_workletFactoryCall = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactoryCall = void 0;
     var types_12 = require("@babel/types");
-    var assert_1 = require("assert");
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
-      const { factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
-      const programPath = path.findParent((ancestorPath) => ancestorPath.isProgram());
-      (0, assert_1.strict)(programPath, "Program path not found");
-      const factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
-        (0, types_12.stringLiteral)(`react-native-worklets/generated/${workletHash}.js`)
-      ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
+      const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      let factoryCall;
+      if (state.opts.experimentalBundling) {
+        factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
+          (0, types_12.stringLiteral)(`react-native-worklets/generated/${workletHash}.js`)
+        ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
+      } else {
+        factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
+      }
       addStackTraceDataToWorkletFactory(path, factoryCall);
       const replacement = factoryCall;
       return replacement;
@@ -1663,6 +1722,10 @@ module.exports = function WorkletsBabelPlugin() {
       throw new Error(`[Worklets] Babel plugin exception: ${e}`);
     }
   }
+  function isGeneratedWorkletFile(filename) {
+    var _a;
+    return (_a = filename === null || filename === void 0 ? void 0 : filename.includes(types_1.generatedWorkletsDir)) !== null && _a !== void 0 ? _a : false;
+  }
   return {
     name: "worklets",
     pre() {
@@ -1673,8 +1736,8 @@ module.exports = function WorkletsBabelPlugin() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          var _a;
-          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1687,8 +1750,8 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          var _a;
-          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1698,8 +1761,8 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ObjectExpression: {
         enter(path, state) {
-          var _a;
-          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1709,8 +1772,8 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ClassDeclaration: {
         enter(path, state) {
-          var _a;
-          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1720,8 +1783,8 @@ module.exports = function WorkletsBabelPlugin() {
       },
       Program: {
         enter(path, state) {
-          var _a;
-          if ((_a = state.file.opts.filename) === null || _a === void 0 ? void 0 : _a.includes("generatedWorklets")) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1731,6 +1794,10 @@ module.exports = function WorkletsBabelPlugin() {
       },
       JSXAttribute: {
         enter(path, state) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
+            return;
+          }
           runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }

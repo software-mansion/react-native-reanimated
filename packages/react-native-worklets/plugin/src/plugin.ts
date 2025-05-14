@@ -17,7 +17,7 @@ import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { ReanimatedPluginPass } from './types';
-import { WorkletizableFunction } from './types';
+import { generatedWorkletsDir, WorkletizableFunction } from './types';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
@@ -28,6 +28,10 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     } catch (e) {
       throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
     }
+  }
+
+  function isGeneratedWorkletFile(filename: string | undefined): boolean {
+    return filename?.includes(generatedWorkletsDir) ?? false;
   }
 
   return {
@@ -41,7 +45,8 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     visitor: {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
-          if (state.file.opts.filename?.includes('generatedWorklets')) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -57,7 +62,8 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
-          if (state.file.opts.filename?.includes('generatedWorklets')) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -68,7 +74,8 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       },
       ObjectExpression: {
         enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
-          if (state.file.opts.filename?.includes('generatedWorklets')) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -78,7 +85,8 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       },
       ClassDeclaration: {
         enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
-          if (state.file.opts.filename?.includes('generatedWorklets')) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -88,7 +96,8 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       },
       Program: {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
-          if (state.file.opts.filename?.includes('generatedWorklets')) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -98,6 +107,10 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       },
       JSXAttribute: {
         enter(path: NodePath<JSXAttribute>, state: ReanimatedPluginPass) {
+          if (isGeneratedWorkletFile(state.filename)) {
+            path.skip();
+            return;
+          }
           runWithTaggedExceptions(() =>
             processInlineStylesWarning(path, state)
           );

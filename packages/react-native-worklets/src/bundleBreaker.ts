@@ -2,7 +2,6 @@
 
 import { setupCallGuard } from './initializers';
 import { __valueUnpacker } from './valueUnpacker';
-import { initializeWorkletRegistries } from './workletRegistry';
 
 export function breakBundle() {
   if (globalThis._WORKLET) {
@@ -12,7 +11,6 @@ export function breakBundle() {
     // @ts-expect-error wwwww
     globalThis._BROKEN = true;
 
-    initializeWorkletRegistries();
     setupCallGuard();
     // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error('o kur🐔a');

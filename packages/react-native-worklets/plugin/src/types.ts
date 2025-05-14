@@ -26,6 +26,7 @@ export interface ReanimatedPluginOptions {
   extraPlugins?: string[];
   extraPresets?: string[];
   workletModules?: string[];
+  experimentalBundling?: boolean;
 }
 
 export interface ReanimatedPluginPass {
@@ -86,3 +87,5 @@ export function isWorkletizableObjectNode(
 }
 
 export const workletClassFactorySuffix = '__classFactory';
+
+export const generatedWorkletsDir = '__generatedWorklets';

@@ -1,12 +1,11 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression, Program } from '@babel/types';
+import type { CallExpression } from '@babel/types';
 import {
   callExpression,
   identifier,
   memberExpression,
   stringLiteral,
 } from '@babel/types';
-import { strict as assert } from 'assert';
 
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { makeWorkletFactory } from './workletFactory';
@@ -15,23 +14,26 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): CallExpression {
-  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
-
-  const programPath = path.findParent((ancestorPath) =>
-    ancestorPath.isProgram()
-  ) as NodePath<Program> | null;
-  assert(programPath, 'Program path not found');
-
-  const factoryCall = callExpression(
-    memberExpression(
-      callExpression(identifier('require'), [
-        stringLiteral(`react-native-worklets/generated/${workletHash}.js`),
-      ]),
-      identifier('default')
-    ),
-
-    [factoryCallParamPack]
+  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
+    path,
+    state
   );
+
+  let factoryCall: CallExpression;
+  if (state.opts.experimentalBundling) {
+    factoryCall = callExpression(
+      memberExpression(
+        callExpression(identifier('require'), [
+          stringLiteral(`react-native-worklets/generated/${workletHash}.js`),
+        ]),
+        identifier('default')
+      ),
+
+      [factoryCallParamPack]
+    );
+  } else {
+    factoryCall = callExpression(factory, [factoryCallParamPack]);
+  }
 
   addStackTraceDataToWorkletFactory(path, factoryCall);
 

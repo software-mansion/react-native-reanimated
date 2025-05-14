@@ -1,3 +1,4 @@
+#import <React/NSDataBigString.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -7,7 +8,6 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
-#import <React/NSDataBigString.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
@@ -34,7 +34,8 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
-- (void)setBundleString:(NSData*) bundle {
+- (void)setBundleString:(NSData *)bundle
+{
   bundle_ = std::make_unique<NSDataBigString>(bundle);
 }
 
@@ -71,7 +72,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, jsScheduler, uiScheduler, std::move(forwardedRequestAnimationFrame), std::move(bundle_));
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      jsScheduler,
+      uiScheduler,
+      std::move(forwardedRequestAnimationFrame),
+      std::move(bundle_));
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
