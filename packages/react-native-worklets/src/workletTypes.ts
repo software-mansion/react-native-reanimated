@@ -55,3 +55,8 @@ export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
 > = ((...args: Args) => ReturnValue) & WorkletProps;
+
+export type ValueUnpacker = WorkletFunction<
+  [objectToUnpack: unknown, category?: string],
+  unknown
+>;

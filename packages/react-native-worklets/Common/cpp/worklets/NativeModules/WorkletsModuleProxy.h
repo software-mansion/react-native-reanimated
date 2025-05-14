@@ -19,7 +19,6 @@ class WorkletsModuleProxy
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
-      const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -77,8 +76,12 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
+  [[nodiscard]] inline bool isDevBundle() const {
+    return isDevBundle_;
+  }
+
  private:
-  const std::string valueUnpackerCode_;
+  const bool isDevBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
