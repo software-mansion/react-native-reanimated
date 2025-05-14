@@ -26,9 +26,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           jsScheduler,
           uiScheduler,
-          getForwardedRequestAnimationFrame())) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
-}
+          getForwardedRequestAnimationFrame())) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
@@ -50,6 +48,10 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       jsCallInvoker,
       jsScheduler,
       uiScheduler);
+}
+
+void WorkletsModule::installTurboModuleCpp() {
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
 std::function<void(std::function<void(const double)>)>
@@ -74,6 +76,7 @@ void WorkletsModule::invalidateCpp() {
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+      makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
   });
 }

@@ -50,26 +50,24 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler);
 
+  @OptIn(markerClass = FrameworkAPI.class)
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
+    var jsContext = Objects.requireNonNull(reactContext.getJavaScriptContextHolder()).get();
+    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(reactContext);
+    mHybridData = initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
   }
 
-  @OptIn(markerClass = FrameworkAPI.class)
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
-    var context = getReactApplicationContext();
-    context.assertOnJSQueueThread();
-
-    var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
-    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
-
-    mHybridData =
-        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
+    installTurboModuleCpp();
     return true;
   }
+
+  private native void installTurboModuleCpp();
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);

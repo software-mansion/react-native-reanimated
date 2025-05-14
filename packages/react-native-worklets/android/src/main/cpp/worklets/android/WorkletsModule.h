@@ -45,6 +45,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
+  void installTurboModuleCpp();
+
   void invalidateCpp();
 
   template <class Signature>
