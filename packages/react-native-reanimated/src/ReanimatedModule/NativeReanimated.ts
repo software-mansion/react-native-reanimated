@@ -68,8 +68,11 @@ class NativeReanimatedModule implements IReanimatedModule {
 
     // TODO: remove this call once ReanimatedModule is migrated to TurboModuleWithJSIBindings
     ReanimatedTurboModule?.installTurboModule();
-  
-    if (ReanimatedTurboModule === null || global.__reanimatedModuleProxy === undefined) {
+
+    if (
+      ReanimatedTurboModule === null ||
+      global.__reanimatedModuleProxy === undefined
+    ) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`

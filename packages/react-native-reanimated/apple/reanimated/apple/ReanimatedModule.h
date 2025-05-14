@@ -7,8 +7,11 @@
 
 #import <reanimated/apple/REANodesManager.h>
 
-@interface ReanimatedModule
-    : RCTEventEmitter <NativeReanimatedModuleSpec, RCTTurboModuleWithJSIBindings, RCTEventDispatcherObserver, RCTInvalidating>
+@interface ReanimatedModule : RCTEventEmitter <
+                                  NativeReanimatedModuleSpec,
+                                  RCTTurboModuleWithJSIBindings,
+                                  RCTEventDispatcherObserver,
+                                  RCTInvalidating>
 
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 
