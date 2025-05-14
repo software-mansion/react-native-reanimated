@@ -27,8 +27,8 @@ folly::dynamic CSSTransitionManager::getCurrentFrameProps(
 }
 
 void CSSTransitionManager::update(
-    const ReanimatedViewProps &oldProps,
-    const ReanimatedViewProps &newProps) {
+    const ReanimatedNodeProps &oldProps,
+    const ReanimatedNodeProps &newProps) {
   // updateTransitionInstance(oldProps.cssTransition, newProps.cssTransition);
   // if (transition_) {
   //   // Run transition if at least one of transition properties has changed
