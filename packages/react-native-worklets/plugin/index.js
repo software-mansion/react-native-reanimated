@@ -431,6 +431,55 @@ var require_globals = __commonJS({
   }
 });
 
+// lib/closure.js
+var require_closure = __commonJS({
+  "lib/closure.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.getClosure = void 0;
+    var types_12 = require("@babel/types");
+    var globals_12 = require_globals();
+    function getClosure(funPath, state) {
+      const capturedNames = /* @__PURE__ */ new Set();
+      const closureVariables = new Array();
+      funPath.traverse({
+        "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
+          typePath.skip();
+        },
+        ReferencedIdentifier(idPath) {
+          if (idPath.isJSXIdentifier()) {
+            return;
+          }
+          const name = idPath.node.name;
+          if (capturedNames.has(name)) {
+            return;
+          }
+          if (globals_12.globals.has(name)) {
+            return;
+          }
+          if ("id" in funPath.node) {
+            const id = idPath.scope.getBindingIdentifier(name);
+            if (id && id === funPath.node.id) {
+              return;
+            }
+          }
+          let scope = idPath.scope;
+          while (scope !== funPath.scope.parent) {
+            if (scope.hasOwnBinding(name)) {
+              return;
+            }
+            scope = scope.parent;
+          }
+          capturedNames.add(name);
+          closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+        }
+      }, state);
+      return closureVariables;
+    }
+    exports2.getClosure = getClosure;
+  }
+});
+
 // lib/transform.js
 var require_transform = __commonJS({
   "lib/transform.js"(exports2) {
@@ -640,12 +689,11 @@ var require_workletFactory = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactory = void 0;
-    var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var path_1 = require("path");
-    var globals_12 = require_globals();
+    var closure_1 = require_closure();
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -672,7 +720,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+      const closureVariables = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -801,54 +849,6 @@ var require_workletFactory = __commonJS({
       const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
-    }
-    function makeArrayFromCapturedBindings(ast, fun) {
-      const closure = /* @__PURE__ */ new Map();
-      const isLocationAssignedMap = /* @__PURE__ */ new Map();
-      (0, core_1.traverse)(ast, {
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const name = path.node.name;
-          if (globals_12.globals.has(name)) {
-            return;
-          }
-          if ("id" in fun.node && fun.node.id && fun.node.id.name === name) {
-            return;
-          }
-          const parentNode = path.parent;
-          if ((0, types_12.isMemberExpression)(parentNode) && parentNode.property === path.node && !parentNode.computed) {
-            return;
-          }
-          if ((0, types_12.isObjectProperty)(parentNode) && (0, types_12.isObjectExpression)(path.parentPath.parent) && path.node !== parentNode.value) {
-            return;
-          }
-          let currentScope = path.scope;
-          while (currentScope != null) {
-            if (currentScope.bindings[name] != null) {
-              return;
-            }
-            currentScope = currentScope.parent;
-          }
-          closure.set(name, (0, types_12.cloneNode)(path.node, true));
-          isLocationAssignedMap.set(name, false);
-        }
-      });
-      fun.traverse({
-        Identifier(path) {
-          if (!path.isReferencedIdentifier()) {
-            return;
-          }
-          const node = closure.get(path.node.name);
-          if (!node || isLocationAssignedMap.get(path.node.name)) {
-            return;
-          }
-          node.loc = path.node.loc;
-          isLocationAssignedMap.set(path.node.name, true);
-        }
-      });
-      return Array.from(closure.values());
     }
     var extraPlugins = [
       require.resolve("@babel/plugin-transform-shorthand-properties"),
