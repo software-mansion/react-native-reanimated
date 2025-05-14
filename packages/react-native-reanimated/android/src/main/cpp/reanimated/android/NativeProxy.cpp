@@ -155,7 +155,8 @@ bool NativeProxy::getIsReducedMotion() {
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
-       makeNativeMethod("getBindingsInstaller", NativeProxy::getBindingsInstaller),
+       makeNativeMethod(
+           "getBindingsInstaller", NativeProxy::getBindingsInstaller),
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
