@@ -24,7 +24,7 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import { assertWorkletsVersion } from '../platform-specific/workletsVersion';
-import { isAndroid, shouldBeUseWeb } from '../PlatformChecker';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IReanimatedModule,
@@ -65,12 +65,6 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-
-    // TODO: remove this call once ReanimatedModule is migrated to TurboModuleWithJSIBindings
-    if (isAndroid()) {
-      ReanimatedTurboModule?.installTurboModule();
-    }
-
     if (
       ReanimatedTurboModule === null ||
       global.__reanimatedModuleProxy === undefined

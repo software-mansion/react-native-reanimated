@@ -49,13 +49,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     return mNodesManager;
   }
 
-  // TODO: remove this method
-  @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule() {
-    getReactApplicationContext().assertOnJSQueueThread();
-    return true;
-  }
-
   @NonNull
   @Override
   public BindingsInstallerHolder getBindingsInstaller() {
