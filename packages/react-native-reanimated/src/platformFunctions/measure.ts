@@ -8,7 +8,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
@@ -67,11 +67,6 @@ function measureJest() {
   return null;
 }
 
-function measureChromeDebugger() {
-  logger.warn('measure() cannot be used with Chrome Debugger.');
-  return null;
-}
-
 function measureDefault() {
   logger.warn('measure() is not supported on this configuration.');
   return null;
@@ -84,8 +79,6 @@ if (!shouldBeUseWeb()) {
   measure = measureNative as unknown as Measure;
 } else if (isJest()) {
   measure = measureJest;
-} else if (isChromeDebugger()) {
-  measure = measureChromeDebugger;
 } else {
   measure = measureDefault;
 }
