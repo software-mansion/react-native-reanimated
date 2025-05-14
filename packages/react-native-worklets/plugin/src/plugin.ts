@@ -30,9 +30,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     }
   }
 
-  function isGeneratedWorkletFile(
-    filename: string | undefined
-  ): boolean {
+  function isGeneratedWorkletFile(filename: string | undefined): boolean {
     return filename?.includes(generatedWorkletsDir) ?? false;
   }
 

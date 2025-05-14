@@ -1,91 +1,102 @@
-function getClosure(
-  fun: NodePath<WorkletizableFunction>,
+import type { NodePath } from '@babel/core';
+import type { Binding } from '@babel/traverse';
+import type { Identifier, ImportDeclaration } from '@babel/types';
+import { cloneNode } from '@babel/types';
+
+import { globals } from './globals';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+
+export function getClosure(
+  funPath: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): {
   closureVariables: Identifier[];
   libraryBindingsToImport: Set<Binding>;
   relativeBindingsToImport: Set<Binding>;
 } {
-  const closureVariables = new Set<string>();
+  const capturedNames = new Set<string>();
+  const closureVariables = new Array<Identifier>();
   const libraryBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
-  fun.traverse(
+  funPath.traverse(
     {
-      Identifier(path) {
-        const name = path.node.name;
-        if (!path.isReferencedIdentifier() || path.key === 'typeName') {
+      'TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration'(typePath) {
+        typePath.skip();
+      },
+      ReferencedIdentifier(idPath) {
+        if (idPath.isJSXIdentifier()) {
           return;
         }
 
-        if ('id' in fun.node && fun.node.id && fun.node.id.name === name) {
+        const name = idPath.node.name;
+
+        if (capturedNames.has(name)) {
           return;
         }
-        if (fun.scope.hasOwnBinding(path.node.name)) {
+
+        if (globals.has(name)) {
           return;
         }
-        if (path.scope.hasOwnBinding(path.node.name)) {
+
+        const binding = idPath.scope.getBinding(name);
+        if (!binding) {
+          // Implicitly bound variable from the global scope.
+          capturedNames.add(name);
+          closureVariables.push(cloneNode(idPath.node as Identifier, true));
           return;
         }
-        const binding = fun.scope.getBinding(path.node.name);
-        if (binding) {
-          if (
-            binding.kind === 'module' &&
-            binding.constant &&
-            binding.path.isImportSpecifier() &&
-            binding.path.parentPath.isImportDeclaration() &&
-            state.opts.workletModules?.some(
-              (module) =>
-                (
-                  binding.path.parentPath as NodePath<ImportDeclaration>
-                ).node.source.value.includes(module)
-              // ||
-              // (state.filename!.includes(module) &&
-              //   (
-              //     binding.path.parentPath as NodePath<ImportDeclaration>
-              //   ).node.source.value.startsWith('.'))
-            )
-          ) {
-            console.log(
-              'library binding',
-              name,
-              'id' in fun.node && fun.node.id?.name
-            );
-            libraryBindingsToImport.add(binding);
-          } else if (
-            binding.kind === 'module' &&
-            binding.constant &&
-            binding.path.isImportSpecifier() &&
-            binding.path.parentPath.isImportDeclaration() &&
-            state.opts.workletModules?.some(
-              (module) =>
-                state.filename!.includes(module) &&
-                (
-                  binding.path.parentPath as NodePath<ImportDeclaration>
-                ).node.source.value.startsWith('.')
-            ) // relative import
-          ) {
-            console.log('binding', name, 'id' in fun.node && fun.node.id?.name);
-            relativeBindingsToImport.add(binding);
-          } else {
-            // console.log('closure', name);
-            if (globals.has(name)) {
-              return;
-            }
-            closureVariables.add(name);
+
+        if ('id' in funPath.node) {
+          // We must handle recursion and
+          // not capture the function itself.
+          const id = idPath.scope.getBindingIdentifier(name);
+          if (id && id === funPath.node.id) {
+            return;
           }
         }
+
+        let scope = idPath.scope;
+        while (scope !== funPath.scope.parent) {
+          if (scope.hasOwnBinding(name)) {
+            return;
+          }
+          scope = scope.parent;
+        }
+
+        if (state.opts.experimentalBundling && isImport(binding)) {
+          if (isImportRelative(binding)) {
+            relativeBindingsToImport.add(binding);
+          } else {
+            libraryBindingsToImport.add(binding);
+          }
+          return;
+        }
+
+        capturedNames.add(name);
+        closureVariables.push(cloneNode(idPath.node as Identifier, true));
       },
     },
     state
   );
 
-  const retClosureVariables = Array.from(closureVariables).map((name) =>
-    identifier(name)
-  );
-
   return {
-    closureVariables: retClosureVariables,
+    closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
   };
+}
+
+function isImport(binding: Binding): boolean {
+  return (
+    binding.kind === 'module' &&
+    binding.constant &&
+    binding.path.isImportSpecifier() &&
+    binding.path.parentPath.isImportDeclaration()
+  );
+}
+
+function isImportRelative(binding: Binding): boolean {
+  return (
+    binding.path.parentPath as NodePath<ImportDeclaration>
+  ).node.source.value.startsWith('.');
 }
