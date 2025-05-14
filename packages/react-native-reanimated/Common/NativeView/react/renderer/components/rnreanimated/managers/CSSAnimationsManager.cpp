@@ -32,31 +32,32 @@ folly::dynamic CSSAnimationsManager::getCurrentFrameProps(
 }
 
 void CSSAnimationsManager::update(const ReanimatedViewProps &newProps) {
-  // Parse properties to animation config objects
-  const auto configs = parseAnimationConfigs(newProps.cssAnimations);
-  // Map current animations to their names in order to reuse the same instances
-  // for animations with the same names
-  auto nameToAnimationsMap = createCurrentNameToAnimationsMap();
-  // Build a vector with the new animations
-  animations_ = createNewAnimationsVector(nameToAnimationsMap, configs);
-  // Remove all remaining animations in the map
-  for (const auto &[_, animations] : nameToAnimationsMap) {
-    for (const auto &animation : animations) {
-      removeAnimationOperation(animation);
-    }
-  }
+  // // Parse properties to animation config objects
+  // const auto configs = parseAnimationConfigs(newProps.cssAnimations);
+  // // Map current animations to their names in order to reuse the same
+  // instances
+  // // for animations with the same names
+  // auto nameToAnimationsMap = createCurrentNameToAnimationsMap();
+  // // Build a vector with the new animations
+  // animations_ = createNewAnimationsVector(nameToAnimationsMap, configs);
+  // // Remove all remaining animations in the map
+  // for (const auto &[_, animations] : nameToAnimationsMap) {
+  //   for (const auto &animation : animations) {
+  //     removeAnimationOperation(animation);
+  //   }
+  // }
 }
 
 std::vector<CSSAnimationConfig> CSSAnimationsManager::parseAnimationConfigs(
     const folly::dynamic &cssAnimations) const {
   std::vector<CSSAnimationConfig> animationConfigs;
 
-  if (cssAnimations.isArray()) {
-    animationConfigs.reserve(cssAnimations.size());
-    for (const auto &animationConfig : cssAnimations) {
-      animationConfigs.push_back(parseCSSAnimationConfig(animationConfig));
-    }
-  }
+  // if (cssAnimations.isArray()) {
+  //   animationConfigs.reserve(cssAnimations.size());
+  //   for (const auto &animationConfig : cssAnimations) {
+  //     animationConfigs.push_back(parseCSSAnimationConfig(animationConfig));
+  //   }
+  // }
 
   return animationConfigs;
 }

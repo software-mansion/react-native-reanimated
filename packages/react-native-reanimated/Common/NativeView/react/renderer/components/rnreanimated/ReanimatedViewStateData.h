@@ -25,7 +25,8 @@ class ReanimatedViewStateData {
   std::shared_ptr<CSSAnimationsManager> cssAnimationsManager;
 
   ReanimatedViewStateData();
-  ReanimatedViewStateData(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
+  explicit ReanimatedViewStateData(
+      const std::shared_ptr<ReanimatedModuleProxy> &proxy);
 
 #ifdef ANDROID
   ReanimatedViewStateData(
