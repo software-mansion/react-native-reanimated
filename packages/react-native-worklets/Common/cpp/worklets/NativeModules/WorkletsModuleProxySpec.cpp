@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 
 #include <utility>
@@ -15,6 +16,60 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableClone)(
   return static_cast<WorkletsModuleProxySpec *>(&turboModule)
       ->makeShareableClone(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableString)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableString(rt, std::move(args[0]).asString(rt));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableNumber)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableNumber(rt, std::move(args[0]).asNumber());
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableBoolean)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableBoolean(rt, std::move(args[0]).asBool());
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableBigInt)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableBigInt(rt, std::move(args[0]).asBigInt(rt));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableUndefined)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableUndefined(rt);
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableNull)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableNull(rt);
 }
 
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
@@ -59,6 +114,18 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
     : TurboModule("NativeWorklets", jsInvoker) {
   methodMap_["makeShareableClone"] =
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(makeShareableClone)};
+  methodMap_["makeShareableString"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableString)};
+  methodMap_["makeShareableNumber"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableNumber)};
+  methodMap_["makeShareableBoolean"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBoolean)};
+  methodMap_["makeShareableBigInt"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBigInt)};
+  methodMap_["makeShareableUndefined"] =
+      MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableUndefined)};
+  methodMap_["makeShareableNull"] =
+      MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableNull)};
   methodMap_["scheduleOnUI"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =

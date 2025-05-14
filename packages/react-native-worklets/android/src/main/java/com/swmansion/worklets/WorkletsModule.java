@@ -46,7 +46,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       long jsContext,
-      String valueUnpackerCode,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler);
@@ -60,7 +59,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @OptIn(markerClass = FrameworkAPI.class)
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule(String valueUnpackerCode) {
+  public boolean installTurboModule() {
     var context = getReactApplicationContext();
     context.assertOnJSQueueThread();
 
@@ -68,12 +67,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(
-            jsContext,
-            valueUnpackerCode,
-            mMessageQueueThread,
-            jsCallInvokerHolder,
-            mAndroidUIScheduler);
+        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
     return true;
   }
 
