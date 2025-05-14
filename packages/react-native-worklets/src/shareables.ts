@@ -268,8 +268,8 @@ function cloneObjectProperties<T extends object>(
 
 function cloneInitializer(
   value: object,
-  shouldPersistRemote: boolean,
-  depth: number
+  shouldPersistRemote = false,
+  depth = 0
 ): ShareableRef<object> {
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
@@ -295,16 +295,15 @@ function cloneArray<T extends unknown[]>(
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableArray(
     clonedElements,
-    shouldPersistRemote,
-    value
-  ) as ShareableRef<T>;
+    shouldPersistRemote
+  );
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
-  return clone;
+  return clone as ShareableRef<T>;
 }
 
 function cloneRemoteFunction<T extends object>(value: T): ShareableRef<T> {
@@ -383,7 +382,7 @@ function cloneWorklet<T extends WorkletFunction>(
 function cloneContextObject<T extends object>(value: T): ShareableRef<T> {
   const workletContextObjectFactory = (value as Record<string, unknown>)
     .__workletContextObjectFactory as () => T;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       return workletContextObjectFactory();
@@ -418,7 +417,7 @@ function clonePlainJSObject<T extends object>(
 function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
   const pattern = value.source;
   const flags = value.flags;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       return new RegExp(pattern, flags);
@@ -431,7 +430,7 @@ function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
 
 function cloneError<T extends Error>(value: T): ShareableRef<T> {
   const { name, message, stack } = value;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       // eslint-disable-next-line reanimated/use-worklets-error
@@ -466,7 +465,7 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
 ): ShareableRef<T> {
   const buffer = value.buffer;
   const typeName = value.constructor.name;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
