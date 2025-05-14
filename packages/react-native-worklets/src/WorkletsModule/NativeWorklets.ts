@@ -18,7 +18,7 @@ class NativeWorklets {
   #shareableNull: ShareableRef<null>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -43,6 +43,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
   }
 
   makeShareableString(str: string) {

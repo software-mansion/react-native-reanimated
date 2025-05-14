@@ -13,6 +13,7 @@ import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
+  WorkletImport,
 } from './workletTypes';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
@@ -37,6 +38,7 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 }
 
 function getFromCache(value: object) {
+  'worklet';
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
@@ -158,6 +160,21 @@ function makeShareableCloneRecursiveNative<T>(
 
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
+  }
+  if (
+    // eslint-disable-next-line no-constant-condition
+    false /* disable it for now */ &&
+    isFunction &&
+    (value as WorkletImport).__bundleData
+  ) {
+    const bundleData = (value as WorkletImport).__bundleData;
+    const clone = WorkletsModule.makeShareableImport(
+      bundleData.source,
+      bundleData.imported
+    );
+    shareableMappingCache.set(value as object, clone);
+    shareableMappingCache.set(clone);
+    return clone as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value, shouldPersistRemote);
