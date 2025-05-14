@@ -484,16 +484,13 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
 function cloneImport<TValue extends WorkletImport>(
   value: TValue
 ): ShareableRef<TValue> {
-  const {source, imported} = value.__bundleData;
-  const clone = WorkletsModule.makeShareableImport(
-    source,
-    imported
-  ) as ShareableRef<TValue>;
-    
+  const { source, imported } = value.__bundleData;
+  const clone = WorkletsModule.makeShareableImport(source, imported);
+
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
-  return clone;
+  return clone as ShareableRef<TValue>;
 }
 
 function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
