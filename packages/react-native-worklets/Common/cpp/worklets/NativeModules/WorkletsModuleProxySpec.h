@@ -53,7 +53,7 @@ class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
   virtual jsi::Value makeShareableInitializer(
       jsi::Runtime &rt,
       const jsi::Object &initializerObject) = 0;
-      
+
   virtual jsi::Value makeShareableUndefined(jsi::Runtime &rt) = 0;
 
   virtual jsi::Value makeShareableNull(jsi::Runtime &rt) = 0;

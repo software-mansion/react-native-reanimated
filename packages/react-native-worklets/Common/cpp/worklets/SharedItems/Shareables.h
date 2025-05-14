@@ -169,7 +169,7 @@ jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value);
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
-    
+
 jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);

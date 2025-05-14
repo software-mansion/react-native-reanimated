@@ -61,7 +61,7 @@ class WorkletsModuleProxy
   jsi::Value makeShareableInitializer(
       jsi::Runtime &rt,
       const jsi::Object &initializerObject) override;
-      
+
   jsi::Value makeShareableUndefined(jsi::Runtime &rt) override;
 
   jsi::Value makeShareableNull(jsi::Runtime &rt) override;
