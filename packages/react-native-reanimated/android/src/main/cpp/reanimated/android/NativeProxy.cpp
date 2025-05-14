@@ -32,10 +32,15 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           getPlatformDependentMethods(),
           getIsReducedMotion())) {
+#ifndef NDEBUG
+  checkJavaVersion();
+  injectCppVersion();
+#endif // NDEBUG
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
   reanimatedModuleProxy_->initializeFabric(uiManager);
+  registerEventHandler();
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
   //     [reanimatedModuleProxy,
@@ -76,7 +81,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 #ifndef NDEBUG
-void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+void NativeProxy::checkJavaVersion() {
   std::string javaVersion;
   try {
     javaVersion =
@@ -121,12 +126,6 @@ void NativeProxy::installJSIBindings() {
       rnRuntime,
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
       reanimatedModuleProxy_);
-#ifndef NDEBUG
-  checkJavaVersion(rnRuntime);
-  injectCppVersion();
-#endif // NDEBUG
-
-  registerEventHandler();
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
