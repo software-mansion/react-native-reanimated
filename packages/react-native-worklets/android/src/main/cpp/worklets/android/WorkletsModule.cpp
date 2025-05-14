@@ -50,10 +50,6 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
-void WorkletsModule::installTurboModuleCpp() {
-  // TODO: remove this method
-}
-
 std::function<void(std::function<void(const double)>)>
 WorkletsModule::getForwardedRequestAnimationFrame() {
   return [javaPart =
@@ -77,7 +73,6 @@ void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("getBindingsInstallerCpp", WorkletsModule::getBindingsInstallerCpp),
-      makeNativeMethod("installTurboModuleCpp", WorkletsModule::installTurboModuleCpp),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
   });
 }

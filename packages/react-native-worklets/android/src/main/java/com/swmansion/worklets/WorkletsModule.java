@@ -6,7 +6,6 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
@@ -63,14 +62,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(reactContext);
     mHybridData = initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
   }
-
-  @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule() {
-    installTurboModuleCpp();
-    return true;
-  }
-
-  private native void installTurboModuleCpp();
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
