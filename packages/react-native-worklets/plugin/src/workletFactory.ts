@@ -1,11 +1,8 @@
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
-  File as BabelFile,
   FunctionExpression,
-  Identifier,
   ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
@@ -22,10 +19,7 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  isMemberExpression,
-  isObjectExpression,
   isObjectMethod,
-  isObjectProperty,
   memberExpression,
   newExpression,
   numericLiteral,
@@ -41,7 +35,7 @@ import {
 import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
-import { globals } from './globals';
+import { getClosure } from './closure';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
@@ -94,7 +88,7 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const closureVariables = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -424,91 +418,6 @@ function makeWorkletName(
   reactName = reactName || toIdentifier(suffix);
 
   return { workletName, reactName };
-}
-
-function makeArrayFromCapturedBindings(
-  ast: BabelFile,
-  fun: NodePath<WorkletizableFunction>
-): Identifier[] {
-  const closure = new Map<string, Identifier>();
-  const isLocationAssignedMap = new Map<string, boolean>();
-
-  // this traversal looks for variables to capture
-  traverse(ast, {
-    Identifier(path) {
-      // we only capture variables that were declared outside of the scope
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (globals.has(name)) {
-        return;
-      }
-      if (
-        'id' in fun.node &&
-        fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's own name
-      ) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, cloneNode(path.node, true));
-      isLocationAssignedMap.set(name, false);
-    },
-  });
-
-  /*
-  For reasons I don't exactly understand, the above traversal will cause the whole 
-  bundle to crash if we traversed original node instead of generated
-  AST. This is why we need to traverse it again, but this time we set
-  location for each identifier that was captured to their original counterpart, since
-  AST has its location set relative as if it was a separate file.
-  */
-  fun.traverse({
-    Identifier(path) {
-      // So it won't refer to something like:
-      // const obj = {unexistingVariable: 1};
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const node = closure.get(path.node.name);
-      if (!node || isLocationAssignedMap.get(path.node.name)) {
-        return;
-      }
-      node.loc = path.node.loc;
-      isLocationAssignedMap.set(path.node.name, true);
-    },
-  });
-
-  return Array.from(closure.values());
 }
 
 const extraPlugins = [
