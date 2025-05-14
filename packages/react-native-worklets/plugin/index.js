@@ -903,9 +903,9 @@ var require_workletFactory = __commonJS({
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
       fun.traverse({
-        DirectiveLiteral(nodePath) {
-          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
-            nodePath.parentPath.remove();
+        DirectiveLiteral(path) {
+          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
+            path.parentPath.remove();
           }
         }
       });
