@@ -297,7 +297,16 @@ export function makeWorkletFactory(
 
   const factoryParams = [
     cloneNode(initDataId, true),
-    ...closureVariables.map((variableId) => cloneNode(variableId, true)),
+    ...closureVariables.map((variableId) => {
+      const clonedId = cloneNode(variableId, true);
+      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
+        clonedId.name = clonedId.name.slice(
+          0,
+          clonedId.name.length - workletClassFactorySuffix.length
+        );
+      }
+      return clonedId;
+    }),
   ];
 
   const factoryParamObjectPattern = objectPattern(
@@ -317,19 +326,7 @@ export function makeWorkletFactory(
     blockStatement(statements)
   );
 
-  const factoryCallArgs = [
-    identifier(initDataId.name),
-    ...closureVariables.map((variableId) => {
-      const clonedId = cloneNode(variableId, true);
-      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
-        clonedId.name = clonedId.name.slice(
-          0,
-          clonedId.name.length - workletClassFactorySuffix.length
-        );
-      }
-      return clonedId;
-    }),
-  ];
+  const factoryCallArgs = factoryParams.map((param) => cloneNode(param, true));
 
   const factoryCallParamPack = objectExpression(
     factoryCallArgs.map((param) =>

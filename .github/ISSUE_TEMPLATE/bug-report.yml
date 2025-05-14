@@ -166,6 +166,6 @@ body:
       label: Acknowledgements
       description: I searched for similar issues in the repository.
       options:
-        - "Yes"
+        - 'Yes'
     validations:
       required: true

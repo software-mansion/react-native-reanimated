@@ -4125,7 +4125,7 @@ exports[`babel plugin for worklet classes injects class factory into worklets 1`
 };
 var foo = function foo_null1Factory(_ref) {
   var _worklet_3370991485663_init_data = _ref._worklet_3370991485663_init_data,
-    Clazz__classFactory = _ref.Clazz__classFactory;
+    Clazz = _ref.Clazz;
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
@@ -4358,7 +4358,7 @@ exports[`babel plugin for worklet classes modifies closures 1`] = `
 };
 var foo = function foo_null1Factory(_ref) {
   var _worklet_3370991485663_init_data = _ref._worklet_3370991485663_init_data,
-    Clazz__classFactory = _ref.Clazz__classFactory;
+    Clazz = _ref.Clazz;
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
