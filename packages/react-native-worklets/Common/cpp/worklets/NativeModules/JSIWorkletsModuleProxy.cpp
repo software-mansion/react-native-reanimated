@@ -116,6 +116,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableBoolean"));
   propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableImport"));
+  propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableNull"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableNumber"));
@@ -173,6 +175,19 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           return makeShareableBoolean(rt, args[0].asBool());
+        });
+  }
+  if (name == "makeShareableImport") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableImport(
+              rt, args[0].asString(rt), args[1].asString(rt));
         });
   }
   if (name == "makeShareableNumber") {
