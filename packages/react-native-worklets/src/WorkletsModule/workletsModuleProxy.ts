@@ -32,6 +32,10 @@ export interface WorkletsModuleProxy {
   makeShareableHostObject<T extends object>(hostObject: T): ShareableRef<T>;
 
   makeShareableInitializer(initializer: object): ShareableRef<object>;
+  
+  makeShareableUndefined(): ShareableRef<undefined>;
+
+  makeShareableNull(): ShareableRef<null>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
