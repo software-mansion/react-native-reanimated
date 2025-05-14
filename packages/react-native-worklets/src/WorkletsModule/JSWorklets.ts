@@ -50,7 +50,7 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeShareableUndefined(): never {
+  makeShareableUndefined(): ShareableRef<undefined> {
     throw new WorkletsError(
       'makeShareableUndefined should never be called in JSWorklets.'
     );
