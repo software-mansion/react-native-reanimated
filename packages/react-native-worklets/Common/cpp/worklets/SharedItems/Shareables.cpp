@@ -148,17 +148,15 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
 jsi::Value makeShareableArrayOfNumbers(
     jsi::Runtime &rt,
     const jsi::Array &array) {
-  auto size = array.size(rt);
-  auto shareableArray = jsi::Array(rt, size);
+  const auto size = array.size(rt);
+  std::vector<std::shared_ptr<Shareable>> data;
+  data.reserve(size);
   for (size_t i = 0; i < size; i++) {
-    auto shareableNumber = std::make_shared<ShareableScalar>(
-        array.getValueAtIndex(rt, i).getNumber());
-    shareableArray.setValueAtIndex(
-        rt, i, ShareableJSRef::newHostObject(rt, shareableNumber));
+    data.emplace_back(std::make_shared<ShareableScalar>(
+        array.getValueAtIndex(rt, i).getNumber()));
   }
-
-  auto shareable = std::make_shared<ShareableArray>(rt, shareableArray);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newHostObject(
+      rt, std::make_shared<ShareableArray>(std::move(data)));
 }
 
 jsi::Value makeShareableArrayOfStrings(

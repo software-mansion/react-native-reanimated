@@ -189,6 +189,9 @@ class ShareableArray : public Shareable {
  public:
   ShareableArray(jsi::Runtime &rt, const jsi::Array &array);
 
+  ShareableArray(std::vector<std::shared_ptr<Shareable>> &&data)
+      : Shareable(ArrayType), data_(data) {}
+
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
