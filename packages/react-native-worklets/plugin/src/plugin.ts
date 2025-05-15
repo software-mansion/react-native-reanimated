@@ -21,17 +21,17 @@ import { WorkletizableFunction } from './types';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
-module.exports = function (): PluginItem {
+module.exports = function WorkletsBabelPlugin(): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Reanimated] Babel plugin exception: ${e as string}`);
+      throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
     }
   }
 
   return {
-    name: 'reanimated',
+    name: 'worklets',
 
     pre(this: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {

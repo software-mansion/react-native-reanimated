@@ -92,6 +92,7 @@ import PlanetsExample from './PlanetsExample';
 import RainbowExample from './RainbowExample';
 import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
+import RunOnUIAsyncExample from './RunOnUIAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
@@ -143,6 +144,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
+  },
+  RunOnUIAsyncExample: {
+    icon: '👷‍♂️',
+    title: 'runOnUIAsync',
+    screen: RunOnUIAsyncExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',

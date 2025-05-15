@@ -1,4 +1,4 @@
-#import <reanimated/apple/native/NativeMethods.h>
+#import <reanimated/apple/native/SetGestureState.h>
 
 namespace reanimated {
 

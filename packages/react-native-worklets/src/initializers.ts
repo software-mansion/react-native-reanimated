@@ -16,6 +16,7 @@ import {
   shouldBeUseWeb,
 } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
+import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
 
@@ -45,6 +46,16 @@ if (SHOULD_BE_USE_WEB) {
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
 } else {
+  if (__DEV__) {
+    const testWorklet = () => {
+      'worklet';
+    };
+    if (!isWorkletFunction(testWorklet)) {
+      throw new WorkletsError(
+        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      );
+    }
+  }
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
