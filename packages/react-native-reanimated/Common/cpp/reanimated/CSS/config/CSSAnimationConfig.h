@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 #include <folly/dynamic.h>
 #include <memory>
@@ -20,7 +20,7 @@ enum class AnimationPlayState { Running, Paused };
 
 struct CSSAnimationSettings {
   double duration;
-  Easing easing;
+  std::shared_ptr<Easing> easing;
   double delay;
   double iterationCount;
   AnimationDirection direction;
@@ -30,7 +30,7 @@ struct CSSAnimationSettings {
 
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
-  std::optional<Easing> easing;
+  std::optional<std::shared_ptr<Easing>> easing;
   std::optional<double> delay;
   std::optional<double> iterationCount;
   std::optional<AnimationDirection> direction;

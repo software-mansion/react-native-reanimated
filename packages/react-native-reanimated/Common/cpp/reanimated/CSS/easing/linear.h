@@ -12,8 +12,8 @@ class LinearEasing : public EasingBase<EasingType::Linear> {
  public:
   LinearEasing(std::vector<double> pointsX, std::vector<double> pointsY);
 
-  double calculate(double t) const override;
-  bool operator==(const EasingBase<EasingType::Linear> &other) const;
+  double calculate(double x) const override;
+  bool operator==(const EasingBase<EasingType::Linear> &other) const override;
 
  private:
   const std::vector<double> pointsX_;
@@ -21,5 +21,9 @@ class LinearEasing : public EasingBase<EasingType::Linear> {
 
   double interpolateValue(double x, std::size_t leftIdx) const;
 };
+
+std::shared_ptr<LinearEasing> linear(
+    std::vector<double> pointsX,
+    std::vector<double> pointsY);
 
 } // namespace reanimated::css

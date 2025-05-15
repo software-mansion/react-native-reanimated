@@ -8,17 +8,18 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
-    const Easing &easing)
-    : RawProgressProvider(timestamp, duration, delay), easing_(easing) {}
+    std::shared_ptr<Easing> easing)
+    : RawProgressProvider(timestamp, duration, delay),
+      easing_(std::move(easing)) {}
 
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
-    const Easing &easing,
+    std::shared_ptr<Easing> easing,
     const double reversingShorteningFactor)
     : RawProgressProvider(timestamp, duration, delay),
-      easing_(easing),
+      easing_(std::move(easing)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
 
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
@@ -31,7 +32,7 @@ double TransitionPropertyProgressProvider::getKeyframeProgress(
   if (fromOffset == toOffset) {
     return 1;
   }
-  return easing_.calculate(getGlobalProgress());
+  return easing_->calculate(getGlobalProgress());
 }
 
 double TransitionPropertyProgressProvider::getRemainingDelay(

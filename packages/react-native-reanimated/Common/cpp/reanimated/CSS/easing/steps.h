@@ -12,12 +12,16 @@ class StepsEasing : public EasingBase<EasingType::Steps> {
  public:
   StepsEasing(std::vector<double> pointsX, std::vector<double> pointsY);
 
-  double calculate(double t) const override;
-  bool operator==(const EasingBase<EasingType::Steps> &other) const;
+  double calculate(double x) const override;
+  bool operator==(const EasingBase<EasingType::Steps> &other) const override;
 
  private:
   const std::vector<double> pointsX_;
   const std::vector<double> pointsY_;
 };
+
+std::shared_ptr<StepsEasing> steps(
+    std::vector<double> pointsX,
+    std::vector<double> pointsY);
 
 } // namespace reanimated::css

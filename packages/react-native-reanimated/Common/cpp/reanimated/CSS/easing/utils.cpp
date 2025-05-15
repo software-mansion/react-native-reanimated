@@ -1,29 +1,33 @@
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 namespace reanimated::css {
 
-inline const std::unordered_map<std::string, Easing> PREDEFINED_EASING_MAP = {
-    {"linear", [](double x) { return x; }},
-    {"ease", CubicBezierEasing(0.25, 0.1, 0.25, 0.1)},
-    {"ease-in", CubicBezierEasing(0.42, 0.0, 1.0, 1.0)},
-    {"ease-out", CubicBezierEasing(0.0, 0.0, 0.58, 1.0)},
-    {"ease-in-out", CubicBezierEasing(0.42, 0.0, 0.58, 1.0)},
-    {"step-start", StepsEasing(std::vector<double>{0}, std::vector<double>{1})},
-    {"step-end",
-     StepsEasing(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
+inline const std::unordered_map<std::string, std::shared_ptr<Easing>>
+    PREDEFINED_EASING_MAP = {
+        {"linear",
+         linear(std::vector<double>{0, 1}, std::vector<double>{0, 1})},
+        {"ease", cubicBezier(0.25, 0.1, 0.25, 0.1)},
+        {"ease-in", cubicBezier(0.42, 0.0, 1.0, 1.0)},
+        {"ease-out", cubicBezier(0.0, 0.0, 0.58, 1.0)},
+        {"ease-in-out", cubicBezier(0.42, 0.0, 0.58, 1.0)},
+        {"step-start", steps(std::vector<double>{0}, std::vector<double>{1})},
+        {"step-end",
+         steps(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
 
-Easing createEasingFunction(jsi::Runtime &rt, const jsi::Value &easingConfig) {
+std::shared_ptr<Easing> createEasing(
+    jsi::Runtime &rt,
+    const jsi::Value &easingConfig) {
   if (easingConfig.isString()) {
-    return getPredefinedEasingFunction(easingConfig.asString(rt).utf8(rt));
+    return getPredefinedEasing(easingConfig.asString(rt).utf8(rt));
   } else if (easingConfig.isObject()) {
-    return createParametrizedEasingFunction(rt, easingConfig.asObject(rt));
+    return createParametrizedEasing(rt, easingConfig.asObject(rt));
   } else {
     throw std::runtime_error(
         std::string("[Reanimated] Invalid easing function"));
   }
 }
 
-Easing getPredefinedEasingFunction(const std::string &name) {
+std::shared_ptr<Easing> getPredefinedEasing(const std::string &name) {
   auto it = PREDEFINED_EASING_MAP.find(name);
   if (it != PREDEFINED_EASING_MAP.end()) {
     return it->second;
@@ -34,14 +38,14 @@ Easing getPredefinedEasingFunction(const std::string &name) {
   }
 }
 
-Easing createParametrizedEasingFunction(
+std::shared_ptr<Easing> createParametrizedEasing(
     jsi::Runtime &rt,
     const jsi::Object &easingConfig) {
   const auto easingName =
       easingConfig.getProperty(rt, "name").asString(rt).utf8(rt);
 
   if (easingName == "cubicBezier") {
-    return CubicBezierEasing(rt, easingConfig);
+    return cubicBezier(rt, easingConfig);
   }
 
   std::vector<double> pointsX;
@@ -58,9 +62,9 @@ Easing createParametrizedEasingFunction(
   }
 
   if (easingName == "linear") {
-    return LinearEasing(pointsX, pointsY);
+    return linear(pointsX, pointsY);
   } else if (easingName == "steps") {
-    return StepsEasing(pointsX, pointsY);
+    return steps(pointsX, pointsY);
   } else {
     throw std::runtime_error(std::string(
         "[Reanimated] Parametrized easing function with name '" + easingName +

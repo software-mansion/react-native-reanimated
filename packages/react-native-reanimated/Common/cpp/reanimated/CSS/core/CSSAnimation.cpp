@@ -16,7 +16,7 @@ CSSAnimation::CSSAnimation(
       config.iterationCount,
       config.direction,
       config.easing,
-      keyframesConfig.keyframeEasingFunctions);
+      keyframesConfig.keyframeEasings);
 
   styleInterpolator_ = keyframesConfig.styleInterpolator;
 
@@ -100,7 +100,7 @@ void CSSAnimation::updateSettings(
     progressProvider_->setDuration(updatedSettings.duration.value());
   }
   if (updatedSettings.easing.has_value()) {
-    progressProvider_->setEasingFunction(updatedSettings.easing.value());
+    progressProvider_->setEasing(updatedSettings.easing.value());
   }
   if (updatedSettings.delay.has_value()) {
     progressProvider_->setDelay(updatedSettings.delay.value());
@@ -133,7 +133,7 @@ bool CSSAnimation::updateSettings(
   const auto oldState = progressProvider_->getState();
 
   progressProvider_->setDuration(settings.duration);
-  progressProvider_->setEasingFunction(settings.easing);
+  progressProvider_->setEasing(settings.easing);
   progressProvider_->setDelay(settings.delay);
   progressProvider_->setIterationCount(settings.iterationCount);
   progressProvider_->setDirection(settings.direction);

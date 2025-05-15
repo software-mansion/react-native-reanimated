@@ -2,7 +2,11 @@
 
 namespace reanimated::css {
 
-CubicBezierEasing::CubicBezierEasing(double x1, double y1, double x2, double y2)
+CubicBezierEasing::CubicBezierEasing(
+    const double x1,
+    const double y1,
+    const double x2,
+    const double y2)
     : x1_(x1), y1_(y1), x2_(x2), y2_(y2) {}
 
 CubicBezierEasing::CubicBezierEasing(
@@ -13,22 +17,23 @@ CubicBezierEasing::CubicBezierEasing(
       x2_(easingConfig.getProperty(rt, "x2").asNumber()),
       y2_(easingConfig.getProperty(rt, "y2").asNumber()) {}
 
-double CubicBezierEasing::sampleCurveX(double t) const {
+double CubicBezierEasing::sampleCurveX(const double t) const {
   return 3 * (1 - t) * (1 - t) * t * x1_ + 3 * (1 - t) * t * t * x2_ +
       t * t * t;
 }
 
-double CubicBezierEasing::sampleCurveY(double t) const {
+double CubicBezierEasing::sampleCurveY(const double t) const {
   return 3 * (1 - t) * (1 - t) * t * y1_ + 3 * (1 - t) * t * t * y2_ +
       t * t * t;
 }
 
-double CubicBezierEasing::sampleCurveDerivativeX(double t) const {
+double CubicBezierEasing::sampleCurveDerivativeX(const double t) const {
   return -6 * (1 - t) * t * x1_ + 3 * (1 - t) * (1 - t) * x1_ +
       6 * (1 - t) * t * x2_ - 6 * t * t * x2_ + 3 * t * t;
 }
 
-double CubicBezierEasing::solveCurveX(double x, double epsilon) const {
+double CubicBezierEasing::solveCurveX(const double x, const double epsilon)
+    const {
   double t0 = 0.0, t1 = 1.0, t2 = x, xValue, dX;
   int iterations = 0;
 
@@ -62,9 +67,8 @@ double CubicBezierEasing::solveCurveX(double x, double epsilon) const {
   return t2;
 }
 
-double CubicBezierEasing::calculate(double x) const {
-  double t = solveCurveX(x);
-  return sampleCurveY(t);
+double CubicBezierEasing::calculate(const double t) const {
+  return sampleCurveY(solveCurveX(t));
 }
 
 bool CubicBezierEasing::operator==(
@@ -72,6 +76,20 @@ bool CubicBezierEasing::operator==(
   const auto &otherCubic = static_cast<const CubicBezierEasing &>(other);
   return x1_ == otherCubic.x1_ && y1_ == otherCubic.y1_ &&
       x2_ == otherCubic.x2_ && y2_ == otherCubic.y2_;
+}
+
+std::shared_ptr<CubicBezierEasing> cubicBezier(
+    const double x1,
+    const double y1,
+    const double x2,
+    const double y2) {
+  return std::make_shared<CubicBezierEasing>(x1, y1, x2, y2);
+}
+
+std::shared_ptr<CubicBezierEasing> cubicBezier(
+    jsi::Runtime &rt,
+    const jsi::Object &easingConfig) {
+  return std::make_shared<CubicBezierEasing>(rt, easingConfig);
 }
 
 } // namespace reanimated::css

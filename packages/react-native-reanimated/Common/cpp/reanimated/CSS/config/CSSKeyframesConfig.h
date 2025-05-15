@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
@@ -9,11 +9,11 @@
 
 namespace reanimated::css {
 
-using KeyframeEasings = std::unordered_map<double, Easing>;
+using KeyframeEasings = std::unordered_map<double, std::shared_ptr<Easing>>;
 
 struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
-  std::shared_ptr<KeyframeEasings> keyframeEasingFunctions;
+  std::shared_ptr<KeyframeEasings> keyframeEasings;
 };
 
 std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(

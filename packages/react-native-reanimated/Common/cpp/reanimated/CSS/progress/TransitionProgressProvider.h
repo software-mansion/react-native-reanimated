@@ -26,12 +26,12 @@ class TransitionPropertyProgressProvider final
       double timestamp,
       double duration,
       double delay,
-      const Easing &easing);
+      std::shared_ptr<Easing> easing);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
-      const Easing &easing,
+      std::shared_ptr<Easing> easing,
       double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
@@ -44,7 +44,7 @@ class TransitionPropertyProgressProvider final
   std::optional<double> calculateRawProgress(double timestamp) override;
 
  private:
-  Easing easing_;
+  std::shared_ptr<Easing> easing_;
   double reversingShorteningFactor_ = 1;
 
   double getElapsedTime(double timestamp) const;
