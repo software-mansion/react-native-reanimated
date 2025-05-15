@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Shareables.h>
 
 using namespace facebook;
@@ -81,7 +82,16 @@ jsi::Value makeShareableClone(
       shareable =
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+      auto getPrototypeOf = rt.global()
+                                .getProperty(rt, "Object")
+                                .asObject(rt)
+                                .getPropertyAsFunction(rt, "getPrototypeOf");
+      auto objectPrototype = getPrototypeOf.call(rt, object).asObject(rt);
+
+      if (objectPrototype.isHostObject(rt)) {
+        shareable = std::make_shared<ShareableTurboModuleLike>(
+            rt, object, objectPrototype.getHostObject(rt));
+      } else if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
             rt, object, nativeStateSource);
       } else {
@@ -265,6 +275,35 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
   return jsi::Object::createFromHostObject(rt, hostObject_);
+}
+
+ShareableTurboModuleLike::ShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto)
+    : Shareable(TurboModuleObjectLikeType) {
+  // We must get rid of the Host Object prototype as `ShareableObject` expects
+  // the prototype to be that of a plain object.
+  auto setPrototypeOf = rt.global()
+                            .getPropertyAsObject(rt, "Object")
+                            .getPropertyAsFunction(rt, "setPrototypeOf");
+  auto emptyObject = jsi::Object(rt);
+  setPrototypeOf.call(rt, object, emptyObject);
+
+  proto_ = std::make_unique<ShareableHostObject>(rt, proto);
+  properties_ = std::make_unique<ShareableObject>(rt, object);
+}
+
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
+  jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
+
+  auto prototype = proto_->toJSValue(rt);
+  auto setPrototypeOf = rt.global()
+                            .getPropertyAsObject(rt, "Object")
+                            .getPropertyAsFunction(rt, "setPrototypeOf");
+  setPrototypeOf.call(rt, obj, prototype);
+
+  return obj;
 }
 
 jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {

@@ -82,6 +82,7 @@ class Shareable {
     RemoteFunctionType,
     HandleType,
     HostObjectType,
+    TurboModuleObjectLikeType,
     HostFunctionType,
     ArrayBufferType,
   };
@@ -212,8 +213,26 @@ class ShareableHostObject : public Shareable {
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
+  std::shared_ptr<jsi::HostObject> getHostObject() const {
+    return hostObject_;
+  }
+
  protected:
   const std::shared_ptr<jsi::HostObject> hostObject_;
+};
+
+class ShareableTurboModuleLike : public Shareable {
+ public:
+  ShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const std::shared_ptr<jsi::HostObject> &proto);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::unique_ptr<ShareableHostObject> proto_;
+  std::unique_ptr<ShareableObject> properties_;
 };
 
 class ShareableHostFunction : public Shareable {
