@@ -25,6 +25,11 @@ NativeProxy::NativeProxy(
       workletsModuleProxy_(jWorkletsModule->cthis()->getWorkletsModuleProxy()),
       uiManager_(
           fabricUIManager->getBinding()->getScheduler()->getUIManager()) {
+#ifndef NDEBUG
+  checkJavaVersion();
+  injectCppVersion();
+#endif // NDEBUG
+  registerEventHandler();
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
   //     [reanimatedModuleProxy,
@@ -34,11 +39,6 @@ NativeProxy::NativeProxy(
   //     });
   // reactScheduler_ = binding->getScheduler();
   // reactScheduler_->addEventListener(eventListener_);
-  registerEventHandler();
-#ifndef NDEBUG
-  checkJavaVersion();
-  injectCppVersion();
-#endif // NDEBUG
 }
 
 NativeProxy::~NativeProxy() {

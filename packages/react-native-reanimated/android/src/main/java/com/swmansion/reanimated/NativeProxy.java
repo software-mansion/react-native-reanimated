@@ -84,7 +84,9 @@ public class NativeProxy {
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
     mHybridData = initHybrid(workletsModule, fabricUIManager);
-    checkCppVersion();
+    if (BuildConfig.DEBUG) {
+      checkCppVersion(); // injectCppVersion should be called during initHybrid above
+    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
