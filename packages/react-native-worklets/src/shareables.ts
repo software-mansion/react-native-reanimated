@@ -253,6 +253,62 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
+  let arrayType: 'string' | 'number' | 'mixed' = 'mixed';
+
+  for (const element of value) {
+    if (arrayType === 'mixed') {
+      // If it's already determined to be mixed, no further checks are needed.
+      break;
+    }
+
+    const elementType = typeof element;
+
+    switch (arrayType) {
+      case undefined: // Or any other initial state representing "unknown"
+        // This block effectively handles the first element encountered or
+        // if arrayType hasn't been definitively set to 'string' or 'number' yet.
+        if (elementType === 'string') {
+          arrayType = 'string';
+        } else if (elementType === 'number') {
+          arrayType = 'number';
+        } else {
+          // First encountered element is neither string nor number.
+          arrayType = 'mixed';
+        }
+        break;
+      case 'string':
+        // Previously, all encountered elements were strings.
+        if (elementType !== 'string') {
+          // Current element is not a string, so the array is mixed.
+          arrayType = 'mixed';
+        }
+        // If elementType is 'string', arrayType remains 'string'.
+        break;
+      case 'number':
+        // Previously, all encountered elements were numbers.
+        if (elementType !== 'number') {
+          // Current element is not a number, so the array is mixed.
+          arrayType = 'mixed';
+        }
+        // If elementType is 'number', arrayType remains 'number'.
+        break;
+      // No default needed: if arrayType became 'mixed' in a previous iteration,
+      // the check at the top of the loop (if (arrayType === 'mixed')) would cause a break.
+    }
+  }
+
+  if (arrayType === 'string' || arrayType === 'number') {
+    const clone =
+      arrayType === 'string'
+        ? WorkletsModule.makeShareableArrayOfStrings(value as string[])
+        : WorkletsModule.makeShareableArrayOfNumbers(value as number[]);
+    shareableMappingCache.set(value, clone);
+    shareableMappingCache.set(clone);
+
+    freezeObjectInDev(value);
+    return clone as ShareableRef<T>;
+  }
+
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );

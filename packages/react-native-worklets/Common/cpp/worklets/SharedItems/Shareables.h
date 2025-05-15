@@ -157,6 +157,14 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableArrayOfNumbers(
+    jsi::Runtime &rt,
+    const jsi::Array &array);
+
+jsi::Value makeShareableArrayOfStrings(
+    jsi::Runtime &rt,
+    const jsi::Array &array);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

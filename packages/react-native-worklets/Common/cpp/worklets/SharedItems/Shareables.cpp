@@ -145,6 +145,37 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableArrayOfNumbers(
+    jsi::Runtime &rt,
+    const jsi::Array &array) {
+  auto size = array.size(rt);
+  auto shareableArray = jsi::Array(rt, size);
+  for (size_t i = 0; i < size; i++) {
+    auto shareableNumber = std::make_shared<ShareableScalar>(
+        array.getValueAtIndex(rt, i).getNumber());
+    shareableArray.setValueAtIndex(
+        rt, i, ShareableJSRef::newHostObject(rt, shareableNumber));
+  }
+
+  auto shareable = std::make_shared<ShareableArray>(rt, shareableArray);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableArrayOfStrings(
+    jsi::Runtime &rt,
+    const jsi::Array &array) {
+  auto size = array.size(rt);
+  auto shareableArray = jsi::Array(rt, size);
+  for (size_t i = 0; i < size; i++) {
+    auto string = array.getValueAtIndex(rt, i).asString(rt);
+    auto shareableString = std::make_shared<ShareableString>(string.utf8(rt));
+    shareableArray.setValueAtIndex(
+        rt, i, ShareableJSRef::newHostObject(rt, shareableString));
+  }
+  auto shareable = std::make_shared<ShareableArray>(rt, shareableArray);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
