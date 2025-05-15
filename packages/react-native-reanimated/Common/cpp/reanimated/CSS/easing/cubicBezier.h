@@ -3,6 +3,9 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/easing/common.h>
 
+#include <jsi/jsi.h>
+#include <memory>
+
 namespace reanimated::css {
 
 class CubicBezierEasing : public EasingBase<EasingType::CubicBezier> {

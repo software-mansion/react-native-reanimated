@@ -4,6 +4,8 @@
 #include <reanimated/CSS/easing/common.h>
 #include <reanimated/CSS/util/algorithms.h>
 
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {

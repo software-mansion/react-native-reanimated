@@ -3,6 +3,7 @@
 #include <reanimated/CSS/easing/utils.h>
 
 #include <jsi/jsi.h>
+#include <memory>
 
 namespace reanimated::css {
 

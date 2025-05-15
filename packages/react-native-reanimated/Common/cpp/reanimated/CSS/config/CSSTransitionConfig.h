@@ -7,6 +7,7 @@
 #include <reanimated/CSS/easing/utils.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
