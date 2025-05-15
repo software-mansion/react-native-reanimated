@@ -24,7 +24,8 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<JavaMessageQueueThread::javaobject> javaMessageQueueThread,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
         androidUIScheduler) {
-  const auto &messageQueueThread = std::make_shared<JMessageQueueThread>(javaMessageQueueThread);
+  const auto &messageQueueThread =
+      std::make_shared<JMessageQueueThread>(javaMessageQueueThread);
   const auto &uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(jThis, messageQueueThread, uiScheduler);
 }
