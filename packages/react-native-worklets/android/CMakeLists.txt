@@ -12,8 +12,7 @@ include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
 string(APPEND CMAKE_CXX_FLAGS
-       " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} \
-  -DREANIMATED_VERSION=${REANIMATED_VERSION}")
+       " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}")
 
 string(APPEND CMAKE_CXX_FLAGS
        " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \

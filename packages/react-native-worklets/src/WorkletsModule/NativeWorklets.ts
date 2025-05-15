@@ -16,6 +16,8 @@ class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: ShareableRef<undefined>;
   #shareableNull: ShareableRef<null>;
+  #shareableTrue: ShareableRef<boolean>;
+  #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
@@ -45,6 +47,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
       this.#workletsModuleProxy.makeShareableUndefined();
+    this.#shareableTrue = this.#workletsModuleProxy.makeShareableBoolean(true);
+    this.#shareableFalse =
+      this.#workletsModuleProxy.makeShareableBoolean(false);
   }
 
   makeShareableClone<TValue>(
@@ -68,7 +73,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   makeShareableBoolean(bool: boolean) {
-    return this.#workletsModuleProxy.makeShareableBoolean(bool);
+    return bool ? this.#shareableTrue : this.#shareableFalse;
   }
 
   makeShareableBigInt(bigInt: bigint) {
