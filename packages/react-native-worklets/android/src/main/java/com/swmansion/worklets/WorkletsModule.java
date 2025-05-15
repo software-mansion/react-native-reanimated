@@ -1,24 +1,25 @@
 package com.swmansion.worklets;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
-import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
+import com.facebook.react.turbomodule.core.interfaces.BindingsInstallerHolder;
+import com.facebook.react.turbomodule.core.interfaces.TurboModuleWithJSIBindings;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec
+    implements LifecycleEventListener, TurboModuleWithJSIBindings {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -32,7 +33,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     return mHybridData;
   }
 
-  private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
@@ -45,31 +45,21 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      long jsContext,
-      MessageQueueThread messageQueueThread,
-      CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler);
+      MessageQueueThread messageQueueThread, AndroidUIScheduler androidUIScheduler);
 
+  @OptIn(markerClass = FrameworkAPI.class)
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-    mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
+    MessageQueueThread messageQueueThread = new WorkletsMessageQueueThread();
+    mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
+    mHybridData = initHybrid(messageQueueThread, mAndroidUIScheduler);
   }
 
-  @OptIn(markerClass = FrameworkAPI.class)
-  @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule() {
-    var context = getReactApplicationContext();
-    context.assertOnJSQueueThread();
-
-    var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
-    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
-
-    mHybridData =
-        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
-    return true;
-  }
+  @NonNull
+  @Override
+  public native BindingsInstallerHolder getBindingsInstaller();
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
@@ -85,12 +75,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     if (mInvalidated.getAndSet(true)) {
       return;
     }
-    if (mHybridData != null && mHybridData.isValid()) {
-      // We have to destroy extra runtimes when invalidate is called. If we clean
-      // it up later instead there's a chance the runtime will retain references
-      // to invalidated memory and will crash on its destruction.
-      invalidateCpp();
-    }
+    invalidateCpp();
     mAndroidUIScheduler.deactivate();
   }
 
