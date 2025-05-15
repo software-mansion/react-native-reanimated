@@ -13,19 +13,20 @@ using namespace react;
 
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler)
+    const std::shared_ptr<MessageQueueThread> &messageQueueThread,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
-      messageQueueThread_(
-          std::make_shared<JMessageQueueThread>(messageQueueThread)),
-      uiScheduler_(androidUIScheduler->cthis()->getUIScheduler()) {}
+      messageQueueThread_(messageQueueThread),
+      uiScheduler_(uiScheduler) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> javaMessageQueueThread,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
         androidUIScheduler) {
-  return makeCxxInstance(jThis, messageQueueThread, androidUIScheduler);
+  const auto &messageQueueThread = std::make_shared<JMessageQueueThread>(javaMessageQueueThread);
+  const auto &uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
+  return makeCxxInstance(jThis, messageQueueThread, uiScheduler);
 }
 
 std::function<void(std::function<void(const double)>)>

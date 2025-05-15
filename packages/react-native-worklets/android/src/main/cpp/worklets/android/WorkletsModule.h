@@ -24,7 +24,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> javaMessageQueueThread,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
           androidUIScheduler);
 
@@ -37,9 +37,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  private:
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
-          androidUIScheduler);
+      const std::shared_ptr<MessageQueueThread> &messageQueueThread,
+      const std::shared_ptr<UIScheduler> &uiScheduler);
 
   jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstaller();
 
