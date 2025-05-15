@@ -272,12 +272,13 @@ function cloneArray<T extends unknown[]>(
       arrayType = 'mixed';
       break;
     }
-  };
+  }
 
   if (arrayType === 'string' || arrayType === 'number') {
-    const clone = arrayType === 'string'
-      ? WorkletsModule.makeShareableArrayOfStrings(value as string[])
-      : WorkletsModule.makeShareableArrayOfNumbers(value as number[]);
+    const clone =
+      arrayType === 'string'
+        ? WorkletsModule.makeShareableArrayOfStrings(value as string[])
+        : WorkletsModule.makeShareableArrayOfNumbers(value as number[]);
     shareableMappingCache.set(value, clone);
     shareableMappingCache.set(clone);
 
