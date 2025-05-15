@@ -19,12 +19,7 @@ import type {
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
-import {
-  isChromeDebugger,
-  isJest,
-  isWeb,
-  isWindowAvailable,
-} from '../../PlatformChecker';
+import { isJest, isWeb, isWindowAvailable } from '../../PlatformChecker';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -63,8 +58,6 @@ class JSReanimated implements IReanimatedModule {
       logger.warn('Layout Animations are not supported on web yet.');
     } else if (isJest()) {
       logger.warn('Layout Animations are no-ops when using Jest.');
-    } else if (isChromeDebugger()) {
-      logger.warn('Layout Animations are no-ops when using Chrome Debugger.');
     } else {
       logger.warn('Layout Animations are not supported on this configuration.');
     }
@@ -195,10 +188,6 @@ class JSReanimated implements IReanimatedModule {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {
       logger.warn('useAnimatedKeyboard is not available when using Jest.');
-    } else if (isChromeDebugger()) {
-      logger.warn(
-        'useAnimatedKeyboard is not available when using Chrome Debugger.'
-      );
     } else {
       logger.warn(
         'useAnimatedKeyboard is not available on this configuration.'
