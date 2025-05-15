@@ -1,0 +1,1 @@
+{"version":3,"file":"transform.d.ts","sourceRoot":"","sources":["../../../../../../../src/css/platform/native/style/processors/transform.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,mBAAmB,CAAC;AAOzD,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,UAAU,CAAC;AAE/C,eAAO,MAAM,cAAc;kCACK,MAAM;CAErC,CAAC;AAoJF,eAAO,MAAM,gBAAgB,EAAE,cAAc,CAAC,eAAe,GAAG,MAAM,CAmBrE,CAAC"}

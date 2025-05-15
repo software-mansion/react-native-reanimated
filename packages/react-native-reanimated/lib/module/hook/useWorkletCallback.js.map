@@ -1,0 +1,1 @@
+{"version":3,"names":["useCallback","useWorkletCallback","worklet","deps"],"sourceRoot":"../../../src","sources":["hook/useWorkletCallback.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,WAAW,QAAQ,OAAO;AAInC;AACA,OAAO,SAASC,kBAAkBA,CAChCC,OAAuC,EACvCC,IAAqB,EACrB;EACA,OAAOH,WAAW,CAACE,OAAO,EAAEC,IAAI,IAAI,EAAE,CAAC;AACzC","ignoreList":[]}

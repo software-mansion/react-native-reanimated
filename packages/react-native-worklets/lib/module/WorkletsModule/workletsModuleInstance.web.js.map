@@ -1,0 +1,1 @@
+{"version":3,"names":["createJSWorkletsModule","WorkletsModule"],"sourceRoot":"../../../src","sources":["WorkletsModule/workletsModuleInstance.web.ts"],"mappings":"AAAA,YAAY;;AAEZ,SAASA,sBAAsB,QAAQ,iBAAc;AAErD,OAAO,MAAMC,cAAc,GAAGD,sBAAsB,CAAC,CAAC","ignoreList":[]}
