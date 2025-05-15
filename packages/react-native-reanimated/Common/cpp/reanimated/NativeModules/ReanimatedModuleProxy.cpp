@@ -513,7 +513,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       CSSAnimationConfig config{
           CSSAnimationSettings{
               settings.duration,
-              settings.easingFunction,
+              settings.easing,
               settings.delay,
               settings.iterationCount,
               settings.direction,
