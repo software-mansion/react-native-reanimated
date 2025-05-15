@@ -40,6 +40,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
       makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
       makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
+      makeShareableArray: global.__workletsModuleProxy.makeShareableArray,
+      makeShareableObject: global.__workletsModuleProxy.makeShareableObject,
+      makeShareableHostObject:
+        global.__workletsModuleProxy.makeShareableHostObject,
+      makeShareableInitializer:
+        global.__workletsModuleProxy.makeShareableInitializer,
       makeShareableUndefined:
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
@@ -78,6 +84,35 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableBigInt(bigInt: bigint) {
     return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
+  }
+
+  makeShareableHostObject<T extends object>(hostObject: T): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableHostObject(
+      hostObject as object
+    ) as ShareableRef<T>;
+  }
+
+  makeShareableInitializer(initializer: object): ShareableRef<object> {
+    return this.#workletsModuleProxy.makeShareableInitializer(initializer);
   }
 
   makeShareableUndefined() {
