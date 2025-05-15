@@ -101,9 +101,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+      const std::shared_ptr<UIManager> &uiManager);
 
   void invalidateCpp();
 };

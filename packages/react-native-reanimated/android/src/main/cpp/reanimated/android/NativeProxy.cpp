@@ -18,13 +18,11 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager)
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+    const std::shared_ptr<UIManager> &uiManager)
     : javaPart_(jni::make_global(jThis)),
-      workletsModuleProxy_(jWorkletsModule->cthis()->getWorkletsModuleProxy()),
-      uiManager_(
-          fabricUIManager->getBinding()->getScheduler()->getUIManager()) {
+      workletsModuleProxy_(workletsModuleProxy),
+      uiManager_(uiManager) {
 #ifndef NDEBUG
   checkJavaVersion();
   injectCppVersion();
@@ -56,7 +54,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
-  return makeCxxInstance(jThis, jWorkletsModule, fabricUIManager);
+  const auto &workletsModuleProxy =
+      jWorkletsModule->cthis()->getWorkletsModuleProxy();
+  const auto &uiManager =
+      fabricUIManager->getBinding()->getScheduler()->getUIManager();
+  return makeCxxInstance(jThis, workletsModuleProxy, uiManager);
 }
 
 #ifndef NDEBUG
