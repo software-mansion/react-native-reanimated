@@ -8,12 +8,12 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
-    EasingFunction easingFunction,
-    const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
+    Easing easing,
+    const std::shared_ptr<KeyframeEasings> &keyframeEasingFunctions)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
-      easingFunction_(std::move(easingFunction)),
+      easing_(std::move(easing)),
       keyframeEasingFunctions_(keyframeEasingFunctions) {}
 
 void AnimationProgressProvider::setIterationCount(double iterationCount) {
@@ -87,7 +87,7 @@ double AnimationProgressProvider::getKeyframeProgress(
     return easingFunctionIt->second(keyframeProgress);
   }
 
-  return easingFunction_(keyframeProgress);
+  return easing_.calculate(keyframeProgress);
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {

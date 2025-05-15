@@ -20,7 +20,7 @@ enum class AnimationPlayState { Running, Paused };
 
 struct CSSAnimationSettings {
   double duration;
-  EasingFunction easingFunction;
+  Easing easing;
   double delay;
   double iterationCount;
   AnimationDirection direction;
@@ -30,7 +30,7 @@ struct CSSAnimationSettings {
 
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
-  std::optional<EasingFunction> easingFunction;
+  std::optional<Easing> easing;
   std::optional<double> delay;
   std::optional<double> iterationCount;
   std::optional<AnimationDirection> direction;

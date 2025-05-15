@@ -13,16 +13,13 @@ namespace reanimated::css {
 
 using namespace facebook;
 
-extern const std::unordered_map<std::string, EasingFunction>
-    PREDEFINED_EASING_MAP;
+extern const std::unordered_map<std::string, Easing> PREDEFINED_EASING_MAP;
 
-EasingFunction getPredefinedEasingFunction(const std::string &name);
-EasingFunction createParametrizedEasingFunction(
+Easing getPredefinedEasingFunction(const std::string &name);
+Easing createParametrizedEasingFunction(
     jsi::Runtime &rt,
     const jsi::Object &easingConfig);
 
-EasingFunction createEasingFunction(
-    jsi::Runtime &rt,
-    const jsi::Value &easingConfig);
+Easing createEasingFunction(jsi::Runtime &rt, const jsi::Value &easingConfig);
 
 } // namespace reanimated::css

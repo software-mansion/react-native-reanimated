@@ -9,18 +9,18 @@
 
 namespace reanimated::css {
 
-using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
+using KeyframeEasings = std::unordered_map<double, Easing>;
 
 struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
-  std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions;
+  std::shared_ptr<KeyframeEasings> keyframeEasingFunctions;
 };
 
 std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
     jsi::Runtime &rt,
     const jsi::Object &config);
 
-std::shared_ptr<KeyframeEasingFunctions> parseKeyframeTimingFunctions(
+std::shared_ptr<KeyframeEasings> parseKeyframeTimingFunctions(
     jsi::Runtime &rt,
     const jsi::Object &config);
 

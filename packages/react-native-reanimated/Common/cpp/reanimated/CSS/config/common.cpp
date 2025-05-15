@@ -6,9 +6,7 @@ double parseDuration(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "duration").asNumber();
 }
 
-EasingFunction parseTimingFunction(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
+Easing parseTimingFunction(jsi::Runtime &rt, const jsi::Object &config) {
   return createEasingFunction(rt, config.getProperty(rt, "timingFunction"));
 }
 

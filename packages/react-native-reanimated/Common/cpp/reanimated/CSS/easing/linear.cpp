@@ -2,31 +2,34 @@
 
 namespace reanimated::css {
 
-double interpolateValue(
-    double x,
-    size_t leftIdx,
-    const std::vector<double> &pointsX,
-    const std::vector<double> &pointsY) {
-  if (leftIdx == pointsX.size() - 1) {
+LinearEasing::LinearEasing(
+    std::vector<double> pointsX,
+    std::vector<double> pointsY)
+    : pointsX_(std::move(pointsX)), pointsY_(std::move(pointsY)) {}
+
+double LinearEasing::interpolateValue(double x, std::size_t leftIdx) const {
+  if (leftIdx == pointsX_.size() - 1) {
     // We are exactly on the last point of the curve, we just return its y
     // coordinate
-    return pointsY[leftIdx];
+    return pointsY_[leftIdx];
   }
   const auto rightIdx = leftIdx + 1;
   // Calculate the line equation for the line between leftIdx and rightIdx
   // points
-  const auto a = (pointsY[rightIdx] - pointsY[leftIdx]) /
-      (pointsX[rightIdx] - pointsX[leftIdx]);
-  return pointsY[leftIdx] + a * (x - pointsX[leftIdx]);
+  const auto a = (pointsY_[rightIdx] - pointsY_[leftIdx]) /
+      (pointsX_[rightIdx] - pointsX_[leftIdx]);
+  return pointsY_[leftIdx] + a * (x - pointsX_[leftIdx]);
 }
 
-EasingFunction linear(
-    const std::vector<double> &pointsX,
-    const std::vector<double> &pointsY) {
-  return [=](double x) {
-    size_t leftIdx = firstSmallerOrEqual(x, pointsX);
-    return interpolateValue(x, leftIdx, pointsX, pointsY);
-  };
+double LinearEasing::calculate(double x) const {
+  size_t leftIdx = firstSmallerOrEqual(x, pointsX_);
+  return interpolateValue(x, leftIdx);
+}
+
+bool LinearEasing::operator==(
+    const EasingBase<EasingType::Linear> &other) const {
+  const auto &otherLinear = static_cast<const LinearEasing &>(other);
+  return pointsX_ == otherLinear.pointsX_ && pointsY_ == otherLinear.pointsY_;
 }
 
 } // namespace reanimated::css
