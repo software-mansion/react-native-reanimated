@@ -137,6 +137,61 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableHostObject",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableHostObject(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableObject",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote,
+         const jsi::Value &nativeStateSource) {
+        return makeShareableObject(
+            rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArray(
+                   rt, value.asObject(rt).asArray(rt), jsi::Value::undefined())
+            .asObject(rt);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableInitializer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableInitializer(rt, value.asObject(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableFunction",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableFunction(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableArrayBuffer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArrayBuffer(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableWorklet",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote) {
+        return makeShareableWorklet(rt, value, shouldRetainRemote);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,

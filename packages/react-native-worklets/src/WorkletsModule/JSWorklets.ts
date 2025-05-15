@@ -50,6 +50,30 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableArray(): ShareableRef<unknown[]> {
+    throw new WorkletsError(
+      'makeShareableArray should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableObject<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableObject should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableHostObject<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableHostObject should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableInitializer(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableInitializer should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableUndefined(): ShareableRef<undefined> {
     throw new WorkletsError(
       'makeShareableUndefined should never be called in JSWorklets.'
@@ -59,6 +83,24 @@ class JSWorklets implements IWorkletsModule {
   makeShareableNull(): ShareableRef<null> {
     throw new WorkletsError(
       'makeShareableNull should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableFunction(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableFunction should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableArrayBuffer(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableArrayBuffer should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableWorklet(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableWorklet should never be called in JSWorklets.'
     );
   }
 

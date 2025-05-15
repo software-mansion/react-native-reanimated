@@ -18,9 +18,33 @@ export interface WorkletsModuleProxy {
 
   makeShareableBigInt(bigInt: bigint): ShareableRef<bigint>;
 
+  makeShareableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean
+  ): ShareableRef<unknown[]>;
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
+
+  makeShareableHostObject<T extends object>(hostObject: T): ShareableRef<T>;
+
+  makeShareableInitializer(initializer: object): ShareableRef<object>;
+
   makeShareableUndefined(): ShareableRef<undefined>;
 
   makeShareableNull(): ShareableRef<null>;
+
+  makeShareableFunction(fun: object): ShareableRef<object>;
+
+  makeShareableArrayBuffer(arrayBuffer: object): ShareableRef<object>;
+
+  makeShareableWorklet(
+    value: object,
+    shouldRetainRemote: boolean
+  ): ShareableRef<object>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
