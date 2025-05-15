@@ -176,6 +176,22 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableArrayBuffer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArrayBuffer(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableWorklet",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote) {
+        return makeShareableWorklet(rt, value, shouldRetainRemote);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,

@@ -156,6 +156,24 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableFunction)(
       ->makeShareableFunction(rt, std::move(args[0]));
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableArrayBuffer)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableArrayBuffer(rt, std::move(args[0]));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableWorklet)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableWorklet(rt, std::move(args[0]), std::move(args[1]));
+}
+
 WorkletsModuleProxySpec::WorkletsModuleProxySpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeWorklets", jsInvoker) {
@@ -191,6 +209,10 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(scheduleOnRuntime)};
   methodMap_["makeShareableFunction"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableFunction)};
+  methodMap_["makeShareableArrayBuffer"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableArrayBuffer)};
+  methodMap_["makeShareableWorklet"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableWorklet)};
 }
 
 } // namespace worklets

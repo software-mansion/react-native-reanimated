@@ -43,7 +43,7 @@ export default function ShareablesExample() {
         <HostObjectDemo />
         <UndefinedDemo />
         <NullDemo />
-        <RemoteFunctionDemo />
+        <WorkletDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
@@ -374,21 +374,32 @@ function RemoteAnonymousFunctionSyncCallDemo() {
   );
 }
 
-function RemoteFunctionDemo() {
-  const title = 'Remote function';
-  const { status, isOk, isError } = useStatus();
+function WorkletDemo() {
+  const title = 'Worklet';
+  const { status, isOk, isNotOk, isError } = useStatus();
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const remoteFunction = () => {
-      console.log('remote function');
+    const worklet = () => {
+      'worklet';
+      const x = 1;
+      return x + 2;
     };
+
+    const workletResult = worklet();
+
     runOnUI(() => {
       'worklet';
-      const uiRemoteFunction = remoteFunction;
-      if (uiRemoteFunction === remoteFunction) {
-        runOnJS(isOk)();
-      } else {
+
+      try {
+        const checks = [worklet() === workletResult];
+
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
         runOnJS(isError)();
       }
     })();

@@ -120,7 +120,6 @@ function makeShareableCloneRecursiveNative<T>(
 ): ShareableRef<T> {
   detectCyclicObject(value, depth);
 
-  const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
   if (typeof value === 'string') {
@@ -147,10 +146,6 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneNull() as ShareableRef<T>;
   }
 
-  if ((!isObject && !isFunction) || value === null) {
-    return clonePrimitive(value, shouldPersistRemote);
-  }
-
   const cached = getFromCache(value);
   if (cached !== undefined) {
     return cached as ShareableRef<T>;
@@ -158,42 +153,42 @@ function makeShareableCloneRecursiveNative<T>(
 
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
-  }
+  } 
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value);
-  }
+  } 
   if (isHostObject(value)) {
     return cloneHostObject(value);
-  }
+  } 
   if (isPlainJSObject(value) && value.__init) {
     return cloneInitializer(
       value,
       shouldPersistRemote,
       depth
     ) as ShareableRef<T>;
-  }
+  } 
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
-  }
+  } 
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
-    return cloneWorklet(value, shouldPersistRemote, depth);
+    return cloneWorklet(value, depth);
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
-  }
+  } 
   if (value instanceof RegExp) {
     return cloneRegExp(value);
-  }
+  } 
   if (value instanceof Error) {
     return cloneError(value);
-  }
+  } 
   if (value instanceof ArrayBuffer) {
-    return cloneArrayBuffer(value, shouldPersistRemote);
+    return cloneArrayBuffer(value);
   }
   if (ArrayBuffer.isView(value)) {
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
-  }
+  } 
   return inaccessibleObject(value);
 }
 
@@ -222,13 +217,6 @@ function detectCyclicObject(value: unknown, depth: number) {
   } else {
     processedObjectAtThresholdDepth = undefined;
   }
-}
-
-function clonePrimitive<T>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  return WorkletsModule.makeShareableClone(value, shouldPersistRemote);
 }
 
 function cloneString(value: string): ShareableRef<string> {
@@ -328,7 +316,6 @@ function cloneHostObject<T extends object>(value: T): ShareableRef<T> {
 
 function cloneWorklet<T extends WorkletFunction>(
   value: T,
-  shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
   if (__DEV__) {
@@ -366,12 +353,12 @@ function cloneWorklet<T extends WorkletFunction>(
     true,
     depth + 1
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
     // retain all worklets
-    true,
-    value
+    true
   ) as ShareableRef<T>;
+
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -445,19 +432,12 @@ function cloneError<T extends Error>(value: T): ShareableRef<T> {
   return handle as unknown as ShareableRef<T>;
 }
 
-function cloneArrayBuffer<T extends ArrayBuffer>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+function cloneArrayBuffer<T extends ArrayBuffer>(value: T): ShareableRef<T> {
+  const clone = WorkletsModule.makeShareableArrayBuffer(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
-  return clone;
+  return clone as ShareableRef<T>;
 }
 
 function cloneArrayBufferView<T extends ArrayBufferView>(
@@ -579,17 +559,32 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         return global._makeShareableHostObject(value) as FlatShareableRef<T>;
       }
+
+      if (isWorkletFunction(value)) {
+        return global._makeShareableWorklet(value, true);
+      }
+
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
         // call `_makeShareableClone`.
         return value.__remoteFunction;
       }
+
+      if (value instanceof ArrayBuffer) {
+        return global._makeShareableArrayBuffer(value);
+      }
+
       if (Array.isArray(value)) {
         return global._makeShareableArray(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
+
+      if (typeof value === 'function') {
+        return global._makeShareableFunction(value);
+      }
+
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
@@ -643,7 +638,7 @@ function makeShareableNative<T extends object>(value: T): T {
   if (shareableMappingCache.get(value)) {
     return value;
   }
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       return value;

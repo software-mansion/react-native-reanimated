@@ -48,6 +48,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
       makeShareableFunction: global.__workletsModuleProxy.makeShareableFunction,
+      makeShareableArrayBuffer:
+        global.__workletsModuleProxy.makeShareableArrayBuffer,
+      makeShareableWorklet: global.__workletsModuleProxy.makeShareableWorklet,
     };
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
@@ -121,6 +124,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableNull() {
     return this.#shareableNull;
+  }
+
+  makeShareableArrayBuffer(arrayBuffer: object): ShareableRef<object> {
+    return this.#workletsModuleProxy.makeShareableArrayBuffer(arrayBuffer);
+  }
+
+  makeShareableWorklet(value: object, shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableWorklet(
+      value,
+      shouldRetainRemote
+    );
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

@@ -133,6 +133,19 @@ jsi::Value WorkletsModuleProxy::makeShareableFunction(
   return worklets::makeShareableFunction(rt, value);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableArrayBuffer(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableArrayBuffer(rt, value);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote) {
+  return worklets::makeShareableWorklet(rt, value, shouldRetainRemote);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

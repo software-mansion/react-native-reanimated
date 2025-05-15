@@ -39,6 +39,13 @@ export interface WorkletsModuleProxy {
 
   makeShareableFunction(fun: object): ShareableRef<object>;
 
+  makeShareableArrayBuffer(arrayBuffer: object): ShareableRef<object>;
+
+  makeShareableWorklet(
+    value: object,
+    shouldRetainRemote: boolean
+  ): ShareableRef<object>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

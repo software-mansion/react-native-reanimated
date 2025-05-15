@@ -176,6 +176,13 @@ jsi::Value makeShareableNull(jsi::Runtime &rt);
 
 jsi::Value makeShareableFunction(jsi::Runtime &rt, const jsi::Value &value);
 
+jsi::Value makeShareableArrayBuffer(jsi::Runtime &rt, const jsi::Value &value);
+
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

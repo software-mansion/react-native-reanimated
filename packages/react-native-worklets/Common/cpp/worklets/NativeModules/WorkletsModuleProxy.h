@@ -69,6 +69,14 @@ class WorkletsModuleProxy
   jsi::Value makeShareableFunction(jsi::Runtime &rt, const jsi::Value &value)
       override;
 
+  jsi::Value makeShareableArrayBuffer(jsi::Runtime &rt, const jsi::Value &value)
+      override;
+
+  jsi::Value makeShareableWorklet(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote) override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
