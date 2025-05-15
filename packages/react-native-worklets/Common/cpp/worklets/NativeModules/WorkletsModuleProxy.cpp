@@ -32,8 +32,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     : WorkletsModuleProxySpec(jsCallInvoker),
       isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
-      jsScheduler_(
-          std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker)),
+      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
