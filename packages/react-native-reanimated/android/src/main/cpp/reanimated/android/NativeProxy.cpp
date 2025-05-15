@@ -7,8 +7,6 @@
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
 
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
-
 #include <react/fabric/Binding.h>
 
 namespace reanimated {
@@ -121,7 +119,6 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(
       rnRuntime,
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
