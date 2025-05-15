@@ -20,27 +20,27 @@ using namespace facebook;
 
 namespace worklets {
 
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool;
+
 WorkletsModuleProxy::WorkletsModuleProxy(
     jsi::Runtime &rnRuntime,
-    const std::string &valueUnpackerCode,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame)
     : WorkletsModuleProxySpec(jsCallInvoker),
-      valueUnpackerCode_(valueUnpackerCode),
+      isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
-      jsScheduler_(jsScheduler),
+      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
       uiScheduler_(uiScheduler),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
           jsQueue,
-          jsScheduler,
+          jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode_)),
+          isDevBundle_)),
       animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
           uiWorkletRuntime_->getJSIRuntime(),
           std::move(forwardedRequestAnimationFrame))) {
@@ -90,6 +90,14 @@ jsi::Value WorkletsModuleProxy::makeShareableBigInt(
   return worklets::makeShareableBigInt(rt, bigint);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableUndefined(jsi::Runtime &rt) {
+  return worklets::makeShareableUndefined(rt);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
+  return worklets::makeShareableNull(rt);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
@@ -137,7 +145,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       jsScheduler_,
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
-      valueUnpackerCode_);
+      isDevBundle_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
@@ -150,6 +158,11 @@ jsi::Value WorkletsModuleProxy::scheduleOnRuntime(
     const jsi::Value &shareableWorkletValue) {
   worklets::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
   return jsi::Value::undefined();
+}
+
+auto isDevBundleFromRNRuntime(jsi::Runtime &rnRuntime) -> bool {
+  const auto rtDev = rnRuntime.global().getProperty(rnRuntime, "__DEV__");
+  return rtDev.isBool() && rtDev.asBool();
 }
 
 } // namespace worklets

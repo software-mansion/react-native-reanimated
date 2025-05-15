@@ -24,7 +24,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
-      const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
@@ -41,10 +40,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
-      const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler);
 
   void invalidateCpp();

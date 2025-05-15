@@ -18682,6 +18682,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "react-native-worklets@workspace:packages/react-native-worklets"
   dependencies:
+    "@babel/cli": "npm:^7.20.0"
+    "@babel/core": "npm:^7.25.2"
     "@react-native-community/cli": "npm:19.0.0"
     "@react-native/eslint-config": "npm:0.80.0-rc.1"
     "@types/jest": "npm:^29.5.5"

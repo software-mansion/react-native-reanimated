@@ -91,6 +91,9 @@ public class NativeProxy {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             fabricUIManager);
+    if (BuildConfig.DEBUG) {
+      checkCppVersion(); // injectCppVersion should be called during initHybrid above
+    }
   }
 
   @OptIn(markerClass = FrameworkAPI.class)

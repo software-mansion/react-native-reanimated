@@ -1,9 +1,7 @@
-/* eslint-disable reanimated/use-reanimated-error */
 /* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -16,11 +14,12 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  #shareableUndefined: ShareableRef<undefined>;
+  #shareableNull: ShareableRef<null>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -39,7 +38,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
       makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
       makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
+      makeShareableUndefined:
+        global.__workletsModuleProxy.makeShareableUndefined,
+      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
     };
+    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.#shareableUndefined =
+      this.#workletsModuleProxy.makeShareableUndefined();
   }
 
   makeShareableClone<TValue>(
@@ -68,6 +73,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableBigInt(bigInt: bigint) {
     return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableUndefined() {
+    return this.#shareableUndefined;
+  }
+
+  makeShareableNull() {
+    return this.#shareableNull;
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

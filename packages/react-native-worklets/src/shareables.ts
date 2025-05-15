@@ -15,7 +15,7 @@ import type {
   WorkletFunction,
 } from './workletTypes';
 
-// for web/chrome debugger/jest environments this file provides a stub implementation
+// for web and jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
@@ -139,6 +139,14 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneBigInt(value) as ShareableRef<T>;
   }
 
+  if (value === undefined) {
+    return cloneUndefined() as ShareableRef<T>;
+  }
+
+  if (value === null) {
+    return cloneNull() as ShareableRef<T>;
+  }
+
   if ((!isObject && !isFunction) || value === null) {
     return clonePrimitive(value, shouldPersistRemote);
   }
@@ -230,6 +238,14 @@ function cloneBoolean(value: boolean): ShareableRef<boolean> {
 
 function cloneBigInt(value: bigint): ShareableRef<bigint> {
   return WorkletsModule.makeShareableBigInt(value);
+}
+
+function cloneUndefined(): ShareableRef<undefined> {
+  return WorkletsModule.makeShareableUndefined();
+}
+
+function cloneNull(): ShareableRef<null> {
+  return WorkletsModule.makeShareableNull();
 }
 
 function cloneArray<T extends unknown[]>(
@@ -590,6 +606,14 @@ export function makeShareableCloneOnUIRecursive<T>(
 
     if (typeof value === 'bigint') {
       return global._makeShareableBigInt(value);
+    }
+
+    if (value === undefined) {
+      return global._makeShareableUndefined();
+    }
+
+    if (value === null) {
+      return global._makeShareableNull();
     }
 
     return global._makeShareableClone(value, undefined);
