@@ -1,7 +1,5 @@
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
-#include <utility>
-
 namespace reanimated::css {
 
 AnimationProgressProvider::AnimationProgressProvider(
@@ -10,13 +8,13 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
-    EasingFunction easingFunction,
-    const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
+    std::shared_ptr<Easing> easing,
+    std::shared_ptr<KeyframeEasings> keyframeEasings)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
-      easingFunction_(std::move(easingFunction)),
-      keyframeEasingFunctions_(keyframeEasingFunctions) {}
+      easing_(std::move(easing)),
+      keyframeEasings_(std::move(keyframeEasings)) {}
 
 AnimationProgressState AnimationProgressProvider::getState() const {
   if (pauseTimestamp_ > 0) {
@@ -59,12 +57,12 @@ double AnimationProgressProvider::getKeyframeProgress(
 
   // Use the overridden easing function if it was overridden for the
   // current keyframe
-  const auto easingFunctionIt = keyframeEasingFunctions_->find(fromOffset);
-  if (easingFunctionIt != keyframeEasingFunctions_->end()) {
-    return easingFunctionIt->second(keyframeProgress);
+  const auto it = keyframeEasings_->find(fromOffset);
+  if (it != keyframeEasings_->end()) {
+    return it->second->calculate(keyframeProgress);
   }
 
-  return easingFunction_(keyframeProgress);
+  return easing_->calculate(keyframeProgress);
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {

@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 #include <folly/dynamic.h>
 #include <memory>
@@ -20,7 +20,7 @@ enum class AnimationPlayState { Running, Paused };
 
 struct CSSAnimationSettings {
   double duration;
-  EasingFunction easingFunction;
+  std::shared_ptr<Easing> easing;
   double delay;
   double iterationCount;
   AnimationDirection direction;
@@ -30,7 +30,7 @@ struct CSSAnimationSettings {
 
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
-  std::optional<EasingFunction> easingFunction;
+  std::optional<std::shared_ptr<Easing>> easing;
   std::optional<double> delay;
   std::optional<double> iterationCount;
   std::optional<AnimationDirection> direction;
@@ -57,6 +57,20 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
   std::string name;
+
+  CSSAnimationConfig(
+      const std::string &name,
+      double duration,
+      std::shared_ptr<Easing> easing,
+      double delay,
+      double iterationCount,
+      AnimationDirection direction,
+      AnimationFillMode fillMode,
+      AnimationPlayState playState);
+
+  CSSAnimationConfig(jsi::Runtime &rt, const jsi::Value &config);
+
+  bool operator==(const CSSAnimationConfig &other) const;
 };
 
 } // namespace reanimated::css

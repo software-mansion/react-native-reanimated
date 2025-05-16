@@ -13,10 +13,10 @@ std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
   return styleInterpolator;
 }
 
-std::shared_ptr<KeyframeEasingFunctions> parseKeyframeTimingFunctions(
+std::shared_ptr<KeyframeEasings> parseKeyframeTimingFunctions(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  KeyframeEasingFunctions result;
+  KeyframeEasings result;
   const auto &keyframeTimingFunctions =
       config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
   const auto timingFunctionOffsets =
@@ -26,13 +26,13 @@ std::shared_ptr<KeyframeEasingFunctions> parseKeyframeTimingFunctions(
   for (size_t i = 0; i < timingFunctionsCount; ++i) {
     const auto offset =
         timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easingFunction = createEasingFunction(
+    const auto easing = createEasing(
         rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
 
-    result[std::stod(offset)] = easingFunction;
+    result[std::stod(offset)] = easing;
   }
 
-  return std::make_shared<KeyframeEasingFunctions>(result);
+  return std::make_shared<KeyframeEasings>(result);
 }
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(

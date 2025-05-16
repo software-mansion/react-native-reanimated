@@ -2,11 +2,12 @@
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 #include <memory>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -26,8 +27,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
       double delay,
       double iterationCount,
       AnimationDirection direction,
-      EasingFunction easingFunction,
-      const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions);
+      std::shared_ptr<Easing> easing,
+      std::shared_ptr<KeyframeEasings> keyframeEasings);
 
   void setIterationCount(double iterationCount) {
     resetProgress();
@@ -37,9 +38,9 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
     resetProgress();
     direction_ = direction;
   }
-  void setEasingFunction(const EasingFunction &easingFunction) {
+  void setEasing(std::shared_ptr<Easing> easing) {
     resetProgress();
-    easingFunction_ = easingFunction;
+    easing_ = std::move(easing);
   }
 
   AnimationDirection getDirection() const {
@@ -66,8 +67,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
  private:
   double iterationCount_;
   AnimationDirection direction_;
-  EasingFunction easingFunction_;
-  std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions_;
+  std::shared_ptr<Easing> easing_;
+  std::shared_ptr<KeyframeEasings> keyframeEasings_;
 
   unsigned currentIteration_ = 1;
   double previousIterationsDuration_ = 0;

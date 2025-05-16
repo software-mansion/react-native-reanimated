@@ -4,9 +4,10 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -16,9 +17,11 @@ using namespace facebook::react;
 
 struct CSSTransitionPropertySettings {
   double duration;
-  EasingFunction easingFunction;
+  std::shared_ptr<Easing> easing;
   double delay;
   bool allowDiscrete;
+
+  bool operator==(const CSSTransitionPropertySettings &other) const;
 };
 
 using CSSTransitionPropertiesSettings =
@@ -27,6 +30,14 @@ using CSSTransitionPropertiesSettings =
 struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
+
+  CSSTransitionConfig(
+      TransitionProperties properties,
+      CSSTransitionPropertiesSettings settings);
+
+  CSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+
+  bool operator==(const CSSTransitionConfig &other) const;
 };
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <react/renderer/components/rnreanimated/EventEmitters.h>
-#include <react/renderer/components/rnreanimated/Props.h>
+#include <react/renderer/components/rnreanimated/ReanimatedNodeProps.h>
 #include <react/renderer/components/rnreanimated/ReanimatedViewStateData.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/LayoutContext.h>
@@ -12,7 +12,7 @@ JSI_EXPORT extern const char ReanimatedViewComponentName[];
 
 using ReanimatedViewShadowNodeBase = ConcreteViewShadowNode<
     ReanimatedViewComponentName,
-    ReanimatedViewProps,
+    ReanimatedNodeProps,
     ReanimatedViewEventEmitter,
     ReanimatedViewStateData>;
 

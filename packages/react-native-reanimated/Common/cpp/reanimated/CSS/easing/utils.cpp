@@ -1,10 +1,11 @@
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 namespace reanimated::css {
 
-inline const std::unordered_map<std::string, EasingFunction>
+inline const std::unordered_map<std::string, std::shared_ptr<Easing>>
     PREDEFINED_EASING_MAP = {
-        {"linear", [](double x) { return x; }},
+        {"linear",
+         linear(std::vector<double>{0, 1}, std::vector<double>{0, 1})},
         {"ease", cubicBezier(0.25, 0.1, 0.25, 0.1)},
         {"ease-in", cubicBezier(0.42, 0.0, 1.0, 1.0)},
         {"ease-out", cubicBezier(0.0, 0.0, 0.58, 1.0)},
@@ -13,31 +14,31 @@ inline const std::unordered_map<std::string, EasingFunction>
         {"step-end",
          steps(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
 
-EasingFunction createEasingFunction(
+std::shared_ptr<Easing> createEasing(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig) {
   if (easingConfig.isString()) {
-    return getPredefinedEasingFunction(easingConfig.asString(rt).utf8(rt));
+    return getPredefinedEasing(easingConfig.asString(rt).utf8(rt));
   } else if (easingConfig.isObject()) {
-    return createParametrizedEasingFunction(rt, easingConfig.asObject(rt));
+    return createParametrizedEasing(rt, easingConfig.asObject(rt));
   } else {
     throw std::runtime_error(
         std::string("[Reanimated] Invalid easing function"));
   }
 }
 
-EasingFunction getPredefinedEasingFunction(const std::string &name) {
+std::shared_ptr<Easing> getPredefinedEasing(const std::string &name) {
   auto it = PREDEFINED_EASING_MAP.find(name);
   if (it != PREDEFINED_EASING_MAP.end()) {
     return it->second;
   } else {
     throw std::runtime_error(std::string(
-        "[Reanimated] Easing function with name '" + name +
+        "[Reanimated] EasingBase function with name '" + name +
         "' is not defined."));
   }
 }
 
-EasingFunction createParametrizedEasingFunction(
+std::shared_ptr<Easing> createParametrizedEasing(
     jsi::Runtime &rt,
     const jsi::Object &easingConfig) {
   const auto easingName =

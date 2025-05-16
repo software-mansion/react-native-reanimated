@@ -31,7 +31,7 @@ folly::dynamic CSSAnimationsManager::getCurrentFrameProps(
   return result;
 }
 
-void CSSAnimationsManager::update(const ReanimatedViewProps &newProps) {
+void CSSAnimationsManager::update(const ReanimatedNodeProps &newProps) {
   // // Parse properties to animation config objects
   // const auto configs = parseAnimationConfigs(newProps.cssAnimations);
   // // Map current animations to their names in order to reuse the same
