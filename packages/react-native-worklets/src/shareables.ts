@@ -253,37 +253,34 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
-  let arrayType: 'string' | 'number' | 'mixed' = 'mixed';
+  if (value.length > 20) {
+    const isArrayOfStrings = value.every(
+      (element) => typeof element === 'string'
+    );
+    const isArrayOfNumbers = value.every(
+      (element) => typeof element === 'number'
+    );
+    if (isArrayOfStrings) {
+      const clone = WorkletsModule.makeShareableArrayOfStrings(
+        value as string[]
+      );
+      shareableMappingCache.set(value, clone);
+      shareableMappingCache.set(clone);
 
-  for (const element of value) {
-    if (typeof element === 'string') {
-      if (arrayType === 'number') {
-        arrayType = 'mixed';
-        break;
-      }
-      arrayType = 'string';
-    } else if (typeof element === 'number') {
-      if (arrayType === 'string') {
-        arrayType = 'mixed';
-        break;
-      }
-      arrayType = 'number';
-    } else {
-      arrayType = 'mixed';
-      break;
+      freezeObjectInDev(value);
+      return clone as ShareableRef<T>;
     }
-  }
 
-  if (arrayType === 'string' || arrayType === 'number') {
-    const clone =
-      arrayType === 'string'
-        ? WorkletsModule.makeShareableArrayOfStrings(value as string[])
-        : WorkletsModule.makeShareableArrayOfNumbers(value as number[]);
-    shareableMappingCache.set(value, clone);
-    shareableMappingCache.set(clone);
+    if (isArrayOfNumbers) {
+      const clone = WorkletsModule.makeShareableArrayOfNumbers(
+        value as number[]
+      );
+      shareableMappingCache.set(value, clone);
+      shareableMappingCache.set(clone);
 
-    freezeObjectInDev(value);
-    return clone as ShareableRef<T>;
+      freezeObjectInDev(value);
+      return clone as ShareableRef<T>;
+    }
   }
 
   const clonedElements = value.map((element) =>

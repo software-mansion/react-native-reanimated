@@ -162,16 +162,15 @@ jsi::Value makeShareableArrayOfNumbers(
 jsi::Value makeShareableArrayOfStrings(
     jsi::Runtime &rt,
     const jsi::Array &array) {
-  auto size = array.size(rt);
-  auto shareableArray = jsi::Array(rt, size);
+  const auto size = array.size(rt);
+  std::vector<std::shared_ptr<Shareable>> data;
+  data.reserve(size);
   for (size_t i = 0; i < size; i++) {
-    auto string = array.getValueAtIndex(rt, i).asString(rt);
-    auto shareableString = std::make_shared<ShareableString>(string.utf8(rt));
-    shareableArray.setValueAtIndex(
-        rt, i, ShareableJSRef::newHostObject(rt, shareableString));
+    data.emplace_back(std::make_shared<ShareableString>(
+        array.getValueAtIndex(rt, i).asString(rt).utf8(rt)));
   }
-  auto shareable = std::make_shared<ShareableArray>(rt, shareableArray);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newHostObject(
+      rt, std::make_shared<ShareableArray>(std::move(data)));
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
