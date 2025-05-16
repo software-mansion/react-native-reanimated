@@ -1,0 +1,13 @@
+diff --git a/android/src/main/java/com/reactnativecommunity/clipboard/ClipboardPackage.java b/android/src/main/java/com/reactnativecommunity/clipboard/ClipboardPackage.java
+index 18e2f18990a184edd3d5c8fdd2209181fde7b25f..effa20caec59c51b50ca928c75569ce70e2b1133 100644
+--- a/android/src/main/java/com/reactnativecommunity/clipboard/ClipboardPackage.java
++++ b/android/src/main/java/com/reactnativecommunity/clipboard/ClipboardPackage.java
+@@ -31,7 +31,7 @@ public class ClipboardPackage extends TurboReactPackage implements ViewManagerOn
+   /** {@inheritDoc} */
+   @Override
+   public List<String> getViewManagerNames(ReactApplicationContext reactContext) {
+-    return null;
++    return Collections.emptyList();
+   }
+ 
+   @Override

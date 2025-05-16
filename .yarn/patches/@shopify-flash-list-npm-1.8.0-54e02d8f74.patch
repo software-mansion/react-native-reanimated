@@ -35,3 +35,16 @@ index 05cf1af2809c289807efe4386f4a28b9b04c517c..6a5904793207f8ae5df659c2c59b2f5b
    /**
     * Allows access to internal recyclerlistview. This is useful for enabling access to its public APIs.
     * Warning: We may swap recyclerlistview for something else in the future. Use with caution.
+diff --git a/android/src/main/kotlin/com/shopify/reactnative/flash_list/BlankAreaEvent.kt b/android/src/main/kotlin/com/shopify/reactnative/flash_list/BlankAreaEvent.kt
+index ed74c43582af56b6dc541460d91d1ede53156d9e..dd34130a6f0be48ddecb3e322b1614013b46140e 100644
+--- a/android/src/main/kotlin/com/shopify/reactnative/flash_list/BlankAreaEvent.kt
++++ b/android/src/main/kotlin/com/shopify/reactnative/flash_list/BlankAreaEvent.kt
+@@ -20,7 +20,7 @@ class BlankAreaEvent(
+     }
+ 
+     override fun dispatch(rctEventEmitter: RCTEventEmitter) {
+-        rctEventEmitter.receiveEvent(viewTag, eventName, eventData)
++        rctEventEmitter.receiveEvent(viewTag, eventName, getEventData())
+     }
+ 
+     companion object {

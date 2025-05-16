@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index 780d02528472e6914c63ca8f06542fb69b1eeac3..21ad70462634fd9e7f63e82b0fed5d0a2b53ad0b 100644
+--- a/package.json
++++ b/package.json
+@@ -61,7 +61,6 @@
+     "./ReactCommon/*": null,
+     "./sdks/*": null,
+     "./src/fb_internal/*": "./src/fb_internal/*",
+-    "./src/*": null,
+     "./third-party-podspecs/*": null,
+     "./types/*": null,
+     "./package.json": "./package.json"
