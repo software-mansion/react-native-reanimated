@@ -1,6 +1,6 @@
 'use strict';
+import { ReanimatedError } from '../../../../../common';
 import { FONT_WEIGHT_MAPPINGS } from '../../../../constants';
-import { ReanimatedError } from '../../../../errors';
 import type { ValueProcessor } from '../types';
 
 const ERROR_MESSAGES = {

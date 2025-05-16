@@ -1,7 +1,7 @@
 'use strict';
+import { ReanimatedError } from '../../../../../common';
 import type { StyleProps } from '../../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../../constants';
-import { ReanimatedError } from '../../../../errors';
 import type {
   AnyRecord,
   CSSAnimationKeyframes,

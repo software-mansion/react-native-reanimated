@@ -6,6 +6,12 @@ import type {
 } from 'react-native-worklets';
 import { logger, WorkletsModule } from 'react-native-worklets';
 
+import {
+  IS_JEST,
+  IS_WEB,
+  IS_WINDOW_AVAILABLE,
+  ReanimatedError,
+} from '../../common';
 import type {
   ShadowNodeWrapper,
   StyleProps,
@@ -18,8 +24,6 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
-import { ReanimatedError } from '../../errors';
-import { isJest, isWeb, isWindowAvailable } from '../../PlatformChecker';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -54,9 +58,9 @@ class JSReanimated implements IReanimatedModule {
   }
 
   enableLayoutAnimations() {
-    if (isWeb()) {
+    if (IS_WEB) {
       logger.warn('Layout Animations are not supported on web yet.');
-    } else if (isJest()) {
+    } else if (IS_JEST) {
       logger.warn('Layout Animations are no-ops when using Jest.');
     } else {
       logger.warn('Layout Animations are not supported on this configuration.');
@@ -77,7 +81,7 @@ class JSReanimated implements IReanimatedModule {
     _iosReferenceFrame: number,
     eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number {
-    if (!isWindowAvailable()) {
+    if (!IS_WINDOW_AVAILABLE) {
       // the window object is unavailable when building the server portion of a site that uses SSG
       // this check is here to ensure that the server build won't fail
       return -1;
@@ -91,7 +95,7 @@ class JSReanimated implements IReanimatedModule {
       // https://w3c.github.io/sensors/#secure-context
       logger.warn(
         'Sensor is not available.' +
-          (isWeb() && location.protocol !== 'https:'
+          (IS_WEB && location.protocol !== 'https:'
             ? ' Make sure you use secure origin with `npx expo start --web --https`.'
             : '') +
           (this.platform === Platform.WEB_IOS
@@ -184,9 +188,9 @@ class JSReanimated implements IReanimatedModule {
   }
 
   subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
-    if (isWeb()) {
+    if (IS_WEB) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
-    } else if (isJest()) {
+    } else if (IS_JEST) {
       logger.warn('useAnimatedKeyboard is not available when using Jest.');
     } else {
       logger.warn(

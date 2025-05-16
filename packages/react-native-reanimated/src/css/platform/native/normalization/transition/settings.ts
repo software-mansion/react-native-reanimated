@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../errors';
+import { ReanimatedError } from '../../../../../common';
 import type { CSSTransitionBehavior } from '../../../../types';
 import { VALID_TRANSITION_BEHAVIORS } from './constants';
 

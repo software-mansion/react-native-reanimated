@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../errors';
+import { ReanimatedError } from '../../../../../common';
 import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {

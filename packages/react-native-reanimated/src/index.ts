@@ -30,7 +30,8 @@ export {
   withTiming,
 } from './animation';
 export type { ParsedColorArray } from './Colors';
-export { convertToRGBA, isColor, processColor } from './Colors';
+export { convertToRGBA, isColor } from './Colors';
+export { processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,

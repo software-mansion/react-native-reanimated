@@ -1,10 +1,9 @@
 'use strict';
 import type { ColorValue, DimensionValue } from 'react-native';
 
-import { processColor } from '../../../Colors';
+import { processColor, ReanimatedError } from '../../../common';
 import type { ParametrizedTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
-import { ReanimatedError } from '../../errors';
 import type { AddArrayPropertyType, ConvertValuesToArrays } from '../../types';
 import { kebabizeCamelCase } from '../../utils';
 

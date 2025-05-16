@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../../errors';
+import { ReanimatedError } from '../../../../../../common';
 import { ERROR_MESSAGES, processColor } from '../colors';
 
 describe(processColor, () => {

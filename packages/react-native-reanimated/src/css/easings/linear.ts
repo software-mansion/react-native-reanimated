@@ -1,8 +1,8 @@
 'use strict';
 import { logger } from 'react-native-worklets';
 
+import { ReanimatedError } from '../../common';
 import { PERCENTAGE_REGEX } from '../constants';
-import { ReanimatedError } from '../errors';
 import type { Point } from '../types';
 import type {
   ControlPoint,

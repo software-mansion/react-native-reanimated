@@ -17,6 +17,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
+import { ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -28,8 +29,6 @@ import type {
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
-import { ReanimatedError } from '../errors';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
@@ -55,8 +54,6 @@ import {
 const IN_STYLE_UPDATER = { current: false };
 const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
 shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
