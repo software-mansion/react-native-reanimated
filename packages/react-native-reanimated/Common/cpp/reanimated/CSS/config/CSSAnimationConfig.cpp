@@ -195,4 +195,42 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
   return result;
 }
 
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::string &name,
+    double duration,
+    std::shared_ptr<Easing> easing,
+    double delay,
+    double iterationCount,
+    AnimationDirection direction,
+    AnimationFillMode fillMode,
+    AnimationPlayState playState)
+    : CSSAnimationSettings{duration, easing, delay, iterationCount, direction, fillMode, playState},
+      name(name) {}
+
+CSSAnimationConfig::CSSAnimationConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto configObj = config.asObject(rt);
+  name = parseName(rt, configObj);
+  duration = parseDuration(rt, configObj);
+  easing = parseTimingFunction(rt, configObj);
+  delay = parseDelay(rt, configObj);
+  iterationCount = parseIterationCount(rt, configObj);
+  direction = parseDirection(rt, configObj);
+  fillMode = parseFillMode(rt, configObj);
+  playState = parsePlayState(rt, configObj);
+}
+
+bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
+  // First check if it's the same object
+  if (this == &other) {
+    return true;
+  }
+
+  return duration == other.duration && easing == other.easing &&
+      delay == other.delay && iterationCount == other.iterationCount &&
+      direction == other.direction && fillMode == other.fillMode &&
+      playState == other.playState && name == other.name;
+}
+
 } // namespace reanimated::css

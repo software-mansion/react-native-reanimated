@@ -29,7 +29,7 @@ class ReanimatedNodeProps final : public ViewProps {
 
   folly::dynamic jsStyle{};
   std::optional<CSSTransitionConfig> cssTransition{};
-  JsiValuePair cssAnimations{};
+  std::vector<CSSAnimationConfig> cssAnimations{};
 };
 
 } // namespace facebook::react

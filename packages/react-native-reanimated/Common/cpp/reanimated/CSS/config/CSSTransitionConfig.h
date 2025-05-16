@@ -20,6 +20,8 @@ struct CSSTransitionPropertySettings {
   std::shared_ptr<Easing> easing;
   double delay;
   bool allowDiscrete;
+
+  bool operator==(const CSSTransitionPropertySettings &other) const;
 };
 
 using CSSTransitionPropertiesSettings =
@@ -28,6 +30,14 @@ using CSSTransitionPropertiesSettings =
 struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
+
+  CSSTransitionConfig(
+      TransitionProperties properties,
+      CSSTransitionPropertiesSettings settings);
+
+  CSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+
+  bool operator==(const CSSTransitionConfig &other) const;
 };
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(

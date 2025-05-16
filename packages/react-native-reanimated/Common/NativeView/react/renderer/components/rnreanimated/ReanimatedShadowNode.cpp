@@ -28,8 +28,15 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   // TODO - optimize cloning (don't call update if props on the JS side didn't
   // change)
 
+  if (oldProps.cssTransition != newProps.cssTransition) {
+    LOG(INFO) << "cssTransition changed";
+  }
+
+  if (oldProps.cssAnimations != newProps.cssAnimations) {
+    LOG(INFO) << "cssAnimations changed";
+  }
+
   // const auto &state = getStateData();
-  // state.cssTransitionManager->update(oldProps, newProps);
   // state.cssAnimationsManager->update(newProps);
 }
 

@@ -57,6 +57,20 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
   std::string name;
+
+  CSSAnimationConfig(
+      const std::string &name,
+      double duration,
+      std::shared_ptr<Easing> easing,
+      double delay,
+      double iterationCount,
+      AnimationDirection direction,
+      AnimationFillMode fillMode,
+      AnimationPlayState playState);
+
+  CSSAnimationConfig(jsi::Runtime &rt, const jsi::Value &config);
+
+  bool operator==(const CSSAnimationConfig &other) const;
 };
 
 } // namespace reanimated::css

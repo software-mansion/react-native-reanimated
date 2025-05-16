@@ -71,6 +71,45 @@ CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
   return result;
 }
 
+bool CSSTransitionPropertySettings::operator==(
+    const CSSTransitionPropertySettings &other) const {
+  return duration == other.duration && easing == other.easing &&
+      delay == other.delay && allowDiscrete == other.allowDiscrete;
+}
+
+CSSTransitionConfig::CSSTransitionConfig(
+    TransitionProperties properties,
+    CSSTransitionPropertiesSettings settings)
+    : properties(properties), settings(settings) {}
+
+CSSTransitionConfig::CSSTransitionConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto configObj = config.asObject(rt);
+  properties = parseProperties(rt, configObj);
+  settings = parseCSSTransitionPropertiesSettings(
+      rt, configObj.getProperty(rt, "settings").asObject(rt));
+}
+
+bool CSSTransitionConfig::operator==(const CSSTransitionConfig &other) const {
+  // First check if it's the same object
+  if (this == &other) {
+    return true;
+  }
+
+  // Compare properties (optional vector of strings)
+  if (properties.has_value() != other.properties.has_value()) {
+    return false;
+  }
+  if (properties.has_value() &&
+      properties.value() != other.properties.value()) {
+    return false;
+  }
+
+  // Compare settings (unordered map mapping property names to settings)
+  return settings == other.settings;
+}
+
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &config) {
