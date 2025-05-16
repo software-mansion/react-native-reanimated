@@ -254,15 +254,12 @@ function cloneArray<T extends unknown[]>(
   depth: number
 ): ShareableRef<T> {
   if (value.length > 20) {
-    const isArrayOfStrings = value.every(
-      (element) => typeof element === 'string'
-    );
     const isArrayOfNumbers = value.every(
       (element) => typeof element === 'number'
     );
-    if (isArrayOfStrings) {
-      const clone = WorkletsModule.makeShareableArrayOfStrings(
-        value as string[]
+    if (isArrayOfNumbers) {
+      const clone = WorkletsModule.makeShareableArrayOfNumbers(
+        value as number[]
       );
       shareableMappingCache.set(value, clone);
       shareableMappingCache.set(clone);
@@ -270,10 +267,12 @@ function cloneArray<T extends unknown[]>(
       freezeObjectInDev(value);
       return clone as ShareableRef<T>;
     }
-
-    if (isArrayOfNumbers) {
-      const clone = WorkletsModule.makeShareableArrayOfNumbers(
-        value as number[]
+    const isArrayOfStrings = value.every(
+      (element) => typeof element === 'string'
+    );
+    if (isArrayOfStrings) {
+      const clone = WorkletsModule.makeShareableArrayOfStrings(
+        value as string[]
       );
       shareableMappingCache.set(value, clone);
       shareableMappingCache.set(clone);
