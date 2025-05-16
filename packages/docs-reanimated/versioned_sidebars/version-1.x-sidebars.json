@@ -1,32 +1,32 @@
 {
-  "version-1.x/docs": [
+  "docs": [
     {
       "type": "category",
       "label": "Overview",
       "items": [
         {
           "type": "doc",
-          "id": "version-1.x/about"
+          "id": "about"
         },
         {
           "type": "doc",
-          "id": "version-1.x/getting_started"
+          "id": "getting_started"
         },
         {
           "type": "doc",
-          "id": "version-1.x/declarative"
+          "id": "declarative"
         },
         {
           "type": "doc",
-          "id": "version-1.x/examples"
+          "id": "examples"
         },
         {
           "type": "doc",
-          "id": "version-1.x/transitions"
+          "id": "transitions"
         },
         {
           "type": "doc",
-          "id": "version-1.x/config"
+          "id": "config"
         }
       ]
     },
@@ -36,11 +36,11 @@
       "items": [
         {
           "type": "doc",
-          "id": "version-1.x/value"
+          "id": "value"
         },
         {
           "type": "doc",
-          "id": "version-1.x/clock"
+          "id": "clock"
         },
         {
           "type": "category",
@@ -48,19 +48,19 @@
           "items": [
             {
               "type": "doc",
-              "id": "version-1.x/animations/timing"
+              "id": "animations/timing"
             },
             {
               "type": "doc",
-              "id": "version-1.x/animations/decay"
+              "id": "animations/decay"
             },
             {
               "type": "doc",
-              "id": "version-1.x/animations/spring"
+              "id": "animations/spring"
             },
             {
               "type": "doc",
-              "id": "version-1.x/animations/spring_utils"
+              "id": "animations/spring_utils"
             }
           ]
         },
@@ -74,63 +74,63 @@
               "items": [
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/abs"
+                  "id": "nodes/abs"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/add"
+                  "id": "nodes/add"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/ceil"
+                  "id": "nodes/ceil"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/divide"
+                  "id": "nodes/divide"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/exp"
+                  "id": "nodes/exp"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/floor"
+                  "id": "nodes/floor"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/log"
+                  "id": "nodes/log"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/max"
+                  "id": "nodes/max"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/min"
+                  "id": "nodes/min"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/modulo"
+                  "id": "nodes/modulo"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/multiply"
+                  "id": "nodes/multiply"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/pow"
+                  "id": "nodes/pow"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/round"
+                  "id": "nodes/round"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/sqrt"
+                  "id": "nodes/sqrt"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/sub"
+                  "id": "nodes/sub"
                 }
               ]
             },
@@ -140,27 +140,27 @@
               "items": [
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/acos"
+                  "id": "nodes/acos"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/asin"
+                  "id": "nodes/asin"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/atan"
+                  "id": "nodes/atan"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/cos"
+                  "id": "nodes/cos"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/sin"
+                  "id": "nodes/sin"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/tan"
+                  "id": "nodes/tan"
                 }
               ]
             },
@@ -170,39 +170,39 @@
               "items": [
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/and"
+                  "id": "nodes/and"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/eq"
+                  "id": "nodes/eq"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/greaterOrEq"
+                  "id": "nodes/greaterOrEq"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/greaterThan"
+                  "id": "nodes/greaterThan"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/lessOrEq"
+                  "id": "nodes/lessOrEq"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/lessThan"
+                  "id": "nodes/lessThan"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/neq"
+                  "id": "nodes/neq"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/not"
+                  "id": "nodes/not"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/or"
+                  "id": "nodes/or"
                 }
               ]
             },
@@ -212,15 +212,15 @@
               "items": [
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/clockRunning"
+                  "id": "nodes/clockRunning"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/startClock"
+                  "id": "nodes/startClock"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/stopClock"
+                  "id": "nodes/stopClock"
                 }
               ]
             },
@@ -230,67 +230,67 @@
               "items": [
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/acc"
+                  "id": "nodes/acc"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/block"
+                  "id": "nodes/block"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/call"
+                  "id": "nodes/call"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/color"
+                  "id": "nodes/color"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/concat"
+                  "id": "nodes/concat"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/cond"
+                  "id": "nodes/cond"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/debug"
+                  "id": "nodes/debug"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/defined"
+                  "id": "nodes/defined"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/diff"
+                  "id": "nodes/diff"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/diffClamp"
+                  "id": "nodes/diffClamp"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/event"
+                  "id": "nodes/event"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/interpolate"
+                  "id": "nodes/interpolate"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/interpolateColors"
+                  "id": "nodes/interpolateColors"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/onChange"
+                  "id": "nodes/onChange"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/proc"
+                  "id": "nodes/proc"
                 },
                 {
                   "type": "doc",
-                  "id": "version-1.x/nodes/set"
+                  "id": "nodes/set"
                 }
               ]
             }
@@ -298,15 +298,15 @@
         },
         {
           "type": "doc",
-          "id": "version-1.x/event"
+          "id": "event"
         },
         {
           "type": "doc",
-          "id": "version-1.x/view"
+          "id": "view"
         },
         {
           "type": "doc",
-          "id": "version-1.x/code"
+          "id": "code"
         }
       ]
     }

@@ -1,4 +1,4 @@
-const darkTheme = require('prism-react-renderer/themes/github');
+const darkTheme = require('prism-react-renderer').themes.github;
 
 module.exports = {
   ...darkTheme,
