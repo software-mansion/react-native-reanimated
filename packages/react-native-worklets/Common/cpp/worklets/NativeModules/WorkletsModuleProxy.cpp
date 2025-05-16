@@ -98,6 +98,18 @@ jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
   return worklets::makeShareableNull(rt);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableArrayOfNumbers(
+    jsi::Runtime &rt,
+    const jsi::Array &array) {
+  return worklets::makeShareableArrayOfNumbers(rt, array);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableArrayOfStrings(
+    jsi::Runtime &rt,
+    const jsi::Array &array) {
+  return worklets::makeShareableArrayOfStrings(rt, array);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

@@ -72,6 +72,26 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableNull)(
       ->makeShareableNull(rt);
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableArrayOfNumbers)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableArrayOfNumbers(
+          rt, std::move(args[0].asObject(rt).asArray(rt)));
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableArrayOfStrings)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableArrayOfStrings(
+          rt, std::move(args[0].asObject(rt).asArray(rt)));
+}
+
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -126,6 +146,10 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableUndefined)};
   methodMap_["makeShareableNull"] =
       MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableNull)};
+  methodMap_["makeShareableArrayOfNumbers"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableArrayOfNumbers)};
+  methodMap_["makeShareableArrayOfStrings"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableArrayOfStrings)};
   methodMap_["scheduleOnUI"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =

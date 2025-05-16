@@ -253,6 +253,35 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
+  if (value.length > 20) {
+    const isArrayOfNumbers = value.every(
+      (element) => typeof element === 'number'
+    );
+    if (isArrayOfNumbers) {
+      const clone = WorkletsModule.makeShareableArrayOfNumbers(
+        value as number[]
+      );
+      shareableMappingCache.set(value, clone);
+      shareableMappingCache.set(clone);
+
+      freezeObjectInDev(value);
+      return clone as ShareableRef<T>;
+    }
+    const isArrayOfStrings = value.every(
+      (element) => typeof element === 'string'
+    );
+    if (isArrayOfStrings) {
+      const clone = WorkletsModule.makeShareableArrayOfStrings(
+        value as string[]
+      );
+      shareableMappingCache.set(value, clone);
+      shareableMappingCache.set(clone);
+
+      freezeObjectInDev(value);
+      return clone as ShareableRef<T>;
+    }
+  }
+
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );

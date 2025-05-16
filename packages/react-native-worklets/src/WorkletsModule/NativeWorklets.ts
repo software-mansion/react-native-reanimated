@@ -43,6 +43,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableUndefined:
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
+      makeShareableArrayOfNumbers:
+        global.__workletsModuleProxy.makeShareableArrayOfNumbers,
+      makeShareableArrayOfStrings:
+        global.__workletsModuleProxy.makeShareableArrayOfStrings,
     };
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
@@ -86,6 +90,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableNull() {
     return this.#shareableNull;
+  }
+
+  makeShareableArrayOfNumbers(array: number[]) {
+    return this.#workletsModuleProxy.makeShareableArrayOfNumbers(array);
+  }
+
+  makeShareableArrayOfStrings(array: string[]) {
+    return this.#workletsModuleProxy.makeShareableArrayOfStrings(array);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

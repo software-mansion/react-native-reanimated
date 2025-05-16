@@ -100,6 +100,20 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableArrayOfNumbers",
+      [](jsi::Runtime &rt, const jsi::Value &array) {
+        return makeShareableArrayOfNumbers(rt, array.asObject(rt).asArray(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableArrayOfStrings",
+      [](jsi::Runtime &rt, const jsi::Value &array) {
+        return makeShareableArrayOfStrings(rt, array.asObject(rt).asArray(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_makeShareableString",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeShareableString(rt, value.asString(rt));

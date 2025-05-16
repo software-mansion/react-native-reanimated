@@ -39,6 +39,14 @@ class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
 
   virtual jsi::Value makeShareableNull(jsi::Runtime &rt) = 0;
 
+  virtual jsi::Value makeShareableArrayOfNumbers(
+      jsi::Runtime &rt,
+      const jsi::Array &array) = 0;
+
+  virtual jsi::Value makeShareableArrayOfStrings(
+      jsi::Runtime &rt,
+      const jsi::Array &array) = 0;
+
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
 
