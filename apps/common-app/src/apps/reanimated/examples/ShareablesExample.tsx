@@ -37,6 +37,8 @@ export default function ShareablesExample() {
         <BooleanDemo />
         <BigIntDemo />
         <NumberDemo />
+        <UndefinedDemo />
+        <NullDemo />
         <CyclicObjectDemo />
         <InaccessibleObjectDemo />
         <RemoteNamedFunctionSyncCallDemo />
@@ -167,11 +169,73 @@ function BooleanDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const bool = true;
+    const boolTrue = true;
+    const boolFalse = false;
     runOnUI(() => {
       'worklet';
       try {
-        if (bool === true) {
+        const checks = [boolTrue === true, boolFalse === false];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function UndefinedDemo() {
+  const title = 'Undefined';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const x = undefined;
+    runOnUI(() => {
+      'worklet';
+      try {
+        if (x === undefined) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function NullDemo() {
+  const title = 'Null';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const x = null;
+    runOnUI(() => {
+      'worklet';
+      try {
+        if (x === null) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();

@@ -7,7 +7,6 @@ import type {
 import { logger, WorkletsModule } from 'react-native-worklets';
 
 import {
-  IS_CHROME_DEBUGGER,
   IS_JEST,
   IS_WEB,
   IS_WINDOW_AVAILABLE,
@@ -63,8 +62,6 @@ class JSReanimated implements IReanimatedModule {
       logger.warn('Layout Animations are not supported on web yet.');
     } else if (IS_JEST) {
       logger.warn('Layout Animations are no-ops when using Jest.');
-    } else if (IS_CHROME_DEBUGGER) {
-      logger.warn('Layout Animations are no-ops when using Chrome Debugger.');
     } else {
       logger.warn('Layout Animations are not supported on this configuration.');
     }
@@ -195,10 +192,6 @@ class JSReanimated implements IReanimatedModule {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (IS_JEST) {
       logger.warn('useAnimatedKeyboard is not available when using Jest.');
-    } else if (IS_CHROME_DEBUGGER) {
-      logger.warn(
-        'useAnimatedKeyboard is not available when using Chrome Debugger.'
-      );
     } else {
       logger.warn(
         'useAnimatedKeyboard is not available on this configuration.'

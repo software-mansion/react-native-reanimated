@@ -2,12 +2,7 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import {
-  IS_CHROME_DEBUGGER,
-  IS_JEST,
-  processColorsInProps,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { IS_JEST, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -53,10 +48,6 @@ function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
 }
 
-function setNativePropsChromeDebugger() {
-  logger.warn('setNativeProps() is not supported with Chrome Debugger.');
-}
-
 function setNativePropsDefault() {
   logger.warn('setNativeProps() is not supported on this configuration.');
 }
@@ -68,8 +59,6 @@ if (!SHOULD_BE_USE_WEB) {
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
 } else if (IS_JEST) {
   setNativeProps = setNativePropsJest;
-} else if (IS_CHROME_DEBUGGER) {
-  setNativeProps = setNativePropsChromeDebugger;
 } else {
   setNativeProps = setNativePropsDefault;
 }

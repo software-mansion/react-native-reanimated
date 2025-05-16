@@ -2,7 +2,7 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -47,10 +47,6 @@ function dispatchCommandJest() {
   logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
-function dispatchCommandChromeDebugger() {
-  logger.warn('dispatchCommand() is not supported with Chrome Debugger.');
-}
-
 function dispatchCommandDefault() {
   logger.warn('dispatchCommand() is not supported on this configuration.');
 }
@@ -62,8 +58,6 @@ if (!SHOULD_BE_USE_WEB) {
   dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
 } else if (IS_JEST) {
   dispatchCommand = dispatchCommandJest;
-} else if (IS_CHROME_DEBUGGER) {
-  dispatchCommand = dispatchCommandChromeDebugger;
 } else {
   dispatchCommand = dispatchCommandDefault;
 }

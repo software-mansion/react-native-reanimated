@@ -2,7 +2,7 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -67,11 +67,6 @@ function measureJest() {
   return null;
 }
 
-function measureChromeDebugger() {
-  logger.warn('measure() cannot be used with Chrome Debugger.');
-  return null;
-}
-
 function measureDefault() {
   logger.warn('measure() is not supported on this configuration.');
   return null;
@@ -84,8 +79,6 @@ if (!SHOULD_BE_USE_WEB) {
   measure = measureNative as unknown as Measure;
 } else if (IS_JEST) {
   measure = measureJest;
-} else if (IS_CHROME_DEBUGGER) {
-  measure = measureChromeDebugger;
 } else {
   measure = measureDefault;
 }

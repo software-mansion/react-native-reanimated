@@ -2,7 +2,7 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import { IS_CHROME_DEBUGGER, IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
@@ -49,10 +49,6 @@ function scrollToJest() {
   logger.warn('scrollTo() is not supported with Jest.');
 }
 
-function scrollToChromeDebugger() {
-  logger.warn('scrollTo() is not supported with Chrome Debugger.');
-}
-
 function scrollToDefault() {
   logger.warn('scrollTo() is not supported on this configuration.');
 }
@@ -64,8 +60,6 @@ if (!SHOULD_BE_USE_WEB) {
   scrollTo = scrollToNative as unknown as ScrollTo;
 } else if (IS_JEST) {
   scrollTo = scrollToJest;
-} else if (IS_CHROME_DEBUGGER) {
-  scrollTo = scrollToChromeDebugger;
 } else {
   scrollTo = scrollToDefault;
 }

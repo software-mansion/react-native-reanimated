@@ -54,6 +54,24 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableBigInt)(
       ->makeShareableBigInt(rt, std::move(args[0]).asBigInt(rt));
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableUndefined)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableUndefined(rt);
+}
+
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableNull)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableNull(rt);
+}
+
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -104,6 +122,10 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBoolean)};
   methodMap_["makeShareableBigInt"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableBigInt)};
+  methodMap_["makeShareableUndefined"] =
+      MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableUndefined)};
+  methodMap_["makeShareableNull"] =
+      MethodMetadata{0, WORKLETS_SPEC_PREFIX(makeShareableNull)};
   methodMap_["scheduleOnUI"] =
       MethodMetadata{1, WORKLETS_SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =
