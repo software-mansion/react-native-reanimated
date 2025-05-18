@@ -6,6 +6,8 @@
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <folly/dynamic.h>
 #include <vector>
@@ -14,6 +16,22 @@ namespace facebook::react {
 
 using namespace reanimated;
 using namespace css;
+
+// Custom overload for CSSAnimationConfig that pulls keyframesRegistry from the
+// context in order to store and reuse animations with the same name
+// (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
+void fromRawValue(
+    const PropsParserContext &context,
+    const RawValue &rawValue,
+    CSSAnimationConfig &result) {
+  const auto &proxy =
+      context.contextContainer.at<std::weak_ptr<ReanimatedModuleProxy>>(
+          "ReanimatedModuleProxy");
+  const auto &sharedProxy = proxy.lock();
+  const auto &keyframesRegistry =
+      sharedProxy->getCssAnimationKeyframesRegistry();
+  result = CSSAnimationConfig(keyframesRegistry, rawValue);
+}
 
 class ReanimatedNodeProps final : public ViewProps {
  public:

@@ -13,6 +13,10 @@ const CSSKeyframesConfig &CSSKeyframesRegistry::get(
   return it->second;
 }
 
+bool CSSKeyframesRegistry::has(const std::string &animationName) const {
+  return registry_.find(animationName) != registry_.end();
+}
+
 void CSSKeyframesRegistry::add(
     const std::string &animationName,
     CSSKeyframesConfig &&config) {
