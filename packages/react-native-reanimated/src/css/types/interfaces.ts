@@ -5,7 +5,7 @@ import type { CSSTransitionProperties } from './transition';
 
 export interface ICSSAnimationsManager {
   update(animationProperties: ExistingCSSAnimationProperties | null): void;
-  unmountCleanup?(): void;
+  unmountCleanup?(): void; // TODO - remove after refactor is finished
 }
 
 export interface ICSSTransitionsManager {
