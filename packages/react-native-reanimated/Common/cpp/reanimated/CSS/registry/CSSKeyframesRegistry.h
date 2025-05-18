@@ -12,6 +12,7 @@ namespace reanimated::css {
 class CSSKeyframesRegistry {
  public:
   const CSSKeyframesConfig &get(const std::string &animationName) const;
+  bool has(const std::string &animationName) const;
   void add(const std::string &animationName, CSSKeyframesConfig &&config);
   void remove(const std::string &animationName);
 

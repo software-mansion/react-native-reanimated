@@ -207,7 +207,9 @@ CSSAnimationConfig::CSSAnimationConfig(
     : CSSAnimationSettings{duration, easing, delay, iterationCount, direction, fillMode, playState},
       name(name) {}
 
-CSSAnimationConfig::CSSAnimationConfig(const RawValue &rawValue) {
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    const RawValue &rawValue) {
   parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
     const auto configObj = value.asObject(rt);
     name = parseName(rt, configObj);

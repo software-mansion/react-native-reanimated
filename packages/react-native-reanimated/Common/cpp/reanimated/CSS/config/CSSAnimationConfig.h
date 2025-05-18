@@ -3,6 +3,7 @@
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/utils.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <folly/dynamic.h>
 #include <memory>
@@ -70,8 +71,11 @@ struct CSSAnimationConfig : public CSSAnimationSettings {
       AnimationPlayState playState);
 
   // Both constructors are needed for rawValue conversion
+  // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
   CSSAnimationConfig() = default;
-  explicit CSSAnimationConfig(const RawValue &rawValue);
+  explicit CSSAnimationConfig(
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+      const RawValue &rawValue);
 
   bool operator==(const CSSAnimationConfig &other) const;
 };
