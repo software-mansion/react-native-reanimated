@@ -29,8 +29,4 @@ export default class NewCSSManager implements ICSSManager {
     this.animationsManager.update(animationProperties);
     this.transitionManager.update(transitionProperties);
   }
-
-  unmountCleanup(): void {
-    this.animationsManager.unmountCleanup();
-  }
 }

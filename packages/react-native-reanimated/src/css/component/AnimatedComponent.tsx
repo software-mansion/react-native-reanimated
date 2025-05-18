@@ -171,9 +171,6 @@ export default class AnimatedComponent<
       if (this._CSSManager) {
         this._CSSManager.unmountCleanup();
       }
-      if (this._CSSManagerNew) {
-        this._CSSManagerNew.unmountCleanup();
-      }
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
