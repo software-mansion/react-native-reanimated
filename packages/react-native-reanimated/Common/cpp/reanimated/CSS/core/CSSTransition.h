@@ -26,7 +26,9 @@ class CSSTransition {
       const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 
+  // TODO - remove this method when CSS refactor is finished
   void updateSettings(const CSSTransitionConfigUpdates &config);
+  void updateConfig(const CSSTransitionConfig &config);
   void run(
       double timestamp,
       const ChangedProps &changedProps,

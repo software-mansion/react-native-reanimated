@@ -46,7 +46,7 @@ void CSSTransitionManager::updateTransitionInstance(
   } else if (!newConfig.has_value()) {
     removeTransition();
   } else if (oldConfig != newConfig) {
-    // TODO
+    transition_->updateConfig(newConfig.value());
   }
 }
 

@@ -82,13 +82,13 @@ CSSTransitionConfig::CSSTransitionConfig(
     CSSTransitionPropertiesSettings settings)
     : properties(properties), settings(settings) {}
 
-CSSTransitionConfig::CSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto configObj = config.asObject(rt);
-  properties = parseProperties(rt, configObj);
-  settings = parseCSSTransitionPropertiesSettings(
-      rt, configObj.getProperty(rt, "settings").asObject(rt));
+CSSTransitionConfig::CSSTransitionConfig(const RawValue &rawValue) {
+  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
+    const auto configObj = value.asObject(rt);
+    properties = parseProperties(rt, configObj);
+    settings = parseCSSTransitionPropertiesSettings(
+        rt, configObj.getProperty(rt, "settings").asObject(rt));
+  });
 }
 
 bool CSSTransitionConfig::operator==(const CSSTransitionConfig &other) const {

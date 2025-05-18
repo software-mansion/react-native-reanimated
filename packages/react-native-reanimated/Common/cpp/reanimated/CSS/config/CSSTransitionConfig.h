@@ -31,11 +31,14 @@ struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
 
+  // TODO - remove this constructor when refactor is finished
   CSSTransitionConfig(
       TransitionProperties properties,
       CSSTransitionPropertiesSettings settings);
 
-  CSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
+  // Both constructors are needed for rawValue conversion
+  CSSTransitionConfig() = default;
+  explicit CSSTransitionConfig(const RawValue &rawValue);
 
   bool operator==(const CSSTransitionConfig &other) const;
 };

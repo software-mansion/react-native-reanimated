@@ -8,7 +8,7 @@
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 
 #include <folly/dynamic.h>
-#include <jsi/jsi.h>
+#include <vector>
 
 namespace facebook::react {
 
@@ -25,23 +25,9 @@ class ReanimatedNodeProps final : public ViewProps {
 
 #pragma mark - Props
 
-  using JsiValuePair = std::pair<jsi::Runtime *, jsi::Value>;
-
   folly::dynamic jsStyle{};
   std::optional<CSSTransitionConfig> cssTransition{};
   std::vector<CSSAnimationConfig> cssAnimations{};
-
- private:
-  std::optional<CSSTransitionConfig> parseCSSTransition(
-      const RawProps &rawProps);
-
-  std::vector<CSSAnimationConfig> parseCSSAnimations(const RawProps &rawProps);
-
-  template <typename T>
-  std::optional<T> parseRawProp(
-      const RawProps &rawProps,
-      const char *propName,
-      std::function<T(jsi::Runtime &, const jsi::Value &)> parser);
 };
 
 } // namespace facebook::react

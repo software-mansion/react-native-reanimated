@@ -3,11 +3,14 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {
 
 using namespace facebook;
+
+using JsiValuePair = std::pair<jsi::Runtime *, jsi::Value>;
 
 using PropertyNames = std::vector<std::string>;
 using PropertyPath = std::vector<std::string>;

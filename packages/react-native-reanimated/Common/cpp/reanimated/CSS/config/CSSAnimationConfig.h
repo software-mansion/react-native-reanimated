@@ -58,6 +58,7 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 struct CSSAnimationConfig : public CSSAnimationSettings {
   std::string name;
 
+  // TODO - remove this constructor when refactor is finished
   CSSAnimationConfig(
       const std::string &name,
       double duration,
@@ -68,7 +69,9 @@ struct CSSAnimationConfig : public CSSAnimationSettings {
       AnimationFillMode fillMode,
       AnimationPlayState playState);
 
-  CSSAnimationConfig(jsi::Runtime &rt, const jsi::Value &config);
+  // Both constructors are needed for rawValue conversion
+  CSSAnimationConfig() = default;
+  explicit CSSAnimationConfig(const RawValue &rawValue);
 
   bool operator==(const CSSAnimationConfig &other) const;
 };

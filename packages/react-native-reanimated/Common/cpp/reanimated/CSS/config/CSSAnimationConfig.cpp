@@ -207,18 +207,18 @@ CSSAnimationConfig::CSSAnimationConfig(
     : CSSAnimationSettings{duration, easing, delay, iterationCount, direction, fillMode, playState},
       name(name) {}
 
-CSSAnimationConfig::CSSAnimationConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto configObj = config.asObject(rt);
-  name = parseName(rt, configObj);
-  duration = parseDuration(rt, configObj);
-  easing = parseTimingFunction(rt, configObj);
-  delay = parseDelay(rt, configObj);
-  iterationCount = parseIterationCount(rt, configObj);
-  direction = parseDirection(rt, configObj);
-  fillMode = parseFillMode(rt, configObj);
-  playState = parsePlayState(rt, configObj);
+CSSAnimationConfig::CSSAnimationConfig(const RawValue &rawValue) {
+  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
+    const auto configObj = value.asObject(rt);
+    name = parseName(rt, configObj);
+    duration = parseDuration(rt, configObj);
+    easing = parseTimingFunction(rt, configObj);
+    delay = parseDelay(rt, configObj);
+    iterationCount = parseIterationCount(rt, configObj);
+    direction = parseDirection(rt, configObj);
+    fillMode = parseFillMode(rt, configObj);
+    playState = parsePlayState(rt, configObj);
+  });
 }
 
 bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
