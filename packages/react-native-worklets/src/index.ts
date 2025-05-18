@@ -1,22 +1,12 @@
 'use strict';
 
-import { breakBundle } from './bundleBreaker';
 import { initializeUIRuntime } from './initializers';
-import { __valueUnpacker } from './valueUnpacker';
 import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
-  console.log(Object.keys(globalThis));
   initializeUIRuntime(WorkletsModule);
-  // @ts-ignore www
-  globalThis.__valueUnpacker = __valueUnpacker;
-  // @ts-ignore www
-} else if (!globalThis._BROKEN) {
-  breakBundle();
-  // @ts-ignore www
-  globalThis._BROKEN = true;
 }
 
 export type { LoggerConfig } from './logger';

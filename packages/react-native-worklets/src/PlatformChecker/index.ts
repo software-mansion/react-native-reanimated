@@ -14,15 +14,21 @@ const mockedPlatformChecker = {
   shouldBeUseWeb: () => false,
 };
 
-export const isJest = globalThis._WORKLET
-  ? mockedPlatformChecker.isJest
-  : RNIsJest;
-export const isWeb = globalThis._WORKLET
-  ? mockedPlatformChecker.isWeb
-  : RNIsWeb;
-export const shouldBeUseWeb = globalThis._WORKLET
-  ? mockedPlatformChecker.shouldBeUseWeb
-  : RNShouldBeUseWeb;
-export const isChromeDebugger = globalThis._WORKLET
-  ? mockedPlatformChecker.isChromeDebugger
-  : RNIsChromeDebugger;
+let isJest: () => boolean;
+let isChromeDebugger: () => boolean;
+let isWeb: () => boolean;
+let shouldBeUseWeb: () => boolean;
+
+if (globalThis._WORKLET) {
+  isJest = mockedPlatformChecker.isJest;
+  isChromeDebugger = mockedPlatformChecker.isChromeDebugger;
+  isWeb = mockedPlatformChecker.isWeb;
+  shouldBeUseWeb = mockedPlatformChecker.shouldBeUseWeb;
+} else {
+  isJest = RNIsJest;
+  isChromeDebugger = RNIsChromeDebugger;
+  isWeb = RNIsWeb;
+  shouldBeUseWeb = RNShouldBeUseWeb;
+}
+
+export { isChromeDebugger, isJest, isWeb, shouldBeUseWeb };
