@@ -5,7 +5,8 @@ namespace reanimated::css {
 void parseRawValue(
     const RawValue &rawValue,
     std::function<void(jsi::Runtime &, const jsi::Value &)> parser) {
-  auto pair = (JsiValuePair *)(const_cast<RawValue *>(&rawValue));
+  auto pair =
+      reinterpret_cast<JsiValuePair *>(const_cast<RawValue *>(&rawValue));
   parser(*pair->first, pair->second);
 }
 

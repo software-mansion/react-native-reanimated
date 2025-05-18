@@ -31,35 +31,25 @@ folly::dynamic CSSAnimationsManager::getCurrentFrameProps(
   return result;
 }
 
-void CSSAnimationsManager::update(const ReanimatedNodeProps &newProps) {
-  // // Parse properties to animation config objects
-  // const auto configs = parseAnimationConfigs(newProps.cssAnimations);
-  // // Map current animations to their names in order to reuse the same
-  // instances
-  // // for animations with the same names
-  // auto nameToAnimationsMap = createCurrentNameToAnimationsMap();
-  // // Build a vector with the new animations
-  // animations_ = createNewAnimationsVector(nameToAnimationsMap, configs);
-  // // Remove all remaining animations in the map
-  // for (const auto &[_, animations] : nameToAnimationsMap) {
-  //   for (const auto &animation : animations) {
-  //     removeAnimationOperation(animation);
-  //   }
-  // }
-}
+void CSSAnimationsManager::update(
+    const ReanimatedNodeProps &oldProps,
+    const ReanimatedNodeProps &newProps) {
+  if (oldProps.cssAnimations == newProps.cssAnimations) {
+    return;
+  }
 
-std::vector<CSSAnimationConfig> CSSAnimationsManager::parseAnimationConfigs(
-    const folly::dynamic &cssAnimations) const {
-  std::vector<CSSAnimationConfig> animationConfigs;
-
-  // if (cssAnimations.isArray()) {
-  //   animationConfigs.reserve(cssAnimations.size());
-  //   for (const auto &animationConfig : cssAnimations) {
-  //     animationConfigs.push_back(parseCSSAnimationConfig(animationConfig));
-  //   }
-  // }
-
-  return animationConfigs;
+  // Map current animations to their names in order to reuse the same instances
+  // for animations with the same names
+  auto nameToAnimationsMap = createCurrentNameToAnimationsMap();
+  // Build a vector with new animations
+  animations_ =
+      createAndStartNewAnimations(nameToAnimationsMap, newProps.cssAnimations);
+  // Remove all remaining animations in the map
+  for (const auto &[_, animations] : nameToAnimationsMap) {
+    for (const auto &animation : animations) {
+      removeAnimationOperation(animation);
+    }
+  }
 }
 
 CSSAnimationsManager::NameToAnimationsMap
@@ -67,14 +57,14 @@ CSSAnimationsManager::createCurrentNameToAnimationsMap() const {
   NameToAnimationsMap nameToAnimationsMap;
 
   for (const auto &animation : animations_) {
-    nameToAnimationsMap[animation->getName()].push_back(animation);
+    nameToAnimationsMap[animation->getName()].emplace_back(animation);
   }
 
   return nameToAnimationsMap;
 }
 
 CSSAnimationsManager::AnimationsVector
-CSSAnimationsManager::createNewAnimationsVector(
+CSSAnimationsManager::createAndStartNewAnimations(
     NameToAnimationsMap &nameToAnimationsMap,
     const std::vector<CSSAnimationConfig> &animationConfigs) {
   AnimationsVector result;
@@ -90,7 +80,7 @@ CSSAnimationsManager::createNewAnimationsVector(
       // Create a new animation the animation with the same name doesn't exist
       const auto animation = createAnimation(animationConfig, timestamp);
       updateAnimationOperation(animation);
-      result.push_back(std::move(animation));
+      result.emplace_back(std::move(animation));
     } else {
       // Update the animation with the settings from the new config
       auto &animations = it->second;
@@ -102,7 +92,7 @@ CSSAnimationsManager::createNewAnimationsVector(
       if (stateChanged) {
         updateAnimationOperation(animation);
       }
-      result.push_back(std::move(animation));
+      result.emplace_back(std::move(animation));
 
       if (animations.empty()) {
         nameToAnimationsMap.erase(it);

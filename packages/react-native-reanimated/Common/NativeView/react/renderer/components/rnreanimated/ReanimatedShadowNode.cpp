@@ -13,7 +13,7 @@ ReanimatedShadowNode::ReanimatedShadowNode(
       static_cast<const ReanimatedNodeProps &>(*this->getProps());
 
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(newProps);
+  state.cssAnimationsManager->update(ReanimatedNodeProps(), newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -26,7 +26,7 @@ ReanimatedShadowNode::ReanimatedShadowNode(
       static_cast<const ReanimatedNodeProps &>(*this->getProps());
 
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(newProps);
+  state.cssAnimationsManager->update(oldProps, newProps);
   state.cssTransitionManager->update(oldProps, newProps);
 }
 
