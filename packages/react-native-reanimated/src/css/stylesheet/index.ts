@@ -1,3 +1,4 @@
+'use strict';
 import keyframes from './keyframes';
 import { create } from './stylesheet';
 
