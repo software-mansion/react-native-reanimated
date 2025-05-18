@@ -1,5 +1,5 @@
 'use strict';
-import { css } from '../../helpers';
+import { css } from '../../stylesheet';
 import type { CSSStyle, CSSTransitionProperty } from '../../types';
 import { filterCSSAndStyleProperties } from '../props';
 

@@ -1,13 +1,11 @@
 'use strict';
-
-import { logger } from 'react-native-worklets';
-
+import { CSSKeyframesRuleImpl } from '../models';
 import type { CSSStyle } from '../types';
 import { isCSSKeyframesRule } from '../utils';
 
 type NamedStyles<T> = { [P in keyof T]: CSSStyle };
 
-function checkAnimationName(
+function parseAnimationName(
   animationName: Required<CSSStyle['animationName']>
 ) {
   if (typeof animationName !== 'object') {
@@ -18,13 +16,11 @@ function checkAnimationName(
     ? animationName
     : [animationName];
 
-  keyframesArray.forEach((keyframes) => {
-    if (!isCSSKeyframesRule(keyframes)) {
-      logger.warn(
-        `You are using inline CSS animation keyframes in the stylesheet object:\n${JSON.stringify(keyframes, null, 2)}\n\nConsider using the css.keyframes helper function for performance optimization.`
-      );
-    }
-  });
+  return keyframesArray.map((keyframes) =>
+    isCSSKeyframesRule(keyframes)
+      ? keyframes
+      : new CSSKeyframesRuleImpl(keyframes)
+  );
 }
 
 export const create = <T extends NamedStyles<T>>(
@@ -32,15 +28,17 @@ export const create = <T extends NamedStyles<T>>(
   styles: T & NamedStyles<any>
 ): T => {
   // TODO - implement more optimizations and correctness checks in dev here
+
+  for (const key in styles) {
+    const style = styles[key];
+    if (style.animationName) {
+      style.animationName = parseAnimationName(style.animationName);
+    }
+  }
+
   if (__DEV__) {
     for (const key in styles) {
-      if (styles[key]) {
-        const style = styles[key];
-        if (style.animationName) {
-          checkAnimationName(style.animationName);
-        }
-        Object.freeze(style);
-      }
+      Object.freeze(styles[key]);
     }
   }
 
