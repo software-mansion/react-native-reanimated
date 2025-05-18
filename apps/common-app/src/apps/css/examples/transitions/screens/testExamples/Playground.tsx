@@ -3,7 +3,7 @@
  * file should be replaced with the actual example implementation.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -44,14 +44,6 @@ export default function Playground() {
     return transitionStyles[num % transitionStyles.length];
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setState((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <Screen>
       <View style={styles.container}>
@@ -67,7 +59,7 @@ export default function Playground() {
               backgroundColor: 'red',
               height: 65,
               marginTop: 60,
-              transitionDuration: 500,
+              transitionDuration: '0.5s',
               transitionProperty: 'all',
               transitionTimingFunction: 'ease-in-out',
               width: 65,
