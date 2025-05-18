@@ -1,6 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../constants';
+import { css } from '../../helpers';
 import CSSKeyframesRuleBase from '../../models/CSSKeyframesRuleBase';
 import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
@@ -8,7 +9,6 @@ import {
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
 } from '../../platform/native/native';
-import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
