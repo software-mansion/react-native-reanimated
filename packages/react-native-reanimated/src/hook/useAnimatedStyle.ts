@@ -1,6 +1,6 @@
 'use strict';
 import type { MutableRefObject } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
@@ -16,7 +16,7 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeShareable, startMapper, stopMapper } from '../core';
+import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isJest, shouldBeUseWeb } from '../PlatformChecker';
@@ -30,7 +30,6 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
   isAnimated,
@@ -496,7 +495,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
-  const areAnimationsActive = useSharedValue<boolean>(true);
+  const [areAnimationsActive] = useState(() => makeMutable(true));
   const jestAnimatedValues = useRef<Style | AnimatedProps>(
     {} as Style | AnimatedProps
   );
@@ -580,13 +579,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }, dependencies);
 
   useEffect(() => {
-    areAnimationsActive.value = true;
     return () => {
       areAnimationsActive.value = false;
     };
   }, [areAnimationsActive]);
 
-  checkSharedValueUsage(initial.value);
+  if (__DEV__) {
+    checkSharedValueUsage(initial.value);
+  }
 
   const animatedStyleHandle = useRef<
     | AnimatedStyleHandle<Style | AnimatedProps>

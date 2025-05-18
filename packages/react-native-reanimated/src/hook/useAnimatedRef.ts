@@ -1,6 +1,6 @@
 'use strict';
 import type { Component } from 'react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { FlatList } from 'react-native';
 import {
   makeShareableCloneRecursive,
@@ -9,10 +9,10 @@ import {
 
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { makeMutable } from '../mutables';
 import { isWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
 
 const IS_WEB = isWeb();
 
@@ -44,7 +44,7 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
 export function useAnimatedRef<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
-  const tag = useSharedValue<ShadowNodeWrapper | null>(null);
+  const [tag] = useState(() => makeMutable<ShadowNodeWrapper | null>(null));
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
