@@ -20,7 +20,7 @@ import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 
-type EntryOrExitLayoutType =
+export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
