@@ -237,11 +237,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     fun = (fun as FunDevRemote).__remoteFunction;
   }
 
-  if (globalThis._WORKLET) {
-    globalThis._log('runOnJS type');
-    globalThis._log(typeof fun);
-  }
-
   const scheduleOnJS =
     typeof fun === 'function'
       ? global._scheduleHostFunctionOnJS

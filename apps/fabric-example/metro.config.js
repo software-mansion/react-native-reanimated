@@ -23,7 +23,7 @@ const config = {
   },
   serializer: {
     getModulesRunBeforeMainModule() {
-      return [require.resolve('react-native-worklets')];
+      return [require.resolve('react-native-worklets/src/bundleBreaker.ts')];
     },
     createModuleIdFactory() {
       let nextId = 0;

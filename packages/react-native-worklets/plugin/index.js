@@ -441,6 +441,7 @@ var require_closure = __commonJS({
     exports2.getClosure = void 0;
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
+    var types_2 = require_types();
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -451,6 +452,7 @@ var require_closure = __commonJS({
           typePath.skip();
         },
         ReferencedIdentifier(idPath) {
+          var _a, _b;
           if (idPath.isJSXIdentifier()) {
             return;
           }
@@ -480,7 +482,7 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && isImport(binding)) {
+          if (state.opts.experimentalBundling && ((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("react-native-worklets")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.includes(types_2.generatedWorkletsDir)) && isImport(binding)) {
             if (isImportRelative(binding)) {
               relativeBindingsToImport.add(binding);
             } else {

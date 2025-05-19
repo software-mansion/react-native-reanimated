@@ -16,3 +16,5 @@ export function initializeLibraryOnWorkletRuntime() {
   }
 }
 
+initializeLibraryOnWorkletRuntime();
+

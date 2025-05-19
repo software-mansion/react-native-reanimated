@@ -9,15 +9,10 @@ import { initializeLibraryOnWorkletRuntime } from './bundleBreaker';
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
-  // globalThis.__valueUnpacker = valueUnpacker as ValueUnpacker;
+  globalThis.__valueUnpacker = valueUnpacker as ValueUnpacker;
   initializeUIRuntime(WorkletsModule);
-} else{
-  // @ts-expect-error www
-  if(!globalThis._BROKEN){
-    // @ts-expect-error www
-    globalThis._BROKEN = true;
+} else if (false) {
     initializeLibraryOnWorkletRuntime();
-  }
 }
 
 export type { LoggerConfig } from './logger';

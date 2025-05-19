@@ -38,7 +38,6 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 }
 
 function getFromCache(value: object) {
-  'worklet';
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
@@ -120,10 +119,6 @@ function makeShareableCloneRecursiveNative<T>(
   shouldPersistRemote = false,
   depth = 0
 ): ShareableRef<T> {
-  if (globalThis._WORKLET) {
-    globalThis._log('makeShareableCloneRecursive');
-    globalThis._log(value);
-  }
   detectCyclicObject(value, depth);
 
   const isObject = typeof value === 'object';
@@ -176,7 +171,6 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
-    console.log('cloning remote function', value);
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
@@ -208,8 +202,8 @@ function makeShareableCloneRecursiveNative<T>(
 }
 
 makeShareableCloneRecursiveNative.__bundleData = {
-  what: 'makeShareableCloneRecursive',
-  from: '../../packages/react-native-worklets/src/index.ts',
+  imported: 'makeShareableCloneRecursive',
+  source: '../../packages/react-native-worklets/src/index.ts',
 };
 
 export interface MakeShareableClone {
@@ -560,7 +554,6 @@ function isRemoteFunction<T>(value: {
  * should use shared values instead.
  */
 function freezeObjectInDev<T extends object>(value: T) {
-  'worklet';
   if (!__DEV__) {
     return;
   }

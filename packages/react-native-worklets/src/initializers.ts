@@ -15,6 +15,8 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
+import { shareableMappingCache } from './shareableMappingCache';
+import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -61,9 +63,9 @@ if (SHOULD_BE_USE_WEB) {
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError)();
+  // executeOnUIRuntimeSync(registerWorkletsError)();
   // executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+  // executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 
 // callGuard is only used with debug builds
@@ -75,8 +77,8 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
   try {
     return fn(...args);
   } catch (e) {
-    if (global.__ErrorUtils) {
-      global.__ErrorUtils.reportFatalError(e as Error);
+    if (globalThis.__ErrorUtils) {
+      globalThis.__ErrorUtils.reportFatalError(e as Error);
     } else {
       throw e;
     }
@@ -85,10 +87,18 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
 
 export function setupCallGuard() {
   'worklet';
-  global.__callGuardDEV = callGuardDEV;
-  global.__ErrorUtils = {
+  if(!globalThis.__callGuardDEV) {
+  globalThis.__callGuardDEV = callGuardDEV;
+  }
+}
+
+const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
+
+export function setupErrorUtils() {
+  'worklet';
+  globalThis.__ErrorUtils = {
     reportFatalError: (error: Error) => {
-      runOnJS(reportFatalErrorOnJS)({
+      runOnJS(runtimeBoundReportFatalErrorOnJS)({
         message: error.message,
         moduleName: 'Worklets',
         stack: error.stack,
@@ -183,6 +193,7 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     executeOnUIRuntimeSync(() => {
       'worklet';
       setupCallGuard();
+      setupErrorUtils();
       setupConsole();
       setupMicrotasks();
       setupRequestAnimationFrame();

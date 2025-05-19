@@ -4,6 +4,7 @@ import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
+import { generatedWorkletsDir } from './types';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 
 export function getClosure(
@@ -64,7 +65,12 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (state.opts.experimentalBundling && isImport(binding)) {
+        if (
+          state.opts.experimentalBundling &&
+          state.filename?.includes('react-native-worklets') &&
+          !state.filename?.includes(generatedWorkletsDir) &&
+          isImport(binding)
+        ) {
           if (isImportRelative(binding)) {
             relativeBindingsToImport.add(binding);
           } else {
