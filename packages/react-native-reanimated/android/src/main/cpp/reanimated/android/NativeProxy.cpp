@@ -7,8 +7,6 @@
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
 
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
-
 #include <react/fabric/Binding.h>
 
 namespace reanimated {
@@ -113,7 +111,6 @@ NativeProxy::getBindingsInstaller() {
             getIsReducedMotion());
         reanimatedModuleProxy_->init(getPlatformDependentMethods());
         reanimatedModuleProxy_->initializeFabric(uiManager_);
-        WorkletRuntimeCollector::install(rnRuntime);
         RNRuntimeDecorator::decorate(
             rnRuntime,
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
