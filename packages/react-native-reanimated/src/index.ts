@@ -50,6 +50,7 @@ export type {
   ExitAnimationsValues,
   IEntryExitAnimationBuilder,
   ILayoutAnimationBuilder,
+  KeyframeProps,
   LayoutAnimation,
   LayoutAnimationFunction,
   LayoutAnimationStartFunction,
@@ -105,6 +106,7 @@ export type {
   AnimatedProps,
   AnimatedStyleProp,
   AnimateProps,
+  EntryOrExitLayoutType,
   TransformStyleTypes,
 } from './helperTypes';
 export type {
@@ -163,6 +165,7 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
+export type { ReanimatedKeyframe } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
