@@ -116,12 +116,12 @@ const config = {
           },
         ],
       },
-      // React Native Paradise banner
+      // App.js 2025 Banner
       announcementBar: {
-        id: 'react-native-paradise-2025',
+        id: 'appjs-2025',
         content: ' ',
-        backgroundColor: '#fff5f7',
-        textColor: '#001a72',
+        backgroundColor: '#f7eded',
+        textColor: '#484dfc',
       },
       footer: {
         style: 'light',
