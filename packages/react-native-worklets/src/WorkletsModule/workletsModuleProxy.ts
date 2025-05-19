@@ -22,6 +22,11 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
+  makeShareableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean
+  ): ShareableRef<unknown[]>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(
