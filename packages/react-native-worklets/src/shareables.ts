@@ -256,10 +256,9 @@ function cloneArray<T extends unknown[]>(
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableArray(
     clonedElements,
-    shouldPersistRemote,
-    value
+    shouldPersistRemote
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -580,9 +579,9 @@ export function makeShareableCloneOnUIRecursive<T>(
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
-        return global._makeShareableClone(
+        return global._makeShareableArray(
           value.map(cloneRecursive),
-          undefined
+          false
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};

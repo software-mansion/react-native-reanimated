@@ -65,12 +65,7 @@ jsi::Value makeShareableClone(
             std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
       }
     } else if (object.isArray(rt)) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
-            rt, object.asArray(rt));
-      } else {
-        shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
-      }
+      return makeShareableArray(rt, object.asArray(rt), shouldRetainRemote);
     } else if (object.isArrayBuffer(rt)) {
       shareable =
           std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
@@ -90,17 +85,17 @@ jsi::Value makeShareableClone(
       }
     }
   } else if (value.isString()) {
-    shareable = std::make_shared<ShareableString>(value.asString(rt).utf8(rt));
+    return makeShareableString(rt, value.asString(rt));
   } else if (value.isUndefined()) {
-    shareable = std::make_shared<ShareableScalar>();
+    return makeShareableUndefined(rt);
   } else if (value.isNull()) {
-    shareable = std::make_shared<ShareableScalar>(nullptr);
+    return makeShareableNull(rt);
   } else if (value.isBool()) {
-    shareable = std::make_shared<ShareableScalar>(value.getBool());
+    return makeShareableBoolean(rt, value.getBool());
   } else if (value.isNumber()) {
-    shareable = std::make_shared<ShareableScalar>(value.getNumber());
+    return makeShareableNumber(rt, value.getNumber());
   } else if (value.isBigInt()) {
-    shareable = std::make_shared<ShareableBigInt>(rt, value.getBigInt(rt));
+    return makeShareableBigInt(rt, value.getBigInt(rt));
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't

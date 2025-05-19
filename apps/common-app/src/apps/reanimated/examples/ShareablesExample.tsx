@@ -39,15 +39,16 @@ export default function ShareablesExample() {
         <NumberDemo />
         <UndefinedDemo />
         <NullDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
+        <ArrayDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
         <DataViewDemo />
         <ErrorDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
       </ScrollView>
     </View>
   );
@@ -236,6 +237,42 @@ function NullDemo() {
       'worklet';
       try {
         if (x === null) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function ArrayDemo() {
+  const title = 'Array';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const array = [1, 2, 3];
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          array.length === 3,
+          array[0] === 1,
+          array[1] === 2,
+          array[2] === 3,
+        ];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();
