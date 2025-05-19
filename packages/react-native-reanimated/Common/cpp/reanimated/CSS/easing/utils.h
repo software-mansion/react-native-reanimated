@@ -22,7 +22,7 @@ std::shared_ptr<Easing> createParametrizedEasing(
     jsi::Runtime &rt,
     const jsi::Object &easingConfig);
 
-std::shared_ptr<Easing> createEasing(
+std::shared_ptr<Easing> createOrGetEasing(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);
 
