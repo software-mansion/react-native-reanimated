@@ -1,0 +1,1 @@
+{"version":3,"names":["jsVersion","acceptedWorkletsVersion","min","max"],"sourceRoot":"../../../src","sources":["platform-specific/jsVersion.ts"],"mappings":"AAAA,YAAY;;AACZ;AACA;AACA;AACA;AACA;AACA,OAAO,MAAMA,SAAS,GAAG,cAAc;;AAEvC;AACA;AACA;AACA;AACA,OAAO,MAAMC,uBAAuB,GAAG;EACrCC,GAAG,EAAE,OAA8B;EACnC;EACA;EACAC,GAAG,EAAE;AACP,CAAC","ignoreList":[]}

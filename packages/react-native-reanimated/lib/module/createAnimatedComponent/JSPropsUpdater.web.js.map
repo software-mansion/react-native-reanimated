@@ -1,0 +1,1 @@
+{"version":3,"names":["JSPropsUpdaterWeb","addOnJSPropsChangeListener","_animatedComponent","removeOnJSPropsChangeListener"],"sourceRoot":"../../../src","sources":["createAnimatedComponent/JSPropsUpdater.web.ts"],"mappings":"AAAA,YAAY;;AAOZ,eAAe,MAAMA,iBAAiB,CAAC;EAC9BC,0BAA0BA,CAC/BC,kBAG4B,EAC5B;IACA;EAAA;EAGKC,6BAA6BA,CAClCD,kBAG4B,EAC5B;IACA;EAAA;AAEJ","ignoreList":[]}
