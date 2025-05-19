@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs_reanimated=self.webpackChunkdocs_reanimated||[]).push([[7356],{51959:e=>{e.exports=JSON.parse('{"permalink":"/react-native-reanimated/examples","page":1,"postsPerPage":10,"totalPages":1,"totalCount":8,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

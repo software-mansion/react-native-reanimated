@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_reanimated=self.webpackChunkdocs_reanimated||[]).push([[1903],{1912:e=>{e.exports=JSON.parse('{"blogBasePath":"/react-native-reanimated/examples","blogTitle":"Blog","authorsListPath":"/react-native-reanimated/examples/authors"}')}}]);
