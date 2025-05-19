@@ -262,15 +262,19 @@ function ArrayDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const array = [1, 2, 3];
+    const array = [1, true, false, null, undefined, 'a', BigInt(123)];
     runOnUI(() => {
       'worklet';
       try {
         const checks = [
-          array.length === 3,
+          array.length === 7,
           array[0] === 1,
-          array[1] === 2,
-          array[2] === 3,
+          array[1] === true,
+          array[2] === false,
+          array[3] === null,
+          array[4] === undefined,
+          array[5] === 'a',
+          array[6] === BigInt(123),
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();

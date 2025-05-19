@@ -580,8 +580,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       if (Array.isArray(value)) {
         return global._makeShareableArray(
-          value.map(cloneRecursive),
-          false
+          value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
