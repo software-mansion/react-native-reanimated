@@ -84,6 +84,7 @@ import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryR
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
@@ -211,6 +212,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🫧',
     title: 'Bubbles',
     screen: BubblesExample,
+  },
+  OpacityTransformExample: {
+    icon: '🌀',
+    title: 'opacity & transform',
+    screen: OpacityTransformExample,
   },
   IPodExample: {
     icon: '🎧',

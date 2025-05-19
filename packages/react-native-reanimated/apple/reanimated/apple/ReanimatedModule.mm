@@ -11,7 +11,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
@@ -159,7 +158,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
 
-  WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
 
