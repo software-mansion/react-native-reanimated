@@ -300,6 +300,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 }
 
 void NativeProxy::invalidateCpp() {
+  workletsModuleProxy_.reset();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
