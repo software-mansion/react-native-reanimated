@@ -3,12 +3,12 @@
 import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { reportFatalErrorOnJS } from './errors';
-// import {
-//   // DEFAULT_LOGGER_CONFIG,
-//   // logToLogBoxAndConsole,
-//   // registerLoggerConfig,
-//   // replaceLoggerImplementation,
-// } from './logger';
+import {
+  DEFAULT_LOGGER_CONFIG,
+  logToLogBoxAndConsole,
+  registerLoggerConfig,
+  replaceLoggerImplementation,
+} from './logger';
 import {
   isChromeDebugger,
   isJest,
@@ -26,21 +26,23 @@ const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
+const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
+
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
 // is defined).
 function overrideLogFunctionImplementation() {
   'worklet';
-  // replaceLoggerImplementation((data) => {
-  //   'worklet';
-  //   runOnJS(logToLogBoxAndConsole)(data);
-  // });
+  replaceLoggerImplementation((data) => {
+    'worklet';
+    runOnJS(runtimeBoundLogToLogBoxAndConsole)(data);
+  });
 }
 
 // Register logger config and replace the log function implementation in
 // the React runtime global scope
 if (!globalThis._WORKLET) {
-  // registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
   overrideLogFunctionImplementation();
 }
 
@@ -63,8 +65,8 @@ if (SHOULD_BE_USE_WEB) {
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
-  // executeOnUIRuntimeSync(registerWorkletsError)();
-  // executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  executeOnUIRuntimeSync(registerWorkletsError)();
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
   // executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 

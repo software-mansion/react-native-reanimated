@@ -24,7 +24,7 @@ export {
 } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
-export { makeShareable, makeShareableCloneRecursive } from './shareables';
+export { makeShareable, makeShareableCloneRecursive, makeShareableCloneOnUIRecursive } from './shareables';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

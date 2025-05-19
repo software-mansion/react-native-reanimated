@@ -149,14 +149,7 @@ function makeShareableCloneRecursiveNative<T>(
   }
 
   if ((!isObject && !isFunction) || value === null) {
-    if (globalThis._WORKLET) {
-      globalThis._log('makeShareableCloneRecursive - primitive');
-    }
-    const primitive = clonePrimitive(value, shouldPersistRemote);
-    if (globalThis._WORKLET) {
-      globalThis._log('cloned primitive');
-    }
-    return primitive;
+    return clonePrimitive(value, shouldPersistRemote);
   }
 
   const cached = getFromCache(value);
@@ -555,11 +548,6 @@ function isRemoteFunction<T>(value: {
  */
 function freezeObjectInDev<T extends object>(value: T) {
   if (!__DEV__) {
-    return;
-  }
-  if (globalThis._WORKLET) {
-    globalThis._log('freezeObjectInDev');
-    globalThis._log(value);
     return;
   }
   Object.entries(value).forEach(([key, element]) => {

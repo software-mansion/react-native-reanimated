@@ -154,15 +154,8 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
     return WorkletsModule.executeOnUIRuntimeSync(
       makeShareableCloneRecursive(() => {
         'worklet';
-        try {
-          const result = worklet(...args);
-          return makeShareableCloneRecursive(result);
-        } catch (error) {
-          globalThis._log('Error in executeOnUIRuntimeSync');
-          globalThis._log(error);
-          globalThis._log(worklet);
-          throw error;
-        }
+        const result = worklet(...args);
+        return makeShareableCloneRecursive(result);
       })
     );
   };
