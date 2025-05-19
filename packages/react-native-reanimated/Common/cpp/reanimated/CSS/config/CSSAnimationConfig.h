@@ -27,6 +27,8 @@ struct CSSAnimationSettings {
   AnimationDirection direction;
   AnimationFillMode fillMode;
   AnimationPlayState playState;
+
+  CSSAnimationSettings(jsi::Runtime &rt, const jsi::Value &config);
 };
 
 struct PartialCSSAnimationSettings {
@@ -56,12 +58,17 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 
 // TODO - clean up this file once the new CSS implementation is ready
 
-struct CSSAnimationConfig : public CSSAnimationSettings {
+struct CSSAnimationConfig {
   std::string name;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
+  KeyframeEasings keyframeEasings;
+  CSSAnimationSettings settings;
 
   // TODO - remove this constructor when refactor is finished
   CSSAnimationConfig(
       const std::string &name,
+      std::shared_ptr<AnimationStyleInterpolator> styleInterpolator,
+      KeyframeEasings keyframeEasings,
       double duration,
       std::shared_ptr<Easing> easing,
       double delay,

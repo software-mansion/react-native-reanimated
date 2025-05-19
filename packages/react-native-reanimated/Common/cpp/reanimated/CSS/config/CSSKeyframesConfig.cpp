@@ -26,7 +26,7 @@ std::shared_ptr<KeyframeEasings> parseKeyframeTimingFunctions(
   for (size_t i = 0; i < timingFunctionsCount; ++i) {
     const auto offset =
         timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easing = createEasing(
+    const auto easing = createOrGetEasing(
         rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
 
     result[std::stod(offset)] = easing;
