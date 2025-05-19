@@ -1,0 +1,24 @@
+diff --git a/lib/module/views/Drawer.native.js b/lib/module/views/Drawer.native.js
+index e6702d01632b36bc51df471f8dd2542447c2ba80..3207c9d9aa2b512b7970c7f6ff0997a89776e60a 100644
+--- a/lib/module/views/Drawer.native.js
++++ b/lib/module/views/Drawer.native.js
+@@ -56,7 +56,6 @@ export function Drawer({
+   const isOpen = drawerType === 'permanent' ? true : open;
+   const isRight = drawerPosition === 'right';
+   const getDrawerTranslationX = React.useCallback(open => {
+-    'worklet';
+ 
+     if (drawerPosition === 'left') {
+       return open ? 0 : -drawerWidth;
+diff --git a/src/views/Drawer.native.tsx b/src/views/Drawer.native.tsx
+index 3363bfc32a230dcbd9c9991cab90dc4847dbd14e..8116a5fd334fb40ba7301b2d0a3648852bdba1dc 100644
+--- a/src/views/Drawer.native.tsx
++++ b/src/views/Drawer.native.tsx
+@@ -176,7 +176,6 @@ export function Drawer({
+ 
+   const toggleDrawer = React.useCallback(
+     (open: boolean, velocity?: number) => {
+-      'worklet';
+ 
+       const translateX = getDrawerTranslationX(open);
+ 
