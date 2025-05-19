@@ -17,19 +17,25 @@ const transformed = transformFileSync(
   }
 );
 
-// @ts-expect-error
+if (!transformed || !transformed.ast) {
+  throw new Error('Failed to transform the file');
+}
+
+let valueUnpackerDeclaration;
+
+
 traverse(transformed.ast, {
-  Program(path) {
-    path.get('directives').forEach((directive) => {
-      // We must strip top-level directives since
-      // they cannot be present in top-level code.
-      directive.remove();
-    });
-  },
+  FunctionDeclaration(path) {
+    // Extract the function declaration for `valueUnpacker`
+    valueUnpackerDeclaration = path.node;
+  }
 });
 
-// @ts-expect-error
-const transformFrom = generate(transformed.ast, {
+if (!valueUnpackerDeclaration) {
+  throw new Error('Failed to find the valueUnpacker function declaration');
+}
+
+const transformFrom = generate(valueUnpackerDeclaration, {
   comments: false,
   compact: false,
 });

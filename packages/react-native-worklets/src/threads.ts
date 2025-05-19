@@ -4,7 +4,7 @@ import { makeShareableCloneRecursive } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction, WorkletImport } from './workletTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -90,7 +90,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     __DEV__ &&
     !SHOULD_BE_USE_WEB &&
     !isWorkletFunction(worklet) &&
-    !worklet.__bundleData
+    !(worklet as unknown as WorkletImport).__bundleData
   ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }

@@ -4,7 +4,6 @@ import { setupCallGuard, setupConsole } from './initializers';
 import { registerLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
-  makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
@@ -75,7 +74,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
     return (...args) =>
       global._scheduleOnRuntime(
         workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
+        makeShareableCloneRecursive(() => {
           'worklet';
           worklet(...args);
         })

@@ -1,15 +1,13 @@
 'use strict';
 
 import { setupCallGuard } from './initializers';
-import { __valueUnpacker } from './valueUnpacker';
+import { __valueUnpacker } from './bundleUnpacker';
+import type { ValueUnpacker } from './workletTypes';
 
-export function breakBundle() {
+function breakBundle() {
   if (globalThis._WORKLET) {
     // TODO: Try storing a raw pointer to the valueUnpacker and see what happens.
-    // @ts-expect-error wwwww
-    globalThis.__valueUnpacker = __valueUnpacker;
-    // @ts-expect-error wwwww
-    globalThis._BROKEN = true;
+    globalThis.__valueUnpacker = __valueUnpacker as ValueUnpacker;
 
     setupCallGuard();
     // eslint-disable-next-line reanimated/use-worklets-error
