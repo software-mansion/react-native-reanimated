@@ -46,7 +46,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       CallExpression: {
         enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -63,7 +62,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           state: ReanimatedPluginPass
         ) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -75,7 +73,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       ObjectExpression: {
         enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -86,7 +83,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       ClassDeclaration: {
         enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -97,7 +93,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       Program: {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -108,7 +103,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       JSXAttribute: {
         enter(path: NodePath<JSXAttribute>, state: ReanimatedPluginPass) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() =>

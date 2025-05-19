@@ -10,6 +10,7 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type {
+  FlatShareableRef,
   ShareableRef,
   WorkletFunction,
   WorkletImport,
@@ -533,16 +534,16 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-// type RemoteFunction<T> = {
-//   __remoteFunction: FlatShareableRef<T>;
-// };
+type RemoteFunction<T> = {
+  __remoteFunction: FlatShareableRef<T>;
+};
 
-// function isRemoteFunction<T>(value: {
-//   __remoteFunction?: unknown;
-// }): value is RemoteFunction<T> {
-//   'worklet';
-//   return !!value.__remoteFunction;
-// }
+function isRemoteFunction<T>(value: {
+  __remoteFunction?: unknown;
+}): value is RemoteFunction<T> {
+  'worklet';
+  return !!value.__remoteFunction;
+}
 
 /**
  * We freeze
@@ -587,6 +588,78 @@ function freezeObjectInDev<T extends object>(value: T) {
     });
   });
   Object.preventExtensions(value);
+}
+
+export function makeShareableCloneOnUIRecursive<T>(
+  value: T
+): FlatShareableRef<T> {
+  'worklet';
+  // TODO: Warn here for new bundling
+  if (SHOULD_BE_USE_WEB) {
+    // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
+    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
+    return value;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function cloneRecursive(value: T): FlatShareableRef<T> {
+    if (
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
+    ) {
+      if (isHostObject(value)) {
+        // We call `_makeShareableClone` to wrap the provided HostObject
+        // inside ShareableJSRef.
+        return global._makeShareableClone(
+          value,
+          undefined
+        ) as FlatShareableRef<T>;
+      }
+      if (isRemoteFunction<T>(value)) {
+        // RemoteFunctions are created by us therefore they are
+        // a Shareable out of the box and there is no need to
+        // call `_makeShareableClone`.
+        return value.__remoteFunction;
+      }
+      if (Array.isArray(value)) {
+        return global._makeShareableClone(
+          value.map(cloneRecursive),
+          undefined
+        ) as FlatShareableRef<T>;
+      }
+      const toAdapt: Record<string, FlatShareableRef<T>> = {};
+      for (const [key, element] of Object.entries(value)) {
+        toAdapt[key] = cloneRecursive(element);
+      }
+      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
+    }
+
+    if (typeof value === 'string') {
+      return global._makeShareableString(value);
+    }
+
+    if (typeof value === 'number') {
+      return global._makeShareableNumber(value);
+    }
+
+    if (typeof value === 'boolean') {
+      return global._makeShareableBoolean(value);
+    }
+
+    if (typeof value === 'bigint') {
+      return global._makeShareableBigInt(value);
+    }
+
+    if (value === undefined) {
+      return global._makeShareableUndefined();
+    }
+
+    if (value === null) {
+      return global._makeShareableNull();
+    }
+
+    return global._makeShareableClone(value, undefined);
+  }
+  return cloneRecursive(value);
 }
 
 function makeShareableJS<T extends object>(value: T): T {

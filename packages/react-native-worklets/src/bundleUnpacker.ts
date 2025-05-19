@@ -2,7 +2,7 @@
 'use strict';
 import type { WorkletFunction } from './workletTypes';
 
-export function __valueUnpacker(
+export function valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string

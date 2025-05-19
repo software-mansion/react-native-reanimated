@@ -1,12 +1,23 @@
 'use strict';
 
 import { initializeUIRuntime } from './initializers';
+import { valueUnpacker } from './bundleUnpacker';
 import { WorkletsModule } from './WorkletsModule';
+import type { ValueUnpacker } from './workletTypes';
+import { initializeLibraryOnWorkletRuntime } from './bundleBreaker';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
+  // globalThis.__valueUnpacker = valueUnpacker as ValueUnpacker;
   initializeUIRuntime(WorkletsModule);
+} else{
+  // @ts-expect-error www
+  if(!globalThis._BROKEN){
+    // @ts-expect-error www
+    globalThis._BROKEN = true;
+    initializeLibraryOnWorkletRuntime();
+  }
 }
 
 export type { LoggerConfig } from './logger';

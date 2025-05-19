@@ -116,12 +116,20 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
-  try {
-    auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
-    std::string scriptName = "scriptName";
-    rt.evaluateJavaScript(buffer, scriptName);
-  } catch (facebook::jsi::JSIException ex) {
-    // LOG(INFO) << ex.what();
+  if (script == nullptr) {
+    // Legacy behavior
+    auto valueUnpackerBuffer =
+        std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+    rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+  } else {
+    // Experimental bundling
+    try {
+      auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
+      std::string scriptName = "scriptName";
+      rt.evaluateJavaScript(buffer, scriptName);
+    } catch (facebook::jsi::JSIException ex) {
+      // LOG(INFO) << ex.what();
+    }
   }
 }
 

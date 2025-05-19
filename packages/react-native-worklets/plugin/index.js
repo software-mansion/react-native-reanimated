@@ -971,13 +971,14 @@ var require_workletFactoryCall = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactoryCall = void 0;
     var types_12 = require("@babel/types");
+    var types_2 = require_types();
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
       const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       let factoryCall;
       if (state.opts.experimentalBundling) {
         factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
-          (0, types_12.stringLiteral)(`react-native-worklets/generated/${workletHash}.js`)
+          (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
         ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
       } else {
         factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
@@ -1737,7 +1738,6 @@ module.exports = function WorkletsBabelPlugin() {
       CallExpression: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1751,7 +1751,6 @@ module.exports = function WorkletsBabelPlugin() {
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1762,7 +1761,6 @@ module.exports = function WorkletsBabelPlugin() {
       ObjectExpression: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1773,7 +1771,6 @@ module.exports = function WorkletsBabelPlugin() {
       ClassDeclaration: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1784,7 +1781,6 @@ module.exports = function WorkletsBabelPlugin() {
       Program: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => {
@@ -1795,7 +1791,6 @@ module.exports = function WorkletsBabelPlugin() {
       JSXAttribute: {
         enter(path, state) {
           if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
             return;
           }
           runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));

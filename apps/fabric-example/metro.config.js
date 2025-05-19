@@ -23,7 +23,7 @@ const config = {
   },
   serializer: {
     getModulesRunBeforeMainModule() {
-      return [require.resolve('react-native-worklets/src/bundleBreaker.ts')];
+      return [require.resolve('react-native-worklets')];
     },
     createModuleIdFactory() {
       let nextId = 0;
@@ -32,7 +32,7 @@ const config = {
         if (idFileMap.has(ppath)) {
           return idFileMap.get(ppath);
         }
-        if (ppath.includes('react-native-worklets/generated/')) {
+        if (ppath.includes('react-native-worklets/__generatedWorklets/')) {
           const base = path.basename(ppath, '.js');
           const id = Number(base);
           idFileMap.set(ppath, id);
