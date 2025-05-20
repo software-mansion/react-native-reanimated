@@ -283,7 +283,7 @@ function ArrayDemo() {
       BigInt(123),
       // object
       { a: 1 },
-      // remote function - not worklet
+      // remote function - not a worklet
       () => {
         return 1;
       },
@@ -323,6 +323,8 @@ function ArrayDemo() {
           array[7].a === 1,
           // remote function - not worklet
           typeof array[8] === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in array[8] && !!array[8].__remoteFunction),
           // array
           array[9].length === 1,
           array[9][0] === 1,
