@@ -1,4 +1,5 @@
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 
 #include <utility>
 
@@ -15,6 +16,8 @@ void RNRuntimeWorkletDecorator::decorate(
 
   rnRuntime.global().setProperty(
       rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
+
+  WorkletRuntimeCollector::install(rnRuntime);
 }
 
 } // namespace worklets

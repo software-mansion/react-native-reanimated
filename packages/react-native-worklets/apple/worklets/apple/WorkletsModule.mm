@@ -57,7 +57,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   });
 
   auto jsCallInvoker = _callInvoker.callInvoker;
-  auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
@@ -65,7 +64,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, jsScheduler, uiScheduler, std::move(forwardedRequestAnimationFrame));
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
