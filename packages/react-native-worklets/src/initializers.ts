@@ -18,16 +18,16 @@ import type { IWorkletsModule } from './WorkletsModule';
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
-
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
 // is defined).
-function overrideLogFunctionImplementation() {
+function overrideLogFunctionImplementation(
+  boundLogToLogBoxAndConsole: typeof logToLogBoxAndConsole
+) {
   'worklet';
   replaceLoggerImplementation((data) => {
     'worklet';
-    runOnJS(runtimeBoundLogToLogBoxAndConsole)(data);
+    runOnJS(boundLogToLogBoxAndConsole)(data);
   });
 }
 
@@ -35,14 +35,14 @@ function overrideLogFunctionImplementation() {
 // the React runtime global scope
 if (!globalThis._WORKLET) {
   registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  overrideLogFunctionImplementation();
+  overrideLogFunctionImplementation(logToLogBoxAndConsole);
 }
 
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
+  globalThis._WORKLET = false;
+  globalThis._log = console.log;
+  globalThis._getAnimationTimestamp = () => performance.now();
 } else if (!globalThis._WORKLET) {
   if (__DEV__) {
     const testWorklet = () => {
@@ -54,12 +54,17 @@ if (SHOULD_BE_USE_WEB) {
       );
     }
   }
+
+  const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
+
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
   executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  // executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+  executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
+    runtimeBoundLogToLogBoxAndConsole
+  );
 }
 
 // callGuard is only used with debug builds
@@ -86,13 +91,13 @@ export function setupCallGuard() {
   }
 }
 
-const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
-
-export function setupErrorUtils() {
+export function setupErrorUtils(
+  boundReportFatalErrorOnJS: typeof reportFatalErrorOnJS
+) {
   'worklet';
   globalThis.__ErrorUtils = {
     reportFatalError: (error: Error) => {
-      runOnJS(runtimeBoundReportFatalErrorOnJS)({
+      runOnJS(boundReportFatalErrorOnJS)({
         message: error.message,
         moduleName: 'Worklets',
         stack: error.stack,
@@ -100,6 +105,8 @@ export function setupErrorUtils() {
     },
   };
 }
+
+let capturableConsole: typeof console;
 
 /**
  * Currently there seems to be a bug in the JSI layer which causes a crash when
@@ -114,7 +121,11 @@ export function setupErrorUtils() {
  * we don't copy the methods as they are in the original console object, we copy
  * JavaScript wrappers instead.
  */
-function createMemorySafeCapturableConsole(): typeof console {
+export function getMemorySafeCapturableConsole(): typeof console {
+  if (capturableConsole) {
+    return capturableConsole;
+  }
+
   const consoleCopy = Object.fromEntries(
     Object.entries(console).map(([methodName, method]) => {
       const methodWrapper = function methodWrapper(...args: unknown[]) {
@@ -137,24 +148,22 @@ function createMemorySafeCapturableConsole(): typeof console {
     })
   );
 
+  capturableConsole = consoleCopy as unknown as typeof console;
+
   return consoleCopy as unknown as typeof console;
 }
 
-// We really have to create a copy of console here. Function runOnJS we use on elements inside
-// this object makes it not configurable
-const capturableConsole = createMemorySafeCapturableConsole();
-
-export function setupConsole() {
+export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-  global.console = {
+  globalThis.console = {
     /* eslint-disable @typescript-eslint/unbound-method */
-    assert: runOnJS(capturableConsole.assert),
-    debug: runOnJS(capturableConsole.debug),
-    log: runOnJS(capturableConsole.log),
-    warn: runOnJS(capturableConsole.warn),
-    error: runOnJS(capturableConsole.error),
-    info: runOnJS(capturableConsole.info),
+    assert: runOnJS(boundCapturableConsole.assert),
+    debug: runOnJS(boundCapturableConsole.debug),
+    log: runOnJS(boundCapturableConsole.log),
+    warn: runOnJS(boundCapturableConsole.warn),
+    error: runOnJS(boundCapturableConsole.error),
+    info: runOnJS(boundCapturableConsole.info),
     /* eslint-enable @typescript-eslint/unbound-method */
   };
 }
@@ -181,12 +190,15 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     return;
   }
 
+  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(() => {
       'worklet';
-      setupErrorUtils();
+      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
       setupCallGuard();
-      setupConsole();
+      setupConsole(runtimeBoundCapturableConsole);
       setupMicrotasks();
       setupRequestAnimationFrame();
     })();

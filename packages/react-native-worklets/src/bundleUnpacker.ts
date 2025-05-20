@@ -34,15 +34,15 @@ export function bundleValueUnpacker(
       }
       return value;
     } else if (category === 'RemoteFunction') {
-      const fun = () => {
+      const remoteFunctionHolder = () => {
         const label = remoteFunctionName
           ? `function \`${remoteFunctionName}\``
           : 'anonymous function';
         throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
       };
-      fun.__remoteFunction = objectToUnpack;
-      return fun;
+      remoteFunctionHolder.__remoteFunction = objectToUnpack;
+      return remoteFunctionHolder;
     } else {
       throw new Error(
         `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${_toString(
