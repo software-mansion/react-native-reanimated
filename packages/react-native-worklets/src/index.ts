@@ -1,18 +1,21 @@
 'use strict';
 
+import { bundleValueUnpacker } from './bundleUnpacker';
 import { initializeUIRuntime } from './initializers';
-import { valueUnpacker } from './bundleUnpacker';
+import { initializeLibraryOnWorkletRuntime } from './workletRuntimeEntry';
 import { WorkletsModule } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
-import { initializeLibraryOnWorkletRuntime } from './bundleBreaker';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
-  globalThis.__valueUnpacker = valueUnpacker as ValueUnpacker;
+  globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   initializeUIRuntime(WorkletsModule);
+  // eslint-disable-next-line no-constant-condition
 } else if (false) {
-    initializeLibraryOnWorkletRuntime();
+  // We must 'run' anything from `workletRuntimeEntry`
+  // for it to be pulled into the bundle.
+  initializeLibraryOnWorkletRuntime();
 }
 
 export type { LoggerConfig } from './logger';
@@ -24,7 +27,11 @@ export {
 } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
-export { makeShareable, makeShareableCloneRecursive, makeShareableCloneOnUIRecursive } from './shareables';
+export {
+  makeShareable,
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
+} from './shareables';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

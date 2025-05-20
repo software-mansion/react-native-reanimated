@@ -160,7 +160,7 @@ export function setupConsole() {
 }
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
-  if (isWeb()) {
+  if (isWeb() || globalThis._WORKLET) {
     return;
   }
   if (!WorkletsModule) {
@@ -184,8 +184,8 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(() => {
       'worklet';
-      setupCallGuard();
       setupErrorUtils();
+      setupCallGuard();
       setupConsole();
       setupMicrotasks();
       setupRequestAnimationFrame();

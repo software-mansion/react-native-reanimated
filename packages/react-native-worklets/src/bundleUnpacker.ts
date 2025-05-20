@@ -1,8 +1,8 @@
 /* eslint-disable reanimated/use-worklets-error */
 'use strict';
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFactory, WorkletFunction } from './workletTypes';
 
-export function valueUnpacker(
+export function bundleValueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string
@@ -18,9 +18,8 @@ export function valueUnpacker(
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
       try {
-        // @ts-expect-error wwww
-        const factory = globalThis.__r(workletHash).default;
-        const worklet = factory(objectToUnpack.__closure);
+        const factory = globalThis.__r(workletHash).default as WorkletFactory;
+        const worklet = factory(objectToUnpack.__closure as never);
         return worklet;
       } catch (e) {
         globalThis._log('Error in __getWorklet');
