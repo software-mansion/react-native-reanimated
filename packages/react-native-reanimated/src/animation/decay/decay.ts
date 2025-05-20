@@ -56,6 +56,7 @@ function validateConfig(config: DefaultDecayConfig): void {
  * Lets you create animations that mimic objects in motion with friction.
  *
  * @param config - The decay animation configuration - {@link DecayConfig}.
+ *   Defaults to {@link DecayConfig} default values.
  * @param callback - A function called upon animation completion -
  *   {@link AnimationCallback}.
  * @returns An [animation
