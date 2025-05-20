@@ -18,6 +18,8 @@ import type { IWorkletsModule } from './WorkletsModule';
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
+const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
+
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
 // is defined).
@@ -25,14 +27,16 @@ function overrideLogFunctionImplementation() {
   'worklet';
   replaceLoggerImplementation((data) => {
     'worklet';
-    runOnJS(logToLogBoxAndConsole)(data);
+    runOnJS(runtimeBoundLogToLogBoxAndConsole)(data);
   });
 }
 
 // Register logger config and replace the log function implementation in
 // the React runtime global scope
-registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-overrideLogFunctionImplementation();
+if (!globalThis._WORKLET) {
+  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+  overrideLogFunctionImplementation();
+}
 
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
@@ -55,7 +59,7 @@ if (SHOULD_BE_USE_WEB) {
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
   executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+  // executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 
 // callGuard is only used with debug builds
@@ -67,8 +71,8 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
   try {
     return fn(...args);
   } catch (e) {
-    if (global.__ErrorUtils) {
-      global.__ErrorUtils.reportFatalError(e as Error);
+    if (globalThis.__ErrorUtils) {
+      globalThis.__ErrorUtils.reportFatalError(e as Error);
     } else {
       throw e;
     }
@@ -77,10 +81,18 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
 
 export function setupCallGuard() {
   'worklet';
-  global.__callGuardDEV = callGuardDEV;
-  global.__ErrorUtils = {
+  if (!globalThis.__callGuardDEV) {
+    globalThis.__callGuardDEV = callGuardDEV;
+  }
+}
+
+const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
+
+export function setupErrorUtils() {
+  'worklet';
+  globalThis.__ErrorUtils = {
     reportFatalError: (error: Error) => {
-      runOnJS(reportFatalErrorOnJS)({
+      runOnJS(runtimeBoundReportFatalErrorOnJS)({
         message: error.message,
         moduleName: 'Worklets',
         stack: error.stack,
@@ -148,7 +160,7 @@ export function setupConsole() {
 }
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
-  if (isWeb()) {
+  if (isWeb() || globalThis._WORKLET) {
     return;
   }
   if (!WorkletsModule) {
@@ -169,6 +181,7 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(() => {
       'worklet';
+      setupErrorUtils();
       setupCallGuard();
       setupConsole();
       setupMicrotasks();
