@@ -17,12 +17,14 @@ import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 import { processTransformOrigin } from './processTransformOrigin';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: StyleProps | AnimatedStyle<any>,
   isAnimatedProps?: boolean
 ) => void;
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
@@ -89,6 +91,7 @@ function createUpdatePropsManager() {
   };
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 if (shouldBeUseWeb()) {
   const maybeThrowError = () => {
     // Jest attempts to access a property of this object to check if it is a Jest mock

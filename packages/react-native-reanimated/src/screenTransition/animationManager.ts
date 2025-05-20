@@ -5,6 +5,7 @@ import type { LockAxis, ScreenTransitionConfig } from './commonTypes';
 import { applyStyle } from './styleUpdater';
 import { getSwipeSimulator } from './swipeSimulator';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 configureProps();
 
 export function startScreenTransition(

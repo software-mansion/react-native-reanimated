@@ -31,6 +31,7 @@ import type {
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {

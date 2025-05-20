@@ -13,18 +13,21 @@ import {
 export { createJSReanimatedModule } from './JSReanimated';
 
 // TODO: Install these global functions in a more suitable location.
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 global._makeShareableClone = () => {
   throw new ReanimatedError(
     '`_makeShareableClone` should never be called from React runtime.'
   );
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 global._scheduleHostFunctionOnJS = () => {
   throw new ReanimatedError(
     '`_scheduleOnJS` should never be called from React runtime.'
   );
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 global._scheduleOnRuntime = () => {
   throw new ReanimatedError(
     '`_scheduleOnRuntime` should never be called from React runtime.'

@@ -70,6 +70,7 @@ type withTimingType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,

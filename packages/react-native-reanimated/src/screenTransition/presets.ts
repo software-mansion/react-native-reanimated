@@ -2,6 +2,7 @@
 
 import type { AnimatedScreenTransition } from './commonTypes';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const SwipeRight: AnimatedScreenTransition = {
   topScreenStyle: (event) => {
     'worklet';
@@ -19,6 +20,7 @@ const SwipeRight: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const SwipeLeft: AnimatedScreenTransition = {
   topScreenStyle: (event) => {
     'worklet';
@@ -36,6 +38,7 @@ const SwipeLeft: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const SwipeDown: AnimatedScreenTransition = {
   topScreenStyle: (event) => {
     'worklet';
@@ -53,6 +56,7 @@ const SwipeDown: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const SwipeUp: AnimatedScreenTransition = {
   topScreenStyle: (event) => {
     'worklet';
@@ -70,6 +74,7 @@ const SwipeUp: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const TwoDimensional: AnimatedScreenTransition = {
   topScreenStyle: (event, _screenSize) => {
     'worklet';
@@ -86,6 +91,7 @@ const TwoDimensional: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const Horizontal: AnimatedScreenTransition = {
   topScreenStyle: (event, _screenSize) => {
     'worklet';
@@ -99,6 +105,7 @@ const Horizontal: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const Vertical: AnimatedScreenTransition = {
   topScreenStyle: (event, _screenSize) => {
     'worklet';
@@ -112,6 +119,7 @@ const Vertical: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const SwipeRightFade: AnimatedScreenTransition = {
   topScreenStyle: (event, screenSize) => {
     'worklet';
@@ -125,6 +133,7 @@ const SwipeRightFade: AnimatedScreenTransition = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const ScreenTransition = {
   SwipeRight,
   SwipeLeft,

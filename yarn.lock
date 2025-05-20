@@ -18660,6 +18660,7 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/types": "npm:^7.20.0"
+    "@ericcornelissen/eslint-plugin-top": "npm:^3.5.1"
     "@react-native/babel-preset": "npm:0.80.0-rc.2"
     "@react-native/eslint-config": "npm:0.80.0-rc.2"
     "@react-native/metro-config": "npm:0.80.0-rc.2"
