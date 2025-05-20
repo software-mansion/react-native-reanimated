@@ -40,7 +40,6 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.79.1#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.79.1-7bacb8c651.patch",
-    "react-native-drawer-layout@npm:^4.1.1": "patch:react-native-drawer-layout@npm%3A4.1.1#~/.yarn/patches/react-native-drawer-layout-npm-4.1.1-64fe7f514a.patch"
+    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.79.1#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.79.1-7bacb8c651.patch"
   }
 }

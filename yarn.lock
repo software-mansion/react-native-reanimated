@@ -18384,16 +18384,16 @@ __metadata:
   linkType: hard
 
 "react-native-drawer-layout@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "react-native-drawer-layout@npm:4.1.1"
+  version: 4.1.8
+  resolution: "react-native-drawer-layout@npm:4.1.8"
   dependencies:
-    use-latest-callback: "npm:^0.2.1"
+    use-latest-callback: "npm:^0.2.3"
   peerDependencies:
     react: ">= 18.2.0"
     react-native: "*"
     react-native-gesture-handler: ">= 2.0.0"
     react-native-reanimated: ">= 2.0.0"
-  checksum: 10/f5dcfd13c4a9ef506d9fc2e0ba8dfd5832200005af203966c13d9067cc87fb8137eca75c06ed6469bed660449c2189f74d05989beb425647ce6b07c628e3ab48
+  checksum: 10/9d74173bb59a20e579ef3bdd9414f98c04f58db5e41756bcf048b000d8f61d0173f934ad33d0cb613c9abfc3c21b45d663aa87354bc2cfad7df8ec429bf78291
   languageName: node
   linkType: hard
 
@@ -21686,6 +21686,15 @@ __metadata:
   peerDependencies:
     react: ">=16.8"
   checksum: 10/da5718eda625738cc7dac8fb502d0f8f2039435eb71203565a72c32e0f5769e7b8ddac074e650066636e7f4b29b45524f751cb18a2b430856d98879bbb10d274
+  languageName: node
+  linkType: hard
+
+"use-latest-callback@npm:^0.2.3":
+  version: 0.2.3
+  resolution: "use-latest-callback@npm:0.2.3"
+  peerDependencies:
+    react: ">=16.8"
+  checksum: 10/5db2dc0d414508c768ba4d1a337bd73dd0fb2a77eccc9dd7051517b28cd71c849c5e9230b5c97fc76a3811c1500f210cb4e4ebb95fe20347e5f910509a8e533c
   languageName: node
   linkType: hard
 

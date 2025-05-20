@@ -485,10 +485,11 @@ var require_closure = __commonJS({
           if (state.opts.experimentalBundling && ((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("react-native-worklets")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.includes(types_2.generatedWorkletsDir)) && isImport(binding)) {
             if (isImportRelative(binding)) {
               relativeBindingsToImport.add(binding);
-            } else {
+              return;
+            } else if (binding.path.parentPath.node.source.value === "react-native-worklets") {
               libraryBindingsToImport.add(binding);
+              return;
             }
-            return;
           }
           capturedNames.add(name);
           closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
@@ -1725,10 +1726,6 @@ module.exports = function WorkletsBabelPlugin() {
       throw new Error(`[Worklets] Babel plugin exception: ${e}`);
     }
   }
-  function isGeneratedWorkletFile(filename) {
-    var _a;
-    return (_a = filename === null || filename === void 0 ? void 0 : filename.includes(types_1.generatedWorkletsDir)) !== null && _a !== void 0 ? _a : false;
-  }
   return {
     name: "worklets",
     pre() {
@@ -1739,9 +1736,6 @@ module.exports = function WorkletsBabelPlugin() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, autoworkletization_1.processCalleesAutoworkletizableCallbacks)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -1752,9 +1746,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
           });
@@ -1762,9 +1753,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ObjectExpression: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
@@ -1772,9 +1760,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ClassDeclaration: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, class_1.processIfWorkletClass)(path, state);
           });
@@ -1782,9 +1767,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       Program: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, file_1.processIfWorkletFile)(path, state);
           });
@@ -1792,9 +1774,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       JSXAttribute: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            return;
-          }
           runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
