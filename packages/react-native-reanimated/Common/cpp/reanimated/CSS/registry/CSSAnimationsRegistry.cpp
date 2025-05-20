@@ -293,8 +293,6 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     }
   }
 
-  LOG(INFO) << "updatedStyle: " << updatedStyle;
-
   setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 
