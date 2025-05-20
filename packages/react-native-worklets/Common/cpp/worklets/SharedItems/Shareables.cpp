@@ -116,42 +116,38 @@ jsi::Value makeShareableClone(
 }
 
 jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string) {
-  auto shareable = std::make_shared<ShareableString>(string.utf8(rt));
+  const auto shareable = std::make_shared<ShareableString>(string.utf8(rt));
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) {
-  auto shareable = std::make_shared<ShareableScalar>(number);
+  const auto shareable = std::make_shared<ShareableScalar>(number);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
-  auto shareable = std::make_shared<ShareableScalar>(boolean);
+  const auto shareable = std::make_shared<ShareableScalar>(boolean);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
-  auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
+  const auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
-  auto shareable = std::make_shared<ShareableScalar>();
+  const auto shareable = std::make_shared<ShareableScalar>();
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableNull(jsi::Runtime &rt) {
-  auto shareable = std::make_shared<ShareableScalar>(nullptr);
+  const auto shareable = std::make_shared<ShareableScalar>(nullptr);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject) {
-  if (initializerObject.getProperty(rt, "__init").isUndefined()) {
-    throw std::runtime_error(
-        "[Worklets] Attempted to convert an initializer object that doesn't have the `__init` property.");
-  }
   const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
   return ShareableJSRef::newHostObject(rt, shareable);
