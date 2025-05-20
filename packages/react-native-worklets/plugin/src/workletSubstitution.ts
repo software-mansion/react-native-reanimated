@@ -59,6 +59,10 @@ export function processWorklet(
   const workletFactoryCall = makeWorkletFactoryCall(path, state);
 
   substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
+
+  // We recrawl the program parent scope to ensure that all variables are
+  // properly resolved after the substitution.
+  path.scope.getProgramParent().crawl();
 }
 
 function hasWorkletDirective(directives: Directive[]): boolean {

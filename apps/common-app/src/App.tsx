@@ -6,7 +6,7 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,9 +15,7 @@ import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
-import { LeakCheck } from './components/LeakCheck';
-
-export const NukeContext = createContext<() => void>(() => '');
+import { LeakCheck, NukeContext } from './components';
 
 export default function App() {
   const [nuked, setNuked] = useState(false);
@@ -26,9 +24,9 @@ export default function App() {
 
   if (nuked) {
     return (
-      <NukeContext.Provider value={() => setNuked(false)}>
+      <NukeContext value={() => setNuked(false)}>
         <LeakCheck />
-      </NukeContext.Provider>
+      </NukeContext>
     );
   }
 
@@ -41,7 +39,7 @@ export default function App() {
   }
 
   return (
-    <NukeContext.Provider value={() => setNuked(true)}>
+    <NukeContext value={() => setNuked(true)}>
       <SafeAreaProvider>
         <GestureHandlerRootView style={flex.fill}>
           <NavigationContainer
@@ -78,7 +76,7 @@ export default function App() {
           </NavigationContainer>
         </GestureHandlerRootView>
       </SafeAreaProvider>
-    </NukeContext.Provider>
+    </NukeContext>
   );
 }
 

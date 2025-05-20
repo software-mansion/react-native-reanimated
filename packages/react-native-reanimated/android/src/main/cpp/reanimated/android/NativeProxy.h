@@ -45,7 +45,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
-  void checkJavaVersion(jsi::Runtime &);
+  void checkJavaVersion();
   void injectCppVersion();
 #endif // NDEBUG
   // removed temporarily, event listener mechanism needs to be fixed on RN side

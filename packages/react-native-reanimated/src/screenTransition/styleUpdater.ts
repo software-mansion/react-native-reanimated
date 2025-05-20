@@ -1,7 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
-import updateProps from '../UpdateProps';
+import { updateProps } from '../updateProps';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,

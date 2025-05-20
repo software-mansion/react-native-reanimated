@@ -700,17 +700,17 @@ void ReanimatedModuleProxy::performOperations() {
       cssAnimationsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch, false);
+      cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch, true);
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
     if (shouldUpdateCssAnimations_) {
       cssTransitionsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
+      cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
     shouldUpdateCssAnimations_ = false;
@@ -780,7 +780,9 @@ void ReanimatedModuleProxy::commitUpdates(
     for (auto const &[family, props] : propsMap) {
       const auto surfaceId = family->getSurfaceId();
       auto &propsVector = propsMapBySurface[surfaceId][family];
-      propsVector.insert(propsVector.end(), props.begin(), props.end());
+      for (const auto &prop : props) {
+        propsVector.emplace_back(prop);
+      }
     }
   } else {
     for (auto const &[shadowNode, props] : updatesBatch) {
@@ -834,7 +836,19 @@ void ReanimatedModuleProxy::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-  uiManager_->dispatchCommand(shadowNode, commandName, args);
+  const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
+
+  if (!scheduler) {
+    return;
+  }
+
+  const auto &schedulerDelegate = scheduler->getDelegate();
+
+  if (schedulerDelegate) {
+    const auto shadowView = ShadowView(*shadowNode);
+    schedulerDelegate->schedulerDidDispatchCommand(
+        shadowView, commandName, args);
+  }
 }
 
 jsi::String ReanimatedModuleProxy::obtainProp(

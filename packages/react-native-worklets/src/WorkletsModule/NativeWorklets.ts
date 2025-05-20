@@ -1,8 +1,7 @@
-/* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -15,11 +14,14 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  #shareableUndefined: ShareableRef<undefined>;
+  #shareableNull: ShareableRef<null>;
+  #shareableTrue: ShareableRef<boolean>;
+  #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -27,7 +29,27 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = {
+      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
+      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
+      executeOnUIRuntimeSync:
+        global.__workletsModuleProxy.executeOnUIRuntimeSync,
+      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
+      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
+      makeShareableString: global.__workletsModuleProxy.makeShareableString,
+      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
+      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
+      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
+      makeShareableUndefined:
+        global.__workletsModuleProxy.makeShareableUndefined,
+      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
+    };
+    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.#shareableUndefined =
+      this.#workletsModuleProxy.makeShareableUndefined();
+    this.#shareableTrue = this.#workletsModuleProxy.makeShareableBoolean(true);
+    this.#shareableFalse =
+      this.#workletsModuleProxy.makeShareableBoolean(false);
   }
 
   makeShareableClone<TValue>(
@@ -40,6 +62,30 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
+  }
+
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return bool ? this.#shareableTrue : this.#shareableFalse;
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableUndefined() {
+    return this.#shareableUndefined;
+  }
+
+  makeShareableNull() {
+    return this.#shareableNull;
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

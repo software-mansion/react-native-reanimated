@@ -68,7 +68,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `runOnRuntime` is not a worklet.'
     );
   }
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     return (...args) =>
       global._scheduleOnRuntime(
         workletRuntime,

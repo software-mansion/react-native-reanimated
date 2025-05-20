@@ -9,7 +9,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -36,7 +36,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
@@ -47,10 +47,6 @@ function setNativePropsNative(
 
 function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
-}
-
-function setNativePropsChromeDebugger() {
-  logger.warn('setNativeProps() is not supported with Chrome Debugger.');
 }
 
 function setNativePropsDefault() {
@@ -64,8 +60,6 @@ if (!shouldBeUseWeb()) {
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
 } else if (isJest()) {
   setNativeProps = setNativePropsJest;
-} else if (isChromeDebugger()) {
-  setNativeProps = setNativePropsChromeDebugger;
 } else {
   setNativeProps = setNativePropsDefault;
 }

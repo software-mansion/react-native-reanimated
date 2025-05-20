@@ -51,6 +51,9 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(view).toHaveAnimatedStyle({ width: 150 });
+
+    const rendered = render(<InlineStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('Inline styles with withTiming', () => {
@@ -95,6 +98,9 @@ describe('Tests of inline styles', () => {
       height: 100,
       backgroundColor: 'violet',
     });
+
+    const rendered = render(<InlineStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('Double inline styles (single object)', () => {
@@ -126,6 +132,9 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(getAnimatedStyle(view)).toEqual({ width: 150, height: 150 });
+
+    const rendered = render(<UseAnimatedStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('Double inline styles (array)', () => {
@@ -157,6 +166,9 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(getAnimatedStyle(view)).toEqual({ width: 150, height: 150 });
+
+    const rendered = render(<UseAnimatedStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('Inline & useAnimatedStyle()', () => {
@@ -194,5 +206,8 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(getAnimatedStyle(view)).toEqual({ width: 150, height: 150 });
+
+    const rendered = render(<UseAnimatedStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

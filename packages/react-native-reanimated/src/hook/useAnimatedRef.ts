@@ -18,6 +18,7 @@ const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
+  getScrollableNode?: FlatList['getScrollableNode'];
   viewConfig?: {
     uiViewClassName?: string;
   };
@@ -26,6 +27,9 @@ interface MaybeScrollableComponent extends Component {
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
   if (component.getNativeScrollRef) {
     return component.getNativeScrollRef();
+  }
+  if (component.getScrollableNode) {
+    return component.getScrollableNode();
   }
   return component;
 }
@@ -42,13 +46,14 @@ export function useAnimatedRef<
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<ShadowNodeWrapper | null>(null);
 
-  const ref = useRef<AnimatedRef<TComponent>>();
+  const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
   if (!ref.current) {
+    /** Called by React when ref is attached to a component. */
     const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
       component
     ) => {
-      // enters when ref is set by attaching to a component
+      let initialTag: ShadowNodeWrapper | null = null;
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
           return IS_WEB
@@ -58,16 +63,16 @@ export function useAnimatedRef<
               );
         };
 
-        tag.value = getTagOrShadowNodeWrapper() as ShadowNodeWrapper;
+        initialTag = getTagOrShadowNodeWrapper();
+        tag.value = initialTag;
 
-        // On Fabric we have to unwrap the tag from the shadow node wrapper
-        // TODO: remove casting
+        // We have to unwrap the tag from the shadow node wrapper.
         fun.getTag = () =>
           findNodeHandle(getComponentOrScrollable(component) as Component)!;
 
         fun.current = component;
       }
-      return tag.value;
+      return initialTag;
     });
 
     fun.current = null;

@@ -7,7 +7,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { dispatchCommand } from './dispatchCommand';
 
 type ScrollTo = <T extends Component>(
@@ -49,10 +49,6 @@ function scrollToJest() {
   logger.warn('scrollTo() is not supported with Jest.');
 }
 
-function scrollToChromeDebugger() {
-  logger.warn('scrollTo() is not supported with Chrome Debugger.');
-}
-
 function scrollToDefault() {
   logger.warn('scrollTo() is not supported on this configuration.');
 }
@@ -64,8 +60,6 @@ if (!shouldBeUseWeb()) {
   scrollTo = scrollToNative as unknown as ScrollTo;
 } else if (isJest()) {
   scrollTo = scrollToJest;
-} else if (isChromeDebugger()) {
-  scrollTo = scrollToChromeDebugger;
 } else {
   scrollTo = scrollToDefault;
 }

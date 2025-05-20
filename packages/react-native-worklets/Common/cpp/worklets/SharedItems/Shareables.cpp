@@ -115,6 +115,36 @@ jsi::Value makeShareableClone(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string) {
+  auto shareable = std::make_shared<ShareableString>(string.utf8(rt));
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) {
+  auto shareable = std::make_shared<ShareableScalar>(number);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
+  auto shareable = std::make_shared<ShareableScalar>(boolean);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
+  auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
+  auto shareable = std::make_shared<ShareableScalar>();
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableNull(jsi::Runtime &rt) {
+  auto shareable = std::make_shared<ShareableScalar>(nullptr);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

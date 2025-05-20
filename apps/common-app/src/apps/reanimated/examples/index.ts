@@ -23,6 +23,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -83,6 +84,7 @@ import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryR
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
@@ -91,6 +93,7 @@ import PlanetsExample from './PlanetsExample';
 import RainbowExample from './RainbowExample';
 import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
+import RunOnUIAsyncExample from './RunOnUIAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
@@ -109,8 +112,8 @@ import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
+import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -142,6 +145,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
+  },
+  RunOnUIAsyncExample: {
+    icon: '👷‍♂️',
+    title: 'runOnUIAsync',
+    screen: RunOnUIAsyncExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
@@ -179,6 +187,12 @@ export const EXAMPLES: Record<string, Example> = {
     screen: InvalidValueAccessExample,
   },
 
+  CopyShareablesPerformanceTest: {
+    icon: '🔄',
+    title: 'Copy shareables performance test',
+    screen: CopyShareablesPerformanceTest,
+  },
+
   // About
 
   AboutExample: {
@@ -198,6 +212,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🫧',
     title: 'Bubbles',
     screen: BubblesExample,
+  },
+  OpacityTransformExample: {
+    icon: '🌀',
+    title: 'opacity & transform',
+    screen: OpacityTransformExample,
   },
   IPodExample: {
     icon: '🎧',
@@ -251,7 +270,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -399,7 +417,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RefExample: {
     icon: '🦑',
-    title: 'forwardRef & useImperativeHandle',
+    title: 'Ref & useImperativeHandle',
     screen: RefExample,
   },
   ChessExample: {
@@ -436,11 +454,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔌',
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
-  },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
   },
   MatrixExample: {
     icon: '🧮',
@@ -515,7 +528,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -580,9 +592,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pager example',
     screen: PagerExample,
   },
+  TransformOriginExample: {
+    title: 'Transform origin example',
+    screen: TransformOriginExample,
+  },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
