@@ -4,7 +4,6 @@ import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { isSharedValue } from '../isSharedValue';
-import { isChromeDebugger } from '../PlatformChecker';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
@@ -87,7 +86,7 @@ export class PropsFilter implements IPropsFilter {
         if (component._isFirstRender) {
           props[key] = value.value;
         }
-      } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
+      } else {
         props[key] = value;
       }
     }

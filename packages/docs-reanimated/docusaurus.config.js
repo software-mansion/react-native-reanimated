@@ -71,6 +71,7 @@ const config = {
           blogSidebarTitle: 'Examples',
           blogSidebarCount: 'ALL',
           showReadingTime: false,
+          onUntruncatedBlogPosts: 'ignore',
         },
       }),
     ],
@@ -115,12 +116,12 @@ const config = {
           },
         ],
       },
-      // React Native Paradise banner
+      // App.js 2025 Banner
       announcementBar: {
-        id: 'react-native-paradise-2025',
+        id: 'appjs-2025',
         content: ' ',
-        backgroundColor: '#fff5f7',
-        textColor: '#001a72',
+        backgroundColor: '#f7eded',
+        textColor: '#484dfc',
       },
       footer: {
         style: 'light',
@@ -129,6 +130,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
+        additionalLanguages: ['bash'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
@@ -189,17 +191,17 @@ const config = {
               new webpack.DefinePlugin({
                 ...processMock,
                 __DEV__: 'false',
-                setImmediate: () => {},
               }),
             ],
             module: {
               rules: [
                 {
-                  test: /\.txt/,
+                  test: /\.txt$/,
                   type: 'asset/source',
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
                 },
               ],
             },

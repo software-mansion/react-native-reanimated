@@ -19,7 +19,6 @@ class WorkletsModuleProxy
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<void(std::function<void(const double)>)>
           &&forwardedRequestAnimationFrame);

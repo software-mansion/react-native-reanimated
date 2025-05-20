@@ -8,6 +8,7 @@ import {
 } from '@babel/types';
 
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { generatedWorkletsDir } from './types';
 import { makeWorkletFactory } from './workletFactory';
 
 export function makeWorkletFactoryCall(
@@ -24,7 +25,9 @@ export function makeWorkletFactoryCall(
     factoryCall = callExpression(
       memberExpression(
         callExpression(identifier('require'), [
-          stringLiteral(`react-native-worklets/generated/${workletHash}.js`),
+          stringLiteral(
+            `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
+          ),
         ]),
         identifier('default')
       ),

@@ -5,6 +5,7 @@ import { cloneNode } from '@babel/types';
 
 import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { generatedWorkletsDir } from './types';
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
@@ -64,13 +65,20 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (state.opts.experimentalBundling && isImport(binding)) {
+        if (
+          state.opts.experimentalBundling &&
+          isImport(binding) &&
+          isAllowedToImport(state.filename)
+        ) {
           if (isImportRelative(binding)) {
+            capturedNames.add(name);
             relativeBindingsToImport.add(binding);
+            return;
           } else {
-            libraryBindingsToImport.add(binding);
+            // Disallow imports from 3rd party libraries for now.
+            // libraryBindingsToImport.add(binding);
+            // return;
           }
-          return;
         }
 
         capturedNames.add(name);
@@ -100,4 +108,14 @@ function isImportRelative(imported: Binding): boolean {
   return (
     imported.path.parentPath as NodePath<ImportDeclaration>
   ).node.source.value.startsWith('.');
+}
+
+function isAllowedToImport(filename: string | undefined): boolean {
+  // Right now we only allow imports in worklets within
+  // `react-native-worklets` package.
+  return (
+    !!filename &&
+    filename.includes('react-native-worklets') &&
+    !filename.includes(generatedWorkletsDir)
+  );
 }

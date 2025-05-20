@@ -372,9 +372,12 @@ export function makeWorkletFactory(
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });
