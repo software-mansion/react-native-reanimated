@@ -61,17 +61,12 @@ bool CSSAnimation::hasBackwardsFillMode() const {
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+    return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue()
                       : styleInterpolator_->getFirstKeyframeValue();
-}
-
-folly::dynamic CSSAnimation::getForwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
-                      : styleInterpolator_->getLastKeyframeValue();
 }
 
 folly::dynamic CSSAnimation::getResetStyle() const {
@@ -104,6 +99,8 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
 void CSSAnimation::updateSettings(
     const PartialCSSAnimationSettings &updatedSettings,
     const double timestamp) {
+  progressProvider_->resetProgress();
+
   if (updatedSettings.duration.has_value()) {
     progressProvider_->setDuration(updatedSettings.duration.value());
   }
@@ -131,6 +128,8 @@ void CSSAnimation::updateSettings(
       progressProvider_->play(timestamp);
     }
   }
+
+  progressProvider_->update(timestamp);
 }
 
 } // namespace reanimated::css

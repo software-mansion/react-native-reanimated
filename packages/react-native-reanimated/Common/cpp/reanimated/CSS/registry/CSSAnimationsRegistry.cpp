@@ -274,15 +274,14 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (currentState == AnimationProgressState::Finished) {
-      if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardsFillStyle();
-      }
-    } else if (
-        startTimestamp == timestamp ||
+    if (startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
       style = animation->getBackwardsFillStyle();
-    } else if (currentState != AnimationProgressState::Pending) {
+    } else if (
+        currentState == AnimationProgressState::Running ||
+        currentState == AnimationProgressState::Paused ||
+        (currentState == AnimationProgressState::Finished &&
+         animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();
     }
 
@@ -293,6 +292,8 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       updatedStyle.update(style);
     }
   }
+
+  LOG(INFO) << "updatedStyle: " << updatedStyle;
 
   setInUpdatesRegistry(shadowNode, updatedStyle);
 }
