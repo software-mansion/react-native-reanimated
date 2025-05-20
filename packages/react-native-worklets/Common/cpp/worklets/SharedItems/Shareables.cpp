@@ -54,7 +54,7 @@ jsi::Value makeShareableClone(
         shareable = std::make_shared<ShareableWorklet>(rt, object);
       }
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      shareable = std::make_shared<ShareableHandle>(rt, object);
+      return makeShareableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
       auto function = object.asFunction(rt);
       if (function.isHostFunction(rt)) {
@@ -142,6 +142,18 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
 
 jsi::Value makeShareableNull(jsi::Runtime &rt) {
   auto shareable = std::make_shared<ShareableScalar>(nullptr);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject) {
+  if (initializerObject.getProperty(rt, "__init").isUndefined()) {
+    throw std::runtime_error(
+        "[Worklets] Attempted to convert an initializer object that doesn't have the `__init` property.");
+  }
+  auto shareable =
+      std::make_shared<ShareableInitializer>(rt, initializerObject);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -300,7 +312,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   }
 }
 
-jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
+jsi::Value ShareableInitializer::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->toJSValue(rt);
     auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(

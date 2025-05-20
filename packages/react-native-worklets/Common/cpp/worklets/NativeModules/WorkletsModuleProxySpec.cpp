@@ -72,6 +72,15 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableNull)(
       ->makeShareableNull(rt);
 }
 
+static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableInitializer)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<WorkletsModuleProxySpec *>(&turboModule)
+      ->makeShareableInitializer(rt, std::move(args[0]).asObject(rt));
+}
+
 static jsi::Value WORKLETS_SPEC_PREFIX(scheduleOnUI)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -134,6 +143,8 @@ WorkletsModuleProxySpec::WorkletsModuleProxySpec(
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(createWorkletRuntime)};
   methodMap_["scheduleOnRuntime"] =
       MethodMetadata{2, WORKLETS_SPEC_PREFIX(scheduleOnRuntime)};
+  methodMap_["makeShareableInitializer"] =
+      MethodMetadata{1, WORKLETS_SPEC_PREFIX(makeShareableInitializer)};
 }
 
 } // namespace worklets

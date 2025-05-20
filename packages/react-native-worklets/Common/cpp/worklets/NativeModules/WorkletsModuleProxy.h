@@ -47,6 +47,10 @@ class WorkletsModuleProxy
 
   jsi::Value makeShareableNull(jsi::Runtime &rt) override;
 
+  jsi::Value makeShareableInitializer(
+      jsi::Runtime &rt,
+      const jsi::Object &initializerObject) override;
+
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
