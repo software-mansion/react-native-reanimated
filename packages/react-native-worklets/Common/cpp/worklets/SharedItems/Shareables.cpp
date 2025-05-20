@@ -145,6 +145,32 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  std::shared_ptr<Shareable> shareable;
+  auto object = value.asObject(rt);
+  // TODO: remove it once we have makeShareableWorklet function implemented
+  // (seperated)
+  if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+    if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+      shareable =
+          std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+    } else {
+      shareable = std::make_shared<ShareableWorklet>(rt, object);
+    }
+  } else if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+    shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+        rt, object, nativeStateSource);
+  } else {
+    shareable =
+        std::make_shared<ShareableObject>(rt, object, nativeStateSource);
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

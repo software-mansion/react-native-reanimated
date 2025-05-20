@@ -391,7 +391,7 @@ function clonePlainJSObject<T extends object>(
       depth + 1
     );
   }
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableObject(
     clonedProps,
     shouldPersistRemote,
     value
@@ -589,7 +589,11 @@ export function makeShareableCloneOnUIRecursive<T>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
+      return global._makeShareableObject(
+        toAdapt,
+        false,
+        value
+      ) as FlatShareableRef<T>;
     }
 
     if (typeof value === 'string') {

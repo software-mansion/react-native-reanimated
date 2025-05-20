@@ -43,6 +43,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       makeShareableUndefined:
         global.__workletsModuleProxy.makeShareableUndefined,
       makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
+      makeShareableObject: global.__workletsModuleProxy.makeShareableObject,
     };
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
@@ -86,6 +87,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableNull() {
     return this.#shareableNull;
+  }
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
