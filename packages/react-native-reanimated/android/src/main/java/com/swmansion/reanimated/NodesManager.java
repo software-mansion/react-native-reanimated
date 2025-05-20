@@ -5,6 +5,7 @@ import static java.lang.Float.NaN;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.view.View;
+import androidx.tracing.Trace;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
@@ -285,7 +286,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+    Trace.beginSection("onAnimationFrame");
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
     if (mSlowAnimationsEnabled) {
@@ -321,7 +322,7 @@ public class NodesManager implements EventDispatcherListener {
       startUpdatingOnAnimationFrame();
     }
 
-    // Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+    Trace.endSection();
   }
 
   public void enqueueUpdateViewOnNativeThread(
