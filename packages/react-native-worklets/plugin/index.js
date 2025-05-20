@@ -441,6 +441,7 @@ var require_closure = __commonJS({
     exports2.getClosure = void 0;
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
+    var types_2 = require_types();
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -480,13 +481,13 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && isImport(binding)) {
+          if (state.opts.experimentalBundling && isImport(binding) && isAllowedToImport(state.filename)) {
             if (isImportRelative(binding)) {
+              capturedNames.add(name);
               relativeBindingsToImport.add(binding);
+              return;
             } else {
-              libraryBindingsToImport.add(binding);
             }
-            return;
           }
           capturedNames.add(name);
           closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
@@ -504,6 +505,9 @@ var require_closure = __commonJS({
     }
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
+    }
+    function isAllowedToImport(filename) {
+      return !!filename && filename.includes("react-native-worklets") && !filename.includes(types_2.generatedWorkletsDir);
     }
   }
 });
@@ -903,9 +907,9 @@ var require_workletFactory = __commonJS({
     exports2.makeWorkletFactory = makeWorkletFactory;
     function removeWorkletDirective(fun) {
       fun.traverse({
-        DirectiveLiteral(path) {
-          if (path.node.value === "worklet" && path.getFunctionParent() === fun) {
-            path.parentPath.remove();
+        DirectiveLiteral(nodePath) {
+          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
+            nodePath.parentPath.remove();
           }
         }
       });
@@ -967,13 +971,14 @@ var require_workletFactoryCall = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactoryCall = void 0;
     var types_12 = require("@babel/types");
+    var types_2 = require_types();
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
       const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       let factoryCall;
       if (state.opts.experimentalBundling) {
         factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
-          (0, types_12.stringLiteral)(`react-native-worklets/generated/${workletHash}.js`)
+          (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
         ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
       } else {
         factoryCall = (0, types_12.callExpression)(factory, [factoryCallParamPack]);
@@ -1718,10 +1723,6 @@ module.exports = function WorkletsBabelPlugin() {
       throw new Error(`[Worklets] Babel plugin exception: ${e}`);
     }
   }
-  function isGeneratedWorkletFile(filename) {
-    var _a;
-    return (_a = filename === null || filename === void 0 ? void 0 : filename.includes(types_1.generatedWorkletsDir)) !== null && _a !== void 0 ? _a : false;
-  }
   return {
     name: "worklets",
     pre() {
@@ -1732,10 +1733,6 @@ module.exports = function WorkletsBabelPlugin() {
     visitor: {
       CallExpression: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, autoworkletization_1.processCalleesAutoworkletizableCallbacks)(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -1746,10 +1743,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
           });
@@ -1757,10 +1750,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ObjectExpression: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
@@ -1768,10 +1757,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       ClassDeclaration: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, class_1.processIfWorkletClass)(path, state);
           });
@@ -1779,10 +1764,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       Program: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => {
             (0, file_1.processIfWorkletFile)(path, state);
           });
@@ -1790,10 +1771,6 @@ module.exports = function WorkletsBabelPlugin() {
       },
       JSXAttribute: {
         enter(path, state) {
-          if (isGeneratedWorkletFile(state.filename)) {
-            path.skip();
-            return;
-          }
           runWithTaggedExceptions(() => (0, inlineStylesWarning_1.processInlineStylesWarning)(path, state));
         }
       }
