@@ -133,8 +133,7 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
-        return makeShareableArray(rt, value.asObject(rt).asArray(rt), false)
-            .asObject(rt);
+        return makeShareableArray(rt, value.asObject(rt).asArray(rt), false);
       });
 
   jsi_utils::installJsiFunction(rt, "_makeShareableNull", [](jsi::Runtime &rt) {
