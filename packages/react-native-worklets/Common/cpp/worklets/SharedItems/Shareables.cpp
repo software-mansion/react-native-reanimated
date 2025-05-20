@@ -145,6 +145,17 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value) {
+  const auto object = value.asObject(rt);
+  if (object.isHostObject<ShareableJSRef>(rt)) {
+    return object;
+  }
+
+  const auto shareable =
+      std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

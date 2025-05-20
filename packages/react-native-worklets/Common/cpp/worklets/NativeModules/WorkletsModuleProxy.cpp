@@ -98,6 +98,12 @@ jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
   return worklets::makeShareableNull(rt);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableHostObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableHostObject(rt, value);
+}
+
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {

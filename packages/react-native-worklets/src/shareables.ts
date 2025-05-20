@@ -163,7 +163,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
-    return cloneHostObject(value, shouldPersistRemote);
+    return cloneHostObject(value);
   }
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
@@ -286,16 +286,11 @@ function cloneRemoteFunction<T extends object>(
 
 function cloneHostObject<T extends object>(
   value: T,
-  shouldPersistRemote: boolean
 ): ShareableRef<T> {
   // for host objects we pass the reference to the object as shareable and
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+  const clone = WorkletsModule.makeShareableHostObject(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -568,9 +563,8 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return global._makeShareableClone(
+        return global._makeShareableHostObject(
           value,
-          undefined
         ) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {

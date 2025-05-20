@@ -157,6 +157,8 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

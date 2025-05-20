@@ -22,6 +22,8 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
+  makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(
