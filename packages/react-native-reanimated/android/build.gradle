@@ -349,6 +349,8 @@ android {
             // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 75) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
+            } else if (REACT_NATIVE_MINOR_VERSION <= 79) {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/79"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
