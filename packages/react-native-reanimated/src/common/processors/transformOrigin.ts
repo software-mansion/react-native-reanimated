@@ -24,9 +24,9 @@ function getAllowedValues(axis: Axis, isArray: boolean): string {
   const allowed: string[] = [];
 
   if (isArray) {
-    allowed.push('numbers with px unit');
-  } else {
     allowed.push('numbers');
+  } else {
+    allowed.push('numbers with px unit');
   }
 
   allowed.push('percentages');
