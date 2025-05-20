@@ -279,7 +279,10 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       style = animation->getBackwardsFillStyle();
     } else if (
         currentState == AnimationProgressState::Running ||
-        currentState == AnimationProgressState::Paused ||
+        // Animation is paused after start (was running before)
+        (currentState == AnimationProgressState::Paused &&
+         timestamp >= animation->getStartTimestamp(timestamp)) ||
+        // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished &&
          animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();

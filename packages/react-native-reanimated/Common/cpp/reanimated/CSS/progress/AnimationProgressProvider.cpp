@@ -47,7 +47,7 @@ AnimationProgressState AnimationProgressProvider::getState(
   if (pauseTimestamp_ > 0) {
     return AnimationProgressState::Paused;
   }
-  if (!rawProgress_.has_value()) {
+  if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
     return AnimationProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
