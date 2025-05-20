@@ -18,6 +18,27 @@ AnimationProgressProvider::AnimationProgressProvider(
       easingFunction_(std::move(easingFunction)),
       keyframeEasingFunctions_(keyframeEasingFunctions) {}
 
+void AnimationProgressProvider::setIterationCount(double iterationCount) {
+  iterationCount_ = iterationCount;
+}
+
+void AnimationProgressProvider::setDirection(AnimationDirection direction) {
+  direction_ = direction;
+}
+
+void AnimationProgressProvider::setEasingFunction(
+    const EasingFunction &easingFunction) {
+  easingFunction_ = easingFunction;
+}
+
+AnimationDirection AnimationProgressProvider::getDirection() const {
+  return direction_;
+}
+
+double AnimationProgressProvider::getGlobalProgress() const {
+  return applyAnimationDirection(rawProgress_.value_or(0));
+}
+
 AnimationProgressState AnimationProgressProvider::getState(
     const double timestamp) const {
   if (shouldFinish(timestamp)) {
@@ -26,7 +47,7 @@ AnimationProgressState AnimationProgressProvider::getState(
   if (pauseTimestamp_ > 0) {
     return AnimationProgressState::Paused;
   }
-  if (!rawProgress_.has_value()) {
+  if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
     return AnimationProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
@@ -34,6 +55,10 @@ AnimationProgressState AnimationProgressProvider::getState(
     return AnimationProgressState::Finished;
   }
   return AnimationProgressState::Running;
+}
+
+double AnimationProgressProvider::getPauseTimestamp() const {
+  return pauseTimestamp_;
 }
 
 double AnimationProgressProvider::getTotalPausedTime(
@@ -137,7 +162,9 @@ double AnimationProgressProvider::updateIterationProgress(
 
   if (deltaIterations > 0) {
     // Return 1 if the current iteration is the last one
-    if (currentIteration_ == iterationCount_) {
+    if (iterationCount_ != -1 &&
+        currentIteration_ + deltaIterations > iterationCount_) {
+      currentIteration_ = iterationCount_;
       return 1;
     }
 
