@@ -1,3 +1,4 @@
+#include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
@@ -85,7 +86,7 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const std::string &valueUnpackerCode)
+    const bool isDevBundle)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -99,14 +100,11 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
+  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler, isDevBundle);
 
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
-      "(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
-                           .asObject(rt)
-                           .asFunction(rt);
-  rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
+  auto valueUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 }
 
 jsi::Value WorkletRuntime::executeSync(
@@ -176,7 +174,7 @@ void scheduleOnRuntime(
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 

@@ -11,19 +11,14 @@ export default function AnnouncementBarContent(props) {
     <div className={clsx(styles.content, props.className)}>
       <img
         className={styles.logo}
-        src={useBaseUrl('/img/react-native-paradise.svg')}
-        alt="React Native Paradise logo"
+        src={useBaseUrl('/img/appjs-2025-logo.svg')}
+        alt="App.js Conf 2025 logo"
       />
-      <strong className={styles.headline}>React Native Paradise</strong>
-      <p className={styles.subText}>
-        Join us for one week of workshops hosted by React Native experts!
+      <p className={styles.headline}>
+        Join us on the biggest React Native & Expo-focused conference.
       </p>
-      <a
-        className={styles.link}
-        href="https://paradise.swmansion.com/"
-        target="_blank"
-        rel="noreferrer noopener">
-        <span className={styles.linkTitle}>Check the details</span>
+      <a className={styles.link} href="https://appjs.co/" target="_blank">
+        <span className={styles.linkTitle}>Learn more</span>
         <div className={styles.linkArrowContainer}>
           <ArrowButton className={styles.linkArrow} />
         </div>

@@ -61,7 +61,8 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
   return shadowNode.clone(
       {mergeProps(shadowNode, propsMap, *family),
        std::make_shared<ShadowNode::ListOfShared>(children),
-       shadowNode.getState()});
+       shadowNode.getState(),
+       false});
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(

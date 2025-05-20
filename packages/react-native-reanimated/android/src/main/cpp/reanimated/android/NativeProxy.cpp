@@ -7,8 +7,6 @@
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
 
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
-
 #include <react/fabric/Binding.h>
 
 namespace reanimated {
@@ -32,10 +30,15 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           getPlatformDependentMethods(),
           getIsReducedMotion())) {
+#ifndef NDEBUG
+  checkJavaVersion();
+  injectCppVersion();
+#endif // NDEBUG
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
   reanimatedModuleProxy_->initializeFabric(uiManager);
+  registerEventHandler();
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // eventListener_ = std::make_shared<EventListener>(
   //     [reanimatedModuleProxy,
@@ -50,11 +53,6 @@ NativeProxy::NativeProxy(
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);
-
-  // cleanup all animated sensors here, since NativeProxy
-  // has already been destroyed when AnimatedSensorModule's
-  // destructor is ran
-  reanimatedModuleProxy_->cleanupSensors();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -76,7 +74,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 #ifndef NDEBUG
-void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+void NativeProxy::checkJavaVersion() {
   std::string javaVersion;
   try {
     javaVersion =
@@ -116,17 +114,10 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(
       rnRuntime,
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
       reanimatedModuleProxy_);
-#ifndef NDEBUG
-  checkJavaVersion(rnRuntime);
-  injectCppVersion();
-#endif // NDEBUG
-
-  registerEventHandler();
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
@@ -306,7 +297,11 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
 void NativeProxy::invalidateCpp() {
   workletsModuleProxy_.reset();
+  // cleanup all animated sensors here, since the next line resets
+  // the pointer and it will be too late after it
+  reanimatedModuleProxy_->cleanupSensors();
   reanimatedModuleProxy_.reset();
+  javaPart_ = nullptr;
 }
 
 } // namespace reanimated

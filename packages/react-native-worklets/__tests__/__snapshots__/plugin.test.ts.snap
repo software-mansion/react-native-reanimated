@@ -498,6 +498,7 @@ exports[`babel plugin for class worklets workletizes getter 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var x = 5;
 var _worklet_13515258128853_init_data = {
   code: "function get_null1(){const{x}=this.__closure;return x+2;}",
   location: "/dev/null",
@@ -3537,6 +3538,35 @@ var firstReference = secondReference;
 var animatedStyle = useAnimatedStyle(firstReference);"
 `;
 
+exports[`babel plugin for referenced worklets workletizes recursion 1`] = `
+"var _worklet_14493084721304_init_data = {
+  code: "function recursiveWorklet_null1(){const recursiveWorklet_null1=this._recur;const{runOnUI}=this.__closure;if(!globalThis._WORKLET){runOnUI(recursiveWorklet_null1)();}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var recursiveWorklet = function recursiveWorklet_null1Factory(_ref) {
+  var _worklet_14493084721304_init_data = _ref._worklet_14493084721304_init_data,
+    runOnUI = _ref.runOnUI;
+  var _e = [new global.Error(), -2, -27];
+  var _recursiveWorklet = function recursiveWorklet() {
+    if (!globalThis._WORKLET) {
+      runOnUI(_recursiveWorklet)();
+    }
+  };
+  _recursiveWorklet.__closure = {
+    runOnUI: runOnUI
+  };
+  _recursiveWorklet.__workletHash = 14493084721304;
+  _recursiveWorklet.__initData = _worklet_14493084721304_init_data;
+  _recursiveWorklet.__stackDetails = _e;
+  return _recursiveWorklet;
+}({
+  _worklet_14493084721304_init_data: _worklet_14493084721304_init_data,
+  runOnUI: runOnUI
+});"
+`;
+
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
 "function App() {
   (0, fun)({
@@ -4095,7 +4125,7 @@ exports[`babel plugin for worklet classes injects class factory into worklets 1`
 };
 var foo = function foo_null1Factory(_ref) {
   var _worklet_3370991485663_init_data = _ref._worklet_3370991485663_init_data,
-    Clazz__classFactory = _ref.Clazz__classFactory;
+    Clazz = _ref.Clazz;
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
@@ -4109,7 +4139,7 @@ var foo = function foo_null1Factory(_ref) {
   return foo;
 }({
   _worklet_3370991485663_init_data: _worklet_3370991485663_init_data,
-  Clazz__classFactory: Clazz__classFactory
+  Clazz: Clazz
 });"
 `;
 
@@ -4328,7 +4358,7 @@ exports[`babel plugin for worklet classes modifies closures 1`] = `
 };
 var foo = function foo_null1Factory(_ref) {
   var _worklet_3370991485663_init_data = _ref._worklet_3370991485663_init_data,
-    Clazz__classFactory = _ref.Clazz__classFactory;
+    Clazz = _ref.Clazz;
   var _e = [new global.Error(), -2, -27];
   var foo = function foo() {
     var clazz = new Clazz();
@@ -4342,7 +4372,7 @@ var foo = function foo_null1Factory(_ref) {
   return foo;
 }({
   _worklet_3370991485663_init_data: _worklet_3370991485663_init_data,
-  Clazz__classFactory: Clazz__classFactory
+  Clazz: Clazz
 });"
 `;
 
@@ -5000,48 +5030,50 @@ exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
 })]();"
 `;
 
-exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_16658893781105_init_data = {
-  code: "function foo_null1(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `
+"var _worklet_8064116599518_init_data = {
+  code: "function null1(){console.log('bar');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_17260955035117_init_data = {
-  code: "function bar_null2(x){return x+2;}",
+var _worklet_290818181475_init_data = {
+  code: "function null2(){const{_worklet_8064116599518_init_data}=this.__closure;const bar=function null1Factory({_worklet_8064116599518_init_data:_worklet_8064116599518_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=8064116599518;null1.__initData=_worklet_8064116599518_init_data;null1.__stackDetails=_e;return null1;}({_worklet_8064116599518_init_data:_worklet_8064116599518_init_data});bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var foo = function foo_null1Factory(_ref) {
-  var _worklet_16658893781105_init_data = _ref._worklet_16658893781105_init_data;
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo(x) {
-    var bar = function bar_null2Factory(_ref2) {
-      var _worklet_17260955035117_init_data = _ref2._worklet_17260955035117_init_data;
+var foo = function null2Factory(_ref) {
+  var _worklet_290818181475_init_data = _ref._worklet_290818181475_init_data,
+    _worklet_8064116599518_init_data = _ref._worklet_8064116599518_init_data;
+  var _e = [new global.Error(), -2, -27];
+  var null2 = function null2() {
+    var bar = function null1Factory(_ref2) {
+      var _worklet_8064116599518_init_data = _ref2._worklet_8064116599518_init_data;
       var _e = [new global.Error(), 1, -27];
-      var bar = function bar(x) {
-        return x + 2;
+      var null1 = function null1() {
+        console.log('bar');
       };
-      bar.__closure = {};
-      bar.__workletHash = 17260955035117;
-      bar.__initData = _worklet_17260955035117_init_data;
-      bar.__stackDetails = _e;
-      return bar;
+      null1.__closure = {};
+      null1.__workletHash = 8064116599518;
+      null1.__initData = _worklet_8064116599518_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }({
-      _worklet_17260955035117_init_data: _worklet_17260955035117_init_data
+      _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
     });
-    return bar(x) + 1;
+    bar();
   };
-  foo.__closure = {};
-  foo.__workletHash = 16658893781105;
-  foo.__initData = _worklet_16658893781105_init_data;
-  foo.__stackDetails = _e;
-  return foo;
+  null2.__closure = {
+    _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
+  };
+  null2.__workletHash = 290818181475;
+  null2.__initData = _worklet_290818181475_init_data;
+  null2.__stackDetails = _e;
+  return null2;
 }({
-  _worklet_16658893781105_init_data: _worklet_16658893781105_init_data
+  _worklet_290818181475_init_data: _worklet_290818181475_init_data,
+  _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
 });"
 `;
 
@@ -5172,54 +5204,7 @@ runOnUI(function null2Factory(_ref) {
 }))();"
 `;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets when enabled 1`] = `
-"var _worklet_8064116599518_init_data = {
-  code: "function null1(){console.log('bar');}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _worklet_290818181475_init_data = {
-  code: "function null2(){const{_worklet_8064116599518_init_data}=this.__closure;const bar=function null1Factory({_worklet_8064116599518_init_data:_worklet_8064116599518_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=8064116599518;null1.__initData=_worklet_8064116599518_init_data;null1.__stackDetails=_e;return null1;}({_worklet_8064116599518_init_data:_worklet_8064116599518_init_data});bar();}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var foo = function null2Factory(_ref) {
-  var _worklet_290818181475_init_data = _ref._worklet_290818181475_init_data,
-    _worklet_8064116599518_init_data = _ref._worklet_8064116599518_init_data;
-  var _e = [new global.Error(), -2, -27];
-  var null2 = function null2() {
-    var bar = function null1Factory(_ref2) {
-      var _worklet_8064116599518_init_data = _ref2._worklet_8064116599518_init_data;
-      var _e = [new global.Error(), 1, -27];
-      var null1 = function null1() {
-        console.log('bar');
-      };
-      null1.__closure = {};
-      null1.__workletHash = 8064116599518;
-      null1.__initData = _worklet_8064116599518_init_data;
-      null1.__stackDetails = _e;
-      return null1;
-    }({
-      _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
-    });
-    bar();
-  };
-  null2.__closure = {
-    _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
-  };
-  null2.__workletHash = 290818181475;
-  null2.__initData = _worklet_290818181475_init_data;
-  null2.__stackDetails = _e;
-  return null2;
-}({
-  _worklet_290818181475_init_data: _worklet_290818181475_init_data,
-  _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
-});"
-`;
-
-exports[`babel plugin for worklet nesting transpiles nested worklets when enabled with depth 3 1`] = `
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `
 "var _worklet_3230974749144_init_data = {
   code: "function null1(){console.log('foobar');}",
   location: "/dev/null",

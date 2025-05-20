@@ -84,6 +84,7 @@ import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryR
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
@@ -92,6 +93,7 @@ import PlanetsExample from './PlanetsExample';
 import RainbowExample from './RainbowExample';
 import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
+import RunOnUIAsyncExample from './RunOnUIAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
@@ -143,6 +145,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
+  },
+  RunOnUIAsyncExample: {
+    icon: '👷‍♂️',
+    title: 'runOnUIAsync',
+    screen: RunOnUIAsyncExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
@@ -205,6 +212,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🫧',
     title: 'Bubbles',
     screen: BubblesExample,
+  },
+  OpacityTransformExample: {
+    icon: '🌀',
+    title: 'opacity & transform',
+    screen: OpacityTransformExample,
   },
   IPodExample: {
     icon: '🎧',

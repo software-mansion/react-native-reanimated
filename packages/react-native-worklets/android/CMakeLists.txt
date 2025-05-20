@@ -11,15 +11,11 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} \
-  -DREANIMATED_VERSION=${REANIMATED_VERSION} \
-  -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
+string(APPEND CMAKE_CXX_FLAGS
+       " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}")
 
 string(APPEND CMAKE_CXX_FLAGS
-  " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
+       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
@@ -54,9 +50,9 @@ set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
 file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
-  "${COMMON_CPP_DIR}/worklets/*.cpp")
+     "${COMMON_CPP_DIR}/worklets/*.cpp")
 file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
-  "${ANDROID_CPP_DIR}/worklets/*.cpp")
+     "${ANDROID_CPP_DIR}/worklets/*.cpp")
 
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
@@ -67,26 +63,26 @@ if(${JS_RUNTIME} STREQUAL "hermes")
 endif()
 
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
-  ${WORKLETS_ANDROID_CPP_SOURCES})
+                            ${WORKLETS_ANDROID_CPP_SOURCES})
 
 # includes
 target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"
-  "${ANDROID_CPP_DIR}")
+                                           "${ANDROID_CPP_DIR}")
 
 target_include_directories(
   worklets
   PRIVATE "${REACT_NATIVE_DIR}/ReactCommon"
-  "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
-  "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
-  "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-  "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
+          "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
+          "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
   target_include_directories(
     worklets
     PRIVATE
-    "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
+      "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+      "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
 
   if(ReactAndroid_VERSION_MINOR LESS 76)
     target_link_libraries(
@@ -113,6 +109,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   target_link_libraries(worklets hermes-engine::libhermes)
 
   if(${HERMES_ENABLE_DEBUGGER})
+    string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
     if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
       target_link_libraries(worklets ReactAndroid::hermestooling)
     else()
