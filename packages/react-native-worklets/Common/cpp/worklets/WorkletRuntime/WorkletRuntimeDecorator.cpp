@@ -136,6 +136,11 @@ void WorkletRuntimeDecorator::decorate(
   });
 
   jsi_utils::installJsiFunction(
+      rt, "_makeShareableHostObject", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableHostObject(rt, value);
+      });
+
+  jsi_utils::installJsiFunction(
       rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
