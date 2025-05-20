@@ -185,7 +185,7 @@ void scheduleOnRuntime(
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,
       shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet. Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.");
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 
