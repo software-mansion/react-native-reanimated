@@ -15,7 +15,7 @@ import type {
   WorkletFunction,
 } from './workletTypes';
 
-// for web/chrome debugger/jest environments this file provides a stub implementation
+// for web and jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.

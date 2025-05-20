@@ -8,7 +8,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -47,10 +47,6 @@ function dispatchCommandJest() {
   logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
-function dispatchCommandChromeDebugger() {
-  logger.warn('dispatchCommand() is not supported with Chrome Debugger.');
-}
-
 function dispatchCommandDefault() {
   logger.warn('dispatchCommand() is not supported on this configuration.');
 }
@@ -62,8 +58,6 @@ if (!shouldBeUseWeb()) {
   dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
 } else if (isJest()) {
   dispatchCommand = dispatchCommandJest;
-} else if (isChromeDebugger()) {
-  dispatchCommand = dispatchCommandChromeDebugger;
 } else {
   dispatchCommand = dispatchCommandDefault;
 }

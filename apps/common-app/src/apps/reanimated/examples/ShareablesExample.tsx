@@ -173,11 +173,13 @@ function BooleanDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const bool = true;
+    const boolTrue = true;
+    const boolFalse = false;
     runOnUI(() => {
       'worklet';
       try {
-        if (bool === true) {
+        const checks = [boolTrue === true, boolFalse === false];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();
