@@ -5,7 +5,6 @@
  */
 
 import type { LogBoxStatic } from 'react-native';
-import { LogBox as RNLogBox } from 'react-native';
 
 export type LogBoxLogLevel = 'warn' | 'error' | 'fatal' | 'syntax';
 
@@ -45,7 +44,11 @@ interface LogBoxExtended extends LogBoxStatic {
   addLog(data: LogData): void;
 }
 
-const LogBox = RNLogBox as LogBoxExtended;
+const LogBox = globalThis._WORKLET
+  ? null
+  : // We cannot import LogBox on Worklet Runtimes.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    (require('react-native').LogBox as LogBoxExtended);
 
 const noop = () => {
   // do nothing
