@@ -91,7 +91,8 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const bool supportsLocking,
     const bool isDevBundle,
-    std::unique_ptr<const JSBigString> &&script)
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -124,11 +125,9 @@ WorkletRuntime::WorkletRuntime(
   } else {
     // Experimental bundling
     try {
-      auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
-      std::string scriptName = "scriptName";
-      rt.evaluateJavaScript(buffer, scriptName);
+      rt.evaluateJavaScript(script, sourceUrl);
     } catch (facebook::jsi::JSIException ex) {
-      // LOG(INFO) << ex.what();
+      //  LOG(INFO) << ex.what();
     }
   }
 }

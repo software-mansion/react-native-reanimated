@@ -3,6 +3,7 @@
 #include <cxxreact/JSBigString.h>
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
@@ -12,8 +13,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <glog/logging.h>
 
 using namespace facebook;
 using namespace react;
@@ -31,7 +30,8 @@ class WorkletRuntime : public jsi::HostObject,
       const std::string &name,
       const bool supportsLocking,
       const bool isDevBundle,
-      std::unique_ptr<const JSBigString> &&script);
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceUrl);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;

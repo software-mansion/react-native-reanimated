@@ -64,6 +64,8 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> script,
+    const std::string &sourceUrl,
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
@@ -75,22 +77,30 @@ inline jsi::Value createWorkletRuntime(
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
       isDevBundle,
-      // TODO:
-      nullptr /* script */);
+      script,
+      sourceUrl);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
-  workletRuntime->runGuarded(initializerShareable);
+  try {
+    workletRuntime->runGuarded(initializerShareable);
+  } catch (facebook::jsi::JSIException ex) {
+    //  LOG(INFO) << ex.what();
+  }
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
+      script_(script),
+      sourceUrl_(sourceUrl),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -100,6 +110,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const JSIWorkletsModuleProxy &other)
     : jsi::HostObject(),
       isDevBundle_(other.isDevBundle_),
+      script_(other.script_),
+      sourceUrl_(other.sourceUrl_),
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
@@ -270,6 +282,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
         [jsQueue = jsQueue_,
          jsScheduler = jsScheduler_,
          isDevBundle = isDevBundle_,
+         script = script_,
+         sourceUrl = sourceUrl_,
          clone](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -280,6 +294,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               jsScheduler,
               std::move(clone),
               isDevBundle,
+              script,
+              sourceUrl,
               rt,
               args[0],
               args[1]);

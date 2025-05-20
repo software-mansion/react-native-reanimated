@@ -1,6 +1,7 @@
 #import <React/RCTCallInvokerModule.h>
 #import <React/RCTEventEmitter.h>
 #import <React/RCTInvalidating.h>
+#import <ReactCommon/NSBigStringBuffer.h>
 
 #import <rnworklets/rnworklets.h>
 
@@ -10,6 +11,8 @@
 
 - (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
 
-- (void)setBundleString:(NSData *)bundle;
+- (void)setScriptBuffer:(NSBigStringBuffer *)script;
+
+- (void)setSourceURL:(const std::string &)sourceURL;
 
 @end
