@@ -1,5 +1,6 @@
 'use strict';
 'worklet';
+import { ReanimatedError } from '../errors';
 import type { TransformOrigin, ValueProcessor } from '../types';
 
 type Axis = 'x' | 'y' | 'z';
@@ -7,15 +8,46 @@ type ConvertedValue = `${number}%` | number;
 type KeywordConversions = Record<string, ConvertedValue>;
 type CustomParse = (value: string) => ConvertedValue | null;
 
-function getAllowedValues(axis: Axis, isArray: boolean): string {
-  const keywords =
-    axis === 'x'
-      ? Object.keys(HORIZONTAL_CONVERSIONS)
-      : axis === 'y'
-        ? Object.keys(VERTICAL_CONVERSIONS)
-        : [];
+const HORIZONTAL_CONVERSIONS = {
+  left: 0,
+  center: '50%',
+  right: '100%',
+} satisfies KeywordConversions;
 
-  return `numbers${isArray ? '' : ' with px unit'}, percentages${keywords.length ? `, or keywords (${keywords.join(', ')})` : ''}`;
+const VERTICAL_CONVERSIONS = {
+  top: 0,
+  center: '50%',
+  bottom: '100%',
+} satisfies KeywordConversions;
+
+function getAllowedValues(axis: Axis, isArray: boolean): string {
+  const allowed: string[] = [];
+
+  if (isArray) {
+    allowed.push('numbers with px unit');
+  } else {
+    allowed.push('numbers');
+  }
+
+  allowed.push('percentages');
+
+  let keywords: string[] = [];
+  switch (axis) {
+    case 'x':
+      keywords = Object.keys(HORIZONTAL_CONVERSIONS);
+      break;
+    case 'y':
+      keywords = Object.keys(VERTICAL_CONVERSIONS);
+      break;
+  }
+  if (keywords.length) {
+    allowed.push(`keywords (${keywords.join(', ')})`);
+  }
+
+  // Add "or" before the last item
+  allowed[allowed.length - 1] = `or ${allowed[allowed.length - 1]}`;
+
+  return allowed.join(', ');
 }
 
 export const ERROR_MESSAGES = {
@@ -32,18 +64,6 @@ export const ERROR_MESSAGES = {
     )}. Allowed values: ${getAllowedValues(axis, isArray)}.`,
 };
 
-const HORIZONTAL_CONVERSIONS = {
-  left: 0,
-  center: '50%',
-  right: '100%',
-} satisfies KeywordConversions;
-
-const VERTICAL_CONVERSIONS = {
-  top: 0,
-  center: '50%',
-  bottom: '100%',
-} satisfies KeywordConversions;
-
 function maybeSwapComponents(components: (string | number)[]) {
   if (
     components[0] in VERTICAL_CONVERSIONS &&
@@ -55,9 +75,10 @@ function maybeSwapComponents(components: (string | number)[]) {
 
 function parseValue(
   value: string | number,
-  keywordConversions: KeywordConversions,
+  allowPercentages: boolean,
   customParse: CustomParse,
-  getError: () => string
+  getError: () => string,
+  keywordConversions?: KeywordConversions
 ) {
   if (typeof value === 'number') {
     return value;
@@ -65,7 +86,7 @@ function parseValue(
   if (keywordConversions && value in keywordConversions) {
     return keywordConversions[value];
   }
-  if (value.endsWith('%')) {
+  if (allowPercentages && value.endsWith('%')) {
     const num = parseFloat(value);
     if (num === 0) {
       return 0;
@@ -109,14 +130,19 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
   return [
     parseValue(
       components[0] ?? '50%',
-      HORIZONTAL_CONVERSIONS,
+      true,
       customParse,
-      () => ERROR_MESSAGES.invalidValue(components[0], 'x', value, isArray)
+      () => ERROR_MESSAGES.invalidValue(components[0], 'x', value, isArray),
+      HORIZONTAL_CONVERSIONS
     ),
-    parseValue(components[1] ?? '50%', VERTICAL_CONVERSIONS, customParse, () =>
-      ERROR_MESSAGES.invalidValue(components[1], 'y', value, isArray)
+    parseValue(
+      components[1] ?? '50%',
+      true,
+      customParse,
+      () => ERROR_MESSAGES.invalidValue(components[1], 'y', value, isArray),
+      VERTICAL_CONVERSIONS
     ),
-    parseValue(components[2] ?? 0, {}, customParse, () =>
+    parseValue(components[2] ?? 0, false, customParse, () =>
       ERROR_MESSAGES.invalidValue(components[2], 'z', value, isArray)
     ),
   ];
