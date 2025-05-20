@@ -152,7 +152,7 @@ jsi::Value makeShareableInitializer(
     throw std::runtime_error(
         "[Worklets] Attempted to convert an initializer object that doesn't have the `__init` property.");
   }
-  auto shareable =
+  const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
   return ShareableJSRef::newHostObject(rt, shareable);
 }

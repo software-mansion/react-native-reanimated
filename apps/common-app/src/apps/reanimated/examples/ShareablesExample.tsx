@@ -262,13 +262,17 @@ function RegExpDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const regex = /test/;
+    const regex1 = /test/;
     // eslint-disable-next-line prefer-regex-literals
     const regex2 = new RegExp('test');
     runOnUI(() => {
       'worklet';
       try {
-        const checks = [regex.test('test'), regex2.test('test')];
+        const checks = [
+          regex1.test('test'),
+          regex2.test('test'),
+          regex1.toString() === regex2.toString(),
+        ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {

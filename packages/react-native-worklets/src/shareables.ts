@@ -262,6 +262,9 @@ function cloneObjectProperties<T extends object>(
 ): Record<string, unknown> {
   const clonedProps: Record<string, unknown> = {};
   for (const [key, element] of Object.entries(value)) {
+    // We don't need to clone __initData field as it contains long strings
+    // representing the worklet code, source map, and location, and we will
+    // serialize/deserialize it once.
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
@@ -366,16 +369,16 @@ function cloneWorklet<T extends WorkletFunction>(
     // seems more elegant to handle it this way.
     delete (value as WorkletFunction).__stackDetails;
   }
-  // to save on transferring static __initData field of worklet structure
-  // we request shareable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings represeting the
-  // worklet code, source map, and location, will always be
-  // serialized/deserialized once.
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
     true,
-    depth + 1
+    depth
   );
+  // to save on transferring static __initData field of worklet structure
+  // we request shareable value to persist its UI counterpart. This means
+  // that the __initData field that contains long strings representing the
+  // worklet code, source map, and location, will always be
+  // serialized/deserialized once.
   clonedProps.__initData = makeShareableCloneRecursive(
     value.__initData,
     true,
