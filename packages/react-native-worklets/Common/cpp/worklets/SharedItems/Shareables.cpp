@@ -293,6 +293,10 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
+  /**
+   * The only way to obtain a module in runtime is to use the Metro's require
+   * method implementation, which is injected into the global object as `__r`.
+   */
   const auto metroRequire = rt.global().getProperty(rt, "__r");
   if (metroRequire.isUndefined()) {
     return jsi::Value::undefined();

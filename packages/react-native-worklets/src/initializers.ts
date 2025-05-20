@@ -9,14 +9,7 @@ import {
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import {
-  isChromeDebugger,
-  isJest,
-  isWeb,
-  shouldBeUseWeb,
-} from './PlatformChecker';
-import { shareableMappingCache } from './shareableMappingCache';
-import { makeShareableCloneRecursive } from './shareables';
+import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -24,7 +17,6 @@ import type { IWorkletsModule } from './WorkletsModule';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_CHROME_DEBUGGER = isChromeDebugger();
 
 const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
 
@@ -89,8 +81,8 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
 
 export function setupCallGuard() {
   'worklet';
-  if(!globalThis.__callGuardDEV) {
-  globalThis.__callGuardDEV = callGuardDEV;
+  if (!globalThis.__callGuardDEV) {
+    globalThis.__callGuardDEV = callGuardDEV;
   }
 }
 
@@ -154,19 +146,17 @@ const capturableConsole = createMemorySafeCapturableConsole();
 
 export function setupConsole() {
   'worklet';
-  if (!IS_CHROME_DEBUGGER) {
-    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-    global.console = {
-      /* eslint-disable @typescript-eslint/unbound-method */
-      assert: runOnJS(capturableConsole.assert),
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
-      /* eslint-enable @typescript-eslint/unbound-method */
-    };
-  }
+  // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+  global.console = {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    assert: runOnJS(capturableConsole.assert),
+    debug: runOnJS(capturableConsole.debug),
+    log: runOnJS(capturableConsole.log),
+    warn: runOnJS(capturableConsole.warn),
+    error: runOnJS(capturableConsole.error),
+    info: runOnJS(capturableConsole.info),
+    /* eslint-enable @typescript-eslint/unbound-method */
+  };
 }
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {

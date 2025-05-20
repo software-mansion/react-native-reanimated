@@ -44,6 +44,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  // TODO: Make it non-nullptr on the UI runtime.
   std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };
 

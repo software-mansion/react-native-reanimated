@@ -20,11 +20,11 @@
   "scripts": {
     "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
-    "format:root": "prettier --write --list-different .",
+    "format:root": "prettier --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint . && yarn prettier --check ."
+    "lint:root": "eslint --ignore-path .gitignore --ignore-path .eslintignore --ignore-path .prettiereslintignore . && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
   },
   "devDependencies": {
     "@types/shelljs": "^0.8.15",
@@ -40,6 +40,9 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.79.1#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.79.1-7bacb8c651.patch"
+    "@react-native/gradle-plugin": "0.80.0-rc.2",
+    "@react-native/community-cli-plugin@npm:0.75.4": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch",
+    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch",
+    "@react-native/community-cli-plugin@npm:0.80.0-rc.2": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch"
   }
 }

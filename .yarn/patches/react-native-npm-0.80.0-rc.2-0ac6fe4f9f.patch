@@ -1,18 +1,18 @@
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-index 74f8178a029e8706a655dd21c1c03ad76040648b..cef790983a7e63e37520d682fdaf42a8e5fe5e80 100644
+index e76e1d18df99468f3cd2c9f61b20ad829081ceb5..d5ef1f4c71c0440b1e0e16e947bca06dc0491cea 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-@@ -480,6 +480,13 @@ - (void)_loadJSBundle:(NSURL *)sourceURL
+@@ -512,6 +512,13 @@ - (void)_loadJSBundle:(NSURL *)sourceURL
          // DevSettings module is needed by _loadScriptFromSource's callback so prior initialization is required
          RCTDevSettings *const devSettings =
              (RCTDevSettings *)[strongSelf->_turboModuleManager moduleForName:"DevSettings"];
 +
-+        id worklets = [strongSelf->_turboModuleManager moduleForName:"WorkletsModule"];
++        id worklets = [strongSelf->_turboModuleManager  moduleForName:"WorkletsModule"];
 +        NSString *paramMethodName = @"setBundleString:";
 +        SEL paramSelector = NSSelectorFromString(paramMethodName);
 +        NSData* clonedData = [source.data copy];
 +        [worklets performSelector:paramSelector withObject:clonedData];
-+        
++
          [strongSelf _loadScriptFromSource:source];
          // Set up hot module reloading in Dev only.
          [strongSelf->_performanceLogger markStopForTag:RCTPLScriptDownload];

@@ -452,7 +452,6 @@ var require_closure = __commonJS({
           typePath.skip();
         },
         ReferencedIdentifier(idPath) {
-          var _a, _b;
           if (idPath.isJSXIdentifier()) {
             return;
           }
@@ -482,13 +481,12 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && ((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("react-native-worklets")) && !((_b = state.filename) === null || _b === void 0 ? void 0 : _b.includes(types_2.generatedWorkletsDir)) && isImport(binding)) {
+          if (state.opts.experimentalBundling && isImport(binding) && isAllowedToImport(state.filename)) {
             if (isImportRelative(binding)) {
+              capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
-            } else if (binding.path.parentPath.node.source.value === "react-native-worklets") {
-              libraryBindingsToImport.add(binding);
-              return;
+            } else {
             }
           }
           capturedNames.add(name);
@@ -507,6 +505,9 @@ var require_closure = __commonJS({
     }
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
+    }
+    function isAllowedToImport(filename) {
+      return !!filename && filename.includes("react-native-worklets") && !filename.includes(types_2.generatedWorkletsDir);
     }
   }
 });
@@ -1027,13 +1028,11 @@ var require_workletSubstitution = __commonJS({
     }
     exports2.processIfWithWorkletDirective = processIfWithWorkletDirective;
     function processWorklet(path, state) {
-      if (state.opts.processNestedWorklets) {
-        path.traverse({
-          [types_2.WorkletizableFunction](subPath, passedState) {
-            processIfWithWorkletDirective(subPath, passedState);
-          }
-        }, state);
-      }
+      path.traverse({
+        [types_2.WorkletizableFunction](subPath, passedState) {
+          processIfWithWorkletDirective(subPath, passedState);
+        }
+      }, state);
       const workletFactoryCall = (0, workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
       substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
       path.scope.getProgramParent().crawl();

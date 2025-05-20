@@ -67,19 +67,17 @@ export function getClosure(
 
         if (
           state.opts.experimentalBundling &&
-          state.filename?.includes('react-native-worklets') &&
-          !state.filename?.includes(generatedWorkletsDir) &&
-          isImport(binding)
+          isImport(binding) &&
+          isAllowedToImport(state.filename)
         ) {
           if (isImportRelative(binding)) {
+            capturedNames.add(name);
             relativeBindingsToImport.add(binding);
             return;
-          } else if (
-            (binding.path.parentPath!.node as ImportDeclaration).source
-              .value === 'react-native-worklets'
-          ) {
-            libraryBindingsToImport.add(binding);
-            return;
+          } else {
+            // Disallow imports from 3rd party libraries for now.
+            // libraryBindingsToImport.add(binding);
+            // return;
           }
         }
 
@@ -110,4 +108,14 @@ function isImportRelative(imported: Binding): boolean {
   return (
     imported.path.parentPath as NodePath<ImportDeclaration>
   ).node.source.value.startsWith('.');
+}
+
+function isAllowedToImport(filename: string | undefined): boolean {
+  // Right now we only allow imports in worklets within
+  // `react-native-worklets` package.
+  return (
+    !!filename &&
+    filename.includes('react-native-worklets') &&
+    !filename.includes(generatedWorkletsDir)
+  );
 }
