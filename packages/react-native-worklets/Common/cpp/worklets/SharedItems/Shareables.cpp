@@ -146,7 +146,7 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
 }
 
 jsi::Value makeShareableHostObject(jsi::Runtime &rt, const jsi::Value &value) {
-  const auto object = value.asObject(rt);
+  auto object = value.asObject(rt);
   if (object.isHostObject<ShareableJSRef>(rt)) {
     return object;
   }
