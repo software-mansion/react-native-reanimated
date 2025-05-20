@@ -915,13 +915,11 @@ var require_workletSubstitution = __commonJS({
     }
     exports2.processIfWithWorkletDirective = processIfWithWorkletDirective;
     function processWorklet(path, state) {
-      if (state.opts.processNestedWorklets) {
-        path.traverse({
-          [types_2.WorkletizableFunction](subPath, passedState) {
-            processIfWithWorkletDirective(subPath, passedState);
-          }
-        }, state);
-      }
+      path.traverse({
+        [types_2.WorkletizableFunction](subPath, passedState) {
+          processIfWithWorkletDirective(subPath, passedState);
+        }
+      }, state);
       const workletFactoryCall = (0, workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
       substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
       path.scope.getProgramParent().crawl();

@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
@@ -52,6 +52,18 @@
     "@babel/core": "^7.0.0-0",
     "react": "*",
     "react-native": "*"
+  },
+  "dependencies": {
+    "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
+    "@babel/plugin-transform-class-properties": "^7.0.0-0",
+    "@babel/plugin-transform-classes": "^7.0.0-0",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
+    "@babel/plugin-transform-optional-chaining": "^7.0.0-0",
+    "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
+    "@babel/plugin-transform-template-literals": "^7.0.0-0",
+    "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
+    "@babel/preset-typescript": "^7.16.7",
+    "convert-source-map": "^2.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
