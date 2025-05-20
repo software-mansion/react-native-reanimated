@@ -90,12 +90,59 @@ jsi::Value WorkletsModuleProxy::makeShareableBigInt(
   return worklets::makeShareableBigInt(rt, bigint);
 }
 
+jsi::Value WorkletsModuleProxy::makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote) {
+  return worklets::makeShareableArray(rt, array, shouldRetainRemote);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  return worklets::makeShareableObject(
+      rt, value, shouldRetainRemote, nativeStateSource);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableHostObject(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableHostObject(rt, value);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject) {
+  return worklets::makeShareableInitializer(rt, initializerObject);
+}
+
 jsi::Value WorkletsModuleProxy::makeShareableUndefined(jsi::Runtime &rt) {
   return worklets::makeShareableUndefined(rt);
 }
 
 jsi::Value WorkletsModuleProxy::makeShareableNull(jsi::Runtime &rt) {
   return worklets::makeShareableNull(rt);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableFunction(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableFunction(rt, value);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableArrayBuffer(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return worklets::makeShareableArrayBuffer(rt, value);
+}
+
+jsi::Value WorkletsModuleProxy::makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote) {
+  return worklets::makeShareableWorklet(rt, value, shouldRetainRemote);
 }
 
 void WorkletsModuleProxy::scheduleOnUI(
