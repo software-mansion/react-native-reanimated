@@ -262,19 +262,82 @@ function ArrayDemo() {
   const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
-    const array = [1, true, false, null, undefined, 'a', BigInt(123)];
+    const arrayBuffer = new ArrayBuffer(3);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    uint8Array[0] = 1;
+    uint8Array[1] = 2;
+    uint8Array[2] = 3;
+    const array: any[] = [
+      // number
+      1,
+      // boolean
+      true,
+      false,
+      // null
+      null,
+      // undefined
+      undefined,
+      // string
+      'a',
+      // bigint
+      BigInt(123),
+      // object
+      { a: 1 },
+      // remote function - not worklet
+      () => {
+        return 1;
+      },
+      // array
+      [1],
+      // worklet function
+      () => {
+        'worklet';
+        return 1;
+      },
+      // initializer - regexp
+      /a/,
+      // array buffer
+      arrayBuffer,
+    ];
     runOnUI(() => {
       'worklet';
       try {
+        const uint8ArrayUI = new Uint8Array(array[12]);
         const checks = [
-          array.length === 7,
+          // number
           array[0] === 1,
+          // boolean
           array[1] === true,
           array[2] === false,
+          // null
           array[3] === null,
+          // undefined
           array[4] === undefined,
+          // string
           array[5] === 'a',
+          // bigint
+          typeof array[6] === 'bigint',
           array[6] === BigInt(123),
+          // object
+          typeof array[7] === 'object',
+          array[7].a === 1,
+          // remote function - not worklet
+          typeof array[8] === 'function',
+          // array
+          array[9].length === 1,
+          array[9][0] === 1,
+          // worklet function
+          typeof array[10] === 'function',
+          array[10]() === 1,
+          // initializer - regexp
+          array[11] instanceof RegExp,
+          array[11].test('a'),
+          // array buffer
+          array[12] instanceof ArrayBuffer,
+          array[12].byteLength === 3,
+          uint8ArrayUI[0] === 1,
+          uint8ArrayUI[1] === 2,
+          uint8ArrayUI[2] === 3,
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
