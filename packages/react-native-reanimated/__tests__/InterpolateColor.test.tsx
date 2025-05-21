@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from '..';
+} from '../src';
 
 describe('colors interpolation', () => {
   it('interpolates rgb without gamma correction', () => {

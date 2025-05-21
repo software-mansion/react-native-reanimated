@@ -1,4 +1,4 @@
-import { Extrapolation, interpolate } from '../interpolation';
+import { Extrapolation, interpolate } from '../src/interpolation';
 
 describe('Test `interpolate` function', () => {
   describe('The provided range is ordered ([0,1] - ordered, [1,0] - unordered)', () => {

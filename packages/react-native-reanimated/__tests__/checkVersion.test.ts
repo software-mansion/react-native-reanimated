@@ -1,8 +1,8 @@
-import { version as packageVersion } from '../../package.json';
+import { version as packageVersion } from '../package.json';
 import {
   checkCppVersion,
   matchVersion,
-} from '../platform-specific/checkCppVersion';
+} from '../src/platform-specific/checkCppVersion';
 
 describe('checkCppVersion', () => {
   beforeEach(() => {

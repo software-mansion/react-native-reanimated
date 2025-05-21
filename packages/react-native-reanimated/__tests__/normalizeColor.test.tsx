@@ -1,4 +1,4 @@
-import { normalizeColor } from '../Colors';
+import { normalizeColor } from '../src/Colors';
 
 describe('Test `normalizeColor` function', () => {
   describe('Only compliant color are accepted', () => {

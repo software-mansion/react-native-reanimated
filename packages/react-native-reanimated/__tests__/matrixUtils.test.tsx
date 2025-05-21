@@ -1,7 +1,7 @@
 import type {
   AffineMatrix,
   AffineMatrixFlat,
-} from '../animation/transformationMatrix/matrixUtils';
+} from '../src/animation/transformationMatrix/matrixUtils';
 import {
   addMatrices,
   decomposeMatrix,
@@ -11,7 +11,7 @@ import {
   multiplyMatrices,
   subtractMatrices,
   unflatten,
-} from '../animation/transformationMatrix/matrixUtils';
+} from '../src/animation/transformationMatrix/matrixUtils';
 
 const identityMatrix: AffineMatrix = [
   [1, 0, 0, 0],

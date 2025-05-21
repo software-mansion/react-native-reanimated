@@ -1,4 +1,4 @@
-import { Bezier } from '../Bezier';
+import { Bezier } from '../src/Bezier';
 
 // spell-checker:disable
 /*
