@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -40,7 +41,8 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle) {
+    const bool isDevBundle,
+    jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -53,6 +55,9 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "_IS_FABRIC", true);
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
+
+  rt.global().setProperty(
+      rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,

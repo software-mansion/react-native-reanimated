@@ -29,22 +29,7 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {
-      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
-      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync:
-        global.__workletsModuleProxy.executeOnUIRuntimeSync,
-      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
-      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
-      makeShareableString: global.__workletsModuleProxy.makeShareableString,
-      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
-      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
-      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
-      makeShareableUndefined:
-        global.__workletsModuleProxy.makeShareableUndefined,
-      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
-      makeShareableArray: global.__workletsModuleProxy.makeShareableArray,
-    };
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
       this.#workletsModuleProxy.makeShareableUndefined();

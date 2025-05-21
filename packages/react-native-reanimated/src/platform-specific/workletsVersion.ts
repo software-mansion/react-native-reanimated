@@ -2,7 +2,7 @@
 
 import semverSatisfies from 'semver/functions/satisfies';
 
-import { ReanimatedError } from '../errors';
+import { ReanimatedError } from '../common';
 import { acceptedWorkletsVersion } from './jsVersion';
 
 export function assertWorkletsVersion() {

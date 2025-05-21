@@ -274,15 +274,16 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (currentState == AnimationProgressState::Finished) {
-      if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardsFillStyle();
-      }
-    } else if (
-        startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+    if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
       style = animation->getBackwardsFillStyle();
-    } else if (currentState != AnimationProgressState::Pending) {
+    } else if (
+        currentState == AnimationProgressState::Running ||
+        // Animation is paused after start (was running before)
+        (currentState == AnimationProgressState::Paused &&
+         timestamp >= animation->getStartTimestamp(timestamp)) ||
+        // Animation is finished and has fill forwards fill mode
+        (currentState == AnimationProgressState::Finished &&
+         animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();
     }
 
