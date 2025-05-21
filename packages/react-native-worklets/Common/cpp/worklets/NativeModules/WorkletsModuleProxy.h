@@ -40,6 +40,14 @@ class WorkletsModuleProxy
 
   jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) override;
 
+  jsi::Value makeShareableArrayOfNumbers(
+      jsi::Runtime &rt,
+      const jsi::Array &array) override;
+
+  jsi::Value makeShareableArrayOfStrings(
+      jsi::Runtime &rt,
+      const jsi::Array &array) override;
+
   jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
       override;
 

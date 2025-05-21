@@ -157,6 +157,14 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableArrayOfNumbers(
+    jsi::Runtime &rt,
+    const jsi::Array &array);
+
+jsi::Value makeShareableArrayOfStrings(
+    jsi::Runtime &rt,
+    const jsi::Array &array);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
@@ -180,6 +188,9 @@ std::shared_ptr<T> extractShareableOrThrow(
 class ShareableArray : public Shareable {
  public:
   ShareableArray(jsi::Runtime &rt, const jsi::Array &array);
+
+  explicit ShareableArray(std::vector<std::shared_ptr<Shareable>> &&data)
+      : Shareable(ArrayType), data_(data) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
