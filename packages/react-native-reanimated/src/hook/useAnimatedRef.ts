@@ -72,7 +72,7 @@ export function useAnimatedRef<
 
         fun.current = component;
       }
-      return initialTag;
+      return initialTag ?? tag.value;
     });
 
     fun.current = null;
