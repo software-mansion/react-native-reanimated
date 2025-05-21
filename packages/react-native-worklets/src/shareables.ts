@@ -19,6 +19,7 @@ import type {
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
@@ -52,6 +53,7 @@ function getFromCache(value: object) {
 // possible to catch errors when someone actually tries to access such object on the UI
 // runtime, we use the below Proxy object which is instantiated on the UI runtime and
 // throws whenever someone tries to access its fields.
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const INACCESSIBLE_OBJECT = {
   __init: () => {
     'worklet';
@@ -89,6 +91,7 @@ const INACCESSIBLE_OBJECT = {
   },
 };
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const VALID_ARRAY_VIEWS_NAMES = [
   'Int8Array',
   'Uint8Array',
@@ -107,6 +110,7 @@ const VALID_ARRAY_VIEWS_NAMES = [
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 let processedObjectAtThresholdDepth: unknown;
 
 function makeShareableCloneRecursiveWeb<T>(value: T): ShareableRef<T> {
@@ -194,6 +198,7 @@ export interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const makeShareableCloneRecursive: MakeShareableClone = SHOULD_BE_USE_WEB
   ? makeShareableCloneRecursiveWeb
   : makeShareableCloneRecursiveNative;
@@ -644,6 +649,7 @@ function makeShareableNative<T extends object>(value: T): T {
  * the UI thread will be seen by all worklets. Use it when you want to create a
  * value that is read and written only on the UI thread.
  */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const makeShareable = SHOULD_BE_USE_WEB
   ? makeShareableJS
   : makeShareableNative;

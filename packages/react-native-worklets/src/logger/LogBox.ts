@@ -45,6 +45,7 @@ interface LogBoxExtended extends LogBoxStatic {
   addLog(data: LogData): void;
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const LogBox = RNLogBox as LogBoxExtended;
 
 const noop = () => {
@@ -52,4 +53,5 @@ const noop = () => {
 };
 
 // Do nothing when addLogBoxLog is called if LogBox is not available
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const addLogBoxLog = LogBox?.addLog?.bind(LogBox) ?? noop;

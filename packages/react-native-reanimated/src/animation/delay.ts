@@ -29,6 +29,7 @@ type withDelayType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay
  */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
   _nextAnimation: T | (() => T),

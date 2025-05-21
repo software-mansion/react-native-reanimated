@@ -9,6 +9,7 @@ import type {
 } from './hook/commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
@@ -138,6 +139,7 @@ class WorkletEventHandlerWeb<Event extends object>
   }
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const WorkletEventHandler = SHOULD_BE_USE_WEB
   ? WorkletEventHandlerWeb
   : WorkletEventHandlerNative;

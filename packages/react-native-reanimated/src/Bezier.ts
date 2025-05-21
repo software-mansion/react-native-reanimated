@@ -15,6 +15,7 @@ const SUBDIVISION_PRECISION = 0.0000001;
 const SUBDIVISION_MAX_ITERATIONS = 10;
 
 const kSplineTableSize = 11;
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
 
 function A(aA1: number, aA2: number): number {

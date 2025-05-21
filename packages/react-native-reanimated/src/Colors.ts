@@ -23,6 +23,7 @@ interface HSV {
 }
 
 const NUMBER: string = '[-+]?\\d*\\.?\\d+';
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const PERCENTAGE = NUMBER + '%';
 
 function call(...args: (RegExp | string)[]) {
@@ -43,6 +44,7 @@ function commaSeparatedCall(...args: (RegExp | string)[]) {
   return '\\(\\s*(' + args.join(')\\s*,\\s*(') + ')\\s*\\)';
 }
 
+/* eslint-disable @ericcornelissen/top/no-top-level-variables, @ericcornelissen/top/no-top-level-side-effects */
 const MATCHERS = {
   rgb: new RegExp('rgb' + call(NUMBER, NUMBER, NUMBER)),
   rgba: new RegExp(
@@ -66,6 +68,7 @@ const MATCHERS = {
   hex6: /^#([0-9a-fA-F]{6})$/,
   hex8: /^#([0-9a-fA-F]{8})$/,
 };
+/* eslint-enable */
 
 function hue2rgb(p: number, q: number, t: number): number {
   'worklet';
@@ -171,6 +174,7 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
@@ -329,6 +333,7 @@ const names: Record<string, number> = makeShareable({
 });
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const ColorProperties = makeShareable([
   'backgroundColor',
   'borderBottomColor',
@@ -660,6 +665,7 @@ export function isColor(value: unknown): boolean {
   return processColorInitially(value) != null;
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_ANDROID = isAndroid();
 
 export function processColor(color: unknown): number | null | undefined {

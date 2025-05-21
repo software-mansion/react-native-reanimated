@@ -52,6 +52,7 @@ function createUpdateManager() {
  *   those that were updated later). This is used to retain the correct ordering
  *   of shared elements. Defaults to `false`.
  */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export let updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
@@ -59,6 +60,7 @@ export let updateLayoutAnimations: (
   isUnmounting?: boolean
 ) => void;
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 if (shouldBeUseWeb()) {
   updateLayoutAnimations = () => {
     // no-op

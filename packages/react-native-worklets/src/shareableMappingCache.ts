@@ -2,8 +2,6 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { ShareableRef } from './workletTypes';
 
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
 /**
  * This symbol is used to represent a mapping from the value to itself.
  *
@@ -20,25 +18,32 @@ becoming empty. This happens when editing the file that contains the definition 
 Because of it, `makeShareableCloneRecursive` can't find given mapping
 in `shareableCache` for the Mutable and tries to clone it as if it was a regular JS object.
 During cloning we use `Object.entries` to iterate over the keys which throws an error on accessing `_value`.
-For convenience we moved this cache to a separate file so it doesn't scare us with red squiggles.
+For convenience, we moved this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
-const cache = SHOULD_BE_USE_WEB
-  ? null
-  : new WeakMap<object, ShareableRef | symbol>();
+function createWebShareableMappingCache() {
+  return {
+    set() {
+      // NOOP
+    },
+    get() {
+      return null;
+    },
+  };
+}
 
-export const shareableMappingCache = SHOULD_BE_USE_WEB
-  ? {
-      set() {
-        // NOOP
-      },
-      get() {
-        return null;
-      },
-    }
-  : {
-      set(shareable: object, shareableRef?: ShareableRef): void {
-        cache!.set(shareable, shareableRef || shareableMappingFlag);
-      },
-      get: cache!.get.bind(cache),
-    };
+function createNativeShareableMappingCache() {
+  const cache = new WeakMap<object, ShareableRef | symbol>();
+
+  return {
+    set(shareable: object, shareableRef?: ShareableRef): void {
+      cache.set(shareable, shareableRef || shareableMappingFlag);
+    },
+    get: cache.get.bind(cache),
+  };
+}
+
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
+export const shareableMappingCache = shouldBeUseWeb()
+  ? createWebShareableMappingCache()
+  : createNativeShareableMappingCache();

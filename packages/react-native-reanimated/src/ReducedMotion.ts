@@ -13,10 +13,13 @@ export function isReducedMotionEnabledInSystem() {
     : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const ReducedMotionManager = {
   jsValue: IS_REDUCED_MOTION_ENABLED_IN_SYSTEM,
+  // eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
   uiValue: makeMutable(IS_REDUCED_MOTION_ENABLED_IN_SYSTEM),
   setEnabled(value: boolean) {
     ReducedMotionManager.jsValue = value;

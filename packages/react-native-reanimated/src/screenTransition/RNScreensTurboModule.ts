@@ -20,6 +20,7 @@ type TransactionConfig = {
   canStartTransition: boolean;
 };
 
+/* eslint-disable @ericcornelissen/top/no-top-level-side-effects */
 export const RNScreensTurboModule: RNScreensTurboModuleType =
   global.RNScreensTurboModule || {
     startTransition: noopFactory<TransactionConfig>({
@@ -30,3 +31,4 @@ export const RNScreensTurboModule: RNScreensTurboModuleType =
     updateTransition: noopFactory(),
     finishTransition: noopFactory(),
   };
+/* eslint-enable */

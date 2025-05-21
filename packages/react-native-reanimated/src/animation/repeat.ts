@@ -36,6 +36,7 @@ type withRepeatType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat
  */
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,

@@ -15,6 +15,7 @@ export function createJSWorkletsModule(): IWorkletsModule {
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
 const requestAnimationFrameImpl =
+  // eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
   isJest() || !globalThis.requestAnimationFrame
     ? mockedRequestAnimationFrame
     : globalThis.requestAnimationFrame;

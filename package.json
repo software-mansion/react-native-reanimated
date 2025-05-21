@@ -27,6 +27,7 @@
     "lint:root": "eslint --ignore-path .gitignore --ignore-path .eslintignore --ignore-path .prettiereslintignore . && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
   },
   "devDependencies": {
+    "@types/eslint": "^9.6.1",
     "@types/shelljs": "^0.8.15",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",

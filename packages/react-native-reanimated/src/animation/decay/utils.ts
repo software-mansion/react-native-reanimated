@@ -9,7 +9,9 @@ import type {
 } from '../../commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_WEB = isWeb();
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 

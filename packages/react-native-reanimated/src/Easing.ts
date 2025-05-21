@@ -282,6 +282,7 @@ function steps(n = 10, roundToNextStep = true): EasingFunction {
   };
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 const EasingObject = {
   linear,
   ease,
@@ -304,6 +305,7 @@ const EasingObject = {
 
 export const EasingNameSymbol = Symbol('easingName');
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 for (const [easingName, easing] of Object.entries(EasingObject)) {
   Object.defineProperty(easing, EasingNameSymbol, {
     value: easingName,

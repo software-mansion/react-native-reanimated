@@ -15,7 +15,9 @@ import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const IS_JEST = isJest();
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 // Override the logFunction implementation with the one that adds logs
@@ -31,10 +33,13 @@ function overrideLogFunctionImplementation() {
 
 // Register logger config and replace the log function implementation in
 // the React runtime global scope
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 overrideLogFunctionImplementation();
 
 // this is for web implementation
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 if (SHOULD_BE_USE_WEB) {
   global._WORKLET = false;
   global._log = console.log;
@@ -130,6 +135,7 @@ function createMemorySafeCapturableConsole(): typeof console {
 
 // We really have to create a copy of console here. Function runOnJS we use on elements inside
 // this object makes it not configurable
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const capturableConsole = createMemorySafeCapturableConsole();
 
 export function setupConsole() {

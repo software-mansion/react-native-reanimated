@@ -4,6 +4,7 @@ import { addLogBoxLog } from './LogBox';
 
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
 
 type LogFunction = (data: LogData) => void;
@@ -36,6 +37,7 @@ function logToConsole(data: LogData) {
   }
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
@@ -143,6 +145,7 @@ function handleLog(
   config.logFunction(createLog(level, message));
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables
 export const logger = {
   warn(message: string, options: LogOptions = {}) {
     'worklet';

@@ -7,6 +7,7 @@ import { ReanimatedError } from './errors';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { PropsAllowlists } from './propsAllowlists';
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function assertNoOverlapInLists() {
@@ -76,6 +77,7 @@ export function configureReanimatedLogger(config: LoggerConfig) {
   }
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-variables,@ericcornelissen/top/no-top-level-side-effects
 const PROCESSED_VIEW_NAMES = new Set();
 
 export interface ViewConfig {
@@ -110,4 +112,5 @@ export function adaptViewConfig(viewConfig: ViewConfig): void {
   }
 }
 
+// eslint-disable-next-line @ericcornelissen/top/no-top-level-side-effects
 configureProps();
