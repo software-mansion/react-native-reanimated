@@ -1,7 +1,9 @@
 #pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/Tools/JSISerializer.h>
 
+#include <glog/logging.h>
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -19,6 +21,17 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
 
+template <typename T>
+void printJSIValue(jsi::Runtime &rt, T &&arg) {
+  if constexpr (std::is_same_v<std::decay_t<T>, jsi::Value>) {
+    const jsi::Value &value = arg; // Work directly with references
+    LOG(INFO) << "ARG " << stringifyJSIValue(rt, value);
+
+  } else {
+    LOG(INFO) << "SKIPPING ARG";
+  }
+}
+
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
 inline jsi::Value runOnRuntimeGuarded(
@@ -30,8 +43,19 @@ inline jsi::Value runOnRuntimeGuarded(
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-  return getCallGuard(rt).call(rt, function, args...);
+try {
+    return getCallGuard(rt).call(rt, function, args...);
+} catch (facebook::jsi::JSIException ex) {
+    LOG(INFO) << ex.what();
+}
+return jsi::Value::undefined();
 #else
+  //   rt.global().getProperty(rt, "_log").asObject(rt).asFunction(rt).call(rt,
+  //   function, 1);
+  //  LOG(INFO) << "BEFORE INVOCATION " << stringifyJSIValue(rt, function);
+  //  LOG(INFO) << "Number of arguments: " << sizeof...(args);
+
+  // (printJSIValue(rt, std::forward<Args>(args)), ...);
   return function.asObject(rt).asFunction(rt).call(rt, args...);
 #endif
 }
@@ -84,6 +108,7 @@ class Shareable {
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    ImportType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -156,6 +181,11 @@ jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
 jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
+
+jsi::Value makeShareableImport(
+    jsi::Runtime &rt,
+    const jsi::String &source,
+    const jsi::String &imported);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -256,6 +286,23 @@ class ShareableWorklet : public ShareableObject {
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+};
+
+class ShareableImport : public Shareable {
+ public:
+  ShareableImport(
+      jsi::Runtime &rt,
+      const jsi::String &source,
+      const jsi::String &imported)
+      : Shareable(ImportType),
+        source_(source.utf8(rt)),
+        imported_(imported.utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string source_;
+  const std::string imported_;
 };
 
 class ShareableRemoteFunction

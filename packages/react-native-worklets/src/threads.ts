@@ -1,13 +1,10 @@
 'use strict';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import {
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+import { makeShareableCloneRecursive } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction, WorkletImport } from './workletTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -84,13 +81,17 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
-  'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (
+    __DEV__ &&
+    !SHOULD_BE_USE_WEB &&
+    !isWorkletFunction(worklet) &&
+    !(worklet as unknown as WorkletImport).__bundleData
+  ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
@@ -154,7 +155,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(() => {
         'worklet';
         const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
+        return makeShareableCloneRecursive(result);
       })
     );
   };
@@ -241,7 +242,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
         | WorkletFunction<Args, ReturnValue>,
       args.length > 0
         ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
+          (makeShareableCloneRecursive(args) as unknown as unknown[])
         : undefined
     );
   };

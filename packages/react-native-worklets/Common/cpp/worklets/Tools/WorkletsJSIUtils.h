@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <sstream>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -195,5 +195,9 @@ jsi::Array convertStringToArray(
     jsi::Runtime &rt,
     const std::string &value,
     const unsigned int expectedSize);
+
+jsi::Object optimizedFromHostObject(
+    jsi::Runtime &rt,
+    std::shared_ptr<jsi::HostObject> &&hostObject);
 
 } // namespace worklets::jsi_utils

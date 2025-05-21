@@ -1,0 +1,217 @@
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d042046b6601dc7c5b54561d1d4d87e27211c723
+--- /dev/null
++++ b/.vscode/settings.json
+@@ -0,0 +1,21 @@
++{
++  "workbench.colorCustomizations": {
++    "[*]": {
++      "diffEditor.insertedLineBackground": "#00ff000a",
++      "diffEditor.insertedTextBackground": "#00ffff0a",
++      "diffEditor.removedLineBackground": "#ff00001a",
++      "diffEditor.removedTextBackground": "#ffff001a",
++      "editor.findMatchBackground": "#00ff556a",
++      "editorError.border": "#ff000088",
++      "editorError.foreground": "#ff0000",
++      "tab.activeBorder": "#20c9e3",
++      "tab.activeBorderTop": "#20c9e3",
++      "terminal.findMatchBackground": "#fff700d6"
++    },
++    "activityBar.background": "#560948",
++    "titleBar.activeBackground": "#790D65",
++    "titleBar.activeForeground": "#FFFBFE",
++    "statusBar.background": "#790D65",
++    "statusBar.foreground": "#FFFBFE"
++  }
++}
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+index cccc6076bd6d249e845ae65ae00273319875caa7..3ed961aaccd12b90318750160d5f371bbba5fbad 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+@@ -297,6 +297,16 @@ internal class ReactInstance(
+               loadSynchronously: Boolean
+           ) {
+             context.setSourceURL(sourceURL)
++
++            val workletsModule = turboModuleManager.getModule("WorkletsModule")!!;
++            val module = workletsModule!!
++
++            val setSourceFileNameMethod = module::class.java.getMethod("setSourceFileName", String::class.java)
++            setSourceFileNameMethod.invoke(module, fileName)
++
++            val setSourceURLMethod = module::class.java.getMethod("setSourceURL", String::class.java)
++            setSourceURLMethod.invoke(module, sourceURL)
++
+             loadJSBundleFromFile(fileName, sourceURL)
+           }
+ 
+diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+index 5ffd7492ba8132fce79ce1879b9f2a97f9810e62..f94f32acfc04a56d81e1fda688abcfd2ceb48878 100644
+--- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
++++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+@@ -140,7 +140,8 @@ void JReactInstance::loadJSBundleFromAssets(
+ 
+   auto manager = extractAssetManager(assetManager);
+   auto script = loadScriptFromAssets(manager, sourceURL);
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ void JReactInstance::loadJSBundleFromFile(
+@@ -149,7 +150,8 @@ void JReactInstance::loadJSBundleFromFile(
+   std::unique_ptr<const JSBigFileString> script;
+   RecoverableError::runRethrowingAsRecoverable<std::system_error>(
+       [&fileName, &script]() { script = JSBigFileString::fromPath(fileName); });
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ /**
+diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
+index db92e3e75ca49ecd41467dc7a656dc10ffda5077..96a041eaf8d57658f68944241a0c146e81b62d95 100644
+--- a/ReactCommon/react/runtime/ReactInstance.cpp
++++ b/ReactCommon/react/runtime/ReactInstance.cpp
+@@ -213,17 +213,16 @@ std::string simpleBasename(const std::string& path) {
+  * preferably via the runtimeExecutor_.
+  */
+ void ReactInstance::loadScript(
+-    std::unique_ptr<const JSBigString> script,
++    const std::shared_ptr<const BigStringBuffer>& script,
+     const std::string& sourceURL,
+     std::function<void(jsi::Runtime& runtime)>&& beforeLoad,
+     std::function<void(jsi::Runtime& runtime)>&& afterLoad) {
+-  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
+   std::string scriptName = simpleBasename(sourceURL);
+ 
+   runtimeScheduler_->scheduleWork([this,
+                                    scriptName,
+                                    sourceURL,
+-                                   buffer = std::move(buffer),
++                                   script,
+                                    weakBufferedRuntimeExecuter =
+                                        std::weak_ptr<BufferedRuntimeExecutor>(
+                                            bufferedRuntimeExecutor_),
+@@ -239,7 +238,7 @@ void ReactInstance::loadScript(
+           ReactMarker::RUN_JS_BUNDLE_START, scriptName.c_str());
+     }
+ 
+-    runtime.evaluateJavaScript(buffer, sourceURL);
++    runtime.evaluateJavaScript(script, sourceURL);
+ 
+     /**
+      * TODO(T183610671): We need a safe/reliable way to enable the js
+diff --git a/ReactCommon/react/runtime/ReactInstance.h b/ReactCommon/react/runtime/ReactInstance.h
+index 51709eebcd7ac58584294c1a5125eff5e82587fc..2868f9ef52c311d56360ced214c391040093d903 100644
+--- a/ReactCommon/react/runtime/ReactInstance.h
++++ b/ReactCommon/react/runtime/ReactInstance.h
+@@ -48,7 +48,7 @@ class ReactInstance final : private jsinspector_modern::InstanceTargetDelegate {
+       BindingsInstallFunc bindingsInstallFunc) noexcept;
+ 
+   void loadScript(
+-      std::unique_ptr<const JSBigString> script,
++      const std::shared_ptr<const BigStringBuffer>& script,
+       const std::string& sourceURL,
+       std::function<void(jsi::Runtime& runtime)>&& beforeLoad = nullptr,
+       std::function<void(jsi::Runtime& runtime)>&& afterLoad = nullptr);
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.h b/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..5b6a31709d04dba6b171666e3a3e4c18ba33effc
+--- /dev/null
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.h
+@@ -0,0 +1,25 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import <Foundation/Foundation.h>
++
++#import <memory>
++
++#import <jsireact/JSIExecutor.h>
++
++using namespace facebook;
++using namespace facebook::react;
++
++@interface NSBigStringBuffer : NSObject {
++  std::shared_ptr<const BigStringBuffer> _buffer;
++}
++
++- (instancetype)initWithSharedPtr:
++    (const std::shared_ptr<const BigStringBuffer> &)buffer;
++- (const std::shared_ptr<const BigStringBuffer> &)getBuffer;
++
++@end
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.mm
+new file mode 100644
+index 0000000000000000000000000000000000000000..20ec1a93bc7f418c0690db8c5519174086e962c2
+--- /dev/null
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/NSBigStringBuffer.mm
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import "NSBigStringBuffer.h"
++
++@implementation NSBigStringBuffer
++
++- (instancetype)initWithSharedPtr:(const std::shared_ptr<const BigStringBuffer>&)buffer {
++    if (self = [super init]) {
++        _buffer = buffer;
++    }
++    return self;
++}
++
++- (const std::shared_ptr<const BigStringBuffer>&)getBuffer {
++    return _buffer;
++}
++
++@end
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+index e76e1d18df99468f3cd2c9f61b20ad829081ceb5..0acf5e0f79184b6d8562265e65acdab401486a84 100644
+--- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+@@ -47,6 +47,7 @@
+ #import "RCTJSThreadManager.h"
+ #import "RCTLegacyUIManagerConstantsProvider.h"
+ #import "RCTPerformanceLoggerUtils.h"
++#import "NSBigStringBuffer.h"
+ 
+ #if RCT_DEV_MENU && __has_include(<React/RCTDevLoadingViewProtocol.h>)
+ #import <React/RCTDevLoadingViewProtocol.h>
+@@ -548,6 +549,7 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+   }
+ 
+   auto script = std::make_unique<NSDataBigString>(source.data);
++  const auto scriptBuffer = std::make_shared<const BigStringBuffer>(std::move(script));
+   const auto *url = deriveSourceURL(source.url).UTF8String;
+ 
+   auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
+@@ -558,7 +560,17 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+   auto afterLoad = [](jsi::Runtime &_) {
+     [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTInstanceDidLoadBundle" object:nil];
+   };
+-  _reactInstance->loadScript(std::move(script), url, beforeLoad, afterLoad);
++  
++  id worklets = [_turboModuleManager  moduleForName:"WorkletsModule"];
++  NSString *scriptParamMethodName = @"setScriptBuffer:";
++  NSString *urlParamMethodName = @"setSourceURL:";
++  SEL scriptSelector = NSSelectorFromString(scriptParamMethodName);
++  SEL urlSelector = NSSelectorFromString(urlParamMethodName);
++  id nsScriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
++  [worklets performSelector:scriptSelector withObject:nsScriptBuffer];
++  [worklets performSelector:urlSelector withObject:@(url)];
++
++  _reactInstance->loadScript(scriptBuffer, url, beforeLoad, afterLoad);
+ }
+ 
+ - (void)_handleJSError:(const JsErrorHandler::ProcessedError &)error withRuntime:(jsi::Runtime &)runtime

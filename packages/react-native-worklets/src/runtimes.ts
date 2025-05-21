@@ -1,10 +1,15 @@
 'use strict';
 
-import { setupCallGuard, setupConsole } from './initializers';
+import { reportFatalErrorOnJS } from './errors';
+import {
+  getMemorySafeCapturableConsole,
+  setupCallGuard,
+  setupConsole,
+  setupErrorUtils,
+} from './initializers';
 import { registerLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
-  makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
@@ -39,14 +44,18 @@ export function createWorkletRuntime(
   // Assign to a different variable as __workletsLoggerConfig is not a captured
   // identifier in the Worklet runtime.
   const config = __workletsLoggerConfig;
+
+  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
+      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
+      setupCallGuard();
       registerWorkletsError();
       registerLoggerConfig(config);
-      setupCallGuard();
-      setupConsole();
+      setupConsole(runtimeBoundCapturableConsole);
       initializer?.();
     })
   );
@@ -72,7 +81,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
     return (...args) =>
       global._scheduleOnRuntime(
         workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
+        makeShareableCloneRecursive(() => {
           'worklet';
           worklet(...args);
         })

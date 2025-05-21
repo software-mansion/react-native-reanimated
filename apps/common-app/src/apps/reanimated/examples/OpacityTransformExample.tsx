@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 const ROWS = 25;
 const COLS = 15;
@@ -46,5 +51,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'navy',
     width: SIZE,
     height: SIZE,
-  }
+  },
 });

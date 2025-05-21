@@ -1,13 +1,16 @@
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <cxxreact/MessageQueueThread.h>
+#include <glog/logging.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
 #include <memory>
 #include <utility>
@@ -82,11 +85,14 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
+    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const bool isDevBundle)
+    const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -100,11 +106,30 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler, isDevBundle);
 
-  auto valueUnpackerBuffer =
-      std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
-  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+  auto optimizedJsiWorkletsModuleProxy =
+      jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
+
+  WorkletRuntimeDecorator::decorate(
+      rt,
+      name,
+      jsScheduler,
+      isDevBundle,
+      std::move(optimizedJsiWorkletsModuleProxy));
+
+  if (script == nullptr) {
+    // Legacy behavior
+    auto valueUnpackerBuffer =
+        std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+    rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+  } else {
+    // Experimental bundling
+    try {
+      rt.evaluateJavaScript(script, sourceUrl);
+    } catch (facebook::jsi::JSIException ex) {
+        LOG(INFO) << ex.what();
+    }
+  }
 }
 
 jsi::Value WorkletRuntime::executeSync(

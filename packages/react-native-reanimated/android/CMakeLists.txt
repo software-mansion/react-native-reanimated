@@ -57,7 +57,8 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
+          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
   target_include_directories(

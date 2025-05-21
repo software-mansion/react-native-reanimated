@@ -13,6 +13,7 @@ import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
+  WorkletImport,
 } from './workletTypes';
 
 // for web and jest environments this file provides a stub implementation
@@ -159,6 +160,9 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
+  if (isFunction && (value as WorkletImport).__bundleData) {
+    return cloneImport(value as WorkletImport) as ShareableRef<T>;
+  }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
@@ -189,6 +193,11 @@ function makeShareableCloneRecursiveNative<T>(
   }
   return inaccessibleObject(value);
 }
+
+makeShareableCloneRecursiveNative.__bundleData = {
+  imported: 'makeShareableCloneRecursive',
+  source: '../../packages/react-native-worklets/src/index.ts',
+};
 
 export interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
@@ -472,6 +481,18 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   return handle;
 }
 
+function cloneImport<TValue extends WorkletImport>(
+  value: TValue
+): ShareableRef<TValue> {
+  const { source, imported } = value.__bundleData;
+  const clone = WorkletsModule.makeShareableImport(source, imported);
+
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  return clone as ShareableRef<TValue>;
+}
+
 function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
   // This is reached for object types that are not of plain Object.prototype.
   // We don't support such objects from being transferred as shareables to
@@ -554,6 +575,7 @@ export function makeShareableCloneOnUIRecursive<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
+  // TODO: Warn here for new bundling
   if (SHOULD_BE_USE_WEB) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
