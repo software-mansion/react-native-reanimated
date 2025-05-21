@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import type { SensorConfig, Value3D, ValueRotation } from '../src/';
-import { SensorType, useAnimatedSensor } from '../src/';
+import type { SensorConfig, Value3D, ValueRotation } from '..';
+import { SensorType, useAnimatedSensor } from '..';
 
 let eventHandler: (data: Value3D | ValueRotation) => void;
 

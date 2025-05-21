@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from '../src';
+} from '..';
 
 jest.useFakeTimers();
 

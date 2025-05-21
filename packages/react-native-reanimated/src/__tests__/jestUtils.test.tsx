@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native';
 import React from 'react';
 import { View } from 'react-native';
 
-import Animated, { useAnimatedStyle } from '../src';
+import Animated, { useAnimatedStyle } from '..';
 
 describe('jestUtils', () => {
   it('differentiates matching with shouldMatchAllProps option with toHaveAnimatedStyle', () => {

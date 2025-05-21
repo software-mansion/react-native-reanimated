@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
-import Animated, { useSharedValue } from '../src';
+import Animated, { useSharedValue } from '..';
 
 describe('useSharedValue', () => {
   it('retains value on rerender', () => {

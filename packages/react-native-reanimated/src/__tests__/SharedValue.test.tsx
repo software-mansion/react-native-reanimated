@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Button, Text, View } from 'react-native';
 
-import { useSharedValue } from '../src';
+import { useSharedValue } from '..';
 
 const ViewTestComponent = () => {
   const sv = useSharedValue(1);

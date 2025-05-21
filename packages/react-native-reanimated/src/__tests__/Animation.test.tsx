@@ -3,9 +3,9 @@ import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Button, View } from 'react-native';
 
-import type { SharedValue } from '../src';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../src';
-import { getAnimatedStyle } from '../src/jestUtils';
+import type { SharedValue } from '..';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../';
+import { getAnimatedStyle } from '../jestUtils';
 
 interface Props {
   sharedValue: SharedValue<number>;
