@@ -1,3 +1,75 @@
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d042046b6601dc7c5b54561d1d4d87e27211c723
+--- /dev/null
++++ b/.vscode/settings.json
+@@ -0,0 +1,21 @@
++{
++  "workbench.colorCustomizations": {
++    "[*]": {
++      "diffEditor.insertedLineBackground": "#00ff000a",
++      "diffEditor.insertedTextBackground": "#00ffff0a",
++      "diffEditor.removedLineBackground": "#ff00001a",
++      "diffEditor.removedTextBackground": "#ffff001a",
++      "editor.findMatchBackground": "#00ff556a",
++      "editorError.border": "#ff000088",
++      "editorError.foreground": "#ff0000",
++      "tab.activeBorder": "#20c9e3",
++      "tab.activeBorderTop": "#20c9e3",
++      "terminal.findMatchBackground": "#fff700d6"
++    },
++    "activityBar.background": "#560948",
++    "titleBar.activeBackground": "#790D65",
++    "titleBar.activeForeground": "#FFFBFE",
++    "statusBar.background": "#790D65",
++    "statusBar.foreground": "#FFFBFE"
++  }
++}
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+index cccc6076bd6d249e845ae65ae00273319875caa7..3ed961aaccd12b90318750160d5f371bbba5fbad 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+@@ -297,6 +297,16 @@ internal class ReactInstance(
+               loadSynchronously: Boolean
+           ) {
+             context.setSourceURL(sourceURL)
++
++            val workletsModule = turboModuleManager.getModule("WorkletsModule")!!;
++            val module = workletsModule!!
++
++            val setSourceFileNameMethod = module::class.java.getMethod("setSourceFileName", String::class.java)
++            setSourceFileNameMethod.invoke(module, fileName)
++
++            val setSourceURLMethod = module::class.java.getMethod("setSourceURL", String::class.java)
++            setSourceURLMethod.invoke(module, sourceURL)
++
+             loadJSBundleFromFile(fileName, sourceURL)
+           }
+ 
+diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+index 5ffd7492ba8132fce79ce1879b9f2a97f9810e62..f94f32acfc04a56d81e1fda688abcfd2ceb48878 100644
+--- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
++++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+@@ -140,7 +140,8 @@ void JReactInstance::loadJSBundleFromAssets(
+ 
+   auto manager = extractAssetManager(assetManager);
+   auto script = loadScriptFromAssets(manager, sourceURL);
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ void JReactInstance::loadJSBundleFromFile(
+@@ -149,7 +150,8 @@ void JReactInstance::loadJSBundleFromFile(
+   std::unique_ptr<const JSBigFileString> script;
+   RecoverableError::runRethrowingAsRecoverable<std::system_error>(
+       [&fileName, &script]() { script = JSBigFileString::fromPath(fileName); });
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ /**
 diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
 index db92e3e75ca49ecd41467dc7a656dc10ffda5077..96a041eaf8d57658f68944241a0c146e81b62d95 100644
 --- a/ReactCommon/react/runtime/ReactInstance.cpp

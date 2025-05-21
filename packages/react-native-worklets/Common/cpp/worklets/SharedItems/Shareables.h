@@ -43,7 +43,12 @@ inline jsi::Value runOnRuntimeGuarded(
   // JavaScript and propagating them to the main React Native thread such that
   // they can be presented using RN's LogBox.
 #ifndef NDEBUG
-  return getCallGuard(rt).call(rt, function, args...);
+try {
+    return getCallGuard(rt).call(rt, function, args...);
+} catch (facebook::jsi::JSIException ex) {
+    LOG(INFO) << ex.what();
+}
+return jsi::Value::undefined();
 #else
   //   rt.global().getProperty(rt, "_log").asObject(rt).asFunction(rt).call(rt,
   //   function, 1);
