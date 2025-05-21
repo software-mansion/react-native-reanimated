@@ -10,11 +10,9 @@ import {
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
-import { isWeb } from '../PlatformChecker';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
-
-const IS_WEB = isWeb();
 
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
@@ -34,14 +32,7 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
   return component;
 }
 
-/**
- * Lets you get a reference of a view that you can use inside a worklet.
- *
- * @returns An object with a `.current` property which contains an instance of a
- *   component.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
- */
-export function useAnimatedRef<
+function useAnimatedRefNative<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const [tag] = useState(() => makeMutable<ShadowNodeWrapper | null>(null));
@@ -56,11 +47,9 @@ export function useAnimatedRef<
       let initialTag: ShadowNodeWrapper | null = null;
       if (component) {
         const getTagOrShadowNodeWrapper = () => {
-          return IS_WEB
-            ? getComponentOrScrollable(component)
-            : getShadowNodeWrapperFromRef(
-                getComponentOrScrollable(component) as Component
-              );
+          return getShadowNodeWrapperFromRef(
+            getComponentOrScrollable(component) as Component
+          );
         };
 
         initialTag = getTagOrShadowNodeWrapper();
@@ -89,3 +78,50 @@ export function useAnimatedRef<
 
   return ref.current;
 }
+
+function useAnimatedRefWeb<
+  TComponent extends Component,
+>(): AnimatedRef<TComponent> {
+  const tag = useRef<ShadowNodeWrapper | null>(null);
+
+  const ref = useRef<AnimatedRef<TComponent> | null>(null);
+
+  if (!ref.current) {
+    /** Called by React when ref is attached to a component. */
+    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
+      component
+    ) => {
+      if (component) {
+        const getTagOrShadowNodeWrapper = () => {
+          return getComponentOrScrollable(component);
+        };
+
+        tag.current = getTagOrShadowNodeWrapper();
+
+        // We have to unwrap the tag from the shadow node wrapper.
+        fun.getTag = () =>
+          findNodeHandle(getComponentOrScrollable(component) as Component)!;
+
+        fun.current = component;
+      }
+      return tag.current;
+    });
+
+    fun.current = null;
+
+    ref.current = fun;
+  }
+
+  return ref.current;
+}
+
+/**
+ * Lets you get a reference of a view that you can use inside a worklet.
+ *
+ * @returns An object with a `.current` property which contains an instance of a
+ *   component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
+ */
+export const useAnimatedRef = shouldBeUseWeb()
+  ? useAnimatedRefWeb
+  : useAnimatedRefNative;
