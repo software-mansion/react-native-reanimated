@@ -84,6 +84,7 @@ class Shareable {
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    TurboModuleLikeType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -156,6 +157,10 @@ jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
 jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
+
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Value &value);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -352,6 +357,20 @@ class ShareableScalar : public Shareable {
 
  private:
   Data data_;
+};
+
+class ShareableTurboModuleLike : public Shareable {
+ public:
+  ShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const std::shared_ptr<jsi::HostObject> &proto);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::unique_ptr<ShareableHostObject> proto_;
+  std::unique_ptr<ShareableObject> properties_;
 };
 
 } // namespace worklets

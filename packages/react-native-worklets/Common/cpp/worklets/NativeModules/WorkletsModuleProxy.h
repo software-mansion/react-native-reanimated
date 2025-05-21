@@ -49,6 +49,10 @@ class WorkletsModuleProxy
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
 
+  jsi::Value makeShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Value &value) override;
+
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
       override;
 

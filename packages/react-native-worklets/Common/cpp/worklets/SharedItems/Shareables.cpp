@@ -145,6 +145,21 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  auto object = value.asObject(rt);
+  auto getPrototypeOf = rt.global()
+                            .getProperty(rt, "Object")
+                            .asObject(rt)
+                            .getPropertyAsFunction(rt, "getPrototypeOf");
+  auto objectPrototype = getPrototypeOf.call(rt, object).asObject(rt);
+
+  auto shareable = std::make_shared<ShareableTurboModuleLike>(
+      rt, object, objectPrototype.getHostObject(rt));
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
@@ -351,6 +366,35 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
       throw std::runtime_error(
           "[Worklets] Attempted to convert object that's not of a scalar type.");
   }
+}
+
+ShareableTurboModuleLike::ShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto)
+    : Shareable(TurboModuleLikeType) {
+  // We must get rid of the Host Object prototype as `ShareableObject` expects
+  // the prototype to be that of a plain object.
+  auto setPrototypeOf = rt.global()
+                            .getPropertyAsObject(rt, "Object")
+                            .getPropertyAsFunction(rt, "setPrototypeOf");
+  auto emptyObject = jsi::Object(rt);
+  setPrototypeOf.call(rt, object, emptyObject);
+
+  proto_ = std::make_unique<ShareableHostObject>(rt, proto);
+  properties_ = std::make_unique<ShareableObject>(rt, object);
+}
+
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
+  jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
+
+  auto prototype = proto_->toJSValue(rt);
+  auto setPrototypeOf = rt.global()
+                            .getPropertyAsObject(rt, "Object")
+                            .getPropertyAsFunction(rt, "setPrototypeOf");
+  setPrototypeOf.call(rt, obj, prototype);
+
+  return obj;
 }
 
 } // namespace worklets
