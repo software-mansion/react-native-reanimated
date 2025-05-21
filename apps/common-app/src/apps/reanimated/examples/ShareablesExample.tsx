@@ -39,6 +39,7 @@ export default function ShareablesExample() {
         <NumberDemo />
         <UndefinedDemo />
         <NullDemo />
+        <PlainObjectDemo />
         <CyclicObjectDemo />
         <InaccessibleObjectDemo />
         <RemoteNamedFunctionSyncCallDemo />
@@ -279,6 +280,72 @@ function CyclicObjectDemo() {
     } catch (e) {
       runOnJS(isError)();
     }
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function PlainObjectDemo() {
+  const title = 'Plain object';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const obj = {
+      a: 1,
+      b: 2,
+      c: 3,
+      d: 'test',
+      e: { f: 4, g: 5 },
+      h: BigInt(6),
+      i: true,
+      j: false,
+      k: null,
+      l: undefined,
+      m: () => {
+        return 1;
+      },
+      n: () => {
+        'worklet';
+        return 2;
+      },
+      o: /test/,
+    };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          obj.a === 1,
+          obj.b === 2,
+          obj.c === 3,
+          obj.d === 'test',
+          obj.e.f === 4,
+          obj.e.g === 5,
+          obj.h === BigInt(6),
+          obj.i === true,
+          obj.j === false,
+          obj.k === null,
+          obj.l === undefined,
+          typeof obj.m === 'function',
+          typeof obj.n === 'function',
+          obj.n() === 2,
+          obj.o.test('test'),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
   };
   return (
     <DemoItemRow

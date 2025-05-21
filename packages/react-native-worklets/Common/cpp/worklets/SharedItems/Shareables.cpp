@@ -153,7 +153,6 @@ jsi::Value makeShareableObject(
   std::shared_ptr<Shareable> shareable;
   auto object = value.asObject(rt);
   // TODO: remove it once we have makeShareableWorklet function implemented
-  // (seperated)
   if (!object.getProperty(rt, "__workletHash").isUndefined()) {
     if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
       shareable =

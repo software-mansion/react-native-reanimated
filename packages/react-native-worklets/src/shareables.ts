@@ -589,11 +589,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
-      return global._makeShareableObject(
-        toAdapt,
-        false,
-        value
-      ) as FlatShareableRef<T>;
+      return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
 
     if (typeof value === 'string') {
