@@ -591,7 +591,7 @@ function DataViewDemo() {
 
 function ErrorDemo() {
   const title = 'Error';
-  const { status, isOk, isError } = useStatus();
+  const { status, isOk, isError, isNotOk } = useStatus();
 
   const handlePress = () => {
     const e = new Error('error message');
@@ -601,12 +601,12 @@ function ErrorDemo() {
         const checks = [
           e instanceof Error,
           String(e).includes('error message'),
-          global._WORKLET,
+          Platform.OS === 'web' ? !global._WORKLET : global._WORKLET,
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
-          runOnJS(isError)();
+          runOnJS(isNotOk)();
         }
       } catch (err) {
         runOnJS(isError)();
@@ -619,7 +619,7 @@ function ErrorDemo() {
       onPress={handlePress}
       status={status}
       expectedOnNative="ok"
-      expectedOnWeb="error"
+      expectedOnWeb="ok"
     />
   );
 }
