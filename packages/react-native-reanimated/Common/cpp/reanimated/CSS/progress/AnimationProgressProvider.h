@@ -7,6 +7,7 @@
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 #include <memory>
+#include <utility>
 
 namespace reanimated::css {
 
