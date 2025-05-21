@@ -7,10 +7,10 @@ import {
   shareableMappingCache,
 } from 'react-native-worklets';
 
+import { SHOULD_BE_USE_WEB } from '../common/constants';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 
@@ -124,6 +124,6 @@ function useAnimatedRefWeb<
  *   component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
-export const useAnimatedRef = shouldBeUseWeb()
+export const useAnimatedRef = SHOULD_BE_USE_WEB
   ? useAnimatedRefWeb
   : useAnimatedRefNative;

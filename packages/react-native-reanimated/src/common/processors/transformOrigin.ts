@@ -1,7 +1,12 @@
 'use strict';
-import type { ValueProcessor } from '../../../../../common';
-import { ReanimatedError } from '../../../../errors';
-import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
+'worklet';
+import { ReanimatedError } from '../errors';
+import type {
+  NormalizedTransformOrigin,
+  TransformOrigin,
+  ValueProcessor,
+} from '../types';
+import { isLength } from '../utils';
 
 type KeywordConversions = Record<string, `${number}%` | number>;
 
@@ -12,6 +17,7 @@ export const ERROR_MESSAGES = {
     `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword.`,
   invalidKeyword: (keyword: string, axis: 'x' | 'y', validKeywords: string[]) =>
     `"${keyword}" is not a valid keyword for the ${axis}-axis. Must be one of: ${validKeywords.join(', ')}.`,
+  invalidZValue: (value: string) => `Invalid z-value: ${value}. Must be a px.`,
 };
 
 const HORIZONTAL_CONVERSIONS: KeywordConversions = {
@@ -51,7 +57,7 @@ function validateResult(
   result: Array<null | `${number}%` | number>,
   components: (string | number)[],
   transformOrigin: TransformOrigin
-): NormalizedTransformOrigin {
+): void {
   const nullIdx = result.indexOf(null);
 
   if (nullIdx !== -1) {
@@ -86,8 +92,6 @@ function validateResult(
       ERROR_MESSAGES.invalidComponent(components[2], transformOrigin)
     );
   }
-
-  return result as NormalizedTransformOrigin;
 }
 
 export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
@@ -107,11 +111,20 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
     [components[0], components[1]] = [components[1], components[0]];
   }
 
+  // Check if the z component is a valid value with px unit
+  if (typeof components[2] === 'string' && !isLength(components[2])) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidZValue(components[2]));
+  }
+
   const result = [
     parseComponent(components[0] ?? '50%', HORIZONTAL_CONVERSIONS),
     parseComponent(components[1] ?? '50%', VERTICAL_CONVERSIONS),
     parseComponent(components[2] ?? 0),
   ];
 
-  return validateResult(result, components, value);
+  if (__DEV__) {
+    validateResult(result, components, value);
+  }
+
+  return result as NormalizedTransformOrigin;
 };
