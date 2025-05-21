@@ -22,6 +22,7 @@ class WorkletRuntime : public jsi::HostObject,
  public:
   explicit WorkletRuntime(
       jsi::Runtime &rnRuntime,
+      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
