@@ -43,6 +43,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.element.style.transitionTimingFunction = '';
     // @ts-ignore this is correct
     this.element.style.transitionBehavior = '';
+
+    this.isAttached = false;
   }
 
   private setElementTransition(transitionProperties: CSSTransitionProperties) {
