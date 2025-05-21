@@ -36,6 +36,7 @@ function useAnimatedRefNative<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const [tag] = useState(() => makeMutable<ShadowNodeWrapper | null>(null));
+  const tagRef = useRef<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
@@ -54,6 +55,7 @@ function useAnimatedRefNative<
 
         initialTag = getTagOrShadowNodeWrapper();
         tag.value = initialTag;
+        tagRef.current = initialTag;
 
         // We have to unwrap the tag from the shadow node wrapper.
         fun.getTag = () =>
@@ -61,7 +63,7 @@ function useAnimatedRefNative<
 
         fun.current = component;
       }
-      return initialTag;
+      return tagRef.current;
     });
 
     fun.current = null;
@@ -82,7 +84,7 @@ function useAnimatedRefNative<
 function useAnimatedRefWeb<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
-  const tag = useRef<ShadowNodeWrapper | null>(null);
+  const tagRef = useRef<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
@@ -96,7 +98,7 @@ function useAnimatedRefWeb<
           return getComponentOrScrollable(component);
         };
 
-        tag.current = getTagOrShadowNodeWrapper();
+        tagRef.current = getTagOrShadowNodeWrapper();
 
         // We have to unwrap the tag from the shadow node wrapper.
         fun.getTag = () =>
@@ -104,7 +106,7 @@ function useAnimatedRefWeb<
 
         fun.current = component;
       }
-      return tag.current;
+      return tagRef.current;
     });
 
     fun.current = null;
