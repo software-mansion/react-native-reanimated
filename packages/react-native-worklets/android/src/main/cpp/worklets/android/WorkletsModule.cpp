@@ -13,34 +13,21 @@ using namespace react;
 
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis,
-    jsi::Runtime *rnRuntime,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<MessageQueueThread> &messageQueueThread,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
-      rnRuntime_(rnRuntime),
-      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
-          *rnRuntime,
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
-          jsCallInvoker,
-          uiScheduler,
-          getForwardedRequestAnimationFrame())) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
-}
+      messageQueueThread_(messageQueueThread),
+      uiScheduler_(uiScheduler) {}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
-    jlong jsContext,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-        jsCallInvokerHolder,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> javaMessageQueueThread,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
         androidUIScheduler) {
-  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
-  auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
-  return makeCxxInstance(
-      jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler);
+  const auto &messageQueueThread =
+      std::make_shared<JMessageQueueThread>(javaMessageQueueThread);
+  const auto &uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
+  return makeCxxInstance(jThis, messageQueueThread, uiScheduler);
 }
 
 std::function<void(std::function<void(const double)>)>
@@ -59,14 +46,33 @@ WorkletsModule::getForwardedRequestAnimationFrame() {
 
 void WorkletsModule::invalidateCpp() {
   javaPart_.reset();
+  messageQueueThread_.reset();
+  uiScheduler_.reset();
   workletsModuleProxy_.reset();
 }
 
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+      makeNativeMethod(
+          "getBindingsInstaller", WorkletsModule::getBindingsInstaller),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
   });
+}
+
+jni::local_ref<BindingsInstallerHolder::javaobject>
+WorkletsModule::getBindingsInstaller() {
+  return jni::make_local(BindingsInstallerHolder::newObjectCxxArgs(
+      [&](jsi::Runtime &rnRuntime,
+          const std::shared_ptr<CallInvoker> &jsCallInvoker) {
+        workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
+            rnRuntime,
+            messageQueueThread_,
+            jsCallInvoker,
+            uiScheduler_,
+            getForwardedRequestAnimationFrame());
+        RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
+      }));
 }
 
 } // namespace worklets

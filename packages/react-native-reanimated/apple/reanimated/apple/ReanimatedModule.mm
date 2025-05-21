@@ -29,7 +29,6 @@ using namespace reanimated;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-@synthesize callInvoker = _callInvoker;
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -137,21 +136,19 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   react_native_assert(isBridgeless && "[Reanimated] react-native-reanimated only supports bridgeless mode");
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
+- (void)installJSIBindingsWithRuntime:(facebook::jsi::Runtime &)rnRuntime
+                          callInvoker:(const std::shared_ptr<facebook::react::CallInvoker> &)jsCallInvoker
 {
   REAAssertJavaScriptQueue();
 
   if ([self hasReactNativeFailedReload]) {
-    return @NO;
+    return;
   }
 
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  auto jsCallInvoker = _callInvoker.callInvoker;
 
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
-  react_native_assert(self.bridge.runtime != nullptr);
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   auto reanimatedModuleProxy =
       reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
@@ -168,8 +165,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto &uiManager = scheduler.uiManager;
   react_native_assert(uiManager.get() != nil);
   reanimatedModuleProxy->initializeFabric(uiManager);
-
-  return @YES;
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:

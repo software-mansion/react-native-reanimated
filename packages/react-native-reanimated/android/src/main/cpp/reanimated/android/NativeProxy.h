@@ -28,9 +28,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
-      jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 
@@ -41,9 +38,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
+  std::shared_ptr<UIManager> uiManager_;
 #ifndef NDEBUG
   void checkJavaVersion();
   void injectCppVersion();
@@ -51,7 +48,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
-  void installJSIBindings();
+  jni::local_ref<BindingsInstallerHolder::javaobject> getBindingsInstaller();
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
@@ -105,10 +102,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
-      jsi::Runtime *rnRuntime,
-      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      const std::shared_ptr<UIManager> &uiManager);
 
   void invalidateCpp();
 };
