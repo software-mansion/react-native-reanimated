@@ -28,7 +28,7 @@
     "@expo/next-adapter": "^5.0.2",
     "@next/bundle-analyzer": "^13.5.3",
     "cypress": "^13.2.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.26.0",
     "next-compose-plugins": "^2.2.1",
     "prettier": "^3.3.3",
     "start-server-and-test": "^2.0.1"
