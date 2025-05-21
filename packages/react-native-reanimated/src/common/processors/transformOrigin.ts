@@ -1,26 +1,14 @@
 'use strict';
 'worklet';
 import { ReanimatedError } from '../errors';
-import type {
-  NormalizedTransformOrigin,
-  TransformOrigin,
-  ValueProcessor,
-} from '../types';
-import { isLength } from '../utils';
+import type { TransformOrigin, ValueProcessor } from '../types';
 
-type KeywordConversions = Record<string, `${number}%` | number>;
+type Axis = 'x' | 'y' | 'z';
+type ConvertedValue = `${number}%` | number;
+type KeywordConversions = Record<string, ConvertedValue>;
+type CustomParse = (value: string) => ConvertedValue | null;
 
-export const ERROR_MESSAGES = {
-  invalidTransformOrigin: (value: TransformOrigin) =>
-    `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
-  invalidComponent: (component: string | number, origin: TransformOrigin) =>
-    `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword.`,
-  invalidKeyword: (keyword: string, axis: 'x' | 'y', validKeywords: string[]) =>
-    `"${keyword}" is not a valid keyword for the ${axis}-axis. Must be one of: ${validKeywords.join(', ')}.`,
-  invalidZValue: (value: string) => `Invalid z-value: ${value}. Must be a px.`,
-};
-
-const HORIZONTAL_CONVERSIONS: KeywordConversions = {
+const HORIZONTAL_CONVERSIONS = {
   left: 0,
   center: '50%',
   right: '100%',
@@ -32,99 +20,130 @@ const VERTICAL_CONVERSIONS = {
   bottom: '100%',
 } satisfies KeywordConversions;
 
-function parseComponent(
-  component: string | number,
-  keywords?: KeywordConversions
-): number | `${number}%` | null {
-  if (keywords && component in keywords) {
-    return keywords[component];
-  } else if (typeof component === 'number') {
-    return component;
+function getAllowedValues(axis: Axis, isArray: boolean): string {
+  const allowed: string[] = [];
+
+  if (isArray) {
+    allowed.push('numbers');
+  } else {
+    allowed.push('numbers with px unit');
   }
 
-  const num = parseFloat(component);
-  if (!isNaN(num)) {
-    if (component.endsWith('%') && num !== 0) {
-      return `${num}%`;
-    }
-    return num;
+  allowed.push('percentages');
+
+  let keywords: string[] = [];
+  switch (axis) {
+    case 'x':
+      keywords = Object.keys(HORIZONTAL_CONVERSIONS);
+      break;
+    case 'y':
+      keywords = Object.keys(VERTICAL_CONVERSIONS);
+      break;
+  }
+  if (keywords.length) {
+    allowed.push(`keywords (${keywords.join(', ')})`);
   }
 
-  return null;
+  // Add "or" before the last item
+  allowed[allowed.length - 1] = `or ${allowed[allowed.length - 1]}`;
+
+  return allowed.join(', ');
 }
 
-function validateResult(
-  result: Array<null | `${number}%` | number>,
-  components: (string | number)[],
-  transformOrigin: TransformOrigin
-): void {
-  const nullIdx = result.indexOf(null);
+export const ERROR_MESSAGES = {
+  invalidTransformOrigin: (value: TransformOrigin) =>
+    `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
+  invalidValue: (
+    value: string | number,
+    axis: Axis,
+    origin: TransformOrigin,
+    isArray: boolean
+  ) =>
+    `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
+      origin
+    )}. Allowed values: ${getAllowedValues(axis, isArray)}.`,
+};
 
-  if (nullIdx !== -1) {
-    const invalidComponent = components[nullIdx];
-
-    if (nullIdx === 0 && invalidComponent in VERTICAL_CONVERSIONS) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidKeyword(
-          invalidComponent as string,
-          'x',
-          Object.keys(HORIZONTAL_CONVERSIONS)
-        )
-      );
-    }
-    if (nullIdx === 1 && invalidComponent in HORIZONTAL_CONVERSIONS) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidKeyword(
-          invalidComponent as string,
-          'y',
-          Object.keys(VERTICAL_CONVERSIONS)
-        )
-      );
-    }
-
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidComponent(components[nullIdx], transformOrigin)
-    );
-  }
-
-  if (result[2] !== undefined && typeof result[2] !== 'number') {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidComponent(components[2], transformOrigin)
-    );
-  }
-}
-
-export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
-  value
-) => {
-  const components = Array.isArray(value) ? value : value.split(/\s+/);
-
-  if (components.length < 1 || components.length > 3) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
-  }
-
-  // Swap x and y components if they are in the wrong order
+function maybeSwapComponents(components: (string | number)[]) {
   if (
     components[0] in VERTICAL_CONVERSIONS &&
     (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
   ) {
     [components[0], components[1]] = [components[1], components[0]];
   }
+}
 
-  // Check if the z component is a valid value with px unit
-  if (typeof components[2] === 'string' && !isLength(components[2])) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidZValue(components[2]));
+function parseValue(
+  value: string | number,
+  allowPercentages: boolean,
+  customParse: CustomParse,
+  getError: () => string,
+  keywordConversions?: KeywordConversions
+) {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (keywordConversions && value in keywordConversions) {
+    return keywordConversions[value];
+  }
+  if (allowPercentages && value.endsWith('%')) {
+    const num = parseFloat(value);
+    if (num === 0) {
+      return 0;
+    }
+    if (!isNaN(num)) {
+      return `${num}%`;
+    }
   }
 
-  const result = [
-    parseComponent(components[0] ?? '50%', HORIZONTAL_CONVERSIONS),
-    parseComponent(components[1] ?? '50%', VERTICAL_CONVERSIONS),
-    parseComponent(components[2] ?? 0),
+  const parsed = customParse(value);
+  if (parsed === null) {
+    throw new ReanimatedError(getError());
+  }
+
+  return parsed;
+}
+
+function parsePx(component: string) {
+  if (component.endsWith('px') || component === '0') {
+    const num = parseFloat(component);
+    if (!isNaN(num)) {
+      return num;
+    }
+  }
+  return null;
+}
+
+export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
+  value
+) => {
+  const isArray = Array.isArray(value);
+  const components = isArray ? value : value.split(/\s+/);
+  const customParse = isArray ? () => null : parsePx;
+
+  if (components.length < 1 || components.length > 3) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
+  }
+
+  maybeSwapComponents(components);
+
+  return [
+    parseValue(
+      components[0] ?? '50%',
+      true,
+      customParse,
+      () => ERROR_MESSAGES.invalidValue(components[0], 'x', value, isArray),
+      HORIZONTAL_CONVERSIONS
+    ),
+    parseValue(
+      components[1] ?? '50%',
+      true,
+      customParse,
+      () => ERROR_MESSAGES.invalidValue(components[1], 'y', value, isArray),
+      VERTICAL_CONVERSIONS
+    ),
+    parseValue(components[2] ?? 0, false, customParse, () =>
+      ERROR_MESSAGES.invalidValue(components[2], 'z', value, isArray)
+    ),
   ];
-
-  if (__DEV__) {
-    validateResult(result, components, value);
-  }
-
-  return result as NormalizedTransformOrigin;
 };
