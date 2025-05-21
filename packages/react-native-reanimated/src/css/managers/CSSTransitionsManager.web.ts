@@ -11,6 +11,7 @@ import { kebabizeCamelCase } from '../utils';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly element: ReanimatedHTMLElement;
+  private isAttached = false;
 
   constructor(element: ReanimatedHTMLElement) {
     this.element = element;
@@ -23,6 +24,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     }
 
     this.setElementTransition(transitionProperties);
+    this.isAttached = true;
   }
 
   unmountCleanup() {
@@ -30,6 +32,10 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   private detach() {
+    if (!this.isAttached) {
+      return;
+    }
+
     this.element.style.transition = '';
     this.element.style.transitionProperty = '';
     this.element.style.transitionDuration = '';
