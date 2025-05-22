@@ -14,15 +14,9 @@ import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { ReanimatedView } from '../../specs';
-import { CSSManager } from '../managers';
-import {
-  markNodeAsRemovable,
-  normalizeCSSTransitionProperties,
-  styleBuilder,
-  unmarkNodeAsRemovable,
-} from '../platform/native';
+import { CSSManager, NewCSSManager } from '../managers';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
-import { filterCSSAndStyleProperties } from '../utils';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
@@ -39,6 +33,7 @@ export default class AnimatedComponent<
   ChildComponent: AnyComponent;
 
   _CSSManager?: CSSManager;
+  _CSSManagerNew?: NewCSSManager; // TODO - replace the old manager in the native implementation with this one
 
   _viewInfo?: ViewInfo;
   _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
@@ -172,8 +167,13 @@ export default class AnimatedComponent<
   }
 
   componentWillUnmount() {
-    if (!IS_JEST && this._CSSManager) {
-      this._CSSManager.unmountCleanup();
+    if (!IS_JEST) {
+      if (this._CSSManager) {
+        this._CSSManager.unmountCleanup();
+      }
+      if (this._CSSManagerNew) {
+        this._CSSManagerNew.unmountCleanup();
+      }
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;
@@ -194,6 +194,10 @@ export default class AnimatedComponent<
 
     if (this._CSSManager) {
       this._CSSManager.update(this._cssStyle);
+    }
+
+    if (this._CSSManagerNew) {
+      this._CSSManagerNew.update(this._cssStyle);
     }
 
     // TODO - maybe check if the render is necessary instead of always returning true
@@ -225,19 +229,16 @@ export default class AnimatedComponent<
       return child;
     }
 
-    // TODO - improve later
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [animationProperties, transitionProperties, filteredStyle] =
-      filterCSSAndStyleProperties(StyleSheet.flatten(style) ?? {});
+    if (!this._CSSManagerNew) {
+      this._updateStyles(this.props);
+      this._CSSManagerNew ??= new NewCSSManager();
+      this._CSSManagerNew.update(this._cssStyle);
+    }
 
     return (
       <ReanimatedView
-        style={styles.container}
-        jsStyle={styleBuilder.buildFrom(filteredStyle)}
-        cssTransition={
-          transitionProperties &&
-          normalizeCSSTransitionProperties(transitionProperties)
-        }>
+        {...this._CSSManagerNew?.getProps()}
+        style={styles.container}>
         {child}
       </ReanimatedView>
     );

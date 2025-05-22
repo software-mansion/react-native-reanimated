@@ -90,10 +90,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.setElementAnimations(animationNames, animationSettings);
   }
 
-  unmountCleanup(): void {
-    // noop
-  }
-
   private detach() {
     const attachedAnimations = Object.values(this.attachedAnimations);
 
