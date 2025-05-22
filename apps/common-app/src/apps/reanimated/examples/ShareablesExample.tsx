@@ -40,15 +40,18 @@ export default function ShareablesExample() {
         <NumberDemo />
         <UndefinedDemo />
         <NullDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
+        <HostObjectDemo />
+        <ArrayDemo />
+        <RegExpDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
         <DataViewDemo />
         <ErrorDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
       </ScrollView>
     </View>
   );
@@ -259,6 +262,165 @@ function NullDemo() {
   );
 }
 
+function RegExpDemo() {
+  const title = 'RegExp';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const regex1 = /test/;
+    // eslint-disable-next-line prefer-regex-literals
+    const regex2 = new RegExp('test');
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          regex1.test('test'),
+          regex2.test('test'),
+          regex1.toString() === regex2.toString(),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function ArrayDemo() {
+  const title = 'Array';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  enum index {
+    number = 0,
+    true = 1,
+    false = 2,
+    null = 3,
+    undefined = 4,
+    string = 5,
+    bigint = 6,
+    object = 7,
+    remoteFunction = 8,
+    array = 9,
+    workletFunction = 10,
+    initializer = 11,
+    arrayBuffer = 12,
+  }
+
+  const handlePress = () => {
+    const arrayBuffer = new ArrayBuffer(3);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    uint8Array[0] = 1;
+    uint8Array[1] = 2;
+    uint8Array[2] = 3;
+    const array: any[] = [
+      // number
+      1,
+      // boolean
+      true,
+      false,
+      // null
+      null,
+      // undefined
+      undefined,
+      // string
+      'a',
+      // bigint
+      BigInt(123),
+      // object
+      { a: 1 },
+      // remote function - not a worklet
+      () => {
+        return 1;
+      },
+      // array
+      [1],
+      // worklet function
+      () => {
+        'worklet';
+        return 1;
+      },
+      // initializer - regexp
+      /a/,
+      // array buffer
+      arrayBuffer,
+    ];
+    runOnUI(() => {
+      'worklet';
+      try {
+        const uint8ArrayUI = new Uint8Array(array[12]);
+        const checks = [
+          // number
+          array[index.number] === 1,
+          // boolean
+          array[index.true] === true,
+          array[index.false] === false,
+          // null
+          array[index.null] === null,
+          // undefined
+          array[index.undefined] === undefined,
+          // string
+          array[index.string] === 'a',
+          // bigint
+          typeof array[index.bigint] === 'bigint',
+          array[index.bigint] === BigInt(123),
+          // object
+          typeof array[index.object] === 'object',
+          array[index.object].a === 1,
+          // remote function - not worklet
+          typeof array[index.remoteFunction] === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in array[index.remoteFunction] &&
+              !!array[index.remoteFunction].__remoteFunction),
+          // array
+          array[index.array].length === 1,
+          array[index.array][0] === 1,
+          // worklet function
+          typeof array[index.workletFunction] === 'function',
+          array[index.workletFunction]() === 1,
+          // initializer - regexp
+          array[index.initializer] instanceof RegExp,
+          array[index.initializer].test('a'),
+          // array buffer
+          array[index.arrayBuffer] instanceof ArrayBuffer,
+          array[index.arrayBuffer].byteLength === 3,
+          uint8ArrayUI[0] === 1,
+          uint8ArrayUI[1] === 2,
+          uint8ArrayUI[2] === 3,
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
 function CyclicObjectDemo() {
   const title = 'Cyclic object';
   const { status, isOk, isError } = useStatus();
@@ -317,6 +479,43 @@ function InaccessibleObjectDemo() {
       status={status}
       expectedOnNative="error"
       expectedOnWeb="ok"
+    />
+  );
+}
+
+function HostObjectDemo() {
+  const title = 'HostObject';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    // @ts-expect-error It's ok
+    const hostObject = globalThis.__reanimatedModuleProxy;
+    const hostObjectKeys = Object.keys(hostObject);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          hostObjectKeys.length === Object.keys(hostObject).length,
+          ...hostObjectKeys.map((key) => hostObject[key] !== undefined),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
     />
   );
 }

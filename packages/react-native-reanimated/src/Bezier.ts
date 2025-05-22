@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from './errors';
+import { ReanimatedError } from './common';
 
 /**
  * https://github.com/gre/bezier-easing BezierEasing - use bezier curve for
