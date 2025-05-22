@@ -157,6 +157,11 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote);
+
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);

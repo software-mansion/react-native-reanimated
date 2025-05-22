@@ -62,6 +62,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableArray(): ShareableRef<unknown[]> {
+    throw new WorkletsError(
+      'makeShareableArray should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableInitializer(): ShareableRef<object> {
     throw new WorkletsError(
       'makeShareableInitializer should never be called in JSWorklets.'

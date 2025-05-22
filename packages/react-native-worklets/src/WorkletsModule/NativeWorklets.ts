@@ -74,6 +74,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#shareableNull;
   }
 
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
   makeShareableInitializer(obj: object) {
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }

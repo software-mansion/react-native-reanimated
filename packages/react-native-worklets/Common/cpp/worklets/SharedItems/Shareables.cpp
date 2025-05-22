@@ -153,6 +153,19 @@ jsi::Value makeShareableInitializer(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote) {
+  std::shared_ptr<Shareable> shareable;
+  if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+    shareable = std::make_shared<RetainingShareable<ShareableArray>>(rt, array);
+  } else {
+    shareable = std::make_shared<ShareableArray>(rt, array);
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
