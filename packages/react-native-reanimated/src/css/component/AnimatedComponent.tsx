@@ -15,8 +15,13 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { ReanimatedView } from '../../specs';
 import { CSSManager } from '../managers';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
+import {
+  markNodeAsRemovable,
+  normalizeCSSTransitionProperties,
+  unmarkNodeAsRemovable,
+} from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import { filterCSSAndStyleProperties } from '../utils';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
@@ -202,12 +207,13 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
+    const style = props?.style ?? this.props.style;
+
     const child = (
       <ChildComponent
-        {...this.props}
-        {...props}
+        {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={filterNonCSSStyleProps(style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}
@@ -218,7 +224,22 @@ export default class AnimatedComponent<
       return child;
     }
 
-    return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
+    // TODO - improve later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [animationProperties, transitionProperties, filteredStyle] =
+      filterCSSAndStyleProperties(StyleSheet.flatten(style) ?? {});
+
+    return (
+      <ReanimatedView
+        style={styles.container}
+        jsStyle={filteredStyle}
+        cssTransition={
+          transitionProperties &&
+          normalizeCSSTransitionProperties(transitionProperties)
+        }>
+        {child}
+      </ReanimatedView>
+    );
   }
 }
 
