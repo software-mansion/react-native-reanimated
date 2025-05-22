@@ -6,6 +6,7 @@
 
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <memory>
 #include <optional>
 
 namespace facebook::react {
