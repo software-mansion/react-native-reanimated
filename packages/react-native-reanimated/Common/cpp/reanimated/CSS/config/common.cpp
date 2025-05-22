@@ -2,16 +2,18 @@
 
 namespace reanimated::css {
 
-double getDuration(const folly::dynamic &config) {
-  return config["duration"].asDouble();
+double parseDuration(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "duration").asNumber();
 }
 
-EasingFunction getTimingFunction(const folly::dynamic &config) {
-  return createEasingFunction(config["timingFunction"]);
+EasingFunction parseTimingFunction(
+    jsi::Runtime &rt,
+    const jsi::Object &config) {
+  return createEasingFunction(rt, config.getProperty(rt, "timingFunction"));
 }
 
-double getDelay(const folly::dynamic &config) {
-  return config["delay"].asDouble();
+double parseDelay(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "delay").asNumber();
 }
 
 } // namespace reanimated::css

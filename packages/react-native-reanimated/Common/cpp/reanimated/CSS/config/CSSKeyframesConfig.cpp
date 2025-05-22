@@ -2,34 +2,47 @@
 
 namespace reanimated::css {
 
-std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
-    const folly::dynamic &config) {
+std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
+    jsi::Runtime &rt,
+    const jsi::Object &config) {
   const auto styleInterpolator = std::make_shared<AnimationStyleInterpolator>();
 
-  styleInterpolator->updateKeyframes(config["keyframesStyle"]);
+  const auto keyframes = config.getProperty(rt, "keyframesStyle");
+  styleInterpolator->updateKeyframes(rt, keyframes);
 
   return styleInterpolator;
 }
 
-std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
-    const folly::dynamic &config) {
+std::shared_ptr<KeyframeEasingFunctions> parseKeyframeTimingFunctions(
+    jsi::Runtime &rt,
+    const jsi::Object &config) {
   KeyframeEasingFunctions result;
+  const auto &keyframeTimingFunctions =
+      config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
+  const auto timingFunctionOffsets =
+      keyframeTimingFunctions.getPropertyNames(rt);
+  const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
 
-  const auto &keyframeTimingFunctions = config["keyframeTimingFunctions"];
+  for (size_t i = 0; i < timingFunctionsCount; ++i) {
+    const auto offset =
+        timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto easingFunction = createEasingFunction(
+        rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
 
-  for (const auto &pair : keyframeTimingFunctions.items()) {
-    const std::string offset = pair.first.asString();
-    const auto &easingFunctionConfig = pair.second;
-
-    result[std::stod(offset)] = createEasingFunction(easingFunctionConfig);
+    result[std::stod(offset)] = easingFunction;
   }
 
   return std::make_shared<KeyframeEasingFunctions>(result);
 }
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
-    const folly::dynamic &config) {
-  return {getStyleInterpolator(config), getKeyframeTimingFunctions(config)};
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto &configObj = config.asObject(rt);
+
+  return {
+      createStyleInterpolator(rt, configObj),
+      parseKeyframeTimingFunctions(rt, configObj)};
 }
 
 } // namespace reanimated::css

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <react/renderer/core/RawValue.h>
+
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
@@ -9,6 +11,8 @@
 #include <unordered_map>
 
 namespace reanimated::css {
+
+using namespace facebook::react;
 
 struct CSSTransitionPropertySettings {
   double duration;
@@ -25,23 +29,22 @@ struct CSSTransitionConfig {
   CSSTransitionPropertiesSettings settings;
 };
 
+std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
+    const CSSTransitionPropertiesSettings &propertiesSettings,
+    const std::string &propName);
+
+// TODO - remove this implementation when CSS refactor is finished
 struct CSSTransitionConfigUpdates {
   std::optional<TransitionProperties> properties;
   std::optional<CSSTransitionPropertiesSettings> settings;
 };
 
-std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
-    const CSSTransitionPropertiesSettings &propertiesSettings,
-    const std::string &propName);
+CSSTransitionConfig parseCSSTransitionConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config);
 
-CSSTransitionConfig parseCSSTransitionConfig(const folly::dynamic &config);
-
-std::optional<CSSTransitionConfigUpdates> getParsedCSSTransitionConfigUpdates(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig);
-
-// TODO - remove this implementation when CSS refactor is finished
 CSSTransitionConfigUpdates getParsedCSSTransitionConfigUpdates(
-    const folly::dynamic &partialConfig);
+    jsi::Runtime &rt,
+    const jsi::Value &partialConfig);
 
 } // namespace reanimated::css
