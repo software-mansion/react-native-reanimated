@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/Fabric/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 
@@ -18,7 +19,8 @@ class ReanimatedCommitHook
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
+      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy,
+      const std::shared_ptr<OperationsLoop> &operationsLoop);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -37,7 +39,7 @@ class ReanimatedCommitHook
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
-
+  std::shared_ptr<OperationsLoop> operationsLoop_;
   SurfaceId currentMaxSurfaceId_ = -1;
 
   std::mutex mutex_; // Protects `currentMaxSurfaceId_`.
