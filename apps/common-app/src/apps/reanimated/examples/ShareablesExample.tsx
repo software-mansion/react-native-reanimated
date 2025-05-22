@@ -303,6 +303,22 @@ function ArrayDemo() {
   const { status, isOk, isNotOk, isError } = useStatus();
   const expectedStatus: Status = 'ok';
 
+  enum index {
+    number = 0,
+    true = 1,
+    false = 2,
+    null = 3,
+    undefined = 4,
+    string = 5,
+    bigint = 6,
+    object = 7,
+    remoteFunction = 8,
+    array = 9,
+    workletFunction = 10,
+    initializer = 11,
+    arrayBuffer = 12,
+  }
+
   const handlePress = () => {
     const arrayBuffer = new ArrayBuffer(3);
     const uint8Array = new Uint8Array(arrayBuffer);
@@ -347,38 +363,39 @@ function ArrayDemo() {
         const uint8ArrayUI = new Uint8Array(array[12]);
         const checks = [
           // number
-          array[0] === 1,
+          array[index.number] === 1,
           // boolean
-          array[1] === true,
-          array[2] === false,
+          array[index.true] === true,
+          array[index.false] === false,
           // null
-          array[3] === null,
+          array[index.null] === null,
           // undefined
-          array[4] === undefined,
+          array[index.undefined] === undefined,
           // string
-          array[5] === 'a',
+          array[index.string] === 'a',
           // bigint
-          typeof array[6] === 'bigint',
-          array[6] === BigInt(123),
+          typeof array[index.bigint] === 'bigint',
+          array[index.bigint] === BigInt(123),
           // object
-          typeof array[7] === 'object',
-          array[7].a === 1,
+          typeof array[index.object] === 'object',
+          array[index.object].a === 1,
           // remote function - not worklet
-          typeof array[8] === 'function',
+          typeof array[index.remoteFunction] === 'function',
           __DEV__ === false ||
-            ('__remoteFunction' in array[8] && !!array[8].__remoteFunction),
+            ('__remoteFunction' in array[index.remoteFunction] &&
+              !!array[index.remoteFunction].__remoteFunction),
           // array
-          array[9].length === 1,
-          array[9][0] === 1,
+          array[index.array].length === 1,
+          array[index.array][0] === 1,
           // worklet function
-          typeof array[10] === 'function',
-          array[10]() === 1,
+          typeof array[index.workletFunction] === 'function',
+          array[index.workletFunction]() === 1,
           // initializer - regexp
-          array[11] instanceof RegExp,
-          array[11].test('a'),
+          array[index.initializer] instanceof RegExp,
+          array[index.initializer].test('a'),
           // array buffer
-          array[12] instanceof ArrayBuffer,
-          array[12].byteLength === 3,
+          array[index.arrayBuffer] instanceof ArrayBuffer,
+          array[index.arrayBuffer].byteLength === 3,
           uint8ArrayUI[0] === 1,
           uint8ArrayUI[1] === 2,
           uint8ArrayUI[2] === 3,
