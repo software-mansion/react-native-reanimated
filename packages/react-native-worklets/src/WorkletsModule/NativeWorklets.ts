@@ -74,6 +74,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#shareableNull;
   }
 
+  makeShareableInitializer(obj: object) {
+    return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  }
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }
