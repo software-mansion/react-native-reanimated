@@ -8,8 +8,6 @@
 
 #include <folly/dynamic.h>
 #include <memory>
-#include <optional>
-#include <unordered_set>
 #include <utility>
 
 namespace facebook::react {
