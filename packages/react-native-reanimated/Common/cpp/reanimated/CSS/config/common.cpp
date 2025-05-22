@@ -2,6 +2,14 @@
 
 namespace reanimated::css {
 
+void parseRawValue(
+    const RawValue &rawValue,
+    std::function<void(jsi::Runtime &, const jsi::Value &)> parser) {
+  auto pair =
+      reinterpret_cast<JsiValuePair *>(const_cast<RawValue *>(&rawValue));
+  parser(*pair->first, pair->second);
+}
+
 double parseDuration(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "duration").asNumber();
 }

@@ -509,16 +509,15 @@ void ReanimatedModuleProxy::applyCSSAnimations(
             "[Reanimated] index is out of bounds of animationNames");
       }
 
-      CSSAnimationConfig config{
-          CSSAnimationSettings{
-              settings.duration,
-              settings.easing,
-              settings.delay,
-              settings.iterationCount,
-              settings.direction,
-              settings.fillMode,
-              settings.playState},
-          animationNames[index]};
+      const auto config = CSSAnimationConfig(
+          animationNames[index],
+          settings.duration,
+          settings.easing,
+          settings.delay,
+          settings.iterationCount,
+          settings.direction,
+          settings.fillMode,
+          settings.playState);
 
       const auto animation = std::make_shared<CSSAnimation>(
           config, cssAnimationKeyframesRegistry_, timestamp);

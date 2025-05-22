@@ -1,6 +1,6 @@
 #pragma once
 
-#include <react/renderer/components/rnreanimated/Props.h>
+#include <react/renderer/components/rnreanimated/ReanimatedNodeProps.h>
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/CSSTransition.h>
@@ -26,8 +26,8 @@ class CSSTransitionManager {
   folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
 
   void update(
-      const ReanimatedViewProps &oldProps,
-      const ReanimatedViewProps &newProps);
+      const ReanimatedNodeProps &oldProps,
+      const ReanimatedNodeProps &newProps);
 
  private:
   std::shared_ptr<CSSTransition> transition_;
@@ -41,17 +41,13 @@ class CSSTransitionManager {
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   void updateTransitionInstance(
-      const folly::dynamic &oldConfig,
-      const folly::dynamic &newConfig);
+      const std::optional<CSSTransitionConfig> &oldConfig,
+      const std::optional<CSSTransitionConfig> &newConfig);
   void runTransitionForChangedProperties(
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
 
-  void createTransition(const folly::dynamic &config);
   void removeTransition();
-  void updateTransition(
-      const folly::dynamic &oldConfig,
-      const folly::dynamic &newConfig);
   void runTransition(ChangedProps &&changedProps);
 };
 

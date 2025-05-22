@@ -10,10 +10,10 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     ShadowNodeTraits traits)
     : ReanimatedViewShadowNodeBase(fragment, family, traits) {
   const auto &newProps =
-      static_cast<const ReanimatedViewProps &>(*this->getProps());
+      static_cast<const ReanimatedNodeProps &>(*this->getProps());
 
-  // const auto &state = getStateData();
-  // state.cssAnimationsManager->update(newProps);
+  const auto &state = getStateData();
+  state.cssAnimationsManager->update(ReanimatedNodeProps(), newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -21,16 +21,13 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFragment &fragment)
     : ReanimatedViewShadowNodeBase(sourceShadowNode, fragment) {
   const auto &oldProps =
-      static_cast<const ReanimatedViewProps &>(*sourceShadowNode.getProps());
+      static_cast<const ReanimatedNodeProps &>(*sourceShadowNode.getProps());
   const auto &newProps =
-      static_cast<const ReanimatedViewProps &>(*this->getProps());
+      static_cast<const ReanimatedNodeProps &>(*this->getProps());
 
-  // TODO - optimize cloning (don't call update if props on the JS side didn't
-  // change)
-
-  // const auto &state = getStateData();
-  // state.cssTransitionManager->update(oldProps, newProps);
-  // state.cssAnimationsManager->update(newProps);
+  const auto &state = getStateData();
+  state.cssAnimationsManager->update(oldProps, newProps);
+  state.cssTransitionManager->update(oldProps, newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
