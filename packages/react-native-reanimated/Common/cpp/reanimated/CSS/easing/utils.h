@@ -5,6 +5,7 @@
 #include <reanimated/CSS/easing/steps.h>
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,15 +14,15 @@ namespace reanimated::css {
 
 using namespace facebook;
 
-extern const std::unordered_map<std::string, EasingFunction>
+extern const std::unordered_map<std::string, std::shared_ptr<Easing>>
     PREDEFINED_EASING_MAP;
 
-EasingFunction getPredefinedEasingFunction(const std::string &name);
-EasingFunction createParametrizedEasingFunction(
+std::shared_ptr<Easing> getPredefinedEasing(const std::string &name);
+std::shared_ptr<Easing> createParametrizedEasing(
     jsi::Runtime &rt,
     const jsi::Object &easingConfig);
 
-EasingFunction createEasingFunction(
+std::shared_ptr<Easing> createEasing(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);
 

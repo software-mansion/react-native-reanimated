@@ -8,18 +8,18 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
-    const EasingFunction &easingFunction)
+    std::shared_ptr<Easing> easing)
     : RawProgressProvider(timestamp, duration, delay),
-      easingFunction_(easingFunction) {}
+      easing_(std::move(easing)) {}
 
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
-    const EasingFunction &easingFunction,
+    std::shared_ptr<Easing> easing,
     const double reversingShorteningFactor)
     : RawProgressProvider(timestamp, duration, delay),
-      easingFunction_(easingFunction),
+      easing_(std::move(easing)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
 
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
@@ -32,7 +32,7 @@ double TransitionPropertyProgressProvider::getKeyframeProgress(
   if (fromOffset == toOffset) {
     return 1;
   }
-  return easingFunction_(getGlobalProgress());
+  return easing_->calculate(getGlobalProgress());
 }
 
 double TransitionPropertyProgressProvider::getRemainingDelay(
@@ -176,7 +176,7 @@ void TransitionProgressProvider::runProgressProviders(
             timestamp,
             propertySettings.duration,
             propertySettings.delay,
-            propertySettings.easingFunction));
+            propertySettings.easing));
   }
 }
 
@@ -211,7 +211,7 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       propertySettings.delay < 0
           ? newReversingShorteningFactor * propertySettings.delay
           : propertySettings.delay,
-      propertySettings.easingFunction,
+      propertySettings.easing,
       newReversingShorteningFactor);
 }
 
