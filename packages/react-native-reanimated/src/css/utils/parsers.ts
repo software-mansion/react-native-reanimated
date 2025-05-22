@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from '../errors';
+import { ReanimatedError } from '../../common';
 import type { SingleCSSTransitionConfig } from '../types';
 import { isTimeUnit, smellsLikeTimingFunction } from './guards';
 
