@@ -73,6 +73,16 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 }
 
+std::shared_ptr<OperationsLoop> ReanimatedModuleProxy::getOperationsLoop()
+    const {
+  return operationsLoop_;
+}
+
+std::shared_ptr<ViewStylesRepository>
+ReanimatedModuleProxy::getViewStylesRepository() const {
+  return viewStylesRepository_;
+}
+
 void ReanimatedModuleProxy::init(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto onRenderCallback = [weakThis =

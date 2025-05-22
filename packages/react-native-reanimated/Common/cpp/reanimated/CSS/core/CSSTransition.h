@@ -15,7 +15,7 @@ namespace reanimated::css {
 class CSSTransition {
  public:
   CSSTransition(
-      ShadowNode::Shared shadowNode,
+      const ShadowNode::Shared shadowNode,
       const CSSTransitionConfig &config);
 
   Tag getViewTag() const;
