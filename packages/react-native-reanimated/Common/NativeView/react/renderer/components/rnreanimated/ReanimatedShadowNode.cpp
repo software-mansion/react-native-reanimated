@@ -12,8 +12,8 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   const auto &newProps =
       static_cast<const ReanimatedViewProps &>(*this->getProps());
 
-  const auto &state = getStateData();
-  state.cssAnimationsManager->update(newProps);
+  // const auto &state = getStateData();
+  // state.cssAnimationsManager->update(newProps);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -28,9 +28,9 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   // TODO - optimize cloning (don't call update if props on the JS side didn't
   // change)
 
-  const auto &state = getStateData();
-  state.cssTransitionManager->update(oldProps, newProps);
-  state.cssAnimationsManager->update(newProps);
+  // const auto &state = getStateData();
+  // state.cssTransitionManager->update(oldProps, newProps);
+  // state.cssAnimationsManager->update(newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {

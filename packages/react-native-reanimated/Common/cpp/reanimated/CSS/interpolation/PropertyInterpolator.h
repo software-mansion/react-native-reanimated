@@ -32,7 +32,9 @@ class PropertyInterpolator {
   virtual bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const = 0;
 
-  virtual void updateKeyframes(const folly::dynamic &keyframes) = 0;
+  virtual void updateKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,

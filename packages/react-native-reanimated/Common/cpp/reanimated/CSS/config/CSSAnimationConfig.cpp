@@ -2,15 +2,15 @@
 
 namespace reanimated::css {
 
-std::string getName(const folly::dynamic &config) {
-  return config["name"].asString();
+std::string parseName(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "name").asString(rt).utf8(rt);
 }
 
-double getIterationCount(const folly::dynamic &config) {
-  return config["iterationCount"].asDouble();
+double parseIterationCount(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "iterationCount").asNumber();
 }
 
-AnimationDirection getDirection(const folly::dynamic &config) {
+AnimationDirection parseDirection(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationDirection>
       strToEnumMap = {
           {"normal", AnimationDirection::Normal},
@@ -18,7 +18,7 @@ AnimationDirection getDirection(const folly::dynamic &config) {
           {"alternate", AnimationDirection::Alternate},
           {"alternate-reverse", AnimationDirection::AlternateReverse}};
 
-  const auto str = config["direction"].asString();
+  const auto str = config.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -27,14 +27,14 @@ AnimationDirection getDirection(const folly::dynamic &config) {
   return it->second;
 }
 
-AnimationFillMode getFillMode(const folly::dynamic &config) {
+AnimationFillMode parseFillMode(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
       {{"none", AnimationFillMode::None},
        {"forwards", AnimationFillMode::Forwards},
        {"backwards", AnimationFillMode::Backwards},
        {"both", AnimationFillMode::Both}};
 
-  const auto str = config["fillMode"].asString();
+  const auto str = config.getProperty(rt, "fillMode").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -43,13 +43,13 @@ AnimationFillMode getFillMode(const folly::dynamic &config) {
   return it->second;
 }
 
-AnimationPlayState getPlayState(const folly::dynamic &config) {
+AnimationPlayState parsePlayState(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationPlayState>
       strToEnumMap = {
           {"running", AnimationPlayState::Running},
           {"paused", AnimationPlayState::Paused}};
 
-  const auto str = config["playState"].asString();
+  const auto str = config.getProperty(rt, "playState").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -58,54 +58,65 @@ AnimationPlayState getPlayState(const folly::dynamic &config) {
   return it->second;
 }
 
-CSSAnimationSettings parseCSSAnimationSettings(const folly::dynamic &config) {
-  return CSSAnimationSettings{
-      getDuration(config),
-      getTimingFunction(config),
-      getDelay(config),
-      getIterationCount(config),
-      getDirection(config),
-      getFillMode(config),
-      getPlayState(config)};
+CSSAnimationSettings parseCSSAnimationSettings(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto &settingsObj = config.asObject(rt);
+
+  return {
+      parseDuration(rt, settingsObj),
+      parseTimingFunction(rt, settingsObj),
+      parseDelay(rt, settingsObj),
+      parseIterationCount(rt, settingsObj),
+      parseDirection(rt, settingsObj),
+      parseFillMode(rt, settingsObj),
+      parsePlayState(rt, settingsObj)};
 }
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
-    const folly::dynamic &partialSettings) {
+    jsi::Runtime &rt,
+    const jsi::Value &partialSettings) {
+  const auto &partialObj = partialSettings.asObject(rt);
+
   PartialCSSAnimationSettings result;
 
-  if (partialSettings.count("duration")) {
-    result.duration = getDuration(partialSettings);
+  if (partialObj.hasProperty(rt, "duration")) {
+    result.duration = parseDuration(rt, partialObj);
   }
-  if (partialSettings.count("timingFunction")) {
-    result.easingFunction = getTimingFunction(partialSettings);
+  if (partialObj.hasProperty(rt, "timingFunction")) {
+    result.easingFunction = parseTimingFunction(rt, partialObj);
   }
-  if (partialSettings.count("delay")) {
-    result.delay = getDelay(partialSettings);
+  if (partialObj.hasProperty(rt, "delay")) {
+    result.delay = parseDelay(rt, partialObj);
   }
-  if (partialSettings.count("iterationCount")) {
-    result.iterationCount = getIterationCount(partialSettings);
+  if (partialObj.hasProperty(rt, "iterationCount")) {
+    result.iterationCount = parseIterationCount(rt, partialObj);
   }
-  if (partialSettings.count("direction")) {
-    result.direction = getDirection(partialSettings);
+  if (partialObj.hasProperty(rt, "direction")) {
+    result.direction = parseDirection(rt, partialObj);
   }
-  if (partialSettings.count("fillMode")) {
-    result.fillMode = getFillMode(partialSettings);
+  if (partialObj.hasProperty(rt, "fillMode")) {
+    result.fillMode = parseFillMode(rt, partialObj);
   }
-  if (partialSettings.count("playState")) {
-    result.playState = getPlayState(partialSettings);
+  if (partialObj.hasProperty(rt, "playState")) {
+    result.playState = parsePlayState(rt, partialObj);
   }
 
   return result;
 }
 
 std::vector<std::string> parseAnimationNames(
-    const folly::dynamic &animationNames) {
+    jsi::Runtime &rt,
+    const jsi::Value &animationNames) {
   std::vector<std::string> result;
 
-  if (animationNames.isArray()) {
-    for (const auto &name : animationNames) {
-      result.emplace_back(name.asString());
-    }
+  const auto &namesArray = animationNames.asObject(rt).asArray(rt);
+  const auto animationNamesCount = namesArray.size(rt);
+  result.reserve(animationNamesCount);
+
+  for (size_t i = 0; i < animationNamesCount; i++) {
+    result.emplace_back(
+        namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
 
   return result;
@@ -113,65 +124,75 @@ std::vector<std::string> parseAnimationNames(
 
 template <typename TResult>
 std::unordered_map<size_t, TResult> parseHelper(
-    const folly::dynamic &settingsObj,
-    std::function<TResult(const folly::dynamic &)> parseFunction) {
+    jsi::Runtime &rt,
+    const jsi::Object &settingsObj,
+    std::function<TResult(jsi::Runtime &, const jsi::Value &)> parseFunction) {
   std::unordered_map<size_t, TResult> result;
 
-  if (settingsObj.isObject()) {
-    for (const auto &pair : settingsObj.items()) {
-      const size_t index = std::stoul(pair.first.asString());
-      result[index] = parseFunction(pair.second);
-    }
+  const auto animationIndices = settingsObj.getPropertyNames(rt);
+  const auto animationIndicesCount = animationIndices.size(rt);
+  result.reserve(animationIndicesCount);
+
+  for (size_t i = 0; i < animationIndicesCount; i++) {
+    const auto &indexStr = animationIndices.getValueAtIndex(rt, i).toString(rt);
+    const auto &animationSettings = settingsObj.getProperty(rt, indexStr);
+
+    const auto index = std::stoul(indexStr.utf8(rt));
+    result[index] = parseFunction(rt, animationSettings);
   }
 
   return result;
 }
 
 CSSAnimationSettingsMap parseNewAnimationSettings(
+    jsi::Runtime &rt,
     const std::vector<std::string> &animationNames,
-    const folly::dynamic &newSettings) {
+    const jsi::Value &newSettings) {
   return parseHelper<CSSAnimationSettings>(
-      newSettings, [](const folly::dynamic &settings) {
-        return parseCSSAnimationSettings(settings);
+      rt,
+      newSettings.asObject(rt),
+      [&](jsi::Runtime &rt, const jsi::Value &config) {
+        return parseCSSAnimationSettings(rt, config);
       });
 }
 
 CSSAnimationSettingsUpdatesMap parseSettingsUpdates(
-    const folly::dynamic &settingsUpdates) {
+    jsi::Runtime &rt,
+    const jsi::Value &settingsUpdates) {
   return parseHelper<PartialCSSAnimationSettings>(
-      settingsUpdates, [](const folly::dynamic &settings) {
-        return parsePartialCSSAnimationSettings(settings);
+      rt,
+      settingsUpdates.asObject(rt),
+      [](jsi::Runtime &rt, const jsi::Value &config) {
+        return parsePartialCSSAnimationSettings(rt, config);
       });
 }
 
-CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config) {
+CSSAnimationUpdates parseCSSAnimationUpdates(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto &configObj = config.asObject(rt);
+
   CSSAnimationUpdates result;
 
-  if (config.count("animationNames")) {
-    result.animationNames = parseAnimationNames(config["animationNames"]);
+  if (configObj.hasProperty(rt, "animationNames")) {
+    const auto animationNames =
+        parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
+    result.animationNames = std::move(animationNames);
+
+    if (configObj.hasProperty(rt, "newAnimationSettings")) {
+      result.newAnimationSettings = parseNewAnimationSettings(
+          rt,
+          animationNames,
+          configObj.getProperty(rt, "newAnimationSettings"));
+    }
   }
-  if (config.count("newAnimationSettings") && result.animationNames) {
-    result.newAnimationSettings = parseNewAnimationSettings(
-        *result.animationNames, config["newAnimationSettings"]);
-  }
-  if (config.count("settingsUpdates")) {
-    result.settingsUpdates = parseSettingsUpdates(config["settingsUpdates"]);
+
+  if (configObj.hasProperty(rt, "settingsUpdates")) {
+    result.settingsUpdates =
+        parseSettingsUpdates(rt, configObj.getProperty(rt, "settingsUpdates"));
   }
 
   return result;
-}
-
-CSSAnimationConfig parseCSSAnimationConfig(const folly::dynamic &config) {
-  return {
-      CSSAnimationSettings{
-          getDuration(config),
-          getTimingFunction(config),
-          getDelay(config),
-          getIterationCount(config),
-          getDirection(config),
-          getFillMode(config),
-          getPlayState(config)},
-      getName(config)};
 }
 
 } // namespace reanimated::css

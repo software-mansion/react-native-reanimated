@@ -95,25 +95,25 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
 }
 
 void TransformsStyleInterpolator::updateKeyframes(
-    const folly::dynamic &keyframes) {
+    jsi::Runtime &rt,
+    const jsi::Value &keyframes) {
   // Step 1: Parse keyframes
-  const auto parsedKeyframes = parseDynamicKeyframes(keyframes);
+  const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
   // Step 2: Convert keyframes to TransformOperations
   std::vector<std::pair<double, std::optional<TransformOperations>>> operations;
   operations.reserve(parsedKeyframes.size());
   for (const auto &[offset, value] : parsedKeyframes) {
-    operations.emplace_back(offset, parseTransformOperations(value));
+    operations.emplace_back(offset, parseTransformOperations(rt, value));
   }
 
   // Step 3: Prepare keyframe interpolation pairs (convert keyframe values in
   // both keyframes to the same type)
-  // There will be one less keyframe than the number of keyframes in the
+  // There will be one less keyframe than the number of keyframes in the jsi
   // array as we create interpolation pairs
   const auto keyframesCount = operations.size() - 1;
   keyframes_.clear();
   keyframes_.reserve(keyframesCount);
-
   for (size_t i = 0; i < keyframesCount; ++i) {
     keyframes_.push_back(createTransformKeyframe(
         operations[i].first,
@@ -143,6 +143,28 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       1,
       parseTransformOperations(prevStyleValue).value_or(TransformOperations{}),
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
+}
+
+std::optional<TransformOperations>
+TransformsStyleInterpolator::parseTransformOperations(
+    jsi::Runtime &rt,
+    const jsi::Value &values) {
+  if (values.isUndefined()) {
+    return std::nullopt;
+  }
+
+  const auto transformsArray = values.asObject(rt).asArray(rt);
+  const auto transformsCount = transformsArray.size(rt);
+
+  TransformOperations transformOperations;
+  transformOperations.reserve(transformsCount);
+
+  for (size_t i = 0; i < transformsCount; ++i) {
+    const auto transform = transformsArray.getValueAtIndex(rt, i);
+    transformOperations.emplace_back(
+        TransformOperation::fromJSIValue(rt, transform));
+  }
+  return transformOperations;
 }
 
 std::optional<TransformOperations>

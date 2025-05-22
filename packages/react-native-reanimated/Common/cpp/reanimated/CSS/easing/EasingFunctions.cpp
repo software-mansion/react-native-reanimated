@@ -13,11 +13,13 @@ inline const std::unordered_map<std::string, EasingFunction>
         {"step-end",
          steps(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
 
-EasingFunction createEasingFunction(const folly::dynamic &easingConfig) {
+EasingFunction createEasingFunction(
+    jsi::Runtime &rt,
+    const jsi::Value &easingConfig) {
   if (easingConfig.isString()) {
-    return getPredefinedEasingFunction(easingConfig.asString());
+    return getPredefinedEasingFunction(easingConfig.asString(rt).utf8(rt));
   } else if (easingConfig.isObject()) {
-    return createParametrizedEasingFunction(easingConfig);
+    return createParametrizedEasingFunction(rt, easingConfig.asObject(rt));
   } else {
     throw std::runtime_error(
         std::string("[Reanimated] Invalid easing function"));
@@ -36,19 +38,26 @@ EasingFunction getPredefinedEasingFunction(const std::string &name) {
 }
 
 EasingFunction createParametrizedEasingFunction(
-    const folly::dynamic &easingConfig) {
-  const auto easingName = easingConfig["name"].asString();
+    jsi::Runtime &rt,
+    const jsi::Object &easingConfig) {
+  const auto easingName =
+      easingConfig.getProperty(rt, "name").asString(rt).utf8(rt);
 
   if (easingName == "cubicBezier") {
-    return cubicBezier(easingConfig);
+    return cubicBezier(rt, easingConfig);
   }
 
   std::vector<double> pointsX;
   std::vector<double> pointsY;
 
-  for (const auto &point : easingConfig["points"]) {
-    pointsX.push_back(point["x"].asDouble());
-    pointsY.push_back(point["y"].asDouble());
+  const auto points =
+      easingConfig.getProperty(rt, "points").asObject(rt).asArray(rt);
+  const auto pointsCount = points.size(rt);
+
+  for (size_t i = 0; i < pointsCount; i++) {
+    const auto pointObj = points.getValueAtIndex(rt, i).asObject(rt);
+    pointsX.push_back(pointObj.getProperty(rt, "x").asNumber());
+    pointsY.push_back(pointObj.getProperty(rt, "y").asNumber());
   }
 
   if (easingName == "linear") {
