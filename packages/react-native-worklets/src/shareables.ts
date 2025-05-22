@@ -160,7 +160,11 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
-  if (isFunction && (value as WorkletImport).__bundleData) {
+  if (
+    globalThis._WORKLETS_EXPERIMENTAL_BUNDLING &&
+    isFunction &&
+    (value as WorkletImport).__bundleData
+  ) {
     return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
@@ -194,10 +198,12 @@ function makeShareableCloneRecursiveNative<T>(
   return inaccessibleObject(value);
 }
 
-makeShareableCloneRecursiveNative.__bundleData = {
-  imported: 'makeShareableCloneRecursive',
-  source: '../../packages/react-native-worklets/src/index.ts',
-};
+if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  makeShareableCloneRecursiveNative.__bundleData = {
+    imported: 'makeShareableCloneRecursive',
+    source: '../../packages/react-native-worklets/src/index.ts',
+  };
+}
 
 export interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
@@ -570,12 +576,10 @@ function freezeObjectInDev<T extends object>(value: T) {
   });
   Object.preventExtensions(value);
 }
-
-export function makeShareableCloneOnUIRecursive<T>(
+function makeShareableCloneOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
-  // TODO: Warn here for new bundling
   if (SHOULD_BE_USE_WEB) {
     // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
     // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
@@ -642,6 +646,12 @@ export function makeShareableCloneOnUIRecursive<T>(
   }
   return cloneRecursive(value);
 }
+
+export const makeShareableCloneOnUIRecursive = (
+  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+    ? makeShareableCloneRecursive
+    : makeShareableCloneOnUIRecursiveLEGACY
+) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
 function makeShareableJS<T extends object>(value: T): T {
   return value;

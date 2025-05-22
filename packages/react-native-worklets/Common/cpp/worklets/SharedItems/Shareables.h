@@ -57,7 +57,7 @@ return jsi::Value::undefined();
 
   // (printJSIValue(rt, std::forward<Args>(args)), ...);
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+#endif // NDEBUG
 }
 
 inline void cleanupIfRuntimeExists(

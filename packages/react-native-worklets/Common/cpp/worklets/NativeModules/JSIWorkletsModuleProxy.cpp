@@ -81,11 +81,7 @@ inline jsi::Value createWorkletRuntime(
       sourceUrl);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
-  try {
-    workletRuntime->runGuarded(initializerShareable);
-  } catch (facebook::jsi::JSIException ex) {
-    //  LOG(INFO) << ex.what();
-  }
+  workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 

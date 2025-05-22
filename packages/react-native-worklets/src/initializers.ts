@@ -186,9 +186,6 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
-  if (globalThis._WORKLET) {
-    return;
-  }
 
   const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();

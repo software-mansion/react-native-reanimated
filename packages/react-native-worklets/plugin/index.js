@@ -407,7 +407,6 @@ var require_globals = __commonJS({
       "_setGestureState",
       "_notifyAboutProgress",
       "_notifyAboutEnd",
-      "_runOnUIQueue",
       "_getAnimationTimestamp"
     ];
     function initializeState(state) {

@@ -149,7 +149,6 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_setGestureState',
   '_notifyAboutProgress',
   '_notifyAboutEnd',
-  '_runOnUIQueue',
   '_getAnimationTimestamp',
 ];
 

@@ -7,7 +7,6 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <cxxreact/MessageQueueThread.h>
-#include <glog/logging.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
@@ -117,19 +116,22 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
-  if (script == nullptr) {
-    // Legacy behavior
-    auto valueUnpackerBuffer =
-        std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
-    rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-  } else {
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  if (script) {
     // Experimental bundling
     try {
       rt.evaluateJavaScript(script, sourceUrl);
     } catch (facebook::jsi::JSIException ex) {
-        LOG(INFO) << ex.what();
+      LOG(INFO) << ex.what();
     }
+    return;
   }
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
+  // Legacy behavior
+  auto valueUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 }
 
 jsi::Value WorkletRuntime::executeSync(

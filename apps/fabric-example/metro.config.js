@@ -6,9 +6,9 @@ const {
   getMetroAndroidAssetsResolutionFix,
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
-const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 const path = require('path');
 
+const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 const root = path.resolve(__dirname, '../..');
 
 /**
@@ -21,6 +21,8 @@ const config = {
   transformer: {
     publicPath: androidAssetsResolutionFix.publicPath,
   },
+  // Uncomment the following to enable experimental bundling
+  // --------------------------------------------------------
   serializer: {
     getModulesRunBeforeMainModule() {
       return [
@@ -45,6 +47,7 @@ const config = {
       };
     },
   },
+  // --------------------------------------------------------
   server: {
     enhanceMiddleware: (middleware) => {
       return androidAssetsResolutionFix.applyMiddleware(middleware);

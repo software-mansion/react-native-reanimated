@@ -51,10 +51,12 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<BigStringBuffer> script;
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
   if (!sourceFilename.empty()) {
     script = std::make_shared<BigStringBuffer>(
         JSBigFileString::fromPath(sourceFilename));
   }
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
   return makeCxxInstance(
       jThis,

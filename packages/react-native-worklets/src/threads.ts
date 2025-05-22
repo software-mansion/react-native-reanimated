@@ -1,6 +1,9 @@
 'use strict';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
-import { makeShareableCloneRecursive } from './shareables';
+import {
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
+} from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -81,6 +84,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
+  'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
@@ -155,7 +159,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(() => {
         'worklet';
         const result = worklet(...args);
-        return makeShareableCloneRecursive(result);
+        return makeShareableCloneOnUIRecursive(result);
       })
     );
   };
@@ -240,10 +244,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0
-        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneRecursive(args) as unknown as unknown[])
-        : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
 }
