@@ -2,7 +2,7 @@
 
 #include <react/renderer/components/rnreanimated/EventEmitters.h>
 #include <react/renderer/components/rnreanimated/Props.h>
-#include <react/renderer/components/rnreanimated/ReanimatedViewState.h>
+#include <react/renderer/components/rnreanimated/ReanimatedViewStateData.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/LayoutContext.h>
 
@@ -16,7 +16,7 @@ using ReanimatedViewShadowNodeBase = ConcreteViewShadowNode<
     ReanimatedViewComponentName,
     ReanimatedViewProps,
     ReanimatedViewEventEmitter,
-    ReanimatedViewState>;
+    ReanimatedViewStateData>;
 
 class ReanimatedShadowNode final : public ReanimatedViewShadowNodeBase {
  public:
