@@ -240,8 +240,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
         rt,
         propName,
         2,
-        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeShareableArray(rt, args[0].asObject(rt).asArray(rt), args[1]);
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableArray(
+              rt, args[0].asObject(rt).asArray(rt), args[1]);
         });
   }
   if (name == "scheduleOnUI") {

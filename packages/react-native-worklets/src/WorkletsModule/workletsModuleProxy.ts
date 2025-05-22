@@ -26,7 +26,7 @@ export interface WorkletsModuleProxy {
     array: unknown[],
     shouldRetainRemote: boolean
   ): ShareableRef<unknown[]>;
-  
+
   makeShareableInitializer(obj: object): ShareableRef<object>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
