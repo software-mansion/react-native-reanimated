@@ -62,6 +62,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableImport(): never {
+    throw new WorkletsError(
+      'makeShareableImport should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableHostObject<T extends object>(): ShareableRef<T> {
     throw new WorkletsError(
       'makeShareableHostObject should never be called in JSWorklets.'

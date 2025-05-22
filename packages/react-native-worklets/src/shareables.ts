@@ -13,6 +13,7 @@ import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
+  WorkletImport,
 } from './workletTypes';
 
 // for web and jest environments this file provides a stub implementation
@@ -158,6 +159,14 @@ function makeShareableCloneRecursiveNative<T>(
 
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
+  }
+  if (
+    // eslint-disable-next-line no-constant-condition
+    false /* disable it for now */ &&
+    isFunction &&
+    (value as WorkletImport).__bundleData
+  ) {
+    return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value, shouldPersistRemote);
@@ -492,6 +501,18 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   shareableMappingCache.set(value, handle);
 
   return handle;
+}
+
+function cloneImport<TValue extends WorkletImport>(
+  value: TValue
+): ShareableRef<TValue> {
+  const { source, imported } = value.__bundleData;
+  const clone = WorkletsModule.makeShareableImport(source, imported);
+
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  return clone as ShareableRef<TValue>;
 }
 
 function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {

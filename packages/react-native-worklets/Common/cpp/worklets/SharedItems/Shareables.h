@@ -84,6 +84,7 @@ class Shareable {
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    ImportType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -156,6 +157,11 @@ jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
 jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
+
+jsi::Value makeShareableImport(
+    jsi::Runtime &rt,
+    const jsi::String &source,
+    const jsi::String &imported);
 
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
@@ -269,6 +275,23 @@ class ShareableWorklet : public ShareableObject {
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+};
+
+class ShareableImport : public Shareable {
+ public:
+  ShareableImport(
+      jsi::Runtime &rt,
+      const jsi::String &source,
+      const jsi::String &imported)
+      : Shareable(ImportType),
+        source_(source.utf8(rt)),
+        imported_(imported.utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string source_;
+  const std::string imported_;
 };
 
 class ShareableRemoteFunction

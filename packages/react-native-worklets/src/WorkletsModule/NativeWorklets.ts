@@ -50,6 +50,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
+  }
+
   makeShareableString(str: string) {
     return this.#workletsModuleProxy.makeShareableString(str);
   }
