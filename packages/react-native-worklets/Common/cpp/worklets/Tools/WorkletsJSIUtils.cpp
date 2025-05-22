@@ -1,4 +1,7 @@
 #include <worklets/Tools/WorkletsJSIUtils.h>
+
+#include <memory>
+#include <sstream>
 #include <vector>
 
 using namespace facebook;
@@ -21,6 +24,17 @@ jsi::Array convertStringToArray(
     matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
   }
   return matrix;
+}
+
+jsi::Object optimizedFromHostObject(
+    jsi::Runtime &rt,
+    std::shared_ptr<jsi::HostObject> &&hostObject) {
+  auto optimizedObject = jsi::Object(rt);
+  for (const auto &propertyName : hostObject->getPropertyNames(rt)) {
+    optimizedObject.setProperty(
+        rt, propertyName, hostObject->get(rt, propertyName));
+  }
+  return optimizedObject;
 }
 
 } // namespace worklets::jsi_utils
