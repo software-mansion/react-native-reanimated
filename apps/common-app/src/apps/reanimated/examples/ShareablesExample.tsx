@@ -40,6 +40,11 @@ export default function ShareablesExample() {
         <UndefinedDemo />
         <NullDemo />
         <ArrayDemo />
+        <RegExpDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
@@ -237,6 +242,43 @@ function NullDemo() {
       'worklet';
       try {
         if (x === null) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function RegExpDemo() {
+  const title = 'RegExp';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    const regex1 = /test/;
+    // eslint-disable-next-line prefer-regex-literals
+    const regex2 = new RegExp('test');
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          regex1.test('test'),
+          regex2.test('test'),
+          regex1.toString() === regex2.toString(),
+        ];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();

@@ -124,6 +124,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableUndefined"));
   propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableInitializer"));
+  propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableArray"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
@@ -221,17 +223,25 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) { return makeShareableUndefined(rt); });
   }
+  if (name == "makeShareableInitializer") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableInitializer(rt, args[0].asObject(rt));
+        });
+  }
   if (name == "makeShareableArray") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         2,
-        [](jsi::Runtime &rt,
-           const jsi::Value &thisValue,
-           const jsi::Value *args,
-           size_t count) {
-          return makeShareableArray(
-              rt, args[0].asObject(rt).asArray(rt), args[1]);
+        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeShareableArray(rt, args[0].asObject(rt).asArray(rt), args[1]);
         });
   }
   if (name == "scheduleOnUI") {

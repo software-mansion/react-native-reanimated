@@ -161,6 +161,10 @@ jsi::Value makeShareableArray(
     jsi::Runtime &rt,
     const jsi::Array &array,
     const jsi::Value &shouldRetainRemote);
+    
+jsi::Value makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -290,7 +294,7 @@ class ShareableRemoteFunction
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
-class ShareableHandle : public Shareable {
+class ShareableInitializer : public Shareable {
  private:
   // We don't release the initializer since the handle can get
   // initialized in parallel on multiple threads. However this is not a problem,
@@ -302,12 +306,12 @@ class ShareableHandle : public Shareable {
   jsi::Runtime *remoteRuntime_;
 
  public:
-  ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
+  ShareableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
       : Shareable(HandleType),
         initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
   }
 
-  ~ShareableHandle() {
+  ~ShareableInitializer() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
