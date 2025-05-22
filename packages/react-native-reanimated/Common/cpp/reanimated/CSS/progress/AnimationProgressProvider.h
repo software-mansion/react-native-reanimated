@@ -32,7 +32,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
 
   void setIterationCount(double iterationCount);
   void setDirection(AnimationDirection direction);
-  void setEasingFunction(const EasingFunction &easingFunction);
+  void setEasing(std::shared_ptr<Easing> easing);
 
   AnimationDirection getDirection() const;
   double getGlobalProgress() const override;

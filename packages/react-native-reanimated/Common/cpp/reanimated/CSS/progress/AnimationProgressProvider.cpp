@@ -24,9 +24,8 @@ void AnimationProgressProvider::setDirection(AnimationDirection direction) {
   direction_ = direction;
 }
 
-void AnimationProgressProvider::setEasingFunction(
-    const EasingFunction &easingFunction) {
-  easingFunction_ = easingFunction;
+void AnimationProgressProvider::setEasing(std::shared_ptr<Easing> easing) {
+  easing_ = std::move(easing);
 }
 
 AnimationDirection AnimationProgressProvider::getDirection() const {
