@@ -8,20 +8,25 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {
 
+struct PropertyInterpolatorUpdateContext {
+  ShadowNode::Shared node;
+  std::shared_ptr<KeyframeProgressProvider> progressProvider;
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository;
+};
+
 class PropertyInterpolator {
  public:
-  explicit PropertyInterpolator(
-      PropertyPath propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  explicit PropertyInterpolator(PropertyPath propertyPath);
 
   virtual folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
   virtual folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
   virtual bool equalsReversingAdjustedStartValue(
@@ -34,13 +39,10 @@ class PropertyInterpolator {
       const folly::dynamic &lastUpdateValue) = 0;
 
   virtual folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const = 0;
+      const PropertyInterpolatorUpdateContext &context) const = 0;
 
  protected:
   const PropertyPath propertyPath_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };
 
 class PropertyInterpolatorFactory {
@@ -52,9 +54,7 @@ class PropertyInterpolatorFactory {
   virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const = 0;
+      const PropertyPath &propertyPath) const = 0;
 };
 
 using PropertyInterpolatorsRecord =
