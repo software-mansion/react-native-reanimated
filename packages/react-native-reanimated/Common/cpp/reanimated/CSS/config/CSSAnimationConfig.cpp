@@ -2,11 +2,15 @@
 
 namespace reanimated::css {
 
-double getIterationCount(const folly::dynamic &settings) {
-  return settings["iterationCount"].asDouble();
+std::string getName(const folly::dynamic &config) {
+  return config["name"].asString();
 }
 
-AnimationDirection getDirection(const folly::dynamic &settings) {
+double getIterationCount(const folly::dynamic &config) {
+  return config["iterationCount"].asDouble();
+}
+
+AnimationDirection getDirection(const folly::dynamic &config) {
   static const std::unordered_map<std::string, AnimationDirection>
       strToEnumMap = {
           {"normal", AnimationDirection::Normal},
@@ -14,7 +18,7 @@ AnimationDirection getDirection(const folly::dynamic &settings) {
           {"alternate", AnimationDirection::Alternate},
           {"alternate-reverse", AnimationDirection::AlternateReverse}};
 
-  const auto str = settings["direction"].asString();
+  const auto str = config["direction"].asString();
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -23,14 +27,14 @@ AnimationDirection getDirection(const folly::dynamic &settings) {
   return it->second;
 }
 
-AnimationFillMode getFillMode(const folly::dynamic &settings) {
+AnimationFillMode getFillMode(const folly::dynamic &config) {
   static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
       {{"none", AnimationFillMode::None},
        {"forwards", AnimationFillMode::Forwards},
        {"backwards", AnimationFillMode::Backwards},
        {"both", AnimationFillMode::Both}};
 
-  const auto str = settings["fillMode"].asString();
+  const auto str = config["fillMode"].asString();
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -39,13 +43,13 @@ AnimationFillMode getFillMode(const folly::dynamic &settings) {
   return it->second;
 }
 
-AnimationPlayState getPlayState(const folly::dynamic &settings) {
+AnimationPlayState getPlayState(const folly::dynamic &config) {
   static const std::unordered_map<std::string, AnimationPlayState>
       strToEnumMap = {
           {"running", AnimationPlayState::Running},
           {"paused", AnimationPlayState::Paused}};
 
-  const auto str = settings["playState"].asString();
+  const auto str = config["playState"].asString();
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
@@ -54,15 +58,15 @@ AnimationPlayState getPlayState(const folly::dynamic &settings) {
   return it->second;
 }
 
-CSSAnimationSettings parseCSSAnimationSettings(const folly::dynamic &settings) {
+CSSAnimationSettings parseCSSAnimationSettings(const folly::dynamic &config) {
   return CSSAnimationSettings{
-      getDuration(settings),
-      getTimingFunction(settings),
-      getDelay(settings),
-      getIterationCount(settings),
-      getDirection(settings),
-      getFillMode(settings),
-      getPlayState(settings)};
+      getDuration(config),
+      getTimingFunction(config),
+      getDelay(config),
+      getIterationCount(config),
+      getDirection(config),
+      getFillMode(config),
+      getPlayState(config)};
 }
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
@@ -155,6 +159,18 @@ CSSAnimationUpdates parseCSSAnimationUpdates(const folly::dynamic &config) {
   }
 
   return result;
+}
+
+CSSAnimationConfig parseCSSAnimationConfig(const folly::dynamic &config) {
+  return {
+      getName(config),
+      getDuration(config),
+      getTimingFunction(config),
+      getDelay(config),
+      getIterationCount(config),
+      getDirection(config),
+      getFillMode(config),
+      getPlayState(config)};
 }
 
 } // namespace reanimated::css
