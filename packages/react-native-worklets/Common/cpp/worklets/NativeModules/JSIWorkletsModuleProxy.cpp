@@ -255,8 +255,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
         rt,
         propName,
         1,
-        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeShareableHostObject(rt, args[0].asObject(rt).getHostObject(rt));
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableHostObject(
+              rt, args[0].asObject(rt).getHostObject(rt));
         });
   }
   if (name == "scheduleOnUI") {
