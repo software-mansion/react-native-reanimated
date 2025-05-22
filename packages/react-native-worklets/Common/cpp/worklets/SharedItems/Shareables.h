@@ -160,7 +160,7 @@ jsi::Value makeShareableNull(jsi::Runtime &rt);
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
     const std::shared_ptr<jsi::HostObject> &value);
-    
+
 jsi::Value makeShareableArray(
     jsi::Runtime &rt,
     const jsi::Array &array,
