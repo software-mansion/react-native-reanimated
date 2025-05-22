@@ -9,6 +9,7 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
+#import <React/NSDataBigString.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 #import <jsireact/JSIExecutor.h>
@@ -41,7 +42,8 @@ using worklets::WorkletsModuleProxy;
   script_ = [script getBuffer];
 }
 
-- (void)setSourceURL:(const std::string &)sourceURL{
+- (void)setSourceURL:(const std::string &)sourceURL
+{
   sourceURL_ = sourceURL;
 }
 
@@ -77,7 +79,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame), std::move(script_), sourceURL_);
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(forwardedRequestAnimationFrame),
+      std::move(script_),
+      sourceURL_);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));

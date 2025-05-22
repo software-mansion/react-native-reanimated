@@ -21,7 +21,7 @@ const config = {
   transformer: {
     publicPath: androidAssetsResolutionFix.publicPath,
   },
-  // Uncomment the following to enable experimental bundling
+  // Uncomment the following to enable experimental bundling.
   // --------------------------------------------------------
   serializer: {
     getModulesRunBeforeMainModule() {

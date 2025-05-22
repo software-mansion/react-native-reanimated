@@ -11,7 +11,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <string>
 #include <utility>
 
 using namespace facebook;

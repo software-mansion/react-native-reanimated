@@ -43,7 +43,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     mSourceFileName = sourceFileName;
   }
 
-  public void setSourceURL(String sourceURL){
+  public void setSourceURL(String sourceURL) {
     mSourceURL = sourceURL;
   }
 
@@ -79,7 +79,13 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler, mSourceFileName, mSourceURL);
+        initHybrid(
+            jsContext,
+            mMessageQueueThread,
+            jsCallInvokerHolder,
+            mAndroidUIScheduler,
+            mSourceFileName,
+            mSourceURL);
     return true;
   }
 

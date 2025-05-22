@@ -57,7 +57,13 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 std::shared_ptr<jsi::HostObject>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   return std::make_shared<JSIWorkletsModuleProxy>(
-      isDevBundle_, script_, sourceUrl_, jsQueue_, jsScheduler_, uiScheduler_, uiWorkletRuntime_);
+      isDevBundle_,
+      script_,
+      sourceUrl_,
+      jsQueue_,
+      jsScheduler_,
+      uiScheduler_,
+      uiWorkletRuntime_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

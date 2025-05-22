@@ -11,6 +11,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <string>
 
 namespace worklets {
 
