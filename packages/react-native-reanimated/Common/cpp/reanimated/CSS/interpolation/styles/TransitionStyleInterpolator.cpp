@@ -2,10 +2,6 @@
 
 namespace reanimated::css {
 
-TransitionStyleInterpolator::TransitionStyleInterpolator(
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
-
 std::unordered_set<std::string>
 TransitionStyleInterpolator::getReversedPropertyNames(
     const folly::dynamic &newPropertyValues) const {
@@ -31,12 +27,17 @@ TransitionStyleInterpolator::getReversedPropertyNames(
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const ShadowNode::Shared &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider) const {
+    const TransitionProgressProvider &transitionProgressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
   return mapInterpolators(
       transitionProgressProvider,
       [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
           const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-        return interpolator->interpolate(shadowNode, progressProvider);
+        return interpolator->interpolate({
+            .node = shadowNode,
+            .progressProvider = progressProvider,
+            .viewStylesRepository = viewStylesRepository,
+        });
       });
 }
 
@@ -76,10 +77,7 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     if (shouldCreateInterpolator) {
       const auto newInterpolator = createPropertyInterpolator(
-          propertyName,
-          {},
-          PROPERTY_INTERPOLATORS_CONFIG,
-          viewStylesRepository_);
+          propertyName, {}, PROPERTY_INTERPOLATORS_CONFIG);
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 

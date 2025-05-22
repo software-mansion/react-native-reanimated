@@ -14,11 +14,9 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
+      const PropertyPath &propertyPath) const override {
     return std::make_shared<RecordPropertiesInterpolator>(
-        factories_, propertyPath, viewStylesRepository);
+        factories_, propertyPath);
   }
 
  private:
@@ -47,11 +45,9 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
+      const PropertyPath &propertyPath) const override {
     return std::make_shared<ArrayPropertiesInterpolator>(
-        factories_, propertyPath, viewStylesRepository);
+        factories_, propertyPath);
   }
 
  private:
@@ -81,11 +77,9 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
+      const PropertyPath &propertyPath) const override {
     return std::make_shared<TransformsStyleInterpolator>(
-        propertyPath, interpolators_, viewStylesRepository);
+        propertyPath, interpolators_);
   }
 
  private:

@@ -2,6 +2,10 @@
 
 namespace reanimated::css {
 
+CSSAnimationsRegistry::CSSAnimationsRegistry(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    : viewStylesRepository_(viewStylesRepository) {}
+
 bool CSSAnimationsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
@@ -186,7 +190,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp);
+    const auto updates = animation->update(timestamp, viewStylesRepository_);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
@@ -195,8 +199,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates =
-            addStyleUpdates(result, animation->getResetStyle(), false) ||
+        hasUpdates = addStyleUpdates(
+                         result,
+                         animation->getResetStyle(viewStylesRepository_),
+                         false) ||
             hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
@@ -284,7 +290,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished &&
          animation->hasForwardsFillMode())) {
-      style = animation->getCurrentInterpolationStyle();
+      style = animation->getCurrentInterpolationStyle(viewStylesRepository_);
     }
 
     if (!shadowNode) {

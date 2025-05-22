@@ -60,17 +60,21 @@ bool CSSAnimation::hasBackwardsFillMode() const {
       fillMode_ == AnimationFillMode::Both;
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
-}
-
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_->getLastKeyframeValue()
                       : styleInterpolator_->getFirstKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getResetStyle() const {
-  return styleInterpolator_->getResetStyle(shadowNode_);
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  return styleInterpolator_->interpolate(
+      getUpdateContext(viewStylesRepository));
+}
+
+folly::dynamic CSSAnimation::getResetStyle(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  return styleInterpolator_->getResetStyle(
+      getUpdateContext(viewStylesRepository));
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -81,7 +85,9 @@ void CSSAnimation::run(const double timestamp) {
   progressProvider_->play(timestamp);
 }
 
-folly::dynamic CSSAnimation::update(const double timestamp) {
+folly::dynamic CSSAnimation::update(
+    const double timestamp,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   progressProvider_->update(timestamp);
 
   // Check if the animation has not started yet because of the delay
@@ -93,7 +99,8 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(
+      getUpdateContext(viewStylesRepository));
 }
 
 void CSSAnimation::updateSettings(
@@ -130,6 +137,15 @@ void CSSAnimation::updateSettings(
   }
 
   progressProvider_->update(timestamp);
+}
+
+PropertyInterpolatorUpdateContext CSSAnimation::getUpdateContext(
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  return PropertyInterpolatorUpdateContext{
+      .node = shadowNode_,
+      .progressProvider = progressProvider_,
+      .viewStylesRepository = viewStylesRepository,
+  };
 }
 
 } // namespace reanimated::css

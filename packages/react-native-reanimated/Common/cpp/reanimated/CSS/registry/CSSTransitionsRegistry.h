@@ -22,6 +22,7 @@ class CSSTransitionsRegistry
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   bool isEmpty() const override;
@@ -38,7 +39,7 @@ class CSSTransitionsRegistry
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
-
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   Registry registry_;
 
   std::unordered_set<Tag> runningTransitionTags_;
