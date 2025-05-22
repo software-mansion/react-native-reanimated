@@ -4,6 +4,7 @@
 #include <folly/dynamic.h>
 #endif
 
+#include <react/renderer/components/rnreanimated/managers/CSSAnimationsManager.h>
 #include <react/renderer/components/rnreanimated/managers/CSSTransitionManager.h>
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -20,6 +21,7 @@ using namespace css;
 class ReanimatedViewStateData {
  public:
   std::shared_ptr<CSSTransitionManager> cssTransitionManager;
+  std::shared_ptr<CSSAnimationsManager> cssAnimationsManager;
 
   ReanimatedViewStateData() = default;
 
