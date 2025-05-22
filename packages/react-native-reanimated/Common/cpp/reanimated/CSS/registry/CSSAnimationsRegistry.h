@@ -2,8 +2,8 @@
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/CSS/util/props.h>
+#include <reanimated/Fabric/operations/DelayedItemsManager.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>

@@ -89,7 +89,7 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
     const double timestamp) {
   while (!delayedTransitionsManager_.empty() &&
          delayedTransitionsManager_.top().timestamp <= timestamp) {
-    const auto [_, viewTag] = delayedTransitionsManager_.pop();
+    const auto viewTag = delayedTransitionsManager_.pop().value;
 
     // Add only these transitions which weren't removed in the meantime
     if (registry_.find(viewTag) != registry_.end()) {
