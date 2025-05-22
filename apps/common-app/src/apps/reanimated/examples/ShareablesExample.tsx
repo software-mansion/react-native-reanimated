@@ -265,7 +265,6 @@ function NullDemo() {
 function RegExpDemo() {
   const title = 'RegExp';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const regex1 = /test/;
@@ -294,7 +293,8 @@ function RegExpDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -302,7 +302,6 @@ function RegExpDemo() {
 function ArrayDemo() {
   const title = 'Array';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   enum index {
     number = 0,
@@ -416,7 +415,8 @@ function ArrayDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -486,7 +486,6 @@ function InaccessibleObjectDemo() {
 function HostObjectDemo() {
   const title = 'HostObject';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     // @ts-expect-error It's ok
@@ -515,7 +514,8 @@ function HostObjectDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
