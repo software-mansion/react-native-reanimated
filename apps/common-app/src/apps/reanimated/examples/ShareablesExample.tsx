@@ -39,12 +39,9 @@ export default function ShareablesExample() {
         <NumberDemo />
         <UndefinedDemo />
         <NullDemo />
+        <HostObjectDemo />
         <ArrayDemo />
         <RegExpDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
@@ -472,6 +469,43 @@ function InaccessibleObjectDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
+
+function HostObjectDemo() {
+  const title = 'HostObject';
+  const { status, isOk, isNotOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    // @ts-expect-error It's ok
+    const hostObject = globalThis.__reanimatedModuleProxy;
+    const hostObjectKeys = Object.keys(hostObject);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          hostObjectKeys.length === Object.keys(hostObject).length,
+          ...hostObjectKeys.map((key) => hostObject[key] !== undefined),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
   return (
     <DemoItemRow
       title={title}

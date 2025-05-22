@@ -166,6 +166,13 @@ jsi::Value makeShareableArray(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableHostObject(
+    jsi::Runtime &rt,
+    const std::shared_ptr<jsi::HostObject> &value) {
+  const auto shareable = std::make_shared<ShareableHostObject>(rt, value);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
