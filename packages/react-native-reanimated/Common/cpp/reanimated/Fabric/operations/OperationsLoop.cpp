@@ -6,6 +6,10 @@ OperationsLoop::OperationsLoop(
     GetAnimationTimestampFunction getAnimationTimestamp)
     : getTimestamp_(std::move(getAnimationTimestamp)) {}
 
+double OperationsLoop::getFrameTimestamp() const {
+  return timestamp_;
+}
+
 OperationsLoop::OperationHandle OperationsLoop::schedule(
     std::unique_ptr<Operation> operation) {
   OperationHandle handle = nextHandle_.fetch_add(1, std::memory_order_relaxed);
