@@ -13,6 +13,7 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { ReanimatedView } from '../../specs';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
@@ -201,7 +202,7 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
-    return (
+    const child = (
       <ChildComponent
         {...this.props}
         {...props}
@@ -212,5 +213,17 @@ export default class AnimatedComponent<
         ref={this._setComponentRef as (ref: Component) => void}
       />
     );
+
+    if (SHOULD_BE_USE_WEB) {
+      return child;
+    }
+
+    return <ReanimatedView style={styles.container}>{child}</ReanimatedView>;
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    display: 'contents',
+  },
+});

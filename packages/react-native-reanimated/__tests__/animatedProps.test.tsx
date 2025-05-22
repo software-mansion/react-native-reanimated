@@ -16,7 +16,7 @@ Animated.addWhitelistedNativeProps({ r: true });
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 Animated.addWhitelistedNativeProps({ text: true });
 
-export default function AnimatedComponent() {
+function AnimatedComponent() {
   const r = useSharedValue(20);
   const width = useSharedValue(20);
 
