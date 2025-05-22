@@ -274,8 +274,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+    if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
       style = animation->getBackwardsFillStyle();
     } else if (
         currentState == AnimationProgressState::Running ||

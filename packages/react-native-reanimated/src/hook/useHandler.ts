@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareable } from 'react-native-worklets';
 
-import { isJest, isWeb } from '../PlatformChecker';
+import { IS_JEST, IS_WEB } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 
@@ -93,7 +93,7 @@ export function useHandler<
     savedDependencies
   );
   initRef.current.savedDependencies = dependencies;
-  const useWeb = isWeb() || isJest();
+  const useWeb = IS_WEB || IS_JEST;
 
   return { context, doDependenciesDiffer, useWeb };
 }
