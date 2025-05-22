@@ -4,7 +4,7 @@
 #include <reanimated/CSS/easing/linear.h>
 #include <reanimated/CSS/easing/steps.h>
 
-#include <jsi/jsi.h>
+#include <folly/dynamic.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -18,11 +18,8 @@ extern const std::unordered_map<std::string, EasingFunction>
 
 EasingFunction getPredefinedEasingFunction(const std::string &name);
 EasingFunction createParametrizedEasingFunction(
-    jsi::Runtime &rt,
-    const jsi::Object &easingConfig);
+    const folly::dynamic &easingConfig);
 
-EasingFunction createEasingFunction(
-    jsi::Runtime &rt,
-    const jsi::Value &easingConfig);
+EasingFunction createEasingFunction(const folly::dynamic &easingConfig);
 
 } // namespace reanimated::css
