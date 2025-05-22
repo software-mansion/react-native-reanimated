@@ -508,7 +508,6 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       const auto &name = animationNames[index];
       const auto animation = std::make_shared<CSSAnimation>(
           rt,
-          shadowNode,
           name,
           cssAnimationKeyframesRegistry_->get(name),
           settings,
