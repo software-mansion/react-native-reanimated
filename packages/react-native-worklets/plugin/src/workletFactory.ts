@@ -351,17 +351,19 @@ export function makeWorkletFactory(
     )
   );
 
-  generateWorkletFile(
-    libraryBindingsToImport,
-    relativeBindingsToImport,
-    initDataId,
-    initDataObjectExpression,
-    factory,
-    workletHash,
-    pathForStringDefinitions as NodePath<ExpressionStatement>,
-    shouldIncludeInitData,
-    state
-  );
+  if (state.opts.experimentalBundling) {
+    generateWorkletFile(
+      libraryBindingsToImport,
+      relativeBindingsToImport,
+      initDataId,
+      initDataObjectExpression,
+      factory,
+      workletHash,
+      pathForStringDefinitions as NodePath<ExpressionStatement>,
+      shouldIncludeInitData,
+      state
+    );
+  }
 
   // @ts-expect-error We must mark the factory as workletized
   // to avoid further workletization inside the factory.

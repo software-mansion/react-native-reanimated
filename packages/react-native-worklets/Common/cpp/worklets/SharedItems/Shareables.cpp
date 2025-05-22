@@ -181,14 +181,6 @@ jsi::Value makeShareableImport(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
-jsi::Value makeShareableImport(
-    jsi::Runtime &rt,
-    const jsi::String &source,
-    const jsi::String &imported) {
-  auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
-  return ShareableJSRef::newHostObject(rt, shareable);
-}
-
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
