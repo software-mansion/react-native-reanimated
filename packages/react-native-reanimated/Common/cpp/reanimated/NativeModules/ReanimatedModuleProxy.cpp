@@ -927,6 +927,11 @@ void ReanimatedModuleProxy::initializeFabric(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
       uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+
+  const auto scheduler =
+      reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
+  scheduler->getContextContainer()->insert(
+      "ReanimatedModuleProxy", weak_from_this());
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
