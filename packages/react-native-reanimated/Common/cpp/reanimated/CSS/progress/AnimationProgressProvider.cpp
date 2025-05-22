@@ -41,7 +41,7 @@ AnimationProgressState AnimationProgressProvider::getState() const {
   if (pauseTimestamp_ > 0) {
     return AnimationProgressState::Paused;
   }
-  if (timestamp < getStartTimestamp(timestamp) || !rawProgress_.has_value()) {
+  if (!rawProgress_.has_value()) {
     return AnimationProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
@@ -120,21 +120,21 @@ bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(
     const double timestamp) {
-  const double currentIterationElapsedTime = timestamp -
-      (creationTimestamp_ + delay_ + previousIterationsDuration_ +
-       getTotalPausedTime(timestamp));
+  const auto startTimestamp = getStartTimestamp(timestamp);
 
-  if (currentIterationElapsedTime < 0) {
+  if (timestamp < startTimestamp) {
     return std::nullopt;
   }
 
-  const double iterationProgress =
+  const auto currentIterationElapsedTime =
+      timestamp - (startTimestamp + previousIterationsDuration_);
+  const auto iterationProgress =
       updateIterationProgress(currentIterationElapsedTime);
 
   if (shouldFinish(timestamp)) {
     // Override current progress for the last update in the last iteration to
     // ensure that animation finishes exactly at the specified iteration
-    const double intPart = std::floor(iterationCount_);
+    const auto intPart = std::floor(iterationCount_);
     return intPart == iterationCount_ ? 1 : iterationCount_ - intPart;
   }
 
