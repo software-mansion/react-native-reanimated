@@ -66,7 +66,7 @@ export default function ExampleCard({
   const itemWrapperStyle: StyleProp<ViewStyle> = [
     styles.itemWrapper,
     {
-      flexBasis: isExpanded ? undefined : '50%',
+      width: isExpanded ? undefined : '50%',
     },
   ];
 

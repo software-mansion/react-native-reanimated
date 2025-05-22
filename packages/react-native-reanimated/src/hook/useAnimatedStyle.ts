@@ -1,11 +1,16 @@
 'use strict';
 import type { MutableRefObject } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { processBoxShadow } from '../common/processors';
+import {
+  IS_JEST,
+  processBoxShadow,
+  ReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -16,10 +21,8 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeShareable, startMapper, stopMapper } from '../core';
+import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import { ReanimatedError } from '../errors';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -30,15 +33,12 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
   isAnimated,
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
   last: AnimatedStyle<any>;
@@ -496,7 +496,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
-  const areAnimationsActive = useSharedValue<boolean>(true);
+  const [areAnimationsActive] = useState(() => makeMutable(true));
   const jestAnimatedValues = useRef<Style | AnimatedProps>(
     {} as Style | AnimatedProps
   );
@@ -548,7 +548,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       }) as WorkletFunction<[], Style>;
     }
 
-    if (isJest()) {
+    if (IS_JEST) {
       fun = () => {
         'worklet';
         jestStyleUpdater(
@@ -580,13 +580,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }, dependencies);
 
   useEffect(() => {
-    areAnimationsActive.value = true;
     return () => {
       areAnimationsActive.value = false;
     };
   }, [areAnimationsActive]);
 
-  checkSharedValueUsage(initial.value);
+  if (__DEV__) {
+    checkSharedValueUsage(initial.value);
+  }
 
   const animatedStyleHandle = useRef<
     | AnimatedStyleHandle<Style | AnimatedProps>
@@ -595,7 +596,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
-    animatedStyleHandle.current = isJest()
+    animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,
