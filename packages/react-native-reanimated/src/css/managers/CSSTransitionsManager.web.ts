@@ -27,10 +27,6 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     this.isAttached = true;
   }
 
-  unmountCleanup() {
-    // noop
-  }
-
   private detach() {
     if (!this.isAttached) {
       return;
