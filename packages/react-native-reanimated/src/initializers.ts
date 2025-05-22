@@ -1,11 +1,11 @@
 'use strict';
-import { isWeb } from './PlatformChecker';
+import { IS_WEB } from './common';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(
   ReanimatedModule: IReanimatedModule
 ) {
-  if (isWeb()) {
+  if (IS_WEB) {
     return;
   }
   if (!ReanimatedModule) {
