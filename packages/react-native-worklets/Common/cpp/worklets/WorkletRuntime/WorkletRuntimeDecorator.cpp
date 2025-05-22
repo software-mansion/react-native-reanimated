@@ -144,7 +144,8 @@ void WorkletRuntimeDecorator::decorate(
       rt,
       "_makeShareableHostObject",
       [](jsi::Runtime &rt, const jsi::Value &value) {
-        return makeShareableHostObject(rt, value);
+        return makeShareableHostObject(
+            rt, value.asObject(rt).getHostObject(rt));
       });
 
   jsi_utils::installJsiFunction(
