@@ -41,6 +41,7 @@ export default function ShareablesExample() {
         <UndefinedDemo />
         <NullDemo />
         <HostObjectDemo />
+        <TurboModuleLikeDemo />
         <ArrayDemo />
         <RegExpDemo />
         <ArrayBufferDemo />
@@ -508,7 +509,50 @@ function HostObjectDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expected={expectedStatus}
+    />
+  );
+}
 
+function TurboModuleLikeDemo() {
+  const title = 'TurboModuleLike';
+  const { status, isOk, isError } = useStatus();
+  const expectedStatus: Status = 'ok';
+
+  const handlePress = () => {
+    // @ts-ignore this is fine
+    const proto = globalThis.__reanimatedModuleProxy;
+    const reanimatedModuleKeys = Object.keys(proto);
+    const obj = {
+      a: 1,
+      b: 'test',
+    };
+    Object.setPrototypeOf(obj, proto);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          obj.a === 1,
+          obj.b === 'test',
+          reanimatedModuleKeys.every(
+            (key) => key in Object.getPrototypeOf(obj)
+          ),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isError)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
   return (
     <DemoItemRow
       title={title}

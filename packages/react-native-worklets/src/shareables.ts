@@ -163,6 +163,11 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
+    // RN has introduced a new representation of the turbo module as a JS object whose prototype is the host object
+    // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+    if (isHostObject(Object.getPrototypeOf(value))) {
+      return cloneTurboModuleLike(value, shouldPersistRemote, depth);
+    }
     return cloneHostObject(value);
   }
   if (isPlainJSObject(value) && value.__init) {
@@ -387,6 +392,26 @@ function cloneWorklet<T extends WorkletFunction>(
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
+  return clone;
+}
+
+/**
+ * TurboModuleLike objects are JS objects that have a TurboModule as their
+ * prototype.
+ */
+function cloneTurboModuleLike<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
+  // We do not call makeShareableClone on the proto, because we are
+  // converting the prototype to a SharableHostObject on the C++ side
+  const clonedProto = Object.getPrototypeOf(value);
+  const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
+  Object.setPrototypeOf(clonedProps, clonedProto);
+  const clone = WorkletsModule.makeShareableTurboModuleLike(
+    clonedProps
+  ) as ShareableRef<T>;
   return clone;
 }
 
