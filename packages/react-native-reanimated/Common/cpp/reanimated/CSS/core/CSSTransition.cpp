@@ -63,6 +63,7 @@ folly::dynamic CSSTransition::getCurrentFrameProps(
       shadowNode, progressProvider_, viewStylesRepository);
 }
 
+// TODO - remove this method when CSS refactor is finished
 void CSSTransition::updateSettings(const CSSTransitionConfigUpdates &config) {
   if (config.properties.has_value()) {
     updateTransitionProperties(config.properties.value());
@@ -70,6 +71,13 @@ void CSSTransition::updateSettings(const CSSTransitionConfigUpdates &config) {
   if (config.settings.has_value()) {
     settings_ = config.settings.value();
   }
+}
+
+void CSSTransition::updateConfig(const CSSTransitionConfig &config) {
+  if (config.properties != properties_) {
+    updateTransitionProperties(config.properties);
+  }
+  settings_ = config.settings;
 }
 
 void CSSTransition::run(

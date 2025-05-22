@@ -1,6 +1,6 @@
 #pragma once
 
-#include <react/renderer/components/rnreanimated/Props.h>
+#include <react/renderer/components/rnreanimated/ReanimatedNodeProps.h>
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
@@ -29,7 +29,9 @@ class CSSAnimationsManager {
 
   folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
 
-  void update(const ReanimatedViewProps &newProps);
+  void update(
+      const ReanimatedNodeProps &oldProps,
+      const ReanimatedNodeProps &newProps);
 
  private:
   using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
@@ -43,10 +45,8 @@ class CSSAnimationsManager {
   std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::vector<CSSAnimationConfig> parseAnimationConfigs(
-      const folly::dynamic &cssAnimations) const;
   NameToAnimationsMap createCurrentNameToAnimationsMap() const;
-  AnimationsVector createNewAnimationsVector(
+  AnimationsVector createAndStartNewAnimations(
       NameToAnimationsMap &nameToAnimationsMap,
       const std::vector<CSSAnimationConfig> &animationConfigs);
 

@@ -20,6 +20,8 @@ struct CSSTransitionPropertySettings {
   std::shared_ptr<Easing> easing;
   double delay;
   bool allowDiscrete;
+
+  bool operator==(const CSSTransitionPropertySettings &other) const;
 };
 
 using CSSTransitionPropertiesSettings =
@@ -28,6 +30,17 @@ using CSSTransitionPropertiesSettings =
 struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
+
+  // TODO - remove this constructor when refactor is finished
+  CSSTransitionConfig(
+      TransitionProperties properties,
+      CSSTransitionPropertiesSettings settings);
+
+  // Both constructors are needed for rawValue conversion
+  CSSTransitionConfig() = default;
+  explicit CSSTransitionConfig(const RawValue &rawValue);
+
+  bool operator==(const CSSTransitionConfig &other) const;
 };
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(

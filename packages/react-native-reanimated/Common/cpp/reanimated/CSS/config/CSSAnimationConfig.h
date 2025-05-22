@@ -57,6 +57,23 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
   std::string name;
+
+  // TODO - remove this constructor when refactor is finished
+  CSSAnimationConfig(
+      const std::string &name,
+      double duration,
+      std::shared_ptr<Easing> easing,
+      double delay,
+      double iterationCount,
+      AnimationDirection direction,
+      AnimationFillMode fillMode,
+      AnimationPlayState playState);
+
+  // Both constructors are needed for rawValue conversion
+  CSSAnimationConfig() = default;
+  explicit CSSAnimationConfig(const RawValue &rawValue);
+
+  bool operator==(const CSSAnimationConfig &other) const;
 };
 
 } // namespace reanimated::css

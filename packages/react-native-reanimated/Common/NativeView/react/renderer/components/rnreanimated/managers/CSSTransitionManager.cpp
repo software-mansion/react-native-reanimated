@@ -27,26 +27,26 @@ folly::dynamic CSSTransitionManager::getCurrentFrameProps(
 }
 
 void CSSTransitionManager::update(
-    const ReanimatedViewProps &oldProps,
-    const ReanimatedViewProps &newProps) {
-  // updateTransitionInstance(oldProps.cssTransition, newProps.cssTransition);
-  // if (transition_) {
-  //   // Run transition if at least one of transition properties has changed
-  //   runTransitionForChangedProperties(oldProps.jsStyle, newProps.jsStyle);
-  // }
+    const ReanimatedNodeProps &oldProps,
+    const ReanimatedNodeProps &newProps) {
+  updateTransitionInstance(oldProps.cssTransition, newProps.cssTransition);
+  if (transition_) {
+    // Run transition if at least one of transition properties has changed
+    runTransitionForChangedProperties(oldProps.jsStyle, newProps.jsStyle);
+  }
 }
 
 void CSSTransitionManager::updateTransitionInstance(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig) {
+    const std::optional<CSSTransitionConfig> &oldConfig,
+    const std::optional<CSSTransitionConfig> &newConfig) {
   if (!transition_) {
-    if (!newConfig.empty()) {
-      createTransition(newConfig);
+    if (newConfig.has_value()) {
+      transition_ = std::make_shared<CSSTransition>(newConfig.value());
     }
-  } else if (newConfig.empty()) {
+  } else if (!newConfig.has_value()) {
     removeTransition();
-  } else {
-    updateTransition(oldConfig, newConfig);
+  } else if (oldConfig != newConfig) {
+    transition_->updateConfig(newConfig.value());
   }
 }
 
@@ -69,24 +69,9 @@ void CSSTransitionManager::runTransitionForChangedProperties(
   }
 }
 
-void CSSTransitionManager::createTransition(const folly::dynamic &config) {
-  //  transition_ =
-  //      std::make_shared<CSSTransition>(parseCSSTransitionConfig(config));
-}
-
 void CSSTransitionManager::removeTransition() {
   operationsLoop_->remove(operationHandle_);
   transition_ = nullptr;
-}
-
-void CSSTransitionManager::updateTransition(
-    const folly::dynamic &oldConfig,
-    const folly::dynamic &newConfig) {
-  // const auto updates =
-  //     getParsedCSSTransitionConfigUpdates(oldConfig, newConfig);
-  // if (updates.has_value()) {
-  //   transition_->updateSettings(std::move(updates.value()));
-  // }
 }
 
 void CSSTransitionManager::runTransition(ChangedProps &&changedProps) {
