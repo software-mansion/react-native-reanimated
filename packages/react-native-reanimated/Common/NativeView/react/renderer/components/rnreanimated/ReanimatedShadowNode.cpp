@@ -9,7 +9,9 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFamily::Shared &family,
     ShadowNodeTraits traits)
     : ReanimatedViewShadowNodeBase(fragment, family, traits) {
-  // TODO - create CSSManager in state with initial CSS properties
+  // TODO - create css animations if view has them on the initial render
+  // transition won't be ever fired on the initial render so we don't need to
+  // handle it here
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -24,23 +26,12 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   // Check if props object is the same first - it will be the same e.g. if
   // commit to the ShadowTree was made from reanimated and props on the JS side
   // didn't change
-  if (&oldProps != &newProps) {
-    // If props objects are different (that means, some of JS props were
-    // updated), we need to check if CSS transition config was updated. We
-    // perform a deep comparison of the who folly::dynamic objects by value.
-    if (oldProps.cssTransition != newProps.cssTransition) {
-      // LOG(INFO) << "CSS transition config updated:\nold: "
-      //           << oldProps.cssTransition << " new: " <<
-      //           newProps.cssTransition;
-    }
-    if (oldProps.jsStyle != newProps.jsStyle) {
-      // LOG(INFO) << "JS style updated:\nold: " << oldProps.jsStyle
-      //           << " new: " << newProps.jsStyle;
-    }
+  if (&oldProps == &newProps) {
+    return;
   }
 
-  // TODO - update CSSManager only when transition/animation props have
-  // changed
+  const auto &state = getStateData();
+  state.cssTransitionManager->update(oldProps, newProps);
 }
 
 void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
