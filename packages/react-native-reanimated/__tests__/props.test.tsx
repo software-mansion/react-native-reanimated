@@ -6,11 +6,10 @@ import Animated, {
   getAnimatedStyle,
   interpolate,
   interpolateColor,
-  processColor,
   useAnimatedStyle,
   useSharedValue,
 } from '../src';
-import { processBoxShadow } from '../src/common/processors';
+import { processBoxShadow, processColor } from '../src/common';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
