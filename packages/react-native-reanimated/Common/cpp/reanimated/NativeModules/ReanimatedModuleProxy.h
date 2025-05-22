@@ -8,11 +8,11 @@
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/OperationsLoop.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/operations/OperationsLoop.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
