@@ -9,6 +9,7 @@
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/operations/OperationsLoop.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <memory>
 #include <optional>
@@ -25,9 +26,8 @@ class ReanimatedViewStateData {
 
   ReanimatedViewStateData() = default;
 
-  void initialize(
-      const std::shared_ptr<OperationsLoop> &operationsLoop,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  bool isInitialized() const;
+  void initialize(const std::shared_ptr<ReanimatedModuleProxy> &proxy);
 
 #ifdef ANDROID
   ReanimatedViewStateData(
@@ -37,6 +37,9 @@ class ReanimatedViewStateData {
     return {};
   }
 #endif
+
+ private:
+  bool initialized_ = false;
 };
 
 } // namespace facebook::react

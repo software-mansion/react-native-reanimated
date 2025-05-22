@@ -127,6 +127,33 @@ void CSSAnimation::updateSettings(
   progressProvider_->update(timestamp);
 }
 
+bool CSSAnimation::updateSettings(
+    const CSSAnimationSettings &settings,
+    const double timestamp) {
+  // TODO - improve
+  const auto oldState = progressProvider_->getState();
+
+  progressProvider_->setDuration(settings.duration);
+  progressProvider_->setEasingFunction(settings.easingFunction);
+  progressProvider_->setDelay(settings.delay);
+  progressProvider_->setIterationCount(settings.iterationCount);
+  progressProvider_->setDirection(settings.direction);
+  fillMode_ = settings.fillMode;
+  if (settings.playState == AnimationPlayState::Paused) {
+    if (progressProvider_->getState() != AnimationProgressState::Paused) {
+      progressProvider_->pause(timestamp);
+    }
+  } else {
+    progressProvider_->play(timestamp);
+  }
+
+  progressProvider_->update(timestamp);
+
+  // Return true if the animation progress state has changed after the settings
+  // update
+  return oldState != progressProvider_->getState();
+}
+
 PropertyInterpolatorUpdateContext CSSAnimation::getUpdateContext(
     const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {

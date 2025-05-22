@@ -40,6 +40,7 @@ class CSSAnimation {
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);
+  bool updateSettings(const CSSAnimationSettings &settings, double timestamp);
   void run(double timestamp);
   void update(double timestamp);
 
