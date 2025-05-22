@@ -36,6 +36,16 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
+  private String mSourceFileName = null;
+  private String mSourceURL = null;
+
+  public void setSourceFileName(String sourceFileName) {
+    mSourceFileName = sourceFileName;
+  }
+
+  public void setSourceURL(String sourceURL) {
+    mSourceURL = sourceURL;
+  }
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -48,7 +58,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       long jsContext,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler);
+      AndroidUIScheduler androidUIScheduler,
+      String sourceFileName,
+      String sourceURL);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -67,7 +79,13 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
+        initHybrid(
+            jsContext,
+            mMessageQueueThread,
+            jsCallInvokerHolder,
+            mAndroidUIScheduler,
+            mSourceFileName,
+            mSourceURL);
     return true;
   }
 

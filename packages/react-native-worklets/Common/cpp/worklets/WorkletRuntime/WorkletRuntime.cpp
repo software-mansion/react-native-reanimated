@@ -9,6 +9,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
 #include <memory>
 #include <utility>
@@ -88,7 +89,9 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const bool isDevBundle)
+    const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -113,6 +116,19 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  if (script) {
+    // Experimental bundling
+    try {
+      rt.evaluateJavaScript(script, sourceUrl);
+    } catch (facebook::jsi::JSIException ex) {
+      LOG(INFO) << ex.what();
+    }
+    return;
+  }
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
+  // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");

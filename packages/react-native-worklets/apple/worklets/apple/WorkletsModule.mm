@@ -8,8 +8,10 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
+#import <React/NSDataBigString.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
+#import <jsireact/JSIExecutor.h>
 
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
@@ -21,6 +23,8 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<const BigStringBuffer> script_;
+  std::string sourceURL_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -30,6 +34,16 @@ using worklets::WorkletsModuleProxy;
 {
   AssertJavaScriptQueue();
   return workletsModuleProxy_;
+}
+
+- (void)setScriptBuffer:(NSBigStringBuffer *)script
+{
+  script_ = [script getBuffer];
+}
+
+- (void)setSourceURL:(const std::string &)sourceURL
+{
+  sourceURL_ = sourceURL;
 }
 
 - (void)checkBridgeless
@@ -64,7 +78,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(forwardedRequestAnimationFrame),
+      std::move(script_),
+      sourceURL_);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
