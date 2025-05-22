@@ -4,9 +4,10 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/easing/utils.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -16,7 +17,7 @@ using namespace facebook::react;
 
 struct CSSTransitionPropertySettings {
   double duration;
-  EasingFunction easingFunction;
+  std::shared_ptr<Easing> easing;
   double delay;
   bool allowDiscrete;
 };

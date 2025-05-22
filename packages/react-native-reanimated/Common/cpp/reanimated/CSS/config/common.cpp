@@ -6,10 +6,10 @@ double parseDuration(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "duration").asNumber();
 }
 
-EasingFunction parseTimingFunction(
+std::shared_ptr<Easing> parseTimingFunction(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return createEasingFunction(rt, config.getProperty(rt, "timingFunction"));
+  return createEasing(rt, config.getProperty(rt, "timingFunction"));
 }
 
 double parseDelay(jsi::Runtime &rt, const jsi::Object &config) {
