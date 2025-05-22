@@ -1,6 +1,7 @@
 /* eslint-disable n/no-callback-literal */
 'use strict';
 
+import type { ViewProps } from 'react-native';
 import {
   Animated as AnimatedRN,
   Image as ImageRN,
@@ -491,3 +492,18 @@ module.exports = {
   ...Reanimated,
   default: Animated,
 };
+
+// Mock ReanimatedView
+jest.mock(
+  'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
+  () => {
+    return function ReanimatedViewMock(props: ViewProps) {
+      return props.children;
+    };
+  }
+);
+jest.mock('react-native-reanimated/src/specs/ReanimatedNativeComponent', () => {
+  return function ReanimatedViewMock(props: ViewProps) {
+    return props.children;
+  };
+});

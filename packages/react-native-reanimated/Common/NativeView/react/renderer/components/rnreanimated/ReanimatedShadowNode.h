@@ -1,11 +1,12 @@
 #pragma once
 
-#include <jsi/jsi.h>
 #include <react/renderer/components/rnreanimated/EventEmitters.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/rnreanimated/ReanimatedViewState.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
 #include <react/renderer/core/LayoutContext.h>
+
+#include <jsi/jsi.h>
 
 namespace facebook::react {
 

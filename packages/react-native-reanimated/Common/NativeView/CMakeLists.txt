@@ -18,6 +18,11 @@ file(
   ${CODEGEN_OVERWRITTEN_COMPONENTS_DIR}/*.cpp
 )
 
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+find_package(react-native-worklets REQUIRED CONFIG)
+find_package(react-native-reanimated REQUIRED CONFIG)
+
 add_library(
   react_codegen_rnreanimated
   OBJECT
@@ -32,13 +37,18 @@ target_include_directories(
   ${CODEGEN_OVERWRITTEN_COMPONENTS_DIR}
   ${CODEGEN_JNI_DIR}
   ${CODEGEN_COMPONENTS_DIR}
+  ${REACT_COMMON_DIR}
 )
 
 target_link_libraries(
   react_codegen_rnreanimated
+  log
+  ReactAndroid::jsi
+  ReactAndroid::reactnative
   fbjni
   jsi
-  reactnative
+  react-native-reanimated::reanimated
+  react-native-worklets::worklets
 )
 
 target_compile_options(
