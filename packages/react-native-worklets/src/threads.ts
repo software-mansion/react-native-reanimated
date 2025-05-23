@@ -132,6 +132,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
             // eslint-disable-next-line @typescript-eslint/no-shadow
             queue.forEach(([worklet, args]) => {
               worklet(...args);
+              callMicrotasks();
             });
             callMicrotasks();
           })
@@ -154,6 +155,8 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(() => {
         'worklet';
         const result = worklet(...args);
+        // The line below crashes the app.
+        // callMicrotasks();
         return makeShareableCloneOnUIRecursive(result);
       })
     );
