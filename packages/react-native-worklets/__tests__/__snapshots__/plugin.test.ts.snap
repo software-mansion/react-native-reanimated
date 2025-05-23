@@ -3750,8 +3750,10 @@ var foo = function foo_null1Factory(_ref) {
 `;
 
 exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
-"var foo = function foo_null1Factory(_ref) {
-  var _worklet_7087145691632_init_data = _ref._worklet_7087145691632_init_data;
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var _objectDestructuringEmpty2 = _interopRequireDefault(require("@babel/runtime/helpers/objectDestructuringEmpty"));
+var foo = function foo_null1Factory(_ref) {
+  (0, _objectDestructuringEmpty2.default)(_ref);
   var _e = [new global.Error(), 1, -27];
   var foo = function foo() {
     var foo = 'bar';
@@ -3760,9 +3762,7 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
   foo.__workletHash = 7087145691632;
   foo.__stackDetails = _e;
   return foo;
-}({
-  _worklet_7087145691632_init_data: _worklet_7087145691632_init_data
-});"
+}({});"
 `;
 
 exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
