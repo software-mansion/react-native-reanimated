@@ -24,13 +24,18 @@
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint --ignore-path .gitignore --ignore-path .eslintignore --ignore-path .prettiereslintignore . && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
+    "lint:root": "eslint --ignore-pattern .gitignore --ignore-pattern .eslintignore --ignore-pattern .prettiereslintignore . && yarn prettier --check --ignore-pattern .gitignore --ignore-pattern .prettierignore --ignore-pattern .prettiereslintignore ."
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.9",
     "@types/shelljs": "^0.8.15",
-    "eslint": "^8.57.0",
+    "eslint": "^9.26.0",
     "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-jsdoc": "^50.2.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-jsdoc": "^50.6.17",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
