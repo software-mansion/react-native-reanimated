@@ -44,7 +44,7 @@ export function createWorkletRuntime(
 ): WorkletRuntime {
   // Assign to a different variable as __workletsLoggerConfig is not a captured
   // identifier in the Worklet runtime.
-  const config = __workletsLoggerConfig;
+  const config = globalThis.__workletsLoggerConfig;
 
   const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
