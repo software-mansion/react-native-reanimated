@@ -9,11 +9,9 @@ ReanimatedShadowNode::ReanimatedShadowNode(
     const ShadowNodeFamily::Shared &family,
     ShadowNodeTraits traits)
     : ReanimatedViewShadowNodeBase(fragment, family, traits) {
-  const auto &newProps =
+  const auto &props =
       static_cast<const ReanimatedNodeProps &>(*this->getProps());
-
-  const auto &state = getStateData();
-  state.cssAnimationsManager->update(ReanimatedNodeProps(), newProps);
+  onMount(props);
 }
 
 ReanimatedShadowNode::ReanimatedShadowNode(
@@ -25,13 +23,24 @@ ReanimatedShadowNode::ReanimatedShadowNode(
   const auto &newProps =
       static_cast<const ReanimatedNodeProps &>(*this->getProps());
 
+  if (&oldProps != &newProps) {
+    onPropsChange(oldProps, newProps);
+  }
+}
+
+void ReanimatedShadowNode::onMount(const ReanimatedNodeProps &props) {
+  const auto &state = getStateData();
+  state.cssAnimationsManager->update(ReanimatedNodeProps(), props);
+}
+
+void ReanimatedShadowNode::onUnmount() {}
+
+void ReanimatedShadowNode::onPropsChange(
+    const ReanimatedNodeProps &oldProps,
+    const ReanimatedNodeProps &newProps) {
   const auto &state = getStateData();
   state.cssAnimationsManager->update(oldProps, newProps);
   state.cssTransitionManager->update(oldProps, newProps);
-}
-
-void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
-  YogaLayoutableShadowNode::layout(layoutContext);
 }
 
 } // namespace facebook::react

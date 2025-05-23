@@ -29,7 +29,13 @@ class ReanimatedShadowNode final
       const ShadowNode &sourceShadowNode,
       const ShadowNodeFragment &fragment);
 
-  void layout(LayoutContext layoutContext) override;
+ private:
+  void onMount(const ReanimatedNodeProps &props);
+  void onUnmount();
+
+  void onPropsChange(
+      const ReanimatedNodeProps &oldProps,
+      const ReanimatedNodeProps &newProps);
 };
 
 } // namespace facebook::react
