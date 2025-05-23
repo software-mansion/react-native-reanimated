@@ -34,6 +34,7 @@ function isHostObject(value: NonNullable<object>) {
 }
 
 function isPlainJSObject(object: object): object is Record<string, unknown> {
+  'worklet';
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
