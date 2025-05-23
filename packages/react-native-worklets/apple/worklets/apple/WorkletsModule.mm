@@ -36,10 +36,12 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
 - (void)setScriptBuffer:(NSBigStringBuffer *)script
 {
   script_ = [script getBuffer];
 }
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
 - (void)setSourceURL:(const std::string &)sourceURL
 {
