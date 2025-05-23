@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useSharedValue retains value on rerender 1`] = `
+<View
+  collapsable={false}
+  jestAnimatedProps={
+    {
+      "value": {},
+    }
+  }
+  jestAnimatedStyle={
+    {
+      "value": {},
+    }
+  }
+  jestInlineStyle={
+    {
+      "opacity": 1,
+    }
+  }
+  style={
+    [
+      {
+        "opacity": 1,
+      },
+    ]
+  }
+  testID="AnimatedView"
+/>
+`;

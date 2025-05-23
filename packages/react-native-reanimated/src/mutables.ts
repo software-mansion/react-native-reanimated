@@ -2,7 +2,7 @@
 import type { Mutable } from './commonTypes';
 import { ReanimatedError } from './errors';
 import { logger } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
@@ -10,6 +10,8 @@ import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+const IS_JEST = isJest();
 
 function shouldWarnAboutAccessDuringRender() {
   return __DEV__ && isReactRendering() && !isFirstReactRender();
@@ -199,6 +201,10 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   return mutable as Mutable<Value>;
 }
 
+interface JestMutable<TValue> extends Mutable<TValue> {
+  toJSON: () => string;
+}
+
 function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
   const listeners = new Map<number, Listener<Value>>();
@@ -243,9 +249,21 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
+  if (IS_JEST) {
+    (mutable as JestMutable<Value>).toJSON = () => mutableToJSON(value);
+  }
+
   return mutable as Mutable<Value>;
 }
 
 export const makeMutable = SHOULD_BE_USE_WEB
   ? makeMutableWeb
   : makeMutableNative;
+
+interface JestMutable<TValue> extends Mutable<TValue> {
+  toJSON: () => string;
+}
+
+function mutableToJSON<TValue>(value: TValue): string {
+  return JSON.stringify(value);
+}

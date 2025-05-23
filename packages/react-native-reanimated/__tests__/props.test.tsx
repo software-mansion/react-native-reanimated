@@ -133,6 +133,9 @@ describe('Test of boxShadow prop', () => {
     jest.advanceTimersByTime(600);
     style.boxShadow = '0px 4px 0px 0px rgba(0, 0, 255, 1)';
     expect(pressable).toHaveAnimatedStyle(style);
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('boxShadow string without spread', () => {
@@ -166,6 +169,9 @@ describe('Test of boxShadow prop', () => {
     expect((style as ViewStyle).boxShadow).toBe(
       '0px 4px 0px 0px rgba(0, 0, 255, 1)'
     );
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
   test('one boxShadow string parsing', () => {
     const { getByTestId } = render(<AnimatedComponent />);
@@ -196,6 +202,9 @@ describe('Test of boxShadow prop', () => {
     expect((style as ViewStyle).boxShadow).toBe(
       '0px 4px 10px 0px rgba(255, 0, 0, 1)'
     );
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('two boxShadows string parsing', () => {

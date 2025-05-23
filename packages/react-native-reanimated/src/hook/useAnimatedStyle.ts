@@ -592,9 +592,18 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   if (!animatedStyleHandle.current) {
     animatedStyleHandle.current = isJest()
-      ? { viewDescriptors, initial, jestAnimatedValues }
+      ? {
+          viewDescriptors,
+          initial,
+          jestAnimatedValues,
+          toJSON: animatedStyleHandleToJSON,
+        }
       : { viewDescriptors, initial };
   }
 
   return animatedStyleHandle.current;
+}
+
+function animatedStyleHandleToJSON(): string {
+  return '{}';
 }

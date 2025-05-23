@@ -29,6 +29,7 @@ import {
 import { ReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimateProps } from '../helperTypes';
+import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import { SharedTransition } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
@@ -680,7 +681,8 @@ export function createAnimatedComponent(
 
       const jestProps = IS_JEST
         ? {
-            jestInlineStyle: this.props.style,
+            jestInlineStyle:
+              this.props.style && filterOutAnimatedStyles(this.props.style),
             jestAnimatedStyle: this.jestAnimatedStyle,
             jestAnimatedProps: this.jestAnimatedProps,
           }
@@ -720,4 +722,25 @@ export function createAnimatedComponent(
     Component.displayName || Component.name || 'Component';
 
   return animatedComponent;
+}
+
+function filterOutAnimatedStyles(
+  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
+): NestedArray<StyleProps | null | undefined> {
+  if (!style) {
+    return style;
+  }
+  if (!Array.isArray(style)) {
+    return style?.viewDescriptors ? {} : style;
+  }
+  return style
+    .filter(
+      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
+    )
+    .map((styleElement) => {
+      if (Array.isArray(styleElement)) {
+        return filterOutAnimatedStyles(styleElement);
+      }
+      return styleElement;
+    });
 }
