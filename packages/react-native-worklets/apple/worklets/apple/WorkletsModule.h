@@ -7,17 +7,20 @@
 #import <worklets/NativeModules/WorkletsModuleProxy.h>
 
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-#import <ReactCommon/NSBigStringBuffer.h>
+#import <React/NSBigStringBuffer.h>
+#import <React/RCTBundleConsumer.h>
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
-@interface WorkletsModule : RCTEventEmitter <NativeWorkletsModuleSpec, RCTCallInvokerModule, RCTInvalidating>
+@interface WorkletsModule : RCTEventEmitter <
+                                NativeWorkletsModuleSpec,
+                                RCTCallInvokerModule,
+                                RCTInvalidating
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+                                ,
+                                RCTBundleConsumer
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+                                >
 
 - (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
-
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-- (void)setScriptBuffer:(NSBigStringBuffer *)script;
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
-
-- (void)setSourceURL:(const std::string &)sourceURL;
 
 @end
