@@ -117,14 +117,17 @@ const notCapturedIdentifiers = [
   // Hermes
   'HermesInternal',
 
-  // Reanimated
-  'ReanimatedError',
-
   // Worklets
   '_WORKLET',
-  'WorkletsError',
-  '__workletsLoggerConfig',
 ];
+
+export const outsideBindingsToCaptureFromGlobalScope = new Set([
+  'ReanimatedError',
+]);
+
+export const internalBindingsToCaptureFromGlobalScope = new Set([
+  'WorkletsError',
+]);
 
 /**
  * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
@@ -134,23 +137,7 @@ const notCapturedIdentifiers = [
  *   `_WORKLET` is the only exception since it's a part of the public API.
  */
 // eslint-disable-next-line camelcase
-const notCapturedIdentifiers_DEPRECATED = [
-  // Reanimated
-  '_IS_FABRIC',
-  '_log',
-  '_toString',
-  '_scheduleHostFunctionOnJS',
-  '_scheduleRemoteFunctionOnJS',
-  '_scheduleOnRuntime',
-  '_makeShareableClone',
-  '_updateProps',
-  '_measure',
-  '_dispatchCommand',
-  '_setGestureState',
-  '_notifyAboutProgress',
-  '_notifyAboutEnd',
-  '_getAnimationTimestamp',
-];
+const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 
 export function initializeState(state: ReanimatedPluginPass) {
   state.workletNumber = 1;

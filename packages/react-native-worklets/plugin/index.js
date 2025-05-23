@@ -305,7 +305,7 @@ var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.addCustomGlobals = exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = exports2.initializeState = void 0;
+    exports2.addCustomGlobals = exports2.initializeGlobals = exports2.globals = exports2.defaultGlobals = exports2.initializeState = exports2.internalBindingsToCaptureFromGlobalScope = exports2.outsideBindingsToCaptureFromGlobalScope = void 0;
     var notCapturedIdentifiers = [
       "globalThis",
       "Infinity",
@@ -388,27 +388,15 @@ var require_globals = __commonJS({
       "arguments",
       "require",
       "HermesInternal",
-      "ReanimatedError",
-      "_WORKLET",
-      "WorkletsError",
-      "__workletsLoggerConfig"
+      "_WORKLET"
     ];
-    var notCapturedIdentifiers_DEPRECATED = [
-      "_IS_FABRIC",
-      "_log",
-      "_toString",
-      "_scheduleHostFunctionOnJS",
-      "_scheduleRemoteFunctionOnJS",
-      "_scheduleOnRuntime",
-      "_makeShareableClone",
-      "_updateProps",
-      "_measure",
-      "_dispatchCommand",
-      "_setGestureState",
-      "_notifyAboutProgress",
-      "_notifyAboutEnd",
-      "_getAnimationTimestamp"
-    ];
+    exports2.outsideBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
+      "ReanimatedError"
+    ]);
+    exports2.internalBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
+      "WorkletsError"
+    ]);
+    var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
@@ -458,13 +446,16 @@ var require_closure = __commonJS({
           if (capturedNames.has(name)) {
             return;
           }
-          if (globals_12.globals.has(name)) {
-            return;
-          }
           const binding = idPath.scope.getBinding(name);
           if (!binding) {
+            if (globals_12.globals.has(name)) {
+              return;
+            }
             capturedNames.add(name);
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
+            return;
+          }
+          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.experimentalBundling && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
             return;
           }
           if ("id" in funPath.node) {
