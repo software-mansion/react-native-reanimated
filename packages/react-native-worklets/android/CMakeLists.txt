@@ -25,6 +25,9 @@ endif()
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
+if(${WORKLETS_EXPERIMENTAL_BUNDLING})
+  string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_EXPERIMENTAL_BUNDLING")
+endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
@@ -75,7 +78,8 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
+          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
   target_include_directories(

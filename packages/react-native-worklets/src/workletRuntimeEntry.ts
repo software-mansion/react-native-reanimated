@@ -17,6 +17,7 @@ import type { ValueUnpacker } from './workletTypes';
  * This function has no effect on the RN Runtime.
  */
 export function initializeLibraryOnWorkletRuntime() {
+  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
   if (globalThis._WORKLET) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
 

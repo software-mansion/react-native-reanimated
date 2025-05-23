@@ -33,7 +33,7 @@ inline jsi::Value runOnRuntimeGuarded(
   return getCallGuard(rt).call(rt, function, args...);
 #else
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+#endif // NDEBUG
 }
 
 inline void cleanupIfRuntimeExists(
