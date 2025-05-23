@@ -527,7 +527,7 @@ var require_generate = __commonJS({
     var fs_1 = require("fs");
     var path_1 = require("path");
     var types_2 = require_types();
-    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, shouldIncludeInitData, state) {
+    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, state) {
       var _a;
       const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
@@ -564,11 +564,6 @@ var require_generate = __commonJS({
       try {
         (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
       } catch (_e) {
-      }
-      if (shouldIncludeInitData) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
       }
       pathForStringDefinitions.parentPath.scope.crawl();
     }
@@ -855,8 +850,7 @@ var require_workletFactory = __commonJS({
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-      if (state.opts.experimentalBundling) {
-      } else if (shouldIncludeInitData) {
+      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
         pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]));
@@ -884,22 +878,22 @@ var require_workletFactory = __commonJS({
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
       }
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
-      const factoryParams = [
-        (0, types_12.cloneNode)(initDataId, true),
-        ...closureVariables.map((variableId) => {
-          const clonedId = (0, types_12.cloneNode)(variableId, true);
-          if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
-            clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
-          }
-          return clonedId;
-        })
-      ];
+      const factoryParams = closureVariables.map((variableId) => {
+        const clonedId = (0, types_12.cloneNode)(variableId, true);
+        if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+          clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
+        }
+        return clonedId;
+      });
+      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+        factoryParams.unshift((0, types_12.cloneNode)(initDataId, true));
+      }
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       if (state.opts.experimentalBundling) {
-        (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, shouldIncludeInitData, state);
+        (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, state);
       }
       factory.workletized = true;
       return { factory, factoryCallParamPack, workletHash };

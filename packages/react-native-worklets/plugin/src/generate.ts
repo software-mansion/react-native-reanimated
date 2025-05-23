@@ -33,7 +33,6 @@ export function generateWorkletFile(
   factory: FunctionExpression,
   workletHash: number,
   pathForStringDefinitions: NodePath<ExpressionStatement>,
-  shouldIncludeInitData: boolean,
   state: ReanimatedPluginPass
 ) {
   const libraryImports = Array.from(libraryBindingsToImport)
@@ -112,14 +111,6 @@ export function generateWorkletFile(
     writeFileSync(dedicatedFilePath, transformedProg);
   } catch (_e) {
     // Nothing.
-  }
-
-  if (shouldIncludeInitData) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
   }
 
   pathForStringDefinitions.parentPath.scope.crawl();
