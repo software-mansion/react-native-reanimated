@@ -61,13 +61,13 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
   return shadowNode.clone(
       {mergeProps(shadowNode, propsMap, *family),
        std::make_shared<ShadowNode::ListOfShared>(children),
-       shadowNode.getState()});
+       shadowNode.getState(),
+       false});
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap,
-    std::vector<Tag> &tagsToRemove) {
+    const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
@@ -77,11 +77,6 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 
     for (auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);
-      if (ancestors.empty()) {
-        // no ancestors means that there is no shadowNode from
-        // this family in the ShadowTree - we can safely cleanup the registry
-        tagsToRemove.push_back(family->getTag());
-      }
 
       for (const auto &[parentNode, index] :
            std::ranges::reverse_view(ancestors)) {

@@ -16,10 +16,9 @@ void UIRuntimeDecorator::decorate(
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
     const EndLayoutAnimationFunction endLayoutAnimation,
     const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
-  jsi_utils::installJsiFunction(uiRuntime, "_updatePropsFabric", updateProps);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_dispatchCommandFabric", dispatchCommand);
-  jsi_utils::installJsiFunction(uiRuntime, "_measureFabric", measure);
+  jsi_utils::installJsiFunction(uiRuntime, "_updateProps", updateProps);
+  jsi_utils::installJsiFunction(uiRuntime, "_dispatchCommand", dispatchCommand);
+  jsi_utils::installJsiFunction(uiRuntime, "_measure", measure);
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
@@ -47,8 +46,7 @@ void UIRuntimeDecorator::decorate(
               0,
               jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
 
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_obtainPropFabric", obtainPropFunction);
+  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
 }
 
 } // namespace reanimated

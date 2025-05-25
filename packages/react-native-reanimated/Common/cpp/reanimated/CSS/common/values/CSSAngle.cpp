@@ -1,6 +1,6 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSAngle::CSSAngle() : value(0) {}
 
@@ -85,4 +85,4 @@ std::ostream &operator<<(std::ostream &os, const CSSAngle &angleValue) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
+} // namespace reanimated::css

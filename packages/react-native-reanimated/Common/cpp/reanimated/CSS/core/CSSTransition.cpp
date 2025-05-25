@@ -1,6 +1,6 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSTransition::CSSTransition(
     ShadowNode::Shared shadowNode,
@@ -31,6 +31,10 @@ TransitionProgressState CSSTransition::getState() const {
 
 folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
   return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+}
+
+TransitionProperties CSSTransition::getProperties() const {
+  return properties_;
 }
 
 PropertyNames CSSTransition::getAllowedProperties(
@@ -134,4 +138,4 @@ bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
   return propertySettings.value().allowDiscrete;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

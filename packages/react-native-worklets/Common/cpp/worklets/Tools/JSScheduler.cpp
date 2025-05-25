@@ -1,5 +1,7 @@
 #include <worklets/Tools/JSScheduler.h>
 
+#include <utility>
+
 namespace worklets {
 
 void JSScheduler::scheduleOnJS(Job job) {

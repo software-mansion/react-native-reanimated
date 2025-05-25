@@ -6,21 +6,15 @@ import {
   parseTimingFunction,
 } from '../platform/web';
 import type { CSSTransitionProperties } from '../types';
+import type { ICSSTransitionsManager } from '../types/interfaces';
 import { kebabizeCamelCase } from '../utils';
 
-export default class CSSTransitionsManager {
+export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly element: ReanimatedHTMLElement;
+  private isAttached = false;
 
   constructor(element: ReanimatedHTMLElement) {
     this.element = element;
-  }
-
-  attach(transitionProperties: CSSTransitionProperties | null) {
-    if (!transitionProperties) {
-      return;
-    }
-
-    this.update(transitionProperties);
   }
 
   update(transitionProperties: CSSTransitionProperties | null) {
@@ -30,9 +24,18 @@ export default class CSSTransitionsManager {
     }
 
     this.setElementTransition(transitionProperties);
+    this.isAttached = true;
   }
 
-  detach() {
+  unmountCleanup() {
+    // noop
+  }
+
+  private detach() {
+    if (!this.isAttached) {
+      return;
+    }
+
     this.element.style.transition = '';
     this.element.style.transitionProperty = '';
     this.element.style.transitionDuration = '';
@@ -40,6 +43,8 @@ export default class CSSTransitionsManager {
     this.element.style.transitionTimingFunction = '';
     // @ts-ignore this is correct
     this.element.style.transitionBehavior = '';
+
+    this.isAttached = false;
   }
 
   private setElementTransition(transitionProperties: CSSTransitionProperties) {

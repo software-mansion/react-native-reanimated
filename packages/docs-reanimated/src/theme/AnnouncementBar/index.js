@@ -32,9 +32,9 @@ function AnnouncementBar() {
     return null;
   }
 
-  // hide announcement bar after 14.02.2025
+  // hide announcement bar after 01.06.2025
   const today = new Date();
-  const hideAfter = new Date('2025-02-14T00:00:00.000Z');
+  const hideAfter = new Date('2025-06-01T00:00:00.000Z');
   if (today > hideAfter) {
     return null;
   }

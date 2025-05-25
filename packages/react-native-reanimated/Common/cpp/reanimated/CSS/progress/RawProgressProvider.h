@@ -4,7 +4,7 @@
 #include <optional>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class RawProgressProvider {
  public:
@@ -31,4 +31,4 @@ class RawProgressProvider {
   virtual std::optional<double> calculateRawProgress(double timestamp) = 0;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

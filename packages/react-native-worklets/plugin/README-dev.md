@@ -105,7 +105,7 @@ Some use cases might've been overlooked and on the other hand - some might work 
 
 ## Plugin's applications
 
-To get some more information about certain edge cases or use cases not listed here, try looking them up in our [tests](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/__tests__/plugin.test.ts).
+To get some more information about certain edge cases or use cases not listed here, try looking them up in our [tests](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/__tests__/plugin.test.ts).
 
 ### What can be a worklet?
 

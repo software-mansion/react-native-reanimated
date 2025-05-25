@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const InterpolatorFactoriesArray &factories,
@@ -64,9 +64,9 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
     interpolators_[i]->updateKeyframesFromStyleChange(
-        i < oldSize ? oldStyleArray.at(i) : empty,
-        i < newSize ? newStyleArray.at(i) : empty,
-        i < valuesCount ? lastUpdateArray.at(i) : empty);
+        i < oldSize ? oldStyleArray[i] : empty,
+        i < newSize ? newStyleArray[i] : empty,
+        i < valuesCount ? lastUpdateArray[i] : empty);
   }
 }
 
@@ -97,4 +97,4 @@ void ArrayPropertiesInterpolator::resizeInterpolators(size_t valuesCount) {
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

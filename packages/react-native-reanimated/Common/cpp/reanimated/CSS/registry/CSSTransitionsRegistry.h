@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class CSSTransitionsRegistry
     : public UpdatesRegistry,
@@ -24,13 +24,12 @@ class CSSTransitionsRegistry
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
-  bool hasUpdates() const;
   bool isEmpty() const override;
+  bool hasUpdates() const;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
-  void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void remove(Tag viewTag) override;
 
   void update(double timestamp);
 
@@ -49,6 +48,9 @@ class CSSTransitionsRegistry
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
+  void updateInUpdatesRegistry(
+      const std::shared_ptr<CSSTransition> &transition,
+      const folly::dynamic &updates);
 };
 
-} // namespace reanimated
+} // namespace reanimated::css

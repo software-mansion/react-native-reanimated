@@ -11,10 +11,9 @@ on:
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/fabric-example/ios/**
+      - apps/fabric-example/**
   merge_group:
     branches:
       - main
@@ -29,20 +28,18 @@ on:
       - packages/react-native-reanimated/Common/**
       - packages/react-native-worklets/RNWorklets.podspec
       - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/android/**
+      - packages/react-native-worklets/apple/**
       - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/fabric-example/ios/**
+      - apps/fabric-example/**
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-ios-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/fabric-example
-      COMMON_APP_DIR: apps/common-app
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
       group: ios-${{ github.ref }}
@@ -70,4 +67,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn react-native run-ios --no-packager
+        run: yarn react-native run-ios --no-packager --scheme "Debug FabricExample"

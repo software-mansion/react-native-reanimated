@@ -29,12 +29,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-android-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: apps/fabric-example
-      COMMON_APP_DIR: apps/common-app
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
       group: android-${{ github.ref }}

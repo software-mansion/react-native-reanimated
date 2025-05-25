@@ -5,10 +5,10 @@
 
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 EasingFunction steps(
     const std::vector<double> &pointsX,
     const std::vector<double> &pointsY);
 
-} // namespace reanimated
+} // namespace reanimated::css

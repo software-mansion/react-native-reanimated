@@ -80,7 +80,14 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &viewStyle) = 0;
-  virtual void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
+
+  // Cleanup
+  virtual void markNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper) = 0;
+  virtual void unmarkNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag) = 0;
 
   // CSS animation keyframes
   virtual void registerCSSKeyframes(
@@ -92,14 +99,10 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &animationName) = 0;
 
   // CSS animations
-  virtual void registerCSSAnimations(
+  virtual void applyCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationConfigs) = 0;
-  virtual void updateCSSAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &settingsUpdates) = 0;
+      const jsi::Value &animationUpdates) = 0;
   virtual void unregisterCSSAnimations(const jsi::Value &viewTag) = 0;
 
   // CSS transitions

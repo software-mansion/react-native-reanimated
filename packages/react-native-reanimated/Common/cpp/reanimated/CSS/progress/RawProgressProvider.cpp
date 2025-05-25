@@ -1,6 +1,6 @@
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 RawProgressProvider::RawProgressProvider(
     const double timestamp,
@@ -9,12 +9,10 @@ RawProgressProvider::RawProgressProvider(
     : duration_(duration), delay_(delay), creationTimestamp_(timestamp) {}
 
 void RawProgressProvider::setDuration(double duration) {
-  resetProgress();
   duration_ = duration;
 }
 
 void RawProgressProvider::setDelay(double delay) {
-  resetProgress();
   delay_ = delay;
 }
 
@@ -43,4 +41,4 @@ void RawProgressProvider::update(const double timestamp) {
   }
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

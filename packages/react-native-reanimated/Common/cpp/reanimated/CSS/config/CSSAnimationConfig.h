@@ -8,8 +8,10 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class AnimationDirection { Normal, Reverse, Alternate, AlternateReverse };
 enum class AnimationFillMode { None, Forwards, Backwards, Both };
@@ -25,11 +27,6 @@ struct CSSAnimationSettings {
   AnimationPlayState playState;
 };
 
-struct CSSAnimationConfig {
-  std::string animationName;
-  CSSAnimationSettings settings;
-};
-
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
   std::optional<EasingFunction> easingFunction;
@@ -40,24 +37,19 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings);
+using CSSAnimationSettingsMap =
+    std::unordered_map<size_t, CSSAnimationSettings>;
+using CSSAnimationSettingsUpdatesMap =
+    std::unordered_map<size_t, PartialCSSAnimationSettings>;
 
-AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &settings);
+struct CSSAnimationUpdates {
+  std::optional<std::vector<std::string>> animationNames;
+  CSSAnimationSettingsMap newAnimationSettings;
+  CSSAnimationSettingsUpdatesMap settingsUpdates;
+};
 
-AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &settings);
-
-AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings);
-
-CSSAnimationSettings parseCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &settings);
-
-CSSAnimationConfig parseCSSAnimationConfig(
+CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
     const jsi::Value &config);
 
-PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &partialSettings);
-
-} // namespace reanimated
+} // namespace reanimated::css

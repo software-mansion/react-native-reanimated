@@ -5,6 +5,8 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 
+#include <memory>
+
 namespace worklets {
 
 using namespace facebook;

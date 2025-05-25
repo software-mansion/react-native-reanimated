@@ -1,27 +1,30 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { CSSKeyframesRuleImpl } from '../models';
-import type { NormalizedSingleCSSAnimationSettings } from '../platform/native';
+import type {
+  CSSAnimationUpdates,
+  NormalizedSingleCSSAnimationSettings,
+} from '../platform/native';
 import {
+  applyCSSAnimations,
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
-  registerCSSAnimations,
   unregisterCSSAnimations,
-  updateCSSAnimations,
 } from '../platform/native';
 import { CSSKeyframesRegistry } from '../registry';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
 } from '../types';
+import type { ICSSAnimationsManager } from '../types/interfaces';
 
-export type ProcessedAnimation = {
+type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
   keyframesRule: CSSKeyframesRuleImpl;
 };
 
-export default class CSSAnimationsManager {
+export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
@@ -33,66 +36,44 @@ export default class CSSAnimationsManager {
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  detach() {
-    if (this.attachedAnimations.length > 0) {
-      unregisterCSSAnimations(this.viewTag);
-      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
-      });
-      this.attachedAnimations = [];
-    }
-  }
-
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
     }
 
-    const [processedAnimations, areAllEqual] =
-      this.processAnimations(animationProperties);
+    const processedAnimations = this.processAnimations(animationProperties);
+    this.registerKeyframesUsage(processedAnimations);
 
-    // Attach new animations if there are no attached animations or if
-    // the array of animations is different (e.g. length or order)
-    if (!areAllEqual) {
-      // We don't need to detach the old animations because CPP will
-      // override them with new ones
-      this.attachAnimations(processedAnimations);
-      return;
-    }
+    const animationUpdates = this.getAnimationUpdates(processedAnimations);
+    this.attachedAnimations = processedAnimations;
 
-    // Update existing animations if all animations are the same but some
-    // of the animation settings are different
-    const settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[] = [];
-
-    for (let i = 0; i < processedAnimations.length; i++) {
-      const updates = getAnimationSettingsUpdates(
-        this.attachedAnimations[i].normalizedSettings,
-        processedAnimations[i].normalizedSettings
-      );
-      if (Object.keys(updates).length > 0) {
-        this.attachedAnimations[i].normalizedSettings =
-          processedAnimations[i].normalizedSettings;
-        settingsUpdates.push({ index: i, settings: updates });
+    if (animationUpdates) {
+      if (
+        animationUpdates.animationNames &&
+        animationUpdates.animationNames.length === 0
+      ) {
+        this.detach();
+        return;
       }
-    }
-    if (settingsUpdates.length > 0) {
-      updateCSSAnimations(this.viewTag, settingsUpdates);
+
+      applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
     }
   }
 
-  private attachAnimations(processedAnimations: ProcessedAnimation[]) {
-    if (processedAnimations.length === 0) {
-      this.detach();
-      return;
-    }
+  unmountCleanup(): void {
+    this.unregisterKeyframesUsage();
+  }
 
+  private detach() {
+    if (this.attachedAnimations.length > 0) {
+      unregisterCSSAnimations(this.viewTag);
+      this.unregisterKeyframesUsage();
+      this.attachedAnimations = [];
+    }
+  }
+
+  private registerKeyframesUsage(processedAnimations: ProcessedAnimation[]) {
     const newAnimationNames = new Set();
 
     // Register keyframes for all new animations
@@ -114,27 +95,24 @@ export default class CSSAnimationsManager {
         );
       }
     });
+  }
 
-    this.attachedAnimations = processedAnimations;
-
-    registerCSSAnimations(
-      this.shadowNodeWrapper,
-      processedAnimations.map(
-        ({ keyframesRule: { name }, normalizedSettings }) => ({
-          name,
-          settings: normalizedSettings,
-        })
-      )
-    );
+  private unregisterKeyframesUsage() {
+    // Unregister keyframes usage by the view (it is necessary to clean up
+    // keyframes from the CPP registry once all views that use them are unmounted)
+    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+      CSSAnimationsManager.animationKeyframesRegistry.remove(
+        name,
+        this.viewTag
+      );
+    });
   }
 
   private processAnimations(
     animationProperties: ExistingCSSAnimationProperties
-  ): [ProcessedAnimation[], boolean] {
+  ): ProcessedAnimation[] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
-    let areAllEqual =
-      this.attachedAnimations.length === singleAnimationPropertiesArray.length;
 
     const processedAnimations = singleAnimationPropertiesArray.map(
       (properties, i) => {
@@ -147,12 +125,6 @@ export default class CSSAnimationsManager {
           // to preserve the same animation. If used inline, it will restart the animation
           // on every component re-render)
           keyframesRule = keyframes;
-          if (
-            areAllEqual &&
-            keyframes !== this.attachedAnimations[i]?.keyframesRule
-          ) {
-            areAllEqual = false;
-          }
         } else if (
           this.attachedAnimations[i]?.keyframesRule.cssText !==
           JSON.stringify(keyframes)
@@ -165,7 +137,6 @@ export default class CSSAnimationsManager {
           keyframesRule = new CSSKeyframesRuleImpl(
             keyframes as CSSAnimationKeyframes
           );
-          areAllEqual = false;
         } else {
           // Otherwise, if keyframes are the same, we can just use the existing keyframes rule
           // instance
@@ -179,6 +150,87 @@ export default class CSSAnimationsManager {
       }
     );
 
-    return [processedAnimations, areAllEqual];
+    return processedAnimations;
+  }
+
+  private buildAnimationsMap(animations: ProcessedAnimation[]) {
+    // Iterate over attached animations from last to first for faster pop from
+    // the end of the array when removing used animations
+    return animations.reduceRight<Record<string, ProcessedAnimation[]>>(
+      (acc, animation) => {
+        const name = animation.keyframesRule.name;
+        if (!acc[name]) {
+          acc[name] = [animation];
+        } else {
+          acc[name].push(animation);
+        }
+        return acc;
+      },
+      {}
+    );
+  }
+
+  private getAnimationUpdates(
+    processedAnimations: ProcessedAnimation[]
+  ): CSSAnimationUpdates | null {
+    const newAnimationSettings: Record<
+      number,
+      NormalizedSingleCSSAnimationSettings
+    > = {};
+    const settingsUpdates: Record<
+      number,
+      Partial<NormalizedSingleCSSAnimationSettings>
+    > = {};
+
+    let animationsArrayChanged =
+      this.attachedAnimations.length !== processedAnimations.length;
+    let hasNewAnimations = false;
+    let hasSettingsUpdates = false;
+
+    const oldAnimations = this.buildAnimationsMap(this.attachedAnimations);
+
+    processedAnimations.forEach(({ keyframesRule, normalizedSettings }, i) => {
+      const oldAnimation = oldAnimations[keyframesRule.name]?.pop();
+
+      if (!oldAnimation) {
+        hasNewAnimations = true;
+        animationsArrayChanged = true;
+        newAnimationSettings[i] = normalizedSettings;
+        return;
+      }
+
+      const updates = getAnimationSettingsUpdates(
+        oldAnimation.normalizedSettings,
+        normalizedSettings
+      );
+
+      if (Object.keys(updates).length > 0) {
+        hasSettingsUpdates = true;
+        settingsUpdates[i] = updates;
+      }
+
+      if (oldAnimation.keyframesRule.name !== keyframesRule.name) {
+        animationsArrayChanged = true;
+      }
+    });
+
+    const result: CSSAnimationUpdates = {};
+    if (animationsArrayChanged) {
+      result.animationNames = processedAnimations.map(
+        ({ keyframesRule }) => keyframesRule.name
+      );
+    }
+    if (hasNewAnimations) {
+      result.newAnimationSettings = newAnimationSettings;
+    }
+    if (hasSettingsUpdates) {
+      result.settingsUpdates = settingsUpdates;
+    }
+
+    if (hasNewAnimations || hasSettingsUpdates || animationsArrayChanged) {
+      return result;
+    }
+
+    return null;
   }
 }

@@ -1,10 +1,13 @@
 'use strict';
-import { IS_ANDROID } from '../../constants';
+import {
+  IS_ANDROID,
+  processBoxShadow,
+  processTransformOrigin,
+} from '../../../common';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';
 import {
   processAspectRatio,
-  processBoxShadow,
   processColor,
   processFontWeight,
   processGap,
@@ -12,7 +15,6 @@ import {
   processInsetBlock,
   processInsetInline,
   processTransform,
-  processTransformOrigin,
 } from './style';
 
 const colorAttributes = { process: processColor };
@@ -184,12 +186,6 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },
   transform: { process: processTransform },
-  transformMatrix: false, // deprecated
-  rotation: false, // deprecated
-  scaleX: false, // deprecated
-  scaleY: false, // deprecated
-  translateX: false, // deprecated
-  translateY: false, // deprecated
 
   // OTHERS
   backfaceVisibility: true,

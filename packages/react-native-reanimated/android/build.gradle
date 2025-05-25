@@ -27,7 +27,12 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
@@ -207,10 +212,10 @@ android {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
-                def monorepoDir = new File("${project.projectDir}/../../..")
+                def packageDir = new File("${project.projectDir}/..")
 
                 def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
-                def output = new File("${monorepoDir}/compile_commands.json")
+                def output = new File("${packageDir}/compile_commands.json")
 
                 output.text = generated.text
 
@@ -229,6 +234,15 @@ task assertMinimalReactNativeVersionTask {
 }
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
+
+task assertNewArchitectureEnabledTask {
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
+    doFirst {
+        throw new GradleException("[Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")

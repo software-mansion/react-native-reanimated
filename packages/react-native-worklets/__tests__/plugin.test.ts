@@ -537,6 +537,7 @@ describe('babel plugin', () => {
 
     it('workletizes getter', () => {
       const input = html`<script>
+        const x = 5;
         class Foo {
           get bar() {
             'worklet';
@@ -1608,30 +1609,12 @@ describe('babel plugin', () => {
         });
       </script>`;
 
-      expect(() => runPlugin(input)).toThrow('[Reanimated]');
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 
   describe('for worklet nesting', () => {
-    it("doesn't process nested worklets when disabled", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(2);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transpiles nested worklets when enabled', () => {
+    it('transpiles nested worklets', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1643,12 +1626,12 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles nested worklets when enabled with depth 3', () => {
+    it('transpiles nested worklets with depth 3', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1663,7 +1646,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1679,7 +1662,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
@@ -1698,7 +1681,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1719,7 +1702,7 @@ describe('babel plugin', () => {
           runOnJS(func)();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -2101,6 +2084,20 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes recursion', () => {
+      const input = html`<script>
+        function recursiveWorklet() {
+          if (!globalThis._WORKLET) {
+            runOnUI(recursiveWorklet)();
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for file workletization', () => {
@@ -2355,7 +2352,9 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'
@@ -2375,7 +2374,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'
@@ -2395,7 +2396,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.default = function ()');
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'

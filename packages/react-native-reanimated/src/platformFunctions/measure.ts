@@ -2,13 +2,13 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
@@ -29,7 +29,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return null;
   }
 
@@ -41,7 +41,7 @@ function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
     return null;
   }
 
-  const measured = global._measureFabric!(viewTag as ShadowNodeWrapper);
+  const measured = global._measure!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
     logger.warn(
       `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
@@ -67,25 +67,18 @@ function measureJest() {
   return null;
 }
 
-function measureChromeDebugger() {
-  logger.warn('measure() cannot be used with Chrome Debugger.');
-  return null;
-}
-
 function measureDefault() {
   logger.warn('measure() is not supported on this configuration.');
   return null;
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
   measure = measureNative as unknown as Measure;
-} else if (isJest()) {
+} else if (IS_JEST) {
   measure = measureJest;
-} else if (isChromeDebugger()) {
-  measure = measureChromeDebugger;
 } else {
   measure = measureDefault;
 }

@@ -4,6 +4,7 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import { ReanimatedError } from '../../common';
 import type {
   AnimationFunction,
   EasingFunction,
@@ -19,7 +20,6 @@ import type {
 import { ReduceMotion } from '../../commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { Easing } from '../../Easing';
-import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {
   duration: number;

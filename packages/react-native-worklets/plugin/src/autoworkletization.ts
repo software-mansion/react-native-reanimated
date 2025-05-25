@@ -126,7 +126,9 @@ function processArgs(
       acceptWorkletizableFunction,
       acceptObject
     );
-    if (!maybeWorklet) {
+    // @ts-expect-error There's no need to workletize
+    // inside an already workletized function.
+    if (!maybeWorklet || maybeWorklet.getFunctionParent()?.node.workletized) {
       return;
     }
     if (isWorkletizableFunctionPath(maybeWorklet)) {

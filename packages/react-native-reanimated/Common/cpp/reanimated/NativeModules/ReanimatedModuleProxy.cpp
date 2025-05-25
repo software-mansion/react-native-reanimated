@@ -46,12 +46,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-#ifdef ANDROID
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-#else
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-#endif
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
@@ -64,7 +60,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  auto lock = updatesRegistryManager_->createLock();
+  auto lock = updatesRegistryManager_->lock();
   // Add registries in order of their priority (from the lowest to the
   // highest)
   // CSS transitions should be overriden by animated style animations;
@@ -446,10 +442,17 @@ void ReanimatedModuleProxy::setViewStyle(
   }
 }
 
-void ReanimatedModuleProxy::removeViewStyle(
+void ReanimatedModuleProxy::markNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  updatesRegistryManager_->markNodeAsRemovable(shadowNode);
+}
+
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
-  staticPropsRegistry_->remove(viewTag.asNumber());
+  updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
 void ReanimatedModuleProxy::registerCSSKeyframes(
@@ -468,63 +471,54 @@ void ReanimatedModuleProxy::unregisterCSSKeyframes(
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
 }
 
-void ReanimatedModuleProxy::registerCSSAnimations(
+void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &animationConfigs) {
+    const jsi::Value &animationUpdates) {
+  cssAnimationsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
-  const auto animationConfigsArray = animationConfigs.asObject(rt).asArray(rt);
-  const auto animationsCount = animationConfigsArray.size(rt);
-
-  std::vector<std::shared_ptr<CSSAnimation>> animations;
-  animations.reserve(animationsCount);
   const auto timestamp = getCssTimestamp();
+  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
-  for (size_t i = 0; i < animationsCount; ++i) {
-    auto animationConfig =
-        animationConfigsArray.getValueAtIndex(rt, i).asObject(rt);
-    const auto animationName =
-        animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
-    const auto settings = parseCSSAnimationSettings(
-        rt, animationConfig.getProperty(rt, "settings"));
-    const auto &keyframesConfig =
-        cssAnimationKeyframesRegistry_->get(animationName);
+  CSSAnimationsMap newAnimations;
 
-    animations.emplace_back(std::make_shared<CSSAnimation>(
-        rt, shadowNode, i, keyframesConfig, settings, timestamp));
+  if (!updates.newAnimationSettings.empty()) {
+    // animationNames always exists when newAnimationSettings is not empty
+    const auto animationNames = updates.animationNames.value();
+    const auto animationNamesCount = animationNames.size();
+
+    for (const auto &[index, settings] : updates.newAnimationSettings) {
+      if (index >= animationNamesCount) {
+        throw std::invalid_argument(
+            "[Reanimated] index is out of bounds of animationNames");
+      }
+
+      const auto &name = animationNames[index];
+      const auto animation = std::make_shared<CSSAnimation>(
+          rt,
+          shadowNode,
+          name,
+          cssAnimationKeyframesRegistry_->get(name),
+          settings,
+          timestamp);
+
+      newAnimations.emplace(index, animation);
+    }
   }
 
-  cssAnimationsRegistry_->set(shadowNode, std::move(animations), timestamp);
-  maybeRunCSSLoop();
-}
+  cssAnimationsRegistry_->apply(
+      rt,
+      shadowNode,
+      updates.animationNames,
+      std::move(newAnimations),
+      updates.settingsUpdates,
+      timestamp);
 
-void ReanimatedModuleProxy::updateCSSAnimations(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &settingsUpdates) {
-  const auto settingsUpdatesArray = settingsUpdates.asObject(rt).asArray(rt);
-  const auto settingsUpdatesCount = settingsUpdatesArray.size(rt);
-
-  std::vector<std::pair<unsigned, PartialCSSAnimationSettings>> updates;
-  updates.reserve(settingsUpdatesCount);
-
-  for (size_t i = 0; i < settingsUpdatesCount; ++i) {
-    auto settingsUpdate =
-        settingsUpdatesArray.getValueAtIndex(rt, i).asObject(rt);
-    const auto animationIndex = settingsUpdate.getProperty(rt, "index");
-    const auto settings = settingsUpdate.getProperty(rt, "settings");
-    updates.emplace_back(
-        animationIndex.asNumber(),
-        parsePartialCSSAnimationSettings(rt, settings));
-  }
-
-  cssAnimationsRegistry_->updateSettings(
-      viewTag.asNumber(), updates, getCssTimestamp());
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
+  cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -532,6 +526,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
+  cssTransitionsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
@@ -547,6 +542,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
+  cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->updateSettings(
       viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
   maybeRunCSSLoop();
@@ -555,6 +551,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
+  cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -696,23 +693,24 @@ void ReanimatedModuleProxy::performOperations() {
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
-    auto lock = updatesRegistryManager_->createLock();
+    auto lock = updatesRegistryManager_->lock();
 
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
-
+      cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch, false);
+      cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch, true);
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
 
     if (shouldUpdateCssAnimations_) {
+      cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
+      cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
     shouldUpdateCssAnimations_ = false;
@@ -782,7 +780,9 @@ void ReanimatedModuleProxy::commitUpdates(
     for (auto const &[family, props] : propsMap) {
       const auto surfaceId = family->getSurfaceId();
       auto &propsVector = propsMapBySurface[surfaceId][family];
-      propsVector.insert(propsVector.end(), props.begin(), props.end());
+      for (const auto &prop : props) {
+        propsVector.emplace_back(prop);
+      }
     }
   } else {
     for (auto const &[shadowNode, props] : updatesBatch) {
@@ -792,7 +792,6 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
     }
   }
-  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -803,8 +802,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(
-                oldRootShadowNode, propsMap, tagsToRemove);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -826,16 +825,6 @@ void ReanimatedModuleProxy::commitUpdates(
       }
 #endif
     });
-
-    // Clear the entire cache after the commit
-    // (we don't know if the view is updated from outside of Reanimated
-    // so we have to clear the entire cache)
-    viewStylesRepository_->clearNodesCache();
-  }
-
-  if (!tagsToRemove.empty()) {
-    auto lock = updatesRegistryManager_->createLock();
-    updatesRegistryManager_->removeBatch(tagsToRemove);
   }
 }
 
@@ -847,7 +836,19 @@ void ReanimatedModuleProxy::dispatchCommand(
   ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
-  uiManager_->dispatchCommand(shadowNode, commandName, args);
+  const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
+
+  if (!scheduler) {
+    return;
+  }
+
+  const auto &schedulerDelegate = scheduler->getDelegate();
+
+  if (schedulerDelegate) {
+    const auto shadowView = ShadowView(*shadowNode);
+    schedulerDelegate->schedulerDidDispatchCommand(
+        shadowView, commandName, args);
+  }
 }
 
 jsi::String ReanimatedModuleProxy::obtainProp(

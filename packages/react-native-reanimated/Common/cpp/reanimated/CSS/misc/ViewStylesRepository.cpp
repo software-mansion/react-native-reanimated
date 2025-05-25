@@ -1,6 +1,6 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 ViewStylesRepository::ViewStylesRepository(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -161,4 +161,4 @@ folly::dynamic ViewStylesRepository::getPropertyValue(
   return *currentValue;
 }
 
-} // namespace reanimated
+} // namespace reanimated::css

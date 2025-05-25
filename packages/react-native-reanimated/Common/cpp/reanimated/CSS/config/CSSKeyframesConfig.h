@@ -7,7 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 
@@ -30,4 +30,4 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     const jsi::Value &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-} // namespace reanimated
+} // namespace reanimated::css

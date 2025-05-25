@@ -1,7 +1,7 @@
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSColor::CSSColor()
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {}
@@ -152,4 +152,4 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
+} // namespace reanimated::css

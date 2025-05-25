@@ -5,12 +5,14 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
+import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
 import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -20,7 +22,6 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -40,10 +41,6 @@ import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
-
-const IS_WEB = isWeb();
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -67,6 +64,7 @@ export default class AnimatedComponent
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
+  jestAnimatedProps: { value: AnimatedProps } = { value: {} };
   _jsPropsUpdater = new JSPropsUpdater();
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
@@ -87,6 +85,7 @@ export default class AnimatedComponent
 
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
+      this.jestAnimatedProps = { value: {} };
     }
 
     const entering = this.props.entering;
@@ -200,8 +199,9 @@ export default class AnimatedComponent
   }
 
   _attachAnimatedStyles() {
+    const animatedProps = this.props.animatedProps;
     const prevAnimatedProps = this._animatedProps;
-    this._animatedProps = this.props.animatedProps;
+    this._animatedProps = animatedProps;
 
     const { viewTag, shadowNodeWrapper, viewConfig } = this._getViewInfo();
 
@@ -233,6 +233,17 @@ export default class AnimatedComponent
       }
     }
 
+    if (animatedProps && IS_JEST) {
+      this.jestAnimatedProps.value = {
+        ...this.jestAnimatedProps.value,
+        ...animatedProps?.initial?.value,
+      };
+
+      if (animatedProps?.jestAnimatedValues) {
+        animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
+      }
+    }
+
     this._animatedStyles.forEach((style) => {
       style.viewDescriptors.add({
         tag: viewTag,
@@ -250,7 +261,7 @@ export default class AnimatedComponent
           ...this.jestAnimatedStyle.value,
           ...style.initial.value,
         };
-        style.jestAnimatedStyle.current = this.jestAnimatedStyle;
+        style.jestAnimatedValues.current = this.jestAnimatedStyle;
       }
     });
 
@@ -373,6 +384,7 @@ export default class AnimatedComponent
 
     if (IS_JEST) {
       filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
+      filteredProps.jestAnimatedProps = this.jestAnimatedProps;
     }
 
     // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
@@ -398,8 +410,10 @@ export default class AnimatedComponent
 
     const jestProps = IS_JEST
       ? {
-          jestInlineStyle: this.props.style,
+          jestInlineStyle:
+            this.props.style && filterOutAnimatedStyles(this.props.style),
           jestAnimatedStyle: this.jestAnimatedStyle,
+          jestAnimatedProps: this.jestAnimatedProps,
         }
       : {};
 
@@ -409,4 +423,25 @@ export default class AnimatedComponent
       ...jestProps,
     });
   }
+}
+
+function filterOutAnimatedStyles(
+  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
+): NestedArray<StyleProps | null | undefined> {
+  if (!style) {
+    return style;
+  }
+  if (!Array.isArray(style)) {
+    return style?.viewDescriptors ? {} : style;
+  }
+  return style
+    .filter(
+      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
+    )
+    .map((styleElement) => {
+      if (Array.isArray(styleElement)) {
+        return filterOutAnimatedStyles(styleElement);
+      }
+      return styleElement;
+    });
 }

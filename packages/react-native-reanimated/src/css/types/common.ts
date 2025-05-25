@@ -7,7 +7,18 @@ import type {
   ViewStyle,
 } from 'react-native';
 
-export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+type DeprecatedProps =
+  | 'transformMatrix'
+  | 'rotation'
+  | 'scaleX'
+  | 'scaleY'
+  | 'translateX'
+  | 'translateY';
+
+export type PlainStyle = Omit<
+  ViewStyle & TextStyle & ImageStyle,
+  DeprecatedProps
+>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = ComponentType<any>;

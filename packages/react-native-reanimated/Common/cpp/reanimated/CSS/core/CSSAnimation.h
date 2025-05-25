@@ -10,21 +10,19 @@
 #include <unordered_set>
 #include <utility>
 
-namespace reanimated {
-
-using CSSAnimationId = std::pair<Tag, unsigned>;
+namespace reanimated::css {
 
 class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
-      unsigned index,
+      std::string name,
       const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 
-  CSSAnimationId getId() const;
+  const std::string &getName() const;
   ShadowNode::Shared getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
@@ -36,7 +34,6 @@ class CSSAnimation {
 
   folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getForwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
@@ -46,7 +43,7 @@ class CSSAnimation {
       double timestamp);
 
  private:
-  const unsigned index_;
+  const std::string name_;
   const ShadowNode::Shared shadowNode_;
   AnimationFillMode fillMode_;
 
@@ -54,4 +51,4 @@ class CSSAnimation {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 
-} // namespace reanimated
+} // namespace reanimated::css
