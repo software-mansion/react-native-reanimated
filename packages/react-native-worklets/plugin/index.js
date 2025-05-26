@@ -471,7 +471,7 @@ var require_closure = __commonJS({
             scope = scope.parent;
           }
           if (state.opts.experimentalBundling && isImport(binding)) {
-            if (isImportRelative(binding)) {
+            if (isImportRelative(binding) && isAllowedForRelativeImports(state.filename, state.opts.workletizableModules)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
@@ -499,6 +499,9 @@ var require_closure = __commonJS({
     }
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
+    }
+    function isAllowedForRelativeImports(filename, workletizableModules) {
+      return !!filename && (filename.includes("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => filename.includes(module3))));
     }
     function isWorkletizableModule(source, workletizableModules) {
       return source.startsWith("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));

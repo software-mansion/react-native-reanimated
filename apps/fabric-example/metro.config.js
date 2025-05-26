@@ -6,10 +6,9 @@ const {
   getMetroAndroidAssetsResolutionFix,
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
-const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
-
 const path = require('path');
 
+const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 const root = path.resolve(__dirname, '../..');
 
 /**
@@ -33,18 +32,18 @@ const config = {
   //   createModuleIdFactory() {
   //     let nextId = 0;
   //     const idFileMap = new Map();
-  //     return (ppath) => {
-  //       if (idFileMap.has(ppath)) {
-  //         return idFileMap.get(ppath);
+  //     return (modulePath) => {
+  //       if (idFileMap.has(modulePath)) {
+  //         return idFileMap.get(modulePath);
   //       }
-  //       if (ppath.includes('react-native-worklets/__generatedWorklets/')) {
-  //         const base = path.basename(ppath, '.js');
+  //       if (modulePath.includes('react-native-worklets/__generatedWorklets/')) {
+  //         const base = path.basename(modulePath, '.js');
   //         const id = Number(base);
-  //         idFileMap.set(ppath, id);
+  //         idFileMap.set(modulePath, id);
   //         return id;
   //       }
-  //       idFileMap.set(ppath, nextId++);
-  //       return idFileMap.get(ppath);
+  //       idFileMap.set(modulePath, nextId++);
+  //       return idFileMap.get(modulePath);
   //     };
   //   },
   // },

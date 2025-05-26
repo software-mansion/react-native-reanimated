@@ -122,7 +122,7 @@ WorkletRuntime::WorkletRuntime(
     try {
       rt.evaluateJavaScript(script, sourceUrl);
     } catch (facebook::jsi::JSIException ex) {
-      LOG(INFO) << ex.what();
+      // LOG(INFO) << ex.what();
     }
     return;
   }

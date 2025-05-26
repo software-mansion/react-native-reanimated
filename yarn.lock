@@ -5747,6 +5747,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/community-cli-plugin@patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch":
+  version: 0.80.0-rc.2
+  resolution: "@react-native/community-cli-plugin@patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch::version=0.80.0-rc.2&hash=4968e4"
+  dependencies:
+    "@react-native/dev-middleware": "npm:0.80.0-rc.2"
+    chalk: "npm:^4.0.0"
+    debug: "npm:^4.4.0"
+    invariant: "npm:^2.2.4"
+    metro: "npm:^0.82.2"
+    metro-config: "npm:^0.82.2"
+    metro-core: "npm:^0.82.2"
+    semver: "npm:^7.1.3"
+  peerDependencies:
+    "@react-native-community/cli": "*"
+  peerDependenciesMeta:
+    "@react-native-community/cli":
+      optional: true
+  checksum: 10/e5ffeccd9b7513ad1e6189b5b897868106ea9bf3b5f6e30ea6f90d133d5554b67d3fdde7326c8194684dc0c2b2b1988cdd862abee3c1e72ff7156bf1e192053b
+  languageName: node
+  linkType: hard
+
 "@react-native/debugger-frontend@npm:0.75.4":
   version: 0.75.4
   resolution: "@react-native/debugger-frontend@npm:0.75.4"
@@ -9287,7 +9308,7 @@ __metadata:
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.80.0-rc.2"
+    react-native: "patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch"
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
@@ -12026,7 +12047,7 @@ __metadata:
   dependencies:
     common-app: "workspace:*"
     prettier: "npm:^3.3.3"
-    react-native: "npm:0.80.0-rc.2"
+    react-native: "patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch"
   languageName: unknown
   linkType: soft
 
@@ -19081,7 +19102,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.80.0-rc.2"
+    react-native: "patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-is-edge-to-edge: "npm:1.1.7"
@@ -19198,7 +19219,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.80.0-rc.2"
+    react-native: "patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
     typescript: "npm:~5.3.0"
   peerDependencies:
@@ -19363,6 +19384,57 @@ __metadata:
   bin:
     react-native: cli.js
   checksum: 10/b87d8649e3ae4ea8e621a5fe8c7c732f5a8c9571cdecdd220bc1757f96f6caa80138d36365a6829c0fc48917285a426734314181e4e11c9b8433eadac41e418e
+  languageName: node
+  linkType: hard
+
+"react-native@patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch":
+  version: 0.80.0-rc.2
+  resolution: "react-native@patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch::version=0.80.0-rc.2&hash=10a48b"
+  dependencies:
+    "@jest/create-cache-key-function": "npm:^29.7.0"
+    "@react-native/assets-registry": "npm:0.80.0-rc.2"
+    "@react-native/codegen": "npm:0.80.0-rc.2"
+    "@react-native/community-cli-plugin": "npm:0.80.0-rc.2"
+    "@react-native/gradle-plugin": "npm:0.80.0-rc.2"
+    "@react-native/js-polyfills": "npm:0.80.0-rc.2"
+    "@react-native/normalize-colors": "npm:0.80.0-rc.2"
+    "@react-native/virtualized-lists": "npm:0.80.0-rc.2"
+    abort-controller: "npm:^3.0.0"
+    anser: "npm:^1.4.9"
+    ansi-regex: "npm:^5.0.0"
+    babel-jest: "npm:^29.7.0"
+    babel-plugin-syntax-hermes-parser: "npm:0.28.1"
+    base64-js: "npm:^1.5.1"
+    chalk: "npm:^4.0.0"
+    commander: "npm:^12.0.0"
+    flow-enums-runtime: "npm:^0.0.6"
+    glob: "npm:^7.1.1"
+    invariant: "npm:^2.2.4"
+    jest-environment-node: "npm:^29.7.0"
+    memoize-one: "npm:^5.0.0"
+    metro-runtime: "npm:^0.82.2"
+    metro-source-map: "npm:^0.82.2"
+    nullthrows: "npm:^1.1.1"
+    pretty-format: "npm:^29.7.0"
+    promise: "npm:^8.3.0"
+    react-devtools-core: "npm:^6.1.1"
+    react-refresh: "npm:^0.14.0"
+    regenerator-runtime: "npm:^0.13.2"
+    scheduler: "npm:0.26.0"
+    semver: "npm:^7.1.3"
+    stacktrace-parser: "npm:^0.1.10"
+    whatwg-fetch: "npm:^3.0.0"
+    ws: "npm:^6.2.3"
+    yargs: "npm:^17.6.2"
+  peerDependencies:
+    "@types/react": ^19.1.0
+    react: ^19.1.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  bin:
+    react-native: cli.js
+  checksum: 10/b587a09956f6451a59c4396f061b0298a6f0371fe86a1dca240c27443ee0f4a3d309ec68628dde5c006be6e93a9aaaa39347b9290d5e52d72316615f6e012c94
   languageName: node
   linkType: hard
 
@@ -22412,7 +22484,7 @@ __metadata:
     expo: "npm:^53.0.0"
     prettier: "npm:^3.3.3"
     react-dom: "npm:19.1.0"
-    react-native: "npm:0.80.0-rc.2"
+    react-native: "patch:react-native@npm%3A0.80.0-rc.2#~/.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch"
     react-native-web: "npm:0.20.0"
     serve: "npm:^14.2.3"
   languageName: unknown

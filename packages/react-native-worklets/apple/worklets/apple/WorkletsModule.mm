@@ -23,7 +23,6 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-  std::shared_ptr<const BigStringBuffer> script_;
   std::string sourceURL_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
@@ -37,16 +36,10 @@ using worklets::WorkletsModuleProxy;
 }
 
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-- (void)setScriptBuffer:(NSBigStringBuffer *)script
-{
-  script_ = [script getBuffer];
-}
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+@synthesize scriptBuffer = _scriptBuffer;
 
-- (void)setSourceURL:(const std::string &)sourceURL
-{
-  sourceURL_ = sourceURL;
-}
+@synthesize sourceURL = _sourceURL;
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
 - (void)checkBridgeless
 {
@@ -72,6 +65,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
+  std::shared_ptr<const BigStringBuffer> script = nullptr;
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  script = [_scriptBuffer getBuffer];
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
@@ -85,7 +82,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       jsCallInvoker,
       uiScheduler,
       std::move(forwardedRequestAnimationFrame),
-      std::move(script_),
+      std::move(script),
       sourceURL_);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
