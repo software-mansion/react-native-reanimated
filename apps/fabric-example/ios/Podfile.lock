@@ -3045,7 +3045,7 @@ SPEC CHECKSUMS:
   React-renderercss: 07d489812e165c84e05d3ceecda255ff95790fd8
   React-rendererdebug: e06d2aeab624a58d4d9368342670c43f345599ee
   React-rncore: 64f6c9ebb626d5fc204aeaeea880b4f2220af899
-  React-RuntimeApple: 10fb973e6b1639b18da3ba7d432e8081a1628f99
+  React-RuntimeApple: ab50c9b42f97a4508285a944ca8891f77af7dc16
   React-RuntimeCore: 3851f3011e344cd3d4c8ee2d822a3afb44ed5a10
   React-runtimeexecutor: a7c556446d3ede28f56c3f5adaf14a00a35d4091
   React-RuntimeHermes: ae7fac6c066bfb5a6338458e9d320a433ed785ce

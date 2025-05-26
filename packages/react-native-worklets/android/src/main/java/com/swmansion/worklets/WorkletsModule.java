@@ -65,9 +65,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
+
     if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
       reactContext.assertOnJSQueueThread();
     }
+
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
@@ -76,9 +78,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     var context = getReactApplicationContext();
+    
     if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
       context.assertOnNativeModulesQueueThread();
     }
+
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 

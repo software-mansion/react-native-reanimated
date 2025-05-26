@@ -31,18 +31,18 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
        createModuleIdFactory() {
          let nextId = 0;
          const idFileMap = new Map();
-         return (ppath) => {
-           if (idFileMap.has(ppath)) {
-             return idFileMap.get(ppath);
+         return (modulePath) => {
+           if (idFileMap.has(modulePath)) {
+             return idFileMap.get(modulePath);
            }
-           if (ppath.includes('react-native-worklets/__generatedWorklets/')) {
-             const base = path.basename(ppath, '.js');
+           if (modulePath.includes('react-native-worklets/__generatedWorklets/')) {
+             const base = path.basename(modulePath, '.js');
              const id = Number(base);
-             idFileMap.set(ppath, id);
+             idFileMap.set(modulePath, id);
              return id;
            }
-           idFileMap.set(ppath, nextId++);
-           return idFileMap.get(ppath);
+           idFileMap.set(modulePath, nextId++);
+           return idFileMap.get(modulePath);
          };
        },
      },
@@ -70,5 +70,6 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
 ## Running
 
 - When running the app, it will initially throw errors like `Unable to resolve module react-native-worklets/__generatedWorklets/...`. This is expected, because the bundle has not yet converged. When it happens, reload the app. On Android you might need to restart the app. After several reloads, the bundle will converge and the errors will be gone.
+- In rare cases where the same error would reappear, re-run Metro bundler with the `--reset-cache` flag to enforce rebuilding the worklets bundle.
 - Fast refresh will not work when you modify code in worklets. You need to reload the app in these cases.
 - Currently only debug builds are supported.

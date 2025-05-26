@@ -22,7 +22,6 @@ struct WorkletsMessageThreadPublic {
 // the app.
 void WorkletsMessageThread::quitSynchronous()
 {
-
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
 // Nothing
 #else
