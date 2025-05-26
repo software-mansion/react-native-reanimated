@@ -792,6 +792,7 @@ var require_workletFactory = __commonJS({
     var closure_1 = require_closure();
     var generate_1 = require_generate();
     var transform_1 = require_transform();
+    var types_2 = require_types();
     var utils_1 = require_utils();
     var workletStringCode_1 = require_workletStringCode();
     var REAL_VERSION = require("../package.json").version;
@@ -866,7 +867,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.experimentalBundling && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -887,6 +888,9 @@ var require_workletFactory = __commonJS({
         (0, types_12.cloneNode)(initDataId, true),
         ...closureVariables.map((variableId) => {
           const clonedId = (0, types_12.cloneNode)(variableId, true);
+          if (!state.opts.experimentalBundling && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+            clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
+          }
           return clonedId;
         })
       ];
