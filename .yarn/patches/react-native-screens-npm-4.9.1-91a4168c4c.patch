@@ -55,3 +55,61 @@ index cf44d7dd35e5ba00d245aaa3e5cd6debab0baa6e..dd7781ba9e65a26d7ca4704c14662ac8
              override fun doFrame(frameTimeNanos: Long) {
                  isLayoutEnqueued = false
                  measure(
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 6f46f933e24c22dcbb6b7849bc6ce3ccf077ed8d..1fdcd46297ab1f36674ce1dcc4f4cdd6f85ecb41 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -1319,13 +1319,6 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenCls(void)
+-{
+-  return RNSScreenView.class;
+-}
+-#endif
+-
+ #pragma mark - RNSScreen
+ 
+ @implementation RNSScreen {
+@@ -2095,3 +2088,10 @@ RCT_ENUM_CONVERTER(
+ // So that the define-macro is not leaked out of this file.
+ // This one is defined in very top of the file depending on RN architecture.
+ #undef ReactScrollViewBase
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenCls(void)
++{
++  return RNSScreenView.class;
++}
++#endif
+diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
+index a4e853c2bd51d33ffb5f60e4d47f29bf5ffbe44b..115a236787776df16848f5cbecaddc4fda4567a7 100644
+--- a/ios/RNSScreenStackHeaderConfig.mm
++++ b/ios/RNSScreenStackHeaderConfig.mm
+@@ -1133,13 +1133,6 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
+ #endif
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
+-{
+-  return RNSScreenStackHeaderConfig.class;
+-}
+-#endif
+-
+ @implementation RNSScreenStackHeaderConfigManager
+ 
+ RCT_EXPORT_MODULE()
+@@ -1294,3 +1287,10 @@ RCT_ENUM_CONVERTER(
+ RCT_ENUM_CONVERTER(RNSBlurEffectStyle, ([self blurEffectsForIOSVersion]), RNSBlurEffectStyleNone, integerValue)
+ 
+ @end
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
++{
++  return RNSScreenStackHeaderConfig.class;
++}
++#endif
