@@ -8867,7 +8867,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
     react-native: "npm:0.80.0-rc.3"
-    react-native-gesture-handler: "npm:2.25.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -11468,7 +11468,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
     react-native: "npm:0.80.0-rc.3"
-    react-native-gesture-handler: "npm:2.25.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -14855,7 +14855,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.1"
-    react-native-gesture-handler: "npm:2.25.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-macos: "npm:0.77.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
@@ -17628,7 +17628,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
     react-native: "npm:0.80.0-rc.3"
-    react-native-gesture-handler: "npm:2.25.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
@@ -18531,6 +18531,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch":
+  version: 2.25.0
+  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch::version=2.25.0&hash=5a66c4"
+  dependencies:
+    "@egjs/hammerjs": "npm:^2.0.17"
+    hoist-non-react-statics: "npm:^3.3.0"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/841f0de4f0369566616d7205309f46a705571a840d1af5ddc03aa333c885562188ab1bc72031bdc33a627189f30fb1f1ecfdcc9345eaa6d7777a40d88b022e17
+  languageName: node
+  linkType: hard
+
 "react-native-is-edge-to-edge@npm:1.1.7":
   version: 1.1.7
   resolution: "react-native-is-edge-to-edge@npm:1.1.7"
@@ -18692,7 +18706,7 @@ __metadata:
     react: "npm:19.1.0"
     react-native: "npm:0.80.0-rc.3"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
-    react-native-gesture-handler: "npm:2.25.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-is-edge-to-edge: "npm:1.1.7"
     react-native-web: "npm:0.19.13"
     react-test-renderer: "npm:19.1.0"
@@ -18741,14 +18755,14 @@ __metadata:
 
 "react-native-screens@patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch":
   version: 4.9.1
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch::version=4.9.1&hash=d664d1"
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch::version=4.9.1&hash=32bec4"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/03ee83a9e5425797c91da64b3df48437f7a02fe6e18d9ca01ed585ca7a635147087a1decef228430a1435f56fd7470dcb4018ea84f66183543d615ad8d1fb990
+  checksum: 10/4081daa41a1213f3c41da248b40b8a3876fce03462156cfccd19925426413c9b02bdf32204d283f019d63448f2ceffda26d23f6c9426903de0b2b4bb3280abf1
   languageName: node
   linkType: hard
 
