@@ -6087,7 +6087,7 @@ __metadata:
 
 "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.7.6#~/.yarn/patches/@shopify-flash-list-npm-1.7.6-dd7668e04d.patch":
   version: 1.7.6
-  resolution: "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.7.6#~/.yarn/patches/@shopify-flash-list-npm-1.7.6-dd7668e04d.patch::version=1.7.6&hash=9de44e"
+  resolution: "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.7.6#~/.yarn/patches/@shopify-flash-list-npm-1.7.6-dd7668e04d.patch::version=1.7.6&hash=6d240e"
   dependencies:
     recyclerlistview: "npm:4.2.3"
     tslib: "npm:2.8.1"
@@ -6095,7 +6095,7 @@ __metadata:
     "@babel/runtime": "*"
     react: "*"
     react-native: "*"
-  checksum: 10/65a2195b366a6e33d7a4d635bc4f64717ff4cd326612a836d14fe6c1bf7b6e3c9e0caa73ff9a941580246d4a4b8ce44d6188b3d82fd0ce6b393ac70876a6b604
+  checksum: 10/dec6400fe2005bde8ac4ee887de019639f1338f22b00b5e56eff8f7d042738b9ec6dff51ac7351d9caac5960f47ff7879ccc15adc4eb304a29914480af116486
   languageName: node
   linkType: hard
 
@@ -8871,7 +8871,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
-    react-native-screens: "npm:4.9.1"
+    react-native-screens: "patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch"
     react-native-svg: "npm:15.12.0"
     react-strict-dom: "npm:0.0.27"
     typescript: "npm:~5.3.0"
@@ -11472,7 +11472,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
-    react-native-screens: "npm:4.9.1"
+    react-native-screens: "patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch"
     react-native-svg: "npm:15.12.0"
     react-test-renderer: "npm:19.1.0"
     typescript: "npm:~5.3.0"
@@ -14860,7 +14860,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.9.1"
+    react-native-screens: "patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch"
     react-native-svg: "npm:15.11.2"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:~5.3.0"
@@ -17632,7 +17632,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.3.0"
-    react-native-screens: "npm:4.9.1"
+    react-native-screens: "patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch"
     react-native-svg: "npm:15.12.0"
     react-test-renderer: "npm:19.1.0"
     typescript: "npm:~5.3.0"
@@ -18736,6 +18736,19 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/ba1e8f818de5b9e22ecb6e4467686c76742816cfdab999ce5564226481d4451a0314c73d7541a641133ef0c0e9f91b3aa4c4a67c931b17c127489e5fb5aef8e8
+  languageName: node
+  linkType: hard
+
+"react-native-screens@patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch":
+  version: 4.9.1
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch::version=4.9.1&hash=d664d1"
+  dependencies:
+    react-freeze: "npm:^1.0.0"
+    warn-once: "npm:^0.1.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/03ee83a9e5425797c91da64b3df48437f7a02fe6e18d9ca01ed585ca7a635147087a1decef228430a1435f56fd7470dcb4018ea84f66183543d615ad8d1fb990
   languageName: node
   linkType: hard
 
