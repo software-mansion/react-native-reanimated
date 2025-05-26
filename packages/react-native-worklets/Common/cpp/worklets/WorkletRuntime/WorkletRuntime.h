@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cxxreact/JSBigString.h>
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>

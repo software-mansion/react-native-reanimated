@@ -576,6 +576,7 @@ function freezeObjectInDev<T extends object>(value: T) {
   });
   Object.preventExtensions(value);
 }
+
 function makeShareableCloneOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatShareableRef<T> {

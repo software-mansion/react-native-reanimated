@@ -1,4 +1,3 @@
-#include "WorkletsModuleProxy.h"
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
