@@ -11,9 +11,9 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
    module.exports = {
      plugins: [
        [
-         'react-native-worklets/babel-plugin',
+         'react-native-worklets/plugin',
          {
-           enableExperimentalBundling: true,
+           experimentalBundling: true,
          },
        ],
        // Your other plugins...

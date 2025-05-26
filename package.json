@@ -41,8 +41,6 @@
   },
   "resolutions": {
     "@react-native/gradle-plugin": "0.80.0-rc.2",
-    "@react-native/community-cli-plugin@npm:0.75.4": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch",
-    "@react-native/community-cli-plugin@npm:0.79.1": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch",
     "@react-native/community-cli-plugin@npm:0.80.0-rc.2": "patch:@react-native/community-cli-plugin@npm%3A0.80.0-rc.2#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch"
   }
 }

@@ -222,25 +222,26 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
-            variable.name.endsWith(workletClassFactorySuffix)
-              ? objectProperty(
-                  identifier(variable.name),
-                  memberExpression(
-                    identifier(
-                      variable.name.slice(
-                        0,
-                        variable.name.length - workletClassFactorySuffix.length
-                      )
-                    ),
-                    identifier(variable.name)
-                  )
-                )
-              : objectProperty(
-                  cloneNode(variable, true),
-                  cloneNode(variable, true),
-                  false,
-                  true
-                )
+            // variable.name.endsWith(workletClassFactorySuffix)
+            //   ? objectProperty(
+            //       identifier(variable.name),
+            //       memberExpression(
+            //         identifier(
+            //           variable.name.slice(
+            //             0,
+            //             variable.name.length - workletClassFactorySuffix.length
+            //           )
+            //         ),
+            //         identifier(variable.name)
+            //       )
+            //     )
+            //   :
+            objectProperty(
+              cloneNode(variable, true),
+              cloneNode(variable, true),
+              false,
+              true
+            )
           )
         )
       )
@@ -311,12 +312,12 @@ export function makeWorkletFactory(
     cloneNode(initDataId, true),
     ...closureVariables.map((variableId) => {
       const clonedId = cloneNode(variableId, true);
-      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
-        clonedId.name = clonedId.name.slice(
-          0,
-          clonedId.name.length - workletClassFactorySuffix.length
-        );
-      }
+      // if (clonedId.name.endsWith(workletClassFactorySuffix)) {
+      //   clonedId.name = clonedId.name.slice(
+      //     0,
+      //     clonedId.name.length - workletClassFactorySuffix.length
+      //   );
+      // }
       return clonedId;
     }),
   ];

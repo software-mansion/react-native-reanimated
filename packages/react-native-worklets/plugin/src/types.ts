@@ -26,6 +26,7 @@ export interface ReanimatedPluginOptions {
   extraPresets?: string[];
   workletModules?: string[];
   experimentalBundling?: boolean;
+  workletizableModules?: string[];
 }
 
 export interface ReanimatedPluginPass {
