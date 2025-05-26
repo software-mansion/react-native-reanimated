@@ -85,7 +85,13 @@ export function getClosure(
         }
 
         if (state.opts.experimentalBundling && isImport(binding)) {
-          if (isImportRelative(binding)) {
+          if (
+            isImportRelative(binding) &&
+            isAllowedForRelativeImports(
+              state.filename,
+              state.opts.workletizableModules
+            )
+          ) {
             capturedNames.add(name);
             relativeBindingsToImport.add(binding);
             return;
@@ -128,6 +134,17 @@ function isImportRelative(imported: Binding): boolean {
   return (
     imported.path.parentPath as NodePath<ImportDeclaration>
   ).node.source.value.startsWith('.');
+}
+
+function isAllowedForRelativeImports(
+  filename: string | undefined,
+  workletizableModules?: string[]
+): boolean {
+  return (
+    !!filename &&
+    (filename.includes('react-native-worklets') ||
+      !!workletizableModules?.some((module) => filename.includes(module)))
+  );
 }
 
 function isWorkletizableModule(
