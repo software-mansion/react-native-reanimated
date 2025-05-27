@@ -5,7 +5,6 @@ import static java.lang.Float.NaN;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.view.View;
-// import androidx.tracing.Trace;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.JavaOnlyMap;
