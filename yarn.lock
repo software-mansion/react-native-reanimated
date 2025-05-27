@@ -9156,7 +9156,7 @@ __metadata:
     react-native-safe-area-context: "npm:5.3.0"
     react-native-screens: "patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch"
     react-native-svg: "npm:15.12.0"
-    react-native-worklets: "npm:0.3.0"
+    react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
     react-test-renderer: "npm:19.1.0"
     typescript: "npm:~5.3.0"
@@ -16939,7 +16939,7 @@ __metadata:
     react-dom: "npm:19.1.0"
     react-native-reanimated: "workspace:*"
     react-native-web: "npm:0.20.0"
-    react-native-worklets: "npm:0.3.0"
+    react-native-worklets: "workspace:*"
     start-server-and-test: "npm:^2.0.1"
   languageName: unknown
   linkType: soft
@@ -18680,7 +18680,7 @@ __metadata:
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
     react-native-is-edge-to-edge: "npm:1.1.7"
     react-native-web: "npm:0.20.0"
-    react-native-worklets: "npm:0.3.0"
+    react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.1.0"
     semver: "npm:^7.7.1"
     shelljs: "npm:^0.8.5"
@@ -18690,7 +18690,7 @@ __metadata:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.3.0
+    react-native-worklets: ">=0.3.0"
   languageName: unknown
   linkType: soft
 
@@ -18763,29 +18763,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.3.0":
-  version: 0.3.0
-  resolution: "react-native-worklets@npm:0.3.0"
-  dependencies:
-    "@babel/plugin-transform-arrow-functions": "npm:^7.0.0-0"
-    "@babel/plugin-transform-class-properties": "npm:^7.0.0-0"
-    "@babel/plugin-transform-classes": "npm:^7.0.0-0"
-    "@babel/plugin-transform-nullish-coalescing-operator": "npm:^7.0.0-0"
-    "@babel/plugin-transform-optional-chaining": "npm:^7.0.0-0"
-    "@babel/plugin-transform-shorthand-properties": "npm:^7.0.0-0"
-    "@babel/plugin-transform-template-literals": "npm:^7.0.0-0"
-    "@babel/plugin-transform-unicode-regex": "npm:^7.0.0-0"
-    "@babel/preset-typescript": "npm:^7.16.7"
-    convert-source-map: "npm:^2.0.0"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-    react: "*"
-    react-native: "*"
-  checksum: 10/69d9c5cbe0f0c3be2cab317fd078a78a164bc077ba7aaca83a84a22746e8c69f4580c89142a657575d30e059645086fd30f0d41cc7416ea8ec08eed831c87314
-  languageName: node
-  linkType: hard
-
-"react-native-worklets@workspace:packages/react-native-worklets":
+"react-native-worklets@workspace:*, react-native-worklets@workspace:packages/react-native-worklets":
   version: 0.0.0-use.local
   resolution: "react-native-worklets@workspace:packages/react-native-worklets"
   dependencies:
@@ -21326,7 +21304,7 @@ __metadata:
     react: "npm:19.0.0"
     react-native: "npm:react-native-tvos@0.79.1-0"
     react-native-reanimated: "workspace:*"
-    react-native-worklets: "npm:0.3.0"
+    react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.0.0"
     typescript: "npm:~5.3.0"
   languageName: unknown
