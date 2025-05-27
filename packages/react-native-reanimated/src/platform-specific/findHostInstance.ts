@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 'use strict';
 
+import { ReanimatedError } from '../common';
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
-import { ReanimatedError } from '../errors';
 
 type HostInstanceFabric = {
   __internalInstanceHandle?: Record<string, unknown>;

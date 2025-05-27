@@ -142,14 +142,14 @@ export default function TransformOrigin() {
                 'Two values specified in pixels (or as a number). The first value is applied to the **x axis** and the second value is applied to the **y axis**.',
               examples: [
                 {
-                  title: 'Pixels to pixels',
+                  title: 'As a pixels string',
                   transformOrigins: ['-50px -10px', '120px 60px'],
                 },
                 {
-                  title: 'Mixed units',
+                  title: 'As a number',
                   transformOrigins: [
-                    [120, '-20px'],
-                    ['-50px', 60],
+                    [120, -20],
+                    [-50, 60],
                   ],
                 },
               ],

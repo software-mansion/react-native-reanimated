@@ -1,15 +1,13 @@
 'use strict';
 import { runOnJS, runOnUI } from 'react-native-worklets';
 
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
 } from './commonTypes';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 class JSPropsUpdaterNative implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
