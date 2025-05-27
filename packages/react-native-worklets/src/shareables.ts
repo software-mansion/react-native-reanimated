@@ -387,11 +387,10 @@ function cloneWorklet<T extends WorkletFunction>(
     depth + 1
   );
 
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
     // retain all worklets
-    true,
-    value
+    true
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
