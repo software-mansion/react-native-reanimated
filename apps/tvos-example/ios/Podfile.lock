@@ -2074,7 +2074,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: ec07a48c499f7f1420c872ba3347ce7937000960
   ReactCodegen: a9e644a22d3ef480d4973dd117c9458da936d12b
   ReactCommon: 975c24e76b57544fa910b0caee34f4adbfe90abb
-  RNReanimated: d29042c429a85fcf0b0013c26ce8f873bc2398b8
+  RNReanimated: 5c0ec62982c666cad3a49857357d88520507f94d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: d4280c1f5bc3aef681cf28421e3a988c2d77ba31
 

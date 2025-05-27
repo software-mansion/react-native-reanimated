@@ -1,7 +1,6 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
@@ -33,6 +32,14 @@ Pod::Spec.new do |s|
   # Use install_modules_dependencies helper to install the dependencies.
   # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
   install_modules_dependencies(s)
+
+  # React Native doesn't expose these flags, but not having them
+  # can lead to runtime errors due to ABI mismatches.
+  # There's also
+  #   HERMESVM_PROFILER_OPCODE
+  #   HERMESVM_PROFILER_BB
+  # which shouldn't be defined in standard setups.
+  hermes_debug_hidden_flags = '$(inherited) HERMES_ENABLE_DEBUGGER=1'
   
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
@@ -49,6 +56,8 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => hermes_debug_hidden_flags,
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
   
 end

@@ -60,6 +60,7 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   target_link_libraries(worklets hermes-engine::libhermes)
 
   if(${HERMES_ENABLE_DEBUGGER})
+    string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
     if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
       target_link_libraries(worklets ReactAndroid::hermestooling)
     else()
