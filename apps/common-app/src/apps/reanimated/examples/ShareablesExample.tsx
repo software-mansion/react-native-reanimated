@@ -486,7 +486,7 @@ function PlainObjectDemo() {
       [key.undefined]: undefined,
       [key.string]: 'test',
       [key.bigint]: BigInt(123),
-      [key.object]: { f: 4, g: 5 },
+      [key.object]: { f: 4, g: 'test' },
       [key.remoteFunction]: () => {
         return 1;
       },
@@ -510,8 +510,11 @@ function PlainObjectDemo() {
           obj[key.string] === 'test',
           obj[key.bigint] === BigInt(123),
           obj[key.object].f === 4,
-          obj[key.object].g === 5,
-          obj[key.remoteFunction]() === 1,
+          obj[key.object].g === 'test',
+          typeof obj[key.remoteFunction] === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in obj[key.remoteFunction] &&
+              !!obj[key.remoteFunction].__remoteFunction),
           obj[key.array].length === 1,
           obj[key.array][0] === 1,
           obj[key.workletFunction]() === 2,
@@ -526,6 +529,7 @@ function PlainObjectDemo() {
           runOnJS(isNotOk)();
         }
       } catch (e) {
+        console.log(e);
         runOnJS(isError)();
       }
     })();
