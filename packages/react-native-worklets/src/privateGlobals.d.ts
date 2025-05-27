@@ -23,6 +23,7 @@ declare global {
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy | undefined;
   var _WORKLET: boolean | undefined;
+  var _WORKLETS_EXPERIMENTAL_BUNDLING: boolean | undefined;
   var _makeShareableClone: <T>(
     value: T,
     nativeStateSource?: object

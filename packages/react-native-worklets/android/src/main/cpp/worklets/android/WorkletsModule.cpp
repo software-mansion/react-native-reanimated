@@ -17,7 +17,9 @@ WorkletsModule::WorkletsModule(
     jsi::Runtime *rnRuntime,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::shared_ptr<BigStringBuffer> script,
+    std::string sourceURL)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
@@ -25,7 +27,9 @@ WorkletsModule::WorkletsModule(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           uiScheduler,
-          getForwardedRequestAnimationFrame())) {
+          getForwardedRequestAnimationFrame(),
+          std::move(script),
+          sourceURL)) {
   auto jsiWorkletsModuleProxy =
       workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
@@ -40,13 +44,29 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
-        androidUIScheduler) {
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+    std::string sourceFilename,
+    std::string sourceURL) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
+
+  std::shared_ptr<BigStringBuffer> script;
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  if (!sourceFilename.empty()) {
+    script = std::make_shared<BigStringBuffer>(
+        JSBigFileString::fromPath(sourceFilename));
+  }
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
   return makeCxxInstance(
-      jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler);
+      jThis,
+      rnRuntime,
+      messageQueueThread,
+      jsCallInvoker,
+      uiScheduler,
+      script,
+      sourceURL);
 }
 
 std::function<void(std::function<void(const double)>)>
