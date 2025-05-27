@@ -20,7 +20,7 @@ class NativeWorklets {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -76,6 +76,21 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableNull() {
     return this.#shareableNull;
+  }
+
+  makeShareableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  }
+
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
+  makeShareableInitializer(obj: object) {
+    return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
