@@ -319,12 +319,8 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<T extends object>(
-  value: T,
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableFunction(
-    value
-  ) as ShareableRef<T>;
+function cloneRemoteFunction<T extends object>(value: T): ShareableRef<T> {
+  const clone = WorkletsModule.makeShareableFunction(value) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 

@@ -153,14 +153,14 @@ jsi::Value makeShareableInitializer(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
-jsi::Value makeShareableFunction(
-    jsi::Runtime &rt,
-    jsi::Function function ) {
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function) {
   std::shared_ptr<Shareable> shareable;
   if (function.isHostFunction(rt)) {
-    shareable = std::make_shared<ShareableHostFunction>(rt, std::move(function));
+    shareable =
+        std::make_shared<ShareableHostFunction>(rt, std::move(function));
   } else {
-    shareable = std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
+    shareable =
+        std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }

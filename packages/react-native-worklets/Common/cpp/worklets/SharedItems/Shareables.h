@@ -176,9 +176,7 @@ jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
 
-jsi::Value makeShareableFunction(
-    jsi::Runtime &rt,
-    jsi::Function function);
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
