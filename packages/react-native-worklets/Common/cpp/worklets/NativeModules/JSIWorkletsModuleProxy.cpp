@@ -269,12 +269,13 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        1,
+        2,
         [](jsi::Runtime &rt,
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableTurboModuleLike(rt, args[0].asObject(rt));
+          return makeShareableTurboModuleLike(
+              rt, args[0].asObject(rt), args[1].asObject(rt));
         });
   }
   if (name == "scheduleOnUI") {

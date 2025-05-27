@@ -22,7 +22,10 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
-  makeShareableTurboModuleLike<T extends object>(obj: T): ShareableRef<T>;
+  makeShareableTurboModuleLike<T extends object, TProto extends object>(
+    obj: T,
+    proto: TProto
+  ): ShareableRef<T>;
 
   makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
 

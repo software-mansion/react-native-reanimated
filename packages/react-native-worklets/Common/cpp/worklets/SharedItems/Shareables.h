@@ -160,7 +160,8 @@ jsi::Value makeShareableNull(jsi::Runtime &rt);
 
 jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
-    const jsi::Object &object);
+    const jsi::Object &object,
+    const jsi::Object &proto);
 
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,

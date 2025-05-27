@@ -175,15 +175,10 @@ jsi::Value makeShareableHostObject(
 
 jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
-    const jsi::Object &object) {
-  auto getPrototypeOf = rt.global()
-                            .getProperty(rt, "Object")
-                            .asObject(rt)
-                            .getPropertyAsFunction(rt, "getPrototypeOf");
-  auto objectPrototype = getPrototypeOf.call(rt, object).asObject(rt);
-
-  auto shareable = std::make_shared<ShareableTurboModuleLike>(
-      rt, object, objectPrototype.getHostObject(rt));
+    const jsi::Object &object,
+    const jsi::Object &proto) {
+  const auto shareable = std::make_shared<ShareableTurboModuleLike>(
+      rt, object, proto.getHostObject(rt));
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -400,13 +395,13 @@ ShareableTurboModuleLike::ShareableTurboModuleLike(
     const jsi::Object &object,
     const std::shared_ptr<jsi::HostObject> &proto)
     : Shareable(TurboModuleLikeType) {
+  const auto emptyObject = jsi::Object(rt);
   // We must get rid of the Host Object prototype as `ShareableObject` expects
   // the prototype to be that of a plain object.
-  auto setPrototypeOf = rt.global()
-                            .getPropertyAsObject(rt, "Object")
-                            .getPropertyAsFunction(rt, "setPrototypeOf");
-  auto emptyObject = jsi::Object(rt);
-  setPrototypeOf.call(rt, object, emptyObject);
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, object, emptyObject);
 
   proto_ = std::make_unique<ShareableHostObject>(rt, proto);
   properties_ = std::make_unique<ShareableObject>(rt, object);
@@ -415,11 +410,11 @@ ShareableTurboModuleLike::ShareableTurboModuleLike(
 jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
   jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
 
-  auto prototype = proto_->toJSValue(rt);
-  auto setPrototypeOf = rt.global()
-                            .getPropertyAsObject(rt, "Object")
-                            .getPropertyAsFunction(rt, "setPrototypeOf");
-  setPrototypeOf.call(rt, obj, prototype);
+  const auto prototype = proto_->toJSValue(rt);
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, obj, prototype);
 
   return obj;
 }
