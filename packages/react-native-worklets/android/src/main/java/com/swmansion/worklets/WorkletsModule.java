@@ -78,7 +78,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     var context = getReactApplicationContext();
-    
+
     if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
       context.assertOnNativeModulesQueueThread();
     }
