@@ -18,7 +18,6 @@ import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ReanimatedUIManager;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
-import com.facebook.systrace.Systrace;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.List;
