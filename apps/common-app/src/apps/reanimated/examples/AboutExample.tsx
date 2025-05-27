@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 function isWeb() {
   return Platform.OS === 'web';
@@ -46,6 +47,19 @@ function getReactNativeVersion() {
 }
 
 export default function AboutExample() {
+  const [experimentalBundling, setExperimentalBundling] = useState<
+    boolean | null
+  >(null);
+
+  React.useEffect(() => {
+    runOnUI(() => {
+      runOnJS(setExperimentalBundling)(
+        // @ts-expect-error This global is not exposed.
+        !!globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+      );
+    })();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -66,6 +80,14 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Experimental bundling:</Text>{' '}
+            {experimentalBundling === null
+              ? 'Loading...'
+              : experimentalBundling
+                ? 'Enabled'
+                : 'Disabled'}
           </Text>
         </>
       )}
