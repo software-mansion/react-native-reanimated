@@ -3,7 +3,11 @@ import type { Binding } from '@babel/traverse';
 import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
-import { globals } from './globals';
+import {
+  globals,
+  internalBindingsToCaptureFromGlobalScope,
+  outsideBindingsToCaptureFromGlobalScope,
+} from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { generatedWorkletsDir } from './types';
 
@@ -36,15 +40,31 @@ export function getClosure(
           return;
         }
 
-        if (globals.has(name)) {
+        const binding = idPath.scope.getBinding(name);
+        if (!binding) {
+          /**
+           * The variable is unbound - it's either a mistake or implicit capture
+           * from the global scope. In this case we have to avoid capturing
+           * certain identifiers.
+           */
+          if (globals.has(name)) {
+            return;
+          }
+          capturedNames.add(name);
+          closureVariables.push(cloneNode(idPath.node as Identifier, true));
           return;
         }
 
-        const binding = idPath.scope.getBinding(name);
-        if (!binding) {
-          // Implicitly bound variable from the global scope.
-          capturedNames.add(name);
-          closureVariables.push(cloneNode(idPath.node as Identifier, true));
+        if (
+          outsideBindingsToCaptureFromGlobalScope.has(name) ||
+          (!state.opts.experimentalBundling &&
+            internalBindingsToCaptureFromGlobalScope.has(name))
+        ) {
+          /**
+           * In legacy bundling we have to purposefully ignore some bound
+           * identifiers since they are supposed to be captured from the global
+           * scope.
+           */
           return;
         }
 
