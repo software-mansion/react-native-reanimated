@@ -85,6 +85,7 @@ class Shareable {
     HostFunctionType,
     ArrayBufferType,
     TurboModuleLikeType,
+    ImportType,
   };
 
   explicit Shareable(ValueType valueType) : valueType_(valueType) {}
@@ -162,6 +163,11 @@ jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
     const jsi::Object &proto);
+    
+jsi::Value makeShareableImport(
+    jsi::Runtime &rt,
+    const jsi::String &source,
+    const jsi::String &imported);
 
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
@@ -275,6 +281,23 @@ class ShareableWorklet : public ShareableObject {
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+};
+
+class ShareableImport : public Shareable {
+ public:
+  ShareableImport(
+      jsi::Runtime &rt,
+      const jsi::String &source,
+      const jsi::String &imported)
+      : Shareable(ImportType),
+        source_(source.utf8(rt)),
+        imported_(imported.utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  const std::string source_;
+  const std::string imported_;
 };
 
 class ShareableRemoteFunction
