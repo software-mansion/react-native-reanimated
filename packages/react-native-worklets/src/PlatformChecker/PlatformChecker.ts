@@ -9,10 +9,9 @@ export function isWeb(): boolean {
   return Platform.OS === 'web';
 }
 
-export function shouldBeUseWeb() {
-  return isJest() || isWeb() || isWindows();
-}
-
 function isWindows(): boolean {
   return Platform.OS === 'windows';
+}
+export function shouldBeUseWeb() {
+  return isJest() || isWeb() || isWindows();
 }

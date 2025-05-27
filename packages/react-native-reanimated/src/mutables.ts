@@ -7,15 +7,10 @@ import {
   shareableMappingCache,
 } from 'react-native-worklets';
 
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
-import { ReanimatedError } from './errors';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-const IS_JEST = isJest();
 
 function shouldWarnAboutAccessDuringRender() {
   return __DEV__ && isReactRendering() && !isFirstReactRender();

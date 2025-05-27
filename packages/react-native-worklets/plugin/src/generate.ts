@@ -33,96 +33,85 @@ export function generateWorkletFile(
   factory: FunctionExpression,
   workletHash: number,
   pathForStringDefinitions: NodePath<ExpressionStatement>,
-  shouldIncludeInitData: boolean,
   state: ReanimatedPluginPass
 ) {
-  if (state.opts.experimentalBundling) {
-    const libraryImports = Array.from(libraryBindingsToImport)
-      .filter(
-        (binding) =>
-          binding.path.isImportSpecifier() &&
-          binding.path.parentPath.isImportDeclaration()
-      )
-      .map((binding) =>
-        importDeclaration(
-          [cloneNode(binding.path.node as ImportSpecifier, true)],
-          stringLiteral(
-            (binding.path.parentPath!.node as ImportDeclaration).source.value
-          )
+  const libraryImports = Array.from(libraryBindingsToImport)
+    .filter(
+      (binding) =>
+        binding.path.isImportSpecifier() &&
+        binding.path.parentPath.isImportDeclaration()
+    )
+    .map((binding) =>
+      importDeclaration(
+        [cloneNode(binding.path.node as ImportSpecifier, true)],
+        stringLiteral(
+          (binding.path.parentPath!.node as ImportDeclaration).source.value
         )
-      );
-
-    const filesDirPath = resolve(
-      dirname(require.resolve('react-native-worklets/package.json')),
-      generatedWorkletsDir
+      )
     );
 
-    const relativeImports = Array.from(relativeBindingsToImport)
-      .filter(
-        (binding) =>
-          binding.path.isImportSpecifier() &&
-          binding.path.parentPath.isImportDeclaration()
-      )
-      .map((binding) => {
-        const resolved = resolve(
-          dirname(state.file.opts.filename!),
-          (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
-            .value
-        );
-        const importPath = relative(filesDirPath, resolved);
+  const filesDirPath = resolve(
+    dirname(require.resolve('react-native-worklets/package.json')),
+    generatedWorkletsDir
+  );
 
-        return importDeclaration(
-          [cloneNode(binding.path.node as ImportSpecifier, true)],
-          stringLiteral(importPath)
-        );
-      });
-
-    const imports = [...libraryImports, ...relativeImports];
-
-    const newProg = program([
-      ...imports,
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ]),
-      exportDefaultDeclaration(factory),
-    ]);
-
-    const transformedProg = transformFromAstSync(newProg, undefined, {
-      filename: state.file.opts.filename,
-      presets: ['@babel/preset-typescript'],
-      plugins: [],
-      ast: false,
-      babelrc: false,
-      configFile: false,
-      comments: false,
-    })?.code;
-
-    assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
-
-    try {
-      if (!existsSync(filesDirPath)) {
-        mkdirSync(filesDirPath, {});
-      }
-    } catch (_e) {
-      // Nothing.
-    }
-
-    const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
-
-    try {
-      writeFileSync(dedicatedFilePath, transformedProg);
-    } catch (_e) {
-      // Nothing.
-    }
-
-    if (shouldIncludeInitData) {
-      pathForStringDefinitions.insertBefore(
-        variableDeclaration('const', [
-          variableDeclarator(initDataId, initDataObjectExpression),
-        ])
+  const relativeImports = Array.from(relativeBindingsToImport)
+    .filter(
+      (binding) =>
+        binding.path.isImportSpecifier() &&
+        binding.path.parentPath.isImportDeclaration()
+    )
+    .map((binding) => {
+      const resolved = resolve(
+        dirname(state.file.opts.filename!),
+        (binding.path.parentPath! as NodePath<ImportDeclaration>).node.source
+          .value
       );
-    }
+      const importPath = relative(filesDirPath, resolved);
 
-    pathForStringDefinitions.parentPath.scope.crawl();
+      return importDeclaration(
+        [cloneNode(binding.path.node as ImportSpecifier, true)],
+        stringLiteral(importPath)
+      );
+    });
+
+  const imports = [...libraryImports, ...relativeImports];
+
+  const newProg = program([
+    ...imports,
+    variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]),
+    exportDefaultDeclaration(factory),
+  ]);
+
+  const transformedProg = transformFromAstSync(newProg, undefined, {
+    filename: state.file.opts.filename,
+    presets: ['@babel/preset-typescript'],
+    plugins: [],
+    ast: false,
+    babelrc: false,
+    configFile: false,
+    comments: false,
+  })?.code;
+
+  assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
+
+  try {
+    if (!existsSync(filesDirPath)) {
+      mkdirSync(filesDirPath, {});
+    }
+  } catch (_e) {
+    // Nothing.
   }
+
+  const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
+
+  try {
+    writeFileSync(dedicatedFilePath, transformedProg);
+  } catch (_e) {
+    // Nothing.
+  }
+
+  pathForStringDefinitions.parentPath.scope.crawl();
 }

@@ -191,9 +191,7 @@ export function makeWorkletFactory(
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
-  if (state.opts.experimentalBundling) {
-    // Nothing.
-  } else if (shouldIncludeInitData) {
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -307,19 +305,20 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const factoryParams = [
-    cloneNode(initDataId, true),
-    ...closureVariables.map((variableId) => {
-      const clonedId = cloneNode(variableId, true);
-      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
-        clonedId.name = clonedId.name.slice(
-          0,
-          clonedId.name.length - workletClassFactorySuffix.length
-        );
-      }
-      return clonedId;
-    }),
-  ];
+  const factoryParams = closureVariables.map((variableId) => {
+    const clonedId = cloneNode(variableId, true);
+    if (clonedId.name.endsWith(workletClassFactorySuffix)) {
+      clonedId.name = clonedId.name.slice(
+        0,
+        clonedId.name.length - workletClassFactorySuffix.length
+      );
+    }
+    return clonedId;
+  });
+
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+    factoryParams.unshift(cloneNode(initDataId, true));
+  }
 
   const factoryParamObjectPattern = objectPattern(
     factoryParams.map((param) =>
@@ -351,17 +350,18 @@ export function makeWorkletFactory(
     )
   );
 
-  generateWorkletFile(
-    libraryBindingsToImport,
-    relativeBindingsToImport,
-    initDataId,
-    initDataObjectExpression,
-    factory,
-    workletHash,
-    pathForStringDefinitions as NodePath<ExpressionStatement>,
-    shouldIncludeInitData,
-    state
-  );
+  if (state.opts.experimentalBundling) {
+    generateWorkletFile(
+      libraryBindingsToImport,
+      relativeBindingsToImport,
+      initDataId,
+      initDataObjectExpression,
+      factory,
+      workletHash,
+      pathForStringDefinitions as NodePath<ExpressionStatement>,
+      state
+    );
+  }
 
   // @ts-expect-error We must mark the factory as workletized
   // to avoid further workletization inside the factory.
