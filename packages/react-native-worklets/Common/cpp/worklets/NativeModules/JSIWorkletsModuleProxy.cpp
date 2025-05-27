@@ -301,7 +301,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableObject(rt, args[0].asObject(rt), args[1].asBool(), args[2].asObject(rt));
+          return makeShareableObject(
+              rt, args[0].getObject(rt), args[1].getBool(), args[2]);
         });
   }
 

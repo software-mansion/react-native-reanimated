@@ -153,7 +153,10 @@ void WorkletRuntimeDecorator::decorate(
          const jsi::Value &shouldRetainRemote,
          const jsi::Value &nativeStateSource) {
         return makeShareableObject(
-            rt, value, shouldRetainRemote, nativeStateSource);
+            rt,
+            value.getObject(rt),
+            shouldRetainRemote.getBool(),
+            nativeStateSource);
       });
 
   jsi_utils::installJsiFunction(
