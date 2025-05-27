@@ -17,7 +17,6 @@ export {
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
-  isRemoteFunction,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,

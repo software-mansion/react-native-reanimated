@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import { runOnJS, runOnUI } from 'react-native-reanimated';
-import { isRemoteFunction } from 'react-native-worklets';
 
 type Status = 'ok' | 'not_ok' | 'error' | undefined;
 
@@ -653,15 +652,17 @@ function RemoteFunctionDemo() {
   const { status, isOk, isNotOk, isError } = useStatus();
 
   const handlePress = () => {
-    function remoteFunction() {
+    const remoteFunction: object = () => {
       return 1;
-    }
+    };
     runOnUI(() => {
       'worklet';
       try {
         const checks = [
           typeof remoteFunction === 'function',
-          isRemoteFunction(remoteFunction as object),
+          __DEV__ === false ||
+            ('__remoteFunction' in remoteFunction &&
+              !!remoteFunction.__remoteFunction),
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();

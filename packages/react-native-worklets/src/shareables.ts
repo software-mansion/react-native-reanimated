@@ -541,7 +541,7 @@ type RemoteFunction<T> = {
   __remoteFunction: FlatShareableRef<T>;
 };
 
-export function isRemoteFunction<T>(value: {
+function isRemoteFunction<T>(value: {
   __remoteFunction?: unknown;
 }): value is RemoteFunction<T> {
   'worklet';
