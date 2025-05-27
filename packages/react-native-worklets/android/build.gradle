@@ -171,6 +171,7 @@ android {
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
 
         externalNativeBuild {
             cmake {

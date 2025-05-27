@@ -1,9 +1,9 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
 
+import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
 import type { AnimatedScrollView } from '../component/ScrollView';
-import { isWeb } from '../PlatformChecker';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -12,8 +12,6 @@ import type {
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
-
-const IS_WEB = isWeb();
 
 /**
  * Lets you synchronously get the current offset of a `ScrollView`.
