@@ -423,7 +423,7 @@ ShareableTurboModuleLike::ShareableTurboModuleLike(
     const std::shared_ptr<jsi::HostObject> &proto)
     : Shareable(TurboModuleLikeType) {
   const auto emptyObject = jsi::Object(rt);
-  // We must get rid of the Host Object prototype as `ShareableObject` expects
+  // We must get rid of the HostObject prototype as `ShareableObject` expects
   // the prototype to be that of a plain object.
   rt.global()
       .getPropertyAsObject(rt, "Object")
