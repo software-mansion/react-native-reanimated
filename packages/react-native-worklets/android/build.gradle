@@ -257,7 +257,12 @@ android {
         main {
             java {
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/worklets/paper"
+                    srcDirs += "src/paper"
+                }
+                if (EXPERIMENTAL_BUNDLING) {
+                    srcDirs += "src/experimentalBundling"
+                } else {
+                    srcDirs += "src/legacyBundling"
                 }
             }
         }
