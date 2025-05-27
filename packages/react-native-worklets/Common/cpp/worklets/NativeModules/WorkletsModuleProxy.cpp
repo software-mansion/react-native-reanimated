@@ -30,18 +30,20 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
-      uiScheduler_(uiScheduler),
-      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
-          rnRuntime,
-          createJSIWorkletsModuleProxy(),
-          jsQueue,
-          jsScheduler_,
-          "Reanimated UI runtime",
-          true /* supportsLocking */,
-          isDevBundle_)),
-      animationFrameBatchinator_(std::make_shared<AnimationFrameBatchinator>(
-          uiWorkletRuntime_->getJSIRuntime(),
-          std::move(forwardedRequestAnimationFrame))) {
+      uiScheduler_(uiScheduler) {
+  uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
+      rnRuntime,
+      createJSIWorkletsModuleProxy(),
+      jsQueue_,
+      jsScheduler_,
+      "Reanimated UI runtime",
+      true /* supportsLocking */,
+      isDevBundle_);
+
+  animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
+      uiWorkletRuntime_->getJSIRuntime(),
+      std::move(forwardedRequestAnimationFrame));
+
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
       animationFrameBatchinator_->getJsiRequestAnimationFrame());

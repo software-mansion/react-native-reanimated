@@ -39,7 +39,7 @@ if (SHOULD_BE_USE_WEB) {
   global._WORKLET = false;
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
-} else {
+} else if (!globalThis._WORKLET) {
   if (__DEV__) {
     const testWorklet = () => {
       'worklet';

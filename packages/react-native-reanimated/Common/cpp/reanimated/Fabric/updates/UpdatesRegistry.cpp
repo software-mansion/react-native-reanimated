@@ -21,8 +21,6 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
 }
 
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 

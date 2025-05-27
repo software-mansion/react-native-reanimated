@@ -23,3 +23,8 @@ using namespace facebook::react;
 }
 
 @end
+
+Class<RCTComponentViewProtocol> ReanimatedViewCls(void)
+{
+  return ReanimatedView.class;
+}

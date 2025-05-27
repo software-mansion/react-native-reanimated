@@ -475,7 +475,6 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
-  cssAnimationsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
@@ -506,19 +505,22 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     }
   }
 
-  cssAnimationsRegistry_->apply(
-      rt,
-      shadowNode,
-      updates.animationNames,
-      std::move(newAnimations),
-      updates.settingsUpdates,
-      timestamp);
+  {
+    auto lock = cssAnimationsRegistry_->lock();
+    cssAnimationsRegistry_->apply(
+        rt,
+        shadowNode,
+        updates.animationNames,
+        std::move(newAnimations),
+        updates.settingsUpdates,
+        timestamp);
+  }
 
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  cssAnimationsRegistry_->lock();
+  auto lock = cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -526,7 +528,6 @@ void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
-  cssTransitionsRegistry_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
@@ -534,7 +535,10 @@ void ReanimatedModuleProxy::registerCSSTransition(
       parseCSSTransitionConfig(rt, transitionConfig),
       viewStylesRepository_);
 
-  cssTransitionsRegistry_->add(transition);
+  {
+    auto lock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->add(transition);
+  }
   maybeRunCSSLoop();
 }
 
@@ -542,7 +546,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
-  cssTransitionsRegistry_->lock();
+  auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->updateSettings(
       viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
   maybeRunCSSLoop();
@@ -551,7 +555,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
-  cssTransitionsRegistry_->lock();
+  auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -697,17 +701,20 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       currentCssTimestamp_ = getAnimationTimestamp_();
-      cssTransitionsRegistry_->lock();
+      auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
-    // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(updatesBatch);
+    {
+      auto lock = animatedPropsRegistry_->lock();
+      // Flush all animated props updates
+      animatedPropsRegistry_->flushUpdates(updatesBatch);
+    }
 
     if (shouldUpdateCssAnimations_) {
-      cssAnimationsRegistry_->lock();
+      auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
