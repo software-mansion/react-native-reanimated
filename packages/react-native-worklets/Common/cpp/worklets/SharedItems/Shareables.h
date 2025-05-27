@@ -132,7 +132,7 @@ class ShareableNativeState : public jsi::NativeState {
     return shareable_;
   }
 
-  static jsi::Object createFromShareable(
+  static jsi::Object createObjectFromShareable(
       jsi::Runtime &rt,
       const std::shared_ptr<Shareable> &value) {
     jsi::Object obj(rt);
