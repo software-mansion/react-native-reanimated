@@ -1,4 +1,5 @@
 'use strict';
+import { ReanimatedError } from '../../../../../common';
 import {
   MILLISECONDS_REGEX,
   SECONDS_REGEX,
@@ -9,7 +10,6 @@ import type {
   NormalizedCSSTimingFunction,
   PredefinedTimingFunction,
 } from '../../../../easings';
-import { ReanimatedError } from '../../../../errors';
 import type { TimeUnit } from '../../../../types';
 import { isPredefinedTimingFunction } from '../../../../utils';
 

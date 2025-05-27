@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
   #   HERMESVM_PROFILER_OPCODE
   #   HERMESVM_PROFILER_BB
   # which shouldn't be defined in standard setups.
-  hermes_debug_hidden_flags = '$(inherited) HERMES_ENABLE_DEBUGGER=1'
+  hermes_debug_hidden_flags = 'HERMES_ENABLE_DEBUGGER=1'
 
   experimental_bundling_flag = $worklets_config[:experimental_bundling] ? 'WORKLETS_EXPERIMENTAL_BUNDLING=1' : ''
   
@@ -61,8 +61,8 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "#{hermes_debug_hidden_flags} #{experimental_bundling_flag}",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited)  #{hermes_debug_hidden_flags} #{experimental_bundling_flag}",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{experimental_bundling_flag}",
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [

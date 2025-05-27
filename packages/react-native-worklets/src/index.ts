@@ -11,10 +11,9 @@ import type { ValueUnpacker } from './workletTypes';
 if (!globalThis._WORKLET) {
   globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   initializeUIRuntime(WorkletsModule);
-  // eslint-disable-next-line no-constant-condition
-} else if (false) {
-  // We must 'run' anything from `workletRuntimeEntry`
-  // for it to be pulled into the bundle.
+  // @ts-expect-error We must trick the bundler to include
+  // the `workletRuntimeEntry` file the way it cannot optimize it out.
+} else if (globalThis._ALWAYS_FALSE) {
   initializeLibraryOnWorkletRuntime();
 }
 
