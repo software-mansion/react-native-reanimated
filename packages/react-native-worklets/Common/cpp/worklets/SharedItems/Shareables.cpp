@@ -175,7 +175,7 @@ jsi::Value makeShareableHostObject(
 
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const jsi::String &source,
+    const double &source,
     const jsi::String &imported) {
   auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
   return ShareableJSRef::newHostObject(rt, shareable);
@@ -330,7 +330,7 @@ jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
     return jsi::Value::undefined();
   }
 
-  const auto source = jsi::String::createFromUtf8(rt, source_);
+  const auto source = source_;
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt)
       .asFunction(rt)

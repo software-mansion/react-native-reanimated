@@ -162,8 +162,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (
-    // eslint-disable-next-line no-constant-condition
-    false /* disable it for now */ &&
+    globalThis._WORKLETS_EXPERIMENTAL_BUNDLING &&
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
@@ -205,6 +204,13 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArrayBufferView(value);
   }
   return inaccessibleObject(value);
+}
+
+if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  makeShareableCloneRecursiveNative.__bundleData = {
+    imported: 'makeShareableCloneRecursive',
+    source: 22113377,
+  };
 }
 
 export interface MakeShareableClone {
@@ -594,7 +600,7 @@ function freezeObjectInDev<T extends object>(value: T) {
   Object.preventExtensions(value);
 }
 
-export function makeShareableCloneOnUIRecursive<T>(
+function makeShareableCloneOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
@@ -663,6 +669,12 @@ export function makeShareableCloneOnUIRecursive<T>(
   }
   return cloneRecursive(value);
 }
+
+export const makeShareableCloneOnUIRecursive = (
+  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+    ? makeShareableCloneRecursive
+    : makeShareableCloneOnUIRecursiveLEGACY
+) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
 function makeShareableJS<T extends object>(value: T): T {
   return value;

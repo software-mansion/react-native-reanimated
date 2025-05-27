@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 function isWeb() {
   return Platform.OS === 'web';
@@ -66,6 +67,15 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Experimental bundling:</Text>{' '}
+            {
+              // @ts-expect-error This global is not exposed.
+              globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+                ? 'Enabled'
+                : 'Disabled'
+            }
           </Text>
         </>
       )}

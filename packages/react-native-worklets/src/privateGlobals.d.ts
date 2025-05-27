@@ -10,6 +10,8 @@ import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
 
 declare global {
+  /** The only runtime-available require method is `__r` defined by Metro. */
+  var __r: (moduleId: number) => Record<string, unknown>;
   var __workletsCache: Map<number, () => unknown>;
   var __handleCache: WeakMap<object, unknown>;
   var evalWithSourceMap:
@@ -21,6 +23,7 @@ declare global {
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy | undefined;
   var _WORKLET: boolean | undefined;
+  var _WORKLETS_EXPERIMENTAL_BUNDLING: boolean | undefined;
   var _makeShareableClone: <T>(
     value: T,
     nativeStateSource?: object

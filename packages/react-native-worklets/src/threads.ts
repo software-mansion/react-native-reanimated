@@ -7,7 +7,7 @@ import {
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction, WorkletImport } from './workletTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -90,7 +90,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (
+    __DEV__ &&
+    !SHOULD_BE_USE_WEB &&
+    !isWorkletFunction(worklet) &&
+    !(worklet as unknown as WorkletImport).__bundleData
+  ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
@@ -239,10 +244,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0
-        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
-        : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
 }
