@@ -6,7 +6,7 @@ module.exports = {
       'react-native-worklets/plugin',
       {
         // Uncomment the next line to enable experimental bundling.
-        experimentalBundling: true,
+        // experimentalBundling: true,
       },
     ],
     [
