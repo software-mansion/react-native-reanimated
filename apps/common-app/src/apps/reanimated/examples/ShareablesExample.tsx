@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { runOnJS, runOnUI } from 'react-native-reanimated';
+import { isRemoteFunction } from 'react-native-worklets';
 
 type Status = 'ok' | 'not_ok' | 'error' | undefined;
 
@@ -46,6 +47,7 @@ export default function ShareablesExample() {
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
+        <RemoteFunctionDemo />
         <DataViewDemo />
         <ErrorDemo />
         <CyclicObjectDemo />
@@ -626,6 +628,42 @@ function ArrayBufferDemo() {
         taUi[7] = 123;
 
         if (isArrayBufferInstance && initialValueCheck) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function RemoteFunctionDemo() {
+  const title = 'Remote function';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    function remoteFunction() {
+      return 1;
+    }
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          typeof remoteFunction === 'function',
+          isRemoteFunction(remoteFunction as object),
+        ];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();

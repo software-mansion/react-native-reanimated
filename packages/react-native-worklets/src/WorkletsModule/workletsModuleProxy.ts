@@ -36,6 +36,8 @@ export interface WorkletsModuleProxy {
 
   makeShareableInitializer(obj: object): ShareableRef<object>;
 
+  makeShareableFunction(func: object): ShareableRef<object>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

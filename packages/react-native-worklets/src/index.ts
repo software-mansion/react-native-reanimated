@@ -20,6 +20,7 @@ export {
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
+  isRemoteFunction,
 } from './shareables';
 export {
   callMicrotasks,
