@@ -4,6 +4,7 @@ import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_M
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_START;
 
 import androidx.annotation.NonNull;
+import androidx.tracing.Trace;
 import com.facebook.react.BaseReactPackage;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
@@ -75,7 +76,7 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
 
   private UIManagerModule createUIManager(final ReactApplicationContext reactContext) {
     ReactMarker.logMarker(CREATE_UI_MANAGER_MODULE_START);
-    // Trace.beginSection("createUIManagerModule");
+    Trace.beginSection("createUIManagerModule");
     final ReactInstanceManager reactInstanceManager = getReactInstanceManager(reactContext);
     List<ViewManager> viewManagers = reactInstanceManager.getOrCreateViewManagers(reactContext);
     int minTimeLeftInFrameForNonBatchedOperationMs = -1;
@@ -83,7 +84,7 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
       return ReanimatedUIManagerFactory.create(
           reactContext, viewManagers, minTimeLeftInFrameForNonBatchedOperationMs);
     } finally {
-      // Trace.endSection();
+      Trace.endSection();
       ReactMarker.logMarker(CREATE_UI_MANAGER_MODULE_END);
     }
   }
