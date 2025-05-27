@@ -389,6 +389,7 @@ function cloneWorklet<T extends WorkletFunction>(
 
   const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
+    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
     // retain all worklets
     true
   ) as ShareableRef<T>;
