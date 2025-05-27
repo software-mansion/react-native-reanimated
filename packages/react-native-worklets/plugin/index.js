@@ -428,7 +428,6 @@ var require_closure = __commonJS({
     exports2.getClosure = void 0;
     var types_12 = require("@babel/types");
     var globals_12 = require_globals();
-    var types_2 = require_types();
     function getClosure(funPath, state) {
       const capturedNames = /* @__PURE__ */ new Set();
       const closureVariables = new Array();
@@ -471,12 +470,17 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && isImport(binding) && isAllowedToImport(state.filename)) {
-            if (isImportRelative(binding)) {
+          if (state.opts.experimentalBundling && isImport(binding)) {
+            if (isImportRelative(binding) && isAllowedForRelativeImports(state.filename, state.opts.workletizableModules)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
               return;
-            } else {
+            }
+            const source = binding.path.parentPath.node.source.value;
+            if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+              capturedNames.add(name);
+              libraryBindingsToImport.add(binding);
+              return;
             }
           }
           capturedNames.add(name);
@@ -496,8 +500,11 @@ var require_closure = __commonJS({
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
     }
-    function isAllowedToImport(filename) {
-      return !!filename && filename.includes("react-native-worklets") && !filename.includes(types_2.generatedWorkletsDir);
+    function isAllowedForRelativeImports(filename, workletizableModules) {
+      return !!filename && (filename.includes("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => filename.includes(module3))));
+    }
+    function isWorkletizableModule(source, workletizableModules) {
+      return source.startsWith("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));
     }
   }
 });
@@ -851,7 +858,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.experimentalBundling && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -870,7 +877,7 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = closureVariables.map((variableId) => {
         const clonedId = (0, types_12.cloneNode)(variableId, true);
-        if (clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+        if (!state.opts.experimentalBundling && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
           clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
         }
         return clonedId;
