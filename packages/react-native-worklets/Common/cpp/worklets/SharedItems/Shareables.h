@@ -1,9 +1,7 @@
 #pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-#include <worklets/Tools/JSISerializer.h>
 
-#include <glog/logging.h>
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -20,17 +18,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 #ifndef NDEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
-
-template <typename T>
-void printJSIValue(jsi::Runtime &rt, T &&arg) {
-  if constexpr (std::is_same_v<std::decay_t<T>, jsi::Value>) {
-    const jsi::Value &value = arg; // Work directly with references
-    LOG(INFO) << "ARG " << stringifyJSIValue(rt, value);
-
-  } else {
-    LOG(INFO) << "SKIPPING ARG";
-  }
-}
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
@@ -187,6 +174,19 @@ jsi::Value makeShareableImport(
     const double &source,
     const jsi::String &imported);
 
+jsi::Value makeShareableHostObject(
+    jsi::Runtime &rt,
+    const std::shared_ptr<jsi::HostObject> &value);
+
+jsi::Value makeShareableArray(
+    jsi::Runtime &rt,
+    const jsi::Array &array,
+    const jsi::Value &shouldRetainRemote);
+
+jsi::Value makeShareableInitializer(
+    jsi::Runtime &rt,
+    const jsi::Object &initializerObject);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
@@ -330,7 +330,7 @@ class ShareableRemoteFunction
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
-class ShareableHandle : public Shareable {
+class ShareableInitializer : public Shareable {
  private:
   // We don't release the initializer since the handle can get
   // initialized in parallel on multiple threads. However this is not a problem,
@@ -342,12 +342,12 @@ class ShareableHandle : public Shareable {
   jsi::Runtime *remoteRuntime_;
 
  public:
-  ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
+  ShareableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
       : Shareable(HandleType),
         initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
   }
 
-  ~ShareableHandle() {
+  ~ShareableInitializer() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 

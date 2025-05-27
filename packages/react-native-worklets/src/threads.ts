@@ -244,7 +244,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      // args.length > 0 ? makeShareableCloneRecursive(args) : undefined
       args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };

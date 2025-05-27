@@ -47,19 +47,6 @@ function getReactNativeVersion() {
 }
 
 export default function AboutExample() {
-  const [experimentalBundling, setExperimentalBundling] = useState<
-    boolean | null
-  >(null);
-
-  React.useEffect(() => {
-    runOnUI(() => {
-      runOnJS(setExperimentalBundling)(
-        // @ts-expect-error This global is not exposed.
-        !!globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
-      );
-    })();
-  }, []);
-
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -83,11 +70,12 @@ export default function AboutExample() {
           </Text>
           <Text style={styles.text}>
             <Text style={styles.bold}>Experimental bundling:</Text>{' '}
-            {experimentalBundling === null
-              ? 'Loading...'
-              : experimentalBundling
+            {
+              // @ts-expect-error This global is not exposed.
+              globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
                 ? 'Enabled'
-                : 'Disabled'}
+                : 'Disabled'
+            }
           </Text>
         </>
       )}

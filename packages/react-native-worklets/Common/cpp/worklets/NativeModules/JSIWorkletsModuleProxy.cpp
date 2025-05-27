@@ -134,6 +134,12 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "makeShareableString"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableUndefined"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableHostObject"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableInitializer"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableArray"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -150,6 +156,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
     jsi::Runtime &rt,
     const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
+
   if (name == "makeShareableClone") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -162,6 +169,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableClone(rt, args[0], args[1], args[2]);
         });
   }
+
   if (name == "makeShareableBigInt") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -174,6 +182,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableBigInt(rt, args[0].asBigInt(rt));
         });
   }
+
   if (name == "makeShareableBoolean") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -186,6 +195,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableBoolean(rt, args[0].asBool());
         });
   }
+
   if (name == "makeShareableImport") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -199,6 +209,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
               rt, args[0].asNumber(), args[1].asString(rt));
         });
   }
+
   if (name == "makeShareableNumber") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -211,6 +222,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableNumber(rt, args[0].asNumber());
         });
   }
+
   if (name == "makeShareableNull") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -221,6 +233,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) { return makeShareableNull(rt); });
   }
+
   if (name == "makeShareableString") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -233,6 +246,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           return makeShareableString(rt, args[0].asString(rt));
         });
   }
+
   if (name == "makeShareableUndefined") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -243,6 +257,48 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) { return makeShareableUndefined(rt); });
   }
+
+  if (name == "makeShareableInitializer") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableInitializer(rt, args[0].asObject(rt));
+        });
+  }
+
+  if (name == "makeShareableArray") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableArray(
+              rt, args[0].asObject(rt).asArray(rt), args[1]);
+        });
+  }
+
+  if (name == "makeShareableHostObject") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableHostObject(
+              rt, args[0].asObject(rt).getHostObject(rt));
+        });
+  }
+
   if (name == "scheduleOnUI") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -256,7 +312,9 @@ jsi::Value JSIWorkletsModuleProxy::get(
           scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0]);
           return jsi::Value::undefined();
         });
-  } else if (name == "executeOnUIRuntimeSync") {
+  }
+
+  if (name == "executeOnUIRuntimeSync") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -268,7 +326,9 @@ jsi::Value JSIWorkletsModuleProxy::get(
             size_t count) {
           return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
         });
-  } else if (name == "createWorkletRuntime") {
+  }
+
+  if (name == "createWorkletRuntime") {
     auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
     return jsi::Function::createFromHostFunction(
         rt,
@@ -296,7 +356,9 @@ jsi::Value JSIWorkletsModuleProxy::get(
               args[1]);
           return jsi::Value::undefined();
         });
-  } else if (name == "scheduleOnRuntime") {
+  }
+
+  if (name == "scheduleOnRuntime") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,

@@ -9,7 +9,6 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 
 #include <memory>
 #include <utility>
@@ -121,7 +120,7 @@ WorkletRuntime::WorkletRuntime(
     try {
       rt.evaluateJavaScript(script, sourceUrl);
     } catch (facebook::jsi::JSIException ex) {
-      // LOG(INFO) << ex.what();
+      // Nothing
     }
     return;
   }

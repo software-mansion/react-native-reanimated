@@ -14,8 +14,6 @@ if (!globalThis._WORKLET) {
   // @ts-expect-error We must trick the bundler to include
   // the `workletRuntimeEntry` file the way it cannot optimize it out.
 } else if (globalThis._ALWAYS_FALSE) {
-  // We must 'run' anything from `workletRuntimeEntry`
-  // for it to be pulled into the bundle.
   initializeLibraryOnWorkletRuntime();
 }
 

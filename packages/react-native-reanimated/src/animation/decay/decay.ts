@@ -1,10 +1,10 @@
 'use strict';
+import { ReanimatedError } from '../../common';
 import type {
   Animation,
   AnimationCallback,
   Timestamp,
 } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
 import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import { rigidDecay } from './rigidDecay';
 import { rubberBandDecay } from './rubberBandDecay';

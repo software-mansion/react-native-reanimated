@@ -19,7 +19,6 @@ import type { ValueUnpacker } from './workletTypes';
 export function initializeLibraryOnWorkletRuntime() {
   globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
   if (globalThis._WORKLET) {
-    // TODO: Try storing a raw pointer to the valueUnpacker and see what happens.
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
 
     setupCallGuard();

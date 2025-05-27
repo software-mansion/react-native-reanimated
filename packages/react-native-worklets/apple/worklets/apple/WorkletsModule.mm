@@ -8,10 +8,8 @@
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
-#import <React/NSDataBigString.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
-#import <jsireact/JSIExecutor.h>
 
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
@@ -23,7 +21,6 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-  std::string sourceURL_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG

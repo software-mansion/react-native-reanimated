@@ -10,7 +10,7 @@
 // Experimental bundling
 #import <React/NSBigStringBuffer.h>
 #import <React/RCTBundleConsumer.h>
-#endif // __has_include(<React/NSBigStringBuffer.h>)
+#endif // __has_include(<React/RCTBundleConsumer.h>)
 
 @interface WorkletsModule : RCTEventEmitter <
                                 NativeWorkletsModuleSpec,
