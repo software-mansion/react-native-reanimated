@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -40,7 +41,8 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle) {
+    const bool isDevBundle,
+    jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -53,6 +55,9 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "_IS_FABRIC", true);
 
   rt.global().setProperty(rt, "__DEV__", isDevBundle);
+
+  rt.global().setProperty(
+      rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
@@ -131,6 +136,11 @@ void WorkletRuntimeDecorator::decorate(
         return makeShareableUndefined(rt);
       });
 
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArray(rt, value.asObject(rt).asArray(rt), false);
+      });
+
   jsi_utils::installJsiFunction(rt, "_makeShareableNull", [](jsi::Runtime &rt) {
     return makeShareableNull(rt);
   });
@@ -144,6 +154,13 @@ void WorkletRuntimeDecorator::decorate(
          const jsi::Value &nativeStateSource) {
         return makeShareableObject(
             rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableInitializer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableInitializer(rt, value.asObject(rt));
       });
 
   jsi_utils::installJsiFunction(

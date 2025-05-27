@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -40,15 +41,18 @@ export default function ShareablesExample() {
         <UndefinedDemo />
         <NullDemo />
         <PlainObjectDemo />
-        <CyclicObjectDemo />
-        <InaccessibleObjectDemo />
-        <RemoteNamedFunctionSyncCallDemo />
-        <RemoteAnonymousFunctionSyncCallDemo />
+        <HostObjectDemo />
+        <ArrayDemo />
+        <RegExpDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
         <DataViewDemo />
         <ErrorDemo />
+        <CyclicObjectDemo />
+        <InaccessibleObjectDemo />
+        <RemoteNamedFunctionSyncCallDemo />
+        <RemoteAnonymousFunctionSyncCallDemo />
       </ScrollView>
     </View>
   );
@@ -66,15 +70,18 @@ interface DemoItemRowProps {
   title: string;
   onPress: () => void;
   status: Status;
-  expected: Status;
+  expectedOnNative: Status;
+  expectedOnWeb: Status;
 }
 
 const DemoItemRow: React.FC<DemoItemRowProps> = ({
   title,
   onPress,
   status,
-  expected,
+  expectedOnNative,
+  expectedOnWeb,
 }) => {
+  const expected = Platform.OS === 'web' ? expectedOnWeb : expectedOnNative;
   return (
     <View style={styles.demoRow}>
       <TouchableOpacity
@@ -107,7 +114,6 @@ function Status({ status }: { status: Status }) {
 function StringDemo() {
   const title = 'String';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const testString = 'test';
@@ -129,7 +135,8 @@ function StringDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -137,7 +144,6 @@ function StringDemo() {
 function NumberDemo() {
   const title = 'Number';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const number = 123;
@@ -159,7 +165,8 @@ function NumberDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -167,7 +174,6 @@ function NumberDemo() {
 function BooleanDemo() {
   const title = 'Boolean';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const boolTrue = true;
@@ -191,7 +197,8 @@ function BooleanDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -199,7 +206,6 @@ function BooleanDemo() {
 function UndefinedDemo() {
   const title = 'Undefined';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const x = undefined;
@@ -221,7 +227,8 @@ function UndefinedDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -229,7 +236,6 @@ function UndefinedDemo() {
 function NullDemo() {
   const title = 'Null';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const x = null;
@@ -251,7 +257,167 @@ function NullDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function RegExpDemo() {
+  const title = 'RegExp';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    const regex1 = /test/;
+    // eslint-disable-next-line prefer-regex-literals
+    const regex2 = new RegExp('test');
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          regex1.test('test'),
+          regex2.test('test'),
+          regex1.toString() === regex2.toString(),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function ArrayDemo() {
+  const title = 'Array';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  enum index {
+    number = 0,
+    true = 1,
+    false = 2,
+    null = 3,
+    undefined = 4,
+    string = 5,
+    bigint = 6,
+    object = 7,
+    remoteFunction = 8,
+    array = 9,
+    workletFunction = 10,
+    initializer = 11,
+    arrayBuffer = 12,
+  }
+
+  const handlePress = () => {
+    const arrayBuffer = new ArrayBuffer(3);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    uint8Array[0] = 1;
+    uint8Array[1] = 2;
+    uint8Array[2] = 3;
+    const array: any[] = [
+      // number
+      1,
+      // boolean
+      true,
+      false,
+      // null
+      null,
+      // undefined
+      undefined,
+      // string
+      'a',
+      // bigint
+      BigInt(123),
+      // object
+      { a: 1 },
+      // remote function - not a worklet
+      () => {
+        return 1;
+      },
+      // array
+      [1],
+      // worklet function
+      () => {
+        'worklet';
+        return 1;
+      },
+      // initializer - regexp
+      /a/,
+      // array buffer
+      arrayBuffer,
+    ];
+    runOnUI(() => {
+      'worklet';
+      try {
+        const uint8ArrayUI = new Uint8Array(array[12]);
+        const checks = [
+          // number
+          array[index.number] === 1,
+          // boolean
+          array[index.true] === true,
+          array[index.false] === false,
+          // null
+          array[index.null] === null,
+          // undefined
+          array[index.undefined] === undefined,
+          // string
+          array[index.string] === 'a',
+          // bigint
+          typeof array[index.bigint] === 'bigint',
+          array[index.bigint] === BigInt(123),
+          // object
+          typeof array[index.object] === 'object',
+          array[index.object].a === 1,
+          // remote function - not worklet
+          typeof array[index.remoteFunction] === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in array[index.remoteFunction] &&
+              !!array[index.remoteFunction].__remoteFunction),
+          // array
+          array[index.array].length === 1,
+          array[index.array][0] === 1,
+          // worklet function
+          typeof array[index.workletFunction] === 'function',
+          array[index.workletFunction]() === 1,
+          // initializer - regexp
+          array[index.initializer] instanceof RegExp,
+          array[index.initializer].test('a'),
+          // array buffer
+          array[index.arrayBuffer] instanceof ArrayBuffer,
+          array[index.arrayBuffer].byteLength === 3,
+          uint8ArrayUI[0] === 1,
+          uint8ArrayUI[1] === 2,
+          uint8ArrayUI[2] === 3,
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -259,7 +425,6 @@ function NullDemo() {
 function CyclicObjectDemo() {
   const title = 'Cyclic object';
   const { status, isOk, isError } = useStatus();
-  const expectedStatus: Status = 'error';
 
   const handlePress = () => {
     try {
@@ -286,7 +451,8 @@ function CyclicObjectDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="error"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -294,48 +460,65 @@ function CyclicObjectDemo() {
 function PlainObjectDemo() {
   const title = 'Plain object';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
+
+  enum key {
+    number = 0,
+    true = 1,
+    false = 2,
+    null = 3,
+    undefined = 4,
+    string = 5,
+    bigint = 6,
+    object = 7,
+    remoteFunction = 8,
+    array = 9,
+    workletFunction = 10,
+    initializer = 11,
+    arrayBuffer = 12,
+  }
 
   const handlePress = () => {
     const obj = {
-      a: 1,
-      b: 2,
-      c: 3,
-      d: 'test',
-      e: { f: 4, g: 5 },
-      h: BigInt(6),
-      i: true,
-      j: false,
-      k: null,
-      l: undefined,
-      m: () => {
+      [key.number]: 1,
+      [key.true]: true,
+      [key.false]: false,
+      [key.null]: null,
+      [key.undefined]: undefined,
+      [key.string]: 'test',
+      [key.bigint]: BigInt(123),
+      [key.object]: { f: 4, g: 5 },
+      [key.remoteFunction]: () => {
         return 1;
       },
-      n: () => {
+      [key.array]: [1],
+      [key.workletFunction]: () => {
         'worklet';
         return 2;
       },
-      o: /test/,
+      [key.initializer]: /test/,
+      [key.arrayBuffer]: new ArrayBuffer(3),
     };
     runOnUI(() => {
       'worklet';
       try {
         const checks = [
-          obj.a === 1,
-          obj.b === 2,
-          obj.c === 3,
-          obj.d === 'test',
-          obj.e.f === 4,
-          obj.e.g === 5,
-          obj.h === BigInt(6),
-          obj.i === true,
-          obj.j === false,
-          obj.k === null,
-          obj.l === undefined,
-          typeof obj.m === 'function',
-          typeof obj.n === 'function',
-          obj.n() === 2,
-          obj.o.test('test'),
+          obj[key.number] === 1,
+          obj[key.true] === true,
+          obj[key.false] === false,
+          obj[key.null] === null,
+          obj[key.undefined] === undefined,
+          obj[key.string] === 'test',
+          obj[key.bigint] === BigInt(123),
+          obj[key.object].f === 4,
+          obj[key.object].g === 5,
+          obj[key.remoteFunction]() === 1,
+          obj[key.array].length === 1,
+          obj[key.array][0] === 1,
+          obj[key.workletFunction]() === 2,
+          obj[key.initializer] instanceof RegExp,
+          obj[key.initializer].test('test'),
+          obj[key.arrayBuffer] instanceof ArrayBuffer,
+          obj[key.arrayBuffer].byteLength === 3,
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
@@ -352,7 +535,8 @@ function PlainObjectDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -360,7 +544,6 @@ function PlainObjectDemo() {
 function InaccessibleObjectDemo() {
   const title = 'Inaccessible object';
   const { status, isOk, isError } = useStatus();
-  const expectedStatus: Status = 'error';
 
   const handlePress = () => {
     const x = new Set();
@@ -379,7 +562,45 @@ function InaccessibleObjectDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="error"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function HostObjectDemo() {
+  const title = 'HostObject';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    // @ts-expect-error It's ok
+    const hostObject = globalThis.__reanimatedModuleProxy;
+    const hostObjectKeys = Object.keys(hostObject);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          hostObjectKeys.length === Object.keys(hostObject).length,
+          ...hostObjectKeys.map((key) => hostObject[key] !== undefined),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -387,7 +608,6 @@ function InaccessibleObjectDemo() {
 function RemoteNamedFunctionSyncCallDemo() {
   const title = 'Remote named function sync call';
   const { status, isOk, isError } = useStatus();
-  const expectedStatus: Status = 'error';
 
   const handlePress = () => {
     function foo() {}
@@ -406,7 +626,8 @@ function RemoteNamedFunctionSyncCallDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="error"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -414,7 +635,6 @@ function RemoteNamedFunctionSyncCallDemo() {
 function RemoteAnonymousFunctionSyncCallDemo() {
   const title = 'Remote anonymous function sync call';
   const { status, isOk, isError } = useStatus();
-  const expectedStatus: Status = 'error';
 
   const handlePress = () => {
     const foo = () => {};
@@ -433,7 +653,8 @@ function RemoteAnonymousFunctionSyncCallDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="error"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -441,7 +662,6 @@ function RemoteAnonymousFunctionSyncCallDemo() {
 function BigIntDemo() {
   const title = 'BigInt';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const bigint = BigInt('1234567890');
@@ -467,7 +687,8 @@ function BigIntDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -475,7 +696,6 @@ function BigIntDemo() {
 function ArrayBufferDemo() {
   const title = 'ArrayBuffer';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const ab = new ArrayBuffer(8);
@@ -505,7 +725,8 @@ function ArrayBufferDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -513,7 +734,6 @@ function ArrayBufferDemo() {
 function TypedArrayDemo() {
   const title = 'TypedArray';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const ta1 = new Int8Array(100);
@@ -573,7 +793,8 @@ function TypedArrayDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -581,7 +802,6 @@ function TypedArrayDemo() {
 function BigIntTypedArrayDemo() {
   const title = 'BigIntTypedArray';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const ta1 = new BigInt64Array(100);
@@ -613,7 +833,8 @@ function BigIntTypedArrayDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
@@ -621,7 +842,6 @@ function BigIntTypedArrayDemo() {
 function DataViewDemo() {
   const title = 'DataView';
   const { status, isOk, isNotOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
 
   const handlePress = () => {
     const buffer = new ArrayBuffer(16);
@@ -647,15 +867,15 @@ function DataViewDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }
 
 function ErrorDemo() {
   const title = 'Error';
-  const { status, isOk, isError } = useStatus();
-  const expectedStatus: Status = 'ok';
+  const { status, isOk, isError, isNotOk } = useStatus();
 
   const handlePress = () => {
     const e = new Error('error message');
@@ -665,12 +885,12 @@ function ErrorDemo() {
         const checks = [
           e instanceof Error,
           String(e).includes('error message'),
-          global._WORKLET,
+          Platform.OS === 'web' ? !global._WORKLET : global._WORKLET,
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
-          runOnJS(isError)();
+          runOnJS(isNotOk)();
         }
       } catch (err) {
         runOnJS(isError)();
@@ -682,7 +902,8 @@ function ErrorDemo() {
       title={title}
       onPress={handlePress}
       status={status}
-      expected={expectedStatus}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
     />
   );
 }

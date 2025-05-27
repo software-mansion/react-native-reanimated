@@ -1,4 +1,5 @@
 #import <worklets/Tools/SingleInstanceChecker.h>
+#import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
@@ -64,7 +65,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
+  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
+  auto optimizedJsiWorkletsModuleProxy =
+      worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
+  RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy));
 
   return @YES;
 }

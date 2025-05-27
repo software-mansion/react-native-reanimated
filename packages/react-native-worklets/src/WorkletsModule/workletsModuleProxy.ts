@@ -10,6 +10,11 @@ export interface WorkletsModuleProxy {
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 
+  makeShareableImport<TValue>(
+    source: string,
+    imported: string
+  ): ShareableRef<TValue>;
+
   makeShareableString(str: string): ShareableRef<string>;
 
   makeShareableNumber(num: number): ShareableRef<number>;
@@ -27,6 +32,15 @@ export interface WorkletsModuleProxy {
     shouldRetainRemote: boolean,
     nativeStateSource?: object
   ): ShareableRef<T>;
+  
+  makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
+
+  makeShareableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean
+  ): ShareableRef<unknown[]>;
+
+  makeShareableInitializer(obj: object): ShareableRef<object>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 

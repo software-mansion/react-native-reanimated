@@ -29,22 +29,7 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {
-      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
-      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync:
-        global.__workletsModuleProxy.executeOnUIRuntimeSync,
-      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
-      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
-      makeShareableString: global.__workletsModuleProxy.makeShareableString,
-      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
-      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
-      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
-      makeShareableUndefined:
-        global.__workletsModuleProxy.makeShareableUndefined,
-      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
-      makeShareableObject: global.__workletsModuleProxy.makeShareableObject,
-    };
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
       this.#workletsModuleProxy.makeShareableUndefined();
@@ -63,6 +48,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
   }
 
   makeShareableString(str: string) {
@@ -99,6 +88,21 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldRetainRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  }
+
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
+  makeShareableInitializer(obj: object) {
+    return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
