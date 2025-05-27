@@ -116,32 +116,32 @@ jsi::Value makeShareableClone(
 
 jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string) {
   const auto shareable = std::make_shared<ShareableString>(string.utf8(rt));
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) {
   const auto shareable = std::make_shared<ShareableScalar>(number);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
   const auto shareable = std::make_shared<ShareableScalar>(boolean);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
   const auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
   const auto shareable = std::make_shared<ShareableScalar>();
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableNull(jsi::Runtime &rt) {
   const auto shareable = std::make_shared<ShareableScalar>(nullptr);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableInitializer(
@@ -149,7 +149,7 @@ jsi::Value makeShareableInitializer(
     const jsi::Object &initializerObject) {
   const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableArray(
@@ -162,14 +162,14 @@ jsi::Value makeShareableArray(
   } else {
     shareable = std::make_shared<ShareableArray>(rt, array);
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
     const std::shared_ptr<jsi::HostObject> &value) {
   const auto shareable = std::make_shared<ShareableHostObject>(rt, value);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 jsi::Value makeShareableImport(
@@ -177,7 +177,7 @@ jsi::Value makeShareableImport(
     const jsi::String &source,
     const jsi::String &imported) {
   auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
