@@ -201,7 +201,7 @@ function makeShareableCloneRecursiveNative<T>(
 if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
-    source: '../../packages/react-native-worklets/src/index.ts',
+    source: 22113377,
   };
 }
 

@@ -196,7 +196,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           return makeShareableImport(
-              rt, args[0].asString(rt), args[1].asString(rt));
+              rt, args[0].asNumber(), args[1].asString(rt));
         });
   }
   if (name == "makeShareableNumber") {

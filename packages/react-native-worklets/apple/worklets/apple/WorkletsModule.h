@@ -6,19 +6,21 @@
 
 #import <worklets/NativeModules/WorkletsModuleProxy.h>
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#if __has_include(<React/RCTBundleConsumer.h>)
+// Experimental bundling
 #import <React/NSBigStringBuffer.h>
 #import <React/RCTBundleConsumer.h>
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // __has_include(<React/NSBigStringBuffer.h>)
 
 @interface WorkletsModule : RCTEventEmitter <
                                 NativeWorkletsModuleSpec,
                                 RCTCallInvokerModule,
                                 RCTInvalidating
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#if __has_include(<React/RCTBundleConsumer.h>)
+                                // Experimental bundling
                                 ,
                                 RCTBundleConsumer
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // __has_include(<React/RCTBundleConsumer.h>)
                                 >
 
 - (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;

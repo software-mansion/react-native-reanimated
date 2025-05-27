@@ -25,7 +25,7 @@ void WorkletsMessageThread::quitSynchronous()
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
 // Nothing
 #else
- AssertJavaScriptQueue();
+  AssertJavaScriptQueue();
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
   RCTMessageThread *rctThread = static_cast<RCTMessageThread *>(this);
   WorkletsMessageThreadPublic *rctThreadPublic = reinterpret_cast<WorkletsMessageThreadPublic *>(rctThread);

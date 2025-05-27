@@ -24,7 +24,6 @@ export interface ReanimatedPluginOptions {
   disableSourceMaps?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
-  workletModules?: string[];
   experimentalBundling?: boolean;
   workletizableModules?: string[];
 }

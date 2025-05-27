@@ -118,7 +118,6 @@ WorkletRuntime::WorkletRuntime(
 
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
   if (script) {
-    // Experimental bundling
     try {
       rt.evaluateJavaScript(script, sourceUrl);
     } catch (facebook::jsi::JSIException ex) {

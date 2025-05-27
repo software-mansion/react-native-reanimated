@@ -32,7 +32,7 @@ const config = {
     createModuleIdFactory() {
       let nextId = 0;
       const idFileMap = new Map();
-      return (moduleName) => {
+      const factory = (/** @type {string} */ moduleName) => {
         if (idFileMap.has(moduleName)) {
           return idFileMap.get(moduleName);
         }
@@ -42,9 +42,15 @@ const config = {
           idFileMap.set(moduleName, id);
           return id;
         }
+        if (moduleName.includes('react-native-worklets/src/index.ts')) {
+          // TODO: Implement something reasonable instead of this.
+          idFileMap.set(moduleName, 22113377);
+          return idFileMap.get(moduleName);
+        }
         idFileMap.set(moduleName, nextId++);
         return idFileMap.get(moduleName);
       };
+      return factory;
     },
   },
   // --------------------------------------------------------

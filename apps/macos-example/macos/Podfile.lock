@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.2.0):
+  - react-native-safe-area-context (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1223,8 +1223,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.2.0)
-    - react-native-safe-area-context/fabric (= 5.2.0)
+    - react-native-safe-area-context/common (= 5.3.0)
+    - react-native-safe-area-context/fabric (= 5.3.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1233,7 +1233,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/common (5.2.0):
+  - react-native-safe-area-context/common (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1254,7 +1254,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/fabric (5.2.0):
+  - react-native-safe-area-context/fabric (5.3.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1561,7 +1561,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.24.0):
+  - RNGestureHandler (2.25.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -2030,7 +2030,7 @@ SPEC CHECKSUMS:
   React-logger: d2346d2c6056e50941ee0e91db9639188842fe34
   React-Mapbuffer: 42c1c6a2fcfc7993c96fd1540993ec5070fc870f
   React-microtasksnativemodule: 88c6fca8e4ec000ea9f417df23798ae67bda047c
-  react-native-safe-area-context: f8aa08037cf04dd77f981cade54de6be9b3fc553
+  react-native-safe-area-context: 0d98866f8f42ecdd7db4ed72023ad0b87253cc12
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 89541f2dd4928c7a6e40a01a7771664e1ff61066
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147
