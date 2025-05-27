@@ -15,7 +15,7 @@
     "react": "19.0.0",
     "react-native": "npm:react-native-tvos@0.79.1-0",
     "react-native-reanimated": "workspace:*",
-    "react-native-worklets": "workspace:*"
+    "react-native-worklets": "0.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

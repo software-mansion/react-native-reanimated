@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.0.0-beta.4",
+  "version": "4.0.0-beta.5",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -90,7 +90,7 @@
     "@babel/core": "^7.0.0-0",
     "react": "*",
     "react-native": "*",
-    "react-native-worklets": ">=0.3.0"
+    "react-native-worklets": "0.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
@@ -143,7 +143,7 @@
     "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
     "react-native-gesture-handler": "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch",
     "react-native-web": "0.20.0",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.3.0",
     "react-test-renderer": "19.1.0",
     "shelljs": "^0.8.5",
     "ts-prune": "^0.10.3",
