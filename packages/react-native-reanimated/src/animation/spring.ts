@@ -35,7 +35,8 @@ type withSpringType = <T extends AnimatableValue>(
  *
  * @param toValue - The value at which the animation will come to rest -
  *   {@link AnimatableValue}
- * @param config - The spring animation configuration - {@link SpringConfig}
+ * @param config - The spring animation configuration - {@link SpringConfig}.
+ *   Defaults to {@link SpringConfig} default values.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}
  * @returns An [animation
