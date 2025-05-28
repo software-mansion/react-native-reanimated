@@ -7,7 +7,6 @@ assert_minimal_react_native_version($config)
 
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
 
-folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32"
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
@@ -86,7 +85,7 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => hermes_debug_hidden_flags,
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
-  s.compiler_flags = "#{folly_flags} #{boost_compiler_flags}"
+  s.compiler_flags = boost_compiler_flags
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',
@@ -99,7 +98,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{fabric_flags} #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
 

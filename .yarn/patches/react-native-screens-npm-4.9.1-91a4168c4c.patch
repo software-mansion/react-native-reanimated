@@ -1,0 +1,115 @@
+diff --git a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
+index d9ebbe96dc7ebbbe5135979c6dba03e032fdb265..a4430a0b784ac03ccd7b90251d8f9bb254ffb2bd 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
+@@ -3,9 +3,9 @@ package com.swmansion.rnscreens
+ import android.annotation.SuppressLint
+ import android.content.Context
+ import android.os.Build
++import android.view.Choreographer
+ import android.view.WindowManager
+ import androidx.appcompat.widget.Toolbar
+-import com.facebook.react.modules.core.ChoreographerCompat
+ import com.facebook.react.modules.core.ReactChoreographer
+ import com.facebook.react.uimanager.ThemedReactContext
+ 
+@@ -16,8 +16,8 @@ open class CustomToolbar(
+     val config: ScreenStackHeaderConfig,
+ ) : Toolbar(context) {
+     private var isLayoutEnqueued = false
+-    private val layoutCallback: ChoreographerCompat.FrameCallback =
+-        object : ChoreographerCompat.FrameCallback() {
++    private val layoutCallback: Choreographer.FrameCallback =
++        object : Choreographer.FrameCallback {
+             override fun doFrame(frameTimeNanos: Long) {
+                 isLayoutEnqueued = false
+                 // The following measure specs are selected to work only with Android APIs <= 29.
+diff --git a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+index cf44d7dd35e5ba00d245aaa3e5cd6debab0baa6e..dd7781ba9e65a26d7ca4704c14662ac8db0ccd9b 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+@@ -2,6 +2,7 @@ package com.swmansion.rnscreens
+ 
+ import android.content.Context
+ import android.content.ContextWrapper
++import android.view.Choreographer
+ import android.view.View
+ import android.view.ViewGroup
+ import android.view.ViewParent
+@@ -12,7 +13,6 @@ import androidx.fragment.app.FragmentManager
+ import androidx.fragment.app.FragmentTransaction
+ import com.facebook.react.ReactRootView
+ import com.facebook.react.bridge.ReactContext
+-import com.facebook.react.modules.core.ChoreographerCompat
+ import com.facebook.react.modules.core.ReactChoreographer
+ import com.facebook.react.uimanager.ThemedReactContext
+ import com.facebook.react.uimanager.UIManagerHelper
+@@ -30,8 +30,8 @@ open class ScreenContainer(
+     private var isAttached = false
+     private var needsUpdate = false
+     private var isLayoutEnqueued = false
+-    private val layoutCallback: ChoreographerCompat.FrameCallback =
+-        object : ChoreographerCompat.FrameCallback() {
++    private val layoutCallback: Choreographer.FrameCallback =
++        object : Choreographer.FrameCallback {
+             override fun doFrame(frameTimeNanos: Long) {
+                 isLayoutEnqueued = false
+                 measure(
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 6f46f933e24c22dcbb6b7849bc6ce3ccf077ed8d..1fdcd46297ab1f36674ce1dcc4f4cdd6f85ecb41 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -1319,13 +1319,6 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenCls(void)
+-{
+-  return RNSScreenView.class;
+-}
+-#endif
+-
+ #pragma mark - RNSScreen
+ 
+ @implementation RNSScreen {
+@@ -2095,3 +2088,10 @@ RCT_ENUM_CONVERTER(
+ // So that the define-macro is not leaked out of this file.
+ // This one is defined in very top of the file depending on RN architecture.
+ #undef ReactScrollViewBase
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenCls(void)
++{
++  return RNSScreenView.class;
++}
++#endif
+diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
+index a4e853c2bd51d33ffb5f60e4d47f29bf5ffbe44b..115a236787776df16848f5cbecaddc4fda4567a7 100644
+--- a/ios/RNSScreenStackHeaderConfig.mm
++++ b/ios/RNSScreenStackHeaderConfig.mm
+@@ -1133,13 +1133,6 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
+ #endif
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
+-{
+-  return RNSScreenStackHeaderConfig.class;
+-}
+-#endif
+-
+ @implementation RNSScreenStackHeaderConfigManager
+ 
+ RCT_EXPORT_MODULE()
+@@ -1294,3 +1287,10 @@ RCT_ENUM_CONVERTER(
+ RCT_ENUM_CONVERTER(RNSBlurEffectStyle, ([self blurEffectsForIOSVersion]), RNSBlurEffectStyleNone, integerValue)
+ 
+ @end
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
++{
++  return RNSScreenStackHeaderConfig.class;
++}
++#endif

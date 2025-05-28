@@ -17,9 +17,9 @@
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.6#~/.yarn/patches/@shopify-flash-list-npm-1.7.6-dd7668e04d.patch",
     "common-app": "workspace:*",
     "expo": "^52.0.4",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-native": "0.79.0-rc.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.80.0-rc.3",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.19.13"
   },

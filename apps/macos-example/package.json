@@ -21,12 +21,12 @@
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.77.1",
-    "react-native-gesture-handler": "2.25.0",
+    "react-native-gesture-handler": "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch",
     "react-native-macos": "0.77.1",
     "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.1.0",
-    "react-native-screens": "4.9.1",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.9.1#~/.yarn/patches/react-native-screens-npm-4.9.1-91a4168c4c.patch",
     "react-native-svg": "15.11.2"
   },
   "devDependencies": {

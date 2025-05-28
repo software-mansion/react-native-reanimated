@@ -285,7 +285,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+    // Trace.beginSection("onAnimationFrame");
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
     if (mSlowAnimationsEnabled) {
@@ -321,7 +321,7 @@ public class NodesManager implements EventDispatcherListener {
       startUpdatingOnAnimationFrame();
     }
 
-    // Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+    // Trace.endSection();
   }
 
   public void enqueueUpdateViewOnNativeThread(
