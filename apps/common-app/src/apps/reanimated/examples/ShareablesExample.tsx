@@ -186,19 +186,6 @@ function StringDemo() {
       const testStringUI = 'test';
       runOnJS(checkShareableCloneOnUI)(testStringUI);
     })();
-
-    // runOnJS(() => {
-    //   'worklet';
-    //   try {
-    //     if (testString === 'test') {
-    //       runOnJS(setStatusShareableCloneOnUI)('ok');
-    //     } else {
-    //       runOnJS(setStatusShareableCloneOnUI)('not_ok');
-    //     }
-    //   } catch (e) {
-    //     runOnJS(setStatusShareableCloneOnUI)('error');
-    //   }
-    // })();
   };
 
   return (
