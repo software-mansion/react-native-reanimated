@@ -15,7 +15,7 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
 
@@ -219,14 +219,14 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   );
 }
 
-function ThrowErrorFromUseScrollViewOffsetDemo() {
+function ThrowErrorFromuseScrollOffsetDemo() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
-  const offset = useScrollViewOffset(aref);
+  const offset = useScrollOffset(aref);
 
   useAnimatedStyle(() => {
     if (_WORKLET && offset.value > 0) {
-      throw Error('Hello world from useScrollViewOffset');
+      throw Error('Hello world from useScrollOffset');
     }
     return {};
   });
@@ -235,7 +235,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
     <View style={styles.height100}>
       <Animated.ScrollView ref={aref}>
         <View style={styles.cyanBox}>
-          <Text>useScrollViewOffset + useAnimatedStyle</Text>
+          <Text>useScrollOffset + useAnimatedStyle</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -257,7 +257,7 @@ export default function WorkletExample() {
       <ThrowErrorFromGestureDetectorDemo />
       <ThrowErrorFromUseAnimatedGestureHandlerDemo />
       <ThrowErrorFromUseAnimatedScrollHandlerDemo />
-      <ThrowErrorFromUseScrollViewOffsetDemo />
+      <ThrowErrorFromuseScrollOffsetDemo />
     </View>
   );
 }

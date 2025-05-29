@@ -123,5 +123,6 @@ export const ReanimatedFlatList = FlatListRender as <
   }
 ) => React.ReactElement;
 
-export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ReanimatedFlatList<T = any> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;

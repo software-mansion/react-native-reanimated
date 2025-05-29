@@ -5,13 +5,13 @@ import Animated, {
   measure,
   useAnimatedRef,
   useAnimatedStyle,
-  useScrollViewOffset,
+  useScrollOffset,
 } from 'react-native-reanimated';
 
 export default function ArticleProgressExample() {
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
   const textRef = useAnimatedRef<Animated.Text>();
-  const scrollHandler = useScrollViewOffset(scrollViewRef);
+  const scrollHandler = useScrollOffset(scrollViewRef);
 
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
     const measuredText = measure(textRef);
