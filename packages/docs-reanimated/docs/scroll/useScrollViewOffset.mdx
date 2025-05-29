@@ -2,23 +2,21 @@
 sidebar_position: 2
 ---
 
-# useScrollViewOffset
+# useScrollOffset
 
-`useScrollViewOffset` lets you to create animations based on the offset of a `ScrollView`.
-The hook automatically detects if the `ScrollView` is horizontal or vertical.
+`useScrollOffset` lets you to create animations based on the offset of a scrollable component (e.g. `ScrollView`, `FlatList`, `FlashList`).
+The hook automatically detects if the scrollable is horizontal or vertical.
 
 ## Reference
 
 ```tsx
-import { useScrollViewOffset } from 'react-native-reanimated';
+import { useScrollOffset } from 'react-native-reanimated';
 
 function App() {
-  const animatedRef = useAnimatedRef();
+  const animatedRef = useAnimatedRef<ScrollView>();
   // highlight-next-line
-  const scrollOffset = useScrollViewOffset(animatedRef);
-  return (
-    <Animated.ScrollView ref={animatedRef}>{/* ... */}</Animated.ScrollView>
-  );
+  const scrollOffset = useScrollOffset(animatedRef);
+  return <ScrollView ref={animatedRef}>{/* ... */}</ScrollView>;
 }
 ```
 
@@ -26,10 +24,22 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
-function useScrollViewOffset(
-  animatedRef: AnimatedRef<AnimatedScrollView>,
-  initialRef?: SharedValue<number>
+function useScrollOffset<C extends ScrollableComponent>(
+  animatedRef: AnimatedRef<C> | null,
+  providedOffset?: SharedValue<number>
 ): SharedValue<number>;
+
+type ScrollableComponent = Component<
+  Pick<
+    ScrollViewProps,
+    | 'onScroll'
+    | 'onScrollBeginDrag'
+    | 'onScrollEndDrag'
+    | 'onMomentumScrollBegin'
+    | 'onMomentumScrollEnd'
+  >
+> &
+  Pick<ScrollView, 'getScrollableNode'>;
 ```
 
 </details>
@@ -38,32 +48,28 @@ function useScrollViewOffset(
 
 #### `animatedRef`
 
-An [animated ref](/docs/next/core/useAnimatedRef#returns) connected to the ScrollView component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/next/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](/docs/next/core/useAnimatedRef#returns) connected to the scrollable component you'd want to scroll on.
 
-#### `initialRef` <Optional/>
+#### `providedOffset` <Optional/>
 
-An optional shared value to be updated with the scroll offset. If not provided a new shared value will be created internally.
+An optional shared value to be updated with the scroll offset. If not provided a new shared value, created internally, will be updated and returned.
 
 ### Returns
 
-`useScrollViewOffset` returns a [shared value](/docs/next/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
+`useScrollOffset` returns a [shared value](/docs/next/fundamentals/glossary#shared-value) which holds the current offset of the scrollable component.
 
 ## Example
 
-import ScrollViewOffset from '@site/src/examples/ScrollViewOffset';
-import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffset';
+import ScrollOffset from '@site/src/examples/ScrollOffset';
+import ScrollOffsetSrc from '!!raw-loader!@site/src/examples/ScrollOffset';
 
-<InteractiveExample
-  src={ScrollViewOffsetSrc}
-  component={ScrollViewOffset}
-  showCode
-/>
+<InteractiveExample src={ScrollOffsetSrc} component={ScrollOffset} showCode />
 
 ## Remarks
 
-- The `animatedRef` argument can be changed at will and the hook will correctly return values based on the ScrollView component it is connected to, for example:
+- The `animatedRef` argument can be changed at will and the hook will correctly return values based on the scrollable component it is connected to, for example:
 
-  `useScrollViewOffset(someState ? someScrollRefA : someScrollRefB)`
+  `useScrollOffset(someState ? someScrollRefA : someScrollRefB)`
 
 ## Platform compatibility
 

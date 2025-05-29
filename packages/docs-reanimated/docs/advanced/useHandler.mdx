@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollOffset`](/docs/next/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -42,7 +42,7 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
 ```typescript
 function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
@@ -56,7 +56,7 @@ interface UseHandlerContext<Context extends Record<string, unknown>> {
 
 interface GeneralHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > {
   (event: ReanimatedEvent<Event>, context: Context): void;
 }
@@ -98,7 +98,7 @@ import useHandlerSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExampl
 
 <InteractiveExample src={useHandlerSrc} component={useHandler} />
 
-This example can be more easily implemented using [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/).
+This example can be more easily implemented using [`useScrollOffset`](/docs/next/scroll/useScrollOffset/).
 
 ## Platform compatibility
 

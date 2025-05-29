@@ -219,7 +219,7 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   );
 }
 
-function ThrowErrorFromuseScrollOffsetDemo() {
+function ThrowErrorFromUseScrollOffsetDemo() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
   const offset = useScrollOffset(aref);
@@ -257,7 +257,7 @@ export default function WorkletExample() {
       <ThrowErrorFromGestureDetectorDemo />
       <ThrowErrorFromUseAnimatedGestureHandlerDemo />
       <ThrowErrorFromUseAnimatedScrollHandlerDemo />
-      <ThrowErrorFromuseScrollOffsetDemo />
+      <ThrowErrorFromUseScrollOffsetDemo />
     </View>
   );
 }

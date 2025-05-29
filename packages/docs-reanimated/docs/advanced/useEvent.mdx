@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # useEvent
 
-`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
+`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollOffset`](/docs/next/scroll/useScrollOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -39,7 +39,7 @@ return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
 ```typescript
 function useEvent<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 >(
   handler: EventHandler<Event, Context>,
   eventNames?: string[],
@@ -48,12 +48,12 @@ function useEvent<
 
 type EventHandler<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 > = (event: ReanimatedEvent<Event>, context?: Context) => void;
 
 type EventHandlerProcessed<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 > = (event: Event, context?: Context) => void;
 ```
 
@@ -87,7 +87,7 @@ import useEventSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExample'
 
 <InteractiveExample src={useEventSrc} component={useEvent} />
 
-This example can be more easily implemented using [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/).
+This example can be more easily implemented using [`useScrollOffset`](/docs/next/scroll/useScrollOffset/).
 
 ## Remarks
 
