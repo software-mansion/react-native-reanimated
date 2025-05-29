@@ -46,6 +46,7 @@ export default function ShareablesExample() {
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
+        <RemoteFunctionDemo />
         <DataViewDemo />
         <ErrorDemo />
         <CyclicObjectDemo />
@@ -626,6 +627,44 @@ function ArrayBufferDemo() {
         taUi[7] = 123;
 
         if (isArrayBufferInstance && initialValueCheck) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function RemoteFunctionDemo() {
+  const title = 'Remote function';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    const remoteFunction: object = () => {
+      return 1;
+    };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          typeof remoteFunction === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in remoteFunction &&
+              !!remoteFunction.__remoteFunction),
+        ];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();
