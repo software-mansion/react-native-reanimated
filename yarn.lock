@@ -5812,6 +5812,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/gradle-plugin@npm:0.75.4":
+  version: 0.75.4
+  resolution: "@react-native/gradle-plugin@npm:0.75.4"
+  checksum: 10/7fe648705740703186d9f90408521cdcc46af2c0a11d50e6baca39d1ea6d4d57a30701ee8902ddc5fea93aa8d1a4b6efd2651eb280f5b7555375b7c6f8562026
+  languageName: node
+  linkType: hard
+
+"@react-native/gradle-plugin@npm:0.79.1":
+  version: 0.79.1
+  resolution: "@react-native/gradle-plugin@npm:0.79.1"
+  checksum: 10/694fa5ef8f9206810547851ed869f3aa28c9b7191be6655faa9aa51960c6172aedc918d64ecb44c115b5044e40a2110c32c5c66ddb99e3449299cce5c134a7b4
+  languageName: node
+  linkType: hard
+
 "@react-native/gradle-plugin@npm:0.80.0-rc.3":
   version: 0.80.0-rc.3
   resolution: "@react-native/gradle-plugin@npm:0.80.0-rc.3"
