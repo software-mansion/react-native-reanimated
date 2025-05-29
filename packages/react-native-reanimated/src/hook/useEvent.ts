@@ -42,7 +42,7 @@ export function useEvent<
   Context extends Record<string, unknown> = never,
 >(
   handler: EventHandler<Event, Context>,
-  eventNames?: string[],
+  eventNames?: readonly string[],
   rebuild?: boolean
 ): EventHandlerProcessed<Event, Context>;
 
