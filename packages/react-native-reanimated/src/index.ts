@@ -139,7 +139,7 @@ export {
   useFrameCallback,
   useHandler,
   useReducedMotion,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
   useWorkletCallback,
 } from './hook';
