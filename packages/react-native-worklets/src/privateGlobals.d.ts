@@ -31,6 +31,11 @@ declare global {
   var _makeShareableBigInt: (value: bigint) => FlatShareableRef<bigint>;
   var _makeShareableUndefined: () => FlatShareableRef<undefined>;
   var _makeShareableNull: () => FlatShareableRef<null>;
+  var _makeShareableObject: <T extends object>(
+    value: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
   var _makeShareableHostObject: <T extends object>(
     value: T
   ) => FlatShareableRef<T>;
