@@ -16,7 +16,7 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -186,7 +186,7 @@ function DropdownContent({
   const flattenedStyle = StyleSheet.flatten(style);
   const windowDimensions = Dimensions.get('window');
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
+  const scrollOffset = useScrollOffset(scrollRef);
 
   const contentWidth = useSharedValue(0);
   const contentHeight = useSharedValue(0);

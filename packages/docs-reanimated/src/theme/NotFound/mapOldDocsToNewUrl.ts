@@ -22,7 +22,7 @@ const oldDocsToNewDocsMap = {
   "/docs/api/hooks/useEvent": "/docs/advanced/useEvent",
   "/docs/api/hooks/useFrameCallback": "/docs/advanced/useFrameCallback",
   "/docs/api/hooks/useHandler": "/docs/advanced/useHandler",
-  "/docs/api/hooks/useScrollViewOffset": "/docs/scroll/useScrollViewOffset",
+  "/docs/api/hooks/useScrollOffset": "/docs/scroll/useScrollOffset",
   "/docs/api/hooks/useSharedValue": "/docs/core/useSharedValue",
 
   "/docs/api/LayoutAnimations/customAnimations": "/docs/layout-animations/custom-animations",
