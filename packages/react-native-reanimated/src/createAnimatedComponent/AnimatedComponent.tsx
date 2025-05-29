@@ -2,6 +2,7 @@
 import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
@@ -34,6 +35,7 @@ import type {
   InitialComponentProps,
   NestedArray,
 } from './commonTypes';
+import { ComponentRegistry } from './ComponentRegistry';
 import { InlinePropManager } from './InlinePropManager';
 import JSPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
@@ -52,7 +54,8 @@ export type Options<P> = {
 
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
-    AnimatedComponentProps<InitialComponentProps>
+    AnimatedComponentProps<InitialComponentProps>,
+    { styleProps: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -88,6 +91,10 @@ export default class AnimatedComponent
       this.jestAnimatedProps = { value: {} };
     }
 
+    this.state = {
+      styleProps: {},
+    };
+
     const entering = this.props.entering;
     const skipEntering = this.context?.current;
     if (
@@ -115,6 +122,11 @@ export default class AnimatedComponent
     this._jsPropsUpdater.addOnJSPropsChangeListener(this);
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    const viewTag = this.getComponentViewTag();
+    if (viewTag !== -1) {
+      ComponentRegistry.register(viewTag, this);
+    }
 
     const layout = this.props.layout;
     if (layout) {
@@ -159,6 +171,11 @@ export default class AnimatedComponent
 
     const exiting = this.props.exiting;
 
+    const viewTag = this.getComponentViewTag();
+    if (viewTag !== -1) {
+      ComponentRegistry.unregister(viewTag);
+    }
+
     if (
       IS_WEB &&
       this._componentDOMRef &&
@@ -173,6 +190,15 @@ export default class AnimatedComponent
         LayoutAnimationType.EXITING
       );
     }
+  }
+
+  /**
+   * Mechanism to update this component's props from native. (As reanimated is
+   * changing the props only on the UI thread at some point we want to sync
+   * with the JS thread).
+   */
+  _updateStylePropsJS(props: StyleProps) {
+    this.setState({ styleProps: props });
   }
 
   _detachStyles() {
@@ -417,9 +443,16 @@ export default class AnimatedComponent
         }
       : {};
 
+    const flatStyles = StyleSheet.flatten(filteredProps.style as object);
+    const mergedStyles = {
+      ...flatStyles,
+      ...this.state.styleProps,
+    };
+
     return super.render({
       nativeID,
       ...filteredProps,
+      style: mergedStyles,
       ...jestProps,
     });
   }

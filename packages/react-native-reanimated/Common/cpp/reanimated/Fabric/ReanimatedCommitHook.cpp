@@ -76,10 +76,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   {
     auto lock = updatesRegistryManager_->lock();
 
-    PropsMap propsMap = updatesRegistryManager_->collectProps();
+    PropsMap propsMap =
+        updatesRegistryManager_->collectProps(); // Reanimated.View {...props}
     updatesRegistryManager_->cancelCommitAfterPause();
 
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    std::vector<Tag> tagsToRemove;
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap, tagsToRemove);
+    for (const auto& tag : tagsToRemove) {
+        updatesRegistryManager_->markNodeAsImmediateRemovable(tag);
+    }
+
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated

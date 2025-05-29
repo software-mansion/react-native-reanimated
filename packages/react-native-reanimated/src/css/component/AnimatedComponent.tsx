@@ -28,7 +28,8 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // to the main one)
 export default class AnimatedComponent<
   P extends AnyRecord = AnimatedComponentProps,
-> extends Component<P> {
+  S extends AnyRecord = Record<string, unknown>,
+> extends Component<P, S> {
   ChildComponent: AnyComponent;
 
   _CSSManager?: CSSManager;

@@ -74,6 +74,24 @@ void UpdatesRegistryManager::handleNodeRemovals(
   }
 }
 
+void UpdatesRegistryManager::markNodeAsImmediateRemovable(Tag tag) {
+  immediateRemovableShadowNodes_.emplace(tag);
+}
+
+void UpdatesRegistryManager::unmarkNodeAsImmediateRemovable(Tag tag) {
+  immediateRemovableShadowNodes_.erase(tag);
+}
+
+void UpdatesRegistryManager::removeImmediateRemovableNodes() {
+  for (auto& tag : immediateRemovableShadowNodes_) {
+      for (auto &registry : registries_) {
+          registry->remove(tag);
+      }
+      staticPropsRegistry_->remove(tag);
+  }
+  immediateRemovableShadowNodes_.clear();
+}
+
 PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
   for (auto &registry : registries_) {

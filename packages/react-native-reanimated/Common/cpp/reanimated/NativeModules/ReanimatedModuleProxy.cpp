@@ -809,8 +809,10 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
+            // TODO: we don't really need the list here, make it optional?
+            std::vector<Tag> list;
             auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap, list);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
