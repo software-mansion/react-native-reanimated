@@ -372,7 +372,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
-    title: 'useScrollViewOffset',
+    title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
   },
   StickyHeaderExample: {

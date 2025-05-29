@@ -1,10 +1,10 @@
 'use strict';
+import type { Component } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import { logger } from 'react-native-worklets';
 
 import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
-import type { AnimatedScrollView } from '../component/ScrollView';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -17,21 +17,26 @@ import { useSharedValue } from './useSharedValue';
 const NOT_INITIALIZED_WARNING =
   'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 
+interface ScrollableComponent extends Component {
+  getScrollableNode(): Component;
+}
+
 /**
- * Lets you synchronously get the current offset of a `ScrollView`.
+ * Lets you synchronously get the current offset of a scrollable component.
  *
  * @param animatedRef - An [animated
  *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef)
- *   attached to an Animated.ScrollView component.
- * @returns A shared value which holds the current offset of the `ScrollView`.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollViewOffset
+ *   attached to a scrollable component.
+ * @returns A shared value which holds the current scroll offset of the
+ *   scrollable component.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset
  */
-export const useScrollViewOffset = IS_WEB
-  ? useScrollViewOffsetWeb
-  : useScrollViewOffsetNative;
+export const useScrollOffset = IS_WEB
+  ? useScrollOffsetWeb
+  : useScrollOffsetNative;
 
-function useScrollViewOffsetWeb(
-  animatedRef: AnimatedRef<AnimatedScrollView> | null,
+function useScrollOffsetWeb<C extends ScrollableComponent>(
+  animatedRef: AnimatedRef<C> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -45,7 +50,8 @@ function useScrollViewOffsetWeb(
       offset.value =
         element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     }
-  }, [animatedRef, offset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animatedRef, animatedRef?.current]);
 
   useEffect(() => {
     if (!animatedRef) {
@@ -70,8 +76,8 @@ function useScrollViewOffsetWeb(
   return offset;
 }
 
-function useScrollViewOffsetNative(
-  animatedRef: AnimatedRef<AnimatedScrollView> | null,
+function useScrollOffsetNative<C extends ScrollableComponent>(
+  animatedRef: AnimatedRef<C> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -112,7 +118,7 @@ function useScrollViewOffsetNative(
 }
 
 function getWebScrollableElement(
-  scrollComponent: AnimatedScrollView | null
+  scrollComponent: ScrollableComponent | null
 ): HTMLElement {
   return (
     (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
