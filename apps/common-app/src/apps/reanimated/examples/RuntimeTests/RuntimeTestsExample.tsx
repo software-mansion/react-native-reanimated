@@ -38,6 +38,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'shareables',
+          importTest: () => {
+            require('./tests/shareables/makeShareableClone.test');
+          },
+        },
+        {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/cancelAnimation.test');
