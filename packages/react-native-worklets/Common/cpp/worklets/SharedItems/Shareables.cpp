@@ -173,6 +173,15 @@ jsi::Value makeShareableHostObject(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const jsi::Object &proto) {
+  const auto shareable = std::make_shared<ShareableTurboModuleLike>(
+      rt, object, proto.getHostObject(rt));
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
     const jsi::String &source,
@@ -406,6 +415,35 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
       throw std::runtime_error(
           "[Worklets] Attempted to convert object that's not of a scalar type.");
   }
+}
+
+ShareableTurboModuleLike::ShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto)
+    : Shareable(TurboModuleLikeType) {
+  const auto emptyObject = jsi::Object(rt);
+  // We must get rid of the HostObject prototype as `ShareableObject` expects
+  // the prototype to be that of a plain object.
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, object, emptyObject);
+
+  proto_ = std::make_unique<ShareableHostObject>(rt, proto);
+  properties_ = std::make_unique<ShareableObject>(rt, object);
+}
+
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
+  jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
+
+  const auto prototype = proto_->toJSValue(rt);
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, obj, prototype);
+
+  return obj;
 }
 
 } // namespace worklets
