@@ -1,5 +1,7 @@
 'use strict';
-import { Component, useCallback, useEffect, useRef } from 'react';
+import type { Component } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import type { ScrollView, ScrollViewProps } from 'react-native';
 
 import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
@@ -11,12 +13,19 @@ import type {
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
-import { useAnimatedRef } from './useAnimatedRef';
-import { ScrollView } from 'react-native';
 
-interface ScrollableComponent extends Component {
-  getScrollableNode(): Component;
-}
+const NATIVE_SCROLL_EVENT_NAMES = [
+  'onScroll',
+  'onScrollBeginDrag',
+  'onScrollEndDrag',
+  'onMomentumScrollBegin',
+  'onMomentumScrollEnd',
+] as const;
+
+type ScrollableComponent = Component<
+  Pick<ScrollViewProps, (typeof NATIVE_SCROLL_EVENT_NAMES)[number]>
+> &
+  Pick<ScrollView, 'getScrollableNode'>;
 
 /**
  * Lets you synchronously get the current offset of a scrollable component.
@@ -87,7 +96,7 @@ function useScrollOffsetNative<C extends ScrollableComponent>(
           ? event.contentOffset.y
           : event.contentOffset.x;
     },
-    scrollNativeEventNames
+    NATIVE_SCROLL_EVENT_NAMES
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
@@ -120,15 +129,3 @@ function getWebScrollableElement(
     scrollComponent
   );
 }
-
-const scrollNativeEventNames = [
-  'onScroll',
-  'onScrollBeginDrag',
-  'onScrollEndDrag',
-  'onMomentumScrollBegin',
-  'onMomentumScrollEnd',
-];
-
-const ref = useAnimatedRef<ScrollView>();
-
-useScrollOffset(ref);
