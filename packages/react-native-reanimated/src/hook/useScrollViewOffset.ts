@@ -100,13 +100,10 @@ function useScrollViewOffsetNative(
     }
 
     const elementTag = animatedRef.getTag();
-    if (elementTag) {
-      eventHandler.workletEventHandler.registerForEvents(elementTag);
-    }
+    eventHandler.workletEventHandler.registerForEvents(elementTag);
+
     return () => {
-      if (elementTag) {
-        eventHandler.workletEventHandler.unregisterFromEvents(elementTag);
-      }
+      eventHandler.workletEventHandler.unregisterFromEvents(elementTag);
     };
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
