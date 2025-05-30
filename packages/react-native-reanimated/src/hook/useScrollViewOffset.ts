@@ -93,7 +93,7 @@ function useScrollViewOffsetNative(
 
     if (!animatedRef.getTag) {
       console.warn(
-        'animatedRef is not initialized. Please make sure to pass the animated ref to the animated component if you want to use useScrollViewOffset.'
+        'animatedRef is not initialized. Please make sure to pass the animated ref to the scrollable component if you want to use useScrollViewOffset.'
       );
       return;
     }
