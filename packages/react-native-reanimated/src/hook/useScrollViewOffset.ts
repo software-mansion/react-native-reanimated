@@ -1,5 +1,6 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
@@ -92,7 +93,7 @@ function useScrollViewOffsetNative(
     }
 
     if (!animatedRef.getTag) {
-      console.warn(
+      logger.warn(
         'animatedRef is not initialized. Please make sure to pass the animated ref to the scrollable component if you want to use useScrollViewOffset.'
       );
       return;
