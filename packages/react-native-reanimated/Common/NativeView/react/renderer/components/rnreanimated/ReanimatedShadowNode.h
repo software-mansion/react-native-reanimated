@@ -21,12 +21,12 @@ class ReanimatedShadowNode final
  public:
   using ReanimatedViewShadowNodeBase::ReanimatedViewShadowNodeBase;
 
-  void onCreate(const ReanimatedNodeProps &props);
-  void onDestroy();
-
+  void onCreate(double timestamp, const ReanimatedNodeProps &props);
   void onPropsChange(
+      double timestamp,
       const ReanimatedNodeProps &oldProps,
       const ReanimatedNodeProps &newProps);
+  folly::dynamic getFrameProps(double timestamp);
 };
 
 } // namespace facebook::react
