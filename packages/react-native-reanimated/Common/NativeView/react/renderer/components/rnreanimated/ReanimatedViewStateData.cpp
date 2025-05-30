@@ -21,9 +21,10 @@ void ReanimatedViewStateData::initialize(
       proxy->getCssAnimationKeyframesRegistry();
   const auto viewStylesRepository = proxy->getViewStylesRepository();
 
-  cssTransitionManager = std::make_shared<CSSTransitionManager>(viewStylesRepository);
+  cssTransitionManager =
+      std::make_shared<CSSTransitionManager>(viewStylesRepository);
   cssAnimationsManager = std::make_shared<CSSAnimationsManager>(
-      operationsLoop, cssAnimationKeyframesRegistry, viewStylesRepository);
+      cssAnimationKeyframesRegistry, viewStylesRepository);
 }
 
 } // namespace facebook::react

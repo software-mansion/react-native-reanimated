@@ -8,7 +8,8 @@ void ReanimatedShadowNode::onCreate(
     const double timestamp,
     const ReanimatedNodeProps &props) {
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(ReanimatedNodeProps(), props);
+  state.cssAnimationsManager->onPropsChange(
+      timestamp, ReanimatedNodeProps(), props);
 }
 
 void ReanimatedShadowNode::onPropsChange(
@@ -16,7 +17,7 @@ void ReanimatedShadowNode::onPropsChange(
     const ReanimatedNodeProps &oldProps,
     const ReanimatedNodeProps &newProps) {
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(oldProps, newProps);
+  state.cssAnimationsManager->onPropsChange(timestamp, oldProps, newProps);
   state.cssTransitionManager->onPropsChange(timestamp, oldProps, newProps);
 }
 

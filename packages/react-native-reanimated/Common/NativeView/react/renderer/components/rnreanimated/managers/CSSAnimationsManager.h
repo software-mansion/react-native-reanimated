@@ -21,40 +21,38 @@ using namespace css;
 class CSSAnimationsManager {
  public:
   CSSAnimationsManager(
-      std::shared_ptr<OperationsLoop> operationsLoop,
       std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry,
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
-  ~CSSAnimationsManager();
+  // Non-copyable
+  CSSAnimationsManager(const CSSAnimationsManager &) = delete;
+  CSSAnimationsManager &operator=(const CSSAnimationsManager &) = delete;
 
-  folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
+  // Non-movable
+  CSSAnimationsManager(CSSAnimationsManager &&) = delete;
+  CSSAnimationsManager &operator=(CSSAnimationsManager &&) = delete;
 
-  void update(
+  void onPropsChange(
+      double timestamp,
       const ReanimatedNodeProps &oldProps,
       const ReanimatedNodeProps &newProps);
+  folly::dynamic onFrame(
+      double timestamp,
+      const ShadowNode::Shared &shadowNode);
 
  private:
   using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
   using NameToAnimationsMap = std::unordered_map<std::string, AnimationsVector>;
 
   AnimationsVector animations_;
-  std::unordered_map<std::string, OperationsLoop::OperationHandle>
-      operationHandles_;
-
-  std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   NameToAnimationsMap createCurrentNameToAnimationsMap() const;
   AnimationsVector createAndStartNewAnimations(
-      NameToAnimationsMap &nameToAnimationsMap,
+      double timestamp,
+      NameToAnimationsMap nameToAnimationsMap,
       const std::vector<CSSAnimationConfig> &animationConfigs);
-
-  std::shared_ptr<CSSAnimation> createAnimation(
-      const CSSAnimationConfig &animationConfig,
-      double timestamp);
-  void removeAnimationOperation(const std::shared_ptr<CSSAnimation> &animation);
-  void updateAnimationOperation(const std::shared_ptr<CSSAnimation> &animation);
 };
 
 } // namespace facebook::react
