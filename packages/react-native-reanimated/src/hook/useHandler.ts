@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareable } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { IS_JEST, IS_WEB, ReanimatedError } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
@@ -84,9 +84,9 @@ export function useHandler<
   const { context, savedDependencies } = initRef.current;
 
   for (const handlerName in handlers) {
-    if (!handlers[handlerName]!.__workletHash) {
+    if (!isWorkletFunction(handlers[handlerName])) {
       throw new ReanimatedError(
-        'Passed function is not a worklet. Please provide a worklet function.'
+        'Passed a function is not a worklet. Please provide a worklet function.'
       );
     }
   }

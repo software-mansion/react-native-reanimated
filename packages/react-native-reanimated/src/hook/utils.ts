@@ -27,7 +27,6 @@ export function buildDependencies(
   const handlersList = Object.values(handlers).filter(
     (handler) => handler !== undefined
   ) as NonNullable<Handler>[];
-
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {
@@ -40,6 +39,17 @@ export function buildDependencies(
   }
 
   return dependencies;
+}
+
+function isWorkletHandler(
+  dep: unknown
+): dep is { workletHash: unknown; closure: unknown } {
+  return (
+    typeof dep === 'object' &&
+    dep !== null &&
+    'workletHash' in dep &&
+    'closure' in dep
+  );
 }
 
 // This is supposed to work as useEffect comparison.
@@ -63,9 +73,17 @@ export function areDependenciesEqual(
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }
+
     for (let i = 0; i < prevDeps.length; ++i) {
-      if (!objectIs(nextDeps[i], prevDeps[i])) {
-        return false;
+      const nextDep = nextDeps[i];
+      const prevDep = prevDeps[i];
+      if (objectIs(nextDep, prevDep)) {
+        continue;
+      }
+      if (isWorkletHandler(nextDep) && isWorkletHandler(prevDep)) {
+        if (nextDep.workletHash !== prevDep.workletHash) {
+          return false;
+        }
       }
     }
     return true;

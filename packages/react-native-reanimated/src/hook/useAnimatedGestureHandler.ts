@@ -88,7 +88,6 @@ export function useAnimatedGestureHandler<
     handlers,
     dependencies
   );
-
   const handler = (e: WebOrNativeEvent) => {
     'worklet';
     const event = useWeb
