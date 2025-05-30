@@ -27,6 +27,7 @@ export function buildDependencies(
   const handlersList = Object.values(handlers).filter(
     (handler) => handler !== undefined
   ) as NonNullable<Handler>[];
+
   if (!dependencies) {
     dependencies = handlersList.map((handler) => {
       return {

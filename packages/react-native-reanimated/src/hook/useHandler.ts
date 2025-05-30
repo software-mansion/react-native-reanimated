@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareable } from 'react-native-worklets';
 
-import { IS_JEST, IS_WEB } from '../common';
+import { IS_JEST, IS_WEB, ReanimatedError } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 
@@ -82,6 +82,14 @@ export function useHandler<
   }, []);
 
   const { context, savedDependencies } = initRef.current;
+
+  for (const handlerName in handlers) {
+    if (!handlers[handlerName]!.__workletHash) {
+      throw new ReanimatedError(
+        'Passed function is not a worklet. Please provide a worklet function.'
+      );
+    }
+  }
 
   dependencies = buildDependencies(
     dependencies,
