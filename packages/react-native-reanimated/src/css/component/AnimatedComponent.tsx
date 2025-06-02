@@ -6,6 +6,7 @@ import { Platform, StyleSheet } from 'react-native';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
+import type { ViewConfig } from '../../ConfigHelper';
 import type {
   AnimatedComponentRef,
   ViewInfo,
@@ -61,7 +62,7 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
+    let viewConfig = {};
     let DOMElement: HTMLElement | null = null;
 
     if (SHOULD_BE_USE_WEB) {
@@ -70,8 +71,6 @@ export default class AnimatedComponent<
       // TODO - implement a valid solution later on - this is a temporary fix
       viewTag = this._componentRef;
       DOMElement = this._componentDOMRef;
-      shadowNodeWrapper = null;
-      viewConfig = null;
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
@@ -86,11 +85,15 @@ export default class AnimatedComponent<
       }
 
       const viewInfo = getViewInfo(hostInstance);
-      viewTag = viewInfo.viewTag;
-      viewConfig = viewInfo.viewConfig;
+      viewTag = viewInfo.viewTag ?? -1;
+      viewConfig = viewInfo.viewConfig ?? {};
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
+    this._viewInfo = {
+      viewTag,
+      shadowNodeWrapper,
+      viewConfig: viewConfig as ViewConfig,
+    };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }

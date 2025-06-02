@@ -208,7 +208,7 @@ export default class AnimatedComponent
     // update UI props whitelist for this view
     const hasReanimated2Props =
       this.props.animatedProps?.viewDescriptors || this._animatedStyles?.length;
-    if (hasReanimated2Props && viewConfig) {
+    if (hasReanimated2Props && viewConfig && !SHOULD_BE_USE_WEB) {
       adaptViewConfig(viewConfig);
     }
 
