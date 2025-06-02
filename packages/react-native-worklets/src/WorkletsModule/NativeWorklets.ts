@@ -100,6 +100,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
 
+  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableWorklet(
+      worklet,
+      shouldPersistRemote
+    );
+  }
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }
