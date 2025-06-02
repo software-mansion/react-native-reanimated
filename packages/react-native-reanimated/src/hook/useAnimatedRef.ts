@@ -36,52 +36,39 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
   return component;
 }
 
-function useAnimatedRefNative<
-  TComponent extends Component,
->(): AnimatedRef<TComponent> {
-  const [wrapper] = useState(() => makeMutable<ShadowNodeWrapper | null>(null));
+function useAnimatedRefBase<TComponent extends Component>(
+  getWrapper: (component: TComponent) => ShadowNodeWrapper
+): AnimatedRef<TComponent> {
   const [observers] = useState<Set<AnimatedRefObserver>>(() => new Set());
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
   if (!ref.current) {
-    /** Called by React when ref is attached to a component. */
     const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
       component
     ) => {
-      let currentWrapper: ShadowNodeWrapper | null = null;
       if (component) {
-        const getTagOrShadowNodeWrapper = () => {
-          return getShadowNodeWrapperFromRef(
-            getComponentOrScrollable(component) as Component
-          );
-        };
-
-        currentWrapper = getTagOrShadowNodeWrapper();
-        wrapper.value = currentWrapper;
-        wrapperRef.current = currentWrapper;
+        wrapperRef.current = getWrapper(component);
 
         // We have to unwrap the tag from the shadow node wrapper.
         fun.getTag = () =>
           findNodeHandle(getComponentOrScrollable(component) as Component)!;
 
         fun.current = component;
-      }
 
-      if (observers.size) {
-        const tag = fun?.getTag?.() ?? null;
-        observers.forEach((observer) => observer(tag));
+        if (observers.size) {
+          const tag = fun?.getTag?.() ?? null;
+          observers.forEach((observer) => observer(tag));
+        }
       }
 
       return wrapperRef.current;
     });
 
-    fun.current = null;
-
     fun.observe = (observer: AnimatedRefObserver) => {
       observers.add(observer);
-      // Call it immediately to get the initial value
+      // Call observer immediately to get the initial value
       observer(fun?.getTag?.() ?? null);
 
       return () => {
@@ -89,66 +76,49 @@ function useAnimatedRefNative<
       };
     };
 
-    const animatedRefShareableHandle = makeShareableCloneRecursive({
-      __init: (): AnimatedRefOnUI => {
-        'worklet';
-        return () => wrapper.value;
-      },
-    });
-    shareableMappingCache.set(fun, animatedRefShareableHandle);
+    fun.current = null;
     ref.current = fun;
   }
 
   return ref.current;
 }
 
+function useAnimatedRefNative<
+  TComponent extends Component,
+>(): AnimatedRef<TComponent> {
+  const [sharedWrapper] = useState(() =>
+    makeMutable<ShadowNodeWrapper | null>(null)
+  );
+
+  const ref = useAnimatedRefBase<TComponent>((component) => {
+    const currentWrapper = getShadowNodeWrapperFromRef(
+      getComponentOrScrollable(component) as Component
+    );
+
+    sharedWrapper.value = currentWrapper;
+
+    return currentWrapper;
+  });
+
+  if (!shareableMappingCache.get(ref)) {
+    const animatedRefShareableHandle = makeShareableCloneRecursive({
+      __init: (): AnimatedRefOnUI => {
+        'worklet';
+        return () => sharedWrapper.value;
+      },
+    });
+    shareableMappingCache.set(ref, animatedRefShareableHandle);
+  }
+
+  return ref;
+}
+
 function useAnimatedRefWeb<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
-  const tagRef = useRef<ShadowNodeWrapper | null>(null);
-  const [observers] = useState<Set<AnimatedRefObserver>>(() => new Set());
-
-  const ref = useRef<AnimatedRef<TComponent> | null>(null);
-
-  if (!ref.current) {
-    /** Called by React when ref is attached to a component. */
-    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
-      component
-    ) => {
-      if (component) {
-        const getTagOrShadowNodeWrapper = () => {
-          return getComponentOrScrollable(component);
-        };
-
-        tagRef.current = getTagOrShadowNodeWrapper();
-
-        // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () =>
-          findNodeHandle(getComponentOrScrollable(component) as Component)!;
-
-        fun.current = component;
-      }
-
-      if (observers.size) {
-        const tag = fun?.getTag?.() ?? null;
-        observers.forEach((observer) => observer(tag));
-      }
-
-      return tagRef.current;
-    });
-
-    fun.current = null;
-
-    fun.observe = (observer: AnimatedRefObserver) => {
-      observers.add(observer);
-      // Call it immediately to get the initial value
-      observer(fun?.getTag?.() ?? null);
-    };
-
-    ref.current = fun;
-  }
-
-  return ref.current;
+  return useAnimatedRefBase<TComponent>((component) =>
+    getComponentOrScrollable(component)
+  );
 }
 
 /**
