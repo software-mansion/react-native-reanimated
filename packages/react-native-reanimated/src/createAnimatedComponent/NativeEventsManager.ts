@@ -86,7 +86,7 @@ export class NativeEventsManager implements INativeEventsManager {
       // Paper
       _nativeTag?: number;
     };
-    if (componentAnimatedRef.getScrollableNode) {
+    if (componentAnimatedRef?.getScrollableNode) {
       /*
         In most cases, getScrollableNode() returns a view tag, and findNodeHandle is not required. 
         However, to cover more exotic list cases, we will continue to use findNodeHandle 
