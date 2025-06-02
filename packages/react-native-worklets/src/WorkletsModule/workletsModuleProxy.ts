@@ -37,7 +37,7 @@ export interface WorkletsModuleProxy {
   makeShareableInitializer(obj: object): ShareableRef<object>;
 
   makeShareableFunction(func: object): ShareableRef<object>;
-  
+
   makeShareableWorklet(
     worklet: object,
     shouldPersistRemote: boolean

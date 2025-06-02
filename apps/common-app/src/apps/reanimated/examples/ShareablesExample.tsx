@@ -48,6 +48,7 @@ export default function ShareablesExample() {
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
         <RemoteFunctionDemo />
+        <HostFunctionDemo />
         <DataViewDemo />
         <ErrorDemo />
         <CyclicObjectDemo />
@@ -709,6 +710,45 @@ function RemoteFunctionDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function HostFunctionDemo() {
+  const title = 'Host function';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    // @ts-ignore _toString function is registered for UI runtime
+    const hostFunction = globalThis._toString;
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          // @ts-ignore _toString function is registered for UI runtime
+          typeof hostFunction === 'function',
+          // @ts-ignore _toString function is registered for UI runtime
+          globalThis._toString(123) === '123',
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+        runOnJS(isOk)();
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
   return (
     <DemoItemRow
       title={title}

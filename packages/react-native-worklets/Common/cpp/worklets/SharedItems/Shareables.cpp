@@ -47,23 +47,11 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
-      } else {
-        shareable = std::make_shared<ShareableWorklet>(rt, object);
-      }
+      return makeShareableWorklet(rt, object, shouldRetainRemote.getBool());
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeShareableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      auto function = object.asFunction(rt);
-      if (function.isHostFunction(rt)) {
-        shareable =
-            std::make_shared<ShareableHostFunction>(rt, std::move(function));
-      } else {
-        shareable =
-            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
-      }
+      return makeShareableFunction(rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
@@ -142,6 +130,20 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
 
 jsi::Value makeShareableNull(jsi::Runtime &rt) {
   const auto shareable = std::make_shared<ShareableScalar>(nullptr);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const bool &shouldRetainRemote) {
+  std::shared_ptr<Shareable> shareable;
+  if (shouldRetainRemote) {
+    shareable =
+        std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+  } else {
+    shareable = std::make_shared<ShareableWorklet>(rt, object);
+  }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
