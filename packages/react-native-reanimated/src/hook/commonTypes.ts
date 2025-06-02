@@ -25,13 +25,16 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
+export type AnimatedRefObserver = (tag: number | null) => void;
+
 export type AnimatedRef<T extends Component> = {
   (component?: T):
     | number // Paper
     | ShadowNodeWrapper // Fabric
     | HTMLElement; // web
   current: T | null;
-  getTag: () => number;
+  observe: (observer: AnimatedRefObserver) => void;
+  getTag?: () => number | null;
 };
 
 // Might make that type generic if it's ever needed.
