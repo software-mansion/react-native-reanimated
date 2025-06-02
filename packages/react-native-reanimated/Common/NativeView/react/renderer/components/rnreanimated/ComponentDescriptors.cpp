@@ -19,7 +19,7 @@ std::shared_ptr<ShadowNode> ReanimatedViewComponentDescriptor::createShadowNode(
   const auto &props = static_cast<const ReanimatedNodeProps &>(*fragment.props);
   shadowNode->onCreate(timestamp, props);
 
-  applyFrame(timestamp, shadowNode);
+  maybeApplyFrame(timestamp, shadowNode);
 
   return shadowNode;
 }
@@ -41,7 +41,7 @@ ShadowNode::Unshared ReanimatedViewComponentDescriptor::cloneShadowNode(
     shadowNode->onPropsChange(timestamp, oldProps, newProps);
   }
 
-  applyFrame(timestamp, shadowNode);
+  maybeApplyFrame(timestamp, shadowNode);
 
   return shadowNode;
 }
@@ -53,9 +53,9 @@ State::Shared ReanimatedViewComponentDescriptor::createInitialState(
       std::make_shared<ReanimatedViewStateData>(getProxy()), family);
 }
 
-void ReanimatedViewComponentDescriptor::applyFrame(
+void ReanimatedViewComponentDescriptor::maybeApplyFrame(
     const double timestamp,
-    const ReanimatedShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<ReanimatedShadowNode> &shadowNode) const {
   const auto &children = shadowNode->getChildren();
 
   if (children.empty()) {
@@ -67,6 +67,26 @@ void ReanimatedViewComponentDescriptor::applyFrame(
         "ReanimatedViewComponentDescriptor: ReanimatedView can only have one "
         "child");
   }
+
+  const auto frameProps = shadowNode->onFrame(timestamp);
+  if (frameProps.empty()) {
+    return;
+  }
+
+  const auto &child = *children.front();
+  shadowNode->replaceChild(child, cloneWithMergedProps(child, frameProps), 0);
+}
+
+ShadowNode::Shared ReanimatedViewComponentDescriptor::cloneWithMergedProps(
+    const ShadowNode &shadowNode,
+    const folly::dynamic &props) const {
+  PropsParserContext propsParserContext{
+      shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+
+  return shadowNode.clone(
+      {.props = shadowNode.getComponentDescriptor().cloneProps(
+           propsParserContext, shadowNode.getProps(), RawProps(props)),
+       .runtimeShadowNodeReference = false});
 }
 
 std::shared_ptr<ReanimatedModuleProxy>

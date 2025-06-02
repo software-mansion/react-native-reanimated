@@ -21,8 +21,10 @@ void ReanimatedShadowNode::onPropsChange(
   state.cssTransitionManager->onPropsChange(timestamp, oldProps, newProps);
 }
 
-folly::dynamic ReanimatedShadowNode::getFrameProps(const double timestamp) {
-  return folly::dynamic::object();
+folly::dynamic ReanimatedShadowNode::onFrame(const double timestamp) {
+  const auto &state = getStateData();
+  const auto sharedThis = shared_from_this();
+  return state.cssTransitionManager->onFrame(timestamp, sharedThis);
 }
 
 } // namespace facebook::react

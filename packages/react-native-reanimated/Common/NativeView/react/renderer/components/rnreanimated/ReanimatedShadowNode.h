@@ -26,7 +26,7 @@ class ReanimatedShadowNode final
       double timestamp,
       const ReanimatedNodeProps &oldProps,
       const ReanimatedNodeProps &newProps);
-  folly::dynamic getFrameProps(double timestamp);
+  folly::dynamic onFrame(double timestamp);
 };
 
 } // namespace facebook::react

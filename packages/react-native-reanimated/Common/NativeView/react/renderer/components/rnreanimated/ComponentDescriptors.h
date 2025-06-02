@@ -34,9 +34,12 @@ class ReanimatedViewComponentDescriptor
       const ShadowNodeFamily::Shared &family) const override;
 
  private:
-  void applyFrame(
+  void maybeApplyFrame(
       double timestamp,
-      const ReanimatedShadowNode::Shared &shadowNode) const;
+      const std::shared_ptr<ReanimatedShadowNode> &shadowNode) const;
+  ShadowNode::Shared cloneWithMergedProps(
+      const ShadowNode &shadowNode,
+      const folly::dynamic &props) const;
   std::shared_ptr<ReanimatedModuleProxy> getProxy() const;
 };
 
