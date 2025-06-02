@@ -16,6 +16,7 @@ import type {
   AnimatedRef,
   AnimatedRefObserver,
   AnimatedRefOnUI,
+  MaybeObserverCleanup,
 } from './commonTypes';
 
 interface MaybeScrollableComponent extends Component {
@@ -39,7 +40,9 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
 function useAnimatedRefBase<TComponent extends Component>(
   getWrapper: (component: TComponent) => ShadowNodeWrapper
 ): AnimatedRef<TComponent> {
-  const [observers] = useState<Set<AnimatedRefObserver>>(() => new Set());
+  const [observers] = useState<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
+    () => new Map()
+  );
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
@@ -59,7 +62,14 @@ function useAnimatedRefBase<TComponent extends Component>(
 
         if (observers.size) {
           const tag = fun?.getTag?.() ?? null;
-          observers.forEach((observer) => observer(tag));
+          observers.forEach((cleanup, observer) => {
+            // Perform the cleanup before calling the observer again.
+            // This ensures that all events that were set up in the observer
+            // are cleaned up before the observer sets up new events during
+            // the next call.
+            cleanup?.();
+            observers.set(observer, observer(tag));
+          });
         }
       }
 
@@ -67,11 +77,13 @@ function useAnimatedRefBase<TComponent extends Component>(
     });
 
     fun.observe = (observer: AnimatedRefObserver) => {
-      observers.add(observer);
+      const tag = fun?.getTag?.() ?? null;
       // Call observer immediately to get the initial value
-      observer(fun?.getTag?.() ?? null);
+      observers.set(observer, observer(tag));
 
       return () => {
+        const cleanup = observers.get(observer);
+        cleanup?.();
         observers.delete(observer);
       };
     };

@@ -25,7 +25,9 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export type AnimatedRefObserver = (tag: number | null) => void;
+export type MaybeObserverCleanup = (() => void) | undefined;
+
+export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
 export type AnimatedRef<T extends Component> = {
   (component?: T):
