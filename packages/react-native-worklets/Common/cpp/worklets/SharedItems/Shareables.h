@@ -178,6 +178,11 @@ jsi::Value makeShareableInitializer(
 
 jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
 
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const bool &shouldRetainRemote);
+
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,

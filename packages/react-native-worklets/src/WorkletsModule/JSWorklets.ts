@@ -92,6 +92,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableWorklet(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableWorklet should never be called in JSWorklets.'
+    );
+  }
+
   scheduleOnUI<TValue>(worklet: ShareableRef<TValue>) {
     // TODO: `requestAnimationFrame` should be used exclusively in Reanimated
 
