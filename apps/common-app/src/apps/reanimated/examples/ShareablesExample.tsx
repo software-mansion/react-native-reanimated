@@ -526,7 +526,7 @@ function TurboModuleLikeDemo() {
   const { status, isOk, isError } = useStatus();
 
   const handlePress = () => {
-    // @ts-ignore this is fine
+    // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const reanimatedModuleKeys = Object.keys(proto);
     const obj = {
