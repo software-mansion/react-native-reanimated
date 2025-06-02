@@ -161,6 +161,13 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_makeShareableWorklet",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableWorklet(rt, value.asObject(rt), false);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_makeShareableInitializer",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeShareableInitializer(rt, value.asObject(rt));

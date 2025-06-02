@@ -43,6 +43,7 @@ export default function ShareablesExample() {
         <PlainObjectDemo />
         <HostObjectDemo />
         <ArrayDemo />
+        <WorkletDemo />
         <RegExpDemo />
         <ArrayBufferDemo />
         <TypedArrayDemo />
@@ -715,6 +716,40 @@ function ArrayBufferDemo() {
         taUi[7] = 123;
 
         if (isArrayBufferInstance && initialValueCheck) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function WorkletDemo() {
+  const title = 'Worklet';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    const worklet = () => {
+      'worklet';
+      return 1;
+    };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [typeof worklet === 'function', worklet() === 1];
+        if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
           runOnJS(isNotOk)();
