@@ -7,7 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { runOnJS, runOnUI } from 'react-native-reanimated';
+import {
+  executeOnUIRuntimeSync,
+  runOnJS,
+  runOnUI,
+} from 'react-native-reanimated';
 
 type Status = 'ok' | 'not_ok' | 'error' | undefined;
 
@@ -156,18 +160,22 @@ function StringDemo() {
   const handlePress = () => {
     const testString = 'test';
 
-    const checkShareableCloneOnUI = (x: string) => {
-      try {
-        if (x === 'test') {
-          setStatusShareableCloneOnUI('ok');
-        } else {
-          setStatusShareableCloneOnUI('not_ok');
-        }
-      } catch (e) {
-        setStatusShareableCloneOnUI('error');
+    // makeShareableCloneOnUI
+    try {
+      const result = executeOnUIRuntimeSync(() => {
+        'worklet';
+        return testString;
+      })();
+      if (result === 'test') {
+        setStatusShareableCloneOnUI('ok');
+      } else {
+        setStatusShareableCloneOnUI('not_ok');
       }
-    };
+    } catch (e) {
+      setStatusShareableCloneOnUI('error');
+    }
 
+    // makeShareableClone
     runOnUI(() => {
       'worklet';
       try {
@@ -179,12 +187,6 @@ function StringDemo() {
       } catch (e) {
         runOnJS(setStatusShareableClone)('error');
       }
-    })();
-
-    runOnUI(() => {
-      'worklet';
-      const testStringUI = 'test';
-      runOnJS(checkShareableCloneOnUI)(testStringUI);
     })();
   };
 
