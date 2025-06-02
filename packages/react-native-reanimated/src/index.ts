@@ -140,6 +140,8 @@ export {
   useHandler,
   useReducedMotion,
   useScrollOffset,
+  /** @deprecated Please use {@link useScrollOffset} instead. */
+  useScrollOffset as useScrollViewOffset,
   useSharedValue,
   useWorkletCallback,
 } from './hook';
