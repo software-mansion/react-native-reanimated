@@ -79,22 +79,16 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 }
 
 function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
-  const propertyNames = Object.keys(props);
-
   // Check if any animation properties are present but animationName is missing
-  if (propertyNames.length > 0 && !('animationName' in props)) {
+  if (!('animationName' in props) && Object.keys(props).length > 0) {
     logger.warn(
       'CSS animation properties were provided without specifying animationName.\n' +
         'If unintended, add animationName or remove unnecessary animation properties.'
     );
   }
 
-  // Check if animationName is present but animationDuration is missing
-  if (
-    'animationName' in props &&
-    props.animationName !== 'none' &&
-    !('animationDuration' in props)
-  ) {
+  // Check if animationDuration is missing when animationName is present
+  if (!('animationDuration' in props) && 'animationName' in props) {
     logger.warn(
       'animationDuration was not specified for CSS animation. The default duration is 0s.\n' +
         'Have you forgotten to pass the animationDuration?'
@@ -103,10 +97,8 @@ function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
 }
 
 function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
-  const propertyNames = Object.keys(props);
-
-  // Check if any transition properties are present but transitionDuration is missing
-  if (propertyNames.length > 0 && !('transitionDuration' in props)) {
+  // Check if transitionDuration is missing when transitionProperty is present
+  if (!('transitionDuration' in props) && 'transitionProperty' in props) {
     logger.warn(
       'transitionDuration was not specified for CSS transition. The default duration is 0s.\n' +
         'Have you forgotten to pass the transitionDuration?'
