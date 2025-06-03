@@ -42,7 +42,7 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
 ```typescript
 function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>,
+  Context extends Record<string, unknown>
 >(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
@@ -56,7 +56,7 @@ interface UseHandlerContext<Context extends Record<string, unknown>> {
 
 interface GeneralHandler<
   Event extends object,
-  Context extends Record<string, unknown>,
+  Context extends Record<string, unknown>
 > {
   (event: ReanimatedEvent<Event>, context: Context): void;
 }

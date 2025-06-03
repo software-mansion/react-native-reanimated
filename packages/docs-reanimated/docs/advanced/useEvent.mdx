@@ -39,7 +39,7 @@ return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
 ```typescript
 function useEvent<
   Event extends object,
-  Context extends Record<string, unknown> = never,
+  Context extends Record<string, unknown> = never
 >(
   handler: EventHandler<Event, Context>,
   eventNames?: string[],
@@ -48,12 +48,12 @@ function useEvent<
 
 type EventHandler<
   Event extends object,
-  Context extends Record<string, unknown> = never,
+  Context extends Record<string, unknown> = never
 > = (event: ReanimatedEvent<Event>, context?: Context) => void;
 
 type EventHandlerProcessed<
   Event extends object,
-  Context extends Record<string, unknown> = never,
+  Context extends Record<string, unknown> = never
 > = (event: Event, context?: Context) => void;
 ```
 
