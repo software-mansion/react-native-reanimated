@@ -34,7 +34,7 @@ const siteMap = {
     'useEvent',
     'useFrameCallback',
     'useHandler',
-    'useScrollOffset',
+    'useScrollViewOffset',
     'useSharedValue',
   ],
 } as const;
