@@ -47,7 +47,7 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      return makeShareableWorklet(rt, object, shouldRetainRemote.getBool());
+      return makeShareableWorklet(rt, object, false);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeShareableInitializer(rt, object);
     } else if (object.isFunction(rt)) {

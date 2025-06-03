@@ -726,15 +726,14 @@ function HostFunctionDemo() {
   const { status, isOk, isNotOk, isError } = useStatus();
 
   const handlePress = () => {
-    // @ts-ignore _toString function is registered for UI runtime
+    // @ts-expect-error _toString function is registered for UI runtime
     const hostFunction = globalThis._toString;
     runOnUI(() => {
       'worklet';
       try {
         const checks = [
-          // @ts-ignore _toString function is registered for UI runtime
           typeof hostFunction === 'function',
-          // @ts-ignore _toString function is registered for UI runtime
+          // @ts-expect-error _toString function is registered for UI runtime
           globalThis._toString(123) === '123',
         ];
         if (checks.every(Boolean)) {
