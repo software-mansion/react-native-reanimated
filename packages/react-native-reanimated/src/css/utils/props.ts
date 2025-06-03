@@ -1,4 +1,6 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import { isSharedValue } from '../../isSharedValue';
 import type {
   AnyRecord,
@@ -9,7 +11,7 @@ import type {
   PlainStyle,
 } from '../types';
 import {
-  isAnimationSetting,
+  isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isTransitionProp,
@@ -22,15 +24,12 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
   CSSTransitionProperties | null,
   PlainStyle,
 ] {
-  let animationName: CSSAnimationProperties['animationName'] | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
-    if (prop === 'animationName') {
-      animationName = value as CSSAnimationProperties['animationName'];
-    } else if (isAnimationSetting(prop)) {
+    if (isAnimationProp(prop)) {
       // TODO - add support for animation shorthand
       animationProperties[prop] = value;
     } else if (isTransitionProp(prop)) {
@@ -49,6 +48,7 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 
   // Return animationProperties only if at least one animationName contains
   // valid keyframes
+  const animationName = animationProperties.animationName;
   const hasAnimationName =
     animationName &&
     (Array.isArray(animationName) ? animationName : [animationName]).every(
@@ -70,5 +70,38 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
     ? transitionProperties
     : null;
 
+  if (__DEV__) {
+    validateCSSAnimationProps(animationProperties);
+    validateCSSTransitionProps(transitionProperties);
+  }
+
   return [finalAnimationConfig, finalTransitionConfig, filteredStyle];
 }
+
+function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
+  const propertyNames = Object.keys(props);
+
+  // Check if any animation properties are present but animationName is missing
+  if (propertyNames.length > 0 && !('animationName' in props)) {
+    logger.warn(
+      'CSS animationName property is missing while other CSS animation properties were provided.\n' +
+        'If you wanted to remove the CSS animation, either:\n' +
+        '  - Pass animationName: "none" to make it explicit\n' +
+        '  - Remove all CSS animation properties from the style'
+    );
+  }
+
+  // Check if animationName is present but animationDuration is missing
+  if (
+    'animationName' in props &&
+    props.animationName !== 'none' &&
+    !('animationDuration' in props)
+  ) {
+    logger.warn(
+      'animationDuration is not specified for CSS animation. The default value is 0s.\n' +
+        'Have you forgotten to pass the animationDuration?'
+    );
+  }
+}
+
+function validateCSSTransitionProps(_props: Partial<CSSTransitionProperties>) {}
