@@ -83,12 +83,9 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
-    std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking,
-    const bool isDevBundle)
+    const bool supportsLocking)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -102,13 +99,21 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+}
+
+void WorkletRuntime::init(
+    jsi::Runtime &rnRuntime,
+    std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy) {
+  jsi::Runtime &rt = *runtime_;
+  const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt,
-      name,
+      name_,
       jsScheduler,
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));

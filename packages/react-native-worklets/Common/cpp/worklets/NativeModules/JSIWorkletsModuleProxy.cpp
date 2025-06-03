@@ -60,21 +60,15 @@ inline jsi::Value executeOnUIRuntimeSync(
 }
 
 inline jsi::Value createWorkletRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-    const bool isDevBundle,
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
+  const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt,
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
-      jsScheduler,
-      name.asString(rt).utf8(rt),
-      true /* supportsLocking */,
-      isDevBundle);
+      rt, jsQueue, name.asString(rt).utf8(rt), true /* supportsLocking */
+  );
+  workletRuntime->init(rt, std::move(jsiWorkletsModuleProxy));
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
@@ -86,7 +80,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       jsQueue_(jsQueue),
@@ -341,22 +335,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
         rt,
         propName,
         2,
-        [jsQueue = jsQueue_,
-         jsScheduler = jsScheduler_,
-         isDevBundle = isDevBundle_,
-         clone](
+        [clone](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
-          return createWorkletRuntime(
-              jsQueue,
-              jsScheduler,
-              std::move(clone),
-              isDevBundle,
-              rt,
-              args[0],
-              args[1]);
+          return createWorkletRuntime(std::move(clone), rt, args[0], args[1]);
           return jsi::Value::undefined();
         });
   }

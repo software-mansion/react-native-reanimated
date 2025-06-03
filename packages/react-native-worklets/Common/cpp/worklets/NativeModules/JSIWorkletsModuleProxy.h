@@ -32,7 +32,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::shared_ptr<WorkletRuntime> uiWorkletRuntime);
+      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
 
@@ -42,13 +42,28 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
+  [[nodiscard]] std::shared_ptr<MessageQueueThread> getJSQueue() const {
+    return jsQueue_;
+  }
+
+  [[nodiscard]] std::shared_ptr<JSScheduler> getJSScheduler() const {
+    return jsScheduler_;
+  }
+
+  [[nodiscard]] std::shared_ptr<UIScheduler> getUIScheduler() const {
+    return uiScheduler_;
+  }
+
+  [[nodiscard]] bool isDevBundle() const {
+    return isDevBundle_;
+  }
+
  private:
   const bool isDevBundle_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
-  // TODO: Make it non-nullptr on the UI runtime.
-  std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };
 
 } // namespace worklets
