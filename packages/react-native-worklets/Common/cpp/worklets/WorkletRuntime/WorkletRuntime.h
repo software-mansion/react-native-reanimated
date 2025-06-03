@@ -3,6 +3,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -22,7 +23,7 @@ class WorkletRuntime : public jsi::HostObject,
  public:
   explicit WorkletRuntime(
       jsi::Runtime &rnRuntime,
-      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
+      std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,

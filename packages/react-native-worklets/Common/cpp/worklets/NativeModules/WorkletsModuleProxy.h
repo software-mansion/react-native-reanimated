@@ -3,6 +3,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -42,8 +43,8 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<jsi::HostObject> createJSIWorkletsModuleProxy()
-      const;
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
+  createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;

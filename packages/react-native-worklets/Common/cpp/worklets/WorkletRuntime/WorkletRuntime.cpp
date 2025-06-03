@@ -83,7 +83,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
-    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
+    std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,

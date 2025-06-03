@@ -1,13 +1,14 @@
 
 #pragma once
 
+#include <cxxreact/MessageQueueThread.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
-#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -21,6 +22,8 @@
 using namespace facebook;
 
 namespace worklets {
+
+class WorkletRuntime;
 
 class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:

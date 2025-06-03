@@ -49,7 +49,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
 
-std::shared_ptr<jsi::HostObject>
+std::shared_ptr<JSIWorkletsModuleProxy>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   return std::make_shared<JSIWorkletsModuleProxy>(
       isDevBundle_, jsQueue_, jsScheduler_, uiScheduler_, uiWorkletRuntime_);
