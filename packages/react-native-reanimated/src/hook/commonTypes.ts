@@ -27,8 +27,7 @@ export interface Descriptor {
 
 export type AnimatedRef<T extends Component> = {
   (component?: T):
-    | number // Paper
-    | ShadowNodeWrapper // Fabric
+    | ShadowNodeWrapper // Native
     | HTMLElement; // web
   current: T | null;
   getTag: () => number;
