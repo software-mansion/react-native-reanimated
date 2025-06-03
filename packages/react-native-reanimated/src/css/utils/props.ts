@@ -84,10 +84,8 @@ function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
   // Check if any animation properties are present but animationName is missing
   if (propertyNames.length > 0 && !('animationName' in props)) {
     logger.warn(
-      'CSS animationName property is missing while other CSS animation properties were provided.\n' +
-        'If you wanted to remove the CSS animation, either:\n' +
-        '  - Pass animationName: "none" to make it explicit\n' +
-        '  - Remove all CSS animation properties from the style'
+      'CSS animation properties were provided without specifying animationName.\n' +
+        'If unintended, add animationName or remove unnecessary animation properties.'
     );
   }
 
@@ -98,10 +96,20 @@ function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
     !('animationDuration' in props)
   ) {
     logger.warn(
-      'animationDuration is not specified for CSS animation. The default value is 0s.\n' +
+      'animationDuration was not specified for CSS animation. The default duration is 0s.\n' +
         'Have you forgotten to pass the animationDuration?'
     );
   }
 }
 
-function validateCSSTransitionProps(_props: Partial<CSSTransitionProperties>) {}
+function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
+  const propertyNames = Object.keys(props);
+
+  // Check if any transition properties are present but transitionDuration is missing
+  if (propertyNames.length > 0 && !('transitionDuration' in props)) {
+    logger.warn(
+      'transitionDuration was not specified for CSS transition. The default duration is 0s.\n' +
+        'Have you forgotten to pass the transitionDuration?'
+    );
+  }
+}
