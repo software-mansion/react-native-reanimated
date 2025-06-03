@@ -43,11 +43,6 @@ const config = {
   //         idFileMap.set(moduleName, id);
   //         return id;
   //       }
-  //       if (moduleName.includes('react-native-worklets/src/index.ts')) {
-  //         // TODO: Implement something reasonable instead of this.
-  //         idFileMap.set(moduleName, 22113377);
-  //         return idFileMap.get(moduleName);
-  //       }
   //       idFileMap.set(moduleName, nextId++);
   //       return idFileMap.get(moduleName);
   //     };
