@@ -416,7 +416,7 @@ function clonePlainJSObject<T extends object>(
     shouldPersistRemote,
     depth
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableObject(
     clonedProps,
     shouldPersistRemote,
     value
