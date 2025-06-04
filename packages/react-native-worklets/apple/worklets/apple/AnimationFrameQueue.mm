@@ -2,7 +2,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
-#include <chrono>
+#import <chrono>
 
 #import <React/RCTAssert.h>
 
