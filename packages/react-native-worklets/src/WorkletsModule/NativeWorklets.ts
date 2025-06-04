@@ -84,7 +84,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   ): ShareableRef<T> {
     return this.#workletsModuleProxy.makeShareableTurboModuleLike(obj, proto);
   }
-  
+
   makeShareableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,

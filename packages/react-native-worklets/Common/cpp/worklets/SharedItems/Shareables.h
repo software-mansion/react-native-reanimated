@@ -163,7 +163,7 @@ jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
     const jsi::Object &proto);
-    
+
 jsi::Value makeShareableObject(
     jsi::Runtime &rt,
     jsi::Object object,
