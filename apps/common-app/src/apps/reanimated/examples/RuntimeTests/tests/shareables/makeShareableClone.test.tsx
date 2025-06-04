@@ -4,15 +4,15 @@ import { runOnUI, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 
-const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
+const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
-const ValueComponent = ({ value }: { value: any }) => {
-  const output = useSharedValue<any>(null);
-  registerValue(SHARED_VALUE_REF, output);
+const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean }) => {
+  const result = useSharedValue<boolean>(false);
+  registerValue(RESULT_SHARED_VALUE_REF, result);
 
   useEffect(() => {
     runOnUI(() => {
-      output.value = value;
+      result.value = onRunUIFunction();
     })();
   });
 
@@ -25,13 +25,21 @@ describe('Test makeShareableClone', () => {
     const testString = 'test';
 
     // Act
-    await render(<ValueComponent value={testString} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof testString === 'string', testString === 'test'];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(testString);
-    expect(sharedValue.onJS).toBe(testString);
+    const sharedResult = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedResult.onUI).toBe(true);
+    expect(sharedResult.onJS).toBe(true);
   });
 
   test('makeShareableCloneNumber', async () => {
@@ -39,13 +47,21 @@ describe('Test makeShareableClone', () => {
     const testNumber = 123;
 
     // Act
-    await render(<ValueComponent value={testNumber} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof testNumber === 'number', testNumber === 123];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(testNumber);
-    expect(sharedValue.onJS).toBe(testNumber);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneTrue', async () => {
@@ -53,13 +69,21 @@ describe('Test makeShareableClone', () => {
     const trueValue = true;
 
     // Act
-    await render(<ValueComponent value={trueValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof trueValue === 'boolean', trueValue === true];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(trueValue);
-    expect(sharedValue.onJS).toBe(trueValue);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneFalse', async () => {
@@ -67,13 +91,21 @@ describe('Test makeShareableClone', () => {
     const falseValue = false;
 
     // Act
-    await render(<ValueComponent value={falseValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof falseValue === 'boolean', falseValue === false];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(falseValue);
-    expect(sharedValue.onJS).toBe(falseValue);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneUndefined', async () => {
@@ -81,13 +113,21 @@ describe('Test makeShareableClone', () => {
     const undefinedValue = undefined;
 
     // Act
-    await render(<ValueComponent value={undefinedValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof undefinedValue === 'undefined', undefinedValue === undefined];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(undefinedValue);
-    expect(sharedValue.onJS).toBe(undefinedValue);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneNull', async () => {
@@ -95,13 +135,21 @@ describe('Test makeShareableClone', () => {
     const nullValue = null;
 
     // Act
-    await render(<ValueComponent value={nullValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof nullValue === 'object', nullValue === null];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(nullValue);
-    expect(sharedValue.onJS).toBe(nullValue);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneBigInt', async () => {
@@ -109,13 +157,21 @@ describe('Test makeShareableClone', () => {
     const bigIntValue = BigInt(123);
 
     // Act
-    await render(<ValueComponent value={bigIntValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof bigIntValue === 'bigint', bigIntValue === BigInt(123)];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue.onUI).toBe(bigIntValue);
-    expect(sharedValue.onJS).toBe(bigIntValue);
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneHostObject', async () => {
@@ -125,20 +181,25 @@ describe('Test makeShareableClone', () => {
     const hostObjectKeys = Object.keys(hostObjectValue);
 
     // Act
-    await render(<ValueComponent value={hostObjectValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [
+            typeof hostObjectValue === 'object',
+            Object.keys(hostObjectValue).length === hostObjectKeys.length,
+            hostObjectKeys.every(key => hostObjectValue[key] !== undefined),
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue<Record<string, any>>(SHARED_VALUE_REF);
-    expect(Object.keys(sharedValue.onUI).length).toBe(hostObjectKeys.length);
-    for (const key of hostObjectKeys) {
-      expect(sharedValue.onUI[key]).not.toBe(undefined);
-    }
-
-    expect(Object.keys(sharedValue.onJS).length).toBe(hostObjectKeys.length);
-    for (const key of hostObjectKeys) {
-      expect(sharedValue.onJS[key]).not.toBe(undefined);
-    }
+    const sharedValue = await getRegisteredValue<Record<string, any>>(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneArray', async () => {
@@ -197,81 +258,57 @@ describe('Test makeShareableClone', () => {
     ];
 
     // Act
-    await render(<ValueComponent value={arrayValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const uint8ArrayUI = new Uint8Array(arrayValue[index.arrayBuffer]);
+          const checks = [
+            // number
+            arrayValue[index.number] === 1,
+            // boolean
+            arrayValue[index.true] === true,
+            arrayValue[index.false] === false,
+            // null
+            arrayValue[index.null] === null,
+            // undefined
+            arrayValue[index.undefined] === undefined,
+            // string
+            arrayValue[index.string] === 'a',
+            // bigint
+            typeof arrayValue[index.bigint] === 'bigint',
+            arrayValue[index.bigint] === BigInt(123),
+            // object
+            typeof arrayValue[index.object] === 'object',
+            arrayValue[index.object].a === 1,
+            // remote function - not worklet
+            typeof arrayValue[index.remoteFunction] === 'function',
+            // array
+            arrayValue[index.array].length === 1,
+            arrayValue[index.array][0] === 1,
+            // worklet function
+            typeof arrayValue[index.workletFunction] === 'function',
+            arrayValue[index.workletFunction]() === 1,
+            // initializer - regexp
+            arrayValue[index.initializer] instanceof RegExp,
+            arrayValue[index.initializer].test('a'),
+            // array buffer
+            arrayValue[index.arrayBuffer] instanceof ArrayBuffer,
+            arrayValue[index.arrayBuffer].byteLength === 3,
+            uint8ArrayUI[0] === 1,
+            uint8ArrayUI[1] === 2,
+            uint8ArrayUI[2] === 3,
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue<any[]>(SHARED_VALUE_REF);
-
-    // Number
-    expect(sharedValue.onUI[index.number]).toBe(1);
-    expect(sharedValue.onJS[index.number]).toBe(1);
-
-    // Boolean
-    expect(sharedValue.onUI[index.true]).toBe(true);
-    expect(sharedValue.onJS[index.true]).toBe(true);
-    expect(sharedValue.onUI[index.false]).toBe(false);
-    expect(sharedValue.onJS[index.false]).toBe(false);
-
-    // Null and Undefined
-    expect(sharedValue.onUI[index.null]).toBe(null);
-    expect(sharedValue.onJS[index.null]).toBe(null);
-    expect(sharedValue.onUI[index.undefined]).toBe(undefined);
-    expect(sharedValue.onJS[index.undefined]).toBe(undefined);
-
-    // String
-    expect(sharedValue.onUI[index.string]).toBe('a');
-    expect(sharedValue.onJS[index.string]).toBe('a');
-
-    // BigInt
-    expect(typeof sharedValue.onUI[index.bigint]).toBe('bigint');
-    expect(sharedValue.onUI[index.bigint]).toBe(BigInt(123));
-    expect(typeof sharedValue.onJS[index.bigint]).toBe('bigint');
-    expect(sharedValue.onJS[index.bigint]).toBe(BigInt(123));
-
-    // Object
-    expect(typeof sharedValue.onUI[index.object]).toBe('object');
-    expect(sharedValue.onUI[index.object].a).toBe(1);
-    expect(typeof sharedValue.onJS[index.object]).toBe('object');
-    expect(sharedValue.onJS[index.object].a).toBe(1);
-
-    // Remote function
-    expect(typeof sharedValue.onUI[index.remoteFunction]).toBe('function');
-    if (__DEV__ === false) {
-      expect('__remoteFunction' in sharedValue.onUI[index.remoteFunction]).toBe(true);
-      expect(!!sharedValue.onUI[index.remoteFunction].__remoteFunction).toBe(true);
-    }
-    expect(typeof sharedValue.onJS[index.remoteFunction]).toBe('function');
-
-    // Array
-    expect(sharedValue.onUI[index.array].length).toBe(1);
-    expect(sharedValue.onUI[index.array][0]).toBe(1);
-    expect(sharedValue.onJS[index.array].length).toBe(1);
-    expect(sharedValue.onJS[index.array][0]).toBe(1);
-
-    // Worklet function
-    expect(typeof sharedValue.onUI[index.workletFunction]).toBe('object');
-    expect(typeof sharedValue.onJS[index.workletFunction]).toBe('object');
-
-    // Initializer (RegExp)
-    expect(sharedValue.onUI[index.initializer] instanceof Object).toBe(true);
-    // expect(sharedValue.onUI[index.initializer].test('a')).toBe(true);
-    expect(sharedValue.onJS[index.initializer] instanceof Object).toBe(true);
-    // expect(sharedValue.onJS[index.initializer].test('a')).toBe(true);
-
-    // ArrayBufferr
-    expect(typeof sharedValue.onUI[index.arrayBuffer]).toBe('object');
-    // expect(sharedValue.onUI[index.arrayBuffer].byteLength).toBe(3);
-    // const uint8ArrayUI = new Uint8Array(sharedValue.onUI[index.arrayBuffer]);
-    // expect(uint8ArrayUI[0]).toBe(1);
-    // expect(uint8ArrayUI[1]).toBe(2);
-    // expect(uint8ArrayUI[2]).toBe(3);
-    // expect(sharedValue.onJS[index.arrayBuffer] instanceof ArrayBuffer).toBe(true);
-    // expect(sharedValue.onJS[index.arrayBuffer].byteLength).toBe(3);
-    // const uint8ArrayJS = new Uint8Array(sharedValue.onJS[index.arrayBuffer]);
-    // expect(uint8ArrayJS[0]).toBe(1);
-    // expect(uint8ArrayJS[1]).toBe(2);
-    // expect(uint8ArrayJS[2]).toBe(3);
+    const sharedValue = await getRegisteredValue<any[]>(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 
   test('makeShareableCloneError', async () => {
@@ -279,12 +316,20 @@ describe('Test makeShareableClone', () => {
     const errorValue = new Error('test');
 
     // Act
-    await render(<ValueComponent value={errorValue} />);
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [errorValue instanceof Error, String(errorValue).includes('test')];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
     await wait(100);
 
     // Assert
-    const sharedValue = await getRegisteredValue<Error>(SHARED_VALUE_REF);
-    expect(String(sharedValue.onUI).includes('test')).toBe(true);
-    expect(String(sharedValue.onJS).includes('test')).toBe(true);
+    const sharedValue = await getRegisteredValue<Error>(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
+    expect(sharedValue.onJS).toBe(true);
   });
 });
