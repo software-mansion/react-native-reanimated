@@ -387,11 +387,11 @@ function cloneWorklet<T extends WorkletFunction>(
     depth + 1
   );
 
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
+    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
     // retain all worklets
-    true,
-    value
+    true
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -423,7 +423,7 @@ function clonePlainJSObject<T extends object>(
     shouldPersistRemote,
     depth
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableObject(
     clonedProps,
     shouldPersistRemote,
     value
@@ -624,6 +624,9 @@ export function makeShareableCloneOnUIRecursive<T>(
         return global._makeShareableArray(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
+      }
+      if (isWorkletFunction(value)) {
+        return global._makeShareableWorklet(value, true);
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       if (isPlainJSObject(value) && value.__init) {

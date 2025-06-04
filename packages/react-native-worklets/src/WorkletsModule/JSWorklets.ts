@@ -62,6 +62,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableObject<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableObject should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableImport(): never {
     throw new WorkletsError(
       'makeShareableImport should never be called in JSWorklets.'
@@ -83,6 +89,12 @@ class JSWorklets implements IWorkletsModule {
   makeShareableInitializer(): ShareableRef<object> {
     throw new WorkletsError(
       'makeShareableInitializer should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableWorklet(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableWorklet should never be called in JSWorklets.'
     );
   }
 
