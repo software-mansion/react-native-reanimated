@@ -9,14 +9,11 @@ import {
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import { isJest, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
-
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
@@ -148,7 +145,7 @@ export function setupConsole() {
 }
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
-  if (isWeb()) {
+  if (IS_WEB || globalThis._WORKLET) {
     return;
   }
   if (!WorkletsModule) {

@@ -2,7 +2,7 @@
 'use strict';
 
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
-import { isJest } from '../PlatformChecker';
+import { IS_JEST } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -15,7 +15,7 @@ export function createJSWorkletsModule(): IWorkletsModule {
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
 const requestAnimationFrameImpl =
-  isJest() || !globalThis.requestAnimationFrame
+  IS_JEST || !globalThis.requestAnimationFrame
     ? mockedRequestAnimationFrame
     : globalThis.requestAnimationFrame;
 

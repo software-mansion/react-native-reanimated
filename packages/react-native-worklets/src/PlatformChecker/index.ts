@@ -1,29 +1,22 @@
 'use strict';
 
 import {
-  isJest as RNIsJest,
-  isWeb as RNIsWeb,
-  shouldBeUseWeb as RNShouldBeUseWeb,
+  IS_JEST as RN_IS_JEST,
+  IS_WEB as RN_IS_WEB,
+  IS_WINDOWS as RN_IS_WINDOWS,
+  SHOULD_BE_USE_WEB as RN_SHOULD_BE_USE_WEB,
 } from './PlatformChecker';
 
-const mockedPlatformChecker = {
-  isJest: () => false,
-  isWeb: () => false,
-  shouldBeUseWeb: () => false,
-};
+let IS_JEST = false;
+let IS_WEB = false;
+let IS_WINDOWS = false;
+let SHOULD_BE_USE_WEB = false;
 
-let isJest: () => boolean;
-let isWeb: () => boolean;
-let shouldBeUseWeb: () => boolean;
-
-if (globalThis._WORKLET) {
-  isJest = mockedPlatformChecker.isJest;
-  isWeb = mockedPlatformChecker.isWeb;
-  shouldBeUseWeb = mockedPlatformChecker.shouldBeUseWeb;
-} else {
-  isJest = RNIsJest;
-  isWeb = RNIsWeb;
-  shouldBeUseWeb = RNShouldBeUseWeb;
+if (!globalThis._WORKLET) {
+  IS_JEST = RN_IS_JEST;
+  IS_WEB = RN_IS_WEB;
+  IS_WINDOWS = RN_IS_WINDOWS;
+  SHOULD_BE_USE_WEB = RN_SHOULD_BE_USE_WEB;
 }
 
-export { isJest, isWeb, shouldBeUseWeb };
+export { IS_JEST, IS_WEB, IS_WINDOWS, SHOULD_BE_USE_WEB };

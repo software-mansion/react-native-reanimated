@@ -1,7 +1,7 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
@@ -20,7 +20,6 @@ import type {
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
