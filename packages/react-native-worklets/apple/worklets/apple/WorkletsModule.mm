@@ -34,8 +34,8 @@ using worklets::WorkletsModuleProxy;
 
 #if __has_include(<React/RCTBundleConsumer.h>)
 // Experimental bundling
-@synthesize scriptBuffer = _scriptBuffer;
-@synthesize sourceURL = _sourceURL;
+@synthesize scriptBuffer = scriptBuffer_;
+@synthesize sourceURL = sourceURL_;
 #endif // __has_include(<React/RCTBundleConsumer.h>)
 
 - (void)checkBridgeless
@@ -62,10 +62,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
+  std::string sourceURL;
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-  script = [_scriptBuffer getBuffer];
+  sourceURL = sourceURL_;
+  script = [scriptBuffer_ getBuffer];
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
@@ -80,7 +83,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       uiScheduler,
       std::move(forwardedRequestAnimationFrame),
       std::move(script),
-      sourceURL_);
+      sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
