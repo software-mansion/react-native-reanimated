@@ -13,7 +13,6 @@ const mockedPlatformChecker = {
 };
 
 let isJest: () => boolean;
-let isChromeDebugger: () => boolean;
 let isWeb: () => boolean;
 let shouldBeUseWeb: () => boolean;
 
@@ -27,4 +26,4 @@ if (globalThis._WORKLET) {
   shouldBeUseWeb = RNShouldBeUseWeb;
 }
 
-export { isChromeDebugger, isJest, isWeb, shouldBeUseWeb };
+export { isJest, isWeb, shouldBeUseWeb };
