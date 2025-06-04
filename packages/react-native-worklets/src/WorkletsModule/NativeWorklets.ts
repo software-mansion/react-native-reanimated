@@ -78,6 +78,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#shareableNull;
   }
 
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
+  }
+
   makeShareableHostObject<T extends object>(obj: T) {
     return this.#workletsModuleProxy.makeShareableHostObject(obj);
   }
@@ -91,6 +103,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableInitializer(obj: object) {
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  }
+
+  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableWorklet(
+      worklet,
+      shouldPersistRemote
+    );
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {

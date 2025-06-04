@@ -8,7 +8,7 @@ import {
   setupErrorUtils,
 } from './initializers';
 import { registerLoggerConfig } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -17,8 +17,6 @@ import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletRuntime } from './workletTypes';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
