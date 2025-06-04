@@ -77,13 +77,7 @@ export function generateWorkletFile(
 
   const imports = [...libraryImports, ...relativeImports];
 
-  const newProg = program([
-    ...imports,
-    variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ]),
-    exportDefaultDeclaration(factory),
-  ]);
+  const newProg = program([...imports, exportDefaultDeclaration(factory)]);
 
   const transformedProg = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
