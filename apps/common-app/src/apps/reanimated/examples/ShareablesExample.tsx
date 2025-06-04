@@ -40,6 +40,7 @@ export default function ShareablesExample() {
         <NumberDemo />
         <UndefinedDemo />
         <NullDemo />
+        <PlainObjectDemo />
         <HostObjectDemo />
         <TurboModuleLikeDemo />
         <ArrayDemo />
@@ -453,6 +454,94 @@ function CyclicObjectDemo() {
       onPress={handlePress}
       status={status}
       expectedOnNative="error"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function PlainObjectDemo() {
+  const title = 'Plain object';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  enum key {
+    number = 0,
+    true = 1,
+    false = 2,
+    null = 3,
+    undefined = 4,
+    string = 5,
+    bigint = 6,
+    object = 7,
+    remoteFunction = 8,
+    array = 9,
+    workletFunction = 10,
+    initializer = 11,
+    arrayBuffer = 12,
+  }
+
+  const handlePress = () => {
+    const obj = {
+      [key.number]: 1,
+      [key.true]: true,
+      [key.false]: false,
+      [key.null]: null,
+      [key.undefined]: undefined,
+      [key.string]: 'test',
+      [key.bigint]: BigInt(123),
+      [key.object]: { f: 4, g: 'test' },
+      [key.remoteFunction]: () => {
+        return 1;
+      },
+      [key.array]: [1],
+      [key.workletFunction]: () => {
+        'worklet';
+        return 2;
+      },
+      [key.initializer]: /test/,
+      [key.arrayBuffer]: new ArrayBuffer(3),
+    };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          obj[key.number] === 1,
+          obj[key.true] === true,
+          obj[key.false] === false,
+          obj[key.null] === null,
+          obj[key.undefined] === undefined,
+          obj[key.string] === 'test',
+          obj[key.bigint] === BigInt(123),
+          obj[key.object].f === 4,
+          obj[key.object].g === 'test',
+          typeof obj[key.remoteFunction] === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in obj[key.remoteFunction] &&
+              !!obj[key.remoteFunction].__remoteFunction),
+          obj[key.array].length === 1,
+          obj[key.array][0] === 1,
+          obj[key.workletFunction]() === 2,
+          obj[key.initializer] instanceof RegExp,
+          obj[key.initializer].test('test'),
+          obj[key.arrayBuffer] instanceof ArrayBuffer,
+          obj[key.arrayBuffer].byteLength === 3,
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        console.log(e);
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
       expectedOnWeb="ok"
     />
   );

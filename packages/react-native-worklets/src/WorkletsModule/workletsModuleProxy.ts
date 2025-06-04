@@ -31,6 +31,12 @@ export interface WorkletsModuleProxy {
     obj: T,
     proto: TProto
   ): ShareableRef<T>;
+  
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
 
   makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
 

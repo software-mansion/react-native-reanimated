@@ -1,5 +1,6 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
@@ -12,6 +13,9 @@ import type {
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
+
+const NOT_INITIALIZED_WARNING =
+  'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 
 /**
  * Lets you synchronously get the current offset of a `ScrollView`.
@@ -41,27 +45,27 @@ function useScrollViewOffsetWeb(
       offset.value =
         element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current]);
+  }, [animatedRef, offset]);
 
   useEffect(() => {
-    const element = animatedRef?.current
-      ? getWebScrollableElement(animatedRef.current)
-      : null;
-
-    if (element) {
-      element.addEventListener('scroll', eventHandler);
+    if (!animatedRef) {
+      return;
     }
-    return () => {
-      if (element) {
-        element.removeEventListener('scroll', eventHandler);
+
+    return animatedRef.observe((tag) => {
+      if (!tag) {
+        logger.warn(NOT_INITIALIZED_WARNING);
+        return;
       }
-    };
-    // React here has a problem with `animatedRef.current` since a Ref .current
-    // field shouldn't be used as a dependency. However, in this case we have
-    // to do it this way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current, eventHandler]);
+
+      const element = getWebScrollableElement(animatedRef.current);
+      element.addEventListener('scroll', eventHandler);
+
+      return () => {
+        element.removeEventListener('scroll', eventHandler);
+      };
+    });
+  }, [animatedRef, eventHandler]);
 
   return offset;
 }
@@ -87,21 +91,22 @@ function useScrollViewOffsetNative(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
-    const elementTag = animatedRef?.getTag() ?? null;
-
-    if (elementTag) {
-      eventHandler.workletEventHandler.registerForEvents(elementTag);
+    if (!animatedRef) {
+      return;
     }
-    return () => {
-      if (elementTag) {
-        eventHandler.workletEventHandler.unregisterFromEvents(elementTag);
+
+    return animatedRef.observe((tag) => {
+      if (!tag) {
+        logger.warn(NOT_INITIALIZED_WARNING);
+        return;
       }
-    };
-    // React here has a problem with `animatedRef.current` since a Ref .current
-    // field shouldn't be used as a dependency. However, in this case we have
-    // to do it this way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current, eventHandler]);
+
+      eventHandler.workletEventHandler.registerForEvents(tag);
+      return () => {
+        eventHandler.workletEventHandler.unregisterFromEvents(tag);
+      };
+    });
+  }, [animatedRef, eventHandler]);
 
   return offset;
 }

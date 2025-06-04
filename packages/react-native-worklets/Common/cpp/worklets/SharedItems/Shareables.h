@@ -163,6 +163,12 @@ jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
     const jsi::Object &proto);
+    
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
 
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
