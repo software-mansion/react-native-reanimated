@@ -27,6 +27,12 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
+
   makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
 
   makeShareableArray(
@@ -35,6 +41,11 @@ export interface WorkletsModuleProxy {
   ): ShareableRef<unknown[]>;
 
   makeShareableInitializer(obj: object): ShareableRef<object>;
+
+  makeShareableWorklet(
+    worklet: object,
+    shouldPersistRemote: boolean
+  ): ShareableRef<object>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
