@@ -1,5 +1,6 @@
 'use strict';
 import type { WorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
 import { ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
@@ -28,28 +29,34 @@ export function buildDependencies(
     (handler) => handler !== undefined
   ) as NonNullable<Handler>[];
   if (!dependencies) {
-    dependencies = handlersList.map((handler) => {
-      return {
-        workletHash: handler.__workletHash,
-        closure: handler.__closure,
-      };
-    });
-  } else {
-    dependencies.push(buildWorkletsHash(handlersList));
+    return handlersList;
   }
 
+  dependencies.push(buildWorkletsHash(handlersList));
   return dependencies;
 }
 
-function isWorkletHandler(
-  dep: unknown
-): dep is { workletHash: unknown; closure: unknown } {
-  return (
-    typeof dep === 'object' &&
-    dep !== null &&
-    'workletHash' in dep &&
-    'closure' in dep
-  );
+function areWorkletsEqual(
+  worklet1: WorkletFunction,
+  worklet2: WorkletFunction
+) {
+  if (
+    worklet1.__workletHash === worklet2.__workletHash &&
+    worklet1.__closure &&
+    worklet2.__closure
+  ) {
+    const closure1Keys = Object.keys(worklet1.__closure);
+    const closure2Keys = Object.keys(worklet2.__closure);
+
+    return (
+      closure1Keys.length === closure2Keys.length &&
+      closure1Keys.every(
+        (key) => worklet1.__closure[key] === worklet2.__closure[key]
+      )
+    );
+  }
+
+  return false;
 }
 
 // This is supposed to work as useEffect comparison.
@@ -80,10 +87,11 @@ export function areDependenciesEqual(
       if (objectIs(nextDep, prevDep)) {
         continue;
       }
-      if (isWorkletHandler(nextDep) && isWorkletHandler(prevDep)) {
-        if (nextDep.workletHash !== prevDep.workletHash) {
-          return false;
-        }
+      if (!isWorkletFunction(nextDep) || !isWorkletFunction(prevDep)) {
+        return false;
+      }
+      if (!areWorkletsEqual(nextDep, prevDep)) {
+        return false;
       }
     }
     return true;
