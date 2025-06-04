@@ -2,14 +2,19 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
+#include <chrono>
 
 #import <React/RCTAssert.h>
+
+#define TIME_SAMPLES_AMOUNT 3
 
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
   std::vector<std::function<void(double)>> frameCallbacks_;
   std::mutex callbacksMutex_;
+  std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
+  int timeDeltaIndex_;
 }
 
 typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
@@ -19,7 +24,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 - (instancetype)init
 {
   AssertJavaScriptQueue();
-  displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
+  bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
+  SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
+  displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
 #if TARGET_OS_OSX
   // nothing
 #else // TARGET_OS_OSX
@@ -65,9 +72,28 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   auto targetTimestamp = displayLink.targetTimestamp;
 #endif // TARGET_OS_OSX
   targetTimestamp = worklets::calculateTimestampWithSlowAnimations(targetTimestamp);
-
   for (const auto &callback : frameCallbacks) {
     callback(targetTimestamp);
+  }
+}
+
+- (void)executeQueueForProMotion:(WorkletsDisplayLink *)displayLink
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  
+  [self executeQueue:displayLink];
+  
+  timeDeltaIndex_ = (timeDeltaIndex_ + 1) % TIME_SAMPLES_AMOUNT;
+  timeDeltas_[timeDeltaIndex_] = std::chrono::high_resolution_clock::now() - start;
+  float averageFrameDuration = 0;
+  for (int i = 0; i < TIME_SAMPLES_AMOUNT; i++) {
+    averageFrameDuration += timeDeltas_[i].count();
+  }
+  averageFrameDuration /= TIME_SAMPLES_AMOUNT;
+  if (averageFrameDuration < 8) {
+    displayLink_.preferredFramesPerSecond = 120;
+  } else {
+    displayLink_.preferredFramesPerSecond = 60;
   }
 }
 
