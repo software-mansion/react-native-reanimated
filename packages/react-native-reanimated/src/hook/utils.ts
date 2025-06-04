@@ -40,11 +40,7 @@ function areWorkletsEqual(
   worklet1: WorkletFunction,
   worklet2: WorkletFunction
 ) {
-  if (
-    worklet1.__workletHash === worklet2.__workletHash &&
-    worklet1.__closure &&
-    worklet2.__closure
-  ) {
+  if (worklet1.__workletHash === worklet2.__workletHash) {
     const closure1Keys = Object.keys(worklet1.__closure);
     const closure2Keys = Object.keys(worklet2.__closure);
 
