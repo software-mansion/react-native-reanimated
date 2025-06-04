@@ -204,7 +204,6 @@ class ReanimatedModuleProxy
     return workletsModuleProxy_;
   }
 
-  void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
@@ -215,7 +214,6 @@ class ReanimatedModuleProxy
       const jsi::Value &props);
 
   const bool isReducedMotion_;
-  bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;

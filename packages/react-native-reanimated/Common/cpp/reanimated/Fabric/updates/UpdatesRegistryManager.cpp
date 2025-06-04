@@ -18,30 +18,6 @@ void UpdatesRegistryManager::addRegistry(
   registries_.push_back(registry);
 }
 
-void UpdatesRegistryManager::pauseReanimatedCommits() {
-  isPaused_ = true;
-}
-
-bool UpdatesRegistryManager::shouldReanimatedSkipCommit() {
-  return isPaused_;
-}
-
-void UpdatesRegistryManager::unpauseReanimatedCommits() {
-  isPaused_ = false;
-}
-
-void UpdatesRegistryManager::pleaseCommitAfterPause() {
-  shouldCommitAfterPause_ = true;
-}
-
-void UpdatesRegistryManager::cancelCommitAfterPause() {
-  shouldCommitAfterPause_ = false;
-}
-
-bool UpdatesRegistryManager::shouldCommitAfterPause() {
-  return shouldCommitAfterPause_.exchange(false);
-}
-
 void UpdatesRegistryManager::markNodeAsRemovable(
     const ShadowNode::Shared &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;

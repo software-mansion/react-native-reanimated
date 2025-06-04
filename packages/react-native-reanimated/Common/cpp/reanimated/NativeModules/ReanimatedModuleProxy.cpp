@@ -721,11 +721,6 @@ void ReanimatedModuleProxy::performOperations() {
     }
 
     shouldUpdateCssAnimations_ = false;
-
-    if ((updatesBatch.size() > 0) &&
-        updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-      updatesRegistryManager_->pleaseCommitAfterPause();
-    }
   }
 
   for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
@@ -743,29 +738,12 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-    // It may happen that `performOperations` is called on the UI thread
-    // while React Native tries to commit a new tree on the JS thread.
-    // In this case, we should skip the commit here and let React Native do
-    // it. The commit will include the current values from the updates manager
-    // which will be applied in ReanimatedCommitHook.
-    return;
-  }
-
   commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
   // so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
-}
-
-void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_([weakThis = weak_from_this()](const double timestamp) {
-    if (auto strongThis = weakThis.lock()) {
-      strongThis->shouldFlushRegistry_ = true;
-    }
-  });
 }
 
 void ReanimatedModuleProxy::commitUpdates(
@@ -781,23 +759,11 @@ void ReanimatedModuleProxy::commitUpdates(
   updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
 
-  if (shouldFlushRegistry_) {
-    shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
-    for (auto const &[family, props] : propsMap) {
-      const auto surfaceId = family->getSurfaceId();
-      auto &propsVector = propsMapBySurface[surfaceId][family];
-      for (const auto &prop : props) {
-        propsVector.emplace_back(prop);
-      }
-    }
-  } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
-    }
+  for (auto const &[shadowNode, props] : updatesBatch) {
+    SurfaceId surfaceId = shadowNode->getSurfaceId();
+    auto family = &shadowNode->getFamily();
+    react_native_assert(family->getSurfaceId() == surfaceId);
+    propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
   }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -805,10 +771,6 @@ void ReanimatedModuleProxy::commitUpdates(
       const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode)
               -> RootShadowNode::Unshared {
-            if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
-              return nullptr;
-            }
-
             auto rootNode =
                 cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
@@ -922,16 +884,8 @@ void ReanimatedModuleProxy::initializeFabric(
 
   initializeLayoutAnimationsProxy();
 
-  const std::function<void()> request = [weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->requestFlushRegistry();
-  };
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_, request);
+      uiManager_, updatesRegistryManager_);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
       uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }

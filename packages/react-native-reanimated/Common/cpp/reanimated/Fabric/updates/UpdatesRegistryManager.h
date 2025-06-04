@@ -24,14 +24,6 @@ class UpdatesRegistryManager {
   // manager (e.g. add priority to registries)
   void addRegistry(const std::shared_ptr<UpdatesRegistry> &registry);
 
-  void pauseReanimatedCommits();
-  bool shouldReanimatedSkipCommit();
-  void unpauseReanimatedCommits();
-
-  void pleaseCommitAfterPause();
-  bool shouldCommitAfterPause();
-  void cancelCommitAfterPause();
-
   void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
@@ -47,7 +39,6 @@ class UpdatesRegistryManager {
  private:
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
-  std::atomic<bool> shouldCommitAfterPause_;
   std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
