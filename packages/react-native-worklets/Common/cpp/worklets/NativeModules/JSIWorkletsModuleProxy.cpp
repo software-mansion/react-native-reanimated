@@ -140,6 +140,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "makeShareableInitializer"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableArray"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableObject"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -296,6 +300,34 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           return makeShareableHostObject(
               rt, args[0].asObject(rt).getHostObject(rt));
+        });
+  }
+
+  if (name == "makeShareableObject") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableObject(
+              rt, args[0].getObject(rt), args[1].getBool(), args[2]);
+        });
+  }
+
+  if (name == "makeShareableWorklet") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableWorklet(
+              rt, args[0].getObject(rt), args[1].getBool());
         });
   }
 
