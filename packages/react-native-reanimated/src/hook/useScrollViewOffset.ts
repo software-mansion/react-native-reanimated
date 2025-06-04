@@ -16,6 +16,9 @@ import { useSharedValue } from './useSharedValue';
 
 const IS_WEB = isWeb();
 
+const NOT_INITIALIZED_WARNING =
+  'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
+
 /**
  * Lets you synchronously get the current offset of a `ScrollView`.
  *
@@ -44,27 +47,27 @@ function useScrollViewOffsetWeb(
       offset.value =
         element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current]);
+  }, [animatedRef, offset]);
 
   useEffect(() => {
-    const element = animatedRef?.current
-      ? getWebScrollableElement(animatedRef.current)
-      : null;
-
-    if (element) {
-      element.addEventListener('scroll', eventHandler);
+    if (!animatedRef) {
+      return;
     }
-    return () => {
-      if (element) {
-        element.removeEventListener('scroll', eventHandler);
+
+    return animatedRef.observe((tag) => {
+      if (!tag) {
+        logger.warn(NOT_INITIALIZED_WARNING);
+        return;
       }
-    };
-    // React here has a problem with `animatedRef.current` since a Ref .current
-    // field shouldn't be used as a dependency. However, in this case we have
-    // to do it this way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current, eventHandler]);
+
+      const element = getWebScrollableElement(animatedRef.current);
+      element.addEventListener('scroll', eventHandler);
+
+      return () => {
+        element.removeEventListener('scroll', eventHandler);
+      };
+    });
+  }, [animatedRef, eventHandler]);
 
   return offset;
 }
@@ -94,27 +97,18 @@ function useScrollViewOffsetNative(
       return;
     }
 
-    if (!animatedRef.getTag) {
-      logger.warn(
-        'animatedRef is not initialized. Please make sure to pass the animated ref to the scrollable component if you want to use useScrollViewOffset.'
-      );
-      return;
-    }
+    return animatedRef.observe((tag) => {
+      if (!tag) {
+        logger.warn(NOT_INITIALIZED_WARNING);
+        return;
+      }
 
-    const elementTag = animatedRef.getTag();
-
-    if (elementTag) {
-      eventHandler.workletEventHandler.registerForEvents(elementTag);
+      eventHandler.workletEventHandler.registerForEvents(tag);
       return () => {
-        eventHandler.workletEventHandler.unregisterFromEvents(elementTag);
+        eventHandler.workletEventHandler.unregisterFromEvents(tag);
       };
-    }
-
-    // React here has a problem with `animatedRef.current` since a Ref .current
-    // field shouldn't be used as a dependency. However, in this case we have
-    // to do it this way.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current, eventHandler]);
+    });
+  }, [animatedRef, eventHandler]);
 
   return offset;
 }
