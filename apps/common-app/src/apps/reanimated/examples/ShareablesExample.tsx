@@ -543,6 +543,7 @@ function TurboModuleLikeDemo() {
           reanimatedModuleKeys.every(
             (key) => key in Object.getPrototypeOf(obj)
           ),
+          'magicKey' in Object.getPrototypeOf(obj) === true,
         ];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
