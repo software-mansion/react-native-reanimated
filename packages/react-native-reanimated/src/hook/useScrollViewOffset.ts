@@ -1,5 +1,6 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
+import { logger } from 'react-native-worklets';
 
 import { IS_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
@@ -87,16 +88,26 @@ function useScrollViewOffsetNative(
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
 
   useEffect(() => {
-    const elementTag = animatedRef?.getTag() ?? null;
+    if (!animatedRef) {
+      return;
+    }
+
+    if (!animatedRef.getTag) {
+      logger.warn(
+        'animatedRef is not initialized. Please make sure to pass the animated ref to the scrollable component if you want to use useScrollViewOffset.'
+      );
+      return;
+    }
+
+    const elementTag = animatedRef.getTag();
 
     if (elementTag) {
       eventHandler.workletEventHandler.registerForEvents(elementTag);
-    }
-    return () => {
-      if (elementTag) {
+      return () => {
         eventHandler.workletEventHandler.unregisterFromEvents(elementTag);
-      }
-    };
+      };
+    }
+
     // React here has a problem with `animatedRef.current` since a Ref .current
     // field shouldn't be used as a dependency. However, in this case we have
     // to do it this way.

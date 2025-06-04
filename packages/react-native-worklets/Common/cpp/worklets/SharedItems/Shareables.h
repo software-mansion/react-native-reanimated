@@ -158,6 +158,12 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
     const jsi::String &source,
@@ -175,6 +181,11 @@ jsi::Value makeShareableArray(
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
+
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const bool &shouldRetainRemote);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
