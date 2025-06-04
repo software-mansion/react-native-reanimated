@@ -209,7 +209,8 @@ function makeShareableCloneRecursiveNative<T>(
 if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
-    source: 22113377,
+    // @ts-expect-error resolveWeak is defined by Metro
+    source: require.resolveWeak('./index'),
   };
 }
 
