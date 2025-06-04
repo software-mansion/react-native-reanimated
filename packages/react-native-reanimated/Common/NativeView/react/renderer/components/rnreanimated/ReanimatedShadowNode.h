@@ -4,7 +4,6 @@
 #include <react/renderer/components/rnreanimated/ReanimatedNodeProps.h>
 #include <react/renderer/components/rnreanimated/ReanimatedViewStateData.h>
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
-#include <react/renderer/core/LayoutContext.h>
 
 namespace facebook::react {
 
@@ -20,16 +19,14 @@ class ReanimatedShadowNode final
     : public ReanimatedViewShadowNodeBase,
       public std::enable_shared_from_this<ReanimatedShadowNode> {
  public:
-  ReanimatedShadowNode(
-      const ShadowNodeFragment &fragment,
-      const ShadowNodeFamily::Shared &family,
-      ShadowNodeTraits traits);
+  using ReanimatedViewShadowNodeBase::ReanimatedViewShadowNodeBase;
 
-  ReanimatedShadowNode(
-      const ShadowNode &sourceShadowNode,
-      const ShadowNodeFragment &fragment);
-
-  void layout(LayoutContext layoutContext) override;
+  void onCreate(double timestamp, const ReanimatedNodeProps &props);
+  void onPropsChange(
+      double timestamp,
+      const ReanimatedNodeProps &oldProps,
+      const ReanimatedNodeProps &newProps);
+  folly::dynamic onFrame(double timestamp);
 };
 
 } // namespace facebook::react

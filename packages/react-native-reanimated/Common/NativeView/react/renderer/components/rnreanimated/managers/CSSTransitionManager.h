@@ -18,37 +18,40 @@ using namespace css;
 class CSSTransitionManager {
  public:
   CSSTransitionManager(
-      std::shared_ptr<OperationsLoop> operationsLoop,
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
-  ~CSSTransitionManager();
+  // Non-copyable
+  CSSTransitionManager(const CSSTransitionManager &) = delete;
+  CSSTransitionManager &operator=(const CSSTransitionManager &) = delete;
 
-  folly::dynamic getCurrentFrameProps(const ShadowNode::Shared &shadowNode);
+  // Non-movable
+  CSSTransitionManager(CSSTransitionManager &&) = delete;
+  CSSTransitionManager &operator=(CSSTransitionManager &&) = delete;
 
-  void update(
+  void onPropsChange(
+      double timestamp,
       const ReanimatedNodeProps &oldProps,
       const ReanimatedNodeProps &newProps);
+  folly::dynamic onFrame(
+      double timestamp,
+      const ShadowNode::Shared &shadowNode);
 
  private:
   std::shared_ptr<CSSTransition> transition_;
-  OperationsLoop::OperationHandle operationHandle_;
 
   // TODO - think of better way of running interrupted transitions without
   // storing last frame result
   folly::dynamic lastFrameProps_ = folly::dynamic::object();
 
-  std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   void updateTransitionInstance(
       const std::optional<CSSTransitionConfig> &oldConfig,
       const std::optional<CSSTransitionConfig> &newConfig);
   void runTransitionForChangedProperties(
+      double timestamp,
       const folly::dynamic &oldProps,
       const folly::dynamic &newProps);
-
-  void removeTransition();
-  void runTransition(ChangedProps &&changedProps);
 };
 
 } // namespace facebook::react

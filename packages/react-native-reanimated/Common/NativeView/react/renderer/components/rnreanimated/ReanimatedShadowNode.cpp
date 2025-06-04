@@ -4,34 +4,27 @@ namespace facebook::react {
 
 extern const char ReanimatedViewComponentName[] = "ReanimatedView";
 
-ReanimatedShadowNode::ReanimatedShadowNode(
-    const ShadowNodeFragment &fragment,
-    const ShadowNodeFamily::Shared &family,
-    ShadowNodeTraits traits)
-    : ReanimatedViewShadowNodeBase(fragment, family, traits) {
-  const auto &newProps =
-      static_cast<const ReanimatedNodeProps &>(*this->getProps());
-
+void ReanimatedShadowNode::onCreate(
+    const double timestamp,
+    const ReanimatedNodeProps &props) {
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(ReanimatedNodeProps(), newProps);
+  state.cssAnimationsManager->onPropsChange(
+      timestamp, ReanimatedNodeProps(), props);
 }
 
-ReanimatedShadowNode::ReanimatedShadowNode(
-    const ShadowNode &sourceShadowNode,
-    const ShadowNodeFragment &fragment)
-    : ReanimatedViewShadowNodeBase(sourceShadowNode, fragment) {
-  const auto &oldProps =
-      static_cast<const ReanimatedNodeProps &>(*sourceShadowNode.getProps());
-  const auto &newProps =
-      static_cast<const ReanimatedNodeProps &>(*this->getProps());
-
+void ReanimatedShadowNode::onPropsChange(
+    const double timestamp,
+    const ReanimatedNodeProps &oldProps,
+    const ReanimatedNodeProps &newProps) {
   const auto &state = getStateData();
-  state.cssAnimationsManager->update(oldProps, newProps);
-  state.cssTransitionManager->update(oldProps, newProps);
+  state.cssAnimationsManager->onPropsChange(timestamp, oldProps, newProps);
+  state.cssTransitionManager->onPropsChange(timestamp, oldProps, newProps);
 }
 
-void ReanimatedShadowNode::layout(LayoutContext layoutContext) {
-  YogaLayoutableShadowNode::layout(layoutContext);
+folly::dynamic ReanimatedShadowNode::onFrame(const double timestamp) {
+  const auto &state = getStateData();
+  const auto sharedThis = shared_from_this();
+  return state.cssTransitionManager->onFrame(timestamp, sharedThis);
 }
 
 } // namespace facebook::react
