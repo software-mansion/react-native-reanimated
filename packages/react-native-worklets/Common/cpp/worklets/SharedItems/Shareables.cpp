@@ -47,6 +47,9 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+			// We pass `false` because this function is invoked only
+			// by `makeShareableCloneOnUIRecursive` which doesn't
+			// make Retaining Shareables.
       return makeShareableWorklet(rt, object, false);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeShareableInitializer(rt, object);

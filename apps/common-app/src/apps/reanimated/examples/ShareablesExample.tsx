@@ -815,16 +815,13 @@ function HostFunctionDemo() {
   const { status, isOk, isNotOk, isError } = useStatus();
 
   const handlePress = () => {
-    // @ts-expect-error _toString function is registered for UI runtime
-    const hostFunction = globalThis._toString;
+    // @ts-expect-error It's ok
+    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
     runOnUI(() => {
       'worklet';
       try {
-        const checks = [
-          typeof hostFunction === 'function',
-          // @ts-expect-error _toString function is registered for UI runtime
-          globalThis._toString(123) === '123',
-        ];
+        const boolean = hostFunction(true);
+        const checks = [typeof hostFunction === 'function', boolean === true];
         if (checks.every(Boolean)) {
           runOnJS(isOk)();
         } else {
