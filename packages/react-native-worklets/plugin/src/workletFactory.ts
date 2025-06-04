@@ -257,7 +257,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  if (shouldIncludeInitData) {
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
     statements.push(
       expressionStatement(
         assignmentExpression(
