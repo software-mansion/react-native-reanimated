@@ -70,8 +70,6 @@ export default class AnimatedComponent<
       // TODO - implement a valid solution later on - this is a temporary fix
       viewTag = this._componentRef;
       DOMElement = this._componentDOMRef;
-      shadowNodeWrapper = null;
-      viewConfig = null;
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
@@ -86,7 +84,7 @@ export default class AnimatedComponent<
       }
 
       const viewInfo = getViewInfo(hostInstance);
-      viewTag = viewInfo.viewTag;
+      viewTag = viewInfo.viewTag ?? -1;
       viewConfig = viewInfo.viewConfig;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }

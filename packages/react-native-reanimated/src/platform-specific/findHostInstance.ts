@@ -4,18 +4,11 @@
 import { ReanimatedError } from '../common';
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 
-type HostInstanceFabric = {
+export type HostInstance = {
   __internalInstanceHandle?: Record<string, unknown>;
   __nativeTag?: number;
   _viewConfig?: Record<string, unknown>;
 };
-
-type HostInstancePaper = {
-  _nativeTag?: number;
-  viewConfig?: Record<string, unknown>;
-};
-
-export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (!maybeNativeRef) {
@@ -26,11 +19,6 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
     maybeNativeRef.__nativeTag &&
     maybeNativeRef._viewConfig
   ) {
-    // This is a native ref to a Fabric component
-    return maybeNativeRef;
-  }
-  if (maybeNativeRef._nativeTag && maybeNativeRef.viewConfig) {
-    // This is a native ref to a Paper component
     return maybeNativeRef;
   }
   // That means it’s a ref to a non-native component, and it’s necessary

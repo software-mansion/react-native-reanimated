@@ -71,6 +71,4 @@ export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
     >;
   };
 
-export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
-
 export type CSSAnimationProp = keyof CSSAnimationProperties;

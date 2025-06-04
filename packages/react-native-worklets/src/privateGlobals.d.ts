@@ -34,9 +34,18 @@ declare global {
   var _makeShareableBigInt: (value: bigint) => FlatShareableRef<bigint>;
   var _makeShareableUndefined: () => FlatShareableRef<undefined>;
   var _makeShareableNull: () => FlatShareableRef<null>;
+  var _makeShareableObject: <T extends object>(
+    value: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
   var _makeShareableHostObject: <T extends object>(
     value: T
   ) => FlatShareableRef<T>;
+  var _makeShareableWorklet: (
+    value: object,
+    shouldPersistRemote: boolean
+  ) => FlatShareableRef<object>;
   var _makeShareableArray: (value: unknown[]) => FlatShareableRef<unknown[]>;
   var _makeShareableInitializer: (value: object) => FlatShareableRef<object>;
   var __callMicrotasks: () => void;
