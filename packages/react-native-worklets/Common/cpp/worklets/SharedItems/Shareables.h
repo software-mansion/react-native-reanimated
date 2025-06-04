@@ -4,6 +4,8 @@
 
 #include <jsi/jsi.h>
 
+#include <glog/logging.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -33,7 +35,7 @@ inline jsi::Value runOnRuntimeGuarded(
   try {
     return getCallGuard(rt).call(rt, function, args...);
   } catch (facebook::jsi::JSIException ex) {
-    LOG(INFO) << ex.what();
+    //    LOG(INFO) << ex.what();
   }
   return jsi::Value::undefined();
 #else
