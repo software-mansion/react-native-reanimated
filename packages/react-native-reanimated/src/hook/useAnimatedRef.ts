@@ -41,9 +41,9 @@ function useAnimatedRefNative<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const [tag] = useState(() => makeMutable<ShadowNodeWrapper | null>(null));
-  const [observers] = useState<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
-    () => new Map()
-  );
+  const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
+    new Map()
+  ).current;
   const tagRef = useRef<ShadowNodeWrapper | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
@@ -116,9 +116,9 @@ function useAnimatedRefWeb<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const tagRef = useRef<ShadowNodeWrapper | null>(null);
-  const [observers] = useState<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
-    () => new Map()
-  );
+  const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
+    new Map()
+  ).current;
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
