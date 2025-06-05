@@ -32,10 +32,6 @@ void fromRawValue(
   const auto &keyframesRegistry =
       sharedProxy->getCssAnimationKeyframesRegistry();
 
-  parseRawValue(rawValue, [](jsi::Runtime &rt, const jsi::Value &value) {
-    //    LOG(INFO) << stringifyJSIValue(rt, value);
-  });
-
   result = CSSAnimationConfig(keyframesRegistry, rawValue);
 }
 
