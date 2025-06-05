@@ -72,6 +72,7 @@ def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
+def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -170,6 +171,7 @@ android {
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
 
         externalNativeBuild {
             cmake {
@@ -181,6 +183,7 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")

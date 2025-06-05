@@ -32,6 +32,12 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
+#if __has_include(<React/RCTBundleConsumer.h>)
+// Experimental bundling
+@synthesize scriptBuffer = scriptBuffer_;
+@synthesize sourceURL = sourceURL_;
+#endif // __has_include(<React/RCTBundleConsumer.h>)
+
 - (void)checkBridgeless
 {
   auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
@@ -56,6 +62,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
+  std::string sourceURL = "";
+  std::shared_ptr<const BigStringBuffer> script = nullptr;
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  sourceURL = [sourceURL_ UTF8String];
+  script = [scriptBuffer_ getBuffer];
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   animationFrameQueue_ = [AnimationFrameQueue new];
@@ -64,7 +77,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame), script, sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
