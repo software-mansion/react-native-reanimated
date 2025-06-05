@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import { runOnJS, runOnUI } from 'react-native-worklets';
 
 function isWeb() {
   return Platform.OS === 'web';

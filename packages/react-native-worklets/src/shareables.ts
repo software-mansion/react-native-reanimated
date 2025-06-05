@@ -215,6 +215,7 @@ function makeShareableCloneRecursiveNative<T>(
 }
 
 if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  // TODO: Do it programatically.
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
     // @ts-expect-error resolveWeak is defined by Metro

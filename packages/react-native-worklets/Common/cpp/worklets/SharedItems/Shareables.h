@@ -172,7 +172,7 @@ jsi::Value makeShareableObject(
 
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const double &source,
+    const double source,
     const jsi::String &imported);
 
 jsi::Value makeShareableHostObject(
@@ -300,7 +300,7 @@ class ShareableImport : public Shareable {
  public:
   ShareableImport(
       jsi::Runtime &rt,
-      const double &source,
+      const double source,
       const jsi::String &imported)
       : Shareable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
