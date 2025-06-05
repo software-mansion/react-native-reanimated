@@ -39,7 +39,6 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 }
 
 function isTurboModuleLike(object: object): object is Record<string, unknown> {
-  'worklet';
   return isHostObject(Object.getPrototypeOf(object));
 }
 

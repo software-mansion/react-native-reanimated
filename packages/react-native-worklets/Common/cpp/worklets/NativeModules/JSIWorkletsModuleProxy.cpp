@@ -305,7 +305,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           return makeShareableTurboModuleLike(
-              rt, args[0].asObject(rt), args[1].asObject(rt));
+              rt, args[0].asObject(rt), args[1].asObject(rt).getHostObject(rt));
         });
   }
 

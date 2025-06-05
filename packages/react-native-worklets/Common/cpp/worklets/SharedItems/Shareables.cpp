@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Shareables.h>
 
 using namespace facebook;
@@ -190,9 +191,9 @@ jsi::Value makeShareableHostObject(
 jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
-    const jsi::Object &proto) {
+    const std::shared_ptr<jsi::HostObject> &proto) {
   const auto shareable = std::make_shared<ShareableTurboModuleLike>(
-      rt, object, proto.getHostObject(rt));
+      rt, object, proto);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -447,18 +448,8 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   }
 }
 
-ShareableTurboModuleLike::ShareableTurboModuleLike(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const std::shared_ptr<jsi::HostObject> &proto)
-    : Shareable(TurboModuleLikeType) {
-  proto_ = std::make_unique<ShareableHostObject>(rt, proto);
-  properties_ = std::make_unique<ShareableObject>(rt, object);
-}
-
 jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
-  jsi::Object obj = properties_->toJSValue(rt).asObject(rt);
-
+  auto obj = properties_->toJSValue(rt).asObject(rt);
   const auto prototype = proto_->toJSValue(rt);
   rt.global()
       .getPropertyAsObject(rt, "Object")

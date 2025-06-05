@@ -162,7 +162,7 @@ jsi::Value makeShareableNull(jsi::Runtime &rt);
 jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
-    const jsi::Object &proto);
+    const std::shared_ptr<jsi::HostObject> &proto);
 
 jsi::Value makeShareableObject(
     jsi::Runtime &rt,
@@ -412,13 +412,16 @@ class ShareableTurboModuleLike : public Shareable {
   ShareableTurboModuleLike(
       jsi::Runtime &rt,
       const jsi::Object &object,
-      const std::shared_ptr<jsi::HostObject> &proto);
+      const std::shared_ptr<jsi::HostObject> &proto)
+      : Shareable(TurboModuleLikeType),
+        proto_(std::make_unique<ShareableHostObject>(rt, proto)),
+        properties_(std::make_unique<ShareableObject>(rt, object)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
- protected:
-  std::unique_ptr<ShareableHostObject> proto_;
-  std::unique_ptr<ShareableObject> properties_;
+ private:
+  const std::unique_ptr<ShareableHostObject> proto_;
+  const std::unique_ptr<ShareableObject> properties_;
 };
 
 } // namespace worklets
