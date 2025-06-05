@@ -60,8 +60,7 @@ function useScrollOffsetWeb<C extends ScrollableComponent>(
       offset.value =
         element.scrollLeft === 0 ? element.scrollTop : element.scrollLeft;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animatedRef, animatedRef?.current]);
+  }, [animatedRef, offset]);
 
   useEffect(() => {
     if (!animatedRef) {
