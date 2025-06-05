@@ -3,6 +3,7 @@
 import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
+import { setupCallGuard } from './callGuard';
 import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
@@ -76,30 +77,6 @@ if (SHOULD_BE_USE_WEB) {
   executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
     runtimeBoundLogToLogBoxAndConsole
   );
-}
-
-// callGuard is only used with debug builds
-export function callGuardDEV<Args extends unknown[], ReturnValue>(
-  fn: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue | void {
-  'worklet';
-  try {
-    return fn(...args);
-  } catch (e) {
-    if (globalThis.__ErrorUtils) {
-      globalThis.__ErrorUtils.reportFatalError(e as Error);
-    } else {
-      throw e;
-    }
-  }
-}
-
-export function setupCallGuard() {
-  'worklet';
-  if (!globalThis.__callGuardDEV) {
-    globalThis.__callGuardDEV = callGuardDEV;
-  }
 }
 
 export function setupErrorUtils(

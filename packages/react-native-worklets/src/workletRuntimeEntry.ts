@@ -2,7 +2,7 @@
 'use strict';
 
 import { bundleValueUnpacker } from './bundleUnpacker';
-import { setupCallGuard } from './initializers';
+import { setupCallGuard } from './callGuard';
 import type { ValueUnpacker } from './workletTypes';
 
 /**
