@@ -17,14 +17,12 @@ ReanimatedViewStateData::ReanimatedViewStateData(
 void ReanimatedViewStateData::initialize(
     const std::shared_ptr<ReanimatedModuleProxy> &proxy) {
   const auto operationsLoop = proxy->getOperationsLoop();
-  const auto cssAnimationKeyframesRegistry =
-      proxy->getCssAnimationKeyframesRegistry();
   const auto viewStylesRepository = proxy->getViewStylesRepository();
 
   cssTransitionManager = std::make_shared<CSSTransitionManager>(
       operationsLoop, viewStylesRepository);
   cssAnimationsManager = std::make_shared<CSSAnimationsManager>(
-      operationsLoop, cssAnimationKeyframesRegistry, viewStylesRepository);
+      operationsLoop, viewStylesRepository);
 }
 
 } // namespace facebook::react

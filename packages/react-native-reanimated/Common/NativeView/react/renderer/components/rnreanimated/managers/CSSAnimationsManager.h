@@ -22,7 +22,6 @@ class CSSAnimationsManager {
  public:
   CSSAnimationsManager(
       std::shared_ptr<OperationsLoop> operationsLoop,
-      std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry,
       std::shared_ptr<ViewStylesRepository> viewStylesRepository);
 
   ~CSSAnimationsManager();
@@ -42,7 +41,6 @@ class CSSAnimationsManager {
       operationHandles_;
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
-  std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   NameToAnimationsMap createCurrentNameToAnimationsMap() const;

@@ -3,6 +3,7 @@
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/utils.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <folly/dynamic.h>
 #include <memory>
@@ -26,7 +27,35 @@ struct CSSAnimationSettings {
   AnimationDirection direction;
   AnimationFillMode fillMode;
   AnimationPlayState playState;
+
+  // Both constructors are needed for rawValue conversion
+  // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
+  CSSAnimationSettings() = default;
+  explicit CSSAnimationSettings(const RawValue &rawValue);
 };
+
+struct CSSAnimationConfig : public CSSAnimationSettings {
+  std::string name;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
+  std::shared_ptr<KeyframeEasings> keyframeEasings;
+
+  // TODO - remove this constructor when refactor is finished
+  CSSAnimationConfig(
+      const std::string &name,
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+      CSSAnimationSettings settings);
+
+  // Both constructors are needed for rawValue conversion
+  // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
+  CSSAnimationConfig() = default;
+  explicit CSSAnimationConfig(
+      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+      const RawValue &rawValue);
+
+  bool operator==(const CSSAnimationConfig &other) const;
+};
+
+// TODO - clean up this file once the new CSS implementation is ready
 
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
@@ -52,28 +81,5 @@ struct CSSAnimationUpdates {
 CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
     const jsi::Value &config);
-
-// TODO - clean up this file once the new CSS implementation is ready
-
-struct CSSAnimationConfig : public CSSAnimationSettings {
-  std::string name;
-
-  // TODO - remove this constructor when refactor is finished
-  CSSAnimationConfig(
-      const std::string &name,
-      double duration,
-      std::shared_ptr<Easing> easing,
-      double delay,
-      double iterationCount,
-      AnimationDirection direction,
-      AnimationFillMode fillMode,
-      AnimationPlayState playState);
-
-  // Both constructors are needed for rawValue conversion
-  CSSAnimationConfig() = default;
-  explicit CSSAnimationConfig(const RawValue &rawValue);
-
-  bool operator==(const CSSAnimationConfig &other) const;
-};
 
 } // namespace reanimated::css

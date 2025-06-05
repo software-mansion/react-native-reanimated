@@ -37,6 +37,7 @@ struct CSSTransitionConfig {
       CSSTransitionPropertiesSettings settings);
 
   // Both constructors are needed for rawValue conversion
+  // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
   CSSTransitionConfig() = default;
   explicit CSSTransitionConfig(const RawValue &rawValue);
 

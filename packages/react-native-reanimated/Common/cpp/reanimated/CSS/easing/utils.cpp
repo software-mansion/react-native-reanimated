@@ -14,7 +14,7 @@ inline const std::unordered_map<std::string, std::shared_ptr<Easing>>
         {"step-end",
          steps(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
 
-std::shared_ptr<Easing> createEasing(
+std::shared_ptr<Easing> createOrGetEasing(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig) {
   if (easingConfig.isString()) {

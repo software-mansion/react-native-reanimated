@@ -15,10 +15,7 @@ namespace reanimated::css {
 
 class CSSAnimation {
  public:
-  CSSAnimation(
-      const CSSAnimationConfig &config,
-      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-      double timestamp);
+  CSSAnimation(const CSSAnimationConfig &config, double timestamp);
 
   const std::string &getName() const;
 

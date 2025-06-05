@@ -4,11 +4,8 @@ namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     const CSSAnimationConfig &config,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    double timestamp)
+    const double timestamp)
     : name_(config.name), fillMode_(config.fillMode) {
-  const auto &keyframesConfig = keyframesRegistry->get(config.name);
-
   progressProvider_ = std::make_shared<AnimationProgressProvider>(
       timestamp,
       config.duration,
@@ -16,9 +13,9 @@ CSSAnimation::CSSAnimation(
       config.iterationCount,
       config.direction,
       config.easing,
-      keyframesConfig.keyframeEasings);
+      config.keyframeEasings);
 
-  styleInterpolator_ = keyframesConfig.styleInterpolator;
+  styleInterpolator_ = config.styleInterpolator;
 
   if (config.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);

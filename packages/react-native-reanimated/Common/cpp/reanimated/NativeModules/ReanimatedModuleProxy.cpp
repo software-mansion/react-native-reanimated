@@ -510,17 +510,9 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       const auto config = CSSAnimationConfig(
-          animationNames[index],
-          settings.duration,
-          settings.easing,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          settings.fillMode,
-          settings.playState);
+          animationNames[index], cssAnimationKeyframesRegistry_, settings);
 
-      const auto animation = std::make_shared<CSSAnimation>(
-          config, cssAnimationKeyframesRegistry_, timestamp);
+      const auto animation = std::make_shared<CSSAnimation>(config, timestamp);
 
       newAnimations.emplace(index, animation);
     }

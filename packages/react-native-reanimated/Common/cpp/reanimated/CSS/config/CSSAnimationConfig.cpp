@@ -2,10 +2,6 @@
 
 namespace reanimated::css {
 
-std::string parseName(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "name").asString(rt).utf8(rt);
-}
-
 double parseIterationCount(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "iterationCount").asNumber();
 }
@@ -58,20 +54,64 @@ AnimationPlayState parsePlayState(jsi::Runtime &rt, const jsi::Object &config) {
   return it->second;
 }
 
-CSSAnimationSettings parseCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto &settingsObj = config.asObject(rt);
+CSSAnimationSettings::CSSAnimationSettings(const RawValue &rawValue) {
+  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
+    const auto &settingsObj = value.asObject(rt);
 
-  return {
-      parseDuration(rt, settingsObj),
-      parseTimingFunction(rt, settingsObj),
-      parseDelay(rt, settingsObj),
-      parseIterationCount(rt, settingsObj),
-      parseDirection(rt, settingsObj),
-      parseFillMode(rt, settingsObj),
-      parsePlayState(rt, settingsObj)};
+    duration = parseDuration(rt, settingsObj);
+    easing = parseTimingFunction(rt, settingsObj);
+    delay = parseDelay(rt, settingsObj);
+    iterationCount = parseIterationCount(rt, settingsObj);
+    direction = parseDirection(rt, settingsObj);
+    fillMode = parseFillMode(rt, settingsObj);
+    playState = parsePlayState(rt, settingsObj);
+  });
 }
+
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::string &name,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    CSSAnimationSettings settings)
+    : CSSAnimationSettings(std::move(settings)), name(std::move(name)) {
+  const auto &keyframesConfig = keyframesRegistry->get(name);
+  styleInterpolator = keyframesConfig.styleInterpolator;
+  keyframeEasings = keyframesConfig.keyframeEasings;
+}
+
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    const RawValue &rawValue)
+    : CSSAnimationSettings(rawValue) {
+  parseRawValue(
+      rawValue,
+      [this, keyframesRegistry](jsi::Runtime &rt, const jsi::Value &value) {
+        const auto configObj = value.asObject(rt);
+        name = configObj.getProperty(rt, "name").asString(rt).utf8(rt);
+
+        if (!keyframesRegistry->has(name)) {
+          keyframesRegistry->add(
+              name, parseCSSAnimationKeyframesConfig(rt, value));
+        }
+
+        const auto &keyframesConfig = keyframesRegistry->get(name);
+        styleInterpolator = keyframesConfig.styleInterpolator;
+        keyframeEasings = keyframesConfig.keyframeEasings;
+      });
+}
+
+bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
+  // First check if it's the same object
+  if (this == &other) {
+    return true;
+  }
+
+  return duration == other.duration && easing == other.easing &&
+      delay == other.delay && iterationCount == other.iterationCount &&
+      direction == other.direction && fillMode == other.fillMode &&
+      playState == other.playState && name == other.name;
+}
+
+// TODO - remove the following code later on
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
     jsi::Runtime &rt,
@@ -152,7 +192,7 @@ CSSAnimationSettingsMap parseNewAnimationSettings(
       rt,
       newSettings.asObject(rt),
       [&](jsi::Runtime &rt, const jsi::Value &config) {
-        return parseCSSAnimationSettings(rt, config);
+        return CSSAnimationSettings(RawValue(rt, config));
       });
 }
 
@@ -193,44 +233,6 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
   }
 
   return result;
-}
-
-CSSAnimationConfig::CSSAnimationConfig(
-    const std::string &name,
-    double duration,
-    std::shared_ptr<Easing> easing,
-    double delay,
-    double iterationCount,
-    AnimationDirection direction,
-    AnimationFillMode fillMode,
-    AnimationPlayState playState)
-    : CSSAnimationSettings{duration, easing, delay, iterationCount, direction, fillMode, playState},
-      name(name) {}
-
-CSSAnimationConfig::CSSAnimationConfig(const RawValue &rawValue) {
-  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
-    const auto configObj = value.asObject(rt);
-    name = parseName(rt, configObj);
-    duration = parseDuration(rt, configObj);
-    easing = parseTimingFunction(rt, configObj);
-    delay = parseDelay(rt, configObj);
-    iterationCount = parseIterationCount(rt, configObj);
-    direction = parseDirection(rt, configObj);
-    fillMode = parseFillMode(rt, configObj);
-    playState = parsePlayState(rt, configObj);
-  });
-}
-
-bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
-  // First check if it's the same object
-  if (this == &other) {
-    return true;
-  }
-
-  return duration == other.duration && easing == other.easing &&
-      delay == other.delay && iterationCount == other.iterationCount &&
-      direction == other.direction && fillMode == other.fillMode &&
-      playState == other.playState && name == other.name;
 }
 
 } // namespace reanimated::css
