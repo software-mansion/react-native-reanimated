@@ -20,7 +20,7 @@ const items = [
     button: 'Install Radon IDE',
   },
   {
-    text: 'Preview React Native components in isolation',
+    text: 'Preview React Native components in isolation.',
     button: 'Try Radon IDE',
   },
   {
