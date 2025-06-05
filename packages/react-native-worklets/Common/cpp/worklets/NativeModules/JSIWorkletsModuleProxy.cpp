@@ -297,6 +297,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
               rt, args[0].asObject(rt).getHostObject(rt));
         });
   }
+
   if (name == "makeShareableFunction") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -308,121 +309,120 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           return makeShareableFunction(rt, args[0].asObject(rt).asFunction(rt));
         });
-
-    if (name == "makeShareableTurboModuleLike") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          2,
-          [](jsi::Runtime &rt,
-             const jsi::Value &thisValue,
-             const jsi::Value *args,
-             size_t count) {
-            return makeShareableTurboModuleLike(
-                rt,
-                args[0].asObject(rt),
-                args[1].asObject(rt).asHostObject(rt));
-          });
-    }
-
-    if (name == "makeShareableObject") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          1,
-          [](jsi::Runtime &rt,
-             const jsi::Value &thisValue,
-             const jsi::Value *args,
-             size_t count) {
-            return makeShareableObject(
-                rt, args[0].getObject(rt), args[1].getBool(), args[2]);
-          });
-    }
-
-    if (name == "makeShareableWorklet") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          2,
-          [](jsi::Runtime &rt,
-             const jsi::Value &thisValue,
-             const jsi::Value *args,
-             size_t count) {
-            return makeShareableWorklet(
-                rt, args[0].getObject(rt), args[1].getBool());
-          });
-    }
-
-    if (name == "scheduleOnUI") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          1,
-          [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
-              jsi::Runtime &rt,
-              const jsi::Value &thisValue,
-              const jsi::Value *args,
-              size_t count) {
-            scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0]);
-            return jsi::Value::undefined();
-          });
-    }
-
-    if (name == "executeOnUIRuntimeSync") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          1,
-          [uiWorkletRuntime = uiWorkletRuntime_](
-              jsi::Runtime &rt,
-              const jsi::Value &thisValue,
-              const jsi::Value *args,
-              size_t count) {
-            return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
-          });
-    }
-
-    if (name == "createWorkletRuntime") {
-      auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          2,
-          [jsQueue = jsQueue_,
-           jsScheduler = jsScheduler_,
-           isDevBundle = isDevBundle_,
-           clone](
-              jsi::Runtime &rt,
-              const jsi::Value &thisValue,
-              const jsi::Value *args,
-              size_t count) {
-            return createWorkletRuntime(
-                jsQueue,
-                jsScheduler,
-                std::move(clone),
-                isDevBundle,
-                rt,
-                args[0],
-                args[1]);
-            return jsi::Value::undefined();
-          });
-    }
-
-    if (name == "scheduleOnRuntime") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          2,
-          [](jsi::Runtime &rt,
-             const jsi ::Value &thisValue,
-             const jsi::Value *args,
-             size_t count) {
-            worklets::scheduleOnRuntime(rt, args[0], args[1]);
-            return jsi::Value::undefined();
-          });
-    }
-
-    return jsi::Value::undefined();
   }
+
+  if (name == "makeShareableTurboModuleLike") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableTurboModuleLike(
+              rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
+        });
+  }
+
+  if (name == "makeShareableObject") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableObject(
+              rt, args[0].getObject(rt), args[1].getBool(), args[2]);
+        });
+  }
+
+  if (name == "makeShareableWorklet") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableWorklet(
+              rt, args[0].getObject(rt), args[1].getBool());
+        });
+  }
+
+  if (name == "scheduleOnUI") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [uiScheduler = uiScheduler_, uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          scheduleOnUI(uiScheduler, uiWorkletRuntime, rt, args[0]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "executeOnUIRuntimeSync") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
+        });
+  }
+
+  if (name == "createWorkletRuntime") {
+    auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [jsQueue = jsQueue_,
+         jsScheduler = jsScheduler_,
+         isDevBundle = isDevBundle_,
+         clone](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return createWorkletRuntime(
+              jsQueue,
+              jsScheduler,
+              std::move(clone),
+              isDevBundle,
+              rt,
+              args[0],
+              args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "scheduleOnRuntime") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi ::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          worklets::scheduleOnRuntime(rt, args[0], args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  return jsi::Value::undefined();
+}
 
 } // namespace worklets
