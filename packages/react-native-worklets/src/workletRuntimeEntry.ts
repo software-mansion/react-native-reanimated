@@ -20,8 +20,8 @@ export function initializeLibraryOnWorkletRuntime() {
   globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
   if (globalThis._WORKLET) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
-
     setupCallGuard();
+
     // We have to throw an error here because otherwise
     // the next module to be ran would be the React Native one,
     // and we cannot allow it on a Worklet Runtime.
