@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Shareables.h>
 
 using namespace facebook;
@@ -47,23 +48,14 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
-      } else {
-        shareable = std::make_shared<ShareableWorklet>(rt, object);
-      }
+      // We pass `false` because this function is invoked only
+      // by `makeShareableCloneOnUIRecursive` which doesn't
+      // make Retaining Shareables.
+      return makeShareableWorklet(rt, object, false);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeShareableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      auto function = object.asFunction(rt);
-      if (function.isHostFunction(rt)) {
-        shareable =
-            std::make_shared<ShareableHostFunction>(rt, std::move(function));
-      } else {
-        shareable =
-            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
-      }
+      return makeShareableFunction(rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
@@ -145,11 +137,37 @@ jsi::Value makeShareableNull(jsi::Runtime &rt) {
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const bool &shouldRetainRemote) {
+  std::shared_ptr<Shareable> shareable;
+  if (shouldRetainRemote) {
+    shareable =
+        std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+  } else {
+    shareable = std::make_shared<ShareableWorklet>(rt, object);
+  }
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject) {
   const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function) {
+  std::shared_ptr<Shareable> shareable;
+  if (function.isHostFunction(rt)) {
+    shareable =
+        std::make_shared<ShareableHostFunction>(rt, std::move(function));
+  } else {
+    shareable =
+        std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
+  }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -173,11 +191,36 @@ jsi::Value makeShareableHostObject(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto) {
+  const auto shareable =
+      std::make_shared<ShareableTurboModuleLike>(rt, object, proto);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const double &source,
+    const double source,
     const jsi::String &imported) {
   auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  std::shared_ptr<Shareable> shareable;
+  if (shouldRetainRemote) {
+    shareable = std::make_shared<RetainingShareable<ShareableObject>>(
+        rt, object, nativeStateSource);
+  } else {
+    shareable =
+        std::make_shared<ShareableObject>(rt, object, nativeStateSource);
+  }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -330,11 +373,10 @@ jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
     return jsi::Value::undefined();
   }
 
-  const auto source = source_;
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt)
       .asFunction(rt)
-      .call(rt, source)
+      .call(rt, source_)
       .asObject(rt)
       .getProperty(rt, imported);
 }
@@ -406,6 +448,17 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
       throw std::runtime_error(
           "[Worklets] Attempted to convert object that's not of a scalar type.");
   }
+}
+
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
+  auto obj = properties_->toJSValue(rt).asObject(rt);
+  const auto prototype = proto_->toJSValue(rt);
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, obj, prototype);
+
+  return obj;
 }
 
 } // namespace worklets

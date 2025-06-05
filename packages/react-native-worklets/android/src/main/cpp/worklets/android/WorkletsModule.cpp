@@ -18,8 +18,8 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::shared_ptr<BigStringBuffer> script,
-    std::string sourceURL)
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceURL)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
@@ -28,7 +28,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getForwardedRequestAnimationFrame(),
-          std::move(script),
+          script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy =
       workletsModuleProxy_->createJSIWorkletsModuleProxy();
@@ -45,16 +45,16 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-    std::string sourceFilename,
-    std::string sourceURL) {
+    const std::string &sourceFilename,
+    const std::string &sourceURL) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
-  std::shared_ptr<BigStringBuffer> script;
+  std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
   if (!sourceFilename.empty()) {
-    script = std::make_shared<BigStringBuffer>(
+    script = std::make_shared<const BigStringBuffer>(
         JSBigFileString::fromPath(sourceFilename));
   }
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING

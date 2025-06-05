@@ -27,13 +27,13 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame,
-    std::shared_ptr<const BigStringBuffer> &&script,
+    const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
       uiScheduler_(uiScheduler),
-      script_(std::move(script)),
+      script_(script),
       sourceUrl_(sourceUrl) {
   uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
       rnRuntime,

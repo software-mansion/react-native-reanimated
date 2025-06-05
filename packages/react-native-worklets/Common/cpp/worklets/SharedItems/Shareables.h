@@ -84,6 +84,7 @@ class Shareable {
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    TurboModuleLikeType,
     ImportType,
   };
 
@@ -158,9 +159,20 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto);
+
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const double &source,
+    const double source,
     const jsi::String &imported);
 
 jsi::Value makeShareableHostObject(
@@ -175,6 +187,13 @@ jsi::Value makeShareableArray(
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
+
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
+
+jsi::Value makeShareableWorklet(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const bool &shouldRetainRemote);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -281,7 +300,7 @@ class ShareableImport : public Shareable {
  public:
   ShareableImport(
       jsi::Runtime &rt,
-      const double &source,
+      const double source,
       const jsi::String &imported)
       : Shareable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
@@ -386,6 +405,23 @@ class ShareableScalar : public Shareable {
 
  private:
   Data data_;
+};
+
+class ShareableTurboModuleLike : public Shareable {
+ public:
+  ShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const std::shared_ptr<jsi::HostObject> &proto)
+      : Shareable(TurboModuleLikeType),
+        proto_(std::make_unique<ShareableHostObject>(rt, proto)),
+        properties_(std::make_unique<ShareableObject>(rt, object)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::unique_ptr<ShareableHostObject> proto_;
+  const std::unique_ptr<ShareableObject> properties_;
 };
 
 } // namespace worklets
