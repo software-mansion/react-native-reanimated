@@ -3,11 +3,13 @@ package com.swmansion.worklets;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.BundleConsumer;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
+import com.facebook.react.fabric.BigStringBufferWrapper;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
@@ -19,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec
-    implements LifecycleEventListener, WorkletsBundleConsumer {
+    implements LifecycleEventListener, BundleConsumer {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -37,13 +39,15 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private String mSourceFileName = null;
+  private BigStringBufferWrapper mScriptWrapper = null;
   private String mSourceURL = null;
 
-  public void setSourceFileName(String sourceFileName) {
-    mSourceFileName = sourceFileName;
+@Override
+  public void setScriptWrapper(BigStringBufferWrapper scriptWrapper) {
+    mScriptWrapper = scriptWrapper;
   }
 
+@Override
   public void setSourceURL(String sourceURL) {
     mSourceURL = sourceURL;
   }
@@ -60,7 +64,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      String sourceFileName,
+      BigStringBufferWrapper scriptWrapper,
       String sourceURL);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
@@ -92,7 +96,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            mSourceFileName,
+            mScriptWrapper,
             mSourceURL);
     return true;
   }
