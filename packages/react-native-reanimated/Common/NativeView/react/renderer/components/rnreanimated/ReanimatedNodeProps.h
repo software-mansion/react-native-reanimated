@@ -10,6 +10,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <vector>
 
 namespace facebook::react {
@@ -30,13 +31,11 @@ void fromRawValue(
   const auto &sharedProxy = proxy.lock();
   const auto &keyframesRegistry =
       sharedProxy->getCssAnimationKeyframesRegistry();
-      
-  parseRawValue(
-      rawValue,
-      [](jsi::Runtime &rt, const jsi::Value &value) {
-//    LOG(INFO) << stringifyJSIValue(rt, value);
+
+  parseRawValue(rawValue, [](jsi::Runtime &rt, const jsi::Value &value) {
+    //    LOG(INFO) << stringifyJSIValue(rt, value);
   });
-      
+
   result = CSSAnimationConfig(keyframesRegistry, rawValue);
 }
 

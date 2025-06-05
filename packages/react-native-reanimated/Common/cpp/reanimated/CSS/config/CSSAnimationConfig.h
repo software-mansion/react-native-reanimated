@@ -31,7 +31,7 @@ struct CSSAnimationSettings {
   // Both constructors are needed for rawValue conversion
   // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
   CSSAnimationSettings() = default;
-  CSSAnimationSettings(const RawValue &rawValue);
+  explicit CSSAnimationSettings(const RawValue &rawValue);
 };
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
