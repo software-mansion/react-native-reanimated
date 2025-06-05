@@ -48,23 +48,14 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
-      } else {
-        shareable = std::make_shared<ShareableWorklet>(rt, object);
-      }
+      // We pass `false` because this function is invoked only
+      // by `makeShareableCloneOnUIRecursive` which doesn't
+      // make Retaining Shareables.
+      return makeShareableWorklet(rt, object, false);
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       return makeShareableInitializer(rt, object);
     } else if (object.isFunction(rt)) {
-      auto function = object.asFunction(rt);
-      if (function.isHostFunction(rt)) {
-        shareable =
-            std::make_shared<ShareableHostFunction>(rt, std::move(function));
-      } else {
-        shareable =
-            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
-      }
+      return makeShareableFunction(rt, object.asFunction(rt));
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableArray>>(
@@ -165,6 +156,18 @@ jsi::Value makeShareableInitializer(
     const jsi::Object &initializerObject) {
   const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function) {
+  std::shared_ptr<Shareable> shareable;
+  if (function.isHostFunction(rt)) {
+    shareable =
+        std::make_shared<ShareableHostFunction>(rt, std::move(function));
+  } else {
+    shareable =
+        std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
+  }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 

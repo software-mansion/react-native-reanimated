@@ -49,6 +49,8 @@ export default function ShareablesExample() {
         <ArrayBufferDemo />
         <TypedArrayDemo />
         <BigIntTypedArrayDemo />
+        <RemoteFunctionDemo />
+        <HostFunctionDemo />
         <DataViewDemo />
         <ErrorDemo />
         <CyclicObjectDemo />
@@ -804,6 +806,79 @@ function WorkletDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function RemoteFunctionDemo() {
+  const title = 'Remote function';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    const remoteFunction: object = () => {
+      return 1;
+    };
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          typeof remoteFunction === 'function',
+          __DEV__ === false ||
+            ('__remoteFunction' in remoteFunction &&
+              !!remoteFunction.__remoteFunction),
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
+
+function HostFunctionDemo() {
+  const title = 'Host function';
+  const { status, isOk, isNotOk, isError } = useStatus();
+
+  const handlePress = () => {
+    // @ts-expect-error It's ok
+    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
+    runOnUI(() => {
+      'worklet';
+      try {
+        const boolean = hostFunction(true);
+        const checks = [typeof hostFunction === 'function', boolean === true];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isNotOk)();
+        }
+        runOnJS(isOk)();
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
+
   return (
     <DemoItemRow
       title={title}

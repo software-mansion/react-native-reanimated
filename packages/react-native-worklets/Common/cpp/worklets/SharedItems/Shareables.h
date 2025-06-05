@@ -188,6 +188,8 @@ jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
 
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
+
 jsi::Value makeShareableWorklet(
     jsi::Runtime &rt,
     const jsi::Object &object,

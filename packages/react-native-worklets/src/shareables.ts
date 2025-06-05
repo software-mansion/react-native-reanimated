@@ -173,7 +173,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value, shouldPersistRemote);
+    return cloneRemoteFunction(value);
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
   // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
@@ -327,15 +327,10 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
+  value: (...args: TArgs) => TReturn
+): ShareableRef<TReturn> {
+  const clone = WorkletsModule.makeShareableFunction(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
