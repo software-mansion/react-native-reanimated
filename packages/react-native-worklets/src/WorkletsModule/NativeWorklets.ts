@@ -20,7 +20,7 @@ class NativeWorklets {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -78,6 +78,25 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#shareableNull;
   }
 
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps> {
+    return this.#workletsModuleProxy.makeShareableTurboModuleLike(props, proto);
+  }
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
+  }
+
   makeShareableHostObject<T extends object>(obj: T) {
     return this.#workletsModuleProxy.makeShareableHostObject(obj);
   }
@@ -91,6 +110,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableInitializer(obj: object) {
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  }
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ) {
+    return this.#workletsModuleProxy.makeShareableFunction(func);
   }
 
   makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {

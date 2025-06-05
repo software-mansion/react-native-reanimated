@@ -33,7 +33,7 @@ inline jsi::Value runOnRuntimeGuarded(
   return getCallGuard(rt).call(rt, function, args...);
 #else
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+#endif // NDEBUG
 }
 
 inline void cleanupIfRuntimeExists(
@@ -84,6 +84,7 @@ class Shareable {
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    TurboModuleLikeType,
     ImportType,
   };
 
@@ -158,6 +159,17 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto);
+
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
     const jsi::String &source,
@@ -175,6 +187,8 @@ jsi::Value makeShareableArray(
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
+
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeShareableWorklet(
     jsi::Runtime &rt,
@@ -393,6 +407,23 @@ class ShareableScalar : public Shareable {
 
  private:
   Data data_;
+};
+
+class ShareableTurboModuleLike : public Shareable {
+ public:
+  ShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const std::shared_ptr<jsi::HostObject> &proto)
+      : Shareable(TurboModuleLikeType),
+        proto_(std::make_unique<ShareableHostObject>(rt, proto)),
+        properties_(std::make_unique<ShareableObject>(rt, object)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::unique_ptr<ShareableHostObject> proto_;
+  const std::unique_ptr<ShareableObject> properties_;
 };
 
 } // namespace worklets

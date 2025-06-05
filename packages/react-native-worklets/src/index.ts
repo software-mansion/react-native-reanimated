@@ -5,7 +5,10 @@ import { WorkletsModule } from './WorkletsModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
-initializeUIRuntime(WorkletsModule);
+if (!globalThis._WORKLET) {
+  // Don't call this method on Worklet Runtimes.
+  initializeUIRuntime(WorkletsModule);
+}
 
 export type { LoggerConfig } from './logger';
 export {
