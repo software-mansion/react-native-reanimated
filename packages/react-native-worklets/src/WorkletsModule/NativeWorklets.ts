@@ -112,6 +112,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
 
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ) {
+    return this.#workletsModuleProxy.makeShareableFunction(func);
+  }
+
   makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
     return this.#workletsModuleProxy.makeShareableWorklet(
       worklet,
