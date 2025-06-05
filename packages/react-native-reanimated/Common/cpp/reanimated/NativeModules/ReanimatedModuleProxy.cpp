@@ -46,20 +46,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      viewStylesRepository_(
-          std::make_shared<ViewStylesRepository>(
-              staticPropsRegistry_,
-              animatedPropsRegistry_)),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(
           std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
-      cssTransitionsRegistry_(
-          std::make_shared<CSSTransitionsRegistry>(
-              staticPropsRegistry_,
-              viewStylesRepository_,
-              getAnimationTimestamp_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          staticPropsRegistry_,
+          viewStylesRepository_,
+          getAnimationTimestamp_)),
       operationsLoop_(std::make_shared<OperationsLoop>(getAnimationTimestamp_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -306,10 +304,9 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(
-      std::string(
-          "Getting property `" + propName +
-          "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
