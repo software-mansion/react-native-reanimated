@@ -2,6 +2,7 @@
 
 import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
+import { bundleValueUnpacker } from './bundleUnpacker';
 import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
@@ -12,8 +13,21 @@ import {
 import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
+import { initializeLibraryOnWorkletRuntime } from './workletRuntimeEntry';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
+import type { ValueUnpacker } from './workletTypes';
+
+if (!globalThis._WORKLET) {
+  globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+}
+
+// @ts-expect-error We must trick the bundler to include
+// the `workletRuntimeEntry` file the way it cannot optimize it out.
+if (globalThis._ALWAYS_FALSE) {
+  // Experimental bundling.
+  initializeLibraryOnWorkletRuntime();
+}
 
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
