@@ -57,7 +57,7 @@ export type CSSAnimationUpdates = {
 
 // TODO - remove no longer needed types after finishing CSS refactor
 export type NormalizedSingleCSSAnimationConfig =
-  NormalizedCSSAnimationKeyframesConfig & {
-    name: string | null; // For named animations only, inline animations don't have a name
-    settings: NormalizedSingleCSSAnimationSettings;
-  };
+  NormalizedCSSAnimationKeyframesConfig &
+    NormalizedSingleCSSAnimationSettings & {
+      name: string;
+    };
