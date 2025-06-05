@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Shareables.h>
 
 using namespace facebook;
@@ -184,6 +185,15 @@ jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
     const std::shared_ptr<jsi::HostObject> &value) {
   const auto shareable = std::make_shared<ShareableHostObject>(rt, value);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto) {
+  const auto shareable =
+      std::make_shared<ShareableTurboModuleLike>(rt, object, proto);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
@@ -436,6 +446,17 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
       throw std::runtime_error(
           "[Worklets] Attempted to convert object that's not of a scalar type.");
   }
+}
+
+jsi::Value ShareableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
+  auto obj = properties_->toJSValue(rt).asObject(rt);
+  const auto prototype = proto_->toJSValue(rt);
+  rt.global()
+      .getPropertyAsObject(rt, "Object")
+      .getPropertyAsFunction(rt, "setPrototypeOf")
+      .call(rt, obj, prototype);
+
+  return obj;
 }
 
 } // namespace worklets

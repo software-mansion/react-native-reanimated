@@ -38,6 +38,10 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
+function isTurboModuleLike(object: object): object is Record<string, unknown> {
+  return isHostObject(Object.getPrototypeOf(object));
+}
+
 function getFromCache(value: object) {
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
@@ -171,6 +175,11 @@ function makeShareableCloneRecursiveNative<T>(
   }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value, shouldPersistRemote);
+  }
+  // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
+  // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+  if (isTurboModuleLike(value)) {
+    return cloneTurboModuleLike(value, shouldPersistRemote, depth);
   }
   if (isHostObject(value)) {
     return cloneHostObject(value);
@@ -397,6 +406,24 @@ function cloneWorklet<T extends WorkletFunction>(
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
+  return clone;
+}
+
+/**
+ * TurboModuleLike objects are JS objects that have a TurboModule as their
+ * prototype.
+ */
+function cloneTurboModuleLike<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
+  const proto = Object.getPrototypeOf(value);
+  const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
+  const clone = WorkletsModule.makeShareableTurboModuleLike(
+    clonedProps,
+    proto
+  ) as ShareableRef<T>;
   return clone;
 }
 
