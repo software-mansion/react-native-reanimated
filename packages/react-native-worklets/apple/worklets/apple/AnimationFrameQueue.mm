@@ -9,14 +9,17 @@
 #define TIME_SAMPLES_AMOUNT 3
 
 namespace FrameRateRange {
-  const CAFrameRateRange BEST = CAFrameRateRangeMake(60, 120, 120);
-  const CAFrameRateRange STANDARD = CAFrameRateRangeMake(30, 60, 60);
-  const CAFrameRateRange LOW = CAFrameRateRangeMake(24, 30, 30);
-  const CAFrameRateRange POOR = CAFrameRateRangeMake(10, 24, 24);
-}
+const CAFrameRateRange BEST = CAFrameRateRangeMake(60, 120, 120);
+const CAFrameRateRange STANDARD = CAFrameRateRangeMake(30, 60, 60);
+const CAFrameRateRange LOW = CAFrameRateRangeMake(24, 30, 30);
+const CAFrameRateRange POOR = CAFrameRateRangeMake(10, 24, 24);
+} // namespace FrameRateRange
 
 enum FrameRateRangeEnum {
-  BEST, STANDARD, LOW, POOR,
+  BEST,
+  STANDARD,
+  LOW,
+  POOR,
 };
 
 @implementation AnimationFrameQueue {
