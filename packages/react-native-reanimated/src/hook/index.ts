@@ -37,6 +37,6 @@ export { useFrameCallback } from './useFrameCallback';
 export type { UseHandlerContext } from './useHandler';
 export { useHandler } from './useHandler';
 export { useReducedMotion } from './useReducedMotion';
-export { useScrollViewOffset } from './useScrollViewOffset';
+export { useScrollOffset } from './useScrollOffset';
 export { useSharedValue } from './useSharedValue';
 export { useWorkletCallback } from './useWorkletCallback';

@@ -98,6 +98,14 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    _func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn> {
+    throw new WorkletsError(
+      'makeShareableRemoteFunction should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableWorklet(): ShareableRef<object> {
     throw new WorkletsError(
       'makeShareableWorklet should never be called in JSWorklets.'

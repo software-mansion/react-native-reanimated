@@ -47,6 +47,10 @@ export interface WorkletsModuleProxy {
 
   makeShareableInitializer(obj: object): ShareableRef<object>;
 
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn>;
+
   makeShareableWorklet(
     worklet: object,
     shouldPersistRemote: boolean
