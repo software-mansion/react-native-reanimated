@@ -44,7 +44,6 @@ class CSSAnimation {
  private:
   const std::string name_;
   AnimationFillMode fillMode_;
-  AnimationPlayState playState_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
