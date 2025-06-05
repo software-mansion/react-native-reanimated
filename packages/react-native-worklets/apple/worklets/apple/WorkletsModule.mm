@@ -62,10 +62,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
-  std::string sourceURL;
+  std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-  sourceURL = sourceURL_;
+  sourceURL = [sourceURL_ UTF8String];
   script = [scriptBuffer_ getBuffer];
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
