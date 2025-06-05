@@ -24,7 +24,7 @@ class WorkletsModuleProxy
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<void(std::function<void(const double)>)>
           &&forwardedRequestAnimationFrame,
-      std::shared_ptr<const BigStringBuffer> &&script,
+      const std::shared_ptr<const BigStringBuffer> &script,
       const std::string &sourceUrl);
 
   ~WorkletsModuleProxy();

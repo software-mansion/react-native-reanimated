@@ -62,6 +62,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableTurboModuleLike<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableTurboModuleLike should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableObject<T extends object>(): ShareableRef<T> {
     throw new WorkletsError(
       'makeShareableObject should never be called in JSWorklets.'
