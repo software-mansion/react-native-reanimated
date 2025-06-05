@@ -20,7 +20,7 @@ class NativeWorklets {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
