@@ -105,7 +105,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
 
-  makeShareableFunction(func: object) {
+  makeShareableFunction<TFunction extends object>(func: TFunction) {
     return this.#workletsModuleProxy.makeShareableFunction(func);
   }
 

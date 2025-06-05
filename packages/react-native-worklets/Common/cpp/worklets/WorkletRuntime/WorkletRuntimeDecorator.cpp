@@ -177,7 +177,7 @@ void WorkletRuntimeDecorator::decorate(
       rt,
       "_makeShareableFunction",
       [](jsi::Runtime &rt, const jsi::Value &value) {
-        return makeShareableFunction(rt, value.getObject(rt).getFunction(rt));
+        return makeShareableFunction(rt, value.asObject(rt).asFunction(rt));
       });
 
   jsi_utils::installJsiFunction(
