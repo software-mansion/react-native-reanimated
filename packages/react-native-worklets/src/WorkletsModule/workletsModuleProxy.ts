@@ -27,6 +27,11 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps>;
+
   makeShareableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,

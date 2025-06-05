@@ -42,6 +42,7 @@ export default function ShareablesExample() {
         <NullDemo />
         <PlainObjectDemo />
         <HostObjectDemo />
+        <TurboModuleLikeDemo />
         <ArrayDemo />
         <WorkletDemo />
         <RegExpDemo />
@@ -600,7 +601,51 @@ function HostObjectDemo() {
       }
     })();
   };
+  return (
+    <DemoItemRow
+      title={title}
+      onPress={handlePress}
+      status={status}
+      expectedOnNative="ok"
+      expectedOnWeb="ok"
+    />
+  );
+}
 
+function TurboModuleLikeDemo() {
+  const title = 'TurboModuleLike';
+  const { status, isOk, isError } = useStatus();
+
+  const handlePress = () => {
+    // @ts-expect-error This global host object isn't exposed in the types.
+    const proto = globalThis.__reanimatedModuleProxy;
+    const reanimatedModuleKeys = Object.keys(proto);
+    const obj = {
+      a: 1,
+      b: 'test',
+    };
+    Object.setPrototypeOf(obj, proto);
+    runOnUI(() => {
+      'worklet';
+      try {
+        const checks = [
+          obj.a === 1,
+          obj.b === 'test',
+          reanimatedModuleKeys.every(
+            (key) => key in Object.getPrototypeOf(obj)
+          ),
+          'magicKey' in Object.getPrototypeOf(obj) === true,
+        ];
+        if (checks.every(Boolean)) {
+          runOnJS(isOk)();
+        } else {
+          runOnJS(isError)();
+        }
+      } catch (e) {
+        runOnJS(isError)();
+      }
+    })();
+  };
   return (
     <DemoItemRow
       title={title}
