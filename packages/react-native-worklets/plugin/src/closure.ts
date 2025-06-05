@@ -9,7 +9,6 @@ import {
   outsideBindingsToCaptureFromGlobalScope,
 } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
-import { generatedWorkletsDir } from './types';
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
@@ -85,19 +84,26 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (
-          state.opts.experimentalBundling &&
-          isImport(binding) &&
-          isAllowedToImport(state.filename)
-        ) {
-          if (isImportRelative(binding)) {
+        if (state.opts.experimentalBundling && isImport(binding)) {
+          if (
+            isImportRelative(binding) &&
+            isAllowedForRelativeImports(
+              state.filename,
+              state.opts.workletizableModules
+            )
+          ) {
             capturedNames.add(name);
             relativeBindingsToImport.add(binding);
             return;
-          } else {
-            // Disallow imports from 3rd party libraries for now.
-            // libraryBindingsToImport.add(binding);
-            // return;
+          }
+          const source = (
+            binding.path.parentPath as NodePath<ImportDeclaration>
+          ).node.source.value;
+
+          if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+            capturedNames.add(name);
+            libraryBindingsToImport.add(binding);
+            return;
           }
         }
 
@@ -130,12 +136,23 @@ function isImportRelative(imported: Binding): boolean {
   ).node.source.value.startsWith('.');
 }
 
-function isAllowedToImport(filename: string | undefined): boolean {
-  // Right now we only allow imports in worklets within
-  // `react-native-worklets` package.
+function isAllowedForRelativeImports(
+  filename: string | undefined,
+  workletizableModules?: string[]
+): boolean {
   return (
     !!filename &&
-    filename.includes('react-native-worklets') &&
-    !filename.includes(generatedWorkletsDir)
+    (filename.includes('react-native-worklets') ||
+      !!workletizableModules?.some((module) => filename.includes(module)))
+  );
+}
+
+function isWorkletizableModule(
+  source: string,
+  workletizableModules?: string[]
+): boolean {
+  return (
+    source.startsWith('react-native-worklets') ||
+    !!workletizableModules?.some((module) => source.startsWith(module))
   );
 }

@@ -220,6 +220,7 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
+            !state.opts.experimentalBundling &&
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -307,7 +308,10 @@ export function makeWorkletFactory(
 
   const factoryParams = closureVariables.map((variableId) => {
     const clonedId = cloneNode(variableId, true);
-    if (clonedId.name.endsWith(workletClassFactorySuffix)) {
+    if (
+      !state.opts.experimentalBundling &&
+      clonedId.name.endsWith(workletClassFactorySuffix)
+    ) {
       clonedId.name = clonedId.name.slice(
         0,
         clonedId.name.length - workletClassFactorySuffix.length
