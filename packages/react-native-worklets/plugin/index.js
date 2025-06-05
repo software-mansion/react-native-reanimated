@@ -524,7 +524,7 @@ var require_generate = __commonJS({
     var fs_1 = require("fs");
     var path_1 = require("path");
     var types_2 = require_types();
-    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, state) {
+    function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a;
       const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
@@ -545,18 +545,11 @@ var require_generate = __commonJS({
         comments: false
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
-      try {
-        if (!(0, fs_1.existsSync)(filesDirPath)) {
-          (0, fs_1.mkdirSync)(filesDirPath, {});
-        }
-      } catch (_e) {
+      if (!(0, fs_1.existsSync)(filesDirPath)) {
+        (0, fs_1.mkdirSync)(filesDirPath, {});
       }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
-      try {
-        (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
-      } catch (_e) {
-      }
-      pathForStringDefinitions.parentPath.scope.crawl();
+      (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
     exports2.generateWorkletFile = generateWorkletFile;
   }
@@ -884,7 +877,7 @@ var require_workletFactory = __commonJS({
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       if (state.opts.experimentalBundling) {
-        (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, initDataId, initDataObjectExpression, factory, workletHash, pathForStringDefinitions, state);
+        (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       }
       factory.workletized = true;
       return { factory, factoryCallParamPack, workletHash };

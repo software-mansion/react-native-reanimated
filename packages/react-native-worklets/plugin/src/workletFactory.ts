@@ -358,11 +358,8 @@ export function makeWorkletFactory(
     generateWorkletFile(
       libraryBindingsToImport,
       relativeBindingsToImport,
-      initDataId,
-      initDataObjectExpression,
       factory,
       workletHash,
-      pathForStringDefinitions as NodePath<ExpressionStatement>,
       state
     );
   }

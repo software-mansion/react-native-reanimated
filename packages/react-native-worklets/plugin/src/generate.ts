@@ -1,12 +1,9 @@
 import { transformFromAstSync } from '@babel/core';
 import type { Binding, NodePath } from '@babel/traverse';
 import type {
-  ExpressionStatement,
   FunctionExpression,
-  Identifier,
   ImportDeclaration,
   ImportSpecifier,
-  ObjectExpression,
 } from '@babel/types';
 import {
   cloneNode,
@@ -14,8 +11,6 @@ import {
   importDeclaration,
   program,
   stringLiteral,
-  variableDeclaration,
-  variableDeclarator,
 } from '@babel/types';
 import assert from 'assert';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
@@ -24,15 +19,11 @@ import { dirname, relative, resolve } from 'path';
 import type { ReanimatedPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
-/** TODO: Fix the function signature when we actually start to use it. */
 export function generateWorkletFile(
   libraryBindingsToImport: Set<Binding>,
   relativeBindingsToImport: Set<Binding>,
-  initDataId: Identifier,
-  initDataObjectExpression: ObjectExpression,
   factory: FunctionExpression,
   workletHash: number,
-  pathForStringDefinitions: NodePath<ExpressionStatement>,
   state: ReanimatedPluginPass
 ) {
   const libraryImports = Array.from(libraryBindingsToImport)
@@ -91,21 +82,11 @@ export function generateWorkletFile(
 
   assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
 
-  try {
-    if (!existsSync(filesDirPath)) {
-      mkdirSync(filesDirPath, {});
-    }
-  } catch (_e) {
-    // Nothing.
+  if (!existsSync(filesDirPath)) {
+    mkdirSync(filesDirPath, {});
   }
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
-  try {
-    writeFileSync(dedicatedFilePath, transformedProg);
-  } catch (_e) {
-    // Nothing.
-  }
-
-  pathForStringDefinitions.parentPath.scope.crawl();
+  writeFileSync(dedicatedFilePath, transformedProg);
 }
