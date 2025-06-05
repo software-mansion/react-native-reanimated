@@ -192,8 +192,8 @@ jsi::Value makeShareableTurboModuleLike(
     jsi::Runtime &rt,
     const jsi::Object &object,
     const std::shared_ptr<jsi::HostObject> &proto) {
-  const auto shareable = std::make_shared<ShareableTurboModuleLike>(
-      rt, object, proto);
+  const auto shareable =
+      std::make_shared<ShareableTurboModuleLike>(rt, object, proto);
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
