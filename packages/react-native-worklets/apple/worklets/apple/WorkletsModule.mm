@@ -65,8 +65,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-  sourceURL = [sourceURL_ UTF8String];
   script = [scriptBuffer_ getBuffer];
+  sourceURL = [sourceURL_ UTF8String];
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
   auto jsCallInvoker = _callInvoker.callInvoker;
