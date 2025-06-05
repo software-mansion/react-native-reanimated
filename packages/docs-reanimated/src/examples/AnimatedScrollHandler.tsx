@@ -27,11 +27,11 @@ const Content = () => {
 };
 
 export default function ScrollExample() {
-  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
-      offsetX.value = event.contentOffset.y;
+      offsetY.value = event.contentOffset.y;
     },
     onMomentumBegin: (e) => {
       console.log('The list is moving.');
@@ -43,8 +43,8 @@ export default function ScrollExample() {
 
   const offsetAnimatedProps = useAnimatedProps(() => {
     return {
-      text: `Scroll offset: ${Math.round(offsetX.value)}px`,
-      defaultValue: `Scroll offset: ${offsetX.value}x`,
+      text: `Scroll offset: ${Math.round(offsetY.value)}px`,
+      defaultValue: `Scroll offset: ${offsetY.value}x`,
     };
   });
 

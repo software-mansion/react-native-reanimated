@@ -1,5 +1,5 @@
 'use strict';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -8,9 +8,6 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletImport } from './workletTypes';
-
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** An array of [worklet, args, resolve (optional)] pairs. */
 let _runOnUIQueue: Array<

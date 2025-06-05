@@ -1,20 +1,13 @@
 'use strict';
 
-import { bundleValueUnpacker } from './bundleUnpacker';
 import { initializeUIRuntime } from './initializers';
-import { initializeLibraryOnWorkletRuntime } from './workletRuntimeEntry';
 import { WorkletsModule } from './WorkletsModule';
-import type { ValueUnpacker } from './workletTypes';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 if (!globalThis._WORKLET) {
-  globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  // Don't call this method on Worklet Runtimes.
   initializeUIRuntime(WorkletsModule);
-  // @ts-expect-error We must trick the bundler to include
-  // the `workletRuntimeEntry` file the way it cannot optimize it out.
-} else if (globalThis._ALWAYS_FALSE) {
-  initializeLibraryOnWorkletRuntime();
 }
 
 export type { LoggerConfig } from './logger';
