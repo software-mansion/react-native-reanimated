@@ -1,9 +1,9 @@
 'use strict';
 
+import { setupCallGuard } from './callGuard';
 import { reportFatalErrorOnJS } from './errors';
 import {
   getMemorySafeCapturableConsole,
-  setupCallGuard,
   setupConsole,
   setupErrorUtils,
 } from './initializers';
