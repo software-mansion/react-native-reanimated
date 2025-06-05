@@ -23,6 +23,8 @@ void CSSKeyframesRegistry::add(
   registry_[animationName] = std::move(config);
 }
 
+// TODO - add proper keyframes cleanup mechanism in the new CSS animations
+// implementation
 void CSSKeyframesRegistry::remove(const std::string &animationName) {
   registry_.erase(animationName);
 }

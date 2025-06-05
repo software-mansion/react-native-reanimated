@@ -16,14 +16,6 @@ struct CSSKeyframesConfig {
   std::shared_ptr<KeyframeEasings> keyframeEasings;
 };
 
-std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
-    jsi::Runtime &rt,
-    const jsi::Object &config);
-
-std::shared_ptr<KeyframeEasings> parseKeyframeTimingFunctions(
-    jsi::Runtime &rt,
-    const jsi::Object &config);
-
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config);

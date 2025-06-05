@@ -15,10 +15,7 @@ namespace reanimated::css {
 
 class CSSAnimation {
  public:
-  CSSAnimation(
-      const CSSAnimationConfig &config,
-      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-      double timestamp);
+  CSSAnimation(const CSSAnimationConfig &config, double timestamp);
 
   const std::string &getName() const;
 
@@ -47,6 +44,7 @@ class CSSAnimation {
  private:
   const std::string name_;
   AnimationFillMode fillMode_;
+  AnimationPlayState playState_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;

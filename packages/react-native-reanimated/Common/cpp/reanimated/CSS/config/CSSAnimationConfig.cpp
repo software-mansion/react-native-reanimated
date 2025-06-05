@@ -54,20 +54,64 @@ AnimationPlayState parsePlayState(jsi::Runtime &rt, const jsi::Object &config) {
   return it->second;
 }
 
-CSSAnimationSettings::CSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto &settingsObj = config.asObject(rt);
+CSSAnimationSettings::CSSAnimationSettings(const RawValue &rawValue) {
+  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
+    const auto &settingsObj = value.asObject(rt);
 
-  return {
-      parseDuration(rt, settingsObj),
-      parseTimingFunction(rt, settingsObj),
-      parseDelay(rt, settingsObj),
-      parseIterationCount(rt, settingsObj),
-      parseDirection(rt, settingsObj),
-      parseFillMode(rt, settingsObj),
-      parsePlayState(rt, settingsObj)};
+    duration = parseDuration(rt, settingsObj);
+    easing = parseTimingFunction(rt, settingsObj);
+    delay = parseDelay(rt, settingsObj);
+    iterationCount = parseIterationCount(rt, settingsObj);
+    direction = parseDirection(rt, settingsObj);
+    fillMode = parseFillMode(rt, settingsObj);
+    playState = parsePlayState(rt, settingsObj);
+  });
 }
+
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::string &name,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    CSSAnimationSettings settings)
+    : CSSAnimationSettings(std::move(settings)), name(std::move(name)) {
+  const auto &keyframesConfig = keyframesRegistry->get(name);
+  styleInterpolator = keyframesConfig.styleInterpolator;
+  keyframeEasings = keyframesConfig.keyframeEasings;
+}
+
+CSSAnimationConfig::CSSAnimationConfig(
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    const RawValue &rawValue)
+    : CSSAnimationSettings(rawValue) {
+  parseRawValue(
+      rawValue,
+      [this, keyframesRegistry](jsi::Runtime &rt, const jsi::Value &value) {
+        const auto configObj = value.asObject(rt);
+        name = configObj.getProperty(rt, "name").asString(rt).utf8(rt);
+
+        if (!keyframesRegistry->has(name)) {
+          keyframesRegistry->add(
+              name, parseCSSAnimationKeyframesConfig(rt, value));
+        }
+
+        const auto &keyframesConfig = keyframesRegistry->get(name);
+        styleInterpolator = keyframesConfig.styleInterpolator;
+        keyframeEasings = keyframesConfig.keyframeEasings;
+      });
+}
+
+bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
+  // First check if it's the same object
+  if (this == &other) {
+    return true;
+  }
+
+  return duration == other.duration && easing == other.easing &&
+      delay == other.delay && iterationCount == other.iterationCount &&
+      direction == other.direction && fillMode == other.fillMode &&
+      playState == other.playState && name == other.name;
+}
+
+// TODO - remove the following code later on
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
     jsi::Runtime &rt,
@@ -148,7 +192,7 @@ CSSAnimationSettingsMap parseNewAnimationSettings(
       rt,
       newSettings.asObject(rt),
       [&](jsi::Runtime &rt, const jsi::Value &config) {
-        return CSSAnimationSettings(rt, config);
+        return CSSAnimationSettings(RawValue(rt, config));
       });
 }
 
@@ -189,72 +233,6 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
   }
 
   return result;
-}
-
-KeyframeEasings CSSAnimationConfig::parseKeyframeTimingFunctions(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
-  KeyframeEasings result;
-
-  const auto &configObj = config.asObject(rt);
-  const auto timingFunctionOffsets = configObj.getPropertyNames(rt);
-  const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
-
-  for (size_t i = 0; i < timingFunctionsCount; ++i) {
-    const auto offset =
-        timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easing =
-        createOrGetEasing(rt, configObj.getProperty(rt, offset.c_str()));
-    result[std::stod(offset)] = easing;
-  }
-
-  return result;
-}
-
-CSSAnimationConfig::CSSAnimationConfig(
-    const std::string &name,
-    std::shared_ptr<AnimationStyleInterpolator> styleInterpolator,
-    KeyframeEasings keyframeEasings,
-    double duration,
-    std::shared_ptr<Easing> easing,
-    double delay,
-    double iterationCount,
-    AnimationDirection direction,
-    AnimationFillMode fillMode,
-    AnimationPlayState playState)
-    : name(name),
-      styleInterpolator(std::move(styleInterpolator)),
-      keyframeEasings(keyframeEasings),
-      settings{
-          duration,
-          std::move(easing),
-          delay,
-          iterationCount,
-          direction,
-          fillMode,
-          playState} {}
-
-CSSAnimationConfig::CSSAnimationConfig(
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    const RawValue &rawValue) {
-  parseRawValue(rawValue, [this](jsi::Runtime &rt, const jsi::Value &value) {
-    const auto configObj = value.asObject(rt);
-    keyframeEasings = parseKeyframeTimingFunctions(
-        rt, configObj.getProperty(rt, "keyframeTimingFunctions"));
-    settings = CSSAnimationSettings(rt, configObj.getProperty(rt, "settings"));
-  });
-}
-
-bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
-  // First check if it's the same object
-  if (this == &other) {
-    return true;
-  }
-
-  return duration == other.duration && easing == other.easing &&
-      delay == other.delay && iterationCount == other.iterationCount &&
-      direction == other.direction && fillMode == other.fillMode &&
-      playState == other.playState && name == other.name;
 }
 
 } // namespace reanimated::css
