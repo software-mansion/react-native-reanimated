@@ -80,9 +80,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 - (void)executeQueueForProMotion:(WorkletsDisplayLink *)displayLink
 {
   auto start = std::chrono::high_resolution_clock::now();
-  
+
   [self executeQueue:displayLink];
-  
+
   timeDeltaIndex_ = (timeDeltaIndex_ + 1) % TIME_SAMPLES_AMOUNT;
   timeDeltas_[timeDeltaIndex_] = std::chrono::high_resolution_clock::now() - start;
   float averageFrameDuration = 0;
