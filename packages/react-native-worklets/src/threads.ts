@@ -1,5 +1,5 @@
 'use strict';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -8,9 +8,6 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction } from './workletTypes';
-
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** An array of [worklet, args, resolve (optional)] pairs. */
 let _runOnUIQueue: Array<
@@ -239,10 +236,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0
-        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
-        : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
 }

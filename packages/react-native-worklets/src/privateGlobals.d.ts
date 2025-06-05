@@ -4,12 +4,14 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { callGuardDEV } from './initializers';
+import type { callGuardDEV } from './callGuard';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
 
 declare global {
+  /** The only runtime-available require method is `__r` defined by Metro. */
+  var __r: (moduleId: number) => Record<string, unknown>;
   var __workletsCache: Map<number, () => unknown>;
   var __handleCache: WeakMap<object, unknown>;
   var evalWithSourceMap:
