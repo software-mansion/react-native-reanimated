@@ -30,8 +30,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
           jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
           androidUIScheduler,
-      std::string sourceFilename,
-      std::string sourceURL);
+      const std::string &sourceFilename,
+      const std::string &sourceURL);
 
   static void registerNatives();
 
@@ -46,8 +46,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::shared_ptr<BigStringBuffer> script,
-      std::string sourceURL);
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceURL);
 
   void invalidateCpp();
 

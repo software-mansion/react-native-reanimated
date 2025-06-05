@@ -4,7 +4,7 @@
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
-import type { callGuardDEV } from './initializers';
+import type { callGuardDEV } from './callGuard';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
@@ -34,9 +34,18 @@ declare global {
   var _makeShareableBigInt: (value: bigint) => FlatShareableRef<bigint>;
   var _makeShareableUndefined: () => FlatShareableRef<undefined>;
   var _makeShareableNull: () => FlatShareableRef<null>;
+  var _makeShareableObject: <T extends object>(
+    value: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ) => FlatShareableRef<T>;
   var _makeShareableHostObject: <T extends object>(
     value: T
   ) => FlatShareableRef<T>;
+  var _makeShareableWorklet: (
+    value: object,
+    shouldPersistRemote: boolean
+  ) => FlatShareableRef<object>;
   var _makeShareableArray: (value: unknown[]) => FlatShareableRef<unknown[]>;
   var _makeShareableInitializer: (value: object) => FlatShareableRef<object>;
   var __callMicrotasks: () => void;

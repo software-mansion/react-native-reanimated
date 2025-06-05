@@ -1,7 +1,7 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
@@ -20,7 +20,6 @@ import type {
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
@@ -36,6 +35,10 @@ function isHostObject(value: NonNullable<object>) {
 function isPlainJSObject(object: object): object is Record<string, unknown> {
   'worklet';
   return Object.getPrototypeOf(object) === Object.prototype;
+}
+
+function isTurboModuleLike(object: object): object is Record<string, unknown> {
+  return isHostObject(Object.getPrototypeOf(object));
 }
 
 function getFromCache(value: object) {
@@ -169,7 +172,12 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneImport(value as WorkletImport) as ShareableRef<T>;
   }
   if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value, shouldPersistRemote);
+    return cloneRemoteFunction(value);
+  }
+  // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
+  // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+  if (isTurboModuleLike(value)) {
+    return cloneTurboModuleLike(value, shouldPersistRemote, depth);
   }
   if (isHostObject(value)) {
     return cloneHostObject(value);
@@ -325,15 +333,10 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
+  value: (...args: TArgs) => TReturn
+): ShareableRef<TReturn> {
+  const clone = WorkletsModule.makeShareableFunction(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -393,16 +396,34 @@ function cloneWorklet<T extends WorkletFunction>(
     depth + 1
   );
 
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
+    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
     // retain all worklets
-    true,
-    value
+    true
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
   freezeObjectInDev(value);
+  return clone;
+}
+
+/**
+ * TurboModuleLike objects are JS objects that have a TurboModule as their
+ * prototype.
+ */
+function cloneTurboModuleLike<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
+  const proto = Object.getPrototypeOf(value);
+  const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
+  const clone = WorkletsModule.makeShareableTurboModuleLike(
+    clonedProps,
+    proto
+  ) as ShareableRef<T>;
   return clone;
 }
 
@@ -429,7 +450,7 @@ function clonePlainJSObject<T extends object>(
     shouldPersistRemote,
     depth
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableObject(
     clonedProps,
     shouldPersistRemote,
     value
@@ -630,6 +651,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
         return global._makeShareableArray(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
+      }
+      if (isWorkletFunction(value)) {
+        return global._makeShareableWorklet(value, true);
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
       if (isPlainJSObject(value) && value.__init) {
