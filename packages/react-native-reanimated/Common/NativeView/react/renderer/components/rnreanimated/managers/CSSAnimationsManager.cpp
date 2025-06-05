@@ -4,10 +4,8 @@ namespace facebook::react {
 
 CSSAnimationsManager::CSSAnimationsManager(
     std::shared_ptr<OperationsLoop> operationsLoop,
-    std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry,
     std::shared_ptr<ViewStylesRepository> viewStylesRepository)
     : operationsLoop_(std::move(operationsLoop)),
-      cssAnimationKeyframesRegistry_(std::move(cssAnimationKeyframesRegistry)),
       viewStylesRepository_(std::move(viewStylesRepository)) {}
 
 CSSAnimationsManager::~CSSAnimationsManager() {
