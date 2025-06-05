@@ -21,7 +21,7 @@ using namespace css;
 // Custom overload for CSSAnimationConfig that pulls keyframesRegistry from the
 // context in order to store and reuse animations with the same name
 // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
-void fromRawValue(
+inline void fromRawValue(
     const PropsParserContext &context,
     const RawValue &rawValue,
     CSSAnimationConfig &result) {
