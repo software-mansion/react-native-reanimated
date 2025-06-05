@@ -47,7 +47,9 @@ function areWorkletsEqual(
     return (
       closure1Keys.length === closure2Keys.length &&
       closure1Keys.every(
-        (key) => worklet1.__closure[key] === worklet2.__closure[key]
+        (key) =>
+          key in worklet2.__closure &&
+          worklet1.__closure[key] === worklet2.__closure[key]
       )
     );
   }
