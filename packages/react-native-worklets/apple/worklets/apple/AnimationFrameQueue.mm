@@ -29,7 +29,7 @@ enum FrameRateRangeEnum {
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
   int timeDeltaIndex_;
-  FrameRateRangeEnum curentFrameRate;
+  FrameRateRangeEnum curentFrameRate_;
 }
 
 typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
@@ -41,7 +41,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   AssertJavaScriptQueue();
   bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
   SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
-  curentFrameRate = supportsProMotion ? BEST : STANDARD;
+  curentFrameRate_ = supportsProMotion ? BEST : STANDARD;
   displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
 #if TARGET_OS_OSX
   // nothing
@@ -106,13 +106,13 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     averageFrameDuration += timeDeltas_[i].count();
   }
   averageFrameDuration = averageFrameDuration / TIME_SAMPLES_AMOUNT;
-  if (averageFrameDuration < 8 && curentFrameRate != BEST) {
+  if (averageFrameDuration < 8 && curentFrameRate_ != BEST) {
     displayLink_.preferredFrameRateRange = FrameRateRange::BEST;
-  } else if (averageFrameDuration < 16 && curentFrameRate != STANDARD) {
+  } else if (averageFrameDuration < 16 && curentFrameRate_ != STANDARD) {
     displayLink_.preferredFrameRateRange = FrameRateRange::STANDARD;
-  } else if (averageFrameDuration < 33 && curentFrameRate != LOW) {
+  } else if (averageFrameDuration < 33 && curentFrameRate_ != LOW) {
     displayLink_.preferredFrameRateRange = FrameRateRange::LOW;
-  } else if (curentFrameRate != POOR) {
+  } else if (curentFrameRate_ != POOR) {
     displayLink_.preferredFrameRateRange = FrameRateRange::POOR;
   }
 }
