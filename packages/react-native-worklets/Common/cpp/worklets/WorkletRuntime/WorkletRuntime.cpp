@@ -116,20 +116,22 @@ WorkletRuntime::WorkletRuntime(
       std::move(optimizedJsiWorkletsModuleProxy));
 
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
-  if (script) {
-    try {
-      rt.evaluateJavaScript(script, sourceUrl);
-    } catch (facebook::jsi::JSIException ex) {
-      // Nothing
-    }
-    return;
+  if (!script) {
+    throw std::runtime_error(
+        "[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
+  try {
+    rt.evaluateJavaScript(script, sourceUrl);
+  } catch (facebook::jsi::JSIException ex) {
+    // Nothing
+  }
+#else
   // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 }
 
 jsi::Value WorkletRuntime::executeSync(

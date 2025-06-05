@@ -63,7 +63,7 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> script,
+    const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl,
     jsi::Runtime &rt,
     const jsi::Value &name,
