@@ -16,10 +16,10 @@ export type TrackerCallCount = {
   onUI: number;
 };
 
-export type SharedValueSnapshot = {
+export type SharedValueSnapshot<TValue extends TestValue> = {
   name: string;
-  onJS: TestValue;
-  onUI: TestValue;
+  onJS: TValue;
+  onUI: TValue;
 };
 
 export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
