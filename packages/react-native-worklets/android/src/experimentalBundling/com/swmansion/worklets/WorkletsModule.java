@@ -42,12 +42,12 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   private BigStringBufferWrapper mScriptWrapper = null;
   private String mSourceURL = null;
 
-@Override
+  @Override
   public void setScriptWrapper(BigStringBufferWrapper scriptWrapper) {
     mScriptWrapper = scriptWrapper;
   }
 
-@Override
+  @Override
   public void setSourceURL(String sourceURL) {
     mSourceURL = sourceURL;
   }

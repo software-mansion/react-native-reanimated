@@ -18,8 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec
-    implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -75,11 +74,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(
-            jsContext,
-            mMessageQueueThread,
-            jsCallInvokerHolder,
-            mAndroidUIScheduler);
+        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
     return true;
   }
 
