@@ -9,6 +9,7 @@
       "packages/react-native-worklets/plugin",
       "packages/react-native-worklets",
       "apps/common-app",
+      "apps/expo-example",
       "apps/fabric-example",
       "apps/macos-example",
       "apps/tvos-example",

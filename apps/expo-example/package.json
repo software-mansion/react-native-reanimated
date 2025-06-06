@@ -1,0 +1,51 @@
+{
+  "name": "expo-example",
+  "main": "index.js",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-navigation/bottom-tabs": "^7.3.10",
+    "@react-navigation/elements": "^2.3.8",
+    "@react-navigation/native": "^7.1.6",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "common-app": "workspace:*",
+    "expo": "~53.0.9",
+    "expo-blur": "~14.1.4",
+    "expo-constants": "~17.1.6",
+    "expo-font": "~13.3.1",
+    "expo-haptics": "~14.1.4",
+    "expo-image": "~2.1.7",
+    "expo-linking": "~7.1.5",
+    "expo-router": "~5.0.6",
+    "expo-splash-screen": "~0.30.8",
+    "expo-status-bar": "~2.2.3",
+    "expo-symbols": "~0.4.4",
+    "expo-system-ui": "~5.0.7",
+    "expo-web-browser": "~14.1.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.80.0-rc.3",
+    "react-native-gesture-handler": "^2.25.0",
+    "react-native-reanimated": "workspace:*",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-web": "~0.20.0",
+    "react-native-webview": "13.13.5",
+    "react-native-worklets": "workspace:*"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@expo/metro-runtime": "~5.0.4",
+    "@types/react": "~19.0.10",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~9.2.0",
+    "typescript": "~5.8.3"
+  },
+  "private": true,
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
