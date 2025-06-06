@@ -32,6 +32,11 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
+ // Custom discord added for removing nodes once they seem in sync with the shadow tree
+ void markNodeAsImmediateRemovable(Tag tag);
+ void unmarkNodeAsImmediateRemovable(Tag viewTag);
+ void removeImmediateRemovableNodes();
+
   void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
@@ -49,6 +54,7 @@ class UpdatesRegistryManager {
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
   std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
+  std::unordered_set<Tag> immediateRemovableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
