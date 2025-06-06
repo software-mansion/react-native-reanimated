@@ -47,8 +47,8 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
        },
      },
    ```
-3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.2-323d7bb4d9.patch).
-4. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-rc.2-0ac6fe4f9f.patch).
+3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.4-af2762c07e.patch).
+4. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-rc.4-ad01aea617.patch).
 
 ### iOS
 
