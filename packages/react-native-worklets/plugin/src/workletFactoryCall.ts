@@ -1,21 +1,46 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { callExpression } from '@babel/types';
+import {
+  callExpression,
+  identifier,
+  memberExpression,
+  stringLiteral,
+} from '@babel/types';
 
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { generatedWorkletsDir } from './types';
 import { makeWorkletFactory } from './workletFactory';
 
 export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): CallExpression {
-  const workletFactory = makeWorkletFactory(path, state);
+  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
+    path,
+    state
+  );
 
-  const workletFactoryCall = callExpression(workletFactory, []);
+  let factoryCall: CallExpression;
+  if (state.opts.experimentalBundling) {
+    factoryCall = callExpression(
+      memberExpression(
+        callExpression(identifier('require'), [
+          stringLiteral(
+            `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
+          ),
+        ]),
+        identifier('default')
+      ),
 
-  addStackTraceDataToWorkletFactory(path, workletFactoryCall);
+      [factoryCallParamPack]
+    );
+  } else {
+    factoryCall = callExpression(factory, [factoryCallParamPack]);
+  }
 
-  const replacement = workletFactoryCall;
+  addStackTraceDataToWorkletFactory(path, factoryCall);
+
+  const replacement = factoryCall;
 
   return replacement;
 }

@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ExpressionStatement,
-  File as BabelFile,
   FunctionExpression,
-  Identifier,
+  ObjectExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -22,14 +19,12 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
-  isMemberExpression,
-  isObjectExpression,
   isObjectMethod,
-  isObjectProperty,
   memberExpression,
   newExpression,
   numericLiteral,
   objectExpression,
+  objectPattern,
   objectProperty,
   returnStatement,
   stringLiteral,
@@ -40,13 +35,15 @@ import {
 import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
-import { globals } from './globals';
+import { getClosure } from './closure';
+import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const REAL_VERSION = require('../../package.json').version;
 
 const MOCK_VERSION = 'x.y.z';
@@ -54,7 +51,11 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): FunctionExpression {
+): {
+  factory: FunctionExpression;
+  factoryCallParamPack: ObjectExpression;
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -92,7 +93,11 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
+  const {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -110,7 +115,7 @@ export function makeWorkletFactory(
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    variables,
+    closureVariables,
     workletName,
     transformed.map
   );
@@ -118,13 +123,13 @@ export function makeWorkletFactory(
   const workletHash = hash(funString);
 
   let lineOffset = 1;
-  if (variables.length > 0) {
+  if (closureVariables.length > 0) {
     // When worklet captures some variables, we append closure destructing at
     // the beginning of the function body. This effectively results in line
     // numbers shifting by the number of captured variables (size of the
     // closure) + 2 (for the opening and closing brackets of the destruct
     // statement)
-    lineOffset -= variables.length + 2;
+    lineOffset -= closureVariables.length + 2;
   }
 
   const pathForStringDefinitions = fun.parentPath.isProgram()
@@ -185,7 +190,8 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
+
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -213,7 +219,8 @@ export function makeWorkletFactory(
         '=',
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
-          variables.map((variable) =>
+          closureVariables.map((variable) =>
+            !state.opts.experimentalBundling &&
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -227,7 +234,12 @@ export function makeWorkletFactory(
                     identifier(variable.name)
                   )
                 )
-              : objectProperty(identifier(variable.name), variable, false, true)
+              : objectProperty(
+                  cloneNode(variable, true),
+                  cloneNode(variable, true),
+                  false,
+                  true
+                )
           )
         )
       )
@@ -255,7 +267,7 @@ export function makeWorkletFactory(
             identifier('__initData'),
             false
           ),
-          initDataId
+          cloneNode(initDataId, true)
         )
       )
     );
@@ -294,16 +306,82 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const newFun = functionExpression(undefined, [], blockStatement(statements));
+  const factoryParams = closureVariables.map((variableId) => {
+    const clonedId = cloneNode(variableId, true);
+    if (
+      !state.opts.experimentalBundling &&
+      clonedId.name.endsWith(workletClassFactorySuffix)
+    ) {
+      clonedId.name = clonedId.name.slice(
+        0,
+        clonedId.name.length - workletClassFactorySuffix.length
+      );
+    }
+    return clonedId;
+  });
 
-  return newFun;
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+    factoryParams.unshift(cloneNode(initDataId, true));
+  }
+
+  const factoryParamObjectPattern = objectPattern(
+    factoryParams.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
+  const factory = functionExpression(
+    identifier(workletName + 'Factory'),
+    [factoryParamObjectPattern],
+    blockStatement(statements)
+  );
+
+  const factoryCallArgs = factoryParams.map((param) => cloneNode(param, true));
+
+  const factoryCallParamPack = objectExpression(
+    factoryCallArgs.map((param) =>
+      objectProperty(
+        cloneNode(param, true),
+        cloneNode(param, true),
+        false,
+        true
+      )
+    )
+  );
+
+  if (state.opts.experimentalBundling) {
+    generateWorkletFile(
+      libraryBindingsToImport,
+      relativeBindingsToImport,
+      initDataId,
+      initDataObjectExpression,
+      factory,
+      workletHash,
+      pathForStringDefinitions as NodePath<ExpressionStatement>,
+      state
+    );
+  }
+
+  // @ts-expect-error We must mark the factory as workletized
+  // to avoid further workletization inside the factory.
+  factory.workletized = true;
+
+  return { factory, factoryCallParamPack, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });
@@ -371,91 +449,6 @@ function makeWorkletName(
   reactName = reactName || toIdentifier(suffix);
 
   return { workletName, reactName };
-}
-
-function makeArrayFromCapturedBindings(
-  ast: BabelFile,
-  fun: NodePath<WorkletizableFunction>
-): Identifier[] {
-  const closure = new Map<string, Identifier>();
-  const isLocationAssignedMap = new Map<string, boolean>();
-
-  // this traversal looks for variables to capture
-  traverse(ast, {
-    Identifier(path) {
-      // we only capture variables that were declared outside of the scope
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const name = path.node.name;
-      // if the function is named and was added to globals we don't want to add it to closure
-      // hence we check if identifier has that name
-      if (globals.has(name)) {
-        return;
-      }
-      if (
-        'id' in fun.node &&
-        fun.node.id &&
-        fun.node.id.name === name // we don't want to capture function's own name
-      ) {
-        return;
-      }
-
-      const parentNode = path.parent;
-
-      if (
-        isMemberExpression(parentNode) &&
-        parentNode.property === path.node &&
-        !parentNode.computed
-      ) {
-        return;
-      }
-
-      if (
-        isObjectProperty(parentNode) &&
-        isObjectExpression(path.parentPath.parent) &&
-        path.node !== parentNode.value
-      ) {
-        return;
-      }
-
-      let currentScope = path.scope;
-
-      while (currentScope != null) {
-        if (currentScope.bindings[name] != null) {
-          return;
-        }
-        currentScope = currentScope.parent;
-      }
-      closure.set(name, path.node);
-      isLocationAssignedMap.set(name, false);
-    },
-  });
-
-  /*
-  For reasons I don't exactly understand, the above traversal will cause the whole 
-  bundle to crash if we traversed original node instead of generated
-  AST. This is why we need to traverse it again, but this time we set
-  location for each identifier that was captured to their original counterpart, since
-  AST has its location set relative as if it was a separate file.
-  */
-  fun.traverse({
-    Identifier(path) {
-      // So it won't refer to something like:
-      // const obj = {unexistingVariable: 1};
-      if (!path.isReferencedIdentifier()) {
-        return;
-      }
-      const node = closure.get(path.node.name);
-      if (!node || isLocationAssignedMap.get(path.node.name)) {
-        return;
-      }
-      node.loc = path.node.loc;
-      isLocationAssignedMap.set(path.node.name, true);
-    },
-  });
-
-  return Array.from(closure.values());
 }
 
 const extraPlugins = [

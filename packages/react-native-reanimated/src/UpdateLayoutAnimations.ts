@@ -1,4 +1,5 @@
 'use strict';
+import { SHOULD_BE_USE_WEB } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
@@ -8,7 +9,6 @@ import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
 } from './core';
-import { shouldBeUseWeb } from './PlatformChecker';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -60,7 +60,7 @@ export let updateLayoutAnimations: (
   sharedTransitionTag?: string
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op
   };

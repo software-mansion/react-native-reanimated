@@ -27,7 +27,12 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
@@ -67,6 +72,7 @@ def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
+def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -165,6 +171,7 @@ android {
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
 
         externalNativeBuild {
             cmake {
@@ -176,6 +183,7 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
@@ -195,21 +203,18 @@ android {
             externalNativeBuild {
                 cmake {
                     if (JS_RUNTIME == "hermes") {
+                        //  React Native doesn't expose these flags, but not having them
+                        //  can lead to runtime errors due to ABI mismatches.
+                        //  There's also
+                        //    HERMESVM_PROFILER_OPCODE
+                        //    HERMESVM_PROFILER_BB
+                        //  which shouldn't be defined in standard setups.
                         arguments "-DHERMES_ENABLE_DEBUGGER=1"
-                    } else {
-                        arguments "-DHERMES_ENABLE_DEBUGGER=0"
                     }
                 }
             }
             packagingOptions {
                 doNotStrip "**/**/*.so"
-            }
-        }
-        release {
-            externalNativeBuild {
-                cmake {
-                    arguments "-DHERMES_ENABLE_DEBUGGER=0"
-                }
             }
         }
     }
@@ -252,7 +257,12 @@ android {
         main {
             java {
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/worklets/paper"
+                    srcDirs += "src/paper"
+                }
+                if (EXPERIMENTAL_BUNDLING) {
+                    srcDirs += "src/experimentalBundling"
+                } else {
+                    srcDirs += "src/legacyBundling"
                 }
             }
         }

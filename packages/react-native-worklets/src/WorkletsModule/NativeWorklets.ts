@@ -1,8 +1,7 @@
-/* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
@@ -15,11 +14,14 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
+  #shareableUndefined: ShareableRef<undefined>;
+  #shareableNull: ShareableRef<null>;
+  #shareableTrue: ShareableRef<boolean>;
+  #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
+      WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -28,6 +30,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       );
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.#shareableUndefined =
+      this.#workletsModuleProxy.makeShareableUndefined();
+    this.#shareableTrue = this.#workletsModuleProxy.makeShareableBoolean(true);
+    this.#shareableFalse =
+      this.#workletsModuleProxy.makeShareableBoolean(false);
   }
 
   makeShareableClone<TValue>(
@@ -39,6 +47,81 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       value,
       shouldPersistRemote,
       nativeStateSource
+    );
+  }
+
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
+  }
+
+  makeShareableString(str: string) {
+    return this.#workletsModuleProxy.makeShareableString(str);
+  }
+
+  makeShareableNumber(num: number) {
+    return this.#workletsModuleProxy.makeShareableNumber(num);
+  }
+
+  makeShareableBoolean(bool: boolean) {
+    return bool ? this.#shareableTrue : this.#shareableFalse;
+  }
+
+  makeShareableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  }
+
+  makeShareableUndefined() {
+    return this.#shareableUndefined;
+  }
+
+  makeShareableNull() {
+    return this.#shareableNull;
+  }
+
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps> {
+    return this.#workletsModuleProxy.makeShareableTurboModuleLike(props, proto);
+  }
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
+  }
+
+  makeShareableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  }
+
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
+  makeShareableInitializer(obj: object) {
+    return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  }
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ) {
+    return this.#workletsModuleProxy.makeShareableFunction(func);
+  }
+
+  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableWorklet(
+      worklet,
+      shouldPersistRemote
     );
   }
 

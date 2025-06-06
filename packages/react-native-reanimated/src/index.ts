@@ -30,7 +30,8 @@ export {
   withTiming,
 } from './animation';
 export type { ParsedColorArray } from './Colors';
-export { convertToRGBA, isColor, processColor } from './Colors';
+export { convertToRGBA, isColor } from './Colors';
+export { processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -50,6 +51,7 @@ export type {
   ExitAnimationsValues,
   IEntryExitAnimationBuilder,
   ILayoutAnimationBuilder,
+  KeyframeProps,
   LayoutAnimation,
   LayoutAnimationFunction,
   LayoutAnimationStartFunction,
@@ -105,6 +107,7 @@ export type {
   AnimatedProps,
   AnimatedStyleProp,
   AnimateProps,
+  EntryOrExitLayoutType,
   TransformStyleTypes,
 } from './helperTypes';
 export type {
@@ -136,7 +139,9 @@ export {
   useFrameCallback,
   useHandler,
   useReducedMotion,
-  useScrollViewOffset,
+  useScrollOffset,
+  /** @deprecated Please use {@link useScrollOffset} instead. */
+  useScrollOffset as useScrollViewOffset,
   useSharedValue,
   useWorkletCallback,
 } from './hook';
@@ -163,6 +168,7 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
+export type { ReanimatedKeyframe } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
@@ -287,7 +293,6 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export { ReanimatedView } from './specs';
 export type { WorkletRuntime } from 'react-native-worklets';
 export {
   isWorkletFunction,

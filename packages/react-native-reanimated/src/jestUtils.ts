@@ -3,25 +3,14 @@
 
 import type { ReactTestInstance } from 'react-test-renderer';
 
+import { IS_JEST, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { ReanimatedError } from './errors';
 import type { DefaultStyle } from './hook/commonTypes';
-import { isJest } from './PlatformChecker';
-
-// Mock ReanimatedView
-jest.mock(
-  'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
-  () => ({})
-);
-jest.mock(
-  'react-native-reanimated/src/specs/ReanimatedNativeComponent',
-  () => ({})
-);
 
 declare global {
   namespace jest {
@@ -285,7 +274,7 @@ export const advanceAnimationByFrame = (count: number) => {
   jest.runOnlyPendingTimers();
 };
 
-const requireFunction = isJest()
+const requireFunction = IS_JEST
   ? require
   : () => {
       throw new ReanimatedError(
@@ -298,6 +287,15 @@ type ToHaveAnimatedStyleConfig = {
 };
 
 export const setUpTests = (userFramerateConfig = {}) => {
+  // Mock ReanimatedView
+  jest.mock(
+    'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
+  jest.mock(
+    'react-native-reanimated/src/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
   let expect: jest.Expect = (global as typeof global & { expect: jest.Expect })
     .expect;
   if (expect === undefined) {

@@ -43,24 +43,26 @@ export function processWorklet(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): void {
-  if (state.opts.processNestedWorklets) {
-    path.traverse(
-      {
-        // @ts-expect-error TypeScript doesn't like this syntax here.
-        [WorkletizableFunction](
-          subPath: NodePath<WorkletizableFunction>,
-          passedState: ReanimatedPluginPass
-        ): void {
-          processIfWithWorkletDirective(subPath, passedState);
-        },
+  path.traverse(
+    {
+      // @ts-expect-error TypeScript doesn't like this syntax here.
+      [WorkletizableFunction](
+        subPath: NodePath<WorkletizableFunction>,
+        passedState: ReanimatedPluginPass
+      ): void {
+        processIfWithWorkletDirective(subPath, passedState);
       },
-      state
-    );
-  }
+    },
+    state
+  );
 
   const workletFactoryCall = makeWorkletFactoryCall(path, state);
 
   substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
+
+  // We recrawl the program parent scope to ensure that all variables are
+  // properly resolved after the substitution.
+  path.scope.getProgramParent().crawl();
 }
 
 function hasWorkletDirective(directives: Directive[]): boolean {

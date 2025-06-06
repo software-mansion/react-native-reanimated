@@ -18,13 +18,14 @@ import {
 export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
-  processNestedWorklets?: boolean;
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
+  experimentalBundling?: boolean;
+  workletizableModules?: string[];
 }
 
 export interface ReanimatedPluginPass {
@@ -85,3 +86,5 @@ export function isWorkletizableObjectNode(
 }
 
 export const workletClassFactorySuffix = '__classFactory';
+
+export const generatedWorkletsDir = '__generatedWorklets';

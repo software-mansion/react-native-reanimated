@@ -2,14 +2,13 @@
 import type { Component } from 'react';
 import { logger } from 'react-native-worklets';
 
-import { processColorsInProps } from '../Colors';
+import { IS_JEST, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -49,23 +48,17 @@ function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
 }
 
-function setNativePropsChromeDebugger() {
-  logger.warn('setNativeProps() is not supported with Chrome Debugger.');
-}
-
 function setNativePropsDefault() {
   logger.warn('setNativeProps() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
-} else if (isJest()) {
+} else if (IS_JEST) {
   setNativeProps = setNativePropsJest;
-} else if (isChromeDebugger()) {
-  setNativeProps = setNativePropsChromeDebugger;
 } else {
   setNativeProps = setNativePropsDefault;
 }

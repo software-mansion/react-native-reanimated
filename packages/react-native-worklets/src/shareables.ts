@@ -1,7 +1,7 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
@@ -13,13 +13,13 @@ import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
+  WorkletImport,
 } from './workletTypes';
 
-// for web/chrome debugger/jest environments this file provides a stub implementation
+// for web and jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
@@ -33,7 +33,12 @@ function isHostObject(value: NonNullable<object>) {
 }
 
 function isPlainJSObject(object: object): object is Record<string, unknown> {
+  'worklet';
   return Object.getPrototypeOf(object) === Object.prototype;
+}
+
+function isTurboModuleLike(object: object): object is Record<string, unknown> {
+  return isHostObject(Object.getPrototypeOf(object));
 }
 
 function getFromCache(value: object) {
@@ -123,6 +128,30 @@ function makeShareableCloneRecursiveNative<T>(
   const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
+  if (typeof value === 'string') {
+    return cloneString(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'number') {
+    return cloneNumber(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'boolean') {
+    return cloneBoolean(value) as ShareableRef<T>;
+  }
+
+  if (typeof value === 'bigint') {
+    return cloneBigInt(value) as ShareableRef<T>;
+  }
+
+  if (value === undefined) {
+    return cloneUndefined() as ShareableRef<T>;
+  }
+
+  if (value === null) {
+    return cloneNull() as ShareableRef<T>;
+  }
+
   if ((!isObject && !isFunction) || value === null) {
     return clonePrimitive(value, shouldPersistRemote);
   }
@@ -135,11 +164,30 @@ function makeShareableCloneRecursiveNative<T>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
+  if (
+    globalThis._WORKLETS_EXPERIMENTAL_BUNDLING &&
+    isFunction &&
+    (value as WorkletImport).__bundleData
+  ) {
+    return cloneImport(value as WorkletImport) as ShareableRef<T>;
+  }
   if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value, shouldPersistRemote);
+    return cloneRemoteFunction(value);
+  }
+  // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
+  // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
+  if (isTurboModuleLike(value)) {
+    return cloneTurboModuleLike(value, shouldPersistRemote, depth);
   }
   if (isHostObject(value)) {
-    return cloneHostObject(value, shouldPersistRemote);
+    return cloneHostObject(value);
+  }
+  if (isPlainJSObject(value) && value.__init) {
+    return cloneInitializer(
+      value,
+      shouldPersistRemote,
+      depth
+    ) as ShareableRef<T>;
   }
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
@@ -164,6 +212,13 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArrayBufferView(value);
   }
   return inaccessibleObject(value);
+}
+
+if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  makeShareableCloneRecursiveNative.__bundleData = {
+    imported: 'makeShareableCloneRecursive',
+    source: '../../packages/react-native-worklets/src/index.ts',
+  };
 }
 
 export interface MakeShareableClone {
@@ -200,6 +255,65 @@ function clonePrimitive<T>(
   return WorkletsModule.makeShareableClone(value, shouldPersistRemote);
 }
 
+function cloneString(value: string): ShareableRef<string> {
+  return WorkletsModule.makeShareableString(value);
+}
+
+function cloneNumber(value: number): ShareableRef<number> {
+  return WorkletsModule.makeShareableNumber(value);
+}
+
+function cloneBoolean(value: boolean): ShareableRef<boolean> {
+  return WorkletsModule.makeShareableBoolean(value);
+}
+
+function cloneBigInt(value: bigint): ShareableRef<bigint> {
+  return WorkletsModule.makeShareableBigInt(value);
+}
+
+function cloneUndefined(): ShareableRef<undefined> {
+  return WorkletsModule.makeShareableUndefined();
+}
+
+function cloneNull(): ShareableRef<null> {
+  return WorkletsModule.makeShareableNull();
+}
+
+function cloneObjectProperties<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): Record<string, unknown> {
+  const clonedProps: Record<string, unknown> = {};
+  for (const [key, element] of Object.entries(value)) {
+    // We don't need to clone __initData field as it contains long strings
+    // representing the worklet code, source map, and location, and we will
+    // serialize/deserialize it once.
+    if (key === '__initData' && clonedProps.__initData !== undefined) {
+      continue;
+    }
+    clonedProps[key] = makeShareableCloneRecursive(
+      element,
+      shouldPersistRemote,
+      depth + 1
+    );
+  }
+  return clonedProps;
+}
+
+function cloneInitializer(
+  value: object,
+  shouldPersistRemote = false,
+  depth = 0
+): ShareableRef<object> {
+  const clonedProps: Record<string, unknown> = cloneObjectProperties(
+    value,
+    shouldPersistRemote,
+    depth
+  );
+  return WorkletsModule.makeShareableInitializer(clonedProps);
+}
+
 function cloneArray<T extends unknown[]>(
   value: T,
   shouldPersistRemote: boolean,
@@ -208,10 +322,9 @@ function cloneArray<T extends unknown[]>(
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableArray(
     clonedElements,
-    shouldPersistRemote,
-    value
+    shouldPersistRemote
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -220,15 +333,10 @@ function cloneArray<T extends unknown[]>(
   return clone;
 }
 
-function cloneRemoteFunction<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
+  value: (...args: TArgs) => TReturn
+): ShareableRef<TReturn> {
+  const clone = WorkletsModule.makeShareableFunction(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -236,18 +344,11 @@ function cloneRemoteFunction<T extends object>(
   return clone;
 }
 
-function cloneHostObject<T extends object>(
-  value: T,
-  shouldPersistRemote: boolean
-): ShareableRef<T> {
+function cloneHostObject<T extends object>(value: T): ShareableRef<T> {
   // for host objects we pass the reference to the object as shareable and
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
-  const clone = WorkletsModule.makeShareableClone(
-    value,
-    shouldPersistRemote,
-    value
-  );
+  const clone = WorkletsModule.makeShareableHostObject(value);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -279,33 +380,27 @@ function cloneWorklet<T extends WorkletFunction>(
     // seems more elegant to handle it this way.
     delete (value as WorkletFunction).__stackDetails;
   }
+  const clonedProps: Record<string, unknown> = cloneObjectProperties(
+    value,
+    true,
+    depth
+  );
   // to save on transferring static __initData field of worklet structure
   // we request shareable value to persist its UI counterpart. This means
-  // that the __initData field that contains long strings represeting the
+  // that the __initData field that contains long strings representing the
   // worklet code, source map, and location, will always be
   // serialized/deserialized once.
-  const clonedProps: Record<string, unknown> = {};
   clonedProps.__initData = makeShareableCloneRecursive(
     value.__initData,
     true,
     depth + 1
   );
 
-  for (const [key, element] of Object.entries(value)) {
-    if (key === '__initData' && clonedProps.__initData !== undefined) {
-      continue;
-    }
-    clonedProps[key] = makeShareableCloneRecursive(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
-  }
-  const clone = WorkletsModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
+    // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
     // retain all worklets
-    true,
-    value
+    true
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -314,10 +409,28 @@ function cloneWorklet<T extends WorkletFunction>(
   return clone;
 }
 
+/**
+ * TurboModuleLike objects are JS objects that have a TurboModule as their
+ * prototype.
+ */
+function cloneTurboModuleLike<T extends object>(
+  value: T,
+  shouldPersistRemote: boolean,
+  depth: number
+): ShareableRef<T> {
+  const proto = Object.getPrototypeOf(value);
+  const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
+  const clone = WorkletsModule.makeShareableTurboModuleLike(
+    clonedProps,
+    proto
+  ) as ShareableRef<T>;
+  return clone;
+}
+
 function cloneContextObject<T extends object>(value: T): ShareableRef<T> {
   const workletContextObjectFactory = (value as Record<string, unknown>)
     .__workletContextObjectFactory as () => T;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       return workletContextObjectFactory();
@@ -332,18 +445,12 @@ function clonePlainJSObject<T extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
-  const clonedProps: Record<string, unknown> = {};
-  for (const [key, element] of Object.entries(value)) {
-    if (key === '__initData' && clonedProps.__initData !== undefined) {
-      continue;
-    }
-    clonedProps[key] = makeShareableCloneRecursive(
-      element,
-      shouldPersistRemote,
-      depth + 1
-    );
-  }
-  const clone = WorkletsModule.makeShareableClone(
+  const clonedProps: Record<string, unknown> = cloneObjectProperties(
+    value,
+    shouldPersistRemote,
+    depth
+  );
+  const clone = WorkletsModule.makeShareableObject(
     clonedProps,
     shouldPersistRemote,
     value
@@ -358,7 +465,7 @@ function clonePlainJSObject<T extends object>(
 function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
   const pattern = value.source;
   const flags = value.flags;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       return new RegExp(pattern, flags);
@@ -371,7 +478,7 @@ function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
 
 function cloneError<T extends Error>(value: T): ShareableRef<T> {
   const { name, message, stack } = value;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       // eslint-disable-next-line reanimated/use-worklets-error
@@ -406,7 +513,7 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
 ): ShareableRef<T> {
   const buffer = value.buffer;
   const typeName = value.constructor.name;
-  const handle = makeShareableCloneRecursive({
+  const handle = cloneInitializer({
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
@@ -422,6 +529,18 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   shareableMappingCache.set(value, handle);
 
   return handle;
+}
+
+function cloneImport<TValue extends WorkletImport>(
+  value: TValue
+): ShareableRef<TValue> {
+  const { source, imported } = value.__bundleData;
+  const clone = WorkletsModule.makeShareableImport(source, imported);
+
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  return clone as ShareableRef<TValue>;
 }
 
 function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
@@ -502,7 +621,7 @@ function freezeObjectInDev<T extends object>(value: T) {
   Object.preventExtensions(value);
 }
 
-export function makeShareableCloneOnUIRecursive<T>(
+function makeShareableCloneOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatShareableRef<T> {
   'worklet';
@@ -520,10 +639,7 @@ export function makeShareableCloneOnUIRecursive<T>(
       if (isHostObject(value)) {
         // We call `_makeShareableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
-        return global._makeShareableClone(
-          value,
-          undefined
-        ) as FlatShareableRef<T>;
+        return global._makeShareableHostObject(value) as FlatShareableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
@@ -532,9 +648,8 @@ export function makeShareableCloneOnUIRecursive<T>(
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
-        return global._makeShareableClone(
-          value.map(cloneRecursive),
-          undefined
+        return global._makeShareableArray(
+          value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
@@ -543,10 +658,41 @@ export function makeShareableCloneOnUIRecursive<T>(
       }
       return global._makeShareableClone(toAdapt, value) as FlatShareableRef<T>;
     }
+
+    if (typeof value === 'string') {
+      return global._makeShareableString(value);
+    }
+
+    if (typeof value === 'number') {
+      return global._makeShareableNumber(value);
+    }
+
+    if (typeof value === 'boolean') {
+      return global._makeShareableBoolean(value);
+    }
+
+    if (typeof value === 'bigint') {
+      return global._makeShareableBigInt(value);
+    }
+
+    if (value === undefined) {
+      return global._makeShareableUndefined();
+    }
+
+    if (value === null) {
+      return global._makeShareableNull();
+    }
+
     return global._makeShareableClone(value, undefined);
   }
   return cloneRecursive(value);
 }
+
+export const makeShareableCloneOnUIRecursive = (
+  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+    ? makeShareableCloneRecursive
+    : makeShareableCloneOnUIRecursiveLEGACY
+) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
 function makeShareableJS<T extends object>(value: T): T {
   return value;

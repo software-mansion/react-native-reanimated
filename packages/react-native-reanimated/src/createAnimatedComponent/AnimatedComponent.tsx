@@ -5,12 +5,14 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
+import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
 import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -20,7 +22,6 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -41,10 +42,6 @@ import { filterStyles, flattenArray } from './utils';
 import { LinearTransition } from '../layoutReanimation';
 
 let id = 0;
-
-const IS_WEB = isWeb();
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -430,7 +427,8 @@ export default class AnimatedComponent
 
     const jestProps = IS_JEST
       ? {
-          jestInlineStyle: this.props.style,
+          jestInlineStyle:
+            this.props.style && filterOutAnimatedStyles(this.props.style),
           jestAnimatedStyle: this.jestAnimatedStyle,
           jestAnimatedProps: this.jestAnimatedProps,
         }
@@ -442,4 +440,25 @@ export default class AnimatedComponent
       ...jestProps,
     });
   }
+}
+
+function filterOutAnimatedStyles(
+  style: NestedArray<StyleProps | AnimatedStyleHandle | null | undefined>
+): NestedArray<StyleProps | null | undefined> {
+  if (!style) {
+    return style;
+  }
+  if (!Array.isArray(style)) {
+    return style?.viewDescriptors ? {} : style;
+  }
+  return style
+    .filter(
+      (styleElement) => !(styleElement && 'viewDescriptors' in styleElement)
+    )
+    .map((styleElement) => {
+      if (Array.isArray(styleElement)) {
+        return filterOutAnimatedStyles(styleElement);
+      }
+      return styleElement;
+    });
 }

@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import { isWorkletFunction, logger, runOnUI } from 'react-native-worklets';
+import {
+  isWorkletFunction,
+  logger,
+  makeShareableCloneRecursive,
+  runOnUI,
+  shareableMappingCache,
+} from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
 import {
@@ -11,6 +17,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
+import { ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -22,8 +29,6 @@ import type {
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
-import { ReanimatedError } from '../errors';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
@@ -41,8 +46,14 @@ import {
   subtractMatrices,
 } from './transformationMatrix/matrixUtils';
 
-let IN_STYLE_UPDATER = false;
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+/**
+ * This variable has to be an object, because it can't be changed for the
+ * worklets if it's a primitive value. We also have to bind it to a separate
+ * object to prevent from freezing it in development.
+ */
+const IN_STYLE_UPDATER = { current: false };
+const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
+shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
@@ -95,9 +106,9 @@ export function assertEasingIsWorklet(
 }
 
 export function initialUpdaterRun<T>(updater: () => T) {
-  IN_STYLE_UPDATER = true;
+  IN_STYLE_UPDATER.current = true;
   const result = updater();
-  IN_STYLE_UPDATER = false;
+  IN_STYLE_UPDATER.current = false;
   return result;
 }
 
@@ -540,7 +551,7 @@ export function defineAnimation<
   U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
-  if (IN_STYLE_UPDATER) {
+  if (!globalThis._WORKLET && IN_STYLE_UPDATER.current) {
     return starting as unknown as T;
   }
   const create = () => {

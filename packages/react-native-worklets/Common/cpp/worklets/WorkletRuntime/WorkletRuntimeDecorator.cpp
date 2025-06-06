@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -39,7 +40,9 @@ static inline std::vector<jsi::Value> parseArgs(
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
-    const std::shared_ptr<JSScheduler> &jsScheduler) {
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const bool isDevBundle,
+    jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -50,6 +53,11 @@ void WorkletRuntimeDecorator::decorate(
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
   rt.global().setProperty(rt, "_IS_FABRIC", true);
+
+  rt.global().setProperty(rt, "__DEV__", isDevBundle);
+
+  rt.global().setProperty(
+      rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
@@ -93,6 +101,83 @@ void WorkletRuntimeDecorator::decorate(
         auto shouldRetainRemote = jsi::Value::undefined();
         return makeShareableClone(
             rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableString",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableString(rt, value.asString(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableNumber",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableNumber(rt, value.asNumber());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBoolean",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableBoolean(rt, value.asBool());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBigInt",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableBigInt(rt, value.asBigInt(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableUndefined", [](jsi::Runtime &rt) {
+        return makeShareableUndefined(rt);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableArray(rt, value.asObject(rt).asArray(rt), false);
+      });
+
+  jsi_utils::installJsiFunction(rt, "_makeShareableNull", [](jsi::Runtime &rt) {
+    return makeShareableNull(rt);
+  });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableObject",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote,
+         const jsi::Value &nativeStateSource) {
+        return makeShareableObject(
+            rt,
+            value.getObject(rt),
+            shouldRetainRemote.getBool(),
+            nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableWorklet",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableWorklet(rt, value.asObject(rt), false);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableInitializer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableInitializer(rt, value.asObject(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableFunction",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeShareableFunction(rt, value.asObject(rt).asFunction(rt));
       });
 
   jsi_utils::installJsiFunction(

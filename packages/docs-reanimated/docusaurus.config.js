@@ -5,6 +5,7 @@ const lightCodeTheme = require('./src/theme/CodeBlock/highlighting-light.js');
 const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
 const webpack = require('webpack');
+const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -70,6 +71,7 @@ const config = {
           blogSidebarTitle: 'Examples',
           blogSidebarCount: 'ALL',
           showReadingTime: false,
+          onUntruncatedBlogPosts: 'ignore',
         },
       }),
     ],
@@ -114,12 +116,12 @@ const config = {
           },
         ],
       },
-      // React Native Paradise banner
+      // App.js 2025 Banner
       announcementBar: {
-        id: 'react-native-paradise-2025',
+        id: 'appjs-2025',
         content: ' ',
-        backgroundColor: '#fff5f7',
-        textColor: '#001a72',
+        backgroundColor: '#f7eded',
+        textColor: '#484dfc',
       },
       footer: {
         style: 'light',
@@ -128,6 +130,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
+        additionalLanguages: ['bash'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
@@ -138,6 +141,36 @@ const config = {
       },
     }),
   plugins: [
+    function svgModulePlugin() {
+      return {
+        name: 'svg-module-plugin',
+        configureWebpack(config, isServer, utils) {
+          return {
+            module: {
+              rules: [
+                {
+                  test: /\.js?$/,
+                  include: [
+                    path.resolve(
+                      __dirname,
+                      'node_modules/@react-native/assets-registry/registry'
+                    ),
+                  ],
+                  use: {
+                    loader: require.resolve('babel-loader'),
+                    options: {
+                      babelrc: false,
+                      configFile: false,
+                      presets: [require.resolve('@babel/preset-flow')],
+                    },
+                  },
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
     ].filter(Boolean),
@@ -158,17 +191,17 @@ const config = {
               new webpack.DefinePlugin({
                 ...processMock,
                 __DEV__: 'false',
-                setImmediate: () => {},
               }),
             ],
             module: {
               rules: [
                 {
-                  test: /\.txt/,
+                  test: /\.txt$/,
                   type: 'asset/source',
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
                 },
               ],
             },

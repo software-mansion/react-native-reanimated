@@ -31,7 +31,7 @@ export type WorkletStackDetails = [
 
 type WorkletClosure = Record<string, unknown>;
 
-interface WorkletInitData {
+export interface WorkletInitData {
   code: string;
   /** Only in dev builds. */
   location?: string;
@@ -52,6 +52,31 @@ export interface WorkletProps {
 }
 
 export type WorkletFunction<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletProps;
+  TArgs extends unknown[] = unknown[],
+  TReturn = unknown,
+> = ((...args: TArgs) => TReturn) & WorkletProps;
+
+export interface WorkletFactory<
+  TArgs extends unknown[] = unknown[],
+  TReturn = unknown,
+  TClosureVariables extends unknown[] = unknown[],
+> {
+  (
+    initData: WorkletInitData,
+    ...closureVariables: TClosureVariables
+  ): WorkletFunction<TArgs, TReturn>;
+}
+
+export type ValueUnpacker = WorkletFunction<
+  [objectToUnpack: unknown, category?: string],
+  unknown
+>;
+
+export interface WorkletImport {
+  __bundleData: {
+    /** Name of the module which is the source of the import. */
+    source: string;
+    /** The name of the imported value. */
+    imported: string;
+  };
+}

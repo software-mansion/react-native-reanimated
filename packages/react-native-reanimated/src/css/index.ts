@@ -1,7 +1,7 @@
 'use strict';
 export { createAnimatedComponent } from './component';
 export { cubicBezier, linear, steps } from './easings';
-export { css } from './stylesheet';
+export * from './stylesheet';
 export type {
   CSSAnimationDelay,
   CSSAnimationDirection,

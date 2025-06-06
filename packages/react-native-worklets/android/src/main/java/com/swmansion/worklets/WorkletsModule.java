@@ -18,7 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec
+    implements LifecycleEventListener, WorkletsBundleConsumer {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -36,6 +37,16 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
+  private String mSourceFileName = null;
+  private String mSourceURL = null;
+
+  public void setSourceFileName(String sourceFileName) {
+    mSourceFileName = sourceFileName;
+  }
+
+  public void setSourceURL(String sourceURL) {
+    mSourceURL = sourceURL;
+  }
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -46,23 +57,31 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       long jsContext,
-      String valueUnpackerCode,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler);
+      AndroidUIScheduler androidUIScheduler,
+      String sourceFileName,
+      String sourceURL);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
-    reactContext.assertOnJSQueueThread();
+
+    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+      reactContext.assertOnJSQueueThread();
+    }
+
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule(String valueUnpackerCode) {
+  public boolean installTurboModule() {
     var context = getReactApplicationContext();
-    context.assertOnJSQueueThread();
+
+    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+      context.assertOnNativeModulesQueueThread();
+    }
 
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
@@ -70,10 +89,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     mHybridData =
         initHybrid(
             jsContext,
-            valueUnpackerCode,
             mMessageQueueThread,
             jsCallInvokerHolder,
-            mAndroidUIScheduler);
+            mAndroidUIScheduler,
+            mSourceFileName,
+            mSourceURL);
     return true;
   }
 

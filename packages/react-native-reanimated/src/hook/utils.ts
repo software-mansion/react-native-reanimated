@@ -1,7 +1,8 @@
 'use strict';
 import type { WorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction } from 'react-native-worklets';
 
-import { ReanimatedError } from '../errors';
+import { ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
@@ -28,17 +29,32 @@ export function buildDependencies(
     (handler) => handler !== undefined
   ) as NonNullable<Handler>[];
   if (!dependencies) {
-    dependencies = handlersList.map((handler) => {
-      return {
-        workletHash: handler.__workletHash,
-        closure: handler.__closure,
-      };
-    });
-  } else {
-    dependencies.push(buildWorkletsHash(handlersList));
+    return handlersList;
   }
 
+  dependencies.push(buildWorkletsHash(handlersList));
   return dependencies;
+}
+
+function areWorkletsEqual(
+  worklet1: WorkletFunction,
+  worklet2: WorkletFunction
+) {
+  if (worklet1.__workletHash === worklet2.__workletHash) {
+    const closure1Keys = Object.keys(worklet1.__closure);
+    const closure2Keys = Object.keys(worklet2.__closure);
+
+    return (
+      closure1Keys.length === closure2Keys.length &&
+      closure1Keys.every(
+        (key) =>
+          key in worklet2.__closure &&
+          worklet1.__closure[key] === worklet2.__closure[key]
+      )
+    );
+  }
+
+  return false;
 }
 
 // This is supposed to work as useEffect comparison.
@@ -62,8 +78,17 @@ export function areDependenciesEqual(
     if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
       return false;
     }
+
     for (let i = 0; i < prevDeps.length; ++i) {
-      if (!objectIs(nextDeps[i], prevDeps[i])) {
+      const nextDep = nextDeps[i];
+      const prevDep = prevDeps[i];
+      if (objectIs(nextDep, prevDep)) {
+        continue;
+      }
+      if (!isWorkletFunction(nextDep) || !isWorkletFunction(prevDep)) {
+        return false;
+      }
+      if (!areWorkletsEqual(nextDep, prevDep)) {
         return false;
       }
     }
