@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';
+import { makeMutableArray } from '../mutablesArray';
 
 /**
  * Lets you define [shared
@@ -25,3 +26,10 @@ export function useSharedValue<Value>(initialValue: Value): SharedValue<Value> {
   }, [mutable]);
   return mutable;
 }
+
+export const useSharedValueArray = (
+  initialValue: number[]
+): SharedValue<number[]> => {
+  const [mutable] = useState(() => makeMutableArray(initialValue));
+  return mutable;
+};
