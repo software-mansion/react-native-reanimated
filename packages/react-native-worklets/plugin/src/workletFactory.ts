@@ -257,7 +257,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  if (shouldIncludeInitData) {
+  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -358,11 +358,8 @@ export function makeWorkletFactory(
     generateWorkletFile(
       libraryBindingsToImport,
       relativeBindingsToImport,
-      initDataId,
-      initDataObjectExpression,
       factory,
       workletHash,
-      pathForStringDefinitions as NodePath<ExpressionStatement>,
       state
     );
   }
