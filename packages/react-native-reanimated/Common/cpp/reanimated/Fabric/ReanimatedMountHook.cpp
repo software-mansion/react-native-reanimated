@@ -6,11 +6,9 @@ namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
-    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::function<void()> &requestFlush)
+    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager)
     : uiManager_(uiManager),
-      updatesRegistryManager_(updatesRegistryManager),
-      requestFlush_(requestFlush) {
+      updatesRegistryManager_(updatesRegistryManager) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -39,13 +37,6 @@ void ReanimatedMountHook::shadowTreeDidMount(
   {
     auto lock = updatesRegistryManager_->lock();
     updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
-
-    // When commit from React Native has finished, we reset the skip commit flag
-    // in order to allow Reanimated to commit its tree
-    updatesRegistryManager_->unpauseReanimatedCommits();
-    if (updatesRegistryManager_->shouldCommitAfterPause()) {
-      requestFlush_();
-    }
   }
 }
 
