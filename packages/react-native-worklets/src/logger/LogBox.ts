@@ -45,7 +45,8 @@ interface LogBoxExtended extends LogBoxStatic {
   addLog(data: LogData): void;
 }
 
-const LogBox = RNLogBox as LogBoxExtended;
+// We cannot import LogBox on Worklet Runtimes.
+const LogBox = globalThis._WORKLET ? null : (RNLogBox as LogBoxExtended);
 
 const noop = () => {
   // do nothing

@@ -8,6 +8,7 @@ end
 
 def worklets_find_config()
   result = {
+    :experimental_bundling => nil,
     :is_reanimated_example_app => nil,
     :react_native_version => nil,
     :react_native_minor_version => nil,
@@ -15,6 +16,8 @@ def worklets_find_config()
     :react_native_common_dir => nil,
     :dynamic_frameworks_worklets_dir => nil,
   }
+
+  result[:experimental_bundling] = ENV["WORKLETS_EXPERIMENTAL_BUNDLING"] == "1"
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
   react_native_json = worklets_try_to_parse_react_native_package_json(react_native_node_modules_dir)

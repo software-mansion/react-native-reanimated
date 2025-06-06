@@ -11,7 +11,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <string>
 #include <utility>
 
 using namespace facebook;
@@ -64,6 +63,8 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl,
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
@@ -74,7 +75,9 @@ inline jsi::Value createWorkletRuntime(
       jsScheduler,
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
-      isDevBundle);
+      isDevBundle,
+      script,
+      sourceUrl);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Worklets] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
@@ -83,12 +86,16 @@ inline jsi::Value createWorkletRuntime(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
+      script_(script),
+      sourceUrl_(sourceUrl),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -98,6 +105,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const JSIWorkletsModuleProxy &other)
     : jsi::HostObject(),
       isDevBundle_(other.isDevBundle_),
+      script_(other.script_),
+      sourceUrl_(other.sourceUrl_),
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
@@ -131,6 +140,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "makeShareableInitializer"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableArray"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableFunction"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeShareableTurboModuleLike"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableObject"));
   propertyNames.emplace_back(
@@ -294,6 +307,33 @@ jsi::Value JSIWorkletsModuleProxy::get(
         });
   }
 
+  if (name == "makeShareableFunction") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableFunction(rt, args[0].asObject(rt).asFunction(rt));
+        });
+  }
+
+  if (name == "makeShareableTurboModuleLike") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableTurboModuleLike(
+              rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
+        });
+  }
+
   if (name == "makeShareableObject") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -360,6 +400,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
         [jsQueue = jsQueue_,
          jsScheduler = jsScheduler_,
          isDevBundle = isDevBundle_,
+         script = script_,
+         sourceUrl = sourceUrl_,
          clone](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -370,6 +412,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               jsScheduler,
               std::move(clone),
               isDevBundle,
+              script,
+              sourceUrl,
               rt,
               args[0],
               args[1]);

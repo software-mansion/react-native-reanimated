@@ -1,0 +1,259 @@
+diff --git a/React/Base/RCTBundleConsumer.h b/React/Base/RCTBundleConsumer.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..92cea8b0f3569c03cedfd825846c7d452938c5b9
+--- /dev/null
++++ b/React/Base/RCTBundleConsumer.h
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import <Foundation/Foundation.h>
++#import <React/NSBigStringBuffer.h>
++
++/**
++ * Provides the interface needed to register a Bundle Consumer module.
++ */
++@protocol RCTBundleConsumer <NSObject>
++
++@property(nonatomic, strong, readwrite) NSBigStringBuffer *scriptBuffer;
++
++@property(nonatomic, strong, readwrite) NSString *sourceURL;
++
++@end
+diff --git a/React/CxxBridge/NSBigStringBuffer.h b/React/CxxBridge/NSBigStringBuffer.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..f4e16ce9f1c385b75bd4894e95b66e1b1b71d451
+--- /dev/null
++++ b/React/CxxBridge/NSBigStringBuffer.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import <Foundation/Foundation.h>
++
++#ifdef __cplusplus
++#import <jsireact/JSIExecutor.h>
++#import <memory>
++
++using namespace facebook;
++using namespace facebook::react;
++#endif // __cplusplus
++
++@interface NSBigStringBuffer : NSObject
++#ifdef __cplusplus
++
++{
++  std::shared_ptr<const BigStringBuffer> _buffer;
++}
++
++- (instancetype)initWithSharedPtr:
++    (const std::shared_ptr<const BigStringBuffer> &)buffer;
++- (const std::shared_ptr<const BigStringBuffer> &)getBuffer;
++#endif // __cplusplus
++
++@end
+diff --git a/React/CxxBridge/NSBigStringBuffer.mm b/React/CxxBridge/NSBigStringBuffer.mm
+new file mode 100644
+index 0000000000000000000000000000000000000000..20ec1a93bc7f418c0690db8c5519174086e962c2
+--- /dev/null
++++ b/React/CxxBridge/NSBigStringBuffer.mm
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++#import "NSBigStringBuffer.h"
++
++@implementation NSBigStringBuffer
++
++- (instancetype)initWithSharedPtr:(const std::shared_ptr<const BigStringBuffer>&)buffer {
++    if (self = [super init]) {
++        _buffer = buffer;
++    }
++    return self;
++}
++
++- (const std::shared_ptr<const BigStringBuffer>&)getBuffer {
++    return _buffer;
++}
++
++@end
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/BundleConsumer.kt b/ReactAndroid/src/main/java/com/facebook/react/bridge/BundleConsumer.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..a8e3bbaa4cd99e61db7f94a7dac5f04ea9d4b8ad
+--- /dev/null
++++ b/ReactAndroid/src/main/java/com/facebook/react/bridge/BundleConsumer.kt
+@@ -0,0 +1,13 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++package com.facebook.react.bridge
++
++public interface BundleConsumer {
++  public fun setSourceFileName(sourceFileName: String)
++  public fun setSourceURL(sourceURL: String)
++}
+diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+index cccc6076bd6d249e845ae65ae00273319875caa7..6d3eddc84cb8d94873f0e600044cffdc587cb2d6 100644
+--- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
++++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
+@@ -20,6 +20,7 @@ import com.facebook.react.DebugCorePackage
+ import com.facebook.react.ReactPackage
+ import com.facebook.react.ViewManagerOnDemandReactPackage
+ import com.facebook.react.bridge.Arguments
++import com.facebook.react.bridge.BundleConsumer
+ import com.facebook.react.bridge.JSBundleLoader
+ import com.facebook.react.bridge.JSBundleLoaderDelegate
+ import com.facebook.react.bridge.JavaScriptContextHolder
+@@ -297,6 +298,11 @@ internal class ReactInstance(
+               loadSynchronously: Boolean
+           ) {
+             context.setSourceURL(sourceURL)
++
++            val workletsModule = turboModuleManager.getModule("WorkletsModule") as? BundleConsumer
++            workletsModule?.setSourceFileName(fileName)
++            workletsModule?.setSourceURL(sourceURL)
++
+             loadJSBundleFromFile(fileName, sourceURL)
+           }
+ 
+diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+index 5ffd7492ba8132fce79ce1879b9f2a97f9810e62..f94f32acfc04a56d81e1fda688abcfd2ceb48878 100644
+--- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
++++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
+@@ -140,7 +140,8 @@ void JReactInstance::loadJSBundleFromAssets(
+ 
+   auto manager = extractAssetManager(assetManager);
+   auto script = loadScriptFromAssets(manager, sourceURL);
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ void JReactInstance::loadJSBundleFromFile(
+@@ -149,7 +150,8 @@ void JReactInstance::loadJSBundleFromFile(
+   std::unique_ptr<const JSBigFileString> script;
+   RecoverableError::runRethrowingAsRecoverable<std::system_error>(
+       [&fileName, &script]() { script = JSBigFileString::fromPath(fileName); });
+-  instance_->loadScript(std::move(script), sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  instance_->loadScript(buffer, sourceURL);
+ }
+ 
+ /**
+diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
+index db92e3e75ca49ecd41467dc7a656dc10ffda5077..96a041eaf8d57658f68944241a0c146e81b62d95 100644
+--- a/ReactCommon/react/runtime/ReactInstance.cpp
++++ b/ReactCommon/react/runtime/ReactInstance.cpp
+@@ -213,17 +213,16 @@ std::string simpleBasename(const std::string& path) {
+  * preferably via the runtimeExecutor_.
+  */
+ void ReactInstance::loadScript(
+-    std::unique_ptr<const JSBigString> script,
++    const std::shared_ptr<const BigStringBuffer>& script,
+     const std::string& sourceURL,
+     std::function<void(jsi::Runtime& runtime)>&& beforeLoad,
+     std::function<void(jsi::Runtime& runtime)>&& afterLoad) {
+-  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
+   std::string scriptName = simpleBasename(sourceURL);
+ 
+   runtimeScheduler_->scheduleWork([this,
+                                    scriptName,
+                                    sourceURL,
+-                                   buffer = std::move(buffer),
++                                   script,
+                                    weakBufferedRuntimeExecuter =
+                                        std::weak_ptr<BufferedRuntimeExecutor>(
+                                            bufferedRuntimeExecutor_),
+@@ -239,7 +238,7 @@ void ReactInstance::loadScript(
+           ReactMarker::RUN_JS_BUNDLE_START, scriptName.c_str());
+     }
+ 
+-    runtime.evaluateJavaScript(buffer, sourceURL);
++    runtime.evaluateJavaScript(script, sourceURL);
+ 
+     /**
+      * TODO(T183610671): We need a safe/reliable way to enable the js
+diff --git a/ReactCommon/react/runtime/ReactInstance.h b/ReactCommon/react/runtime/ReactInstance.h
+index 51709eebcd7ac58584294c1a5125eff5e82587fc..2868f9ef52c311d56360ced214c391040093d903 100644
+--- a/ReactCommon/react/runtime/ReactInstance.h
++++ b/ReactCommon/react/runtime/ReactInstance.h
+@@ -48,7 +48,7 @@ class ReactInstance final : private jsinspector_modern::InstanceTargetDelegate {
+       BindingsInstallFunc bindingsInstallFunc) noexcept;
+ 
+   void loadScript(
+-      std::unique_ptr<const JSBigString> script,
++      const std::shared_ptr<const BigStringBuffer>& script,
+       const std::string& sourceURL,
+       std::function<void(jsi::Runtime& runtime)>&& beforeLoad = nullptr,
+       std::function<void(jsi::Runtime& runtime)>&& afterLoad = nullptr);
+diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+index e76e1d18df99468f3cd2c9f61b20ad829081ceb5..04fc5e1b32668673e98004b373053f3162f9e8a9 100644
+--- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
++++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
+@@ -11,6 +11,7 @@
+ 
+ #import <FBReactNativeSpec/FBReactNativeSpec.h>
+ #import <React/NSDataBigString.h>
++#import <React/NSBigStringBuffer.h>
+ #import <React/RCTAssert.h>
+ #import <React/RCTBridge+Inspector.h>
+ #import <React/RCTBridge+Private.h>
+@@ -19,6 +20,7 @@
+ #import <React/RCTBridgeModuleDecorator.h>
+ #import <React/RCTBridgeProxy+Cxx.h>
+ #import <React/RCTBridgeProxy.h>
++#import <React/RCTBundleConsumer.h>
+ #import <React/RCTComponentViewFactory.h>
+ #import <React/RCTConstants.h>
+ #import <React/RCTCxxUtils.h>
+@@ -548,6 +550,7 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+   }
+ 
+   auto script = std::make_unique<NSDataBigString>(source.data);
++  const auto scriptBuffer = std::make_shared<const BigStringBuffer>(std::move(script));
+   const auto *url = deriveSourceURL(source.url).UTF8String;
+ 
+   auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
+@@ -558,7 +561,12 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+   auto afterLoad = [](jsi::Runtime &_) {
+     [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTInstanceDidLoadBundle" object:nil];
+   };
+-  _reactInstance->loadScript(std::move(script), url, beforeLoad, afterLoad);
++
++  id<RCTBundleConsumer> worklets = (id<RCTBundleConsumer>)[_turboModuleManager moduleForName:"WorkletsModule"];
++  worklets.scriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
++  worklets.sourceURL = @(url);
++
++  _reactInstance->loadScript(scriptBuffer, url, beforeLoad, afterLoad);
+ }
+ 
+ - (void)_handleJSError:(const JsErrorHandler::ProcessedError &)error withRuntime:(jsi::Runtime &)runtime
+diff --git a/scripts/cocoapods/new_architecture.rb b/scripts/cocoapods/new_architecture.rb
+index 02a441467bb..f3ff4b90ed1 100644
+--- a/scripts/cocoapods/new_architecture.rb
++++ b/scripts/cocoapods/new_architecture.rb
+@@ -161,7 +161,7 @@ class NewArchitectureHelper
+             .uniq{ |p| p.path }
+             .map{ |p| p.path }
+ 
+-        excluded_info_plist = ["/Pods", "Tests", "metainternal", ".bundle"]
++        excluded_info_plist = ["/Pods", "Tests", "metainternal", ".bundle", "build/", "DerivedData/"]
+         projectPaths.each do |projectPath|
+             projectFolderPath = File.dirname(projectPath)
+             infoPlistFiles = `find #{projectFolderPath} -name "Info.plist"`
