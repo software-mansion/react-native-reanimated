@@ -652,13 +652,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
           value.map(cloneRecursive)
         ) as FlatShareableRef<T>;
       }
-      if (isWorkletFunction(value)) {
-        return global._makeShareableWorklet(value, true);
-      }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
-      if (isPlainJSObject(value) && value.__init) {
-        return global._makeShareableInitializer(toAdapt);
-      }
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }

@@ -1,0 +1,83 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  background-color: var(--swm-green-light-60);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none !important;
+}
+
+.container:hover .button svg {
+  transform: translate(5px);
+}
+
+.container:hover .button {
+  border: 1px solid var(--swm-green-light-100);
+}
+
+.text {
+  font-size: 15px;
+  color: var(--swm-navy-light-100);
+  font-weight: 500;
+  z-index: 1;
+  position: relative;
+  margin-bottom: 8px;
+  text-wrap: balance;
+  text-align: center;
+}
+
+.button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  color: var(--swm-navy-light-100);
+  background-color: var(--swm-white);
+  transition: border 0.3s;
+  border: 1px solid var(--swm-navy-light-100);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1;
+  gap: 4px;
+}
+
+.button svg {
+  transition: transform 0.3s;
+}
+
+.ellipseLeft {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: -20px;
+  left: -30px;
+  border-radius: 50%;
+  transform: rotate(-30deg);
+  background: linear-gradient(
+    184.24deg,
+    var(--swm-green-light-80) 3.45%,
+    var(--swm-green-light-40) 66.97%,
+    rgba(255, 255, 255, 0) 124.45%
+  );
+}
+
+.ellipseRight {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  bottom: -45px;
+  right: -70px;
+  border-radius: 50%;
+  transform: rotate(-120deg);
+  background: linear-gradient(
+    184.24deg,
+    var(--swm-green-light-80) 3.45%,
+    var(--swm-green-light-40) 66.97%,
+    rgba(255, 255, 255, 0) 124.45%
+  );
+}
