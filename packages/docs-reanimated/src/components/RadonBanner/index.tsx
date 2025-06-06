@@ -1,3 +1,5 @@
+import React, { useRef } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import styles from './styles.module.css';
 
 import ArrowRight from '@site/static/img/arrow-right.svg';
@@ -45,21 +47,33 @@ const items = [
   },
 ];
 
-export default function RadonBanner() {
-  const item = items[Math.floor(Math.random() * items.length)];
+function RadonBannerInner(): JSX.Element {
+  const item = useRef(items[Math.floor(Math.random() * items.length)]);
 
   return (
     <a
       href="https://ide.swmansion.com/?utm_source=reanimated"
       className={styles.container}>
       <div className={styles.content}>
-        <p className={styles.text}>{item.text}</p>
+        <p className={styles.text}>{item.current.text}</p>
         <span className={styles.button}>
-          {item.button} <ArrowRight />
+          {item.current.button} <ArrowRight />
         </span>
       </div>
       <span className={styles.ellipseLeft} />
       <span className={styles.ellipseRight} />
     </a>
+  );
+}
+
+export default function RadonBanner() {
+  return (
+    <BrowserOnly fallback={<div />}>
+      {() => (
+        <>
+          <RadonBannerInner />
+        </>
+      )}
+    </BrowserOnly>
   );
 }
