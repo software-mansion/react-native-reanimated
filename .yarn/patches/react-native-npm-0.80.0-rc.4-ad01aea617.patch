@@ -111,10 +111,10 @@ index 00000000000..a9f4656e0d9
 +}
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/fabric/BigStringBufferWrapper.kt b/ReactAndroid/src/main/java/com/facebook/react/fabric/BigStringBufferWrapper.kt
 new file mode 100644
-index 00000000000..1a029e61dac
+index 00000000000..1d41653271a
 --- /dev/null
 +++ b/ReactAndroid/src/main/java/com/facebook/react/fabric/BigStringBufferWrapper.kt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,36 @@
 +/*
 + * Copyright (c) Meta Platforms, Inc. and affiliates.
 + *
@@ -125,21 +125,34 @@ index 00000000000..1a029e61dac
 +package com.facebook.react.fabric
 +
 +import android.annotation.SuppressLint
++import android.content.res.AssetManager
 +import com.facebook.jni.HybridData
 +import com.facebook.proguard.annotations.DoNotStripAny
-+import com.facebook.soloader.SoLoader
 +
 +/** TODO: Description */
 +@SuppressLint("MissingNativeLoadLibrary")
 +@DoNotStripAny
-+public class BigStringBufferWrapper internal constructor(fileName: String) {
++public class BigStringBufferWrapper {
 +
-+private val mHybridData: HybridData = initHybrid(fileName);
++  private val mHybridData: HybridData
 +
-+  private external fun initHybrid(fileName: String): HybridData;
++  public constructor(fileName: String) {
++    mHybridData = initHybridFromFile(fileName)
++  }
++
++  public constructor(assetManager: AssetManager, assetURL: String) {
++    mHybridData = initHybridFromAssets(assetManager, assetURL)
++  }
++
++  private external fun initHybridFromFile(fileName: String): HybridData
++
++  private external fun initHybridFromAssets(
++          assetManager: AssetManager,
++          assetURL: String
++  ): HybridData
 +}
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
-index cccc6076bd6..7f9096104ec 100644
+index cccc6076bd6..4c7603ab5da 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
 @@ -20,6 +20,7 @@ import com.facebook.react.DebugCorePackage
@@ -158,7 +171,7 @@ index cccc6076bd6..7f9096104ec 100644
  import com.facebook.react.fabric.ComponentFactory
  import com.facebook.react.fabric.FabricUIManager
  import com.facebook.react.fabric.FabricUIManagerBinding
-@@ -297,11 +299,19 @@ internal class ReactInstance(
+@@ -297,11 +299,24 @@ internal class ReactInstance(
                loadSynchronously: Boolean
            ) {
              context.setSourceURL(sourceURL)
@@ -176,11 +189,32 @@ index cccc6076bd6..7f9096104ec 100644
            override fun loadSplitBundleFromFile(fileName: String, sourceURL: String) {
 -            loadJSBundleFromFile(fileName, sourceURL)
 +            val script = BigStringBufferWrapper(fileName)
++
++            val workletsModule = turboModuleManager.getModule("WorkletsModule") as? BundleConsumer
++            workletsModule?.setScriptWrapper(script)
++            workletsModule?.setSourceURL(sourceURL)
++
 +            loadJSBundle(script, sourceURL)
            }
  
            override fun loadScriptFromAssets(
-@@ -422,7 +432,7 @@ internal class ReactInstance(
+@@ -310,7 +325,14 @@ internal class ReactInstance(
+               loadSynchronously: Boolean
+           ) {
+             context.setSourceURL(assetURL)
+-            loadJSBundleFromAssets(assetManager, assetURL)
++
++            val script = BigStringBufferWrapper(assetManager, assetURL)
++
++            val workletsModule = turboModuleManager.getModule("WorkletsModule") as? BundleConsumer
++            workletsModule?.setScriptWrapper(script)
++            workletsModule?.setSourceURL(assetURL.removePrefix("assets://"))
++
++            loadJSBundle(script, assetURL)
+           }
+ 
+           override fun setSourceURLs(deviceURL: String, remoteURL: String) {
+@@ -422,7 +444,7 @@ internal class ReactInstance(
        reactHostInspectorTarget: ReactHostInspectorTarget?
    ): HybridData
  
@@ -191,10 +225,10 @@ index cccc6076bd6..7f9096104ec 100644
  
 diff --git a/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.cpp b/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.cpp
 new file mode 100644
-index 00000000000..0eda975bb17
+index 00000000000..e006e6e64f8
 --- /dev/null
 +++ b/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.cpp
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,57 @@
 +/*
 + * Copyright (c) Meta Platforms, Inc. and affiliates.
 + *
@@ -203,14 +237,14 @@ index 00000000000..0eda975bb17
 + */
 +
 +#include "BigStringBufferWrapper.h"
-+#include <cxxreact/RecoverableError.h>
 +#include <cxxreact/JSBigString.h>
++#include <cxxreact/RecoverableError.h>
 +
 +using namespace facebook::jni;
 +
 +namespace facebook::react {
 +jni::local_ref<BigStringBufferWrapper::jhybriddata>
-+BigStringBufferWrapper::initHybrid(
++BigStringBufferWrapper::initHybridFromFile(
 +    jni::alias_ref<jhybridobject> jThis,
 +    std::string fileName) {
 +  std::unique_ptr<const JSBigFileString> script;
@@ -220,26 +254,44 @@ index 00000000000..0eda975bb17
 +  return makeCxxInstance(buffer);
 +}
 +
++jni::local_ref<BigStringBufferWrapper::jhybriddata>
++BigStringBufferWrapper::initHybridFromAssets(
++    jni::alias_ref<jhybridobject> jThis,
++    jni::alias_ref<JAssetManager::javaobject> assetManager,
++    const std::string& assetURL) {
++  const int kAssetsLength = 9; // strlen("assets://");
++  auto sourceURL = assetURL.substr(kAssetsLength);
++
++  auto manager = extractAssetManager(assetManager);
++  auto script = loadScriptFromAssets(manager, sourceURL);
++  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
++  return makeCxxInstance(buffer);
++}
++
 +BigStringBufferWrapper::BigStringBufferWrapper(
 +    const std::shared_ptr<const BigStringBuffer>& script)
 +    : script_(script) {}
 +
-+const std::shared_ptr<const BigStringBuffer>
-+BigStringBufferWrapper::getScript() const {
++const std::shared_ptr<const BigStringBuffer> BigStringBufferWrapper::getScript()
++    const {
 +  return script_;
 +}
 +
 +void BigStringBufferWrapper::registerNatives() {
 +  registerHybrid(
-+      {makeNativeMethod("initHybrid", BigStringBufferWrapper::initHybrid)});
++      {makeNativeMethod(
++           "initHybridFromFile", BigStringBufferWrapper::initHybridFromFile),
++       makeNativeMethod(
++           "initHybridFromAssets",
++           BigStringBufferWrapper::initHybridFromAssets)});
 +}
 +} // namespace facebook::react
 diff --git a/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.h b/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.h
 new file mode 100644
-index 00000000000..098c0772798
+index 00000000000..248f99faf1e
 --- /dev/null
 +++ b/ReactAndroid/src/main/jni/react/fabric/BigStringBufferWrapper.h
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,47 @@
 +/*
 + * Copyright (c) Meta Platforms, Inc. and affiliates.
 + *
@@ -254,6 +306,7 @@ index 00000000000..098c0772798
 +
 +#include <fbjni/fbjni.h>
 +#include <jsireact/JSIExecutor.h>
++#include <react/jni/JSLoader.h>
 +
 +namespace facebook::react {
 +
@@ -267,9 +320,15 @@ index 00000000000..098c0772798
 +  [[nodiscard]] const std::shared_ptr<const BigStringBuffer> getScript() const;
 +
 + private:
-+  static jni::local_ref<BigStringBufferWrapper::jhybriddata> initHybrid(
++  static jni::local_ref<BigStringBufferWrapper::jhybriddata> initHybridFromFile(
 +      jni::alias_ref<jhybridobject> jThis,
 +      std::string fileName);
++
++  static jni::local_ref<BigStringBufferWrapper::jhybriddata>
++  initHybridFromAssets(
++      jni::alias_ref<jhybridobject> jThis,
++      jni::alias_ref<JAssetManager::javaobject> assetManager,
++      const std::string& assetURL);
 +
 +  friend HybridBase;
 +
@@ -300,18 +359,24 @@ index 064aec9141b..78a7ee32019 100644
    });
  }
 diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
-index 5ffd7492ba8..e46f3e02700 100644
+index 5ffd7492ba8..5414a38d021 100644
 --- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
 +++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
-@@ -140,16 +140,15 @@ void JReactInstance::loadJSBundleFromAssets(
- 
-   auto manager = extractAssetManager(assetManager);
-   auto script = loadScriptFromAssets(manager, sourceURL);
--  instance_->loadScript(std::move(script), sourceURL);
-+  auto buffer = std::make_shared<BigStringBuffer>(std::move(script));
-+  instance_->loadScript(buffer, sourceURL);
+@@ -132,24 +132,11 @@ jni::local_ref<JReactInstance::jhybriddata> JReactInstance::initHybrid(
+       jReactHostInspectorTarget);
  }
  
+-void JReactInstance::loadJSBundleFromAssets(
+-    jni::alias_ref<JAssetManager::javaobject> assetManager,
+-    const std::string& assetURL) {
+-  const int kAssetsLength = 9; // strlen("assets://");
+-  auto sourceURL = assetURL.substr(kAssetsLength);
+-
+-  auto manager = extractAssetManager(assetManager);
+-  auto script = loadScriptFromAssets(manager, sourceURL);
+-  instance_->loadScript(std::move(script), sourceURL);
+-}
+-
 -void JReactInstance::loadJSBundleFromFile(
 -    const std::string& fileName,
 +void JReactInstance::loadJSBundle(
@@ -326,31 +391,38 @@ index 5ffd7492ba8..e46f3e02700 100644
  }
  
  /**
-@@ -222,7 +221,7 @@ void JReactInstance::registerNatives() {
+@@ -219,10 +206,7 @@ void JReactInstance::registerNatives() {
+       makeNativeMethod("initHybrid", JReactInstance::initHybrid),
        makeNativeMethod(
-           "loadJSBundleFromAssets", JReactInstance::loadJSBundleFromAssets),
-       makeNativeMethod(
+           "createJSTimerExecutor", JReactInstance::createJSTimerExecutor),
+-      makeNativeMethod(
+-          "loadJSBundleFromAssets", JReactInstance::loadJSBundleFromAssets),
+-      makeNativeMethod(
 -          "loadJSBundleFromFile", JReactInstance::loadJSBundleFromFile),
-+          "loadJSBundle", JReactInstance::loadJSBundle),
++      makeNativeMethod("loadJSBundle", JReactInstance::loadJSBundle),
        makeNativeMethod(
            "getJSCallInvokerHolder", JReactInstance::getJSCallInvokerHolder),
        makeNativeMethod(
 diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
-index d6552a8a978..009c6357117 100644
+index d6552a8a978..ff9445980f7 100644
 --- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
 +++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
-@@ -21,6 +21,7 @@
- #include <react/runtime/JSRuntimeFactory.h>
- #include <react/runtime/PlatformTimerRegistry.h>
- #include <react/runtime/ReactInstance.h>
+@@ -13,6 +13,7 @@
+ #include <fbjni/fbjni.h>
+ #include <jni.h>
+ #include <jsi/jsi.h>
 +#include <react/fabric/BigStringBufferWrapper.h>
+ #include <react/jni/JMessageQueueThread.h>
+ #include <react/jni/JRuntimeExecutor.h>
+ #include <react/jni/JRuntimeScheduler.h>
+@@ -58,12 +59,8 @@ class JReactInstance : public jni::HybridClass<JReactInstance> {
  
- #include "JBindingsInstaller.h"
- #include "JJSRuntimeFactory.h"
-@@ -62,8 +63,8 @@ class JReactInstance : public jni::HybridClass<JReactInstance> {
-       jni::alias_ref<JAssetManager::javaobject> assetManager,
-       const std::string& assetURL);
+   static void registerNatives();
  
+-  void loadJSBundleFromAssets(
+-      jni::alias_ref<JAssetManager::javaobject> assetManager,
+-      const std::string& assetURL);
+-
 -  void loadJSBundleFromFile(
 -      const std::string& fileName,
 +  void loadJSBundle(
