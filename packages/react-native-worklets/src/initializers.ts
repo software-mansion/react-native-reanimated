@@ -19,7 +19,7 @@ import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
 
-if (!globalThis._WORKLET) {
+if (!globalThis._WORKLET && globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
   globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
 }
 
