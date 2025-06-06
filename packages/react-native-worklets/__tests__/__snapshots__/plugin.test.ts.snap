@@ -664,6 +664,38 @@ var Foo = function () {
 }();"
 `;
 
+exports[`babel plugin for closure capturing captures locally bound variables named like globals 1`] = `
+"var console = {
+  log: function log() {
+    return 42;
+  }
+};
+var _worklet_1380037982666_init_data = {
+  code: "function f_null1(){const{console}=this.__closure;console.log(console);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function f_null1Factory(_ref) {
+  var _worklet_1380037982666_init_data = _ref._worklet_1380037982666_init_data,
+    console = _ref.console;
+  var _e = [new global.Error(), -2, -27];
+  var f = function f() {
+    console.log(console);
+  };
+  f.__closure = {
+    console: console
+  };
+  f.__workletHash = 1380037982666;
+  f.__initData = _worklet_1380037982666_init_data;
+  f.__stackDetails = _e;
+  return f;
+}({
+  _worklet_1380037982666_init_data: _worklet_1380037982666_init_data,
+  console: console
+});"
+`;
+
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "var x = 5;
 var objX = {
@@ -724,8 +756,7 @@ var f = function f_null1Factory(_ref) {
 `;
 
 exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `
-"var foo = 42;
-var _worklet_11658370598384_init_data = {
+"var _worklet_11658370598384_init_data = {
   code: "function f_null1(){console.log(foo);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
@@ -767,6 +798,34 @@ var f = function f_null1Factory(_ref) {
   return f;
 }({
   _worklet_9451494835104_init_data: _worklet_9451494835104_init_data
+});"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture locally bound variables named like custom globals 1`] = `
+"var foo = 42;
+var _worklet_6398258314122_init_data = {
+  code: "function f_null1(){const{foo}=this.__closure;console.log(foo);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var f = function f_null1Factory(_ref) {
+  var _worklet_6398258314122_init_data = _ref._worklet_6398258314122_init_data,
+    foo = _ref.foo;
+  var _e = [new global.Error(), -2, -27];
+  var f = function f() {
+    console.log(foo);
+  };
+  f.__closure = {
+    foo: foo
+  };
+  f.__workletHash = 6398258314122;
+  f.__initData = _worklet_6398258314122_init_data;
+  f.__stackDetails = _e;
+  return f;
+}({
+  _worklet_6398258314122_init_data: _worklet_6398258314122_init_data,
+  foo: foo
 });"
 `;
 

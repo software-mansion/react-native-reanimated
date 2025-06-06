@@ -3,9 +3,12 @@ import type { Binding } from '@babel/traverse';
 import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
-import { globals } from './globals';
+import {
+  globals,
+  internalBindingsToCaptureFromGlobalScope,
+  outsideBindingsToCaptureFromGlobalScope,
+} from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
-import { generatedWorkletsDir } from './types';
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
@@ -36,15 +39,31 @@ export function getClosure(
           return;
         }
 
-        if (globals.has(name)) {
+        const binding = idPath.scope.getBinding(name);
+        if (!binding) {
+          /**
+           * The variable is unbound - it's either a mistake or implicit capture
+           * from the global scope. In this case we have to avoid capturing
+           * certain identifiers.
+           */
+          if (globals.has(name)) {
+            return;
+          }
+          capturedNames.add(name);
+          closureVariables.push(cloneNode(idPath.node as Identifier, true));
           return;
         }
 
-        const binding = idPath.scope.getBinding(name);
-        if (!binding) {
-          // Implicitly bound variable from the global scope.
-          capturedNames.add(name);
-          closureVariables.push(cloneNode(idPath.node as Identifier, true));
+        if (
+          outsideBindingsToCaptureFromGlobalScope.has(name) ||
+          (!state.opts.experimentalBundling &&
+            internalBindingsToCaptureFromGlobalScope.has(name))
+        ) {
+          /**
+           * In legacy bundling we have to purposefully ignore some bound
+           * identifiers since they are supposed to be captured from the global
+           * scope.
+           */
           return;
         }
 
@@ -65,19 +84,26 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (
-          state.opts.experimentalBundling &&
-          isImport(binding) &&
-          isAllowedToImport(state.filename)
-        ) {
-          if (isImportRelative(binding)) {
+        if (state.opts.experimentalBundling && isImport(binding)) {
+          if (
+            isImportRelative(binding) &&
+            isAllowedForRelativeImports(
+              state.filename,
+              state.opts.workletizableModules
+            )
+          ) {
             capturedNames.add(name);
             relativeBindingsToImport.add(binding);
             return;
-          } else {
-            // Disallow imports from 3rd party libraries for now.
-            // libraryBindingsToImport.add(binding);
-            // return;
+          }
+          const source = (
+            binding.path.parentPath as NodePath<ImportDeclaration>
+          ).node.source.value;
+
+          if (isWorkletizableModule(source, state.opts.workletizableModules)) {
+            capturedNames.add(name);
+            libraryBindingsToImport.add(binding);
+            return;
           }
         }
 
@@ -110,12 +136,23 @@ function isImportRelative(imported: Binding): boolean {
   ).node.source.value.startsWith('.');
 }
 
-function isAllowedToImport(filename: string | undefined): boolean {
-  // Right now we only allow imports in worklets within
-  // `react-native-worklets` package.
+function isAllowedForRelativeImports(
+  filename: string | undefined,
+  workletizableModules?: string[]
+): boolean {
   return (
     !!filename &&
-    filename.includes('react-native-worklets') &&
-    !filename.includes(generatedWorkletsDir)
+    (filename.includes('react-native-worklets') ||
+      !!workletizableModules?.some((module) => filename.includes(module)))
+  );
+}
+
+function isWorkletizableModule(
+  source: string,
+  workletizableModules?: string[]
+): boolean {
+  return (
+    source.startsWith('react-native-worklets') ||
+    !!workletizableModules?.some((module) => source.startsWith(module))
   );
 }

@@ -69,7 +69,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return fun;
   } else {
     throw new Error(
-      `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+      `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
         objectToUnpack
       )}".`
     );

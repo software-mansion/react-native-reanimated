@@ -81,7 +81,7 @@ export class NativeEventsManager implements INativeEventsManager {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
     const componentAnimatedRef = this.#managedComponent
       ._componentRef as AnimatedComponentRef & { __nativeTag?: number };
-    if (componentAnimatedRef.getScrollableNode) {
+    if (componentAnimatedRef?.getScrollableNode) {
       /*
         In most cases, getScrollableNode() returns a view tag, and findNodeHandle is not required. 
         However, to cover more exotic list cases, we will continue to use findNodeHandle 
