@@ -468,6 +468,91 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
+  test('makeShareableRemoteFunction', async () => {
+    // Arrange
+    const remoteFunction = () => {
+      return 1;
+    };
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [
+            typeof remoteFunction === 'function',
+            __DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction),
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await wait(100);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+  });
+
+  test('makeShareableHostFunction', async () => {
+    // Arrange
+    // @ts-expect-error It's ok
+    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          // make shareable boolean returns a ShareableRef<boolean> which is a host object
+          const shareableBoolean = hostFunction(true);
+          const checks = [typeof hostFunction === 'function', 'magicKey' in shareableBoolean];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await wait(100);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
+  test('makeShareableTurboModuleLike', async () => {
+    // Arrange
+    // @ts-expect-error This global host object isn't exposed in the types.
+    const proto = globalThis.__reanimatedModuleProxy;
+    const reanimatedModuleKeys = Object.keys(proto);
+    const obj = {
+      a: 1,
+      b: 'test',
+    };
+    Object.setPrototypeOf(obj, proto);
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [
+            obj.a === 1,
+            obj.b === 'test',
+            reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj)),
+            'magicKey' in Object.getPrototypeOf(obj) === true,
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await wait(100);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
   test('makeShareableArrayBuffer', async () => {
     // Arrange
     const arrayBuffer = new ArrayBuffer(3);
