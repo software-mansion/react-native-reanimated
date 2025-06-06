@@ -55,10 +55,10 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-  auto sourceURL_ = std::string{};
 #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
   script = scriptWrapper->cthis()->getScript();
-  sourceURL_ = sourceURL;
+#else
+  const auto sourceURL = std::string{};
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
 
   return makeCxxInstance(
@@ -68,7 +68,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       jsCallInvoker,
       uiScheduler,
       script,
-      sourceURL_);
+      sourceURL);
 }
 
 std::function<void(std::function<void(const double)>)>

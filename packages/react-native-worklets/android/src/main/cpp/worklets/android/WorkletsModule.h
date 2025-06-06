@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ReactCommon/CallInvokerHolder.h>
-#include <fbjni/detail/CoreClasses.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
