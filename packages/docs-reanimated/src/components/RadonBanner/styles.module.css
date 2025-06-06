@@ -11,7 +11,7 @@
   opacity: 0;
   animation-name: slideUpAndFade;
   animation-fill-mode: forwards;
-  animation-duration: 300ms;
+  animation-duration: 500ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
 }
@@ -19,7 +19,7 @@
 @keyframes slideUpAndFade {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
