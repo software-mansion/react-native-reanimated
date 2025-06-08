@@ -1,103 +1,93 @@
 import { executeOnUIRuntimeSync } from 'react-native-reanimated';
 
-import { describe, expect, test, wait } from '../../ReJest/RuntimeTestsApi';
+import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test makeShareableCloneOnUI', () => {
-  test('makeShareableCloneOnUIString', async () => {
+  test('makeShareableCloneOnUIString', () => {
     // Arrange & Act
     const stringValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return 'test';
     })();
-    await wait(100);
 
     // Assert
     expect(typeof stringValue).toBe('string');
     expect(stringValue).toBe('test');
   });
 
-  test('makeShareableCloneOnUINumber', async () => {
+  test('makeShareableCloneOnUINumber', () => {
     // Arrange & Act
     const numberValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return 123;
     })();
-    await wait(100);
+
     // Assert
     expect(typeof numberValue).toBe('number');
     expect(numberValue).toBe(123);
   });
 
-  test('makeShareableCloneOnUITrue', async () => {
+  test('makeShareableCloneOnUITrue', () => {
     // Arrange & Act
     const trueValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return true;
     })();
-    await wait(100);
 
     // Assert
     expect(typeof trueValue).toBe('boolean');
     expect(trueValue).toBe(true);
   });
 
-  test('makeShareableCloneOnUIFalse', async () => {
+  test('makeShareableCloneOnUIFalse', () => {
     // Arrange & Act
     const falseValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return false;
     })();
-    await wait(100);
 
     // Assert
     expect(typeof falseValue).toBe('boolean');
     expect(falseValue).toBe(false);
   });
 
-  test('makeShareableCloneOnUIUndefined', async () => {
+  test('makeShareableCloneOnUIUndefined', () => {
     // Arrange & Act
     const undefinedValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return undefined;
     })();
 
-    // Act
-    await wait(100);
-
     // Assert
     expect(typeof undefinedValue).toBe('undefined');
     expect(undefinedValue).toBe(undefined);
   });
 
-  test('makeShareableCloneOnUINull', async () => {
+  test('makeShareableCloneOnUINull', () => {
     // Arrange & Act
     const nullValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return null;
     })();
-    await wait(100);
 
     // Assert
     expect(typeof nullValue).toBe('object');
     expect(nullValue).toBe(null);
   });
 
-  test('makeShareableCloneOnUIBigInt', async () => {
+  test('makeShareableCloneOnUIBigInt', () => {
     // Arrange & Act
     const bigIntValue = executeOnUIRuntimeSync(() => {
       'worklet';
       return BigInt(123);
     })();
 
-    // Act
-    await wait(100);
-
     // Assert
     expect(typeof bigIntValue).toBe('bigint');
     expect(bigIntValue).toBe(BigInt(123));
   });
 
-  test('makeShareableCloneOnUIHostObject', async () => {
+  test('makeShareableCloneOnUIHostObject', () => {
     // Arrange & Act
     // @ts-expect-error It's ok
     const hostObjectKeys = Object.keys(globalThis.__workletsModuleProxy);
@@ -106,7 +96,6 @@ describe('Test makeShareableCloneOnUI', () => {
       // @ts-expect-error It's ok
       return globalThis.__workletsModuleProxy;
     })();
-    await wait(100);
 
     // Assert
     expect(typeof hostObjectValue).toBe('object');
@@ -114,7 +103,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(hostObjectKeys.every(key => hostObjectValue[key] !== undefined)).toBe(true);
   });
 
-  test('makeShareableCloneOnUIArray', async () => {
+  test('makeShareableCloneOnUIArray', () => {
     // Arrange
     enum index {
       number = 0,
@@ -167,7 +156,6 @@ describe('Test makeShareableCloneOnUI', () => {
         arrayBuffer,
       ];
     })();
-    await wait(100);
 
     // Assert
     // number
@@ -198,6 +186,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(typeof arrayValue[index.arrayBuffer]).toBe('object');
   });
 
+  // These types are not supported yet
   // test('makeShareableCloneOnUIError', async () => {
   //   // Arrange
   //   const errorValue = executeOnUIRuntimeSync(() => {
@@ -248,8 +237,8 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
-  test('makeShareableCloneOnUIPlainObject', async () => {
-    // Arrange
+  test('makeShareableCloneOnUIPlainObject', () => {
+    // Arrange & Act
     enum key {
       number = 0,
       true = 1,
@@ -284,9 +273,6 @@ describe('Test makeShareableCloneOnUI', () => {
       };
     })();
 
-    // Act
-    await wait(100);
-
     // Assert
     expect(typeof obj[key.number]).toBe('number');
     expect(obj[key.number]).toBe(1);
@@ -311,6 +297,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(typeof obj[key.initializer]).toBe('object');
   });
 
+  // These types are not supported yet
   // test('makeShareableCloneOnUIWorklet', async () => {
   //   // Arrange
   //   const workletFunction = executeOnUIRuntimeSync(() => {
@@ -368,6 +355,56 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
+  // test('makeShareableRemoteFunction', async () => {
+  //   // Arrange & Act
+  //   const remoteFunction = executeOnUIRuntimeSync(() => {
+  //     'worklet';
+  //     const remoteFunction = () => {
+  //       return 1;
+  //     };
+  //     return remoteFunction;
+  //   })();
+
+  //   // Assert
+  //   expect(typeof remoteFunction).toBe('function');
+  //   expect(__DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction)).toBe(true);
+  // });
+
+  // test('makeShareableHostFunction', async () => {
+  //   // Arrange & Act
+  //   const hostFunction = executeOnUIRuntimeSync(() => {
+  //     'worklet';
+  //     // @ts-expect-error It's ok
+  //     return globalThis.__workletsModuleProxy.makeShareableBoolean;
+  //   })();
+
+  //   // Assert
+  //   const shareableBoolean = hostFunction(true);
+  //   expect(typeof shareableBoolean).toBe('function');
+  //   expect('magicKey' in shareableBoolean).toBe(true);
+  // });
+
+  // test('makeShareableTurboModuleLike', async () => {
+  //   // Arrange & Act
+  //   const { obj, reanimatedModuleKeys } = executeOnUIRuntimeSync(() => {
+  //     // @ts-expect-error This global host object isn't exposed in the types.
+  //     const proto = globalThis.__reanimatedModuleProxy;
+  //     const _reanimatedModuleKeys = Object.keys(proto);
+  //     const _obj = {
+  //       a: 1,
+  //       b: 'test',
+  //     };
+  //     Object.setPrototypeOf(_obj, proto);
+  //     return { obj: _obj, reanimatedModuleKeys: _reanimatedModuleKeys };
+  //   })();
+
+  //   // Assert
+  //   expect(obj.a).toBe(1);
+  //   expect(obj.b).toBe('test');
+  //   expect(reanimatedModuleKeys.every(key => key in Object.getPrototypeOf(obj))).toBe(true);
+  //   expect('magicKey' in Object.getPrototypeOf(obj)).toBe(true);
+  // });
+
   test('makeShareableCloneOnUIInaccessibleObject', async () => {
     // Arrange
     const set = executeOnUIRuntimeSync(() => {
@@ -376,7 +413,6 @@ describe('Test makeShareableCloneOnUI', () => {
     })();
 
     // Act & Assert
-    await wait(100);
     await expect(() => {
       set.has(42);
     }).toThrow();
@@ -390,7 +426,6 @@ describe('Test makeShareableCloneOnUI', () => {
     })();
 
     // Act & Assert
-    await wait(100);
     await expect(() => {
       foo();
     }).toThrow();
@@ -404,7 +439,6 @@ describe('Test makeShareableCloneOnUI', () => {
     })();
 
     // Act & Assert
-    await wait(100);
     await expect(() => {
       foo();
     }).toThrow();
