@@ -385,7 +385,52 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('captures locally bound variables named like globals', () => {
+      const input = html`<script>
+        const console = {
+          log: () => 42,
+        };
+
+        function f() {
+          'worklet';
+          console.log(console);
+        }
+      </script>`;
+
+      const { code, ast } = runPlugin(input, { ast: true });
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toContain('console: console');
+      expect(code).toMatchSnapshot();
+    });
+
     it("doesn't capture custom globals", () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          console.log(foo);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, { globals: ['foo'] });
+      expect(code).toContain('f.__closure = {}');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture locally bound variables named like custom globals", () => {
       const input = html`<script>
         const foo = 42;
 
@@ -396,7 +441,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toContain('f.__closure = {}');
+      expect(code).toContain('foo: foo');
       expect(code).toMatchSnapshot();
     });
 

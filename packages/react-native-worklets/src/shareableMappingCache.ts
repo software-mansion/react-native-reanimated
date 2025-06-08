@@ -1,8 +1,6 @@
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import type { ShareableRef } from './workletTypes';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * This symbol is used to represent a mapping from the value to itself.

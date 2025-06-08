@@ -2,7 +2,7 @@
 'use strict';
 
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
-import { isJest } from '../PlatformChecker';
+import { IS_JEST } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -15,7 +15,7 @@ export function createJSWorkletsModule(): IWorkletsModule {
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
 const requestAnimationFrameImpl =
-  isJest() || !globalThis.requestAnimationFrame
+  IS_JEST || !globalThis.requestAnimationFrame
     ? mockedRequestAnimationFrame
     : globalThis.requestAnimationFrame;
 
@@ -62,6 +62,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableTurboModuleLike<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableTurboModuleLike should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableObject<T extends object>(): ShareableRef<T> {
     throw new WorkletsError(
       'makeShareableObject should never be called in JSWorklets.'
@@ -89,6 +95,14 @@ class JSWorklets implements IWorkletsModule {
   makeShareableInitializer(): ShareableRef<object> {
     throw new WorkletsError(
       'makeShareableInitializer should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    _func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn> {
+    throw new WorkletsError(
+      'makeShareableRemoteFunction should never be called in JSWorklets.'
     );
   }
 
