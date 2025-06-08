@@ -27,7 +27,7 @@ export function useSharedValue<Value>(initialValue: Value): SharedValue<Value> {
   return mutable;
 }
 
-export const useSharedValueArray = (
+export const useSharedArray = (
   initialValue: number[]
 ): SharedValue<number[]> => {
   const [mutable] = useState(() => makeMutableArray(initialValue));

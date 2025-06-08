@@ -97,7 +97,7 @@ function hideInternalValueProp<Value>(mutable: ArrayMutable<Value>) {
 
 type SupportedArrayType = number;
 
-export function makeMutableUI(
+export function makeMutableArrayUI(
   initial: Array<SupportedArrayType>
 ): Mutable<Array<SupportedArrayType>> {
   'worklet';
@@ -141,13 +141,13 @@ export function makeMutableUI(
   return mutable as Mutable<Array<SupportedArrayType>>;
 }
 
-function makeMutableNative<Value extends number[]>(
+function makeMutableArrayNative<Value extends number[]>(
   initial: Value
 ): Mutable<Value> {
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial);
+      return makeMutableArrayUI(initial);
     },
   });
 
@@ -165,7 +165,7 @@ function makeMutableNative<Value extends number[]>(
           property: string | symbol,
           newValue: SupportedArrayType
         ) {
-          runOnUI(() => {
+          executeOnUIRuntimeSync(() => {
             mutable.value[Number(property)] = newValue;
           })();
           return true;
@@ -173,7 +173,6 @@ function makeMutableNative<Value extends number[]>(
       });
     },
     set value(newValue) {
-      console.log('set value', newValue);
       checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
@@ -209,7 +208,7 @@ interface JestMutable<TValue> extends Mutable<TValue> {
   toJSON: () => string;
 }
 
-function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
+function makeMutableArrayWeb<Value>(initial: Value): Mutable<Value> {
   const value: Value = initial;
   const listeners = new Map<number, Listener<Value>>();
 
@@ -250,8 +249,8 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 }
 
 export const makeMutableArray = SHOULD_BE_USE_WEB
-  ? makeMutableWeb
-  : makeMutableNative;
+  ? makeMutableArrayWeb
+  : makeMutableArrayNative;
 
 interface JestMutable<TValue> extends Mutable<TValue> {
   toJSON: () => string;

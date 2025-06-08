@@ -6,6 +6,7 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+// Animation types and functions
 export type {
   DecayAnimation,
   DelayAnimation,
@@ -29,9 +30,13 @@ export {
   withSpring,
   withTiming,
 } from './animation';
+
+// Color related exports
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
 export { processColor } from './common';
+
+// Common types
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -73,12 +78,16 @@ export {
   ReduceMotion,
   SensorType,
 } from './commonTypes';
+
+// Component related exports
 export type { FlatListPropsWithLayout } from './component/FlatList';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
 export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
+
+// Core functionality
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
   createWorkletRuntime,
@@ -93,6 +102,8 @@ export {
   runOnRuntime,
   runOnUI,
 } from './core';
+
+// CSS and Easing
 export * from './css';
 export type {
   EasingFactoryFn,
@@ -100,6 +111,8 @@ export type {
   EasingFunctionFactory,
 } from './Easing';
 export { Easing } from './Easing';
+
+// Frame and helper types
 export type { FrameInfo } from './frameCallback';
 export type {
   Adaptable,
@@ -110,6 +123,8 @@ export type {
   EntryOrExitLayoutType,
   TransformStyleTypes,
 } from './helperTypes';
+
+// Hook related exports
 export type {
   AnimatedRef,
   DerivedValue,
@@ -143,8 +158,11 @@ export {
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
+  useSharedArray,
   useWorkletCallback,
 } from './hook';
+
+// Interpolation related exports
 export type {
   InterpolateConfig,
   InterpolateHSV,
@@ -160,6 +178,8 @@ export {
 } from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';
+
+// Utility functions
 export { isSharedValue } from './isSharedValue';
 export {
   advanceAnimationByFrame,
@@ -168,6 +188,8 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
+
+// Layout reanimation exports
 export type { ReanimatedKeyframe } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
@@ -271,6 +293,8 @@ export {
   ZoomOutRotate,
   ZoomOutUp,
 } from './layoutReanimation';
+
+// Mapper and platform functions
 export { startMapper, stopMapper } from './mappers';
 export type { ComponentCoords } from './platformFunctions';
 export {
@@ -281,8 +305,12 @@ export {
   setGestureState,
   setNativeProps,
 } from './platformFunctions';
+
+// Plugin and prop adapters
 export { getUseOfValueInStyleWarning } from './pluginUtils';
 export { createAnimatedPropAdapter } from './PropAdapters';
+
+// Screen transition
 export type {
   AnimatedScreenTransition,
   GoBackGesture,
@@ -293,6 +321,8 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
+
+// Worklet related exports
 export type { WorkletRuntime } from 'react-native-worklets';
 export {
   isWorkletFunction,
