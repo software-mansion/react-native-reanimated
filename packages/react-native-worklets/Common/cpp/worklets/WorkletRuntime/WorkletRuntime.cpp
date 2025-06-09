@@ -124,7 +124,12 @@ WorkletRuntime::WorkletRuntime(
   try {
     rt.evaluateJavaScript(script, sourceUrl);
   } catch (facebook::jsi::JSIException ex) {
-    // Nothing
+    const auto exStr = std::string{ex.what()};
+    if (!exStr.starts_with("Worklets initialized successfully")) {
+      throw std::runtime_error(
+          std::string{"[Worklets] Failed to initialize runtime. Reason: "} +
+          ex.what());
+    }
   }
 #else
   // Legacy behavior
