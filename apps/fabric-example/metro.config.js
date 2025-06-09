@@ -33,7 +33,7 @@ const config = {
   //   createModuleIdFactory() {
   //     let nextId = 0;
   //     const idFileMap = new Map();
-  //     return (moduleName) => {
+  //     return (/** @type {string} */ moduleName) => {
   //       if (idFileMap.has(moduleName)) {
   //         return idFileMap.get(moduleName);
   //       }

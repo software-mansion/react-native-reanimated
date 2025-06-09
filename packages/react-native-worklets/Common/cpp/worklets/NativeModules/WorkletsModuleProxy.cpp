@@ -32,7 +32,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
-      uiScheduler_(uiScheduler) {
+      uiScheduler_(uiScheduler),
+      script_(script),
+      sourceUrl_(sourceUrl) {
   uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
       rnRuntime,
       createJSIWorkletsModuleProxy(),

@@ -18,7 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec
+    implements LifecycleEventListener, WorkletsBundleConsumer {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -64,7 +65,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
-    reactContext.assertOnJSQueueThread();
+
+    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+      reactContext.assertOnJSQueueThread();
+    }
+
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
@@ -73,7 +78,10 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     var context = getReactApplicationContext();
-    context.assertOnJSQueueThread();
+
+    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+      context.assertOnNativeModulesQueueThread();
+    }
 
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
