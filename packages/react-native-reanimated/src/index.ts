@@ -1,7 +1,5 @@
 'use strict';
 
-import './publicGlobals';
-
 import * as Animated from './Animated';
 
 export default Animated;

@@ -1,6 +1,10 @@
 'use strict';
 /* eslint-disable no-var */
 /* eslint-disable reanimated/use-global-this */
+import type { RuntimeKind } from './runtimeKind';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { getRuntimeKind } from './runtimeKind';
+
 export {};
 
 declare global {
@@ -24,4 +28,11 @@ declare global {
 
   /** @deprecated Don't use. */
   var _IS_FABRIC: boolean | undefined;
+
+  /**
+   * This global variable is used to determine the kind of the current runtime.
+   * You can use it to differentiate between runtimes, but the recommended way
+   * is to use the {@link getRuntimeKind} function.
+   */
+  var _RUNTIME_KIND: RuntimeKind | undefined;
 }
