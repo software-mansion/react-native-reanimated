@@ -282,7 +282,6 @@ export {
   setNativeProps,
 } from './platformFunctions';
 export { getUseOfValueInStyleWarning } from './pluginUtils';
-export { createAnimatedPropAdapter } from './PropAdapters';
 export type {
   AnimatedScreenTransition,
   GoBackGesture,

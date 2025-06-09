@@ -329,23 +329,6 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::configureProps(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
-  auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
-    auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    animatablePropNames_.insert(name);
-  }
-  auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
-    auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    animatablePropNames_.insert(name);
-  }
-  return jsi::Value::undefined();
-}
-
 jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
@@ -559,29 +542,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
-    jsi::Runtime &rt,
-    const jsi::Value &props) {
-  jsi::Object nonAnimatableProps(rt);
-  bool hasAnyNonAnimatableProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(animatablePropNames_, propName)) {
-      hasAnyNonAnimatableProp = true;
-      const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
-      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
-    }
-  }
-  if (!hasAnyNonAnimatableProp) {
-    return jsi::Value::undefined();
-  }
-  return nonAnimatableProps;
-}
-
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -729,10 +689,7 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
-    if (nonAnimatableProps.isUndefined()) {
-      continue;
-    }
+    // TODO: filter only non-native props (most likely using view configs on the JS side)
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
     assert(
@@ -740,7 +697,7 @@ void ReanimatedModuleProxy::performOperations() {
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-    jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
+    jsPropsUpdater.call(rt, viewTag, *props);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {

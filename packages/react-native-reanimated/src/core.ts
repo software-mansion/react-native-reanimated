@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -214,13 +214,4 @@ export function setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
-}
-
-export function jsiConfigureProps(
-  uiProps: string[],
-  nativeProps: string[]
-): void {
-  if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.configureProps(uiProps, nativeProps);
-  }
 }

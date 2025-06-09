@@ -260,12 +260,6 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  configureProps() {
-    throw new ReanimatedError(
-      'configureProps is not available in JSReanimated.'
-    );
-  }
-
   setViewStyle(_viewTag: number, _style: StyleProps): void {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }

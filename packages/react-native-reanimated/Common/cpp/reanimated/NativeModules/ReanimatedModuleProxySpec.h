@@ -60,10 +60,6 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual jsi::Value enableLayoutAnimations(
       jsi::Runtime &rt,
       const jsi::Value &config) = 0;
-  virtual jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) = 0;
 
   // layout animations
   virtual jsi::Value configureLayoutAnimationBatch(

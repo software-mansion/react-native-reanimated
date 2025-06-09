@@ -166,10 +166,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.enableLayoutAnimations(flag);
   }
 
-  configureProps(uiProps: string[], nativeProps: string[]) {
-    this.#reanimatedModuleProxy.configureProps(uiProps, nativeProps);
-  }
-
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
@@ -252,7 +248,6 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
   enableLayoutAnimations(): void {}
-  configureProps(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;
   }
