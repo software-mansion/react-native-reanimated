@@ -1,6 +1,7 @@
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -82,11 +83,14 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     jsi::Runtime &rnRuntime,
+    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const bool isDevBundle)
+    const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(
           rnRuntime,
@@ -100,11 +104,34 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  WorkletRuntimeDecorator::decorate(rt, name, jsScheduler, isDevBundle);
 
+  auto optimizedJsiWorkletsModuleProxy =
+      jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
+
+  WorkletRuntimeDecorator::decorate(
+      rt,
+      name,
+      jsScheduler,
+      isDevBundle,
+      std::move(optimizedJsiWorkletsModuleProxy));
+
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  if (!script) {
+    throw std::runtime_error(
+        "[Worklets] Expected to receive the bundle, but got nullptr instead.");
+  }
+
+  try {
+    rt.evaluateJavaScript(script, sourceUrl);
+  } catch (facebook::jsi::JSIException ex) {
+    // Nothing
+  }
+#else
+  // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
 }
 
 jsi::Value WorkletRuntime::executeSync(

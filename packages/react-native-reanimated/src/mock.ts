@@ -119,6 +119,7 @@ const hook = {
   // useFrameCallback: ADD ME IF NEEDED
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
   useScrollViewOffset: () => ({ value: 0 }),
+  useScrollOffset: () => ({ value: 0 }),
 };
 
 const animation = {

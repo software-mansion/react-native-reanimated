@@ -5,13 +5,13 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
+import type { IReanimatedErrorConstructor } from './common';
 import type {
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
   StyleProps,
 } from './commonTypes';
-import type { IReanimatedErrorConstructor } from './errors';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';

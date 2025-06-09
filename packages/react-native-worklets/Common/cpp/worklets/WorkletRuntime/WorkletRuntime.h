@@ -2,6 +2,7 @@
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
@@ -22,11 +23,14 @@ class WorkletRuntime : public jsi::HostObject,
  public:
   explicit WorkletRuntime(
       jsi::Runtime &rnRuntime,
+      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const bool supportsLocking,
-      const bool isDevBundle);
+      const bool isDevBundle,
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceUrl);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;

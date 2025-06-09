@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../../errors';
+import { ReanimatedError } from '../../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../../types';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 

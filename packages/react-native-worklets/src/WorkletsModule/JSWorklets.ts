@@ -2,7 +2,7 @@
 'use strict';
 
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
-import { isJest } from '../PlatformChecker';
+import { IS_JEST } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -15,7 +15,7 @@ export function createJSWorkletsModule(): IWorkletsModule {
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
 const requestAnimationFrameImpl =
-  isJest() || !globalThis.requestAnimationFrame
+  IS_JEST || !globalThis.requestAnimationFrame
     ? mockedRequestAnimationFrame
     : globalThis.requestAnimationFrame;
 
@@ -59,6 +59,56 @@ class JSWorklets implements IWorkletsModule {
   makeShareableNull(): ShareableRef<null> {
     throw new WorkletsError(
       'makeShareableNull should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableTurboModuleLike<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableTurboModuleLike should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableObject<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableObject should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableImport(): never {
+    throw new WorkletsError(
+      'makeShareableImport should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableHostObject<T extends object>(): ShareableRef<T> {
+    throw new WorkletsError(
+      'makeShareableHostObject should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableArray(): ShareableRef<unknown[]> {
+    throw new WorkletsError(
+      'makeShareableArray should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableInitializer(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableInitializer should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    _func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn> {
+    throw new WorkletsError(
+      'makeShareableRemoteFunction should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableWorklet(): ShareableRef<object> {
+    throw new WorkletsError(
+      'makeShareableWorklet should never be called in JSWorklets.'
     );
   }
 

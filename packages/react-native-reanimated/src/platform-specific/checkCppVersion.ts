@@ -2,7 +2,7 @@
 
 import { logger } from 'react-native-worklets';
 
-import { ReanimatedError } from '../errors';
+import { ReanimatedError } from '../common';
 import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {

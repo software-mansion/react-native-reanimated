@@ -10,6 +10,11 @@ export interface WorkletsModuleProxy {
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 
+  makeShareableImport<TValue>(
+    source: string,
+    imported: string
+  ): ShareableRef<TValue>;
+
   makeShareableString(str: string): ShareableRef<string>;
 
   makeShareableNumber(num: number): ShareableRef<number>;
@@ -21,6 +26,35 @@ export interface WorkletsModuleProxy {
   makeShareableUndefined(): ShareableRef<undefined>;
 
   makeShareableNull(): ShareableRef<null>;
+
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps>;
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
+
+  makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
+
+  makeShareableArray(
+    array: unknown[],
+    shouldRetainRemote: boolean
+  ): ShareableRef<unknown[]>;
+
+  makeShareableInitializer(obj: object): ShareableRef<object>;
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn>;
+
+  makeShareableWorklet(
+    worklet: object,
+    shouldPersistRemote: boolean
+  ): ShareableRef<object>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 

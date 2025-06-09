@@ -20,7 +20,7 @@ class NativeWorklets {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined) {
+    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -29,21 +29,7 @@ class NativeWorklets {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    this.#workletsModuleProxy = {
-      scheduleOnUI: global.__workletsModuleProxy.scheduleOnUI,
-      scheduleOnRuntime: global.__workletsModuleProxy.scheduleOnRuntime,
-      executeOnUIRuntimeSync:
-        global.__workletsModuleProxy.executeOnUIRuntimeSync,
-      createWorkletRuntime: global.__workletsModuleProxy.createWorkletRuntime,
-      makeShareableClone: global.__workletsModuleProxy.makeShareableClone,
-      makeShareableString: global.__workletsModuleProxy.makeShareableString,
-      makeShareableNumber: global.__workletsModuleProxy.makeShareableNumber,
-      makeShareableBoolean: global.__workletsModuleProxy.makeShareableBoolean,
-      makeShareableBigInt: global.__workletsModuleProxy.makeShareableBigInt,
-      makeShareableUndefined:
-        global.__workletsModuleProxy.makeShareableUndefined,
-      makeShareableNull: global.__workletsModuleProxy.makeShareableNull,
-    };
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
       this.#workletsModuleProxy.makeShareableUndefined();
@@ -62,6 +48,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shouldPersistRemote,
       nativeStateSource
     );
+  }
+
+  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
+    return this.#workletsModuleProxy.makeShareableImport(from, to);
   }
 
   makeShareableString(str: string) {
@@ -86,6 +76,53 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   makeShareableNull() {
     return this.#shareableNull;
+  }
+
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps> {
+    return this.#workletsModuleProxy.makeShareableTurboModuleLike(props, proto);
+  }
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T> {
+    return this.#workletsModuleProxy.makeShareableObject(
+      obj,
+      shouldRetainRemote,
+      nativeStateSource
+    );
+  }
+
+  makeShareableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  }
+
+  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableArray(
+      array,
+      shouldRetainRemote
+    );
+  }
+
+  makeShareableInitializer(obj: object) {
+    return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  }
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ) {
+    return this.#workletsModuleProxy.makeShareableFunction(func);
+  }
+
+  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.makeShareableWorklet(
+      worklet,
+      shouldPersistRemote
+    );
   }
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
