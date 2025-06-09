@@ -90,6 +90,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
+    assert mScriptWrapper != null
+        : "Script wrapper must be set before installing the WorkletsModule";
+
     mHybridData =
         initHybrid(
             jsContext,
