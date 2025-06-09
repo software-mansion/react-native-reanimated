@@ -70,7 +70,6 @@ if (isNewArchitectureEnabled()) {
 def reactNativeRootDir = resolveReactNativeDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
-def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
 
@@ -170,7 +169,6 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
         buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
 
         externalNativeBuild {
@@ -181,7 +179,6 @@ android {
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
@@ -256,9 +253,6 @@ android {
     sourceSets {
         main {
             java {
-                if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/paper"
-                }
                 if (EXPERIMENTAL_BUNDLING) {
                     srcDirs += "src/experimentalBundling"
                 } else {
@@ -295,6 +289,15 @@ task assertMinimalReactNativeVersionTask {
 }
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
+
+task assertNewArchitectureEnabledTask {
+    onlyIf { !isNewArchitectureEnabled() }
+    doFirst {
+        throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
