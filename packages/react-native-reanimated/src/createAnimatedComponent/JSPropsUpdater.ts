@@ -23,8 +23,6 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
       runOnUI(() => {
         'worklet';
         global.updateJSProps = (viewTag: number, props: unknown) => {
-          // console.log(viewTag);
-          // console.log(props);
           runOnJS(updater)(viewTag, props);
         };
       })();

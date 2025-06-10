@@ -329,6 +329,14 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
+jsi::Value ReanimatedModuleProxy::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
+  // Nothing here
+  return jsi::Value::undefined();
+}
+
 jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {

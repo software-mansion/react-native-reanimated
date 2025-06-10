@@ -5,6 +5,7 @@ const NOOP = () => {
 
 // ts-prune-ignore-next Is this even used?
 export default {
+  configureProps: NOOP,
   connectNodes: NOOP,
   getValue: () => 0,
   disconnectNodes: NOOP,

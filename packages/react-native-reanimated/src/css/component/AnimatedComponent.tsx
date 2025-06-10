@@ -85,9 +85,10 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
+      viewConfig = viewInfo.viewConfig;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper };
+    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }

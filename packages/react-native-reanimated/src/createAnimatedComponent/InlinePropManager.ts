@@ -1,5 +1,6 @@
 'use strict';
 import type { StyleProps } from '../commonTypes';
+import { adaptViewConfig } from '../ConfigHelper';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
 import { updateProps } from '../updateProps';
@@ -141,7 +142,11 @@ export class InlinePropManager implements IInlinePropManager {
       if (!this._inlinePropsViewDescriptors) {
         this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
 
-        const { viewTag, shadowNodeWrapper } = viewInfo;
+        const { viewTag, shadowNodeWrapper, viewConfig } = viewInfo;
+
+        if (Object.keys(newInlineProps).length && viewConfig) {
+          adaptViewConfig(viewConfig);
+        }
 
         this._inlinePropsViewDescriptors.add({
           tag: viewTag as number,

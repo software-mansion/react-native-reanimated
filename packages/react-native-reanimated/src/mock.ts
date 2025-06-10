@@ -211,6 +211,10 @@ const Colors = {
   // convertToRGBA: ADD ME IF NEEDED
 };
 
+const PropAdapters = {
+  // createAnimatedPropAdapter: ADD ME IF NEEDED
+};
+
 class BaseAnimationMock {
   duration() {
     return this;
@@ -460,6 +464,8 @@ const Animated = {
   interpolateColor: NOOP,
   clamp: NOOP,
   createAnimatedComponent: ID,
+  addWhitelistedUIProps: NOOP,
+  addWhitelistedNativeProps: NOOP,
 };
 
 const Reanimated = {
@@ -471,6 +477,7 @@ const Reanimated = {
   ...Easing,
   ...platformFunctions,
   ...Colors,
+  ...PropAdapters,
   ...layoutReanimation,
   ...isSharedValue,
   ...commonTypes,

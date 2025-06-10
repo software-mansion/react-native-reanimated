@@ -42,6 +42,8 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
+  configureProps(uiProps: string[], nativeProps: string[]): void;
+
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
