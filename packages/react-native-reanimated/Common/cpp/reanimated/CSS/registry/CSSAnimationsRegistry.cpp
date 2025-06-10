@@ -20,12 +20,12 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 void CSSAnimationsRegistry::apply(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::optional<std::vector<std::string>> &animationNames,
+    const std::optional<std::vector<AnimationTag>> &animationTags,
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
   const auto animationsVector =
-      buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
+      buildAnimationsVector(rt, shadowNode, animationTags, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
@@ -90,25 +90,25 @@ void CSSAnimationsRegistry::update(const double timestamp) {
 CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::optional<std::vector<std::string>> &animationNames,
+    const std::optional<std::vector<AnimationTag>> &animationTags,
     const std::optional<CSSAnimationsMap> &newAnimations) const {
   const auto registryIt = registry_.find(shadowNode->getTag());
 
-  // If animationNames has no value, that means no animations were added,
+  // If animationTags has no value, that means no animations were added,
   // removed or reordered, so we can return the current animations vector from
   // the registry
-  if (!animationNames.has_value()) {
+  if (!animationTags.has_value()) {
     if (registryIt != registry_.end()) {
       return std::move(registryIt->second.animationsVector);
     }
   }
 
   CSSAnimationsVector animationsVector;
-  const auto &animationNamesVector = animationNames.value();
-  const auto animationNamesSize = animationNamesVector.size();
-  animationsVector.reserve(animationNamesSize);
+  const auto &animationTagsVector = animationTags.value();
+  const auto animationTagsSize = animationTagsVector.size();
+  animationsVector.reserve(animationTagsSize);
 
-  std::unordered_map<std::string, CSSAnimationsVector> oldAnimationsMap;
+  std::unordered_map<AnimationTag, CSSAnimationsVector> oldAnimationsMap;
   CSSAnimationsMap emptyAnimationsMap;
   const auto &newAnimationsMap = newAnimations.value_or(emptyAnimationsMap);
 
@@ -117,23 +117,23 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
 
     // Fill the map while maintaining reverse order (for quick pop from the end)
     for (auto it = oldAnimations.rbegin(); it != oldAnimations.rend(); ++it) {
-      oldAnimationsMap[(*it)->getName()].emplace_back(*it);
+      oldAnimationsMap[(*it)->getTag()].emplace_back(*it);
     }
   }
 
-  for (size_t i = 0; i < animationNamesSize; ++i) {
+  for (size_t i = 0; i < animationTagsSize; ++i) {
     const auto &newAnimationIt = newAnimationsMap.find(i);
     if (newAnimationIt != newAnimationsMap.end()) {
       animationsVector.emplace_back(newAnimationIt->second);
       continue;
     }
 
-    const auto &name = animationNamesVector[i];
-    const auto &oldAnimationIt = oldAnimationsMap.find(name);
+    const auto &tag = animationTagsVector[i];
+    const auto &oldAnimationIt = oldAnimationsMap.find(tag);
 
     if (oldAnimationIt == oldAnimationsMap.end()) {
       throw std::runtime_error(
-          "[Reanimated] There is no animation with name " + name +
+          "[Reanimated] There is no animation with tag " + std::to_string(tag) +
           " available to use at index " + std::to_string(i));
     }
 

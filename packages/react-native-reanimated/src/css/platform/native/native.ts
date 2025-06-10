@@ -3,7 +3,6 @@ import type { ShadowNodeWrapper, StyleProps } from '../../../commonTypes';
 import { ReanimatedModule } from '../../../ReanimatedModule';
 import type {
   CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from './types';
 
@@ -22,21 +21,6 @@ export function unmarkNodeAsRemovable(viewTag: number) {
 }
 
 // ANIMATIONS
-
-// Keyframes
-
-export function registerCSSKeyframes(
-  animationName: string,
-  keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-) {
-  ReanimatedModule.registerCSSKeyframes(animationName, keyframesConfig);
-}
-
-export function unregisterCSSKeyframes(animationName: string) {
-  ReanimatedModule.unregisterCSSKeyframes(animationName);
-}
-
-// View animations
 
 export function applyCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,

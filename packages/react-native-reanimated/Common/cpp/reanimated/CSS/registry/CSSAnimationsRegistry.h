@@ -36,7 +36,7 @@ class CSSAnimationsRegistry
   void apply(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::optional<std::vector<std::string>> &animationNames,
+      const std::optional<std::vector<AnimationTag>> &animationTags,
       const CSSAnimationsMap &newAnimations,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
       double timestamp);
@@ -70,7 +70,7 @@ class CSSAnimationsRegistry
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::optional<std::vector<std::string>> &animationNames,
+      const std::optional<std::vector<AnimationTag>> &animationTags,
       const std::optional<CSSAnimationsMap> &newAnimations) const;
   AnimationToIndexMap buildAnimationToIndexMap(
       const CSSAnimationsVector &animationsVector) const;

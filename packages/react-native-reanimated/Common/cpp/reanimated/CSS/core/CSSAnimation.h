@@ -17,7 +17,7 @@ class CSSAnimation {
  public:
   CSSAnimation(const CSSAnimationConfig &config, double timestamp);
 
-  const std::string &getName() const;
+  const AnimationTag &getTag() const;
 
   double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState() const;
@@ -42,7 +42,7 @@ class CSSAnimation {
   void update(double timestamp);
 
  private:
-  const std::string name_;
+  const AnimationTag tag_;
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;

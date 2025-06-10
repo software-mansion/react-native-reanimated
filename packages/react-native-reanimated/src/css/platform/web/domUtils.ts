@@ -3,11 +3,13 @@ import { logger } from 'react-native-worklets';
 
 import { IS_WINDOW_AVAILABLE, ReanimatedError } from '../../../common';
 
+export const ANIMATION_NAME_PREFIX = 'REA-CSS-';
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
-// Since we cannot remove keyframe from DOM by its name, we have to store its id
-const cssNameToIndex = new Map<string, number>();
-const cssNameList: string[] = [];
+// Since we cannot remove keyframe from DOM by its tag, we have to store its
+// index
+const cssTagToIndex = new Map<number, number>();
+const cssTagList: number[] = [];
 
 export function configureWebCSSAnimations() {
   if (
@@ -39,10 +41,10 @@ function getStyleSheet() {
   );
 }
 
-export function insertCSSAnimation(animationName: string, keyframes: string) {
+export function insertCSSAnimation(animationTag: number, keyframes: string) {
   // Without window availability check SSR crashes because document is undefined
   // (NextExample on CI)
-  if (!IS_WINDOW_AVAILABLE || cssNameToIndex.has(animationName)) {
+  if (!IS_WINDOW_AVAILABLE || cssTagToIndex.has(animationTag)) {
     return;
   }
 
@@ -53,49 +55,49 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
     return;
   }
 
-  const animation = `@keyframes ${animationName} { ${keyframes} }`;
+  const animation = `@keyframes ${ANIMATION_NAME_PREFIX}${animationTag} { ${keyframes} }`;
 
   sheet.insertRule(animation, 0);
-  cssNameList.unshift(animationName);
-  cssNameToIndex.set(animationName, 0);
+  cssTagList.unshift(animationTag);
+  cssTagToIndex.set(animationTag, 0);
 
-  for (let i = 1; i < cssNameList.length; ++i) {
-    const nextCSSName = cssNameList[i];
-    const nextCSSIndex = cssNameToIndex.get(nextCSSName);
+  for (let i = 1; i < cssTagList.length; ++i) {
+    const nextCSSTag = cssTagList[i];
+    const nextCSSIndex = cssTagToIndex.get(nextCSSTag);
 
     if (nextCSSIndex === undefined) {
       throw new ReanimatedError('Failed to obtain CSS animation index.');
     }
 
-    cssNameToIndex.set(cssNameList[i], nextCSSIndex + 1);
+    cssTagToIndex.set(cssTagList[i], nextCSSIndex + 1);
   }
 }
 
-export function removeCSSAnimation(animationName: string) {
+export function removeCSSAnimation(animationTag: number) {
   // Without this check SSR crashes because document is undefined (NextExample on CI)
   if (!IS_WINDOW_AVAILABLE) {
     return;
   }
 
   const sheet = getStyleSheet();
-  const currentCSSIndex = cssNameToIndex.get(animationName);
+  const currentCSSIndex = cssTagToIndex.get(animationTag);
 
   if (currentCSSIndex === undefined) {
     throw new ReanimatedError('Failed to obtain CSS animation index.');
   }
 
   sheet?.deleteRule(currentCSSIndex);
-  cssNameList.splice(currentCSSIndex, 1);
-  cssNameToIndex.delete(animationName);
+  cssTagList.splice(currentCSSIndex, 1);
+  cssTagToIndex.delete(animationTag);
 
-  for (let i = currentCSSIndex; i < cssNameList.length; ++i) {
-    const nextCSSName = cssNameList[i];
-    const nextCSSIndex = cssNameToIndex.get(nextCSSName);
+  for (let i = currentCSSIndex; i < cssTagList.length; ++i) {
+    const nextCSSTag = cssTagList[i];
+    const nextCSSIndex = cssTagToIndex.get(nextCSSTag);
 
     if (nextCSSIndex === undefined) {
       throw new ReanimatedError('Failed to obtain CSS animation index.');
     }
 
-    cssNameToIndex.set(cssNameList[i], nextCSSIndex - 1);
+    cssTagToIndex.set(cssTagList[i], nextCSSIndex - 1);
   }
 }

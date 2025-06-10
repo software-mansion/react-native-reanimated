@@ -1,18 +1,13 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
-import { ANIMATION_NAME_PREFIX } from '../../constants';
 import CSSKeyframesRuleBase from '../../models/CSSKeyframesRuleBase';
 import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
-  unregisterCSSKeyframes,
 } from '../../platform/native/native';
-import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';
-
-const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
 jest.mock('../../platform/native/native.ts', () => ({
   applyCSSAnimations: jest.fn(),
@@ -49,7 +44,7 @@ describe('CSSAnimationsManager', () => {
 
         expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
         expect(applyCSSAnimations).toHaveBeenCalledWith(shadowNodeWrapper, {
-          animationNames: [animationName(0)],
+          animationTags: [0],
           newAnimationSettings: {
             0: normalizeSingleCSSAnimationSettings(animationProperties),
           },
@@ -116,7 +111,7 @@ describe('CSSAnimationsManager', () => {
           2,
           shadowNodeWrapper,
           {
-            animationNames: [animationName(1)],
+            animationTags: [1],
             newAnimationSettings: {
               0: normalizeSingleCSSAnimationSettings(newAnimationProperties),
             },
@@ -145,48 +140,6 @@ describe('CSSAnimationsManager', () => {
 
       describe('multiple animations', () => {
         // TODO - add after fixing multiple animations implementation for native
-      });
-    });
-
-    describe('unmountCleanup', () => {
-      it('removes animation keyframes from the keyframes registry', () => {
-        // Prepare the manager
-        manager.update({
-          animationName: [
-            css.keyframes({
-              from: { opacity: 1 },
-              to: { opacity: 0.5 },
-            }),
-            css.keyframes({
-              from: { opacity: 0 },
-              to: { opacity: 1 },
-            }),
-          ],
-        });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const attachedAnimations = (manager as any).attachedAnimations;
-        jest.clearAllMocks();
-
-        // Run cleanup and test
-        manager.unmountCleanup();
-
-        expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(2);
-        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
-          1,
-          attachedAnimations[0].keyframesRule.name
-        );
-        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
-          2,
-          attachedAnimations[1].keyframesRule.name
-        );
-
-        // Animations should be still attached because call to unmountCleanup
-        // doesn't necessarily mean that the component will be removed.
-        // We handle this animations cleanup in the CPP implementation.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((manager as any).attachedAnimations).toEqual(attachedAnimations);
-        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
-        expect(applyCSSAnimations).not.toHaveBeenCalled();
       });
     });
   });

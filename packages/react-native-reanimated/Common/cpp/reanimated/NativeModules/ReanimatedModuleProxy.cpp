@@ -473,13 +473,6 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
-// TODO - remove when proper cleanup is implemented on the CPP side
-void ReanimatedModuleProxy::unregisterCSSKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &animationTag) {
-  cssAnimationKeyframesRegistry_->remove(animationTag.asNumber());
-}
-
 void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -492,17 +485,17 @@ void ReanimatedModuleProxy::applyCSSAnimations(
 
   if (!updates.newAnimationSettings.empty()) {
     // animationNames always exists when newAnimationSettings is not empty
-    const auto animationNames = updates.animationNames.value();
-    const auto animationNamesCount = animationNames.size();
+    const auto animationTags = updates.animationTags.value();
+    const auto animationTagsCount = animationTags.size();
 
     for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationNamesCount) {
+      if (index >= animationTagsCount) {
         throw std::invalid_argument(
-            "[Reanimated] index is out of bounds of animationNames");
+            "[Reanimated] index is out of bounds of animationTags");
       }
 
       const auto config = CSSAnimationConfig(
-          animationNames[index], cssAnimationKeyframesRegistry_, settings);
+          animationTags[index], settings, cssAnimationKeyframesRegistry_);
 
       const auto animation = std::make_shared<CSSAnimation>(config, timestamp);
 
@@ -515,7 +508,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     cssAnimationsRegistry_->apply(
         rt,
         shadowNode,
-        updates.animationNames,
+        updates.animationTags,
         std::move(newAnimations),
         updates.settingsUpdates,
         timestamp);
