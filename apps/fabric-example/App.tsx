@@ -9,7 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Circle, G, Path, Svg } from 'react-native-svg';
+import { Circle, G, Path, Rect, Svg } from 'react-native-svg';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -51,6 +51,31 @@ function SvgCircleDemo({ sv }: { sv: SharedValue<number> }) {
       <Text style={styles.text}>AnimatedCircle</Text>
       <Svg height="200" width="200">
         <AnimatedCircle strokeWidth={20} animatedProps={animatedProps} />
+      </Svg>
+    </View>
+  );
+}
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+
+function SvgRectDemo({ sv }: { sv: SharedValue<number> }) {
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      x: sv.value * 100,
+      y: sv.value * 100,
+      width: sv.value * 100,
+      height: sv.value * 100,
+      opacity: sv.value,
+      fill: interpolateColor(sv.value, [0, 1], ['red', 'lime'], 'HSV'),
+      stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
+    };
+  }, []);
+
+  return (
+    <View style={styles.demo}>
+      <Text style={styles.text}>AnimatedRect</Text>
+      <Svg height="200" width="200">
+        <AnimatedRect strokeWidth={20} animatedProps={animatedProps} />
       </Svg>
     </View>
   );
@@ -123,6 +148,7 @@ export default function App() {
     <ScrollView contentContainerStyle={styles.container}>
       <TextInputDemo sv={sv} />
       <SvgCircleDemo sv={sv} />
+      <SvgRectDemo sv={sv} />
       <SvgPathDemo sv={sv} />
       <SvgGDemo sv={sv} />
     </ScrollView>
