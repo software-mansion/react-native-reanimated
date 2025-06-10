@@ -84,7 +84,9 @@ std::tuple<Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
+  react_native_assert(
+      sizeof...(Args) == count &&
+      "Argument list has different length than expected");
   return convertArgs<Args...>(rt, args);
 }
 
@@ -97,7 +99,9 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
+  react_native_assert(
+      sizeof...(Args) == count &&
+      "Argument list has different length than expected");
   return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
 }
 

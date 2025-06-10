@@ -20,7 +20,9 @@ jsi::Array convertStringToArray(
       std::istream_iterator<float>(stringStream),
       std::istream_iterator<float>(),
       std::back_inserter(transformMatrixList));
-  react_native_assert(transformMatrixList.size() == expectedSize && "Transform matrix list size is different than expected");
+  react_native_assert(
+      transformMatrixList.size() == expectedSize &&
+      "Transform matrix list size is different than expected");
   jsi::Array matrix(rt, expectedSize);
   for (unsigned int i = 0; i < expectedSize; i++) {
     matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
