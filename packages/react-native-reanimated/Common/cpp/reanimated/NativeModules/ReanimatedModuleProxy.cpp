@@ -692,7 +692,7 @@ void ReanimatedModuleProxy::performOperations() {
     // TODO: filter only non-native props (most likely using view configs on the JS side)
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
-    assert(
+    react_native_assert(
         maybeJSPropsUpdater.isObject() &&
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =

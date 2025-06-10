@@ -10,6 +10,7 @@
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 
 #include <atomic>
 #include <memory>
@@ -61,13 +62,15 @@ struct WorkletsReentrancyCheck {
       // Returns true if tid and expected were the same.  If they
       // were, then the stored tid referred to no thread, and we
       // atomically saved this thread's tid.  Now increment depth.
-      assert(depth == 0 && "[Worklets] No thread id, but depth != 0");
+      react_native_assert(
+          depth == 0 && "[Worklets] No thread id, but depth != 0");
       ++depth;
     } else if (expected == this_id) {
       // If the stored tid referred to a thread, expected was set to
       // that value.  If that value is this thread's tid, that's ok,
       // just increment depth again.
-      assert(depth != 0 && "[Worklets] Thread id was set, but depth == 0");
+      react_native_assert(
+          depth != 0 && "[Worklets] Thread id was set, but depth == 0");
       ++depth;
     } else {
       // The stored tid was some other thread.  This indicates a bad
@@ -79,7 +82,7 @@ struct WorkletsReentrancyCheck {
   }
 
   void after() {
-    assert(
+    react_native_assert(
         tid.load(std::memory_order_relaxed) == std::this_thread::get_id() &&
         "[Worklets] No thread id in after()");
     if (--depth == 0) {
@@ -87,7 +90,8 @@ struct WorkletsReentrancyCheck {
       std::thread::id expected = std::this_thread::get_id();
       bool didWrite = tid.compare_exchange_strong(
           expected, std::thread::id(), std::memory_order_relaxed);
-      assert(didWrite && "[Worklets] Decremented to zero, but no tid write");
+      react_native_assert(
+          didWrite && "[Worklets] Decremented to zero, but no tid write");
     }
   }
 
