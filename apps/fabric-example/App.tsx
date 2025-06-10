@@ -27,6 +27,7 @@ function TextInputDemo({ sv }: { sv: SharedValue<number> }) {
         // @ts-expect-error it works
         animatedProps={animatedProps}
         style={styles.input}
+        editable={false}
       />
     </View>
   );
