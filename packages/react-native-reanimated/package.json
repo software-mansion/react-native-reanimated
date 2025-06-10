@@ -123,7 +123,7 @@
     "code-tag": "^1.1.0",
     "cspell": "^8.8.0",
     "eslint": "^9.28.0",
-    "eslint-config-prettier": "^10.1.15",
+    "eslint-config-prettier": "^10.1.5",
     "eslint-config-standard": "^17.1.0",
     "eslint-import-resolver-babel-module": "^5.3.2",
     "eslint-plugin-import": "^2.31.0",

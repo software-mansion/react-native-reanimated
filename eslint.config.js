@@ -1,25 +1,20 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
-import tsParser from '@typescript-eslint/parser';
-import tsdoc from 'eslint-plugin-tsdoc';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import jsdoc from 'eslint-plugin-jsdoc';
-import {
-  fixupConfigRules,
-  fixupPluginRules,
-  // includeIgnoreFile,
-} from '@eslint/compat';
-import react from 'eslint-plugin-react';
-import reactNative from 'eslint-plugin-react-native';
-import _import from 'eslint-plugin-import';
-import jest from 'eslint-plugin-jest';
-import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import js from '@eslint/js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
+const { defineConfig, globalIgnores } = require('eslint/config');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const tsParser = require('@typescript-eslint/parser');
+const tsdoc = require('eslint-plugin-tsdoc');
+const simpleImportSort = require('eslint-plugin-simple-import-sort');
+const jsdoc = require('eslint-plugin-jsdoc');
+
+const { fixupConfigRules, fixupPluginRules } = require('@eslint/compat');
+
+const react = require('eslint-plugin-react');
+const reactNative = require('eslint-plugin-react-native');
+const _import = require('eslint-plugin-import');
+const jest = require('eslint-plugin-jest');
+const typescriptEslint = require('@typescript-eslint/eslint-plugin');
+const js = require('@eslint/js');
+
+const { FlatCompat } = require('@eslint/eslintrc');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -27,16 +22,19 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
-export default defineConfig([
+module.exports = defineConfig([
   {
     languageOptions: {
       parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
         requireConfigFile: false,
       },
 
       globals: {
         ...reactNative.environments['react-native']['react-native'],
         ...jest.environments.globals.globals,
+        React: true,
       },
     },
 
@@ -59,9 +57,7 @@ export default defineConfig([
 
     settings: {
       'import/resolver': {
-        'babel-module': {
-          extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        },
+        'babel-module': { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
       },
     },
 
@@ -74,6 +70,9 @@ export default defineConfig([
       'react/jsx-uses-vars': 'error',
       'react/jsx-uses-react': 'error',
       'no-use-before-define': 'off',
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
+      'no-loss-of-precision': 'off',
       eqeqeq: 'error',
       'no-unreachable': 'error',
       'jest/no-disabled-tests': 'warn',
@@ -90,20 +89,10 @@ export default defineConfig([
     languageOptions: {
       parser: tsParser,
 
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: __dirname,
-      },
+      parserOptions: { project: true, tsconfigRootDir: __dirname },
     },
 
-    plugins: {
-      tsdoc,
-      'simple-import-sort': simpleImportSort,
-    },
-
-    extends: compat.extends(
-      'plugin:@typescript-eslint/recommended-type-checked'
-    ),
+    plugins: { tsdoc, 'simple-import-sort': simpleImportSort },
 
     rules: {
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -121,27 +110,22 @@ export default defineConfig([
         },
       ],
 
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-        },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
 
       '@typescript-eslint/no-var-requires': 'warn',
 
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        {
-          prefer: 'type-imports',
-        },
+        { prefer: 'type-imports' },
       ],
 
       '@typescript-eslint/consistent-type-exports': [
         'error',
-        {
-          fixMixedExportsWithInlineTypeSpecifier: false,
-        },
+        { fixMixedExportsWithInlineTypeSpecifier: false },
       ],
 
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -158,9 +142,7 @@ export default defineConfig([
   {
     files: ['**/*.js', '**/*.jsx'],
 
-    plugins: {
-      'eslint-plugin-jsdoc': jsdoc,
-    },
+    plugins: { jsdoc },
 
     extends: compat.extends('plugin:jsdoc/recommended'),
 
@@ -172,14 +154,18 @@ export default defineConfig([
     },
   },
   globalIgnores([
-    '**/build',
-    '**/.yarn',
-    '**/ios',
-    '**/macos',
-    '**/vendor',
-    'apps/common-app/**/*.snapshot.ts',
-    'packages/react-native-worklets/plugin/lib',
-    'packages/react-native-worklets/plugin/index.js',
-    'packages/react-native-worklets/plugin/index.js.map',
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/coverage/**',
+    '**/dist/**',
+    '**/build/**',
+    '**/coverage/**',
+    'eslint.config.js',
+    // TODO: remove this once we have a proper eslint config for each package and app
+    "**/apps/**",
+    "**/packages/react-native-worklets/**",
+    "**/packages/eslint-plugin-reanimated/**",
+    "**/packages/docs-reanimated/**",
   ]),
 ]);

@@ -2,11 +2,6 @@ const { defineConfig, globalIgnores } = require('eslint/config');
 const baseConfig = require('../../eslint.config.js');
 
 const reanimated = require('eslint-plugin-reanimated');
-const { FlatCompat } = require('@eslint/eslintrc');
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
 
 module.exports = defineConfig([
   {
@@ -24,3 +19,5 @@ module.exports = defineConfig([
   },
   globalIgnores(['**/lib', '**/plugin']),
 ]);
+
+console.log(module.exports);
