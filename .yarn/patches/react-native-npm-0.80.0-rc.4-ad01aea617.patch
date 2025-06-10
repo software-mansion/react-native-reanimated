@@ -1,5 +1,5 @@
 diff --git a/Libraries/AppDelegate/RCTAppSetupUtils.mm b/Libraries/AppDelegate/RCTAppSetupUtils.mm
-index cf48ec9cef8..de44f419d22 100644
+index cf48ec9cef8..6b0d8a28a6b 100644
 --- a/Libraries/AppDelegate/RCTAppSetupUtils.mm
 +++ b/Libraries/AppDelegate/RCTAppSetupUtils.mm
 @@ -19,6 +19,7 @@
@@ -15,7 +15,7 @@ index cf48ec9cef8..de44f419d22 100644
          } else if (protocol == @protocol(RCTURLRequestHandler)) {
            classNames = dependencyProvider ? dependencyProvider.URLRequestHandlerClassNames : @[];
 -        }
-+        } else if (protocol = @protocol(RCTBundleConsumer)) {
++        } else if (protocol == @protocol(RCTBundleConsumer)) {
 +          classNames = dependencyProvider ? dependencyProvider.bundleConsumerClassNames : @[];
 +        } 
  
