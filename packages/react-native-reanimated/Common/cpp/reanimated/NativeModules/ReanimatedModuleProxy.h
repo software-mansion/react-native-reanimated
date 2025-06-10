@@ -76,10 +76,10 @@ class ReanimatedModuleProxy
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
-  jsi::Value configureProps(
+  jsi::Value registerNativePropsForView(
       jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) override;
+      const jsi::Value &viewName,
+      const jsi::Value &nativePropNames) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -210,8 +210,9 @@ class ReanimatedModuleProxy
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
-  jsi::Value filterNonAnimatableProps(
+  jsi::Value filterNonNativeProps(
       jsi::Runtime &rt,
+      const std::string &viewName,
       const jsi::Value &props);
 
   const bool isReducedMotion_;
@@ -240,8 +241,9 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_set<std::string>
-      animatablePropNames_; // filled by configureProps
+  std::unordered_map<std::string, std::unordered_set<std::string>> nativePropNamesForViews_; // Filled by `registerNativePropsForView`.
+  mutable std::mutex nativePropNamesForViewsMutex_; // Protects `nativePropNames_`.
+
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;

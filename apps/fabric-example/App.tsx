@@ -147,7 +147,7 @@ export default function App() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TextInputDemo sv={sv} />
+      {/* <TextInputDemo sv={sv} /> */}
       <SvgCircleDemo sv={sv} />
       <SvgRectDemo sv={sv} />
       <SvgPathDemo sv={sv} />

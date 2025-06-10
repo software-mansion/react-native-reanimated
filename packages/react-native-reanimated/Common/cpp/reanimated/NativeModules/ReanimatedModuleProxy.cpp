@@ -329,11 +329,19 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::configureProps(
+jsi::Value ReanimatedModuleProxy::registerNativePropsForView(
     jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
-  // Nothing here
+    const jsi::Value &viewName,
+    const jsi::Value &nativePropNames) {
+  const auto viewNameStr = viewName.asString(rt).utf8(rt);
+  const auto nativePropNamesArray = nativePropNames.asObject(rt).asArray(rt);
+  const auto size = nativePropNamesArray.size(rt);
+  std::unordered_set<std::string> nativePropNamesSet;
+  for (size_t i = 0; i < size; i++) {
+    nativePropNamesSet.insert(nativePropNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+  }
+  auto lock = std::unique_lock<std::mutex>(nativePropNamesForViewsMutex_);
+  nativePropNamesForViews_[viewNameStr] = std::move(nativePropNamesSet);
   return jsi::Value::undefined();
 }
 
@@ -550,6 +558,31 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
+jsi::Value ReanimatedModuleProxy::filterNonNativeProps(
+    jsi::Runtime &rt,
+    const std::string &viewName,
+    const jsi::Value &props) {
+  jsi::Object nonNativeProps(rt);
+  bool hasAnyNonNativeProp = false;
+  const jsi::Object &propsObject = props.asObject(rt);
+  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
+  const auto &nativePropNamesForView = nativePropNamesForViews_[viewName];
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string &propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    if (!collection::contains(nativePropNamesForView, propName)) {
+      hasAnyNonNativeProp = true;
+      const auto &propNameStr = propName.c_str();
+      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
+      nonNativeProps.setProperty(rt, propNameStr, propValue);
+    }
+  }
+  if (!hasAnyNonNativeProp) {
+    return jsi::Value::undefined();
+  }
+  return nonNativeProps;
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -696,16 +729,23 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
-    // TODO: filter only non-native props (most likely using view configs on the JS side)
-    jsi::Value maybeJSPropsUpdater =
-        rt.global().getProperty(rt, "updateJSProps");
-    react_native_assert(
-        maybeJSPropsUpdater.isObject() &&
-        "[Reanimated] `updateJSProps` not found");
-    jsi::Function jsPropsUpdater =
-        maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-    jsPropsUpdater.call(rt, viewTag, *props);
+  {
+    auto lock = std::unique_lock<std::mutex>(nativePropNamesForViewsMutex_);
+
+    for (const auto &[viewTag, viewName, props] : animatedPropsRegistry_->getJSIUpdates()) {
+      const jsi::Value &nonNativeProps = filterNonNativeProps(rt, viewName, *props);
+      if (nonNativeProps.isUndefined()) {
+        continue;
+      }
+      jsi::Value maybeJSPropsUpdater =
+          rt.global().getProperty(rt, "updateJSProps");
+      react_native_assert(
+          maybeJSPropsUpdater.isObject() &&
+          "[Reanimated] `updateJSProps` not found");
+      jsi::Function jsPropsUpdater =
+          maybeJSPropsUpdater.asObject(rt).asFunction(rt);
+      jsPropsUpdater.call(rt, viewTag, nonNativeProps);
+    }
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
