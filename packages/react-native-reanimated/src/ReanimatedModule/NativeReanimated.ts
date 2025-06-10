@@ -21,7 +21,6 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../css/platform/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -198,20 +197,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
-  registerCSSKeyframes(
-    animationName: string,
-    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSKeyframes(
-      animationName,
-      keyframesConfig
-    );
-  }
-
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
-  }
-
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationUpdates: CSSAnimationUpdates
@@ -261,8 +246,6 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   setViewStyle(): void {}
   markNodeAsRemovable(): void {}
   unmarkNodeAsRemovable(): void {}
-  registerCSSKeyframes(): void {}
-  unregisterCSSKeyframes(): void {}
   applyCSSAnimations(): void {}
   registerCSSAnimations(): void {}
   updateCSSAnimations(): void {}

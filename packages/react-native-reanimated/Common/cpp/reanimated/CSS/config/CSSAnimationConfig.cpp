@@ -71,9 +71,8 @@ CSSAnimationSettings::CSSAnimationSettings(const RawValue &rawValue) {
 CSSAnimationConfig::CSSAnimationConfig(
     AnimationTag tag,
     CSSAnimationSettings settings,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
+    const CSSKeyframesConfig &keyframesConfig)
     : CSSAnimationSettings(std::move(settings)), tag(tag) {
-  const auto &keyframesConfig = keyframesRegistry->get(tag);
   styleInterpolator = keyframesConfig.styleInterpolator;
   keyframeEasings = keyframesConfig.keyframeEasings;
 }
@@ -137,22 +136,6 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   return result;
 }
 
-std::vector<AnimationTag> parseAnimationTags(
-    jsi::Runtime &rt,
-    const jsi::Value &animationTags) {
-  std::vector<AnimationTag> result;
-
-  const auto &tagsArray = animationTags.asObject(rt).asArray(rt);
-  const auto animationTagsCount = tagsArray.size(rt);
-  result.reserve(animationTagsCount);
-
-  for (size_t i = 0; i < animationTagsCount; i++) {
-    result.emplace_back(tagsArray.getValueAtIndex(rt, i).asNumber());
-  }
-
-  return result;
-}
-
 template <typename TResult>
 std::unordered_map<size_t, TResult> parseHelper(
     jsi::Runtime &rt,
@@ -199,15 +182,29 @@ CSSAnimationSettingsUpdatesMap parseSettingsUpdates(
 
 CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry) {
   const auto &configObj = config.asObject(rt);
 
   CSSAnimationUpdates result;
 
-  if (configObj.hasProperty(rt, "animationTags")) {
-    const auto animationTags =
-        parseAnimationTags(rt, configObj.getProperty(rt, "animationTags"));
-    result.animationTags = std::move(animationTags);
+  if (configObj.hasProperty(rt, "keyframeConfigs")) {
+    const auto &keyframeConfigs =
+        configObj.getProperty(rt, "keyframeConfigs").asObject(rt).asArray(rt);
+    const auto keyframeConfigsCount = keyframeConfigs.size(rt);
+    std::vector<std::pair<AnimationTag, CSSKeyframesConfig>>
+        keyframeConfigsVector;
+    keyframeConfigsVector.reserve(keyframeConfigsCount);
+
+    for (size_t i = 0; i < keyframeConfigsCount; i++) {
+      const auto &config = keyframeConfigs.getValueAtIndex(rt, i);
+      const auto &keyframesConfig = keyframesRegistry->getOrCreate(rt, config);
+      keyframeConfigsVector.emplace_back(
+          config.asObject(rt).getProperty(rt, "tag").asNumber(),
+          keyframesConfig);
+    }
+
+    result.keyframeConfigs = std::move(keyframeConfigsVector);
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
       result.newAnimationSettings = parseNewAnimationSettings(

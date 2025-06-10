@@ -46,18 +46,20 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(
           std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          viewStylesRepository_,
-          getAnimationTimestamp_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              viewStylesRepository_,
+              getAnimationTimestamp_)),
       operationsLoop_(std::make_shared<OperationsLoop>(getAnimationTimestamp_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -304,9 +306,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -479,23 +482,24 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
-  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
+  const auto updates = parseCSSAnimationUpdates(
+      rt, animationUpdates, cssAnimationKeyframesRegistry_);
 
   CSSAnimationsMap newAnimations;
 
   if (!updates.newAnimationSettings.empty()) {
-    // animationNames always exists when newAnimationSettings is not empty
-    const auto animationTags = updates.animationTags.value();
-    const auto animationTagsCount = animationTags.size();
+    const auto keyframeConfigs = updates.keyframeConfigs.value();
+    const auto keyframeConfigsCount = keyframeConfigs.size();
 
     for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationTagsCount) {
+      if (index >= keyframeConfigsCount) {
         throw std::invalid_argument(
             "[Reanimated] index is out of bounds of animationTags");
       }
 
-      const auto config = CSSAnimationConfig(
-          animationTags[index], settings, cssAnimationKeyframesRegistry_);
+      const auto [animationTag, keyframeConfig] = keyframeConfigs[index];
+      const auto config =
+          CSSAnimationConfig(animationTag, settings, keyframeConfig);
 
       const auto animation = std::make_shared<CSSAnimation>(config, timestamp);
 
@@ -503,12 +507,17 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     }
   }
 
+  std::vector<AnimationTag> animationTags;
+  for (const auto &[index, animation] : newAnimations) {
+    animationTags.emplace_back(index);
+  }
+
   {
     auto lock = cssAnimationsRegistry_->lock();
     cssAnimationsRegistry_->apply(
         rt,
         shadowNode,
-        updates.animationTags,
+        animationTags,
         std::move(newAnimations),
         updates.settingsUpdates,
         timestamp);

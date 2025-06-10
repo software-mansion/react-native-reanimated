@@ -151,26 +151,6 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSKeyframes)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSKeyframes(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 static jsi::Value REANIMATED_SPEC_PREFIX(applyCSSAnimations)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -256,11 +236,6 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
   methodMap_["unmarkNodeAsRemovable"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
-
-  methodMap_["registerCSSKeyframes"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
-  methodMap_["unregisterCSSKeyframes"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
   methodMap_["applyCSSAnimations"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};

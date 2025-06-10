@@ -36,34 +36,34 @@ void CSSAnimationsManager::update(
     return;
   }
 
-  // Map current animations to their names in order to reuse the same instances
-  // for animations with the same names
-  auto nameToAnimationsMap = createCurrentNameToAnimationsMap();
+  // Map current animations to their tags in order to reuse the same instances
+  // for animations with the same tags
+  auto tagToAnimationsMap = createCurrentTagToAnimationsMap();
   // Build a vector with new animations
   animations_ =
-      createAndStartNewAnimations(nameToAnimationsMap, newProps.cssAnimations);
+      createAndStartNewAnimations(tagToAnimationsMap, newProps.cssAnimations);
   // Remove all remaining animations in the map
-  for (const auto &[_, animations] : nameToAnimationsMap) {
+  for (const auto &[_, animations] : tagToAnimationsMap) {
     for (const auto &animation : animations) {
       removeAnimationOperation(animation);
     }
   }
 }
 
-CSSAnimationsManager::NameToAnimationsMap
-CSSAnimationsManager::createCurrentNameToAnimationsMap() const {
-  NameToAnimationsMap nameToAnimationsMap;
+CSSAnimationsManager::TagToAnimationsMap
+CSSAnimationsManager::createCurrentTagToAnimationsMap() const {
+  TagToAnimationsMap tagToAnimationsMap;
 
   for (const auto &animation : animations_) {
-    nameToAnimationsMap[animation->getName()].emplace_back(animation);
+    tagToAnimationsMap[animation->getTag()].emplace_back(animation);
   }
 
-  return nameToAnimationsMap;
+  return tagToAnimationsMap;
 }
 
 CSSAnimationsManager::AnimationsVector
 CSSAnimationsManager::createAndStartNewAnimations(
-    NameToAnimationsMap &nameToAnimationsMap,
+    TagToAnimationsMap &tagToAnimationsMap,
     const std::vector<CSSAnimationConfig> &animationConfigs) {
   AnimationsVector result;
   result.reserve(animationConfigs.size());
@@ -71,11 +71,11 @@ CSSAnimationsManager::createAndStartNewAnimations(
   const auto timestamp = operationsLoop_->getFrameTimestamp();
 
   for (const auto &animationConfig : animationConfigs) {
-    const auto &animationName = animationConfig.name;
-    const auto it = nameToAnimationsMap.find(animationName);
+    const auto &animationTag = animationConfig.tag;
+    const auto it = tagToAnimationsMap.find(animationTag);
 
-    if (it == nameToAnimationsMap.end()) {
-      // Create a new animation the animation with the same name doesn't exist
+    if (it == tagToAnimationsMap.end()) {
+      // Create a new animation the animation with the same tag doesn't exist
       const auto animation = createAnimation(animationConfig, timestamp);
       updateAnimationOperation(animation);
       result.emplace_back(std::move(animation));
@@ -93,7 +93,7 @@ CSSAnimationsManager::createAndStartNewAnimations(
       result.emplace_back(std::move(animation));
 
       if (animations.empty()) {
-        nameToAnimationsMap.erase(it);
+        tagToAnimationsMap.erase(it);
       }
     }
   }
@@ -109,7 +109,7 @@ std::shared_ptr<CSSAnimation> CSSAnimationsManager::createAnimation(
 
 void CSSAnimationsManager::removeAnimationOperation(
     const std::shared_ptr<CSSAnimation> &animation) {
-  const auto it = operationHandles_.find(animation->getName());
+  const auto it = operationHandles_.find(animation->getTag());
   if (it != operationHandles_.end()) {
     operationsLoop_->remove(it->second);
     operationHandles_.erase(it);
@@ -128,7 +128,7 @@ void CSSAnimationsManager::updateAnimationOperation(
   }
 
   // Schedule a new operation to update the animation on every frame
-  operationHandles_[animation->getName()] = operationsLoop_->schedule(
+  operationHandles_[animation->getTag()] = operationsLoop_->schedule(
       Operation()
           .doOnce([animation](double timestamp) {
             if (animation->getState() == AnimationProgressState::Pending) {

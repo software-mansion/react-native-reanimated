@@ -11,7 +11,6 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../css/platform/native';
 
@@ -62,13 +61,6 @@ export interface ReanimatedModuleProxy {
 
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
-
-  registerCSSKeyframes(
-    animationName: string,
-    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void;
-
-  unregisterCSSKeyframes(animationName: string): void;
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,

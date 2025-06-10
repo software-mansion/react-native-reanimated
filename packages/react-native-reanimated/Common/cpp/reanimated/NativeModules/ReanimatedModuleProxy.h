@@ -129,13 +129,6 @@ class ReanimatedModuleProxy
   void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag)
       override;
 
-  void registerCSSKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &animationName,
-      const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
-      override;
-
   void applyCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,

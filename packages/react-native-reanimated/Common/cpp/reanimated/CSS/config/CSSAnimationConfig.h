@@ -43,7 +43,7 @@ struct CSSAnimationConfig : public CSSAnimationSettings {
   CSSAnimationConfig(
       AnimationTag tag,
       CSSAnimationSettings settings,
-      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
+      const CSSKeyframesConfig &keyframesConfig);
 
   // Both constructors are needed for rawValue conversion
   // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
@@ -73,13 +73,15 @@ using CSSAnimationSettingsUpdatesMap =
     std::unordered_map<size_t, PartialCSSAnimationSettings>;
 
 struct CSSAnimationUpdates {
-  std::optional<std::vector<AnimationTag>> animationTags;
+  std::optional<std::vector<std::pair<AnimationTag, CSSKeyframesConfig>>>
+      keyframeConfigs;
   CSSAnimationSettingsMap newAnimationSettings;
   CSSAnimationSettingsUpdatesMap settingsUpdates;
 };
 
 CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
-    const jsi::Value &config);
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
 
 } // namespace reanimated::css

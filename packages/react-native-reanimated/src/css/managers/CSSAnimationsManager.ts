@@ -47,8 +47,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     if (animationUpdates) {
       if (
-        animationUpdates.animationTags &&
-        animationUpdates.animationTags.length === 0
+        animationUpdates.keyframeConfigs &&
+        animationUpdates.keyframeConfigs.length === 0
       ) {
         this.detach();
         return;
@@ -173,9 +173,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     const result: CSSAnimationUpdates = {};
     if (animationsArrayChanged) {
-      result.animationTags = processedAnimations.map(
-        ({ keyframesRule }) => keyframesRule.tag
-      );
+      result.keyframeConfigs = processedAnimations.map(({ keyframesRule }) => ({
+        tag: keyframesRule.tag,
+        ...keyframesRule.normalizedKeyframesConfig,
+      }));
     }
     if (hasNewAnimations) {
       result.newAnimationSettings = newAnimationSettings;
