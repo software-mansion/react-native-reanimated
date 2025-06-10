@@ -137,7 +137,7 @@ WorkletRuntime::WorkletRuntime(
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  assert(
+  react_native_assert(
       supportsLocking_ &&
       ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
