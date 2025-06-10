@@ -5,7 +5,7 @@ namespace reanimated::css {
 CSSAnimation::CSSAnimation(
     const CSSAnimationConfig &config,
     const double timestamp)
-    : name_(config.name), fillMode_(config.fillMode) {
+    : tag_(config.tag), fillMode_(config.fillMode) {
   progressProvider_ = std::make_shared<AnimationProgressProvider>(
       timestamp,
       config.duration,
@@ -22,8 +22,8 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-const std::string &CSSAnimation::getName() const {
-  return name_;
+const AnimationTag &CSSAnimation::getTag() const {
+  return tag_;
 }
 
 double CSSAnimation::getStartTimestamp(const double timestamp) const {

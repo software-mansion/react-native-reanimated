@@ -50,8 +50,4 @@ export default class CSSManager implements ICSSManager {
 
     this.isFirstUpdate = false;
   }
-
-  unmountCleanup(): void {
-    this.cssAnimationsManager.unmountCleanup();
-  }
 }

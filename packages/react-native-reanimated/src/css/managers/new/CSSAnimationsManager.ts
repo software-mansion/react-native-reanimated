@@ -49,16 +49,13 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       return {
         ...animation.normalizedKeyframesConfig,
         ...settings,
-        name: animation.name,
+        tag: animation.tag,
       };
     }
 
     return {
       ...normalizeAnimationKeyframes(animation as CSSAnimationKeyframes),
       ...settings,
-      // TODO - add keyframes hashing to generate the unique animation name from keyframes or something
-      // else that would be better than JSON.stringify
-      name: JSON.stringify(animation),
     };
   }
 }

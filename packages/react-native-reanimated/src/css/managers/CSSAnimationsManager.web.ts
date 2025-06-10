@@ -2,6 +2,7 @@
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
 import {
+  ANIMATION_NAME_PREFIX,
   configureWebCSSAnimations,
   insertCSSAnimation,
   maybeAddSuffixes,
@@ -82,12 +83,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       };
     });
 
-    const animationNames = processedAnimations.map(
-      ({ keyframesRule: { name } }) => name
+    const animationTags = processedAnimations.map(
+      ({ keyframesRule: { tag } }) => tag
     );
 
     this.updateAttachedAnimations(processedAnimations);
-    this.setElementAnimations(animationNames, animationSettings);
+    this.setElementAnimations(animationTags, animationSettings);
   }
 
   private detach() {
@@ -105,9 +106,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.element.style.animationTimingFunction = '';
 
     attachedAnimations.forEach(
-      ({ keyframesRule: { name, processedKeyframes }, removable }) => {
+      ({ keyframesRule: { tag, processedKeyframes }, removable }) => {
         if (removable && processedKeyframes) {
-          removeCSSAnimation(name);
+          removeCSSAnimation(tag);
         }
       }
     );
@@ -121,7 +122,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       const rule = processedAnimation.keyframesRule;
       if (rule.processedKeyframes) {
         // We always call insert as it will insert animation only if it doesn't exist
-        insertCSSAnimation(rule.name, rule.processedKeyframes);
+        insertCSSAnimation(rule.tag, rule.processedKeyframes);
       }
       newAttachedAnimations[rule.processedKeyframes] = processedAnimation;
     });
@@ -133,7 +134,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
           rule.processedKeyframes &&
           !newAttachedAnimations[rule.processedKeyframes]
         ) {
-          removeCSSAnimation(rule.name);
+          removeCSSAnimation(rule.tag);
         }
       }
     );
@@ -142,10 +143,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   private setElementAnimations(
-    animationNames: string[],
+    animationTags: number[],
     animationSettings: ProcessedSettings
   ) {
-    this.element.style.animationName = animationNames.join(',');
+    this.element.style.animationName = animationTags
+      .map((tag) => `${ANIMATION_NAME_PREFIX}${tag}`)
+      .join(',');
 
     this.element.style.animationDuration = maybeAddSuffixes(
       animationSettings,

@@ -34,18 +34,18 @@ class CSSAnimationsManager {
 
  private:
   using AnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
-  using NameToAnimationsMap = std::unordered_map<std::string, AnimationsVector>;
+  using TagToAnimationsMap = std::unordered_map<AnimationTag, AnimationsVector>;
 
   AnimationsVector animations_;
-  std::unordered_map<std::string, OperationsLoop::OperationHandle>
+  std::unordered_map<AnimationTag, OperationsLoop::OperationHandle>
       operationHandles_;
 
   std::shared_ptr<OperationsLoop> operationsLoop_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  NameToAnimationsMap createCurrentNameToAnimationsMap() const;
+  TagToAnimationsMap createCurrentTagToAnimationsMap() const;
   AnimationsVector createAndStartNewAnimations(
-      NameToAnimationsMap &nameToAnimationsMap,
+      TagToAnimationsMap &tagToAnimationsMap,
       const std::vector<CSSAnimationConfig> &animationConfigs);
 
   std::shared_ptr<CSSAnimation> createAnimation(

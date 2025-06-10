@@ -167,12 +167,6 @@ export default class AnimatedComponent<
   }
 
   componentWillUnmount() {
-    if (!IS_JEST) {
-      if (this._CSSManager) {
-        this._CSSManager.unmountCleanup();
-      }
-    }
-
     const wrapper = this._viewInfo?.shadowNodeWrapper;
     if (!SHOULD_BE_USE_WEB && wrapper) {
       // Mark node as removable on the native (C++) side, but only actually remove it

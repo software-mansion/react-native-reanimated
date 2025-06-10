@@ -47,7 +47,9 @@ export type NormalizedSingleCSSAnimationSettings = {
 };
 
 export type CSSAnimationUpdates = {
-  animationNames?: string[];
+  keyframeConfigs?: (NormalizedCSSAnimationKeyframesConfig & {
+    tag?: number;
+  })[];
   newAnimationSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
   settingsUpdates?: Record<
     string,
@@ -59,5 +61,5 @@ export type CSSAnimationUpdates = {
 export type NormalizedSingleCSSAnimationConfig =
   NormalizedCSSAnimationKeyframesConfig &
     NormalizedSingleCSSAnimationSettings & {
-      name: string;
+      tag?: number;
     };

@@ -35,15 +35,15 @@ struct CSSAnimationSettings {
 };
 
 struct CSSAnimationConfig : public CSSAnimationSettings {
-  std::string name;
+  AnimationTag tag;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
   std::shared_ptr<KeyframeEasings> keyframeEasings;
 
   // TODO - remove this constructor when refactor is finished
   CSSAnimationConfig(
-      const std::string &name,
-      const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-      CSSAnimationSettings settings);
+      AnimationTag tag,
+      CSSAnimationSettings settings,
+      const CSSKeyframesConfig &keyframesConfig);
 
   // Both constructors are needed for rawValue conversion
   // (node_modules/react-native/ReactCommon/react/renderer/core/propsConversions.h)
@@ -73,13 +73,15 @@ using CSSAnimationSettingsUpdatesMap =
     std::unordered_map<size_t, PartialCSSAnimationSettings>;
 
 struct CSSAnimationUpdates {
-  std::optional<std::vector<std::string>> animationNames;
+  std::optional<std::vector<std::pair<AnimationTag, CSSKeyframesConfig>>>
+      keyframeConfigs;
   CSSAnimationSettingsMap newAnimationSettings;
   CSSAnimationSettingsUpdatesMap settingsUpdates;
 };
 
 CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
-    const jsi::Value &config);
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
 
 } // namespace reanimated::css

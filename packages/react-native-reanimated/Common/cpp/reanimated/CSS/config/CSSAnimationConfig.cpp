@@ -69,11 +69,10 @@ CSSAnimationSettings::CSSAnimationSettings(const RawValue &rawValue) {
 }
 
 CSSAnimationConfig::CSSAnimationConfig(
-    const std::string &name,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    CSSAnimationSettings settings)
-    : CSSAnimationSettings(std::move(settings)), name(std::move(name)) {
-  const auto &keyframesConfig = keyframesRegistry->get(name);
+    AnimationTag tag,
+    CSSAnimationSettings settings,
+    const CSSKeyframesConfig &keyframesConfig)
+    : CSSAnimationSettings(std::move(settings)), tag(tag) {
   styleInterpolator = keyframesConfig.styleInterpolator;
   keyframeEasings = keyframesConfig.keyframeEasings;
 }
@@ -85,15 +84,7 @@ CSSAnimationConfig::CSSAnimationConfig(
   parseRawValue(
       rawValue,
       [this, keyframesRegistry](jsi::Runtime &rt, const jsi::Value &value) {
-        const auto configObj = value.asObject(rt);
-        name = configObj.getProperty(rt, "name").asString(rt).utf8(rt);
-
-        if (!keyframesRegistry->has(name)) {
-          keyframesRegistry->add(
-              name, parseCSSAnimationKeyframesConfig(rt, value));
-        }
-
-        const auto &keyframesConfig = keyframesRegistry->get(name);
+        const auto &keyframesConfig = keyframesRegistry->getOrCreate(rt, value);
         styleInterpolator = keyframesConfig.styleInterpolator;
         keyframeEasings = keyframesConfig.keyframeEasings;
       });
@@ -105,10 +96,10 @@ bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
     return true;
   }
 
-  return duration == other.duration && easing == other.easing &&
-      delay == other.delay && iterationCount == other.iterationCount &&
-      direction == other.direction && fillMode == other.fillMode &&
-      playState == other.playState && name == other.name;
+  return tag == other.tag && duration == other.duration &&
+      easing == other.easing && delay == other.delay &&
+      iterationCount == other.iterationCount && direction == other.direction &&
+      fillMode == other.fillMode && playState == other.playState;
 }
 
 // TODO - remove the following code later on
@@ -145,23 +136,6 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   return result;
 }
 
-std::vector<std::string> parseAnimationNames(
-    jsi::Runtime &rt,
-    const jsi::Value &animationNames) {
-  std::vector<std::string> result;
-
-  const auto &namesArray = animationNames.asObject(rt).asArray(rt);
-  const auto animationNamesCount = namesArray.size(rt);
-  result.reserve(animationNamesCount);
-
-  for (size_t i = 0; i < animationNamesCount; i++) {
-    result.emplace_back(
-        namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
-  }
-
-  return result;
-}
-
 template <typename TResult>
 std::unordered_map<size_t, TResult> parseHelper(
     jsi::Runtime &rt,
@@ -186,7 +160,6 @@ std::unordered_map<size_t, TResult> parseHelper(
 
 CSSAnimationSettingsMap parseNewAnimationSettings(
     jsi::Runtime &rt,
-    const std::vector<std::string> &animationNames,
     const jsi::Value &newSettings) {
   return parseHelper<CSSAnimationSettings>(
       rt,
@@ -209,21 +182,33 @@ CSSAnimationSettingsUpdatesMap parseSettingsUpdates(
 
 CSSAnimationUpdates parseCSSAnimationUpdates(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry) {
   const auto &configObj = config.asObject(rt);
 
   CSSAnimationUpdates result;
 
-  if (configObj.hasProperty(rt, "animationNames")) {
-    const auto animationNames =
-        parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
-    result.animationNames = std::move(animationNames);
+  if (configObj.hasProperty(rt, "keyframeConfigs")) {
+    const auto &keyframeConfigs =
+        configObj.getProperty(rt, "keyframeConfigs").asObject(rt).asArray(rt);
+    const auto keyframeConfigsCount = keyframeConfigs.size(rt);
+    std::vector<std::pair<AnimationTag, CSSKeyframesConfig>>
+        keyframeConfigsVector;
+    keyframeConfigsVector.reserve(keyframeConfigsCount);
+
+    for (size_t i = 0; i < keyframeConfigsCount; i++) {
+      const auto &config = keyframeConfigs.getValueAtIndex(rt, i);
+      const auto &keyframesConfig = keyframesRegistry->getOrCreate(rt, config);
+      keyframeConfigsVector.emplace_back(
+          config.asObject(rt).getProperty(rt, "tag").asNumber(),
+          keyframesConfig);
+    }
+
+    result.keyframeConfigs = std::move(keyframeConfigsVector);
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
       result.newAnimationSettings = parseNewAnimationSettings(
-          rt,
-          animationNames,
-          configObj.getProperty(rt, "newAnimationSettings"));
+          rt, configObj.getProperty(rt, "newAnimationSettings"));
     }
   }
 

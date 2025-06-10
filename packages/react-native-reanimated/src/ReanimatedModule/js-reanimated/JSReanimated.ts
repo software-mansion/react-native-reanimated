@@ -21,7 +21,6 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
-  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
@@ -279,21 +278,6 @@ class JSReanimated implements IReanimatedModule {
   unmarkNodeAsRemovable(_viewTag: number): void {
     throw new ReanimatedError(
       'unmarkNodeAsRemovable is not available in JSReanimated.'
-    );
-  }
-
-  registerCSSKeyframes(
-    _animationName: string,
-    _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void {
-    throw new ReanimatedError(
-      '`registerCSSKeyframes` is not available in JSReanimated.'
-    );
-  }
-
-  unregisterCSSKeyframes(_animationName: string): void {
-    throw new ReanimatedError(
-      '`unregisterCSSKeyframes` is not available in JSReanimated.'
     );
   }
 

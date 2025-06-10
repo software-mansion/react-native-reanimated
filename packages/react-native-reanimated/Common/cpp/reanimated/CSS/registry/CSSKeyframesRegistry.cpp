@@ -2,31 +2,40 @@
 
 namespace reanimated::css {
 
-const CSSKeyframesConfig &CSSKeyframesRegistry::get(
-    const std::string &animationName) const {
-  const auto it = registry_.find(animationName);
-  if (it == registry_.end()) {
-    throw std::runtime_error(
-        "[Reanimated] " + animationName +
-        " not found in the keyframes registry.");
+AnimationTag CSSKeyframesRegistry::nextInlineTag = -1;
+
+const CSSKeyframesConfig &CSSKeyframesRegistry::getOrCreate(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto &configObj = config.asObject(rt);
+  AnimationTag tag;
+
+  // We use positive tag numbers for css animations created with css.create
+  if (configObj.hasProperty(rt, "tag")) {
+    tag = configObj.getProperty(rt, "tag").asNumber();
   }
-  return it->second;
+  // Or pass just keyframes config for inline css animations that were created
+  // without a css.keyframes helper function and generate a negative tag number
+  else {
+    tag = getTagFromConfig(rt, config);
+  }
+
+  if (registry_.find(tag) == registry_.end()) {
+    registry_[tag] = parseCSSAnimationKeyframesConfig(rt, config);
+  }
+
+  return registry_[tag];
 }
 
-bool CSSKeyframesRegistry::has(const std::string &animationName) const {
-  return registry_.find(animationName) != registry_.end();
-}
+AnimationTag CSSKeyframesRegistry::getTagFromConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  const auto canonicalForm = toCanonicalForm(rt, config);
+  if (tagByCanonicalForm_.find(canonicalForm) != tagByCanonicalForm_.end()) {
+    return tagByCanonicalForm_[canonicalForm];
+  }
 
-void CSSKeyframesRegistry::add(
-    const std::string &animationName,
-    CSSKeyframesConfig &&config) {
-  registry_[animationName] = std::move(config);
-}
-
-// TODO - add proper keyframes cleanup mechanism in the new CSS animations
-// implementation
-void CSSKeyframesRegistry::remove(const std::string &animationName) {
-  registry_.erase(animationName);
+  return tagByCanonicalForm_[canonicalForm] = nextInlineTag--;
 }
 
 } // namespace reanimated::css
