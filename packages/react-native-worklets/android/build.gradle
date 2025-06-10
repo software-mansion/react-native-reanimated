@@ -70,6 +70,7 @@ if (isNewArchitectureEnabled()) {
 def reactNativeRootDir = resolveReactNativeDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
+def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
 
@@ -291,7 +292,7 @@ task assertMinimalReactNativeVersionTask {
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
 task assertNewArchitectureEnabledTask {
-    onlyIf { !isNewArchitectureEnabled() }
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
     doFirst {
         throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
     }
