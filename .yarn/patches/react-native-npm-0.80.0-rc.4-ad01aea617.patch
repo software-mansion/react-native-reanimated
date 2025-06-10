@@ -587,8 +587,33 @@ index 51709eebcd7..2868f9ef52c 100644
        const std::string& sourceURL,
        std::function<void(jsi::Runtime& runtime)>&& beforeLoad = nullptr,
        std::function<void(jsi::Runtime& runtime)>&& afterLoad = nullptr);
+diff --git a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
+index 1e9917b8737..435c9e2c3fa 100644
+--- a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
++++ b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
+@@ -16,6 +16,8 @@ else
+   source[:tag] = "v#{version}"
+ end
+ 
++experimental_bundling_flag = ENV["WORKLETS_EXPERIMENTAL_BUNDLING"] == "1" ? 'WORKLETS_EXPERIMENTAL_BUNDLING=1' : ''
++
+ header_search_paths = [
+   "$(PODS_ROOT)/Headers/Private/React-Core",
+   "$(PODS_TARGET_SRCROOT)/../../../..",
+@@ -36,7 +38,10 @@ Pod::Spec.new do |s|
+   s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => header_search_paths,
+                                 "USE_HEADERMAP" => "YES",
+                                 "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
+-                                "GCC_WARN_PEDANTIC" => "YES" }
++                                "GCC_WARN_PEDANTIC" => "YES",
++                                "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{experimental_bundling_flag}",
++                                "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{experimental_bundling_flag}",
++                               }
+ 
+   if ENV['USE_FRAMEWORKS']
+     s.header_mappings_dir     = './'
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-index e76e1d18df9..31f971ef218 100644
+index e76e1d18df9..9901eb7f5b1 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 @@ -11,6 +11,7 @@
@@ -615,7 +640,7 @@ index e76e1d18df9..31f971ef218 100644
  
  #import "ObjCTimerRegistry.h"
  #import "RCTJSThreadManager.h"
-@@ -548,9 +551,17 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+@@ -548,9 +551,19 @@ - (void)_loadScriptFromSource:(RCTSource *)source
    }
  
    auto script = std::make_unique<NSDataBigString>(source.data);
@@ -624,17 +649,19 @@ index e76e1d18df9..31f971ef218 100644
  
 -  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
 +  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete, turboModuleManager = self->_turboModuleManager, scriptBuffer, url](jsi::Runtime &_) {
++    #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
 +    auto bundleConsumerNames = [RCTModulesConformingToProtocolsProvider bundleConsumerClassNames];
 +    for (id name in bundleConsumerNames) {
 +      id<RCTBundleConsumer> module = (id<RCTBundleConsumer>)[turboModuleManager moduleForName:[name UTF8String]];
 +      module.scriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
 +      module.sourceURL = @(url);
 +    }
++    #endif // WORKLETS_EXPERIMENTAL_BUNDLING
 +    
      if (waitUntilModuleSetupComplete) {
        waitUntilModuleSetupComplete();
      }
-@@ -558,7 +569,8 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+@@ -558,7 +571,8 @@ - (void)_loadScriptFromSource:(RCTSource *)source
    auto afterLoad = [](jsi::Runtime &_) {
      [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTInstanceDidLoadBundle" object:nil];
    };
