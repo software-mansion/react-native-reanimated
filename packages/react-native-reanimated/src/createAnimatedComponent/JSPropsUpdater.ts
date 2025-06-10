@@ -25,7 +25,7 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
         global.updateJSProps = (viewTag: number, props: unknown) => {
           // console.log(viewTag);
           // console.log(props);
-          runOnJS(updater)(viewTag, props);
+          // runOnJS(updater)(viewTag, props);
         };
       })();
       JSPropsUpdaterNative.isInitialized = true;
