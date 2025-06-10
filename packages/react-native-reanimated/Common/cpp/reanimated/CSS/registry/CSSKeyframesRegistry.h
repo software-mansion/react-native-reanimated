@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
+#include <reanimated/CSS/util/jsi.h>
 
 #include <memory>
 #include <string>
@@ -9,15 +10,23 @@
 
 namespace reanimated::css {
 
+using AnimationTag = int32_t;
+
 class CSSKeyframesRegistry {
  public:
-  const CSSKeyframesConfig &get(const std::string &animationName) const;
-  bool has(const std::string &animationName) const;
-  void add(const std::string &animationName, CSSKeyframesConfig &&config);
-  void remove(const std::string &animationName);
+  const CSSKeyframesConfig &getOrCreate(
+      jsi::Runtime &rt,
+      const jsi::Value &config);
+
+  // TODO - add keyframes removal when no longer used
 
  private:
-  std::unordered_map<std::string, CSSKeyframesConfig> registry_;
+  static AnimationTag nextInlineTag;
+
+  std::unordered_map<AnimationTag, CSSKeyframesConfig> registry_;
+  std::unordered_map<std::string, AnimationTag> tagByCanonicalForm_;
+
+  AnimationTag getTagFromConfig(jsi::Runtime &rt, const jsi::Value &config);
 };
 
 } // namespace reanimated::css

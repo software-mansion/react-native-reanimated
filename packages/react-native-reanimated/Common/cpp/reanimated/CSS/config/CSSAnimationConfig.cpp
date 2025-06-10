@@ -69,11 +69,11 @@ CSSAnimationSettings::CSSAnimationSettings(const RawValue &rawValue) {
 }
 
 CSSAnimationConfig::CSSAnimationConfig(
-    const std::string &name,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
-    CSSAnimationSettings settings)
-    : CSSAnimationSettings(std::move(settings)), name(std::move(name)) {
-  const auto &keyframesConfig = keyframesRegistry->get(name);
+    AnimationTag tag,
+    CSSAnimationSettings settings,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
+    : CSSAnimationSettings(std::move(settings)), tag(tag) {
+  const auto &keyframesConfig = keyframesRegistry->get(tag);
   styleInterpolator = keyframesConfig.styleInterpolator;
   keyframeEasings = keyframesConfig.keyframeEasings;
 }
@@ -85,15 +85,7 @@ CSSAnimationConfig::CSSAnimationConfig(
   parseRawValue(
       rawValue,
       [this, keyframesRegistry](jsi::Runtime &rt, const jsi::Value &value) {
-        const auto configObj = value.asObject(rt);
-        name = configObj.getProperty(rt, "name").asString(rt).utf8(rt);
-
-        if (!keyframesRegistry->has(name)) {
-          keyframesRegistry->add(
-              name, parseCSSAnimationKeyframesConfig(rt, value));
-        }
-
-        const auto &keyframesConfig = keyframesRegistry->get(name);
+        const auto &keyframesConfig = keyframesRegistry->getOrCreate(rt, value);
         styleInterpolator = keyframesConfig.styleInterpolator;
         keyframeEasings = keyframesConfig.keyframeEasings;
       });
@@ -105,10 +97,10 @@ bool CSSAnimationConfig::operator==(const CSSAnimationConfig &other) const {
     return true;
   }
 
-  return duration == other.duration && easing == other.easing &&
-      delay == other.delay && iterationCount == other.iterationCount &&
-      direction == other.direction && fillMode == other.fillMode &&
-      playState == other.playState && name == other.name;
+  return tag == other.tag && duration == other.duration &&
+      easing == other.easing && delay == other.delay &&
+      iterationCount == other.iterationCount && direction == other.direction &&
+      fillMode == other.fillMode && playState == other.playState;
 }
 
 // TODO - remove the following code later on
@@ -145,18 +137,17 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   return result;
 }
 
-std::vector<std::string> parseAnimationNames(
+std::vector<AnimationTag> parseAnimationTags(
     jsi::Runtime &rt,
-    const jsi::Value &animationNames) {
-  std::vector<std::string> result;
+    const jsi::Value &animationTags) {
+  std::vector<AnimationTag> result;
 
-  const auto &namesArray = animationNames.asObject(rt).asArray(rt);
-  const auto animationNamesCount = namesArray.size(rt);
-  result.reserve(animationNamesCount);
+  const auto &tagsArray = animationTags.asObject(rt).asArray(rt);
+  const auto animationTagsCount = tagsArray.size(rt);
+  result.reserve(animationTagsCount);
 
-  for (size_t i = 0; i < animationNamesCount; i++) {
-    result.emplace_back(
-        namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+  for (size_t i = 0; i < animationTagsCount; i++) {
+    result.emplace_back(tagsArray.getValueAtIndex(rt, i).asNumber());
   }
 
   return result;
@@ -186,7 +177,6 @@ std::unordered_map<size_t, TResult> parseHelper(
 
 CSSAnimationSettingsMap parseNewAnimationSettings(
     jsi::Runtime &rt,
-    const std::vector<std::string> &animationNames,
     const jsi::Value &newSettings) {
   return parseHelper<CSSAnimationSettings>(
       rt,
@@ -214,16 +204,14 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
 
   CSSAnimationUpdates result;
 
-  if (configObj.hasProperty(rt, "animationNames")) {
-    const auto animationNames =
-        parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
-    result.animationNames = std::move(animationNames);
+  if (configObj.hasProperty(rt, "animationTags")) {
+    const auto animationTags =
+        parseAnimationTags(rt, configObj.getProperty(rt, "animationTags"));
+    result.animationTags = std::move(animationTags);
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
       result.newAnimationSettings = parseNewAnimationSettings(
-          rt,
-          animationNames,
-          configObj.getProperty(rt, "newAnimationSettings"));
+          rt, configObj.getProperty(rt, "newAnimationSettings"));
     }
   }
 

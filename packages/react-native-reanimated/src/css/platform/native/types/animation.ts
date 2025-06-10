@@ -59,5 +59,5 @@ export type CSSAnimationUpdates = {
 export type NormalizedSingleCSSAnimationConfig =
   NormalizedCSSAnimationKeyframesConfig &
     NormalizedSingleCSSAnimationSettings & {
-      name: string;
+      tag: number;
     };

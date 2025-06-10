@@ -473,19 +473,11 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerCSSKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &animationName,
-    const jsi::Value &keyframesConfig) {
-  cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig));
-}
-
+// TODO - remove when proper cleanup is implemented on the CPP side
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &animationName) {
-  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+    const jsi::Value &animationTag) {
+  cssAnimationKeyframesRegistry_->remove(animationTag.asNumber());
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
