@@ -1,5 +1,5 @@
-#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <react/debug/react_native_assert.h>
+#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
 #include <utility>
 
@@ -12,7 +12,9 @@ AnimatedSensorModule::AnimatedSensorModule(
           platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  react_native_assert(sensorsIds_.empty() && "Tried to deallocate AnimatedSensorModule with registered sensors");
+  react_native_assert(
+      sensorsIds_.empty() &&
+      "Tried to deallocate AnimatedSensorModule with registered sensors");
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
