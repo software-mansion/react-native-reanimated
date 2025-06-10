@@ -7,7 +7,7 @@ namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
-  assert(valueUnpacker.isObject() && "valueUnpacker not found");
+  react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
@@ -352,7 +352,7 @@ jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
-  assert(
+  react_native_assert(
       std::any_of(
           data_.cbegin(),
           data_.cend(),

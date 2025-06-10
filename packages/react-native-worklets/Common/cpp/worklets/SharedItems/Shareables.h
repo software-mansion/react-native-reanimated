@@ -258,9 +258,7 @@ class ShareableHostFunction : public Shareable {
  public:
   ShareableHostFunction(jsi::Runtime &rt, jsi::Function function)
       : Shareable(HostFunctionType),
-        hostFunction_(
-            (assert(function.isHostFunction(rt)),
-             function.getHostFunction(rt))),
+        hostFunction_(function.getHostFunction(rt)),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
