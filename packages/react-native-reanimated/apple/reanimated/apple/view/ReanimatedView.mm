@@ -1,3 +1,6 @@
+#if TARGET_OS_OSX
+#else
+
 #import <reanimated/apple/view/ReanimatedView.h>
 
 #import <react/renderer/components/rnreanimated/ComponentDescriptors.h>
@@ -28,3 +31,5 @@ Class<RCTComponentViewProtocol> ReanimatedViewCls(void)
 {
   return ReanimatedView.class;
 }
+
+#endif

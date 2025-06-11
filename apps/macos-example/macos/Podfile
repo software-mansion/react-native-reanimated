@@ -1,5 +1,4 @@
 require_relative '../node_modules/react-native-macos/scripts/react_native_pods'
-require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
 
