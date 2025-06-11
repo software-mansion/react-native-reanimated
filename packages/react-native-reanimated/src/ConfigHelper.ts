@@ -3,6 +3,7 @@ import type { LoggerConfig } from 'react-native-worklets';
 import { updateLoggerConfig } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
+import type { ShadowNodeWrapper } from './commonTypes';
 import {
   executeOnUIRuntimeSync,
   jsiRegisterNativePropNamesForComponentName,
@@ -45,12 +46,18 @@ export interface ViewConfig {
   validAttributes: Record<string, unknown>;
 }
 
-export function adaptViewConfig(viewConfig: ViewConfig): void {
-  const componentName = viewConfig.uiViewClassName;
-  if (PROCESSED_VIEW_NAMES.has(componentName)) {
+export function adaptViewConfig(
+  shadowNodeWrapper: ShadowNodeWrapper,
+  viewConfig: ViewConfig
+): void {
+  const uiViewClassName = viewConfig.uiViewClassName;
+  if (PROCESSED_VIEW_NAMES.has(uiViewClassName)) {
     return;
   }
   const nativePropNames = Object.keys(viewConfig.validAttributes);
-  jsiRegisterNativePropNamesForComponentName(componentName, nativePropNames);
-  PROCESSED_VIEW_NAMES.add(componentName);
+  jsiRegisterNativePropNamesForComponentName(
+    shadowNodeWrapper,
+    nativePropNames
+  );
+  PROCESSED_VIEW_NAMES.add(uiViewClassName);
 }

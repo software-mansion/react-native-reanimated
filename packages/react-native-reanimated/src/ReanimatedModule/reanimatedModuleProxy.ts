@@ -43,7 +43,7 @@ export interface ReanimatedModuleProxy {
   unregisterSensor(sensorId: number): void;
 
   registerNativePropNamesForComponentName(
-    componentName: string,
+    shadowNodeWrapper: ShadowNodeWrapper,
     nativePropNames: string[]
   ): void;
 

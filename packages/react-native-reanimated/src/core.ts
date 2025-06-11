@@ -12,6 +12,7 @@ import type {
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
+  ShadowNodeWrapper,
   SharedValue,
   Value3D,
   ValueRotation,
@@ -217,12 +218,12 @@ export function setShouldAnimateExitingForTag(
 }
 
 export function jsiRegisterNativePropNamesForComponentName(
-  componentName: string,
+  shadowNodeWrapper: ShadowNodeWrapper,
   nativePropNames: string[]
 ): void {
   if (!SHOULD_BE_USE_WEB) {
     ReanimatedModule.registerNativePropNamesForComponentName(
-      componentName,
+      shadowNodeWrapper,
       nativePropNames
     );
   }

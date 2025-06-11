@@ -167,11 +167,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   registerNativePropNamesForComponentName(
-    componentName: string,
+    shadowNodeWrapper: ShadowNodeWrapper,
     nativePropNames: string[]
   ) {
     this.#reanimatedModuleProxy.registerNativePropNamesForComponentName(
-      componentName,
+      shadowNodeWrapper,
       nativePropNames
     );
   }

@@ -331,9 +331,10 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
 
 jsi::Value ReanimatedModuleProxy::registerNativePropNamesForComponentName(
     jsi::Runtime &rt,
-    const jsi::Value &componentName,
+    const jsi::Value &shadowNodeWrapper,
     const jsi::Value &nativePropNames) {
-  const auto componentNameStr = componentName.asString(rt).utf8(rt);
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto componentNameStr = shadowNode->getComponentName();
   const auto nativePropNamesArray = nativePropNames.asObject(rt).asArray(rt);
   const auto size = nativePropNamesArray.size(rt);
   std::unordered_set<std::string> nativePropNamesSet;
@@ -569,8 +570,10 @@ jsi::Value ReanimatedModuleProxy::filterNonNativeProps(
   bool hasAnyNonNativeProp = false;
   const jsi::Object &propsObject = props.asObject(rt);
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  const auto &nativePropNamesForComponentName =
-      nativePropNamesForComponentNames_[componentName];
+  const auto it = nativePropNamesForComponentNames_.find(componentName);
+  const auto found = it != nativePropNamesForComponentNames_.end();
+  react_native_assert(found && "Native props not found for given component name");
+  const auto &nativePropNamesForComponentName = it->second;
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);

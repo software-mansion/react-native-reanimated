@@ -79,7 +79,7 @@ class ReanimatedModuleProxy
       override;
   jsi::Value registerNativePropNamesForComponentName(
       jsi::Runtime &rt,
-      const jsi::Value &componentName,
+      const jsi::Value &shadowNodeWrapper,
       const jsi::Value &nativePropNames) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,

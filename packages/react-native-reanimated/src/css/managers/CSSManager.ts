@@ -23,7 +23,7 @@ export default class CSSManager implements ICSSManager {
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
 
     if (viewConfig) {
-      adaptViewConfig(viewConfig);
+      adaptViewConfig(wrapper, viewConfig);
     }
   }
 
