@@ -1,9 +1,6 @@
 'use strict';
 
-const PREFIX = '[Reanimated]';
-const DOCS_URL =
-  'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
-const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+const PREFIX = '[Worklets]';
 
 export enum LogLevel {
   warn = 1,
@@ -19,7 +16,6 @@ type LogFunction = (data: LogData) => void;
 
 export type LoggerConfig = {
   level?: LogLevel;
-  strict?: boolean;
 };
 
 export type LoggerConfigInternal = {
@@ -41,7 +37,6 @@ function logToConsole(data: LogData) {
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
-  strict: true,
 };
 
 /**
@@ -51,7 +46,7 @@ export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
  */
 export function registerLoggerConfig(config: LoggerConfigInternal) {
   'worklet';
-  global.__reanimatedLoggerConfig = config;
+  global.__workletsLoggerConfig = config;
 }
 
 /**
@@ -66,32 +61,20 @@ export function registerLoggerConfig(config: LoggerConfigInternal) {
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
   registerLoggerConfig({
-    ...global.__reanimatedLoggerConfig,
-    // Don't reuse previous level and strict values from the global config
+    ...global.__workletsLoggerConfig,
+    // Don't reuse previous level values from the global config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
-    strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
   });
 }
 
-type LogOptions = {
-  strict?: boolean;
-};
-
-function handleLog(level: LogLevel, message: string, options: LogOptions) {
+function handleLog(level: LogLevel, message: string) {
   'worklet';
-  const config = global.__reanimatedLoggerConfig;
+  const config = global.__workletsLoggerConfig;
   if (
-    // Don't log if the log is marked as strict-only and the config doesn't
-    // enable strict logging
-    (options.strict && !config.strict) ||
     // Don't log if the log level is below the minimum configured level
     level < config.level
   ) {
     return;
-  }
-
-  if (options.strict) {
-    message += `\n\n${DOCS_REFERENCE}`;
   }
 
   config.logFunction({
@@ -101,12 +84,12 @@ function handleLog(level: LogLevel, message: string, options: LogOptions) {
 }
 
 export const logger = {
-  warn(message: string, options: LogOptions = {}) {
+  warn(message: string) {
     'worklet';
-    handleLog(LogLevel.warn, message, options);
+    handleLog(LogLevel.warn, message);
   },
-  error(message: string, options: LogOptions = {}) {
+  error(message: string) {
     'worklet';
-    handleLog(LogLevel.error, message, options);
+    handleLog(LogLevel.error, message);
   },
 };

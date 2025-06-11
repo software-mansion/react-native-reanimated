@@ -1,3 +1,4 @@
+'use strict';
 import {
   DEFAULT_LOGGER_CONFIG,
   registerLoggerConfig,
