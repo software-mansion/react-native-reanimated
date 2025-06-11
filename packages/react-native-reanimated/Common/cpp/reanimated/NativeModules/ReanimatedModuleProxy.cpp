@@ -572,7 +572,8 @@ jsi::Value ReanimatedModuleProxy::filterNonNativeProps(
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
   const auto it = nativePropNamesForComponentNames_.find(componentName);
   const auto found = it != nativePropNamesForComponentNames_.end();
-  react_native_assert(found && "Native props not found for given component name");
+  react_native_assert(
+      found && "Native props not found for given component name");
   const auto &nativePropNamesForComponentName = it->second;
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
