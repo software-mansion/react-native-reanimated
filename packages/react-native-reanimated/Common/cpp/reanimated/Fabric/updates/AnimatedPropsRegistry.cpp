@@ -21,10 +21,11 @@ SurfaceId AnimatedPropsRegistry::update(
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
-    jsiUpdates_.emplace_back(
+    JSIUpdate update{
         /* .tag = */ shadowNode->getTag(),
         /* .componentName = */ shadowNode->getComponentName(),
-        /* .props = */ std::make_unique<jsi::Value>(rt, updates));
+        /* .props = */ std::make_unique<jsi::Value>(rt, updates)};
+    jsiUpdates_.emplace_back(std::move(update));
     surfaceId = shadowNode->getSurfaceId();
   }
 
