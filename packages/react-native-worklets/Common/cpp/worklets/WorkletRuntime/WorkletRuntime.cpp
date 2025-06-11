@@ -81,11 +81,7 @@ WorkletRuntime::WorkletRuntime(
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(
-          jsQueue,
-          name,
-          supportsLocking,
-          runtimeMutex_)),
+      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
 #endif
