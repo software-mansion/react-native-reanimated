@@ -1,6 +1,5 @@
 'use strict';
-import type { LoggerConfig } from 'react-native-worklets';
-
+import type { LoggerConfig } from './common';
 import { logger, SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
