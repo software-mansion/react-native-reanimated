@@ -4,12 +4,13 @@ import type {
   ShareableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { logger, WorkletsModule } from 'react-native-worklets';
+import { WorkletsModule } from 'react-native-worklets';
 
 import {
   IS_JEST,
   IS_WEB,
   IS_WINDOW_AVAILABLE,
+  logger,
   ReanimatedError,
 } from '../../common';
 import type {

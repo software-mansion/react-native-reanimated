@@ -1,8 +1,6 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
 import { ColorProperties } from '../Colors';
-import { processColor } from '../common';
+import { logger, processColor } from '../common';
 import type {
   AnimatableValue,
   AnimatedStyle,
