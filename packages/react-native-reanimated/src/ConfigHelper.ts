@@ -13,11 +13,15 @@ export function registerNativePropsForView(
 }
 
 export function addWhitelistedNativeProps(): void {
-  // TODO: add deprecated warning
+  console.warn(
+    '[Reanimated] `addWhitelistedNativeProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
+  );
 }
 
 export function addWhitelistedUIProps(): void {
-  // TODO: add deprecated warning
+  console.warn(
+    '[Reanimated] `addWhitelistedUIProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
+  );
 }
 
 /**
