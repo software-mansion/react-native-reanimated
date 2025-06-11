@@ -37,7 +37,7 @@ function resolveFindHostInstance_DEPRECATED() {
     findHostInstance_DEPRECATED =
       ReactFabric?.default?.findHostInstance_DEPRECATED ??
       ReactFabric?.findHostInstance_DEPRECATED;
-  } catch (e) {
+  } catch (_e) {
     throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }

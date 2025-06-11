@@ -2,4 +2,4 @@
 export * from './native';
 export * from './normalization';
 export { default as styleBuilder } from './styleBuilder';
-export * from './types';
+export type * from './types';

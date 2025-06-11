@@ -12,7 +12,7 @@ export function assertWorkletsVersion() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { version } = require('react-native-worklets/package.json');
     workletsVersion = version;
-  } catch (e) {
+  } catch (_e) {
     throw new ReanimatedError(
       "react-native-worklets package isn't installed. Please install it to use Reanimated."
     );
