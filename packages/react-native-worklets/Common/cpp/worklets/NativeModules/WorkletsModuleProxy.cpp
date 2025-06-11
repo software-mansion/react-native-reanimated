@@ -36,7 +36,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       script_(script),
       sourceUrl_(sourceUrl) {
   uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
-      rnRuntime,
       createJSIWorkletsModuleProxy(),
       jsQueue_,
       jsScheduler_,
