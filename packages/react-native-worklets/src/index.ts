@@ -25,7 +25,6 @@ export {
   makeShareableCloneRecursive,
 } from './shareables';
 export {
-  callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
