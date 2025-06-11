@@ -11,7 +11,8 @@
 
 namespace reanimated {
 
-using JSIUpdates = std::vector<std::tuple<Tag, std::string, std::unique_ptr<jsi::Value>>>;
+using JSIUpdates =
+    std::vector<std::tuple<Tag, std::string, std::unique_ptr<jsi::Value>>>;
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
   JSIUpdates jsiUpdates_;

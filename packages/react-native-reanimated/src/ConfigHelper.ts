@@ -3,13 +3,16 @@ import type { LoggerConfig } from 'react-native-worklets';
 import { updateLoggerConfig } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
-import { executeOnUIRuntimeSync, jsiRegisterNativePropsForView } from './core';
+import {
+  executeOnUIRuntimeSync,
+  jsiRegisterNativePropNamesForComponentName,
+} from './core';
 
-export function registerNativePropsForView(
-  viewName: string,
+export function registerNativePropNamesForComponentName(
+  componentName: string,
   nativePropNames: string[]
 ): void {
-  jsiRegisterNativePropsForView(viewName, nativePropNames);
+  jsiRegisterNativePropNamesForComponentName(componentName, nativePropNames);
 }
 
 export function addWhitelistedNativeProps(): void {
@@ -50,10 +53,11 @@ export interface ViewConfig {
 }
 
 export function adaptViewConfig(viewConfig: ViewConfig): void {
-  const viewName = viewConfig.uiViewClassName;
-  if (!PROCESSED_VIEW_NAMES.has(viewName)) {
-    const nativePropNames = Object.keys(viewConfig.validAttributes);
-    registerNativePropsForView(viewName, nativePropNames);
-    PROCESSED_VIEW_NAMES.add(viewName);
+  const componentName = viewConfig.uiViewClassName;
+  if (PROCESSED_VIEW_NAMES.has(componentName)) {
+    return;
   }
+  const nativePropNames = Object.keys(viewConfig.validAttributes);
+  registerNativePropNamesForComponentName(componentName, nativePropNames);
+  PROCESSED_VIEW_NAMES.add(componentName);
 }

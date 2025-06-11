@@ -76,9 +76,9 @@ class ReanimatedModuleProxy
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
-  jsi::Value registerNativePropsForView(
+  jsi::Value registerNativePropNamesForComponentName(
       jsi::Runtime &rt,
-      const jsi::Value &viewName,
+      const jsi::Value &componentName,
       const jsi::Value &nativePropNames) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
@@ -212,7 +212,7 @@ class ReanimatedModuleProxy
 
   jsi::Value filterNonNativeProps(
       jsi::Runtime &rt,
-      const std::string &viewName,
+      const std::string &componentName,
       const jsi::Value &props);
 
   const bool isReducedMotion_;
@@ -241,8 +241,12 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_map<std::string, std::unordered_set<std::string>> nativePropNamesForViews_; // Filled by `registerNativePropsForView`.
-  mutable std::mutex nativePropNamesForViewsMutex_; // Protects `nativePropNames_`.
+  // Filled by `registerNativePropNamesForComponentName`.
+  std::unordered_map<std::string, std::unordered_set<std::string>>
+      nativePropNamesForComponentNames_;
+
+  // Protects `nativePropNamesForComponentNames_`.
+  mutable std::mutex nativePropNamesForComponentNamesMutex_;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;

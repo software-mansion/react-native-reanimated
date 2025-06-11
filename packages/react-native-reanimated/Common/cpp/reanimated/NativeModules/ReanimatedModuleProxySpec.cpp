@@ -72,13 +72,15 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(registerNativePropsForView)(
+static jsi::Value REANIMATED_SPEC_PREFIX(
+    registerNativePropNamesForComponentName)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerNativePropsForView(rt, std::move(args[0]), std::move(args[1]));
+      ->registerNativePropNamesForComponentName(
+          rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -237,8 +239,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerSensor)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterSensor)};
-  methodMap_["registerNativePropsForView"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerNativePropsForView)};
+  methodMap_["registerNativePropNamesForComponentName"] = MethodMetadata{
+      2, REANIMATED_SPEC_PREFIX(registerNativePropNamesForComponentName)};
   methodMap_["subscribeForKeyboardEvents"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =

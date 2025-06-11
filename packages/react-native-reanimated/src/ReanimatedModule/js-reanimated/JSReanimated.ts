@@ -260,9 +260,9 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  registerNativePropsForView() {
+  registerNativePropNamesForComponentName() {
     throw new ReanimatedError(
-      'registerNativePropsForView is not available in JSReanimated.'
+      'registerNativePropNamesForComponentName is not available in JSReanimated.'
     );
   }
 

@@ -329,19 +329,22 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::registerNativePropsForView(
+jsi::Value ReanimatedModuleProxy::registerNativePropNamesForComponentName(
     jsi::Runtime &rt,
-    const jsi::Value &viewName,
+    const jsi::Value &componentName,
     const jsi::Value &nativePropNames) {
-  const auto viewNameStr = viewName.asString(rt).utf8(rt);
+  const auto componentNameStr = componentName.asString(rt).utf8(rt);
   const auto nativePropNamesArray = nativePropNames.asObject(rt).asArray(rt);
   const auto size = nativePropNamesArray.size(rt);
   std::unordered_set<std::string> nativePropNamesSet;
   for (size_t i = 0; i < size; i++) {
-    nativePropNamesSet.insert(nativePropNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    nativePropNamesSet.insert(
+        nativePropNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  auto lock = std::unique_lock<std::mutex>(nativePropNamesForViewsMutex_);
-  nativePropNamesForViews_[viewNameStr] = std::move(nativePropNamesSet);
+  auto lock =
+      std::unique_lock<std::mutex>(nativePropNamesForComponentNamesMutex_);
+  nativePropNamesForComponentNames_[componentNameStr] =
+      std::move(nativePropNamesSet);
   return jsi::Value::undefined();
 }
 
@@ -560,17 +563,18 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
 
 jsi::Value ReanimatedModuleProxy::filterNonNativeProps(
     jsi::Runtime &rt,
-    const std::string &viewName,
+    const std::string &componentName,
     const jsi::Value &props) {
   jsi::Object nonNativeProps(rt);
   bool hasAnyNonNativeProp = false;
   const jsi::Object &propsObject = props.asObject(rt);
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  const auto &nativePropNamesForView = nativePropNamesForViews_[viewName];
+  const auto &nativePropNamesForComponentName =
+      nativePropNamesForComponentNames_[componentName];
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(nativePropNamesForView, propName)) {
+    if (!collection::contains(nativePropNamesForComponentName, propName)) {
       hasAnyNonNativeProp = true;
       const auto &propNameStr = propName.c_str();
       const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
@@ -730,10 +734,13 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   {
-    auto lock = std::unique_lock<std::mutex>(nativePropNamesForViewsMutex_);
+    auto lock =
+        std::unique_lock<std::mutex>(nativePropNamesForComponentNamesMutex_);
 
-    for (const auto &[viewTag, viewName, props] : animatedPropsRegistry_->getJSIUpdates()) {
-      const jsi::Value &nonNativeProps = filterNonNativeProps(rt, viewName, *props);
+    for (const auto &[viewTag, componentName, props] :
+         animatedPropsRegistry_->getJSIUpdates()) {
+      const jsi::Value &nonNativeProps =
+          filterNonNativeProps(rt, componentName, *props);
       if (nonNativeProps.isUndefined()) {
         continue;
       }

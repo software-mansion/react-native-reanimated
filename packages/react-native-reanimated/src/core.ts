@@ -216,11 +216,14 @@ export function setShouldAnimateExitingForTag(
   );
 }
 
-export function jsiRegisterNativePropsForView(
-  viewName: string,
+export function jsiRegisterNativePropNamesForComponentName(
+  componentName: string,
   nativePropNames: string[]
 ): void {
   if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.registerNativePropsForView(viewName, nativePropNames);
+    ReanimatedModule.registerNativePropNamesForComponentName(
+      componentName,
+      nativePropNames
+    );
   }
 }
