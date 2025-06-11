@@ -146,7 +146,6 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",

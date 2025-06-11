@@ -5,6 +5,9 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 $worklets_config = worklets_find_config()
 worklets_assert_minimal_react_native_version($worklets_config)
 
+$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
+worklets_assert_new_architecture_enabled($new_arch_enabled)
+
 ios_min_version = '13.4'
 
 Pod::Spec.new do |s|
@@ -61,7 +64,7 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited)  #{hermes_debug_hidden_flags} #{experimental_bundling_flag}",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags} #{experimental_bundling_flag}",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{experimental_bundling_flag}",
   }
   s.xcconfig = {

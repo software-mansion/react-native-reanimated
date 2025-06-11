@@ -18,10 +18,6 @@ string(APPEND CMAKE_CXX_FLAGS
        " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
-endif()
-
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
@@ -75,25 +71,20 @@ target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"
 target_include_directories(
   worklets
   PRIVATE "${REACT_NATIVE_DIR}/ReactCommon"
+          "${REACT_NATIVE_DIR}/ReactCommon/yoga"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor")
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+)
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  target_include_directories(
-    worklets
-    PRIVATE
-      "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-      "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
-
-  if(ReactAndroid_VERSION_MINOR LESS 76)
-    target_link_libraries(
-      worklets ReactAndroid::fabricjni ReactAndroid::react_debug
-      ReactAndroid::react_render_core
-      ReactAndroid::react_render_componentregistry ReactAndroid::rrc_view)
-  endif()
+if(ReactAndroid_VERSION_MINOR LESS 76)
+  target_link_libraries(
+    worklets ReactAndroid::fabricjni ReactAndroid::react_debug
+    ReactAndroid::react_render_core
+    ReactAndroid::react_render_componentregistry ReactAndroid::rrc_view)
 endif()
 
 # build shared lib
