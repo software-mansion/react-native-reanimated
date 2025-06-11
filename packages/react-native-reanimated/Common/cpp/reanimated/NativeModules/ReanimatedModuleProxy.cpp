@@ -741,10 +741,9 @@ void ReanimatedModuleProxy::performOperations() {
     auto lock =
         std::unique_lock<std::mutex>(nativePropNamesForComponentNamesMutex_);
 
-    for (const auto &[viewTag, componentName, props] :
-         animatedPropsRegistry_->getJSIUpdates()) {
+    for (const auto &jsiUpdate : animatedPropsRegistry_->getJSIUpdates()) {
       const jsi::Value &nonNativeProps =
-          filterNonNativeProps(rt, componentName, *props);
+          filterNonNativeProps(rt, jsiUpdate.componentName, *jsiUpdate.props);
       if (nonNativeProps.isUndefined()) {
         continue;
       }
@@ -755,7 +754,7 @@ void ReanimatedModuleProxy::performOperations() {
           "[Reanimated] `updateJSProps` not found");
       jsi::Function jsPropsUpdater =
           maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-      jsPropsUpdater.call(rt, viewTag, nonNativeProps);
+      jsPropsUpdater.call(rt, jsiUpdate.tag, nonNativeProps);
     }
   }
 

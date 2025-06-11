@@ -6,13 +6,17 @@
 
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace reanimated {
 
-using JSIUpdates =
-    std::vector<std::tuple<Tag, std::string, std::unique_ptr<jsi::Value>>>;
+struct JSIUpdate {
+  const Tag tag;
+  const std::string componentName;
+  std::unique_ptr<const jsi::Value> props;
+};
+
+using JSIUpdates = std::vector<JSIUpdate>;
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
   JSIUpdates jsiUpdates_;
