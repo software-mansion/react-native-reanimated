@@ -23,7 +23,10 @@ function getBundleOffset(error: Error): [string, number, number] {
   return ['unknown', 0, 0];
 }
 
-function processStack(stack: string): string {
+function processStack(stack?: string): string | undefined {
+  if (stack === '' || stack === undefined) {
+    return undefined;
+  }
   const workletStackEntries = stack.match(/worklet_(\d+):(\d+):(\d+)/g);
   let result = stack;
   workletStackEntries?.forEach((match) => {
@@ -42,22 +45,31 @@ function processStack(stack: string): string {
   return result;
 }
 
-export function reportFatalErrorOnJS({
-  message,
-  stack,
-  moduleName,
-}: {
-  message: string;
-  stack?: string;
-  moduleName: string;
-}) {
-  // eslint-disable-next-line reanimated/use-worklets-error
-  const error = new Error();
+export interface RNError extends Error {
+  jsEngine: string;
+}
+
+/**
+ * Remote error is an error coming from a Worklet Runtime that we bubble up to
+ * the RN Runtime.
+ */
+export function reportFatalRemoteError(
+  { message, stack, name, jsEngine }: RNError,
+  force: boolean
+): void {
+  const error = new WorkletsError() as RNError;
   error.message = message;
-  error.stack = stack ? processStack(stack) : undefined;
-  error.name = `${moduleName}Error`;
-  // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
-  error.jsEngine = moduleName;
-  // @ts-ignore the reportFatalError method is an internal method of ErrorUtils not exposed in the type definitions
-  global.ErrorUtils.reportFatalError(error);
+  error.stack = processStack(stack);
+  error.name = name;
+  error.jsEngine = jsEngine;
+  if (force) {
+    throw error;
+  } else {
+    // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
+    globalThis.ErrorUtils.reportFatalError(error);
+  }
+}
+
+export function registerReportFatalRemoteError() {
+  globalThis.__reportFatalRemoteError = reportFatalRemoteError;
 }

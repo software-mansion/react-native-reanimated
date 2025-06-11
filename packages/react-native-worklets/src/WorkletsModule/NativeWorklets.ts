@@ -148,4 +148,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shareableWorklet
     );
   }
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(
+      message,
+      stack,
+      name,
+      jsEngine
+    );
+  }
 }

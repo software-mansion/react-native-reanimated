@@ -4,7 +4,7 @@ import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequest
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
-import { reportFatalErrorOnJS } from './errors';
+import { registerReportFatalRemoteError } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
@@ -46,6 +46,7 @@ function overrideLogFunctionImplementation(
 // Register logger config and replace the log function implementation in
 // the React runtime global scope
 if (!globalThis._WORKLET) {
+  registerReportFatalRemoteError();
   registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
   overrideLogFunctionImplementation(logToLogBoxAndConsole);
 }
@@ -77,21 +78,6 @@ if (SHOULD_BE_USE_WEB) {
   executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
     runtimeBoundLogToLogBoxAndConsole
   );
-}
-
-export function setupErrorUtils(
-  boundReportFatalErrorOnJS: typeof reportFatalErrorOnJS
-) {
-  'worklet';
-  globalThis.__ErrorUtils = {
-    reportFatalError: (error: Error) => {
-      runOnJS(boundReportFatalErrorOnJS)({
-        message: error.message,
-        moduleName: 'Worklets',
-        stack: error.stack,
-      });
-    },
-  };
 }
 
 let capturableConsole: typeof console;
@@ -175,13 +161,11 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
-  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(() => {
       'worklet';
-      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
       setupCallGuard();
       setupConsole(runtimeBoundCapturableConsole);
       setupMicrotasks();
