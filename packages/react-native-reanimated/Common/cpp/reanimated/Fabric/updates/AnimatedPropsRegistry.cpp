@@ -1,5 +1,7 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
+#include <utility>
+
 namespace reanimated {
 
 JSIUpdates AnimatedPropsRegistry::getJSIUpdates() {
