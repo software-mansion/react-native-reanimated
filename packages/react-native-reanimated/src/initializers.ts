@@ -1,10 +1,10 @@
 'use strict';
-import { IS_WEB } from './common';
 import type { IReanimatedModule } from './ReanimatedModule';
 import {
   DEFAULT_LOGGER_CONFIG,
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
+  IS_WEB,
 } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
