@@ -1,6 +1,5 @@
 'use strict';
-import type { LoggerConfig } from 'react-native-worklets';
-
+import type { LoggerConfig } from './common';
 import {
   ReanimatedError,
   SHOULD_BE_USE_WEB,
