@@ -1,7 +1,7 @@
 'use strict';
 import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
 
+import { logger } from '../common';
 import type { MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from 'react-native-worklets';
+import { logger } from '../common';
 
 export function dispatchCommand() {
   logger.warn('dispatchCommand() is not supported on web.');

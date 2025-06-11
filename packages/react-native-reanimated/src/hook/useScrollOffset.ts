@@ -2,9 +2,8 @@
 import type { Component } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import type { ScrollView, ScrollViewProps } from 'react-native';
-import { logger } from 'react-native-worklets';
 
-import { IS_WEB } from '../common';
+import { IS_WEB, logger } from '../common';
 import type { SharedValue } from '../commonTypes';
 import type {
   AnimatedRef,
