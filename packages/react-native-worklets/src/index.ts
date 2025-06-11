@@ -1,5 +1,7 @@
 'use strict';
 
+import './publicGlobals';
+
 import { initializeUIRuntime } from './initializers';
 import { WorkletsModule } from './WorkletsModule';
 
@@ -17,6 +19,7 @@ export {
   registerLoggerConfig,
   updateLoggerConfig,
 } from './logger';
+export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {

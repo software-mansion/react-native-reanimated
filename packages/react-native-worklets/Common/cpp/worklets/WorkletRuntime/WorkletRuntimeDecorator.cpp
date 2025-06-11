@@ -2,6 +2,7 @@
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -43,6 +44,9 @@ void WorkletRuntimeDecorator::decorate(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy) {
+  const auto &global = rt.global();
+
+  global.setProperty(rt, "_RUNTIME_KIND", RuntimeKind::Worker);
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
