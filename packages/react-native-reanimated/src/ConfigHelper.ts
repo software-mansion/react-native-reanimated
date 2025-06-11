@@ -8,13 +8,6 @@ import {
   jsiRegisterNativePropNamesForComponentName,
 } from './core';
 
-export function registerNativePropNamesForComponentName(
-  componentName: string,
-  nativePropNames: string[]
-): void {
-  jsiRegisterNativePropNamesForComponentName(componentName, nativePropNames);
-}
-
 export function addWhitelistedNativeProps(): void {
   console.warn(
     '[Reanimated] `addWhitelistedNativeProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
@@ -58,6 +51,6 @@ export function adaptViewConfig(viewConfig: ViewConfig): void {
     return;
   }
   const nativePropNames = Object.keys(viewConfig.validAttributes);
-  registerNativePropNamesForComponentName(componentName, nativePropNames);
+  jsiRegisterNativePropNamesForComponentName(componentName, nativePropNames);
   PROCESSED_VIEW_NAMES.add(componentName);
 }
