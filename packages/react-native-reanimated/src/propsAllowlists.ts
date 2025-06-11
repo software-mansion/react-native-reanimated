@@ -24,6 +24,12 @@ export const PropsAllowlists: AllowlistsHolder = {
     shadowRadius: true,
     outlineColor: true,
     shadowColor: true,
+    /* text color */
+    color: true,
+    tintColor: true,
+    textShadowColor: true,
+    placeholderTextColor: true,
+    textDecorationColor: true,
     /* legacy android transform properties */
     scaleX: true,
     scaleY: true,
@@ -128,11 +134,5 @@ export const PropsAllowlists: AllowlistsHolder = {
     justifyContent: true,
     position: true,
     cursor: true,
-    /* text color */
-    color: true,
-    tintColor: true,
-    textShadowColor: true,
-    placeholderTextColor: true,
-    textDecorationColor: true,
   },
 };
