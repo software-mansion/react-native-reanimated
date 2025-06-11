@@ -15,7 +15,6 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-Animated.addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const KeyboardStateNames = {

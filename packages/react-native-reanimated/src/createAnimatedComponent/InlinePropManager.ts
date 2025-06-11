@@ -144,8 +144,12 @@ export class InlinePropManager implements IInlinePropManager {
 
         const { viewTag, shadowNodeWrapper, viewConfig } = viewInfo;
 
-        if (Object.keys(newInlineProps).length && viewConfig) {
-          adaptViewConfig(viewConfig);
+        if (
+          Object.keys(newInlineProps).length &&
+          shadowNodeWrapper &&
+          viewConfig
+        ) {
+          adaptViewConfig(shadowNodeWrapper, viewConfig);
         }
 
         this._inlinePropsViewDescriptors.add({

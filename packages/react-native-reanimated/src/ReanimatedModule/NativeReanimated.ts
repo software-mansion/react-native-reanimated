@@ -166,8 +166,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.enableLayoutAnimations(flag);
   }
 
-  configureProps(uiProps: string[], nativeProps: string[]) {
-    this.#reanimatedModuleProxy.configureProps(uiProps, nativeProps);
+  registerNativePropNamesForComponentName(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    nativePropNames: string[]
+  ) {
+    this.#reanimatedModuleProxy.registerNativePropNamesForComponentName(
+      shadowNodeWrapper,
+      nativePropNames
+    );
   }
 
   subscribeForKeyboardEvents(
@@ -252,7 +258,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
   enableLayoutAnimations(): void {}
-  configureProps(): void {}
+  registerNativePropNamesForComponentName(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;
   }

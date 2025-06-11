@@ -72,7 +72,6 @@ const styles = StyleSheet.create({
 });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-Animated.addWhitelistedNativeProps({ text: true });
 
 function AnimatedText({ text, ...props }: { text: DerivedValue<string> }) {
   const animatedProps = useAnimatedProps(() => ({

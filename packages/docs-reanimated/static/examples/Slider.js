@@ -16,8 +16,6 @@ import Animated, {
 const INITIAL_BOX_SIZE = 50;
 const SLIDER_WIDTH = 300;
 
-Animated.addWhitelistedNativeProps({ text: true });
-
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const Slider = () => {
@@ -32,8 +30,8 @@ const Slider = () => {
         ? offset.value + event.changeX <= 0
           ? 0
           : offset.value + event.changeX >= MAX_VALUE
-          ? MAX_VALUE
-          : offset.value + event.changeX
+            ? MAX_VALUE
+            : offset.value + event.changeX
         : offset.value;
 
     const newWidth = INITIAL_BOX_SIZE + offset.value;

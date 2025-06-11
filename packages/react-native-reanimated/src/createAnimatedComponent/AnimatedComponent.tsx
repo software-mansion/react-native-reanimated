@@ -208,8 +208,8 @@ export default class AnimatedComponent
     // update UI props whitelist for this view
     const hasReanimated2Props =
       this.props.animatedProps?.viewDescriptors || this._animatedStyles?.length;
-    if (hasReanimated2Props && viewConfig) {
-      adaptViewConfig(viewConfig);
+    if (hasReanimated2Props && shadowNodeWrapper && viewConfig) {
+      adaptViewConfig(shadowNodeWrapper, viewConfig);
     }
 
     // remove old styles

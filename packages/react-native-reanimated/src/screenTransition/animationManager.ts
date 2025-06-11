@@ -1,11 +1,8 @@
 'use strict';
 
-import { configureProps } from '../ConfigHelper';
 import type { LockAxis, ScreenTransitionConfig } from './commonTypes';
 import { applyStyle } from './styleUpdater';
 import { getSwipeSimulator } from './swipeSimulator';
-
-configureProps();
 
 export function startScreenTransition(
   screenTransitionConfig: ScreenTransitionConfig
