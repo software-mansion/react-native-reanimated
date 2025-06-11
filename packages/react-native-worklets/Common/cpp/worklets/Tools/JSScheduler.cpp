@@ -9,4 +9,10 @@ void JSScheduler::scheduleOnJS(Job job) {
       [job = std::move(job), &rt = rnRuntime_] { job(rt); });
 }
 
+#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+void JSScheduler::invokeSync_UNSAFE(Job job) {
+  job(rnRuntime_);
+}
+#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
 } // namespace worklets
