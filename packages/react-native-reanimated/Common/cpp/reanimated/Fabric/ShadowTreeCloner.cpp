@@ -72,10 +72,6 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 
   ChildrenMap childrenMap;
 
-  // for (const auto &[key, value] : propsMap) {
-  //   LOG(INFO) << value[0].operator folly::dynamic();
-  // }
-
   {
     ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
 
