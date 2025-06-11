@@ -198,7 +198,6 @@ android {
                 "**/libreact_render*.so",
                 "**/librrc_root.so",
                 "**/libjscexecutor.so",
-                "**/libv8executor.so",
         ]
     }
     compileOptions {

@@ -69,7 +69,6 @@ inline jsi::Value createWorkletRuntime(
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt,
       std::move(jsiWorkletsModuleProxy),
       jsQueue,
       jsScheduler,

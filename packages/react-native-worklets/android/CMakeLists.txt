@@ -33,16 +33,9 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
 elseif(${JS_RUNTIME} STREQUAL "jsc")
   string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
 else()
   message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
 endif()
-
-# Resolves "CMake Warning: Manually-specified variables were not used by the
-# project" when any of the following variables is not used in some build
-# configuration.
-set(IGNORE_ME "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
@@ -117,14 +110,4 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
   else()
     target_link_libraries(worklets ReactAndroid::jscexecutor)
   endif()
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  # TODO: Refactor this when adding support for newest V8
-  target_include_directories(worklets PRIVATE "${JS_RUNTIME_DIR}/src")
-  file(GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/\
-    library_jni/**/jni/${ANDROID_ABI}")
-  find_library(
-    V8EXECUTOR_LIB v8executor
-    PATHS ${V8_SO_DIR}
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
-  target_link_libraries(worklets ${V8EXECUTOR_LIB})
 endif()
