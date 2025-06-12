@@ -69,7 +69,6 @@ inline jsi::Value createWorkletRuntime(
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt,
       std::move(jsiWorkletsModuleProxy),
       jsQueue,
       jsScheduler,
@@ -214,7 +213,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           return makeShareableImport(
-              rt, args[0].asString(rt), args[1].asString(rt));
+              rt, args[0].asNumber(), args[1].asString(rt));
         });
   }
 

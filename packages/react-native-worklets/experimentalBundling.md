@@ -72,4 +72,4 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
 - When running the app, it will initially throw errors like `Unable to resolve module react-native-worklets/__generatedWorklets/...`. This is expected, because the bundle has not yet converged. When it happens, reload the app. On Android you might need to restart the app. After several reloads, the bundle will converge and the errors will be gone.
 - In rare cases where the same error would reappear, re-run Metro bundler with the `--reset-cache` flag to enforce rebuilding the worklets bundle.
 - Fast refresh will not work when you modify code in worklets. You need to reload the app in these cases.
-- Currently only debug builds are supported.
+- In production builds bundling is a compilation step - which means that the compilation will fail several times until the bundle converges. Keep restarting the build until it succeeds.

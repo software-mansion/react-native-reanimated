@@ -132,7 +132,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case SHARED_ELEMENT_TRANSITION:
       return sharedTransitions_;
     default:
-      assert(false);
+      throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
 

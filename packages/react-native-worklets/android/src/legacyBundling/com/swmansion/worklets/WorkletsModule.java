@@ -18,8 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec
-    implements LifecycleEventListener, WorkletsBundleConsumer {
+public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -37,16 +36,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private String mSourceFileName = null;
-  private String mSourceURL = null;
-
-  public void setSourceFileName(String sourceFileName) {
-    mSourceFileName = sourceFileName;
-  }
-
-  public void setSourceURL(String sourceURL) {
-    mSourceURL = sourceURL;
-  }
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -59,9 +48,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
       long jsContext,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler,
-      String sourceFileName,
-      String sourceURL);
+      AndroidUIScheduler androidUIScheduler);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -87,13 +74,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(
-            jsContext,
-            mMessageQueueThread,
-            jsCallInvokerHolder,
-            mAndroidUIScheduler,
-            mSourceFileName,
-            mSourceURL);
+        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
     return true;
   }
 
