@@ -5,20 +5,20 @@ const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
 
-export enum LogLevel {
+export enum ReanimatedLogLevel {
   warn = 1,
   error = 2,
 }
 
 type LogData = {
-  level: LogLevel;
+  level: ReanimatedLogLevel;
   message: string;
 };
 
 type LogFunction = (data: LogData) => void;
 
 export type LoggerConfig = {
-  level?: LogLevel;
+  level?: ReanimatedLogLevel;
   strict?: boolean;
 };
 
@@ -29,10 +29,10 @@ export type LoggerConfigInternal = {
 function logToConsole(data: LogData) {
   'worklet';
   switch (data.level) {
-    case LogLevel.warn:
+    case ReanimatedLogLevel.warn:
       console.warn(data.message);
       break;
-    case LogLevel.error:
+    case ReanimatedLogLevel.error:
       console.error(data.message);
       break;
   }
@@ -40,7 +40,7 @@ function logToConsole(data: LogData) {
 
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
-  level: LogLevel.warn,
+  level: ReanimatedLogLevel.warn,
   strict: true,
 };
 
@@ -77,7 +77,11 @@ type LogOptions = {
   strict?: boolean;
 };
 
-function handleLog(level: LogLevel, message: string, options: LogOptions) {
+function handleLog(
+  level: ReanimatedLogLevel,
+  message: string,
+  options: LogOptions
+) {
   'worklet';
   const config = global.__reanimatedLoggerConfig;
   if (
@@ -103,10 +107,10 @@ function handleLog(level: LogLevel, message: string, options: LogOptions) {
 export const logger = {
   warn(message: string, options: LogOptions = {}) {
     'worklet';
-    handleLog(LogLevel.warn, message, options);
+    handleLog(ReanimatedLogLevel.warn, message, options);
   },
   error(message: string, options: LogOptions = {}) {
     'worklet';
-    handleLog(LogLevel.error, message, options);
+    handleLog(ReanimatedLogLevel.error, message, options);
   },
 };
