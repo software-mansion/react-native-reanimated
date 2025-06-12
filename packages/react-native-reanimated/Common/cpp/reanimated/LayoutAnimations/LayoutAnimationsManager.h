@@ -1,6 +1,8 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <react/renderer/mounting/ShadowView.h>
+
 
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/JSLogger.h>
@@ -14,22 +16,44 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <stack>
 
 namespace reanimated {
 
 using namespace facebook;
 using namespace worklets;
+using SharedTag = std::string;
+
+struct SharedTransitionGroup {
+//  std::string name;
+//  std::optional<ShadowView> current;
+  std::unordered_map<Tag, ShadowView> tagToView_;
+  Tag fakeTag = -1;
+};
+
+struct SharedTransitionManager{
+  std::unordered_map<std::string, SharedTransitionGroup> groups_;
+  std::unordered_map<Tag, std::string> tagToName_;
+  std::unordered_map<Tag, std::string> nativeIDToName_;
+  std::vector<SharedTag> containers_;
+  
+//  SharedTransitionGroup getGroupForTag();
+//  int createTransitionContainer(SharedTag sharedTag);
+//  int removeTransitionContainer(SharedTag sharedTag);
+//  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
+};
 
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
   std::shared_ptr<Shareable> config;
+  std::string sharedTransitionTag;
 };
 
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-      : jsLogger_(jsLogger) {}
+  : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),  jsLogger_(jsLogger) {}
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
@@ -44,14 +68,19 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
 
- private:
   std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
       const LayoutAnimationType type);
+  
+  std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 
+private:
   std::shared_ptr<JSLogger> jsLogger_;
 
   std::unordered_map<int, std::shared_ptr<Shareable>>
       enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>>
+      sharedTransitionsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Shareable>> sharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
