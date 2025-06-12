@@ -7,7 +7,7 @@ namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
-  assert(valueUnpacker.isObject() && "valueUnpacker not found");
+  react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
@@ -202,7 +202,7 @@ jsi::Value makeShareableTurboModuleLike(
 
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const jsi::String &source,
+    const double source,
     const jsi::String &imported) {
   auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
   return ShareableJSRef::newHostObject(rt, shareable);
@@ -352,7 +352,7 @@ jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
-  assert(
+  react_native_assert(
       std::any_of(
           data_.cbegin(),
           data_.cend(),
@@ -373,11 +373,10 @@ jsi::Value ShareableImport::toJSValue(jsi::Runtime &rt) {
     return jsi::Value::undefined();
   }
 
-  const auto source = jsi::String::createFromUtf8(rt, source_);
   const auto imported = jsi::String::createFromUtf8(rt, imported_);
   return metroRequire.asObject(rt)
       .asFunction(rt)
-      .call(rt, source)
+      .call(rt, source_)
       .asObject(rt)
       .getProperty(rt, imported);
 }

@@ -22,7 +22,6 @@ class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
-      jsi::Runtime &rnRuntime,
       std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,

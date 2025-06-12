@@ -215,9 +215,11 @@ function makeShareableCloneRecursiveNative<T>(
 }
 
 if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  // TODO: Do it programatically.
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
-    source: '../../packages/react-native-worklets/src/index.ts',
+    // @ts-expect-error resolveWeak is defined by Metro
+    source: require.resolveWeak('./index'),
   };
 }
 
