@@ -1,8 +1,5 @@
 'use strict';
-import { withTiming } from '../animation';
-import type {
-  ILayoutAnimationBuilder,
-} from '../commonTypes';
+import type { ILayoutAnimationBuilder } from '../commonTypes';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
 
@@ -35,7 +32,7 @@ export class SharedTransition
 
     return (values: any) => {
       'worklet';
-      
+
       const initialValues: any = {};
       const animations: any = {};
       for (const key in values.source) {
@@ -48,11 +45,11 @@ export class SharedTransition
               const key = Object.keys(item)[0];
               return {
                 [key]: delayFunction(delay, animation(item[key], config)),
-              }
+              };
             });
           } else if (key === 'boxShadow') {
             animations[key] = target.map((item: Record<string, unknown>) => {
-              const boxShadow:Record<string, unknown> = {};
+              const boxShadow: Record<string, unknown> = {};
               for (const shadowKey of Object.keys(item)) {
                 boxShadow[shadowKey] = delayFunction(
                   delay,
@@ -62,9 +59,9 @@ export class SharedTransition
               return boxShadow;
             });
           } else if (key === 'transformOrigin') {
-            animations[key] = target.map((item: number) => (
+            animations[key] = target.map((item: number) =>
               delayFunction(delay, animation(item, config))
-            ));
+            );
           } else {
             console.error('Unexpected array in SharedTransition:', key);
           }
