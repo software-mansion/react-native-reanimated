@@ -31,6 +31,8 @@ class WorkletRuntime : public jsi::HostObject,
       const std::shared_ptr<const BigStringBuffer> &script,
       const std::string &sourceUrl);
 
+  ~WorkletRuntime();
+
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
@@ -77,6 +79,11 @@ class WorkletRuntime : public jsi::HostObject,
 #endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
+
+  std::unique_ptr<jsinspector_modern::HostTargetDelegate>
+      inspectorHostDelegate_;
+  std::shared_ptr<jsinspector_modern::HostTarget> inspectorTarget_;
+  std::optional<int> inspectorPageId_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
