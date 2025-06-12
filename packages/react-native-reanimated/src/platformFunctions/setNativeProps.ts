@@ -1,8 +1,12 @@
 'use strict';
 import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
 
-import { IS_JEST, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
+import {
+  IS_JEST,
+  logger,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,

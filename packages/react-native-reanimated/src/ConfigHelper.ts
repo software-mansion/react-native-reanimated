@@ -1,8 +1,10 @@
 'use strict';
-import type { LoggerConfig } from 'react-native-worklets';
-import { updateLoggerConfig } from 'react-native-worklets';
-
-import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import type { LoggerConfig } from './common';
+import {
+  ReanimatedError,
+  SHOULD_BE_USE_WEB,
+  updateLoggerConfig,
+} from './common';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { PropsAllowlists } from './propsAllowlists';
 

@@ -1,6 +1,7 @@
 'use strict';
 
 import './publicGlobals';
+import './initializers';
 
 import * as Animated from './Animated';
 
@@ -31,7 +32,7 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export { processColor } from './common';
+export { processColor, ReanimatedLogLevel } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -294,7 +295,4 @@ export {
   startScreenTransition,
 } from './screenTransition';
 export type { WorkletRuntime } from 'react-native-worklets';
-export {
-  isWorkletFunction,
-  LogLevel as ReanimatedLogLevel,
-} from 'react-native-worklets';
+export { isWorkletFunction } from 'react-native-worklets';
