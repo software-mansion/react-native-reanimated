@@ -223,7 +223,7 @@ if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
   };
 }
 
-export interface MakeShareableClone {
+interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
 }
 
