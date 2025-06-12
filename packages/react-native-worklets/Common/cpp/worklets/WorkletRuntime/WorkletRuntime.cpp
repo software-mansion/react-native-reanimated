@@ -71,6 +71,32 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   }
 }
 
+class WorkletsHostTargetDelegate
+    : public facebook::react::jsinspector_modern::HostTargetDelegate {
+ public:
+  WorkletsHostTargetDelegate() {}
+
+  jsinspector_modern::HostTargetMetadata getMetadata() override {
+    return {
+        .appDisplayName = "FabricExample",
+        .appIdentifier = "org.reactjs.native.example.FabricExample",
+        .deviceName = "iPhone 16 Pro",
+        .integrationName = "iOS Bridgeless (RCTHost)",
+        .platform = "ios",
+        .reactNativeVersion = "0.80.0-rc.4",
+    };
+  }
+
+  void onReload(const PageReloadRequest &request) override {
+    // Do nothing
+  }
+
+  void onSetPausedInDebuggerMessage(
+      const OverlaySetPausedInDebuggerMessageRequest &request) override {
+    // Do nothing
+  }
+};
+
 WorkletRuntime::WorkletRuntime(
     std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
@@ -88,6 +114,28 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+
+  inspectorHostDelegate_ = std::make_unique<WorkletsHostTargetDelegate>();
+
+  inspectorTarget_ = facebook::react::jsinspector_modern::HostTarget::create(
+      *inspectorHostDelegate_, [](auto callback) {
+        // TODO: RCTExecuteOnMainQueue(^{
+        callback();
+        // TODO: });
+      });
+
+  inspectorPageId_ =
+      facebook::react::jsinspector_modern::getInspectorInstance().addPage(
+          "Reanimated UI runtime",
+          /* vm */ "",
+          [this](std::unique_ptr<
+                 facebook::react::jsinspector_modern::IRemoteConnection> remote)
+              -> std::unique_ptr<
+                  facebook::react::jsinspector_modern::ILocalConnection> {
+            // TODO: use weak_ptr
+            return inspectorTarget_->connect(std::move(remote));
+          },
+          {.nativePageReloads = true, .prefersFuseboxFrontend = true});
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
@@ -116,6 +164,15 @@ WorkletRuntime::WorkletRuntime(
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 #endif // WORKLETS_EXPERIMENTAL_BUNDLING
+}
+
+WorkletRuntime::~WorkletRuntime() {
+  if (inspectorPageId_.has_value()) {
+    facebook::react::jsinspector_modern::getInspectorInstance().removePage(
+        *inspectorPageId_);
+    inspectorPageId_.reset();
+    inspectorTarget_.reset();
+  }
 }
 
 jsi::Value WorkletRuntime::executeSync(
