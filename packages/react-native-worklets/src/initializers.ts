@@ -5,7 +5,6 @@ import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimati
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { reportFatalErrorOnJS } from './errors';
-import { DEFAULT_LOGGER_CONFIG, registerLoggerConfig } from './logger';
 import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
@@ -23,12 +22,6 @@ if (!globalThis._WORKLET && globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
 if (globalThis._ALWAYS_FALSE) {
   // Experimental bundling.
   initializeLibraryOnWorkletRuntime();
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-if (!globalThis._WORKLET) {
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
 }
 
 // this is for web implementation
@@ -52,7 +45,6 @@ if (SHOULD_BE_USE_WEB) {
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
 }
 
 export function setupErrorUtils(
