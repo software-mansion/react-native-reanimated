@@ -60,6 +60,8 @@ class PropsDiffer {
   void diffBorderRadius(const std::optional<react::ValueUnit>& sourceValue, const std::optional<react::ValueUnit>& targetValue, const char* name, jsi::Runtime& rt);
   void diffBorderWidth(const std::optional<react::Float>& sourceValue, const std::optional<react::Float>& targetValue, const char* name, jsi::Runtime& rt, float defaultSourceWidth, float defaultTargetWidth);
   void diffBorderColors(const std::optional<react::SharedColor>& sourceValue, const std::optional<react::SharedColor>& targetValue, const char* name, jsi::Runtime& rt);
+  
+  static inline std::string toString(const SharedColor& value);
 
 public:
   explicit PropsDiffer(jsi::Runtime& rt, const ShadowView& sourceView, const ShadowView& targetView) :

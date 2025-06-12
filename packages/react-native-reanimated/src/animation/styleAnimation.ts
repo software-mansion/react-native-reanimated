@@ -130,9 +130,9 @@ export function withStyleAnimation(
 
           // When working with animations changing colors, we need to make sure that each one of them begins with a rgba, not a processed number.
           // Thus, we only set the path to a processed color, but currentStyleAnimation.current stays as rgba.
-          const isAnimatingColorProp = ColorProperties.includes(
-            currentEntry.path[0] as string
-          );
+          const isAnimatingColorProp = 
+            ColorProperties.includes(currentEntry.path[0] as string)
+            || currentEntry.path[0] === 'boxShadow' && currentEntry.path.length > 2 && currentEntry.path[2] === 'color';
 
           setPath(
             animation.current,

@@ -185,14 +185,14 @@ void PropsDiffer::addTransformOriginToDiff(jsi::Runtime& rt, const TransformOrig
   jsi::Array transformOriginJsi(rt, 3);
 
   if (transformOrigin.xy[0].unit == UnitType::Percent) {
-    const int origin = view.layoutMetrics.frame.size.width * transformOrigin.xy[0].value;
+    const float origin = view.layoutMetrics.frame.size.width * transformOrigin.xy[0].value / 100;
     transformOriginJsi.setValueAtIndex(rt, 0, origin);
   } else {
     transformOriginJsi.setValueAtIndex(rt, 0, transformOrigin.xy[0].value);
   }
 
   if (transformOrigin.xy[1].unit == UnitType::Percent) {
-    const int origin = view.layoutMetrics.frame.size.height * transformOrigin.xy[1].value;
+    const float origin = view.layoutMetrics.frame.size.height * transformOrigin.xy[1].value / 100;
     transformOriginJsi.setValueAtIndex(rt, 1, origin);
   } else {
     transformOriginJsi.setValueAtIndex(rt, 1, transformOrigin.xy[1].value);
@@ -365,13 +365,13 @@ void PropsDiffer::diffBorderWidth(const std::optional<react::Float>& sourceValue
     if (sourceValue.has_value()) {
       sourceValues_.setProperty(rt, name, source);
     } else {
-      sourceValues_.setProperty(rt, name, toString(defaultSourceWidth));
+      sourceValues_.setProperty(rt, name, react::toString(defaultSourceWidth));
     }
 
     if (targetValue.has_value()) {
       targetValues_.setProperty(rt, name, target);
     } else {
-      targetValues_.setProperty(rt, name, toString(defaultTargetWidth));
+      targetValues_.setProperty(rt, name, react::toString(defaultTargetWidth));
     }
   }
 }
@@ -395,6 +395,22 @@ void PropsDiffer::diffBorderColors(const std::optional<react::SharedColor>& sour
       targetValues_.setProperty(rt, name, toString(maybeDefaultColor));
     }
   }
+}
+
+// Copied from https://github.com/facebook/react-native/blob/v0.80.0-rc.5/packages/react-native/ReactCommon/react/renderer/core/graphicsConversions.h#L47
+// I needed to manually apply a patch for unnecessary alpha channel normalization.
+inline std::string PropsDiffer::toString(const SharedColor& value) {
+  ColorComponents components = colorComponentsFromColor(value);
+  std::array<char, 255> buffer{};
+  std::snprintf(
+    buffer.data(),
+    buffer.size(),
+    "rgba(%.0f, %.0f, %.0f, %f)",
+    components.red * 255.f,
+    components.green * 255.f,
+    components.blue * 255.f,
+    components.alpha);
+  return buffer.data();
 }
 
 } // namespace reanimated

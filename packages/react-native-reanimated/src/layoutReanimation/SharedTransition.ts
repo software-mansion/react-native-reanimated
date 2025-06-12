@@ -61,6 +61,10 @@ export class SharedTransition
               }
               return boxShadow;
             });
+          } else if (key === 'transformOrigin') {
+            animations[key] = target.map((item: number) => (
+              delayFunction(delay, animation(item, config))
+            ));
           } else {
             console.error('Unexpected array in SharedTransition:', key);
           }
@@ -71,7 +75,7 @@ export class SharedTransition
           );
         }
       }
-      
+
       return {
         initialValues,
         animations,
