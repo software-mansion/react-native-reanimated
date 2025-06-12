@@ -39,7 +39,7 @@ import JSPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
-import { LinearTransition } from '../layoutReanimation';
+import { SharedTransition } from '../layoutReanimation/SharedTransition';
 
 let id = 0;
 
@@ -95,7 +95,7 @@ export default class AnimatedComponent
         this.reanimatedID,
         LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
         maybeBuild(
-          LinearTransition.duration(2000),
+          SharedTransition.duration(2000),
           this.props?.style,
           this._displayName
         ),
