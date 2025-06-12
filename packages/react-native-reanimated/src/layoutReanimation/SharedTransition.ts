@@ -1,5 +1,5 @@
 'use strict';
-import type { ILayoutAnimationBuilder } from '../commonTypes';
+import type { ILayoutAnimationBuilder, LayoutAnimationFunction } from '../commonTypes';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
 
@@ -24,15 +24,21 @@ export class SharedTransition
     return new SharedTransition() as InstanceType<T>;
   }
 
-  build = (): any => {
+  build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
 
-    return (values: any) => {
+    return (valuesUntyped) => {
       'worklet';
-
+      const values = valuesUntyped as unknown as {
+        source: Record<string, number | string>;
+        target: Record<string, number | string>;
+      };
+      const animationFactory = (value: number | string) => {
+        return delayFunction(delay, animation(value, config))
+      }
       const initialValues: any = {};
       const animations: any = {};
       for (const key in values.source) {
@@ -41,35 +47,27 @@ export class SharedTransition
         const target = values.target[key];
         if (Array.isArray(target)) {
           if (key === 'transform') {
-            animations[key] = target.map((item: Record<string, unknown>) => {
+            animations[key] = target.map((item: Record<string, number | string>) => {
               const key = Object.keys(item)[0];
               return {
-                [key]: delayFunction(delay, animation(item[key], config)),
+                [key]: animationFactory(item[key]),
               };
             });
           } else if (key === 'boxShadow') {
-            animations[key] = target.map((item: Record<string, unknown>) => {
+            animations[key] = target.map((item: Record<string, number | string>) => {
               const boxShadow: Record<string, unknown> = {};
               for (const shadowKey of Object.keys(item)) {
-                boxShadow[shadowKey] = delayFunction(
-                  delay,
-                  animation(item[shadowKey], config)
-                );
+                boxShadow[shadowKey] = animationFactory(item[shadowKey]);
               }
               return boxShadow;
             });
           } else if (key === 'transformOrigin') {
-            animations[key] = target.map((item: number) =>
-              delayFunction(delay, animation(item, config))
-            );
+            animations[key] = target.map(animationFactory);
           } else {
             console.error('Unexpected array in SharedTransition:', key);
           }
         } else {
-          animations[key] = delayFunction(
-            delay,
-            animation(values.target[key], config)
-          );
+          animations[key] = animationFactory(values.target[key]);
         }
       }
 
