@@ -142,6 +142,7 @@ export {
   useScrollOffset,
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
+  useSharedArray,
   useSharedValue,
   useWorkletCallback,
 } from './hook';
