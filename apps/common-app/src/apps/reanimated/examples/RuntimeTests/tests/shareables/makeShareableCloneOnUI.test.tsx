@@ -1,3 +1,4 @@
+import { TurboModuleRegistry } from 'react-native';
 import { executeOnUIRuntimeSync } from 'react-native-reanimated';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
@@ -89,12 +90,12 @@ describe('Test makeShareableCloneOnUI', () => {
 
   test('makeShareableCloneOnUIHostObject', () => {
     // Arrange & Act
-    // @ts-expect-error It's ok
-    const hostObjectKeys = Object.keys(globalThis.__workletsModuleProxy);
+    // Prototype of TurboModule is a host object
+    const hostObject = Object.getPrototypeOf(TurboModuleRegistry.get('Clipboard'));
+    const hostObjectKeys = Object.keys(hostObject);
     const hostObjectValue = executeOnUIRuntimeSync(() => {
       'worklet';
-      // @ts-expect-error It's ok
-      return globalThis.__workletsModuleProxy;
+      return hostObject;
     })();
 
     // Assert

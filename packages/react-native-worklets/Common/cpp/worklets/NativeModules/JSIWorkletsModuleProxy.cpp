@@ -303,7 +303,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           return makeShareableHostObject(
-              rt, args[0].asObject(rt).getHostObject(rt));
+              rt, args[0].asObject(rt).asHostObject(rt));
         });
   }
 
