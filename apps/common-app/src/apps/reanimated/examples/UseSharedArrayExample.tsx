@@ -1,35 +1,61 @@
-import { Button, StyleSheet, View } from "react-native";
-import { useSharedArray } from "react-native-reanimated";
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedArray,
+} from 'react-native-reanimated';
 
 const randomIntNumber = (min: number, max: number) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 export default function UseSharedArrayExample() {
-    const array = useSharedArray([]);
+  const sharedValue = useSharedArray([100, 200]);
 
-    const pushRandomNumber = () => {
-        array.value.push(randomIntNumber(0, 100));
-        console.log('Array value:', array.value);
-    }
+  const animatedStyleElement1 = useAnimatedStyle((registry) => {
+    console.log('AnimatedStyleElement1 updated...');
+    registry?.registerForUpdates(sharedValue, [0]);
+    return {
+      width: sharedValue.value[0],
+    };
+  });
 
-    const modifyLastNumber = () => {
-        array.value[array.value.length - 1] = randomIntNumber(0, 100);
-        console.log('Array value:', array.value);
-    }
+  const animatedStyleElement2 = useAnimatedStyle((registry) => {
+    console.log('AnimatedStyleElement2 updated...');
+    registry?.registerForUpdates(sharedValue, [1]);
+    return {
+      width: sharedValue.value[1],
+    };
+  });
 
   return (
     <View style={styles.container}>
-      <Button title="Add Random Number" onPress={pushRandomNumber} />
-      <Button title="Modify Last Number" onPress={modifyLastNumber} />
+      <Animated.View style={[styles.box, animatedStyleElement1]} />
+      <Animated.View style={[styles.box, animatedStyleElement2]} />
+      <Button
+        title="Change element 1"
+        onPress={() => {
+          sharedValue.modifyValue(0, randomIntNumber(100, 200));
+        }}
+      />
+      <Button
+        title="Change element 2"
+        onPress={() => {
+          sharedValue.modifyValue(1, randomIntNumber(100, 200));
+        }}
+      />
     </View>
   );
-}  
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  box: {
+    backgroundColor: 'red',
+    height: 100,
+  },
 });

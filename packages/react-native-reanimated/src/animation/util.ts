@@ -30,6 +30,7 @@ import type {
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
+import type { SharedRegisterer } from '../SharedValuesSet';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,
@@ -105,9 +106,12 @@ export function assertEasingIsWorklet(
   }
 }
 
-export function initialUpdaterRun<T>(updater: () => T) {
+export function initialUpdaterRun<T>(
+  updater: (registerer?: SharedRegisterer) => T,
+  registerer?: SharedRegisterer
+) {
   IN_STYLE_UPDATER.current = true;
-  const result = updater();
+  const result = updater(registerer);
   IN_STYLE_UPDATER.current = false;
   return result;
 }

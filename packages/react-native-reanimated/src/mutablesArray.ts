@@ -8,7 +8,7 @@ import {
 } from 'react-native-worklets';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
-import type { Mutable } from './commonTypes';
+import type { MutableArray, SharedArrayValueType } from './commonTypes';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
 
@@ -34,9 +34,14 @@ function checkInvalidWriteDuringRender() {
   }
 }
 
-type Listener<Value> = (newValue: Value) => void;
+type Listener<Value> = (newValue: Value, key?: number | string) => void;
 
-type ArrayMutable<Value> = Omit<Mutable<Value>, 'get' | 'set' | '_value'>;
+type ArrayMutable<Value> = Omit<
+  MutableArray<Value>,
+  'get' | 'set' | '_value'
+> & {
+  modifyValue: (index: number, value: SharedArrayValueType) => void;
+};
 
 /**
  * Adds `get` and `set` methods to the mutable object to handle access to
@@ -95,17 +100,15 @@ function hideInternalValueProp<Value>(mutable: ArrayMutable<Value>) {
   });
 }
 
-type SupportedArrayType = number;
-
 export function makeMutableArrayUI(
-  initial: Array<SupportedArrayType>
-): Mutable<Array<SupportedArrayType>> {
+  initial: Array<SharedArrayValueType>
+): MutableArray<Array<SharedArrayValueType>> {
   'worklet';
-  const listeners = new Map<number, Listener<Array<SupportedArrayType>>>();
+  const listeners = new Map<number, Listener<Array<SharedArrayValueType>>>();
 
   let value = initial;
 
-  const mutable: ArrayMutable<Array<SupportedArrayType>> = {
+  const mutable: ArrayMutable<Array<SharedArrayValueType>> = {
     get value() {
       return value;
     },
@@ -117,16 +120,22 @@ export function makeMutableArrayUI(
     },
     addListener: (
       id: number,
-      listener: Listener<Array<SupportedArrayType>>
+      listener: Listener<Array<SharedArrayValueType>>
     ) => {
       listeners.set(id, listener);
     },
     removeListener: (id: number) => {
       listeners.delete(id);
     },
+    modifyValue: (index: number, newValue: SharedArrayValueType) => {
+      value[index] = newValue;
+      listeners.forEach((listener) => {
+        listener(value, index);
+      });
+    },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable as Mutable<Array<SupportedArrayType>>,
+        mutable as MutableArray<Array<SharedArrayValueType>>,
         modifier !== undefined ? modifier(mutable.value) : mutable.value,
         forceUpdate
       );
@@ -138,12 +147,12 @@ export function makeMutableArrayUI(
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  return mutable as Mutable<Array<SupportedArrayType>>;
+  return mutable as MutableArray<Array<SharedArrayValueType>>;
 }
 
-function makeMutableArrayNative<Value extends number[]>(
-  initial: Value
-): Mutable<Value> {
+function makeMutableArrayNative(
+  initial: Array<SharedArrayValueType>
+): MutableArray<Array<SharedArrayValueType>> {
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -151,31 +160,27 @@ function makeMutableArrayNative<Value extends number[]>(
     },
   });
 
-  const mutable: ArrayMutable<Value> = {
-    get value(): Value {
+  const mutable: ArrayMutable<Array<SharedArrayValueType>> = {
+    get value(): Array<SharedArrayValueType> {
       checkInvalidReadDuringRender();
-      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        return sv.value;
-      });
-      const result = uiValueGetter(mutable as Mutable<Value>);
-
-      return new Proxy(result, {
-        set(
-          _target: Value,
-          property: string | symbol,
-          newValue: SupportedArrayType
-        ) {
-          executeOnUIRuntimeSync(() => {
-            mutable.value[Number(property)] = newValue;
-          })();
-          return true;
-        },
-      });
+      const uiValueGetter = executeOnUIRuntimeSync(
+        (sv: MutableArray<Array<SharedArrayValueType>>) => {
+          return sv.value;
+        }
+      );
+      return uiValueGetter(
+        mutable as MutableArray<Array<SharedArrayValueType>>
+      );
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
+      })();
+    },
+    modifyValue: (index: number, newValue: SharedArrayValueType) => {
+      runOnUI(() => {
+        mutable.modifyValue(index, newValue);
       })();
     },
     modify: (modifier, forceUpdate = true) => {
@@ -201,34 +206,48 @@ function makeMutableArrayNative<Value extends number[]>(
   addCompilerSafeGetAndSet(mutable);
 
   shareableMappingCache.set(mutable, handle);
-  return mutable as Mutable<Value>;
+  return mutable as MutableArray<Array<SharedArrayValueType>>;
 }
 
-interface JestMutable<TValue> extends Mutable<TValue> {
+interface JestMutable<TValue> extends MutableArray<TValue> {
   toJSON: () => string;
 }
 
-function makeMutableArrayWeb<Value>(initial: Value): Mutable<Value> {
-  const value: Value = initial;
-  const listeners = new Map<number, Listener<Value>>();
+function makeMutableArrayWeb(
+  initial: Array<SharedArrayValueType>
+): MutableArray<Array<SharedArrayValueType>> {
+  const value: Array<SharedArrayValueType> = initial;
+  const listeners = new Map<number, Listener<Array<SharedArrayValueType>>>();
 
-  const mutable: ArrayMutable<Value> = {
-    get value(): Value {
+  const mutable: ArrayMutable<Array<SharedArrayValueType>> = {
+    get value(): Array<SharedArrayValueType> {
       checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      valueSetter(mutable as Mutable<Value>, newValue);
+      valueSetter(
+        mutable as MutableArray<Array<SharedArrayValueType>>,
+        newValue
+      );
     },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable as Mutable<Value>,
+        mutable as MutableArray<Array<SharedArrayValueType>>,
         modifier !== undefined ? modifier(mutable.value) : mutable.value,
         forceUpdate
       );
     },
-    addListener: (id: number, listener: Listener<Value>) => {
+    modifyValue: (index: number, newValue: SharedArrayValueType) => {
+      value[index] = newValue;
+      listeners.forEach((listener) => {
+        listener(value, index);
+      });
+    },
+    addListener: (
+      id: number,
+      listener: Listener<Array<SharedArrayValueType>>
+    ) => {
       listeners.set(id, listener);
     },
     removeListener: (id: number) => {
@@ -242,17 +261,18 @@ function makeMutableArrayWeb<Value>(initial: Value): Mutable<Value> {
   addCompilerSafeGetAndSet(mutable);
 
   if (IS_JEST) {
-    (mutable as JestMutable<Value>).toJSON = () => mutableToJSON(value);
+    (mutable as JestMutable<Array<SharedArrayValueType>>).toJSON = () =>
+      mutableToJSON(value);
   }
 
-  return mutable as Mutable<Value>;
+  return mutable as MutableArray<Array<SharedArrayValueType>>;
 }
 
 export const makeMutableArray = SHOULD_BE_USE_WEB
   ? makeMutableArrayWeb
   : makeMutableArrayNative;
 
-interface JestMutable<TValue> extends Mutable<TValue> {
+interface JestMutable<TValue> extends MutableArray<TValue> {
   toJSON: () => string;
 }
 
