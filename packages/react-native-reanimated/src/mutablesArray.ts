@@ -100,7 +100,7 @@ function hideInternalValueProp<Value>(mutable: ArrayMutable<Value>) {
   });
 }
 
-export function makeMutableArrayUI(
+function makeMutableArrayUI(
   initial: Array<SharedArrayValueType>
 ): MutableArray<Array<SharedArrayValueType>> {
   'worklet';
