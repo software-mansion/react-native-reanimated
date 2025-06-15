@@ -10,6 +10,7 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
+import type { SharedRegisterer } from './SharedValuesSet';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -167,6 +168,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+export type SharedArrayValueType = number;
+
 /**
  * A value that can be used both on the [JavaScript
  * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread)
@@ -181,12 +184,31 @@ export interface SharedValue<Value = unknown> {
   value: Value;
   get(): Value;
   set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
+  addListener: (
+    listenerID: number,
+    listener: (value: Value, key?: number | string) => void
+  ) => void;
   removeListener: (listenerID: number) => void;
   modify: (
     modifier?: <T extends Value>(value: T) => T,
     forceUpdate?: boolean
   ) => void;
+}
+
+export interface SharedArrayValue<Value = Array<SharedArrayValueType>> {
+  value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
+  addListener: (
+    listenerID: number,
+    listener: (value: Value, key?: number | string) => void
+  ) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
+  modifyValue: (index: number, newValue: SharedArrayValueType) => void;
 }
 
 /**
@@ -213,6 +235,20 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _value: Value;
 }
 
+export interface MutableArray<Value = Array<SharedArrayValueType>>
+  extends SharedArrayValue<Value> {
+  _isReanimatedSharedValue: true;
+  _animation?: AnimationObject<Value> | null; // only in Native
+  /**
+   * `_value` prop should only be accessed by the `valueSetter` implementation
+   * which may make the decision about updating the mutable value depending on
+   * the provided new value. All other places should only attempt to modify the
+   * mutable by assigning to `value` prop directly or by calling the `set`
+   * method.
+   */
+  _value: Value;
+}
+
 export type MapperRawInputs = unknown[];
 
 export type MapperOutputs = SharedValue[];
@@ -222,7 +258,8 @@ export type MapperRegistry = {
     mapperID: number,
     worklet: () => void,
     inputs: MapperRawInputs,
-    outputs?: MapperOutputs
+    outputs?: MapperOutputs,
+    sharedRegisterer?: SharedRegisterer
   ) => void;
   stop: (mapperID: number) => void;
 };

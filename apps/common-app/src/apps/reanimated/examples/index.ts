@@ -114,6 +114,7 @@ import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
+import UseSharedArrayExample from './UseSharedArrayExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -165,6 +166,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
+  },
+  UseSharedArrayExample: {
+    icon: '🔄',
+    title: 'Use shared array',
+    screen: UseSharedArrayExample,
   },
   JSPropsExample: {
     icon: '🟨',
