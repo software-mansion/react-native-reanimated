@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -145,6 +146,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "makeShareableTurboModuleLike"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableObject"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableMap"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableSet"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
 
@@ -289,6 +292,35 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           return makeShareableArray(
               rt, args[0].asObject(rt).asArray(rt), args[1]);
+        });
+  }
+
+  if (name == "makeShareableMap") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableMap(
+              rt,
+              args[0].asObject(rt).asArray(rt),
+              args[1].asObject(rt).asArray(rt));
+        });
+  }
+
+  if (name == "makeShareableSet") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableSet(rt, args[0].asObject(rt).asArray(rt));
         });
   }
 

@@ -78,6 +78,8 @@ class Shareable {
     StringType,
     ObjectType,
     ArrayType,
+    MapType,
+    SetType,
     WorkletType,
     RemoteFunctionType,
     HandleType,
@@ -184,6 +186,13 @@ jsi::Value makeShareableArray(
     const jsi::Array &array,
     const jsi::Value &shouldRetainRemote);
 
+jsi::Value makeShareableMap(
+    jsi::Runtime &rt,
+    const jsi::Array &keys,
+    const jsi::Array &values);
+
+jsi::Value makeShareableSet(jsi::Runtime &rt, const jsi::Array &values);
+
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
@@ -239,6 +248,30 @@ class ShareableObject : public Shareable {
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
   std::shared_ptr<jsi::NativeState> nativeState_;
+};
+
+class ShareableMap : public Shareable {
+ public:
+  ShareableMap(
+      jsi::Runtime &rt,
+      const jsi::Array &keys,
+      const jsi::Array &values);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::vector<std::pair<std::shared_ptr<Shareable>, std::shared_ptr<Shareable>>>
+      data_;
+};
+
+class ShareableSet : public Shareable {
+ public:
+  ShareableSet(jsi::Runtime &rt, const jsi::Array &values);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::vector<std::shared_ptr<Shareable>> data_;
 };
 
 class ShareableHostObject : public Shareable {

@@ -184,6 +184,19 @@ jsi::Value makeShareableArray(
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
+jsi::Value makeShareableMap(
+    jsi::Runtime &rt,
+    const jsi::Array &keys,
+    const jsi::Array &values) {
+  auto shareable = std::make_shared<ShareableMap>(rt, keys, values);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
+jsi::Value makeShareableSet(jsi::Runtime &rt, const jsi::Array &values) {
+  auto shareable = std::make_shared<ShareableSet>(rt, values);
+  return ShareableJSRef::newHostObject(rt, shareable);
+}
+
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
     const std::shared_ptr<jsi::HostObject> &value) {
@@ -340,6 +353,61 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
     obj.setNativeState(rt, nativeState_);
   }
   return obj;
+}
+
+ShareableMap::ShareableMap(
+    jsi::Runtime &rt,
+    const jsi::Array &keys,
+    const jsi::Array &values)
+    : Shareable(MapType) {
+  auto size = keys.size(rt);
+  react_native_assert(
+      size == values.size(rt) &&
+      "Keys and values arrays must have the same size.");
+  data_.reserve(size);
+  for (size_t i = 0; i < size; i++) {
+    auto key = extractShareableOrThrow(rt, keys.getValueAtIndex(rt, i));
+    auto value = extractShareableOrThrow(rt, values.getValueAtIndex(rt, i));
+    data_.emplace_back(key, value);
+  }
+}
+
+jsi::Value ShareableMap::toJSValue(jsi::Runtime &rt) {
+  const auto keyValues = jsi::Array(rt, data_.size());
+  for (size_t i = 0, size = data_.size(); i < size; i++) {
+    const auto pair = jsi::Array(rt, 2);
+    pair.setValueAtIndex(rt, 0, data_[i].first->toJSValue(rt));
+    pair.setValueAtIndex(rt, 1, data_[i].second->toJSValue(rt));
+    keyValues.setValueAtIndex(rt, i, std::move(pair));
+  }
+
+  const auto &global = rt.global();
+  auto map = global.getPropertyAsFunction(rt, "Map").callAsConstructor(
+      rt, std::move(keyValues));
+
+  return map;
+}
+
+ShareableSet::ShareableSet(jsi::Runtime &rt, const jsi::Array &values)
+    : Shareable(SetType) {
+  auto size = values.size(rt);
+  data_.reserve(size);
+  for (size_t i = 0; i < size; i++) {
+    data_.push_back(extractShareableOrThrow(rt, values.getValueAtIndex(rt, i)));
+  }
+}
+
+jsi::Value ShareableSet::toJSValue(jsi::Runtime &rt) {
+  const auto values = jsi::Array(rt, data_.size());
+  for (size_t i = 0, size = data_.size(); i < size; i++) {
+    values.setValueAtIndex(rt, i, data_[i]->toJSValue(rt));
+  }
+
+  const auto &global = rt.global();
+  auto set = global.getPropertyAsFunction(rt, "Set").callAsConstructor(
+      rt, std::move(values));
+
+  return set;
 }
 
 jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
