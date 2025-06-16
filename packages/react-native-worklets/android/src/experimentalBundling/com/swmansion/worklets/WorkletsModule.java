@@ -105,6 +105,12 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
   }
 
+    /** @noinspection unused*/
+  @DoNotStrip
+  public boolean isOnJSQueueThread() {
+    return getReactApplicationContext().isOnJSQueueThread();
+  }
+
   public void toggleSlowAnimations() {
     final int ANIMATIONS_DRAG_FACTOR = 10;
     mSlowAnimationsEnabled = !mSlowAnimationsEnabled;
