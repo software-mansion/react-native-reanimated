@@ -71,13 +71,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue();};
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
       [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame), script, sourceURL);
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), std::move(forwardedRequestAnimationFrame), script, sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy =
       worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
