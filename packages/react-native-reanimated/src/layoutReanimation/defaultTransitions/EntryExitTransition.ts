@@ -1,7 +1,6 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
 import { withSequence, withTiming } from '../../animation';
+import { logger } from '../../common';
 import type {
   AnimatableValue,
   AnimationObject,

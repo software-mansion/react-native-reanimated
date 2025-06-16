@@ -5,12 +5,6 @@ import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimati
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { reportFatalErrorOnJS } from './errors';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
 import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
@@ -30,26 +24,6 @@ if (globalThis._ALWAYS_FALSE) {
   initializeLibraryOnWorkletRuntime();
 }
 
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-function overrideLogFunctionImplementation(
-  boundLogToLogBoxAndConsole: typeof logToLogBoxAndConsole
-) {
-  'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(boundLogToLogBoxAndConsole)(data);
-  });
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-if (!globalThis._WORKLET) {
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  overrideLogFunctionImplementation(logToLogBoxAndConsole);
-}
-
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
   globalThis._WORKLET = false;
@@ -67,16 +41,10 @@ if (SHOULD_BE_USE_WEB) {
     }
   }
 
-  const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
-
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
-    runtimeBoundLogToLogBoxAndConsole
-  );
 }
 
 export function setupErrorUtils(
