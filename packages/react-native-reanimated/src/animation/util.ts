@@ -24,13 +24,13 @@ import type {
   Animation,
   AnimationObject,
   EasingFunction,
+  SharedRegisterer,
   SharedValue,
   Timestamp,
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
-import type { SharedRegisterer } from '../SharedValuesSet';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,

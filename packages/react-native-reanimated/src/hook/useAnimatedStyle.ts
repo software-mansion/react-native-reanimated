@@ -17,13 +17,13 @@ import type {
   AnimatedStyle,
   AnimationObject,
   NestedObjectValues,
+  SharedRegisterer,
   SharedValue,
   StyleProps,
   Timestamp,
 } from '../commonTypes';
 import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import type { SharedRegisterer } from '../SharedValuesSet';
 import { makeShareableRegistry } from '../SharedValuesSet';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
