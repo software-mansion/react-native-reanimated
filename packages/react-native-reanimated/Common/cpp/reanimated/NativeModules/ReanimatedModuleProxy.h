@@ -210,10 +210,6 @@ class ReanimatedModuleProxy
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
-  jsi::Value filterNonAnimatableProps(
-      jsi::Runtime &rt,
-      const jsi::Value &props);
-
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
