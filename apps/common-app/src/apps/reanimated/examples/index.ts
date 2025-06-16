@@ -111,6 +111,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
@@ -135,6 +136,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  ThirdPartyComponentsExample: {
+    icon: '3️⃣',
+    title: 'Third party components',
+    screen: ThirdPartyComponentsExample,
   },
   RuntimeTests: {
     icon: '⚙️',
