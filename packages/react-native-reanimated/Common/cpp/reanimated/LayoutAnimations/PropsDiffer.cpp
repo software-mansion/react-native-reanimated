@@ -24,6 +24,12 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   return diff;
 }
 
+void PropsDiffer::setArbitratyTransforms(const Transform &sourceTransform, const Transform &targetTransform) {
+  sourceTransform_ = sourceTransform;
+  targetTransform_ = targetTransform;
+  hasArbitraryTransforms_ = true;
+}
+
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {
   const auto &sourceFrame = sourceView_.layoutMetrics.frame;
   const auto &targetFrame = targetView_.layoutMetrics.frame;
@@ -75,6 +81,24 @@ void PropsDiffer::diffBackgroundColor(jsi::Runtime &rt) {
 }
 
 void PropsDiffer::diffTransform(jsi::Runtime &rt) {
+
+  if (hasArbitraryTransforms_) {
+    jsi::Array sourceMatrix(rt, 16), targetMatrix(rt, 16);
+    for (int i = 0; i < 16; i++) {
+      sourceMatrix.setValueAtIndex(rt, i, sourceTransform_.matrix[i]);
+      targetMatrix.setValueAtIndex(rt, i, targetTransform_.matrix[i]);
+    }
+    jsi::Object sourceOperation(rt), targetOperation(rt);
+    sourceOperation.setProperty(rt, "matrix", sourceMatrix);
+    targetOperation.setProperty(rt, "matrix", targetMatrix);
+    jsi::Array sourceTransforms(rt, 1), targetTransforms(rt, 1);
+    sourceTransforms.setValueAtIndex(rt, 0, sourceOperation);
+    targetTransforms.setValueAtIndex(rt, 0, targetOperation);
+    sourceValues_.setProperty(rt, "transform", sourceTransforms);
+    targetValues_.setProperty(rt, "transform", targetTransforms);
+    return;
+  }
+
   const auto &sourceJsiOperations =
       getTransformOperationsFromProps(rt, sourceViewProps_);
   const auto &targetJsiOperations =
