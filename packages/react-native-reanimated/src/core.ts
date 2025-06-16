@@ -12,7 +12,6 @@ import type {
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
-  ShadowNodeWrapper,
   SharedValue,
   Value3D,
   ValueRotation,
