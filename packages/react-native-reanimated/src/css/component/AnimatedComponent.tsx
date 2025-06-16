@@ -61,7 +61,6 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
     let DOMElement: HTMLElement | null = null;
 
     if (SHOULD_BE_USE_WEB) {
