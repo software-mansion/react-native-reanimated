@@ -105,7 +105,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
   }
 
-    /** @noinspection unused*/
+  /**
+   * @noinspection unused
+   */
   @DoNotStrip
   public boolean isOnJSQueueThread() {
     return getReactApplicationContext().isOnJSQueueThread();

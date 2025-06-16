@@ -82,7 +82,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
   }
 
-  /** @noinspection unused*/
+  /**
+   * @noinspection unused
+   */
   @DoNotStrip
   public boolean isOnJSQueueThread() {
     return getReactApplicationContext().isOnJSQueueThread();
