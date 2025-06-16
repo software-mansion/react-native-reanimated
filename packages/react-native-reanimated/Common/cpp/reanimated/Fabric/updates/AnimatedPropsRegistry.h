@@ -14,13 +14,23 @@ namespace reanimated {
 using JSIUpdates = std::vector<std::pair<Tag, std::unique_ptr<jsi::Value>>>;
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
-  JSIUpdates jsiUpdates_;
-
  public:
-  JSIUpdates getJSIUpdates();
+  JSIUpdates getNonAnimatablePropUpdates();
 
-  SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
+  void update(
+      jsi::Runtime &rt,
+      const jsi::Value &operations,
+      const std::unordered_set<std::string> &animatablePropNames);
   void remove(Tag tag) override;
+
+ private:
+  JSIUpdates nonAnimatablePropUpdates_;
+
+  void addNonAnimatablePropUpdates(
+      jsi::Runtime &rt,
+      const Tag tag,
+      const jsi::Value &props,
+      const std::unordered_set<std::string> &animatablePropNames);
 };
 
 } // namespace reanimated

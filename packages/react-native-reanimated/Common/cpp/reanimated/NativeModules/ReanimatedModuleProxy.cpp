@@ -50,12 +50,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -91,7 +93,8 @@ void ReanimatedModuleProxy::init(
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    strongThis->animatedPropsRegistry_->update(
+        rt, operations, strongThis->animatablePropNames_);
   };
 
   auto measure = [weakThis = weak_from_this()](
@@ -286,9 +289,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -559,29 +563,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
-    jsi::Runtime &rt,
-    const jsi::Value &props) {
-  jsi::Object nonAnimatableProps(rt);
-  bool hasAnyNonAnimatableProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(animatablePropNames_, propName)) {
-      hasAnyNonAnimatableProp = true;
-      const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
-      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
-    }
-  }
-  if (!hasAnyNonAnimatableProp) {
-    return jsi::Value::undefined();
-  }
-  return nonAnimatableProps;
-}
-
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -728,11 +709,9 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
-    if (nonAnimatableProps.isUndefined()) {
-      continue;
-    }
+  auto nonAnimatablePropUpdates =
+      animatedPropsRegistry_->getNonAnimatablePropUpdates();
+  if (nonAnimatablePropUpdates.size() > 0) {
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
     react_native_assert(
@@ -740,7 +719,9 @@ void ReanimatedModuleProxy::performOperations() {
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-    jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
+    for (const auto &[viewTag, props] : nonAnimatablePropUpdates) {
+      jsPropsUpdater.call(rt, viewTag, *props);
+    }
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
