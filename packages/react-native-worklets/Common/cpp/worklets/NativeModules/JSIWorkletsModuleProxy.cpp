@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -83,6 +84,22 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
+inline jsi::Value reportFatalErrorOnJS(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::string &message,
+    const std::string &stack,
+    const std::string &name,
+    const std::string &jsEngine) {
+  JSLogger::reportFatalErrorOnJS(
+      jsScheduler,
+      JSErrorData{
+          .message = message,
+          .stack = stack,
+          .name = name,
+          .jsEngine = jsEngine});
+  return jsi::Value::undefined();
+}
+
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
@@ -155,6 +172,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
 
   return propertyNames;
 }
@@ -431,6 +450,25 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "reportFatalErrorOnJS") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return reportFatalErrorOnJS(
+              jsScheduler,
+              /* message */ args[0].asString(rt).utf8(rt),
+              /* stack */ args[1].asString(rt).utf8(rt),
+              /* name */ args[2].asString(rt).utf8(rt),
+              /* jsEngine */ args[3].asString(rt).utf8(rt));
         });
   }
 

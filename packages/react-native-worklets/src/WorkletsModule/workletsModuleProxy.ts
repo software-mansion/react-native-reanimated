@@ -71,6 +71,13 @@ export interface WorkletsModuleProxy {
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<TValue>
   ): void;
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ): void;
 }
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
