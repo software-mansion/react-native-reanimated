@@ -25,6 +25,7 @@ WorkletsModule::WorkletsModule(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           uiScheduler,
+          getIsOnJSQueueThread(),
           getForwardedRequestAnimationFrame(),
           script,
           sourceURL)) {
@@ -82,6 +83,14 @@ WorkletsModule::getForwardedRequestAnimationFrame() {
     jRequestAnimationFrame(
         javaPart.get(),
         AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+  };
+}
+
+std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
+  return [javaPart = javaPart_]() -> bool {
+    return javaPart->getClass()
+        ->getMethod<jboolean()>("isOnJSQueueThread")
+        .operator()(javaPart);
   };
 }
 

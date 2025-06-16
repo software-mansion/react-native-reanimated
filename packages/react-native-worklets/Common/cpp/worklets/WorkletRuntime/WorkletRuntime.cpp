@@ -112,19 +112,25 @@ WorkletRuntime::WorkletRuntime(
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
     if (!message.starts_with("Worklets initialized successfully")) {
-      jsScheduler->invokeSync_UNSAFE(
-          [&message, &stack](jsi::Runtime &rnRuntime) {
-            const auto newMessage =
-                "[Worklets] Failed to initialize runtime. Reason: " + message;
-            JSLogger::reportFatalErrorOnJS(
-                rnRuntime,
-                {.message = newMessage,
-                 .stack = stack,
-                 .name = "WorkletsError",
-                 .jsEngine = "Worklets"},
-                /*force*/ true);
-          });
-    }
+      const auto newMessage =
+          "[Worklets] Failed to initialize runtime. Reason: " + message;
+      const auto errorData = JSLogger::ErrorData{
+          .message = newMessage,
+          .stack = stack,
+          .name = "WorkletsError",
+          .jsEngine = "Worklets"};
+      if (jsScheduler->canInvokeSyncOnJS()) {
+        jsScheduler->invokeSyncOnJS(
+            [&message, &stack](jsi::Runtime &rnRuntime) {
+              JSLogger::reportFatalErrorOnJS(
+                  rnRuntime,
+                  errorData,
+                  /*force*/ true);
+            });
+      } else {
+        JSLogger::reportFatalErrorOnJS(jsScheduler, errorData)
+      }
+    };
   }
 #else
   // Legacy behavior
