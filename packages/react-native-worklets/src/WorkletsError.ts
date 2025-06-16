@@ -1,12 +1,11 @@
-'use strict';
+'use strict';   
 
 function WorkletsErrorConstructor(message?: string): WorkletsError {
   'worklet';
   const prefix = '[Worklets]';
 
-  const errorInstance = new ReanimatedError(
-    message ? `${prefix} ${message}` : prefix
-  );
+  // eslint-disable-next-line reanimated/use-reanimated-error
+  const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
   errorInstance.name = `WorkletsError`;
   return errorInstance as WorkletsError;
 }
