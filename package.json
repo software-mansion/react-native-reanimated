@@ -24,19 +24,19 @@
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint --flag unstable_config_lookup_from_file  --ignore-pattern .gitignore --ignore-pattern .eslintignore --ignore-pattern .prettiereslintignore . && yarn prettier --check --ignore-pattern .gitignore --ignore-pattern .prettierignore --ignore-pattern .prettiereslintignore ."
+    "lint:root": "eslint --flag unstable_config_lookup_from_file . && yarn prettier --check ."
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
     "@types/shelljs": "^0.8.15",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
-    "eslint": "^9.28.0",
+    "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.13.0",
+    "eslint-plugin-jest": "^28.14.0",
     "eslint-plugin-jsdoc": "^50.7.1",
-    "eslint-plugin-n": "^17.19.0",
+    "eslint-plugin-n": "^17.20.0",
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",

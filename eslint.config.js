@@ -110,11 +110,14 @@ module.exports = defineConfig([
         },
       ],
 
-      '@typescript-eslint/no-unused-vars': ['error', {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
 
       '@typescript-eslint/no-var-requires': 'warn',
 
@@ -160,12 +163,15 @@ module.exports = defineConfig([
     '**/coverage/**',
     '**/dist/**',
     '**/build/**',
+    '**/ios/**',
+    '**/android/**',
     '**/coverage/**',
+    '**/lib/**',
+    '**/plugin/**',
     'eslint.config.js',
     // TODO: remove this once we have a proper eslint config for each package and app
-    "**/apps/**",
-    "**/packages/react-native-worklets/**",
-    "**/packages/eslint-plugin-reanimated/**",
-    "**/packages/docs-reanimated/**",
+    '**/apps/**',
+    '**/packages/eslint-plugin-reanimated/**',
+    '**/packages/docs-reanimated/**',
   ]),
 ]);

@@ -17,5 +17,5 @@ module.exports = defineConfig([
       'reanimated/use-global-this': 'error',
     },
   },
-  globalIgnores(['**/lib/**', '**/plugin/**']),
+  globalIgnores(['lib', 'index.js', 'index.js.map']),
 ]);
