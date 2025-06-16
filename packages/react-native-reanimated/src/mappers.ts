@@ -5,10 +5,10 @@ import { IS_JEST } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
+  SharedRegisterer,
   SharedValue,
 } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
-import type { SharedRegisterer } from './SharedValuesSet';
 
 type MapperExtractedInputs = SharedValue[];
 

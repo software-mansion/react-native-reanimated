@@ -10,7 +10,6 @@ import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
-import type { SharedRegisterer } from './SharedValuesSet';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -247,6 +246,24 @@ export interface MutableArray<Value = Array<SharedArrayValueType>>
    * method.
    */
   _value: Value;
+}
+
+export type SharedRegistryItem = {
+  sharedValue: SharedValue<any>;
+  keys: Array<number | string>;
+};
+
+export type SharedRegistry = Mutable<Array<SharedRegistryItem>>;
+
+export interface SharedRegisterer {
+  shareableRegistry: SharedRegistry;
+  registerForUpdates: (
+    sharedValue: SharedValue<any>,
+    keys: Array<number | string>
+  ) => void;
+  unregisterForUpdates: (sharedValue: SharedValue<any>) => void;
+  has: (sharedValue: SharedValue<any>) => boolean;
+  get: (sharedValue: SharedValue<any>) => SharedRegistryItem | undefined;
 }
 
 export type MapperRawInputs = unknown[];

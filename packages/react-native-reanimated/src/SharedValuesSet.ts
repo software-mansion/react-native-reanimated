@@ -1,24 +1,10 @@
 'use strict';
-import type { Mutable, SharedValue } from './commonTypes';
+import type {
+  SharedRegisterer,
+  SharedRegistryItem,
+  SharedValue,
+} from './commonTypes';
 import { makeMutable } from './core';
-
-type SharedRegistryItem = {
-  sharedValue: SharedValue<any>;
-  keys: Array<number | string>;
-};
-
-type SharedRegistry = Mutable<Array<SharedRegistryItem>>;
-
-export interface SharedRegisterer {
-  shareableRegistry: SharedRegistry;
-  registerForUpdates: (
-    sharedValue: SharedValue<any>,
-    keys: Array<number | string>
-  ) => void;
-  unregisterForUpdates: (sharedValue: SharedValue<any>) => void;
-  has: (sharedValue: SharedValue<any>) => boolean;
-  get: (sharedValue: SharedValue<any>) => SharedRegistryItem | undefined;
-}
 
 export function makeShareableRegistry(): SharedRegisterer {
   const shareableRegistry = makeMutable<Array<SharedRegistryItem>>([]);
