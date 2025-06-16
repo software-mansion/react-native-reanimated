@@ -18,10 +18,6 @@ string(APPEND CMAKE_CXX_FLAGS
        " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
-endif()
-
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
@@ -37,16 +33,9 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
 elseif(${JS_RUNTIME} STREQUAL "jsc")
   string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
 else()
   message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
 endif()
-
-# Resolves "CMake Warning: Manually-specified variables were not used by the
-# project" when any of the following variables is not used in some build
-# configuration.
-set(IGNORE_ME "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
@@ -75,25 +64,20 @@ target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"
 target_include_directories(
   worklets
   PRIVATE "${REACT_NATIVE_DIR}/ReactCommon"
+          "${REACT_NATIVE_DIR}/ReactCommon/yoga"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor")
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+)
 
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  target_include_directories(
-    worklets
-    PRIVATE
-      "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-      "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
-
-  if(ReactAndroid_VERSION_MINOR LESS 76)
-    target_link_libraries(
-      worklets ReactAndroid::fabricjni ReactAndroid::react_debug
-      ReactAndroid::react_render_core
-      ReactAndroid::react_render_componentregistry ReactAndroid::rrc_view)
-  endif()
+if(ReactAndroid_VERSION_MINOR LESS 76)
+  target_link_libraries(
+    worklets ReactAndroid::fabricjni ReactAndroid::react_debug
+    ReactAndroid::react_render_core
+    ReactAndroid::react_render_componentregistry ReactAndroid::rrc_view)
 endif()
 
 # build shared lib
@@ -126,14 +110,4 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
   else()
     target_link_libraries(worklets ReactAndroid::jscexecutor)
   endif()
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  # TODO: Refactor this when adding support for newest V8
-  target_include_directories(worklets PRIVATE "${JS_RUNTIME_DIR}/src")
-  file(GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/\
-    library_jni/**/jni/${ANDROID_ABI}")
-  find_library(
-    V8EXECUTOR_LIB v8executor
-    PATHS ${V8_SO_DIR}
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
-  target_link_libraries(worklets ${V8EXECUTOR_LIB})
 endif()

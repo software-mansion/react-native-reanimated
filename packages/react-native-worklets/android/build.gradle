@@ -85,12 +85,6 @@ def JS_RUNTIME = {
         return System.getenv("JS_RUNTIME")
     }
 
-    // Enable V8 runtime if react-native-v8 is installed
-    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
-    if (v8Project != null) {
-        return "v8"
-    }
-
     // Check if Hermes is enabled in app setup
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
     if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
@@ -99,16 +93,6 @@ def JS_RUNTIME = {
 
     // Use JavaScriptCore (JSC) by default
     return "jsc"
-}.call()
-
-def jsRuntimeDir = {
-    if (JS_RUNTIME == "hermes") {
-        return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
-    } else if (JS_RUNTIME == "v8") {
-        return findProject(":react-native-v8").getProjectDir().getParent()
-    } else {
-        return Paths.get(reactNativeRootDir.path, "ReactCommon", "jsi")
-    }
 }.call()
 
 def reactNativeArchitectures() {
@@ -170,7 +154,6 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
         buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
 
         externalNativeBuild {
@@ -180,8 +163,6 @@ android {
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
-                        "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
@@ -246,7 +227,6 @@ android {
                 "**/libreact_render*.so",
                 "**/librrc_root.so",
                 "**/libjscexecutor.so",
-                "**/libv8executor.so",
         ]
     }
     compileOptions {
@@ -256,9 +236,6 @@ android {
     sourceSets {
         main {
             java {
-                if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/paper"
-                }
                 if (EXPERIMENTAL_BUNDLING) {
                     srcDirs += "src/experimentalBundling"
                 } else {
@@ -296,6 +273,15 @@ task assertMinimalReactNativeVersionTask {
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
+task assertNewArchitectureEnabledTask {
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
+    doFirst {
+        throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
+
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
@@ -327,14 +313,3 @@ dependencies {
 }
 
 preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
-
-afterEvaluate {
-    if (JS_RUNTIME == "v8") {
-        def buildTasks = tasks.findAll({ task ->
-            !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })
-        buildTasks.forEach { task ->
-            def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
-            task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
-        }
-    }
-}
