@@ -92,6 +92,7 @@ export {
   runOnJS,
   runOnRuntime,
   runOnUI,
+  registerJSProps,
 } from './core';
 export * from './css';
 export type {

@@ -5,7 +5,7 @@ const NOOP = () => {
 
 // ts-prune-ignore-next Is this even used?
 export default {
-  registerNativePropNamesForComponentName: NOOP,
+  registerJSProps: NOOP,
   connectNodes: NOOP,
   getValue: () => 0,
   disconnectNodes: NOOP,

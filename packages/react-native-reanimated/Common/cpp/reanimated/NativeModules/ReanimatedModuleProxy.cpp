@@ -329,23 +329,20 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::registerNativePropNamesForComponentName(
+jsi::Value ReanimatedModuleProxy::registerJSProps(
     jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &nativePropNames) {
-  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto componentNameStr = shadowNode->getComponentName();
-  const auto nativePropNamesArray = nativePropNames.asObject(rt).asArray(rt);
-  const auto size = nativePropNamesArray.size(rt);
-  std::unordered_set<std::string> nativePropNamesSet;
+    const jsi::Value &componentName,
+    const jsi::Value &jsPropsNames) {
+  const auto componentNameStr = componentName.asString(rt).utf8(rt);
+  const auto jsPropsNamesArray = jsPropsNames.asObject(rt).asArray(rt);
+  const auto size = jsPropsNamesArray.size(rt);
+  std::unordered_set<std::string> jsPropsNamesSet;
   for (size_t i = 0; i < size; i++) {
-    nativePropNamesSet.insert(
-        nativePropNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    jsPropsNamesSet.insert(
+        jsPropsNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  auto lock =
-      std::unique_lock<std::mutex>(nativePropNamesForComponentNamesMutex_);
-  nativePropNamesForComponentNames_[componentNameStr] =
-      std::move(nativePropNamesSet);
+  auto lock = std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
+  jsPropsNamesForComponentNames_[componentNameStr] = std::move(jsPropsNamesSet);
   return jsi::Value::undefined();
 }
 
@@ -562,33 +559,33 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterNonNativeProps(
+jsi::Value ReanimatedModuleProxy::filterJSProps(
     jsi::Runtime &rt,
     const std::string &componentName,
     const jsi::Value &props) {
-  jsi::Object nonNativeProps(rt);
-  bool hasAnyNonNativeProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  const auto it = nativePropNamesForComponentNames_.find(componentName);
-  const auto found = it != nativePropNamesForComponentNames_.end();
-  react_native_assert(
-      found && "Native props not found for given component name");
-  const auto &nativePropNamesForComponentName = it->second;
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(nativePropNamesForComponentName, propName)) {
-      hasAnyNonNativeProp = true;
-      const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
-      nonNativeProps.setProperty(rt, propNameStr, propValue);
-    }
-  }
-  if (!hasAnyNonNativeProp) {
+  const auto it = jsPropsNamesForComponentNames_.find(componentName);
+  const auto found = it != jsPropsNamesForComponentNames_.end();
+  if (!found) {
     return jsi::Value::undefined();
   }
-  return nonNativeProps;
+
+  const auto &jsPropsNamesForComponentName = it->second;
+  jsi::Object jsProps(rt);
+  bool empty = true;
+  const auto &propsObject = props.asObject(rt);
+  const auto &propsNamesArray = propsObject.getPropertyNames(rt);
+  for (size_t i = 0; i < propsNamesArray.size(rt); ++i) {
+    const auto &propName = propsNamesArray.getValueAtIndex(rt, i).asString(rt);
+    if (jsPropsNamesForComponentName.contains(propName.utf8(rt))) {
+      empty = false;
+      const auto &propValue = propsObject.getProperty(rt, propName);
+      jsProps.setProperty(rt, propName, propValue);
+    }
+  }
+  if (empty) {
+    return jsi::Value::undefined();
+  }
+  return jsProps;
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -739,12 +736,12 @@ void ReanimatedModuleProxy::performOperations() {
 
   {
     auto lock =
-        std::unique_lock<std::mutex>(nativePropNamesForComponentNamesMutex_);
+        std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
 
     for (const auto &jsiUpdate : animatedPropsRegistry_->getJSIUpdates()) {
-      const jsi::Value &nonNativeProps =
-          filterNonNativeProps(rt, jsiUpdate.componentName, *jsiUpdate.props);
-      if (nonNativeProps.isUndefined()) {
+      const jsi::Value &jsProps =
+          filterJSProps(rt, jsiUpdate.componentName, *jsiUpdate.props);
+      if (jsProps.isUndefined()) {
         continue;
       }
       jsi::Value maybeJSPropsUpdater =
@@ -754,7 +751,7 @@ void ReanimatedModuleProxy::performOperations() {
           "[Reanimated] `updateJSProps` not found");
       jsi::Function jsPropsUpdater =
           maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-      jsPropsUpdater.call(rt, jsiUpdate.tag, nonNativeProps);
+      jsPropsUpdater.call(rt, jsiUpdate.tag, jsProps);
     }
   }
 

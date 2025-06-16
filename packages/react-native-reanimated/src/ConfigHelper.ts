@@ -3,11 +3,7 @@ import type { LoggerConfig } from 'react-native-worklets';
 import { logger, updateLoggerConfig } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
-import type { ShadowNodeWrapper } from './commonTypes';
-import {
-  executeOnUIRuntimeSync,
-  jsiRegisterNativePropNamesForComponentName,
-} from './core';
+import { executeOnUIRuntimeSync } from './core';
 
 export function addWhitelistedNativeProps(): void {
   logger.warn(
@@ -37,27 +33,4 @@ export function configureReanimatedLogger(config: LoggerConfig) {
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(updateLoggerConfig)(config);
   }
-}
-
-const PROCESSED_VIEW_NAMES = new Set();
-
-export interface ViewConfig {
-  uiViewClassName: string;
-  validAttributes: Record<string, unknown>;
-}
-
-export function adaptViewConfig(
-  shadowNodeWrapper: ShadowNodeWrapper,
-  viewConfig: ViewConfig
-): void {
-  const uiViewClassName = viewConfig.uiViewClassName;
-  if (PROCESSED_VIEW_NAMES.has(uiViewClassName)) {
-    return;
-  }
-  const nativePropNames = Object.keys(viewConfig.validAttributes);
-  jsiRegisterNativePropNamesForComponentName(
-    shadowNodeWrapper,
-    nativePropNames
-  );
-  PROCESSED_VIEW_NAMES.add(uiViewClassName);
 }
