@@ -169,8 +169,8 @@ module.exports = defineConfig([
     '**/lib/**',
     '**/plugin/**',
     'eslint.config.js',
-    // TODO: remove this once we have a proper eslint config for each package and app
-    '**/apps/**',
+        // TODO: remove this once we have a proper eslint config for each package and app
+        '**/apps/**',
     '**/packages/docs-reanimated/**',
   ]),
 ]);
