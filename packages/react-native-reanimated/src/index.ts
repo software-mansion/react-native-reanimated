@@ -89,10 +89,10 @@ export {
   isReanimated3,
   makeMutable,
   makeShareableCloneRecursive,
+  registerJSProps,
   runOnJS,
   runOnRuntime,
   runOnUI,
-  registerJSProps,
 } from './core';
 export * from './css';
 export type {
