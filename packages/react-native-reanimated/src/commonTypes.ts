@@ -253,7 +253,7 @@ export type SharedRegistryItem = {
   keys: Array<number | string>;
 };
 
-export type SharedRegistry = Mutable<Array<SharedRegistryItem>>;
+type SharedRegistry = Mutable<Array<SharedRegistryItem>>;
 
 export interface SharedRegisterer {
   shareableRegistry: SharedRegistry;
