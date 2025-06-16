@@ -36,7 +36,7 @@ class PropsDiffer {
   jsi::Object targetValues_;
   Transform sourceTransform_;
   Transform targetTransform_;
-  bool hasArbitraryTransforms_ = false;
+  bool needsOverrideTransforms_ = false;
 
   void diffFrame(jsi::Runtime &rt);
 
@@ -100,7 +100,7 @@ class PropsDiffer {
         targetValues_(rt) {};
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
-  void setArbitratyTransforms(const Transform &sourceTransform, const Transform &targetTransform);
+  void overrideTransforms(const Transform &sourceTransform, const Transform &targetTransform);
 };
 
 } // namespace reanimated
