@@ -1,7 +1,6 @@
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
