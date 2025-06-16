@@ -79,7 +79,7 @@ class ReanimatedModuleProxy
       override;
   jsi::Value registerJSProps(
       jsi::Runtime &rt,
-      const jsi::Value &componentNames,
+      const jsi::Value &componentName,
       const jsi::Value &jsPropsNames) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
