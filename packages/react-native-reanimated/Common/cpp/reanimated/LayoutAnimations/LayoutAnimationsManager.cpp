@@ -118,7 +118,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case LAYOUT:
       return layoutAnimations_;
     default:
-      assert(false);
+      throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
 

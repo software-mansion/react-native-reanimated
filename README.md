@@ -17,9 +17,6 @@
 [![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
-<!-- TODO: Restore badge once V8 is supported. -->
-<!-- [![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml) -->
-
 ## Installation
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.

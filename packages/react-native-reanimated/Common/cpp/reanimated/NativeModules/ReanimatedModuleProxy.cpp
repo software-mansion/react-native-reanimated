@@ -735,7 +735,7 @@ void ReanimatedModuleProxy::performOperations() {
     }
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
-    assert(
+    react_native_assert(
         maybeJSPropsUpdater.isObject() &&
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =
