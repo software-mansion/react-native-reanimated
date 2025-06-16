@@ -12,8 +12,6 @@ import { Circle, Ellipse, Path, Svg } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-Animated.addWhitelistedNativeProps({ cx: true, cy: true });
-
 function useLoop(toValue: number = 1, duration: number = 1000) {
   const sv = useSharedValue(0);
 
