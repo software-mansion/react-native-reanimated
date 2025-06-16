@@ -1,5 +1,4 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/Tools/CollectionUtils.h>
 
 #ifndef NDEBUG
 #include <utility>
@@ -35,7 +34,7 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
     const int tag,
     const bool shouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(shouldAnimateExitingForTag_, tag)
+  return shouldAnimateExitingForTag_.contains(tag)
       ? shouldAnimateExitingForTag_[tag]
       : shouldAnimate;
 }
@@ -44,7 +43,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     const int tag,
     const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(getConfigsForType(type), tag);
+  return getConfigsForType(type).contains(tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
@@ -63,7 +62,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
   std::shared_ptr<Shareable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!collection::contains(getConfigsForType(type), tag)) {
+    if (!getConfigsForType(type).contains(tag)) {
       return;
     }
     config = getConfigsForType(type)[tag];
@@ -118,7 +117,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case LAYOUT:
       return layoutAnimations_;
     default:
-      assert(false);
+      throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
 

@@ -1,7 +1,6 @@
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -569,7 +568,7 @@ jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(animatablePropNames_, propName)) {
+    if (!animatablePropNames_.contains(propName)) {
       hasAnyNonAnimatableProp = true;
       const auto &propNameStr = propName.c_str();
       const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
@@ -735,7 +734,7 @@ void ReanimatedModuleProxy::performOperations() {
     }
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
-    assert(
+    react_native_assert(
         maybeJSPropsUpdater.isObject() &&
         "[Reanimated] `updateJSProps` not found");
     jsi::Function jsPropsUpdater =

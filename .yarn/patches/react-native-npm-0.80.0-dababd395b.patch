@@ -671,19 +671,6 @@ index e76e1d18df9..9901eb7f5b1 100644
  }
  
  - (void)_handleJSError:(const JsErrorHandler::ProcessedError &)error withRuntime:(jsi::Runtime &)runtime
-diff --git a/scripts/cocoapods/new_architecture.rb b/scripts/cocoapods/new_architecture.rb
-index 02a441467bb..f3ff4b90ed1 100644
---- a/scripts/cocoapods/new_architecture.rb
-+++ b/scripts/cocoapods/new_architecture.rb
-@@ -161,7 +161,7 @@ class NewArchitectureHelper
-             .uniq{ |p| p.path }
-             .map{ |p| p.path }
- 
--        excluded_info_plist = ["/Pods", "Tests", "metainternal", ".bundle"]
-+        excluded_info_plist = ["/Pods", "Tests", "metainternal", ".bundle", "build/", "DerivedData/"]
-         projectPaths.each do |projectPath|
-             projectFolderPath = File.dirname(projectPath)
-             infoPlistFiles = `find #{projectFolderPath} -name "Info.plist"`
 diff --git a/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js b/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js
 index ed5c2696fb7..97b468989f4 100644
 --- a/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js
