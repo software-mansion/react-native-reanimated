@@ -15,16 +15,22 @@ void JSLogger::warnOnJS(const std::string &warning) const {
 
 void JSLogger::reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    JSErrorData jsErrorData,
+    JSErrorData &&jsErrorData,
     bool force) {
-  jsScheduler->scheduleOnJS([jsErrorData, force](jsi::Runtime &rnRuntime) {
+  auto job = [jsErrorData = std::move(jsErrorData),
+              force](jsi::Runtime &rnRuntime) {
     reportFatalErrorOnJS(rnRuntime, jsErrorData, force);
-  });
+  };
+  if (jsScheduler->canInvokeSyncOnJS()) {
+    jsScheduler->invokeSyncOnJS(job);
+  } else {
+    jsScheduler->scheduleOnJS(job);
+  }
 }
 
 void JSLogger::reportFatalErrorOnJS(
     jsi::Runtime &rnRuntime,
-    JSErrorData jsErrorData,
+    const JSErrorData &jsErrorData,
     bool force) {
   const auto &global = rnRuntime.global();
   const auto errorInstance = rnRuntime.global()

@@ -114,24 +114,15 @@ WorkletRuntime::WorkletRuntime(
     if (!message.starts_with("Worklets initialized successfully")) {
       const auto newMessage =
           "[Worklets] Failed to initialize runtime. Reason: " + message;
-      const auto errorData = JSErrorData{
-          .message = newMessage,
-          .stack = stack,
-          .name = "WorkletsError",
-          .jsEngine = "Worklets"};
-      if (jsScheduler->canInvokeSyncOnJS()) {
-        jsScheduler->invokeSyncOnJS(
-            [errorData_ = std::move(errorData)](jsi::Runtime &rnRuntime) {
-              JSLogger::reportFatalErrorOnJS(
-                  rnRuntime,
-                  errorData_,
-                  /*force*/ true);
-            });
-      } else {
-        JSLogger::reportFatalErrorOnJS(jsScheduler, std::move(errorData));
-      }
-    };
-  }
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler,
+          {.message = newMessage,
+           .stack = stack,
+           .name = "WorkletsError",
+           .jsEngine = "Worklets"})
+    }
+  };
+}
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =

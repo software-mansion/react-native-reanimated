@@ -22,15 +22,15 @@ class JSLogger {
 
   static void reportFatalErrorOnJS(
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      JSErrorData jsErrorData,
-      bool force = false);
-
-  static void reportFatalErrorOnJS(
-      jsi::Runtime &rnRuntime,
-      JSErrorData jsErrorData,
+      JSErrorData &&jsErrorData,
       bool force = false);
 
  private:
+  static void reportFatalErrorOnJS(
+      jsi::Runtime &rnRuntime,
+      const JSErrorData &jsErrorData,
+      bool force = false);
+
   const std::shared_ptr<JSScheduler> jsScheduler_;
 };
 
