@@ -6,7 +6,7 @@
 
 #import <React/RCTAssert.h>
 
-#define TIME_SAMPLES_AMOUNT 4
+constexpr auto TIME_SAMPLES_AMOUNT = 4;
 
 namespace FrameRateRange {
 const auto BEST = CAFrameRateRangeMake(60, 120, 120);
