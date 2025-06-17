@@ -8,6 +8,7 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <react/renderer/graphics/Transform.h>
 
 #include <memory>
 #include <string>
@@ -59,6 +60,9 @@ struct LayoutAnimationsProxy
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
         mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+        
+        mutable std::unordered_map<Tag, react::Transform> transformForNode_;
+        
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -86,7 +90,7 @@ struct LayoutAnimationsProxy
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
+  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId, const int tagBefore, const int tagAfter)
             const;
         
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
@@ -101,9 +105,13 @@ struct LayoutAnimationsProxy
         
         LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
         
-        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const;
-        
-        LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
+        void findSharedElementsOnScreen(const LightNode::Unshared &node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const;
+
+        std::vector<react::Point> getAbsolutePositionsForRootPathView(const LightNode::Unshared &node) const;
+
+        void parseParentTransforms(const LightNode::Unshared &node, const std::vector<react::Point> &absolutePositions) const;
+        react::Transform resolveTransform(const LayoutMetrics &layoutMetrics, const Transform &transform, const TransformOrigin &transformOrigin) const;
+        std::array<float, 3> getTranslateForTransformOrigin(float viewWidth, float viewHeight, const TransformOrigin &transformOrigin) const;
 
   void parseRemoveMutations(
       std::unordered_map<Tag, ShadowView> &movedViews,
