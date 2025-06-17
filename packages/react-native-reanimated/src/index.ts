@@ -46,6 +46,7 @@ export type {
   AnimationObject,
   BaseLayoutAnimationConfig,
   EasingFunction,
+  EasingFunctionFactory,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
   ExitAnimationsValues,
