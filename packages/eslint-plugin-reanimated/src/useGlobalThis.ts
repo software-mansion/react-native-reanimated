@@ -3,7 +3,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'useGlobalThis', []> = {
-  create: function (context) {
+  create (context) {
     return {
       Identifier(node: TSESTree.Identifier) {
         if (
@@ -13,7 +13,7 @@ const rule: TSESLint.RuleModule<'useGlobalThis', []> = {
           context.report({
             node,
             messageId: 'useGlobalThis',
-            fix: function (fixer) {
+            fix (fixer) {
               return fixer.replaceText(node, 'globalThis._WORKLET');
             },
           });

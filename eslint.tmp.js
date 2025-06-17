@@ -5,7 +5,7 @@ const tsdoc = require('eslint-plugin-tsdoc');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
 const jsdoc = require('eslint-plugin-jsdoc');
 
-const { fixupConfigRules, fixupPluginRules } = require('@eslint/compat');
+const { fixupPluginRules } = require('@eslint/compat');
 
 const react = require('eslint-plugin-react');
 const reactNative = require('eslint-plugin-react-native');
@@ -13,14 +13,10 @@ const _import = require('eslint-plugin-import');
 const jest = require('eslint-plugin-jest');
 const typescriptEslint = require('@typescript-eslint/eslint-plugin');
 const js = require('@eslint/js');
-
-const { FlatCompat } = require('@eslint/eslintrc');
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+const standard = require('eslint-config-standard');
+const prettier = require('eslint-config-prettier');
+const reactHooks = require('eslint-plugin-react-hooks');
+const n = require('eslint-plugin-n');
 
 module.exports = defineConfig([
   {
@@ -37,15 +33,7 @@ module.exports = defineConfig([
         React: true,
       },
     },
-
-    extends: fixupConfigRules(
-      compat.extends(
-        'standard',
-        'prettier',
-        'plugin:import/typescript',
-        'plugin:react-hooks/recommended'
-      )
-    ),
+    extends: [js.configs.recommended],
 
     plugins: {
       react,
@@ -53,6 +41,10 @@ module.exports = defineConfig([
       import: fixupPluginRules(_import),
       jest,
       '@typescript-eslint': typescriptEslint,
+      'react-hooks': reactHooks,
+      prettier: prettier,
+      standard: standard,
+      n,
     },
 
     settings: {
@@ -72,7 +64,9 @@ module.exports = defineConfig([
       'no-use-before-define': 'off',
       'no-unused-vars': 'off',
       'no-undef': 'off',
+      'no-redeclare': 'off',
       'no-loss-of-precision': 'off',
+      'no-empty': 'off',
       eqeqeq: 'error',
       'no-unreachable': 'error',
       'jest/no-disabled-tests': 'warn',
@@ -88,7 +82,6 @@ module.exports = defineConfig([
 
     languageOptions: {
       parser: tsParser,
-
       parserOptions: { project: true, tsconfigRootDir: __dirname },
     },
 
@@ -147,8 +140,6 @@ module.exports = defineConfig([
 
     plugins: { jsdoc },
 
-    extends: compat.extends('plugin:jsdoc/recommended'),
-
     rules: {
       'jsdoc/tag-lines': 'off',
       'jsdoc/require-param-description': 'off',
@@ -169,8 +160,8 @@ module.exports = defineConfig([
     '**/lib/**',
     '**/plugin/**',
     'eslint.config.js',
-        // TODO: remove this once we have a proper eslint config for each package and app
-        '**/apps/**',
+    // TODO: remove this once we have a proper eslint config for each package and app
+    '**/apps/**',
     '**/packages/docs-reanimated/**',
   ]),
 ]);

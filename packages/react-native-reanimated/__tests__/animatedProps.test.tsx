@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import React from 'react';
 import { Button, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
@@ -39,7 +38,7 @@ export default function AnimatedComponent() {
   return (
     <View>
       <Svg>
-        // SVG components strip our jest props and cannot be tested
+        {/* SVG components strip our jest props and cannot be tested */}
         <AnimatedCircle
           cx="50%"
           cy="50%"

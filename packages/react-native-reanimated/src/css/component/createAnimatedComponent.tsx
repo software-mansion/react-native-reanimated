@@ -5,7 +5,6 @@ import type {
   FunctionComponent,
   Ref,
 } from 'react';
-import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
 import type { CSSProps } from '../types';

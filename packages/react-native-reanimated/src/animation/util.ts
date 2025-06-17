@@ -244,7 +244,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
         // FIXME
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }

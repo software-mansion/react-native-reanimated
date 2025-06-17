@@ -65,7 +65,7 @@ export function getViewProp<T>(
       component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
-          reject(result);
+          reject(new ReanimatedError(result));
         } else {
           resolve(result);
         }

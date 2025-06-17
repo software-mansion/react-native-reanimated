@@ -54,6 +54,7 @@ function convertOklabToLrgb({
 }: LabColor): RgbColor {
   'worklet';
 
+  /* eslint-disable no-loss-of-precision */
   const L = Math.pow(
     l * 0.99999999845051981432 +
       0.39633779217376785678 * a +
@@ -83,6 +84,7 @@ function convertOklabToLrgb({
       1.7076147009309444 * S,
     alpha,
   };
+  /* eslint-enable no-loss-of-precision */
 }
 
 function convertOklabToRgb(labColor: LabColor): RgbColor {

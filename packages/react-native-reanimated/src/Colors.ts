@@ -657,7 +657,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
+  return processColorInitially(value) !== null;
 }
 
 export type ParsedColorArray = [number, number, number, number];

@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import React from 'react';
 import { Button, Text, View } from 'react-native';
 
 import { useSharedValue } from '../src';

@@ -1,4 +1,4 @@
-'use strict';   
+'use strict';
 
 function WorkletsErrorConstructor(message?: string): WorkletsError {
   'worklet';

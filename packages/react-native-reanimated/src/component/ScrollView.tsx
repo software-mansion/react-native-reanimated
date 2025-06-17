@@ -1,6 +1,5 @@
 'use strict';
 import type { Ref } from 'react';
-import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
