@@ -52,7 +52,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_MINOR_VERSION > 80
+#if REACT_NATIVE_MINOR_VERSION >= 80
     ,
     const ShadowTreeCommitOptions &commitOptions
 #endif
@@ -93,7 +93,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // it could lead to RN commits being delayed until the animation is finished
     // (very bad). We don't pause Reanimated commits for state updates coming
     // from React Native as this would break sticky header animations.
-#if REACT_NATIVE_MINOR_VERSION > 80
+#if REACT_NATIVE_MINOR_VERSION >= 80
     if (commitOptions.source == ShadowTreeCommitSource::React) {
       updatesRegistryManager_->pauseReanimatedCommits();
     }
