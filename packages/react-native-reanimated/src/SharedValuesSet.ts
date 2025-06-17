@@ -1,13 +1,13 @@
 'use strict';
 import type {
   SharedRegisterer,
-  SharedRegistryItem,
+  SharedRegistry,
   SharedValue,
 } from './commonTypes';
 import { makeMutable } from './core';
 
 export function makeShareableRegistry(): SharedRegisterer {
-  const shareableRegistry = makeMutable<Array<SharedRegistryItem>>([]);
+  const shareableRegistry = makeMutable<SharedRegistry>(new Map());
   const data: SharedRegisterer = {
     shareableRegistry,
     registerForUpdates: <T>(
@@ -16,44 +16,24 @@ export function makeShareableRegistry(): SharedRegisterer {
     ) => {
       shareableRegistry.modify((registry) => {
         'worklet';
-        const index = registry.findIndex(
-          (value) => value.sharedValue === sharedValue
-        );
-        if (index === -1) {
-          registry.push({ sharedValue, keys });
-        } else {
-          registry[index] = { sharedValue, keys };
-        }
+        registry.set(sharedValue, keys);
         return registry;
       });
     },
     unregisterForUpdates: <T>(sharedValue: SharedValue<T>) => {
       shareableRegistry.modify((registry) => {
         'worklet';
-        const index = registry.findIndex(
-          (value) => value.sharedValue === sharedValue
-        );
-        if (index !== -1) {
-          registry.splice(index, 1);
-        }
+        registry.delete(sharedValue);
         return registry;
       });
     },
     has: (sharedValue: SharedValue<any>) => {
       'worklet';
-      return shareableRegistry.value.some((value) => {
-        return value.sharedValue === sharedValue;
-      });
+      return shareableRegistry.value.has(sharedValue);
     },
     get: (sharedValue: SharedValue<any>) => {
       'worklet';
-      const index = shareableRegistry.value.findIndex(
-        (value) => value.sharedValue === sharedValue
-      );
-      if (index !== -1) {
-        return shareableRegistry.value[index];
-      }
-      return undefined;
+      return shareableRegistry.value.get(sharedValue);
     },
   };
   return data;

@@ -248,15 +248,12 @@ export interface MutableArray<Value = Array<SharedArrayValueType>>
   _value: Value;
 }
 
-export type SharedRegistryItem = {
-  sharedValue: SharedValue<any>;
-  keys: Array<number | string>;
-};
+export type SharedRegistryItem = Array<number | string>;
 
-type SharedRegistry = Mutable<Array<SharedRegistryItem>>;
+export type SharedRegistry = Map<SharedValue<any>, SharedRegistryItem>;
 
 export interface SharedRegisterer {
-  shareableRegistry: SharedRegistry;
+  shareableRegistry: Mutable<SharedRegistry>;
   registerForUpdates: (
     sharedValue: SharedValue<any>,
     keys: Array<number | string>
