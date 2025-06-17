@@ -32,7 +32,10 @@ class ReanimatedCommitHook
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode,
-      const ShadowTreeCommitOptions &commitOptions) noexcept override;
+#if REACT_NATIVE_MINOR_VERSION > 80
+      const ShadowTreeCommitOptions &commitOptions
+#endif
+      ) noexcept override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;
