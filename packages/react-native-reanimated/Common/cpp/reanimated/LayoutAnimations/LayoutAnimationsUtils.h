@@ -135,13 +135,10 @@ static inline void updateLayoutMetrics(
 }
 
 static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
-  return !std::strcmp(
-             node->mutation.oldChildShadowView.componentName,
-             "RNSScreenStack") ||
-      !std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSScreen") ||
-      !std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSModalScreen");
+  const auto &componentName = node->mutation.oldChildShadowView.componentName;
+  return !std::strcmp(componentName, "RNSScreenStack") ||
+      !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
 }
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
