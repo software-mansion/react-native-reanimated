@@ -90,7 +90,7 @@ struct LayoutAnimationsProxy
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId, const int tagBefore = -1, const int tagAfter = -1)
+  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId, const int tagBefore, const int tagAfter)
             const;
         
   void transferConfigFromNativeID(const std::string nativeId, const int tag)

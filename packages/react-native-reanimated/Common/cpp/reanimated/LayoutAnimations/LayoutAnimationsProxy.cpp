@@ -129,17 +129,26 @@ void LayoutAnimationsProxy::parseParentTransforms(const LightNode::Unshared &nod
 
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
+  bool parentHasTransform = false;
   for (long int i = transforms.size() - 1; i >= 0; --i) {
     auto& [transform, transformOrigin] = transforms[i];
     if (transform.operations.empty()) {
       continue;
+    } else if (i > 0) {
+      parentHasTransform = true;
+    }
+    if (i == 0 && !parentHasTransform) {
+      // If only target view has transform, lets skip it, to matrix decomposition in JS
+      break;
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
     transformOrigin.xy[1].value -= targetViewPosition.y - absolutePositions[i].y;
     combinedMatrix = combinedMatrix * resolveTransform(node->current.layoutMetrics, transform, transformOrigin);
     combinedMatrix.operations.clear();
   }
-  transformForNode_[node->current.tag] = combinedMatrix;
+  if (parentHasTransform) {
+    transformForNode_[node->current.tag] = combinedMatrix;
+  }
 }
 
 // The methods resolveTransform and getTranslateForTransformOrigin are sourced from:
@@ -400,7 +409,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
             }
             auto& la = layoutAnimations_[fakeTag];
             if (la.finalView->layoutMetrics != copy.layoutMetrics){
-              startSharedTransition(fakeTag, copy, copy, surfaceId);
+              startSharedTransition(fakeTag, copy, copy, surfaceId, -1, shadowView.tag);
             }
           }
         }
@@ -485,6 +494,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   
   sharedContainersToRemove_.push_back(tag);
   tagsToRestore_.push_back(restoreMap_[tag]);
+  transformForNode_.clear();
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return surfaceId;
@@ -1255,17 +1265,12 @@ void LayoutAnimationsProxy::startSharedTransition(const int tag, const ShadowVie
 
     auto &uiRuntime = strongThis->uiRuntime_;
     auto propsDiffer = PropsDiffer(uiRuntime, oldView, after);
-    
-    if (tagBefore != tagAfter) {
-      const auto &getMatrix = [strongThis](const int originalViewTag) -> Transform {
-        const auto& combinedMatrix = strongThis->transformForNode_[originalViewTag];
-        return Transform::FromTransformOperation(
-          react::TransformOperation(react::TransformOperationType::Arbitrary),
-          {},
-          combinedMatrix
-        );
-      };
-      propsDiffer.overrideTransforms(getMatrix(tagBefore), getMatrix(tagAfter));
+
+    if (tagBefore == -1) {
+      propsDiffer.overrideTargetTransforms(strongThis->transformForNode_[tagAfter]);
+    } else {
+      propsDiffer.overrideSourceTransforms(strongThis->transformForNode_[tagBefore]);
+      propsDiffer.overrideTargetTransforms(strongThis->transformForNode_[tagAfter]);
     }
     
     const auto &propsDiff = propsDiffer.computeDiff(uiRuntime);
