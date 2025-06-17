@@ -4,12 +4,12 @@ import { adaptViewConfig } from '../ConfigHelper';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
 import { updateProps } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   IInlinePropManager,
+  ViewDescriptorsSet,
   ViewInfo,
 } from './commonTypes';
 import { flattenArray } from './utils';

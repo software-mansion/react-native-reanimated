@@ -11,7 +11,18 @@ import type {
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { ViewConfig } from '../ConfigHelper';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+
+export interface Descriptor {
+  tag: number | ReanimatedHTMLElement;
+  shadowNodeWrapper: ShadowNodeWrapper;
+}
+
+export interface ViewDescriptorsSet {
+  shareableViewDescriptors: SharedValue<Descriptor[]>;
+  add: (item: Descriptor) => void;
+  remove: (viewTag: number) => void;
+}
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;

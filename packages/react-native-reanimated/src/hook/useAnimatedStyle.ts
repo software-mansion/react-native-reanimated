@@ -22,15 +22,17 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedProps,
+  Descriptor,
+  ViewDescriptorsSet,
+} from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
   DependencyList,
-  Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import {

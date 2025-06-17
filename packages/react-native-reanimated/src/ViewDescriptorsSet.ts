@@ -1,13 +1,9 @@
 'use strict';
-import type { SharedValue } from './commonTypes';
 import { makeMutable } from './core';
-import type { Descriptor } from './hook/commonTypes';
-
-export interface ViewDescriptorsSet {
-  shareableViewDescriptors: SharedValue<Descriptor[]>;
-  add: (item: Descriptor) => void;
-  remove: (viewTag: number) => void;
-}
+import type {
+  Descriptor,
+  ViewDescriptorsSet,
+} from './createAnimatedComponent/commonTypes';
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const shareableViewDescriptors = makeMutable<Descriptor[]>([]);

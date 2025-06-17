@@ -16,7 +16,7 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import type { Descriptor } from '../hook/commonTypes';
+import type { Descriptor } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
@@ -75,7 +75,7 @@ function createUpdatePropsManager() {
       viewDescriptors: ViewDescriptorsWrapper,
       updates: StyleProps | AnimatedStyle<any>
     ) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
+      viewDescriptors.value.forEach((viewDescriptor: Descriptor) => {
         operations.push({
           shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
           updates,
