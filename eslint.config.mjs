@@ -83,7 +83,7 @@ const nodeRules = {
   'n/no-unpublished-require': 'warn',
   'n/no-extraneous-import': 'warn',
   'n/no-extraneous-require': 'warn',
-'n/no-unsupported-features/node-builtins': 'warn',
+  'n/no-unsupported-features/node-builtins': 'warn',
 };
 
 /** @type {import('eslint').Linter.RulesRecord} */
@@ -104,7 +104,7 @@ const tsCommonExtends = [
   reactHooks.configs['recommended-latest'],
   importPlugin.flatConfigs.recommended,
   importPlugin.flatConfigs.typescript,
-  nodePlugin.configs["flat/recommended-script"],
+  nodePlugin.configs['flat/recommended-script'],
 ];
 
 /** @type {import('eslint').Linter.Config} */
@@ -231,8 +231,7 @@ export default tsEslint.config(
     '**/lib/**',
     '**/plugin/**',
     '**/eslint-plugin-reanimated/types/**',
-    // TODO: remove this once we have a proper eslint config for each package and app
-    '**/apps/**',
     '**/packages/docs-reanimated/**',
+    '**/apps/common-app/src/types/**',
   ])
 );

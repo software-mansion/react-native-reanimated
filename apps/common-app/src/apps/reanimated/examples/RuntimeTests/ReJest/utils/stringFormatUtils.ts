@@ -77,11 +77,11 @@ export function getColorSquare(color: unknown) {
     return '??';
   }
   const colorNumber = processColor(color) as number;
-  /* eslint-disable no-bitwise */
+
   const red = (colorNumber >> 16) & 255;
   const green = (colorNumber >> 8) & 255;
   const blue = colorNumber & 255;
-  /* eslint-enable no-bitwise */
+
   const colorAnsi = `\x1b[48;5;${rgbToAnsi256(red, green, blue)}m`;
   return colorAnsi + '  ' + RESET_BACKGROUND;
 }

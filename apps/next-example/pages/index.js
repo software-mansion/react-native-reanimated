@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable no-unused-vars */
 import { StyleSheet, Text, View } from 'react-native';
 
 const styles = StyleSheet.create({

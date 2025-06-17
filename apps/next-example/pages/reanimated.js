@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable no-unused-vars */
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 

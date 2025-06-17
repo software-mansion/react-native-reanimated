@@ -3,7 +3,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'useWorkletsError', []> = {
-  create (context) {
+  create(context) {
     return {
       NewExpression(node: TSESTree.NewExpression) {
         // Check if the expression is `new Error`
@@ -14,7 +14,7 @@ const rule: TSESLint.RuleModule<'useWorkletsError', []> = {
           context.report({
             node,
             messageId: 'useWorkletsError',
-            fix (fixer) {
+            fix(fixer) {
               // Replace `Error` with `WorkletsError`
               return fixer.replaceText(node.callee, 'WorkletsError');
             },

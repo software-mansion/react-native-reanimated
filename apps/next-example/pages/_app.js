@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable no-unused-vars */
 import Head from 'next/head';
 
 export default function App({ Component, pageProps }) {

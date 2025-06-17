@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import {
   Platform,
   ScrollView,
@@ -273,7 +274,7 @@ function RegExpDemo() {
 
   const handlePress = () => {
     const regex1 = /test/;
-    // eslint-disable-next-line prefer-regex-literals
+
     const regex2 = new RegExp('test');
     runOnUI(() => {
       'worklet';
@@ -439,7 +440,6 @@ function CyclicObjectDemo() {
       runOnUI(() => {
         'worklet';
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _test = x[1];
           runOnJS(isOk)();
         } catch (e) {

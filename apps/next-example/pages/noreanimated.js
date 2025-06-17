@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
+/* eslint-disable no-unused-vars */
 import { StyleSheet, View, Text } from 'react-native';
 
 export default function App() {

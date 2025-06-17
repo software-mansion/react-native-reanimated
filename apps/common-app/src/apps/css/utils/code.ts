@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import type { AnyRecord } from '@/types';
 
 export function isValidPropertyName(propertyName: string): boolean {
@@ -95,7 +92,6 @@ const stringifyConfigObject = <T extends AnyRecord>(
 
   return `{\n${keys
     .map((key) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const value = object[key];
       const formattedKey = isValidPropertyName(key) ? key : `"${key}"`;
 

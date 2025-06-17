@@ -24,7 +24,7 @@
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint --flag unstable_config_lookup_from_file . && yarn prettier --check ."
+    "lint:root": "eslint --flag unstable_config_lookup_from_file . && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
