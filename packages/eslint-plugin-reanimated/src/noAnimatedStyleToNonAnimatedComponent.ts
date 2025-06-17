@@ -1,6 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-// TODO: FIX ME
-// eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
@@ -53,7 +51,11 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
           }
 
           // @ts-expect-error TODO: FIX ME
-          const styleExpression = styleValue.expression;
+          const styleExpression = styleValue.expression as
+            | TSESTree.Identifier
+            | TSESTree.ArrayExpression
+            | TSESTree.ObjectExpression
+            | TSESTree.MemberExpression;
           switch (styleExpression.type) {
             case AST_NODE_TYPES.Identifier: // style={myVariable}
               checkIdentifierNodeForBeingAnimated(styleExpression);
