@@ -51,7 +51,8 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
-    RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+    RootShadowNode::Unshared const &newRootShadowNode,
+    const ShadowTreeCommitOptions& commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
@@ -86,8 +87,11 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // props will be applied in ReanimatedCommitHook by UpdatesRegistryManager
     // This is very important, since if we didn't pause Reanimated commits,
     // it could lead to RN commits being delayed until the animation is finished
-    // (very bad).
-    updatesRegistryManager_->pauseReanimatedCommits();
+    // (very bad). We don't pause Reanimated commits for state updates coming from
+    // React Native as this would break sticky header animations.
+    if (commitOptions.source == ShadowTreeCommitSource::React) {
+      updatesRegistryManager_->pauseReanimatedCommits();
+    }
   }
 
   return rootNode;

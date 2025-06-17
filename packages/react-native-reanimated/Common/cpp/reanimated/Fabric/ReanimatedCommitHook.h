@@ -31,7 +31,8 @@ class ReanimatedCommitHook
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode) noexcept override;
+      RootShadowNode::Unshared const &newRootShadowNode,
+      const ShadowTreeCommitOptions &commitOptions) noexcept override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;
