@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+// eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'useReanimatedError', []> = {
@@ -24,7 +25,7 @@ const rule: TSESLint.RuleModule<'useReanimatedError', []> = {
   },
   meta: {
     docs: {
-      recommended: 'recommended',
+      // recommended: 'recommended',
       description:
         'Warns when `new Error` is used instead of `new ReanimatedError`.',
     },

@@ -35,6 +35,9 @@ jobs:
           cache: 'yarn'
           node-version: 22
 
+      - name: Build 
+        run: yarn build
+
       # Setup repo
       - name: Install dependencies
         run: yarn install --immutable

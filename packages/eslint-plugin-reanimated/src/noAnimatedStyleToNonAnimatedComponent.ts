@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+// eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
@@ -164,7 +165,7 @@ const rule: TSESLint.RuleModule<'animatedStyle' | 'sharedValue'> = {
   },
   meta: {
     docs: {
-      recommended: 'recommended',
+      // recommended: 'recommended',
       description:
         "Don't pass a reanimated animated style into a non-animated component.",
     },
