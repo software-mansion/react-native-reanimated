@@ -24,11 +24,11 @@ import type {
   Animation,
   AnimationObject,
   EasingFunction,
+  EasingFunctionFactory,
   SharedValue,
   Timestamp,
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
-import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {

@@ -94,11 +94,7 @@ export {
   runOnUI,
 } from './core';
 export * from './css';
-export type {
-  EasingFactoryFn,
-  EasingFn,
-  EasingFunctionFactory,
-} from './Easing';
+export type { EasingFactoryFn, EasingFn } from './Easing';
 export { Easing } from './Easing';
 export type { FrameInfo } from './frameCallback';
 export type {

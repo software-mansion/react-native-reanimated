@@ -9,7 +9,6 @@ import type {
 import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
-import type { EasingFunctionFactory } from './Easing';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -32,6 +31,8 @@ interface WindowDimensions {
   windowWidth: number;
   windowHeight: number;
 }
+
+export type EasingFunctionFactory = { factory: () => EasingFunction };
 
 export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction | EasingFunctionFactory;
