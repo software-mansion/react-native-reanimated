@@ -18,6 +18,7 @@
   },
   "private": true,
   "scripts": {
+    "build:worklets": "yarn workspace react-native-worklets run build",
     "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "prettier --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
