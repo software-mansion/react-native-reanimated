@@ -31,8 +31,9 @@ class ReanimatedCommitHook
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode,
+      RootShadowNode::Unshared const &newRootShadowNode
 #if REACT_NATIVE_MINOR_VERSION > 80
+      ,
       const ShadowTreeCommitOptions &commitOptions
 #endif
       ) noexcept override;

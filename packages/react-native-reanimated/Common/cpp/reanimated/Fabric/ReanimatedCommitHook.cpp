@@ -51,8 +51,9 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
-    RootShadowNode::Unshared const &newRootShadowNode,
+    RootShadowNode::Unshared const &newRootShadowNode
 #if REACT_NATIVE_MINOR_VERSION > 80
+    ,
     const ShadowTreeCommitOptions &commitOptions
 #endif
     ) noexcept {
