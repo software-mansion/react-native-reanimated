@@ -11901,26 +11901,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^5.5.0":
-  version: 5.5.0
-  resolution: "eslint-plugin-prettier@npm:5.5.0"
-  dependencies:
-    prettier-linter-helpers: "npm:^1.0.0"
-    synckit: "npm:^0.11.7"
-  peerDependencies:
-    "@types/eslint": ">=8.0.0"
-    eslint: ">=8.0.0"
-    eslint-config-prettier: ">= 7.0.0 <10.0.0 || >=10.1.0"
-    prettier: ">=3.0.0"
-  peerDependenciesMeta:
-    "@types/eslint":
-      optional: true
-    eslint-config-prettier:
-      optional: true
-  checksum: 10/83210819211ad98f305b719352c151794c8c6403d3888c0f8cca76429bf91235753c15d060eb8097d3872e85e9224b8a46280105e468d8c578e2ca9f253bfa57
-  languageName: node
-  linkType: hard
-
 "eslint-plugin-promise@npm:^7.2.1":
   version: 7.2.1
   resolution: "eslint-plugin-promise@npm:7.2.1"
@@ -20037,12 +20017,10 @@ __metadata:
     "@types/shelljs": "npm:^0.8.15"
     eslint: "npm:^9.29.0"
     eslint-config-prettier: "npm:^10.1.5"
-    eslint-config-standard: "npm:^17.1.0"
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-jest: "npm:^28.14.0"
     eslint-plugin-jsdoc: "npm:^50.7.1"
     eslint-plugin-n: "npm:^17.20.0"
-    eslint-plugin-prettier: "npm:^5.5.0"
     eslint-plugin-promise: "npm:^7.2.1"
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^5.2.0"
@@ -20091,14 +20069,12 @@ __metadata:
     code-tag: "npm:^1.1.0"
     cspell: "npm:^8.8.0"
     eslint: "npm:^9.29.0"
-    eslint-config-prettier: "npm:^10.1.5"
     eslint-config-standard: "npm:^17.1.0"
     eslint-import-resolver-babel-module: "npm:^5.3.2"
     eslint-plugin-import: "npm:^2.31.0"
     eslint-plugin-jest: "npm:^28.13.0"
     eslint-plugin-n: "npm:^17.19.0"
     eslint-plugin-no-inline-styles: "npm:^1.0.5"
-    eslint-plugin-prettier: "npm:^5.5.0"
     eslint-plugin-promise: "npm:^7.2.1"
     eslint-plugin-react-hooks: "npm:^5.2.0"
     eslint-plugin-reanimated: "workspace:*"
