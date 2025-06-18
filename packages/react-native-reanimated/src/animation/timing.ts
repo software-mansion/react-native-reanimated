@@ -4,10 +4,10 @@ import type {
   Animation,
   AnimationCallback,
   EasingFunction,
+  EasingFunctionFactory,
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
 import {
   assertEasingIsWorklet,

@@ -55,9 +55,9 @@ class NativeReanimatedModule implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #workletsModule: IWorkletsModule;
   #reanimatedModuleProxy: ReanimatedModuleProxy;
-
   constructor() {
     this.#workletsModule = WorkletsModule;
     // These checks have to split since version checking depend on the execution order

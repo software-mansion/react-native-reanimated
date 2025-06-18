@@ -15,5 +15,5 @@
     "declaration": true,
     "declarationDir": "types"
   },
-  "include": ["src"]
+  "include": ["src", "types"]
 }

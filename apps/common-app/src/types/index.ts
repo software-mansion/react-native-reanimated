@@ -1,2 +1,2 @@
-export * from './fonts';
-export * from './helpers';
+export type * from './fonts';
+export type * from './helpers';

@@ -24,11 +24,11 @@ import type {
   Animation,
   AnimationObject,
   EasingFunction,
+  EasingFunctionFactory,
   SharedValue,
   Timestamp,
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
-import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
@@ -244,7 +244,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
         // FIXME
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }

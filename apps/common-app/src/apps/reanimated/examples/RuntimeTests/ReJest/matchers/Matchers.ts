@@ -14,7 +14,7 @@ import { compareSnapshots } from './snapshotMatchers';
 
 export class Matchers {
   private _negation = false;
-  // eslint-disable-next-line no-useless-constructor
+
   constructor(
     private _currentValue: TestValue,
     private _testCase: TestCase,

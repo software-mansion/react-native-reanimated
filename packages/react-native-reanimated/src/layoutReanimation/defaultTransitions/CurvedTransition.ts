@@ -3,10 +3,10 @@ import { withTiming } from '../../animation';
 import { assertEasingIsWorklet } from '../../animation/util';
 import type {
   EasingFunction,
+  EasingFunctionFactory,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
 } from '../../commonTypes';
-import type { EasingFunctionFactory } from '../../Easing';
 import { Easing } from '../../Easing';
 import { BaseAnimationBuilder } from '../animationBuilder';
 

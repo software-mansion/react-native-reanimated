@@ -36,6 +36,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'yarn'
+          node-version: 22
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
@@ -54,9 +55,6 @@ jobs:
       - name: Check types
         working-directory: ${{ env.PLUGIN_DIR }}
         run: yarn type:check
-      - name: Lint and format
-        working-directory: ${{ env.PLUGIN_DIR }}
-        run: yarn lint
       - name: Test
         working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn jest plugin

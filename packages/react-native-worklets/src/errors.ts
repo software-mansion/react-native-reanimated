@@ -51,7 +51,7 @@ export function reportFatalErrorOnJS({
   stack?: string;
   moduleName: string;
 }) {
-  // eslint-disable-next-line reanimated/use-worklets-error
+  // eslint-disable-next-line reanimated/use-reanimated-error
   const error = new Error();
   error.message = message;
   error.stack = stack ? processStack(stack) : undefined;

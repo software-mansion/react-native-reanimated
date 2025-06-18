@@ -22,15 +22,17 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedProps,
+  Descriptor,
+  ViewDescriptorsSet,
+} from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
   DependencyList,
-  Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import {
@@ -158,7 +160,7 @@ function runAnimations(
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
+        animation.callback?.(true /* finished */);
       }
     }
     /*
@@ -507,7 +509,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   } else {
     dependencies.push(updater.__workletHash);
   }
-  adaptersHash && dependencies.push(adaptersHash);
+  if (adaptersHash) {
+    dependencies.push(adaptersHash);
+  }
 
   if (!animatedUpdaterData.current) {
     const initialStyle = initialUpdaterRun(updater);
@@ -576,7 +580,6 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     return () => {
       stopMapper(mapperId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   useEffect(() => {

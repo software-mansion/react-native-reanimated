@@ -2,4 +2,4 @@
 export * from './builderFactories';
 export * from './builders';
 export * from './processors';
-export * from './types';
+export type * from './types';

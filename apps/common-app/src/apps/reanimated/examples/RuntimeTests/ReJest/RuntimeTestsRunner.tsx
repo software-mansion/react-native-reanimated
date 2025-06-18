@@ -69,7 +69,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   function handleStartClick() {
     testSelectionCallbacks.current.forEach(callback => callback());
     setStarted(true);
-    // eslint-disable-next-line no-void
+
     void run();
   }
 

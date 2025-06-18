@@ -36,6 +36,7 @@ class JSReanimated implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
@@ -147,7 +148,8 @@ class JSReanimated implements IReanimatedModule {
         };
       case SensorType.ROTATION:
         return () => {
-          let [qw, qx, qy, qz] = sensor.quaternion;
+          const [qw, qx] = sensor.quaternion;
+          let [, , qy, qz] = sensor.quaternion;
 
           // Android sensors have a different coordinate system than iOS
           if (this.platform === Platform.WEB_ANDROID) {

@@ -5,10 +5,10 @@ import type {
   AnimationFunction,
   BaseBuilderAnimationConfig,
   EasingFunction,
+  EasingFunctionFactory,
   LayoutAnimationAndConfig,
   StyleProps,
 } from '../../commonTypes';
-import type { EasingFunctionFactory } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {

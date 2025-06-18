@@ -4,7 +4,6 @@ import { Button, Text, View } from 'react-native';
 export const NukeContext = createContext<() => void>(() => '');
 
 function registriesLeakCheck(): string {
-  // eslint-disable-next-line no-underscore-dangle
   return global._registriesLeakCheck() ?? '';
 }
 

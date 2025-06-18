@@ -1,21 +1,6 @@
 const path = require('path');
 
 /**
- * @param {Object<string, string>} dependencies
- * @param {Set<string>} exclude
- */
-function resolveDependencies(dependencies = {}, exclude) {
-  return Object.fromEntries(
-    Object.keys(dependencies)
-      .filter((name) => !exclude.has(name))
-      .map((name) => [
-        name,
-        { root: path.resolve(__dirname, `../../../node_modules/${name}`) },
-      ])
-  );
-}
-
-/**
  * This function will return the dependencies from the common-app package that
  * aren't listed in the current app's package.json
  *
@@ -29,9 +14,9 @@ function getDependencies(currentAppDir = '.', exclude = []) {
   const currentAppPkg = require(path.resolve(currentAppDir, 'package.json'));
 
   const excludedDependencies = new Set([
-    ...Object.keys(currentAppPkg.devDependencies),
-    ...Object.keys(currentAppPkg.dependencies),
     ...exclude,
+    ...Object.keys(currentAppPkg.dependencies),
+    ...Object.keys(currentAppPkg.devDependencies),
   ]);
 
   return {
@@ -39,6 +24,21 @@ function getDependencies(currentAppDir = '.', exclude = []) {
     ...resolveDependencies(commonAppPkg.devDependencies, excludedDependencies),
     ...resolveDependencies(commonAppPkg.dependencies, excludedDependencies),
   };
+}
+
+/**
+ * @param {Object<string, string>} dependencies
+ * @param {Set<string>} exclude
+ */
+function resolveDependencies(dependencies = {}, exclude) {
+  return Object.fromEntries(
+    Object.keys(dependencies)
+      .filter((name) => !exclude.has(name))
+      .map((name) => [
+        name,
+        { root: path.resolve(__dirname, `../../../node_modules/${name}`) },
+      ])
+  );
 }
 
 module.exports = {
