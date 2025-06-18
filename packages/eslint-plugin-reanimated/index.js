@@ -151,7 +151,7 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
       },
       meta: {
         docs: {
-          // recommended: 'recommended',
+          recommended: 'recommended',
           description:
             "Don't pass a reanimated animated style into a non-animated component.",
         },
@@ -197,7 +197,7 @@ var require_useGlobalThis = __commonJS({
       },
       meta: {
         docs: {
-          // recommended: 'recommended',
+          recommended: 'recommended',
           description:
             'Warns when `_WORKLET` is used instead of `globalThis._WORKLET`.',
         },
@@ -241,7 +241,7 @@ var require_useReanimatedError = __commonJS({
       },
       meta: {
         docs: {
-          // recommended: 'recommended',
+          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new ReanimatedError`.',
         },
@@ -286,7 +286,7 @@ var require_useWorkletsError = __commonJS({
       },
       meta: {
         docs: {
-          // recommended: 'recommended',
+          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new WorkletsError`.',
         },

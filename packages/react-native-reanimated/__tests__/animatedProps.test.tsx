@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
 import { Button, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedProps,

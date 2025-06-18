@@ -1,9 +1,12 @@
 import jsEslint from '@eslint/js';
 import tsEslint from 'typescript-eslint';
 import perfectionist from 'eslint-plugin-perfectionist';
+// @ts-ignore
 import reactNative from 'eslint-plugin-react-native';
 import react from 'eslint-plugin-react';
+// @ts-ignore
 import globals from 'globals';
+// @ts-ignore
 import importPlugin from 'eslint-plugin-import';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -13,9 +16,10 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import { fixupPluginRules } from '@eslint/compat';
 import { globalIgnores } from 'eslint/config';
 
-/** @type {import('eslint').Linter.Config[]} */
+/** @type {import('typescript-eslint').ConfigWithExtends[]} */
 export default tsEslint.config(
   jsEslint.configs.recommended,
+  // @ts-ignore
   perfectionist.configs['recommended-natural'],
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
@@ -326,7 +330,6 @@ export default tsEslint.config(
   },
   globalIgnores([
     '**/eslint.config.mjs',
-    '**/node_modules/**',
     'index.ts',
   ])
 );

@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+
+import type React from 'react';
 import { useCallback } from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList, View } from 'react-native';

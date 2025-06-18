@@ -1,7 +1,6 @@
-/* eslint-disable react/jsx-no-undef */
-
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/jsx-no-undef */
 import React from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList } from 'react-native';

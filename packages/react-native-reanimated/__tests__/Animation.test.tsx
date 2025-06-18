@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
 import { Button, View } from 'react-native';
 
 import type { SharedValue } from '../src';
