@@ -74,6 +74,18 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableMap(): never {
+    throw new WorkletsError(
+      'makeShareableMap should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableSet(): never {
+    throw new WorkletsError(
+      'makeShareableSet should never be called in JSWorklets.'
+    );
+  }
+
   makeShareableImport(): never {
     throw new WorkletsError(
       'makeShareableImport should never be called in JSWorklets.'
