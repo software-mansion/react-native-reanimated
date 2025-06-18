@@ -16,6 +16,7 @@ import {
   calculateNewMassToMatchDuration,
   checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
+  getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
@@ -53,15 +54,16 @@ export const withSpring = ((
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
     const defaultConfig: DefaultSpringConfig = {
-      damping: 10,
+      damping: 360,
       mass: 1,
-      stiffness: 100,
+      stiffness: 600,
       overshootClamping: false,
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
+      energyCutoff: 2e-8,
       velocity: 0,
-      duration: 2000,
-      dampingRatio: 0.5,
+      duration: 840,
+      dampingRatio: 1,
       reduceMotion: undefined,
       clamp: undefined,
     } as const;
@@ -70,6 +72,9 @@ export const withSpring = ((
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+      useManualThresholds: !!(
+        userConfig?.restDisplacementThreshold || userConfig?.restSpeedThreshold
+      ),
       skipAnimation: false,
     };
 
@@ -131,13 +136,10 @@ export const withSpring = ((
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      const { isOvershooting, isVelocity, isDisplacement } =
-        isAnimationTerminatingCalculation(animation, config);
-
-      const springIsNotInMove =
-        isOvershooting || (isVelocity && isDisplacement);
-
-      if (!config.useDuration && springIsNotInMove) {
+      if (
+        !config.useDuration &&
+        isAnimationTerminatingCalculation(animation, config)
+      ) {
         animation.velocity = 0;
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -169,6 +171,14 @@ export const withSpring = ((
     ): void {
       animation.current = value;
       animation.startValue = value;
+
+      const initialEnergy = getEnergy(
+        animation.startValue - (animation.toValue as number),
+        config.velocity,
+        config.stiffness,
+        config.mass
+      );
+      animation.initialEnergy = initialEnergy;
 
       let mass = config.mass;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
@@ -242,6 +252,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      initialEnergy: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });

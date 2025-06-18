@@ -107,6 +107,7 @@ import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
@@ -470,6 +471,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🕰',
     title: 'Pendulum example',
     screen: PendulumExample,
+  },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
   },
   SpringClampExample: {
     icon: '🗜',
