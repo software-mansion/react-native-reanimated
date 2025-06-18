@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -76,10 +77,10 @@ class ReanimatedModuleProxy
 
   jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
       override;
-  jsi::Value configureProps(
+  jsi::Value registerJSProps(
       jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) override;
+      const jsi::Value &componentName,
+      const jsi::Value &jsPropsNames) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -210,8 +211,9 @@ class ReanimatedModuleProxy
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
-  jsi::Value filterNonAnimatableProps(
+  jsi::Value filterJSProps(
       jsi::Runtime &rt,
+      const std::string &componentName,
       const jsi::Value &props);
 
   const bool isReducedMotion_;
@@ -240,8 +242,13 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_set<std::string>
-      animatablePropNames_; // filled by configureProps
+  // Filled by `registerJSProps`.
+  std::unordered_map<std::string, std::unordered_set<std::string>>
+      jsPropsNamesForComponentNames_;
+
+  // Protects `jsPropsNamesForComponentNames_`.
+  mutable std::mutex jsPropsNamesForComponentNamesMutex_;
+
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;

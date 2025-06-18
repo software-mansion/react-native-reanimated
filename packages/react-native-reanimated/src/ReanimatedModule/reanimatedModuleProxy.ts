@@ -42,7 +42,7 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
-  configureProps(uiProps: string[], nativeProps: string[]): void;
+  registerJSProps(componentName: string, jsPropsNames: string[]): void;
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,

@@ -9,7 +9,6 @@ import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import { adaptViewConfig } from '../ConfigHelper';
 import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
@@ -203,14 +202,7 @@ export default class AnimatedComponent
     const prevAnimatedProps = this._animatedProps;
     this._animatedProps = animatedProps;
 
-    const { viewTag, shadowNodeWrapper, viewConfig } = this._getViewInfo();
-
-    // update UI props whitelist for this view
-    const hasReanimated2Props =
-      this.props.animatedProps?.viewDescriptors || this._animatedStyles?.length;
-    if (hasReanimated2Props && viewConfig) {
-      adaptViewConfig(viewConfig);
-    }
+    const { viewTag, shadowNodeWrapper } = this._getViewInfo();
 
     // remove old styles
     if (this._prevAnimatedStyles) {
