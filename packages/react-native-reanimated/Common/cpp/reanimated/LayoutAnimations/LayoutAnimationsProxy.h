@@ -14,12 +14,21 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <stack>
 
 namespace reanimated {
 
 class ReanimatedModuleProxy;
 
 using namespace facebook;
+
+struct LightNode {
+  using Unshared = std::shared_ptr<LightNode>;
+  ShadowView previous;
+  ShadowView current;
+  std::weak_ptr<LightNode> parent;
+  std::vector<std::shared_ptr<LightNode>> children;
+};
 
 struct LayoutAnimation {
 #if REACT_NATIVE_MINOR_VERSION >= 78
@@ -42,6 +51,14 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+        mutable int myTag = 10001;
+        mutable std::vector<Tag> sharedContainersToRemove_;
+        mutable std::unordered_map<Tag, Tag> restoreMap_;
+        mutable std::vector<Tag> tagsToRestore_;
+        std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
+//  mutable std::unordered_map<
+//        mutable std::optional<ShadowView> previousView;
+        mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -53,18 +70,25 @@ struct LayoutAnimationsProxy
       ContextContainer::Shared contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
-      : layoutAnimationsManager_(layoutAnimationsManager),
+        : sharedTransitionManager_(layoutAnimationsManager->sharedTransitionManager_),
+        layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler) {}
+        uiScheduler_(uiScheduler) {
+          lightNodes_[1] = std::make_shared<LightNode>();
+          lightNodes_[11] = std::make_shared<LightNode>();
+
+        }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
       const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-
+  void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
+            const;
+        
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
       const;
   std::optional<SurfaceId> progressLayoutAnimation(
@@ -72,6 +96,14 @@ struct LayoutAnimationsProxy
       const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
+        
+        Tag findVisible(std::shared_ptr<LightNode> node,int& count) const;
+        
+        LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
+        
+        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const;
+        
+        LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
 
   void parseRemoveMutations(
       std::unordered_map<Tag, ShadowView> &movedViews,
@@ -96,6 +128,10 @@ struct LayoutAnimationsProxy
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,
       const PropsParserContext &propsParserContext) const;
+
+    std::shared_ptr<ShadowView> cloneViewWithOpacity(
+            facebook::react::ShadowViewMutation &mutation,
+            const PropsParserContext &propsParserContext) const;
   void maybeRestoreOpacity(
       LayoutAnimation &layoutAnimation,
       const jsi::Object &newStyle) const;

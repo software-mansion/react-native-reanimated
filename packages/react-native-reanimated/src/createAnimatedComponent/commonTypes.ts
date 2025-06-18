@@ -66,6 +66,7 @@ export type AnimatedComponentProps<
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   jestAnimatedValues?: MutableRefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
+  sharedTransitionTag?: string;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder

@@ -38,6 +38,7 @@ import JSPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
+import { LinearTransition } from '../layoutReanimation';
 
 let id = 0;
 
@@ -85,6 +86,21 @@ export default class AnimatedComponent
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
+    }
+
+    if (this.props.sharedTransitionTag) {
+      console.log("'Shared transition tag: ", this.props.sharedTransitionTag);
+      updateLayoutAnimations(
+        this.reanimatedID,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        maybeBuild(
+          LinearTransition.duration(2000),
+          this.props?.style,
+          this._displayName
+        ),
+        undefined,
+        this.props.sharedTransitionTag
+      );
     }
 
     const entering = this.props.entering;
@@ -338,6 +354,7 @@ export default class AnimatedComponent
     const tag = this.getComponentViewTag();
 
     const { layout, entering, exiting } = this.props;
+
     if (layout || entering || exiting) {
       if (!SHOULD_BE_USE_WEB) {
         enableLayoutAnimations(true, false);
