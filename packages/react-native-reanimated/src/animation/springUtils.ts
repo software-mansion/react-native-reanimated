@@ -11,6 +11,8 @@ import type {
 /**
  * Spring animation configuration.
  *
+ * TODO: Update
+ *
  * @param mass - The weight of the spring. Reducing this value makes the
  *   animation faster. Defaults to 1.
  * @param damping - How quickly a spring slows down. Higher damping means the
@@ -37,8 +39,6 @@ import type {
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
@@ -56,7 +56,19 @@ export type SpringConfig = {
       dampingRatio?: number;
       clamp?: { min?: number; max?: number };
     }
-);
+) &
+  (
+    | {
+        restDisplacementThreshold?: number;
+        restSpeedThreshold?: number;
+        energyCutoff?: never;
+      }
+    | {
+        restDisplacementThreshold?: never;
+        restSpeedThreshold?: never;
+        energyCutoff?: number;
+      }
+  );
 
 // This type contains all the properties from SpringConfig, which are changed to be required,
 // except for optional 'reduceMotion' and 'clamp'
@@ -69,6 +81,7 @@ export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
+  useManualThresholds: boolean;
   skipAnimation: boolean;
 }
 
@@ -82,6 +95,7 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   zeta: number;
   omega0: number;
   omega1: number;
+  initialEnergy: number;
 }
 
 export interface InnerSpringAnimation
@@ -384,25 +398,52 @@ export function underDampedSpringCalculations(
   return { position: underDampedPosition, velocity: underDampedVelocity };
 }
 
+export function getEnergy(
+  displacement: number,
+  velocity: number,
+  stiffness: number,
+  mass: number
+) {
+  'worklet';
+  const potentialEnergy = 0.5 * stiffness * displacement ** 2;
+  const kineticEnergy = 0.5 * mass * velocity ** 2;
+  let totalEnergy = potentialEnergy + kineticEnergy;
+  if (totalEnergy <= 0) {
+    // Correctly handle divisons by zero.
+    // i.e. when startValue and toValue are the same.
+    totalEnergy = Number.EPSILON;
+  }
+  return totalEnergy;
+}
+
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: DefaultSpringConfig
-): {
-  isOvershooting: boolean;
-  isVelocity: boolean;
-  isDisplacement: boolean;
-} {
+  config: DefaultSpringConfig & SpringConfigInner
+): boolean {
   'worklet';
-  const { toValue, velocity, startValue, current } = animation;
+  const { toValue, velocity, startValue, current, initialEnergy } = animation;
 
-  const isOvershooting = config.overshootClamping
-    ? (current > toValue && startValue < toValue) ||
+  if (config.overshootClamping) {
+    if (
+      (current > toValue && startValue < toValue) ||
       (current < toValue && startValue > toValue)
-    : false;
+    ) {
+      return true;
+    }
+  }
+  if (config.useManualThresholds) {
+    return (
+      Math.abs(velocity) < config.restSpeedThreshold &&
+      Math.abs(toValue - current) < config.restDisplacementThreshold
+    );
+  } else {
+    const currentEnergy = getEnergy(
+      toValue - current,
+      velocity,
+      config.stiffness,
+      config.mass
+    );
 
-  const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
-  const isDisplacement =
-    Math.abs(toValue - current) < config.restDisplacementThreshold;
-
-  return { isOvershooting, isVelocity, isDisplacement };
+    return currentEnergy / initialEnergy <= config.energyCutoff;
+  }
 }
