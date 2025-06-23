@@ -1,18 +1,32 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import Animated, {
+  FadeOut,
+  LayoutAnimationConfig,
+} from 'react-native-reanimated';
 
-export default function EmptyExample() {
+export default function App() {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShow(false);
+    }, 1000);
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Hello world!</Text>
-    </View>
+    show && (
+      <LayoutAnimationConfig skipEntering skipExiting>
+        <Animated.View exiting={FadeOut} style={styles.box} />
+      </LayoutAnimationConfig>
+    )
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  box: {
+    width: 200,
+    height: 200,
+    backgroundColor: 'red',
   },
 });

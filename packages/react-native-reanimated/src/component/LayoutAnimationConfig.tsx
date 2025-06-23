@@ -83,10 +83,7 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
       this.setShouldAnimateExiting();
     }
 
-    return (
-      nextProps.skipExiting !== this.props.skipExiting ||
-      nextProps.skipEntering !== this.props.skipEntering
-    );
+    return true;
   }
 
   render(): ReactNode {
