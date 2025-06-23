@@ -24,8 +24,6 @@ type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
 
-const dupa = 1;
-
 interface HomeScreenProps {
   navigation:
     | StackNavigationProp<RootStackParamList, 'Home'>
