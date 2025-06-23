@@ -22,9 +22,6 @@ import type {
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
   getScrollableNode?: FlatList['getScrollableNode'];
-  viewConfig?: {
-    uiViewClassName?: string;
-  };
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {

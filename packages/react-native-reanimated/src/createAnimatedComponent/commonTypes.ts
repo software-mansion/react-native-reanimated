@@ -9,7 +9,6 @@ import type {
   StyleProps,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import type { ViewConfig } from '../ConfigHelper';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -21,7 +20,6 @@ export interface AnimatedProps extends Record<string, unknown> {
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
-  viewConfig?: ViewConfig;
   DOMElement?: HTMLElement | null;
 }
 

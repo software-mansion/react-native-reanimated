@@ -328,20 +328,20 @@ jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::configureProps(
+jsi::Value ReanimatedModuleProxy::registerJSProps(
     jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
-  auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
-    auto name = uiPropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    animatablePropNames_.insert(name);
+    const jsi::Value &componentName,
+    const jsi::Value &jsPropsNames) {
+  const auto componentNameStr = componentName.asString(rt).utf8(rt);
+  const auto jsPropsNamesArray = jsPropsNames.asObject(rt).asArray(rt);
+  const auto size = jsPropsNamesArray.size(rt);
+  std::unordered_set<std::string> jsPropsNamesSet;
+  for (size_t i = 0; i < size; i++) {
+    jsPropsNamesSet.insert(
+        jsPropsNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  auto nativePropsArray = nativeProps.asObject(rt).asArray(rt);
-  for (size_t i = 0; i < nativePropsArray.size(rt); ++i) {
-    auto name = nativePropsArray.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    animatablePropNames_.insert(name);
-  }
+  auto lock = std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
+  jsPropsNamesForComponentNames_[componentNameStr] = std::move(jsPropsNamesSet);
   return jsi::Value::undefined();
 }
 
@@ -558,27 +558,33 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
+jsi::Value ReanimatedModuleProxy::filterJSProps(
     jsi::Runtime &rt,
+    const std::string &componentName,
     const jsi::Value &props) {
-  jsi::Object nonAnimatableProps(rt);
-  bool hasAnyNonAnimatableProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!animatablePropNames_.contains(propName)) {
-      hasAnyNonAnimatableProp = true;
-      const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
-      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
-    }
-  }
-  if (!hasAnyNonAnimatableProp) {
+  const auto it = jsPropsNamesForComponentNames_.find(componentName);
+  const auto found = it != jsPropsNamesForComponentNames_.end();
+  if (!found) {
     return jsi::Value::undefined();
   }
-  return nonAnimatableProps;
+
+  const auto &jsPropsNamesForComponentName = it->second;
+  jsi::Object jsProps(rt);
+  bool empty = true;
+  const auto &propsObject = props.asObject(rt);
+  const auto &propsNamesArray = propsObject.getPropertyNames(rt);
+  for (size_t i = 0; i < propsNamesArray.size(rt); ++i) {
+    const auto &propName = propsNamesArray.getValueAtIndex(rt, i).asString(rt);
+    if (jsPropsNamesForComponentName.contains(propName.utf8(rt))) {
+      empty = false;
+      const auto &propValue = propsObject.getProperty(rt, propName);
+      jsProps.setProperty(rt, propName, propValue);
+    }
+  }
+  if (empty) {
+    return jsi::Value::undefined();
+  }
+  return jsProps;
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -727,19 +733,25 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
-    if (nonAnimatableProps.isUndefined()) {
-      continue;
+  {
+    auto lock =
+        std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
+
+    for (const auto &jsiUpdate : animatedPropsRegistry_->getJSIUpdates()) {
+      const jsi::Value &jsProps =
+          filterJSProps(rt, jsiUpdate.componentName, *jsiUpdate.props);
+      if (jsProps.isUndefined()) {
+        continue;
+      }
+      jsi::Value maybeJSPropsUpdater =
+          rt.global().getProperty(rt, "updateJSProps");
+      react_native_assert(
+          maybeJSPropsUpdater.isObject() &&
+          "[Reanimated] `updateJSProps` not found");
+      jsi::Function jsPropsUpdater =
+          maybeJSPropsUpdater.asObject(rt).asFunction(rt);
+      jsPropsUpdater.call(rt, jsiUpdate.tag, jsProps);
     }
-    jsi::Value maybeJSPropsUpdater =
-        rt.global().getProperty(rt, "updateJSProps");
-    react_native_assert(
-        maybeJSPropsUpdater.isObject() &&
-        "[Reanimated] `updateJSProps` not found");
-    jsi::Function jsPropsUpdater =
-        maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-    jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
