@@ -70,10 +70,23 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     }
   }
 
-  componentWillUnmount(): void {
-    if (this.props.skipExiting !== undefined) {
+  componentDidMount(): void {
+    if (this.props.skipExiting) {
       this.setShouldAnimateExiting();
     }
+  }
+
+  shouldComponentUpdate(
+    nextProps: Readonly<LayoutAnimationConfigProps>
+  ): boolean {
+    if (nextProps.skipExiting !== this.props.skipExiting) {
+      this.setShouldAnimateExiting();
+    }
+
+    return (
+      nextProps.skipExiting !== this.props.skipExiting ||
+      nextProps.skipEntering !== this.props.skipEntering
+    );
   }
 
   render(): ReactNode {
