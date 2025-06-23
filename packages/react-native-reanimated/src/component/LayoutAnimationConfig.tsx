@@ -61,18 +61,18 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
       : this.props.children;
   }
 
-  setShouldAnimateExiting() {
+  setShouldAnimateExiting(shouldAnimate: boolean) {
     if (Children.count(this.props.children) === 1) {
       const tag = findNodeHandle(this);
       if (tag) {
-        setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
+        setShouldAnimateExitingForTag(tag, shouldAnimate);
       }
     }
   }
 
   componentDidMount(): void {
     if (this.props.skipExiting) {
-      this.setShouldAnimateExiting();
+      this.setShouldAnimateExiting(false);
     }
   }
 
@@ -80,7 +80,7 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
     nextProps: Readonly<LayoutAnimationConfigProps>
   ): boolean {
     if (nextProps.skipExiting !== this.props.skipExiting) {
-      this.setShouldAnimateExiting();
+      this.setShouldAnimateExiting(!nextProps.skipExiting);
     }
 
     return true;
