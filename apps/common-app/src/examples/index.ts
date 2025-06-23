@@ -620,10 +620,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Transform origin example',
     screen: TransformOriginExample,
   },
-  ModalExitingExample: {
-    title: '[LA] Modal exiting example',
-    screen: ModalExitingExample,
-  },
 
   // Layout Animations
 
@@ -742,6 +738,10 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
   },
 
   // Shared Element Transitions
