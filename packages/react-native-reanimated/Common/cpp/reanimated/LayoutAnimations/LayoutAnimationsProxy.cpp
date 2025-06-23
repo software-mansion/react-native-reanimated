@@ -866,8 +866,8 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
     // shadow node
     uiManager_->getShadowTreeRegistry().visit(
         surfaceId, [&](const facebook::react::ShadowTree &shadowTree) {
-          const auto &rootRevision = shadowTree.getCurrentRevision();
-          const auto &rootShadowNode = rootRevision.rootShadowNode;
+          const auto &currentRevision = shadowTree.getCurrentRevision();
+          const auto &rootShadowNode = currentRevision.rootShadowNode;
           const auto [width, height] =
               rootShadowNode->getLayoutMetrics().frame.size;
           surfaceManager.updateWindow(surfaceId, width, height);
