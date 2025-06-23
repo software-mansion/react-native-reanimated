@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { makeShareableCloneRecursive, runOnUI, useSharedValue } from 'react-native-reanimated';
+import { runOnUI, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 
