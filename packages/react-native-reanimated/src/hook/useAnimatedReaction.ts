@@ -1,10 +1,11 @@
 'use strict';
 import { useEffect } from 'react';
-import type { WorkletFunction } from '../commonTypes';
+import type { WorkletFunction } from 'react-native-worklets';
+
+import { SHOULD_BE_USE_WEB } from '../common';
 import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import { shouldBeUseWeb } from '../PlatformChecker';
 
 /**
  * Lets you to respond to changes in a [shared
@@ -39,7 +40,7 @@ export function useAnimatedReaction<PreparedResult>(
 
   let inputs = Object.values(prepare.__closure ?? {});
 
-  if (shouldBeUseWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Reanimated Babel plugin
       inputs = dependencies;

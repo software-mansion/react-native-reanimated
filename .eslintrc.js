@@ -9,7 +9,7 @@ module.exports = {
         project: true,
         tsconfigRootDir: __dirname,
       },
-      plugins: ['tsdoc'],
+      plugins: ['tsdoc', 'simple-import-sort'],
       extends: ['plugin:@typescript-eslint/recommended-type-checked'],
       rules: {
         '@typescript-eslint/no-unsafe-call': 'off',
@@ -42,6 +42,11 @@ module.exports = {
         '@typescript-eslint/no-duplicate-type-constituents': 'error',
         '@typescript-eslint/no-shadow': 'error',
         'tsdoc/syntax': 'error',
+        'simple-import-sort/imports': 'error',
+        'simple-import-sort/exports': 'error',
+        'import/first': 'error',
+        'import/newline-after-import': 'error',
+        'import/no-duplicates': 'error',
       },
     },
     {
@@ -50,6 +55,9 @@ module.exports = {
       extends: ['plugin:jsdoc/recommended'],
       rules: {
         'jsdoc/tag-lines': 'off',
+        'jsdoc/require-param-description': 'off',
+        'jsdoc/require-returns-description': 'off',
+        'jsdoc/require-jsdoc': 'off',
       },
     },
   ],

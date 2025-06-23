@@ -1,5 +1,6 @@
 'use strict';
-import { addWhitelistedNativeProps } from './ConfigHelper';
+import { logger } from 'react-native-worklets';
+
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -13,12 +14,10 @@ export function createAnimatedPropAdapter(
 
 export function createAnimatedPropAdapter(
   adapter: AnimatedPropsAdapterWorklet,
-  nativeProps?: string[]
+  _nativeProps?: string[]
 ): AnimatedPropsAdapterWorklet {
-  const nativePropsToAdd: { [key: string]: boolean } = {};
-  nativeProps?.forEach((prop) => {
-    nativePropsToAdd[prop] = true;
-  });
-  addWhitelistedNativeProps(nativePropsToAdd);
+  logger.warn(
+    '`createAnimatedPropAdapter` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code and pass the adapter function directly.'
+  );
   return adapter;
 }

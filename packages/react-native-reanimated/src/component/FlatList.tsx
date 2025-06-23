@@ -1,5 +1,5 @@
 'use strict';
-import React, { forwardRef, useRef } from 'react';
+import React, { useRef } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -7,12 +7,12 @@ import type {
   ViewStyle,
 } from 'react-native';
 import { FlatList } from 'react-native';
-import { AnimatedView } from './View';
+
+import type { AnimatedStyle, ILayoutAnimationBuilder } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
-import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import { LayoutAnimationConfig } from './LayoutAnimationConfig';
-import type { AnimatedStyle } from '../commonTypes';
 import type { AnimatedProps } from '../helperTypes';
+import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import { AnimatedView } from './View';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 
@@ -96,9 +96,9 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 
 // We need explicit any here, because this is the exact same type that is used in React Native types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const FlatListForwardRefRender = function <Item = any>(
+const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
-  ref: React.ForwardedRef<FlatList>
+  ref: React.Ref<FlatList>
 ) {
   const {
     itemLayoutAnimation,
@@ -151,15 +151,16 @@ const FlatListForwardRefRender = function <Item = any>(
   );
 };
 
-export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
+export const ReanimatedFlatList = FlatListRender as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
-    ref?: React.ForwardedRef<FlatList>;
+    ref?: React.Ref<FlatList>;
   }
 ) => React.ReactElement;
 
-export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ReanimatedFlatList<T = any> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;

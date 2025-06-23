@@ -1,26 +1,16 @@
 'use strict';
-import { isFabric } from '../PlatformChecker';
-import updateProps from '../UpdateProps';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
+import { updateProps } from '../updateProps';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
 } from './commonTypes';
 
-const IS_FABRIC = isFabric();
-
-function createViewDescriptorPaper(screenId: number | ShadowNodeWrapper) {
-  'worklet';
-  return { tag: screenId, name: 'RCTView' };
-}
-function createViewDescriptorFabric(screenId: number | ShadowNodeWrapper) {
+function createViewDescriptor(screenId: number | ShadowNodeWrapper) {
   'worklet';
   return { shadowNodeWrapper: screenId };
 }
-const createViewDescriptor = IS_FABRIC
-  ? createViewDescriptorFabric
-  : createViewDescriptorPaper;
 
 function applyStyleForTopScreen(
   screenTransitionConfig: ScreenTransitionConfig,

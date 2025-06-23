@@ -1,6 +1,7 @@
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { View, Button, Text } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Button, Text, View } from 'react-native';
+
 import { useSharedValue } from '../src';
 
 const ViewTestComponent = () => {
@@ -30,6 +31,8 @@ describe('SharedValue basic render', () => {
     const { getByTestId } = render(<ViewTestComponent />);
     const text = getByTestId('text');
     expect(text.children[0]).toBe('1');
+    const rendered = render(<ViewTestComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('no changes value after click', () => {
@@ -42,5 +45,7 @@ describe('SharedValue basic render', () => {
     expect(text.children[0]).toBe('1');
     fireEvent.press(button);
     expect(text.children[0]).toBe('1');
+    const rendered = render(<TestComponentWithSV />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

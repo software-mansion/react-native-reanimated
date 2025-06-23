@@ -1,14 +1,13 @@
 'use strict';
+import { runOnUI } from 'react-native-worklets';
+
+import { IS_JEST } from './common';
 import type {
-  MapperRawInputs,
   MapperOutputs,
+  MapperRawInputs,
   SharedValue,
 } from './commonTypes';
-import { isJest } from './PlatformChecker';
-import { runOnUI } from './threads';
 import { isSharedValue } from './isSharedValue';
-
-const IS_JEST = isJest();
 
 type MapperExtractedInputs = SharedValue[];
 

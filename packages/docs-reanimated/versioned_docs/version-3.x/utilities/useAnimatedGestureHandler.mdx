@@ -1,0 +1,124 @@
+---
+sidebar_position: 5
+---
+
+# useAnimatedGestureHandler
+
+:::danger
+
+This API is deprecated, doesn't receive any updates and will be removed in the next major version of Reanimated.
+
+See the [**Upgrading to the new API introduced in Gesture Handler 2**](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2#upgrading-to-the-new-api) migration guide.
+
+:::
+
+`useAnimatedGestureHandler` lets you create animations based on [gesture handlers](https://docs.swmansion.com/react-native-gesture-handler/docs/category/gesture-handlers-legacy).
+
+You need to pass the object defined using `useAnimatedGestureHandler` to the `onGestureEvent` property of a gesture handler component.
+
+This hook requires `react-native-gesture-handler` [installed and configured](https://docs.swmansion.com/react-native-gesture-handler/docs/#installation) in your project.
+
+## Reference
+
+```jsx
+import { useAnimatedGestureHandler } from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler';
+
+function App() {
+  const x = useSharedValue(0);
+
+  // highlight-start
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = x.value;
+    },
+    onActive: (event, ctx) => {
+      x.value = ctx.startX + event.translationX;
+    },
+  });
+  // highlight-end
+
+  return (
+    <PanGestureHandler onGestureEvent={gestureHandler}>
+      <Animated.View />
+    </PanGestureHandler>
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface GestureHandlers<
+  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
+  Context extends Record<string, unknown>
+> {
+  [key: string]: GestureHandler<Event, Context> | undefined;
+  onStart?: GestureHandler<Event, Context>;
+  onActive?: GestureHandler<Event, Context>;
+  onEnd?: GestureHandler<Event, Context>;
+  onFail?: GestureHandler<Event, Context>;
+  onCancel?: GestureHandler<Event, Context>;
+  onFinish?: GestureHandler<Event, Context>;
+}
+
+// highlight-start
+function useAnimatedGestureHandler<
+  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
+  Context extends Record<string, unknown> = Record<string, unknown>
+>(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList);
+// highlight-end
+```
+
+</details>
+
+### Arguments
+
+#### `gestureHandlers`
+
+The first argument is an object that can carry one or more handlers.
+You can set the handlers under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
+
+Each of the specified handlers will be triggered depending on the current state of the attached gesture handler.
+Read more about gesture handling states in the [Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/under-the-hood/state).
+The handler receives the following arguments:
+
+- `event` [object] - an event object carrying the event payload.
+  The payload will be different depending on the type of the gesture handler to which the callback is attached to (`PanGestureHandler`, `RotationGestureHandler`, etc.).
+
+- `context` [object] - a JavaScript object that can be used to store some state. You can read and write any data to it. This object persists between events and across handlers for all the selected states.
+
+#### `dependencies` <Optional/>
+
+An optional array of dependencies.
+
+Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
+
+### Returns
+
+`useAnimatedGestureHandler` returns a handler object that can be attached to one of the gesture handler components provided by the `react-native-gesture-handler` library.
+You need to pass this object to the `onGestureEvent` property of a gesture handler.
+
+## Example
+
+import AnimatedGestureHandler from '@site/src/examples/AnimatedGestureHandler';
+import AnimatedGestureHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedGestureHandler';
+
+<InteractiveExample
+  src={AnimatedGestureHandlerSrc}
+  component={AnimatedGestureHandler}
+  label="Grab and drag the circle"
+/>
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ⚠️  |
+
+</div>
+
+\* On Web, you have to pass returned handler object to both `onGestureEvent` and `onHandlerStateChange` parameters.

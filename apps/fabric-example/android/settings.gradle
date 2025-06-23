@@ -1,9 +1,12 @@
-pluginManagement { includeBuild("../../../node_modules/react-native/node_modules/@react-native/gradle-plugin") }
+pluginManagement { includeBuild('../../../node_modules/@react-native/gradle-plugin') }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'FabricExample'
 include ':app'
-includeBuild('../../../node_modules/react-native/node_modules/@react-native/gradle-plugin')
+includeBuild('../../../node_modules/@react-native/gradle-plugin')
+
+// Build from source (https://reactnative.dev/contributing/how-to-build-from-source)
+// NOTE: Please do not remove these lines even though they are commented out.
 // includeBuild('../../../node_modules/react-native') {
 //     dependencySubstitution {
 //         substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))

@@ -1,0 +1,70 @@
+---
+id: ReducedMotionConfig
+title: ReducedMotionConfig
+sidebar_label: ReducedMotionConfig
+sidebar_position: 4
+---
+
+`ReducedMotionConfig` component let's you change behavior in response to the device's reduced motion accessibility setting. By default it disables all animation when the reduced motion is enabled on a device. You can adjust it for your specific use case. You can learn more about [Accessibility](/docs/next/guides/accessibility) and [`useReducedMotion`](/docs/next/device/useReducedMotion) in Reanimated.
+
+:::caution
+
+The new configuration will be applied globally across the entire application.
+
+:::
+
+## Reference
+
+```javascript
+import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
+
+function App() {
+  return (
+    // ...
+    // highlight-next-line
+    <ReducedMotionConfig mode={ReduceMotion.Never} />
+    // ...
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface ReducedMotionConfigProps {
+  mode: ReduceMotion;
+}
+
+enum ReduceMotion {
+  System = 'system',
+  Always = 'always',
+  Never = 'never',
+}
+```
+
+</details>
+
+### Arguments
+
+#### `mode`
+
+A parameter that determines how animations should behave in response to the device's reduce motion accessibility setting.
+
+- `ReduceMotion.System` - This value adjusts the animation behavior based on whether the reduced motion accessibility setting is activated on the device. When enabled, the animation is disabled; otherwise, it remains active.
+- `ReduceMotion.Always` - With this setting, the animation is consistently disabled, regardless of the device's accessibility configuration.
+- `ReduceMotion.Never` - This option ensures that the animation remains enabled at all times.
+
+## Example
+
+import ReducedMotionConfig from '@site/src/examples/ReducedMotionConfig';
+import ReducedMotionConfigSrc from '!!raw-loader!@site/src/examples/ReducedMotionConfig';
+
+<InteractiveExample
+  src={ReducedMotionConfigSrc}
+  component={ReducedMotionConfig}
+/>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

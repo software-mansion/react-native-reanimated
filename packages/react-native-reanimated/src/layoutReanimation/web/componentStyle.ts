@@ -1,7 +1,7 @@
 'use strict';
 
-import { _updatePropsJS } from '../../js-reanimated';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 
 export interface ReanimatedSnapshot {
   top: number;

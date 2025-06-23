@@ -7,16 +7,17 @@ on:
       - .github/workflows/reanimated-typescript-compatibility-test-nightly.yml
   schedule:
     - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:
-  run:
+  reanimated-typescript-compatibility-test-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # TODO: Fetch versions from common source.
-        react-native-version: ['0.72', '0.73', '0.74', '0.75', nightly]
+        react-native-version: ['0.78', 'nightly']
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -34,8 +35,7 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install
       - name: Build Reanimated
-        working-directory: packages/react-native-reanimated
-        run: yarn build
+        run: yarn workspace react-native-reanimated build
       - name: Install react-native ${{ matrix.react-native-version }}
         run: yarn up react-native@${{ matrix.react-native-version }}
 
@@ -51,6 +51,3 @@ jobs:
       - name: Run common type tests
         working-directory: packages/react-native-reanimated
         run: yarn type:check:tests:common
-      - name: Run 0.72+ type tests
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:0.72+

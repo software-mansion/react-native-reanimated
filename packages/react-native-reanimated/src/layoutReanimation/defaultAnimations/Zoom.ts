@@ -1,14 +1,14 @@
 'use strict';
 import type {
-  IEntryExitAnimationBuilder,
-  EntryExitAnimationFunction,
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  EntryExitAnimationsValues,
   AnimationConfigFunction,
+  EntryAnimationsValues,
+  EntryExitAnimationFunction,
+  EntryExitAnimationsValues,
+  ExitAnimationsValues,
   IEntryAnimationBuilder,
+  IEntryExitAnimationBuilder,
   IExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
@@ -95,7 +95,7 @@ export class ZoomInRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 0 }, { rotate }],
+          transform: [{ scale: 0 }, { rotate: `${rotate}rad` }],
           ...initialValues,
         },
         callback,
@@ -469,7 +469,7 @@ export class ZoomOutRotate
           ],
         },
         initialValues: {
-          transform: [{ scale: 1 }, { rotate: '0' }],
+          transform: [{ scale: 1 }, { rotate: '0rad' }],
           ...initialValues,
         },
         callback,

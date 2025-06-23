@@ -1,18 +1,14 @@
 'use strict';
+import type { Component } from 'react';
+import { logger } from 'react-native-worklets';
+
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import {
-  isChromeDebugger,
-  isFabric,
-  isJest,
-  shouldBeUseWeb,
-} from '../PlatformChecker';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import type { Component } from 'react';
-import { logger } from '../logger';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -33,59 +29,35 @@ type DispatchCommand = <T extends Component>(
  */
 export let dispatchCommand: DispatchCommand;
 
-function dispatchCommandFabric(
+function dispatchCommandNative(
   animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   commandName: string,
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!_WORKLET) {
+  if (!globalThis._WORKLET) {
     return;
   }
 
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
-}
-
-function dispatchCommandPaper(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
-  commandName: string,
-  args: Array<unknown> = []
-) {
-  'worklet';
-  if (!_WORKLET) {
-    return;
-  }
-
-  const viewTag = animatedRef() as number;
-  global._dispatchCommandPaper!(viewTag, commandName, args);
+  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
 }
 
 function dispatchCommandJest() {
   logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
-function dispatchCommandChromeDebugger() {
-  logger.warn('dispatchCommand() is not supported with Chrome Debugger.');
-}
-
 function dispatchCommandDefault() {
   logger.warn('dispatchCommand() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
   // mapped as a different function in `shareableMappingCache` and
   // TypeScript is not able to infer that.
-  if (isFabric()) {
-    dispatchCommand = dispatchCommandFabric as unknown as DispatchCommand;
-  } else {
-    dispatchCommand = dispatchCommandPaper as unknown as DispatchCommand;
-  }
-} else if (isJest()) {
+  dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
+} else if (IS_JEST) {
   dispatchCommand = dispatchCommandJest;
-} else if (isChromeDebugger()) {
-  dispatchCommand = dispatchCommandChromeDebugger;
 } else {
   dispatchCommand = dispatchCommandDefault;
 }

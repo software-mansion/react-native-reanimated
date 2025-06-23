@@ -1,5 +1,6 @@
 'use strict';
 import { useRef } from 'react';
+
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { IWorkletEventHandler, ReanimatedEvent } from './commonTypes';
 
@@ -41,7 +42,7 @@ export function useEvent<
   Context extends Record<string, unknown> = never,
 >(
   handler: EventHandler<Event, Context>,
-  eventNames?: string[],
+  eventNames?: readonly string[],
   rebuild?: boolean
 ): EventHandlerProcessed<Event, Context>;
 

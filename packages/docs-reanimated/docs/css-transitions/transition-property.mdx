@@ -1,0 +1,99 @@
+---
+sidebar_position: 2
+---
+
+# transitionProperty
+
+`transitionProperty` lets you specify the name or names of styles properties to transition.
+
+import TransitionPropertyBasic from '@site/src/examples/css-transitions/TransitionPropertyBasic';
+import TransitionPropertyBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionPropertyBasic';
+
+<InteractiveExample
+  src={TransitionPropertyBasicSrc}
+  component={TransitionPropertyBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        // highlight-next-line
+        transitionProperty: 'width',
+        transitionDuration: 300,
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+
+type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+
+type CSSTransitionProperty<S extends object = PlainStyle> =
+  | 'all'
+  | 'none'
+  | keyof S
+  | ('all' | keyof S)[];
+```
+
+</details>
+
+### Values
+
+#### `<style property>`
+
+A string which is a single style property to transition when it's value changes.
+
+```typescript
+transitionProperty: 'backgroundColor';
+```
+
+#### `<style property>[]`
+
+An array of strings which are properties to transition when their values changes.
+
+```typescript
+transitionProperty: ['borderWidth', 'borderColor'];
+```
+
+#### `all`
+
+Every property that can be transitioned will be.
+
+#### `none`
+
+No properties will transition.
+
+## Example
+
+import TransitionProperty from '@site/src/examples/css-transitions/TransitionProperty';
+import TransitionPropertySrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionProperty';
+
+<InteractiveExample
+  src={TransitionPropertySrc}
+  component={TransitionProperty}
+  label="Click rectangles to grow"
+/>
+
+## Remarks
+
+- You need to use the [`transitionDuration`](/docs/next/css-transitions/transition-duration) alongside the `transitionProperty` to create transitions.
+
+- The property that you want to transition using `transitionProperty` needs to be applied to the same component.
+
+- Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](/docs/next/layout-animations/layout-transitions) to animate discrete style properties instead.
+
+- We discourage the use of `all` property as it can lead to performance issues.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

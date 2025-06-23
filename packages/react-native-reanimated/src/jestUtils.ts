@@ -2,14 +2,15 @@
 'use strict';
 
 import type { ReactTestInstance } from 'react-test-renderer';
+
+import { IS_JEST, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
+  AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
-import { ReanimatedError } from './errors';
 
 declare global {
   namespace jest {
@@ -20,6 +21,7 @@ declare global {
           shouldMatchAllProps?: boolean;
         }
       ): R;
+      toHaveAnimatedProps(props: Record<string, unknown>): R;
     }
   }
 }
@@ -28,7 +30,8 @@ const defaultFramerateConfig = {
   fps: 60,
 };
 
-const isEmpty = (obj: object) => Object.keys(obj).length === 0;
+const isEmpty = (obj: object | undefined) =>
+  !obj || Object.keys(obj).length === 0;
 const getStylesFromObject = (obj: object) => {
   return obj === undefined
     ? {}
@@ -47,6 +50,14 @@ type JestInlineStyle =
     }
   | ArrayLike<StyleValue>;
 
+const getCurrentProps = (
+  component: TestComponent
+): Partial<AnimatedComponentProps<AnimatedProps>> => {
+  const propsObject = component.props.jestAnimatedProps?.value;
+
+  return propsObject ? { ...propsObject } : {};
+};
+
 const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   const styleObject = component.props.style;
 
@@ -61,8 +72,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
         ...style,
       };
     });
-
-    return currentStyle;
   }
 
   const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
@@ -70,7 +79,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
   if (Array.isArray(jestInlineStyles)) {
     for (const obj of jestInlineStyles) {
-      if ('jestAnimatedStyle' in obj) {
+      if ('jestAnimatedValues' in obj) {
         continue;
       }
 
@@ -83,7 +92,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     }
 
     currentStyle = {
-      ...styleObject,
       ...currentStyle,
       ...jestAnimatedStyleValue,
     };
@@ -93,9 +101,9 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
   const inlineStyles = getStylesFromObject(jestInlineStyles);
 
-  currentStyle = isEmpty(jestAnimatedStyleValue as object)
-    ? { ...styleObject, ...inlineStyles }
-    : { ...styleObject, ...jestAnimatedStyleValue };
+  currentStyle = isEmpty(jestAnimatedStyleValue as object | undefined)
+    ? { ...inlineStyles }
+    : { ...jestAnimatedStyleValue };
 
   return currentStyle;
 };
@@ -126,8 +134,8 @@ const checkEqual = <Value>(current: Value, expected: Value) => {
 };
 
 const findStyleDiff = (
-  current: DefaultStyle,
-  expected: DefaultStyle,
+  current: DefaultStyle | Partial<AnimatedComponentProps<AnimatedProps>>,
+  expected: DefaultStyle | Partial<AnimatedComponentProps<AnimatedProps>>,
   shouldMatchAllProps?: boolean
 ) => {
   const diffs = [];
@@ -165,6 +173,53 @@ const findStyleDiff = (
   return { isEqual, diffs };
 };
 
+const compareAndFormatDifferences = (
+  currentValues: Partial<AnimatedComponentProps<AnimatedProps>> | DefaultStyle,
+  expectedValues: Partial<AnimatedComponentProps<AnimatedProps>> | DefaultStyle,
+  shouldMatchAllProps: boolean = false
+): { message: () => string; pass: boolean } => {
+  const { isEqual, diffs } = findStyleDiff(
+    currentValues,
+    expectedValues,
+    shouldMatchAllProps
+  );
+
+  if (isEqual) {
+    return { message: () => 'ok', pass: true };
+  }
+
+  const currentValuesStr = JSON.stringify(currentValues);
+  const expectedValuesStr = JSON.stringify(expectedValues);
+  const differences = diffs
+    .map(
+      (diff) =>
+        `- '${diff.property}' should be ${JSON.stringify(diff.expect)}, but is ${JSON.stringify(diff.current)}`
+    )
+    .join('\n');
+
+  return {
+    message: () =>
+      `Expected: ${expectedValuesStr}\nReceived: ${currentValuesStr}\n\nDifferences:\n${differences}`,
+    pass: false,
+  };
+};
+
+const compareProps = (
+  component: TestComponent,
+  expectedProps: Partial<AnimatedComponentProps<AnimatedProps>>
+) => {
+  if (
+    component.props.jestAnimatedProps &&
+    Object.keys(component.props.jestAnimatedProps.value).length === 0
+  ) {
+    return { message: () => `Component doesn't have props.`, pass: false };
+  }
+
+  const currentProps = getCurrentProps(component);
+
+  return compareAndFormatDifferences(currentProps, expectedProps);
+};
+
 const compareStyle = (
   component: TestComponent,
   expectedStyle: DefaultStyle,
@@ -175,32 +230,12 @@ const compareStyle = (
   }
   const { shouldMatchAllProps } = config;
   const currentStyle = getCurrentStyle(component);
-  const { isEqual, diffs } = findStyleDiff(
+
+  return compareAndFormatDifferences(
     currentStyle,
     expectedStyle,
     shouldMatchAllProps
   );
-
-  if (isEqual) {
-    return { message: () => 'ok', pass: true };
-  }
-
-  const currentStyleStr = JSON.stringify(currentStyle);
-  const expectedStyleStr = JSON.stringify(expectedStyle);
-  const differences = diffs
-    .map(
-      (diff) =>
-        `- '${diff.property}' should be ${JSON.stringify(
-          diff.expect
-        )}, but is ${JSON.stringify(diff.current)}`
-    )
-    .join('\n');
-
-  return {
-    message: () =>
-      `Expected: ${expectedStyleStr}\nReceived: ${currentStyleStr}\n\nDifferences:\n${differences}`,
-    pass: false,
-  };
 };
 
 let frameTime = Math.round(1000 / defaultFramerateConfig.fps);
@@ -239,7 +274,7 @@ export const advanceAnimationByFrame = (count: number) => {
   jest.runOnlyPendingTimers();
 };
 
-const requireFunction = isJest()
+const requireFunction = IS_JEST
   ? require
   : () => {
       throw new ReanimatedError(
@@ -252,6 +287,15 @@ type ToHaveAnimatedStyleConfig = {
 };
 
 export const setUpTests = (userFramerateConfig = {}) => {
+  // Mock ReanimatedView
+  jest.mock(
+    'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
+  jest.mock(
+    'react-native-reanimated/src/specs/ReanimatedNativeComponent',
+    () => ({})
+  );
   let expect: jest.Expect = (global as typeof global & { expect: jest.Expect })
     .expect;
   if (expect === undefined) {
@@ -277,6 +321,18 @@ export const setUpTests = (userFramerateConfig = {}) => {
   frameTime = Math.round(1000 / framerateConfig.fps);
 
   expect.extend({
+    toHaveAnimatedProps(
+      component: React.Component<
+        AnimatedComponentProps<InitialComponentProps>
+      > &
+        IAnimatedComponentInternal,
+      expectedProps: Partial<AnimatedComponentProps<AnimatedProps>>
+    ) {
+      return compareProps(component, expectedProps);
+    },
+  });
+
+  expect.extend({
     toHaveAnimatedStyle(
       component: React.Component<
         AnimatedComponentProps<InitialComponentProps>
@@ -293,6 +349,9 @@ export const setUpTests = (userFramerateConfig = {}) => {
 type TestComponent = React.Component<
   AnimatedComponentProps<InitialComponentProps> & {
     jestAnimatedStyle?: { value: DefaultStyle };
+    jestAnimatedProps?: {
+      value: Partial<AnimatedComponentProps<AnimatedProps>>;
+    };
   }
 >;
 

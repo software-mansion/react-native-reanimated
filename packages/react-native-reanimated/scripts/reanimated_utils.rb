@@ -13,8 +13,9 @@ def find_config()
     :react_native_minor_version => nil,
     :is_tvos_target => nil,
     :react_native_node_modules_dir => nil,
-    :reanimated_node_modules_dir => nil,
     :react_native_common_dir => nil,
+    :dynamic_frameworks_reanimated_dir => nil,
+    :dynamic_frameworks_worklets_dir => nil,
   }
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
@@ -30,7 +31,7 @@ def find_config()
     raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
-  result[:is_reanimated_example_app] = ENV["REANIMATED_EXAMPLE_APP_NAME"] != nil
+  result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
   result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
@@ -38,30 +39,34 @@ def find_config()
     result[:react_native_minor_version] = 1000
   end
   result[:react_native_node_modules_dir] = File.expand_path(react_native_node_modules_dir)
-  result[:reanimated_node_modules_dir] = File.expand_path(File.join(__dir__, '..', '..'))
 
   pods_root = Pod::Config.instance.project_pods_root
   react_native_common_dir_absolute = File.join(react_native_node_modules_dir, 'react-native', 'ReactCommon')
   react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
   result[:react_native_common_dir] = react_native_common_dir_relative
 
+  react_native_reanimated_dir_absolute = File.join(__dir__, '..')
+  react_native_reanimated_dir_relative = Pathname.new(react_native_reanimated_dir_absolute).relative_path_from(pods_root).to_s
+  result[:dynamic_frameworks_reanimated_dir] = react_native_reanimated_dir_relative
+
+  react_native_worklets_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native-worklets/package.json')"`), '..')
+  react_native_worklets_dir_absolute = File.join(react_native_worklets_node_modules_dir, 'react-native-worklets')
+  react_native_worklets_dir_relative = Pathname.new(react_native_worklets_dir_absolute).relative_path_from(pods_root).to_s
+  result[:dynamic_frameworks_worklets_dir] = react_native_worklets_dir_relative
+
   return result
 end
 
-def assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
-  reanimated_version = reanimated_package_json['version']
-  reanimated_major_version = reanimated_version.split('.')[0].to_i
-  react_native_minor_version = config[:react_native_minor_version]
-  fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-  if fabric_enabled && reanimated_major_version == 3 && react_native_minor_version < 74
+def assert_minimal_react_native_version(config)
       # If you change the minimal React Native version remember to update Compatibility Table in docs
-    raise "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + reanimated_version + " supports the New Architecture on React Native 0.74.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
+  minimalReactNativeVersion = 75
+  if config[:react_native_minor_version] < minimalReactNativeVersion
+    raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
   end
 end
 
-def assert_minimal_react_native_version(config)
-  if config[:react_native_minor_version] < 71
-    # If you change the minimal React Native version remember to update Compatibility Table in docs
-    raise "[Reanimated] Unsupported React Native version. Please use 0.71 or newer."
+def assert_new_architecture_enabled(new_arch_enabled)
+  if !new_arch_enabled
+    raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
 end

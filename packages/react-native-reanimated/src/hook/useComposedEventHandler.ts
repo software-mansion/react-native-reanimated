@@ -1,10 +1,11 @@
 'use strict';
-import { useEvent } from './useEvent';
-import { useHandler } from './useHandler';
+import type { WorkletFunction } from 'react-native-worklets';
+
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { ReanimatedEvent } from './commonTypes';
-import type { WorkletFunction } from '../commonTypes';
-import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
+import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 type ComposedHandlerProcessed<
   Event extends object,

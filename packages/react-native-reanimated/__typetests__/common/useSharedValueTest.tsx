@@ -4,11 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef } from 'react';
 import { Button } from 'react-native';
+
 import Animated, {
-  useSharedValue,
-  useDerivedValue,
-  withTiming,
   useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
 } from '../..';
 
 function UseSharedValueTestRead() {

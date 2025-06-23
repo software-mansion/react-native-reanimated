@@ -1,0 +1,96 @@
+name: Reanimated release checks
+on:
+  pull_request:
+    branches:
+      - '[0-9]+.[0-9]+-stable'
+  push:
+    branches:
+      - '[0-9]+.[0-9]+-stable'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  babel_plugin_static_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Babel plugin static check
+    uses: ./.github/workflows/babel-plugin-static-check.yml
+
+  docs_reanimated_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Docs Reanimated build check
+    uses: ./.github/workflows/docs-reanimated-build-check.yml
+
+  example_android_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example Android build check
+    uses: ./.github/workflows/example-android-build-check.yml
+
+  example_ios_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example iOS build check
+    uses: ./.github/workflows/example-ios-build-check.yml
+
+  example_macos_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example macOS build check
+    uses: ./.github/workflows/example-macos-build-check.yml
+
+  example_next_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example Next build check
+    uses: ./.github/workflows/example-next-build-check-and-test.yml
+
+  example_tvos_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example tvOS build check
+    uses: ./.github/workflows/example-tvos-build-check.yml
+
+  example_typescript_check_and_lint:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Example Typescript check and lint
+    uses: ./.github/workflows/example-typescript-check-and-lint.yml
+
+  reanimated_android_validation:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated Android validation
+    uses: ./.github/workflows/reanimated-android-validation.yml
+
+  reanimated_apple_validation:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated Apple validation
+    uses: ./.github/workflows/reanimated-apple-validation.yml
+
+  reanimated_common_build_check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated Common build check
+    uses: ./.github/workflows/reanimated-common-validation.yml
+
+  reanimated_compatibility_check_nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated Common compatibility check [Nightly]
+    uses: ./.github/workflows/reanimated-compatibility-check-nightly.yml
+
+  reanimated_static_checks:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated static checks
+    uses: ./.github/workflows/reanimated-static-checks.yml
+
+  reanimated_typescript_compatibility_test_nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Reanimated Typescript compatibility test [Nightly]
+    uses: ./.github/workflows/reanimated-typescript-compatibility-test-nightly.yml
+
+  static_framework_reanimated_build_check_nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Static framework Reanimated build check [Nightly]
+    uses: ./.github/workflows/static-framework-reanimated-build-check-nightly.yml
+
+  windows_hosted_app_reanimated_build_check_nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Windows hosted app Reanimated build check [Nightly]
+    uses: ./.github/workflows/windows-hosted-app-reanimated-build-check-nightly.yml
+
+  yarn_validation:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Yarn validation
+    uses: ./.github/workflows/yarn-validation.yml

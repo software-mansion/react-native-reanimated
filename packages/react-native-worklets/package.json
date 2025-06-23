@@ -1,0 +1,136 @@
+{
+  "name": "react-native-worklets",
+  "version": "0.4.0",
+  "description": "The React Native multithreading library",
+  "keywords": [
+    "react-native",
+    "react",
+    "native",
+    "worklets"
+  ],
+  "scripts": {
+    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:valueUnpacker",
+    "build:valueUnpacker": "node ./scripts/export-value-unpacker.js",
+    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
+    "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
+    "format:android": "yarn format:android:java && yarn format:android:cpp && yarn format:android:cmake",
+    "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:android:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/format-cmake.sh",
+    "format:android:java": "node ../../scripts/format-java.js",
+    "format:apple": "find apple -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:js": "prettier --write --list-different src",
+    "format:plugin": "yarn workspace babel-plugin-worklets format",
+    "lint": "yarn lint:js && yarn lint:common && yarn lint:plugin && yarn lint:android && yarn lint:apple",
+    "lint:android": "../../scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
+    "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
+    "lint:common": "../../scripts/validate-common.sh && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
+    "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
+    "lint:clang-tidy": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs ../../scripts/clang-tidy-lint.sh",
+    "lint:js": "eslint src && yarn prettier --check src",
+    "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "test": "jest",
+    "type:check": "yarn type:check:src && yarn type:check:plugin && yarn type:check:app",
+    "type:check:src": "yarn tsc --noEmit",
+    "type:check:app": "yarn workspace common-app type:check",
+    "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
+    "use-strict-check": "node ../../scripts/validate-use-strict.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git",
+    "directory": "packages/react-native-worklets"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/software-mansion/react-native-reanimated/issues"
+  },
+  "homepage": "https://docs.swmansion.com/react-native-reanimated",
+  "peerDependencies": {
+    "@babel/core": "^7.0.0-0",
+    "react": "*",
+    "react-native": "*"
+  },
+  "dependencies": {
+    "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
+    "@babel/plugin-transform-class-properties": "^7.0.0-0",
+    "@babel/plugin-transform-classes": "^7.0.0-0",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
+    "@babel/plugin-transform-optional-chaining": "^7.0.0-0",
+    "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
+    "@babel/plugin-transform-template-literals": "^7.0.0-0",
+    "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
+    "@babel/preset-typescript": "^7.16.7",
+    "convert-source-map": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.20.0",
+    "@babel/core": "^7.25.2",
+    "@react-native-community/cli": "19.0.0",
+    "@react-native/eslint-config": "0.80.0",
+    "@types/jest": "^29.5.5",
+    "@types/react": "^19.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "babel-plugin-worklets": "workspace:*",
+    "clang-format-node": "^1.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-reanimated": "workspace:*",
+    "jest": "^29.0.0",
+    "madge": "^5.0.1",
+    "prettier": "^3.3.3",
+    "react": "19.1.0",
+    "react-native": "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch",
+    "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
+    "typescript": "~5.3.0"
+  },
+  "main": "./lib/module/index",
+  "module": "./lib/module/index",
+  "react-native": "./src/index",
+  "source": "./src/index",
+  "types": "lib/typescript/index.d.ts",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "apple",
+    "Common",
+    "scripts/worklets_utils.rb",
+    "plugin/index.js",
+    "*.podspec",
+    "react-native.config.js",
+    "!apple/build",
+    "!android/build",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
+    "!android/local.properties",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!**/.*"
+  ],
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "module",
+        {
+          "esm": true,
+          "jsxRuntime": "classic"
+        }
+      ],
+      "typescript"
+    ]
+  },
+  "codegenConfig": {
+    "name": "rnworklets",
+    "type": "modules",
+    "jsSrcsDir": "src/specs",
+    "android": {
+      "javaPackageName": "com.swmansion.worklets"
+    }
+  }
+}

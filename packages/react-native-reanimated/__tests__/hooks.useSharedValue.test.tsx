@@ -1,8 +1,7 @@
+import { render } from '@testing-library/react-native';
 import React from 'react';
-import renderer from 'react-test-renderer';
-import Animated, { useSharedValue } from '../src';
 
-jest.mock('../src/NativeReanimated/NativeReanimated');
+import Animated, { useSharedValue } from '../src';
 
 describe('useSharedValue', () => {
   it('retains value on rerender', () => {
@@ -16,28 +15,28 @@ describe('useSharedValue', () => {
     }
 
     function TestComponent(props: Props) {
-      const opacity = useSharedValue(props.value);
-      return <Animated.View style={{ opacity: opacity.value }} />;
+      const [opacity, setOpacity] = React.useState(props.value);
+      const opacitySv = useSharedValue(props.value);
+
+      React.useEffect(() => setOpacity(opacitySv.value), [opacitySv]);
+
+      return <Animated.View style={{ opacity }} testID={'AnimatedView'} />;
     }
 
-    // When rendering with initial value
-    const wrapper = renderer.create(
-      <TestComponent key="box" value={initialValue} />
-    );
+    const component = render(<TestComponent key="box" value={initialValue} />);
 
-    expect(
-      typeof wrapper.root.children[0] !== 'string'
-        ? wrapper.root.children[0].props.style.opacity
-        : false
-    ).toBe(initialValue);
+    const animatedView = component.getByTestId('AnimatedView');
 
-    // When rendering with updated value
-    wrapper.update(<TestComponent key="box" value={updatedValue} />);
+    expect(animatedView.props.style[0].opacity).toBe(initialValue);
 
-    expect(
-      typeof wrapper.root.children[0] !== 'string'
-        ? wrapper.root.children[0].props.style.opacity
-        : false
-    ).toBe(initialValue);
+    component.update(<TestComponent key="box" value={updatedValue} />);
+    const updatedChild = component.getByTestId('AnimatedView');
+
+    expect(updatedChild.props.style[0].opacity).toBe(initialValue);
+
+    const rendered = render(
+      <TestComponent key="box" value={updatedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

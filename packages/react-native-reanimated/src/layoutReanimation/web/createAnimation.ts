@@ -1,21 +1,22 @@
 'use strict';
 
-import { AnimationsData, TransitionType } from './config';
-import type { InitialValuesStyleProps, KeyframeDefinitions } from './config';
-import { convertAnimationObjectToKeyframes } from './animationParser';
+import type { TransformsStyle } from 'react-native';
+
 import type {
   AnimationData,
   ReanimatedWebTransformProperties,
   TransitionData,
 } from './animationParser';
-import type { TransformsStyle } from 'react-native';
-import { LinearTransition } from './transition/Linear.web';
-import { SequencedTransition } from './transition/Sequenced.web';
-import { FadingTransition } from './transition/Fading.web';
-import { JumpingTransition } from './transition/Jumping.web';
+import { convertAnimationObjectToKeyframes } from './animationParser';
+import type { InitialValuesStyleProps, KeyframeDefinitions } from './config';
+import { AnimationsData, TransitionType } from './config';
 import { insertWebAnimation } from './domUtils';
 import { CurvedTransition } from './transition/Curved.web';
 import { EntryExitTransition } from './transition/EntryExit.web';
+import { FadingTransition } from './transition/Fading.web';
+import { JumpingTransition } from './transition/Jumping.web';
+import { LinearTransition } from './transition/Linear.web';
+import { SequencedTransition } from './transition/Sequenced.web';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 

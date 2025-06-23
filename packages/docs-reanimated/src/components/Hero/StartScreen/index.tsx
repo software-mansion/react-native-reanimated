@@ -46,7 +46,10 @@ const StartScreen = () => {
                 <span className={styles.rnLabel}>React Native</span>
                 <SelectedLabel isInteractive={true}>Reanimated</SelectedLabel>
               </h1>
-              <h2 className={styles.subheadingLabel}>Beyond the limitations</h2>
+              <h2 className={styles.subheadingLabel}>
+                Create smooth animations with an&nbsp;excellent developer
+                experience.
+              </h2>
             </div>
             <div className={styles.lowerHeading}>
               <Horse />

@@ -3,10 +3,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+
 import Animated, {
-  useSharedValue,
-  useDerivedValue,
   interpolateColor,
+  useDerivedValue,
+  useSharedValue,
 } from '../..';
 
 function InlineStylesTest() {
@@ -44,7 +45,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest4() {
-    const sv = useSharedValue(true);
+    const sv = useSharedValue('0');
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={{ width: sv }} />;
   }
@@ -55,7 +56,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest6() {
-    const sv = useSharedValue({ width: true });
+    const sv = useSharedValue({ width: '0' });
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={sv} />;
   }

@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/uimanager/UIManager.h>
@@ -25,5 +24,3 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const PropsMap &propsMap);
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

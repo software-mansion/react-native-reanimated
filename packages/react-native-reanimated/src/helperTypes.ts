@@ -8,20 +8,18 @@ This will not be easy though!
 */
 
 import type { RegisteredStyle, StyleProp } from 'react-native';
+
 import type {
   AnimatedStyle,
+  EntryExitAnimationFunction,
+  LayoutAnimationFunction,
   SharedValue,
   TransformArrayItem,
 } from './commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
-import type {
-  EntryExitAnimationFunction,
-  LayoutAnimationFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
-import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 
-type EntryOrExitLayoutType =
+export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
@@ -89,38 +87,13 @@ type LayoutProps = {
   exiting?: EntryOrExitLayoutType;
 };
 
-type SharedTransitionProps = {
-  /**
-   * Lets you animate components between two navigation screens.
-   *
-   * Assign the same `sharedTransitionTag` to [animated
-   * components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component)
-   * on two different navigation screens to create a shared transition.
-   *
-   * @experimental
-   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
-   */
-  sharedTransitionTag?: string;
-  /**
-   * Lets you create a custom shared transition animation.
-   *
-   * Used alongside `SharedTransition.custom()` method.
-   *
-   * @experimental
-   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
-   */
-  sharedTransitionStyle?: SharedTransition;
-};
-
 type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
-  LayoutProps &
-  SharedTransitionProps;
+  LayoutProps;
 
 export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
-  LayoutProps &
-  SharedTransitionProps & {
+  LayoutProps & {
     /**
      * Lets you animate component props.
      *

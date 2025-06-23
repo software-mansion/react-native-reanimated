@@ -1,12 +1,11 @@
 'use strict';
 
 import React, { useEffect, useRef } from 'react';
-import { TextInput, StyleSheet, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
-import type { FrameInfo } from '../frameCallback';
-import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
-import { addWhitelistedNativeProps } from '../ConfigHelper';
+import type { FrameInfo } from '../frameCallback';
+import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
@@ -46,7 +45,7 @@ function createCircularDoublesBuffer(size: number) {
 }
 
 const DEFAULT_BUFFER_SIZE = 20;
-addWhitelistedNativeProps({ text: true });
+
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
@@ -197,6 +196,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 13,
+    fontVariant: ['tabular-nums'],
     color: '#ffff',
     fontFamily: 'monospace',
     paddingHorizontal: 3,

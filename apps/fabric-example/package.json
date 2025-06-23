@@ -3,54 +3,23 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "",
+    "build": "cd ios && bundle install && bundle exec pod update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint --max-warnings=0 .",
-    "format": "prettier --write --list-different .",
     "start": "react-native start",
-    "test": "jest"
+    "format": "prettier --write --list-different ."
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^1.24.0",
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch",
-    "@react-native-masked-view/masked-view": "^0.3.1",
-    "@react-native-picker/picker": "patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch",
-    "@react-navigation/native": "^6.1.18",
-    "@react-navigation/native-stack": "^6.11.0",
-    "@shopify/flash-list": "^1.7.1",
     "common-app": "workspace:*",
-    "react": "18.3.1",
-    "react-native": "0.76.0-rc.3",
-    "react-native-gesture-handler": "2.20.0",
-    "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch",
-    "react-native-reanimated": "workspace:*",
-    "react-native-safe-area-context": "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch",
-    "react-native-screens": "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch",
-    "react-native-svg": "15.8.0-rc.1"
+    "react-native": "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
-    "@react-native-community/cli": "15.0.0-alpha.2",
-    "@react-native-community/cli-platform-android": "15.0.0-alpha.2",
-    "@react-native-community/cli-platform-ios": "15.0.0-alpha.2",
-    "@react-native/babel-preset": "0.76.0-rc.3",
-    "@react-native/eslint-config": "0.76.0-rc.3",
-    "@react-native/metro-config": "0.76.0-rc.3",
-    "@react-native/typescript-config": "0.76.0-rc.3",
-    "@types/react": "^18.2.6",
-    "@types/react-test-renderer": "^18.0.0",
-    "babel-jest": "^29.6.3",
-    "eslint": "^8.57.0",
-    "jest": "^29.6.3",
-    "patch-package": "^8.0.0",
-    "prettier": "^3.3.3",
-    "react-test-renderer": "18.3.1",
-    "typescript": "~5.3.0"
+    "prettier": "^3.3.3"
   },
   "engines": {
     "node": ">=18"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }

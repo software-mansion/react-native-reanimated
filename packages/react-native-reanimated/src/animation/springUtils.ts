@@ -1,11 +1,12 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import type {
-  Animation,
   AnimatableValue,
-  Timestamp,
+  Animation,
   ReduceMotion,
+  Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
 
 /**
  * Spring animation configuration.

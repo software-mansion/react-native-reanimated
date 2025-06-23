@@ -8,6 +8,7 @@ on:
       - .github/workflows/expo-devclient-build-check-nightly.yml
   schedule:
     - cron: '0 0 * * *' # after publishing new nightly version on NPM
+  workflow_call:
   workflow_dispatch:
 
 jobs:
@@ -34,6 +35,11 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+      - uses: ruby/setup-ruby@v1
+        if: ${{ matrix.platform == 'iOS' }}
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app (Paper)
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         run: npx create-expo-app@latest ${{ env.APP_NAME }}
@@ -65,7 +71,7 @@ jobs:
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
+        run: yarn react-native run-ios --terminal='Terminal'
       - name: Build app (Android)
         working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}

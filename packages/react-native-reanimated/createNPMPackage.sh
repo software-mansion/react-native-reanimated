@@ -1,13 +1,19 @@
 #!/bin/bash
 
 yarn install --immutable
-yarn bob build
 
-PREVIOUS_VERSION=$(node scripts/set-reanimated-version.js $@)
-if [ $? -ne 0 ]; then
-  exit 1
+if [ $# -ge 1 ]; then
+  if ! CURRENT_VERSION=$(node scripts/set-reanimated-version.js "$@"); then
+    exit 1
+  fi
 fi
+
+yarn build
+
 npm pack
-node scripts/set-reanimated-version.js $PREVIOUS_VERSION
+
+if [ $# -ge 1 ]; then
+  node scripts/set-reanimated-version.js "$CURRENT_VERSION" >/dev/null
+fi
 
 echo "Done!"

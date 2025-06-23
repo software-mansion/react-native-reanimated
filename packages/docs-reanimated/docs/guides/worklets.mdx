@@ -6,7 +6,9 @@ sidebar_position: 1
 
 # Worklets
 
-Worklets are short-running JavaScript functions that can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
+Worklets are short-running JavaScript functions that can run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
+
+## Defining worklets
 
 You can create your own worklets using the `'worklet';` directive at the top of a function.
 
@@ -17,7 +19,9 @@ function myWorklet() {
 }
 ```
 
-The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+## Workletization
+
+The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md#basics) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/next/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -32,9 +36,9 @@ function App() {
 }
 ```
 
-Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
+## Running worklets on the UI thread
 
-You can use [`runOnUI`](/docs/threading/runOnUI) to manually schedule worklet execution on the UI thread:
+You can use [`runOnUI`](/docs/next/threading/runOnUI) to manually schedule worklet execution on the UI thread:
 
 ```javascript
 function myWorklet() {
@@ -59,6 +63,41 @@ function onPress() {
   runOnUI(myWorklet)('Howdy');
 }
 ```
+
+## Running functions from worklets
+
+You can run functions on the JS thread from the UI thread with [`runOnJS`](/docs/next/threading/runOnJS). Most frequently used to call functions that aren't marked with a `'worklet';` directive (i.e. most third-party libraries) or to update the React state.
+
+```javascript
+import { router } from 'expo-router';
+import { Gesture } from 'react-native-gesture-handler';
+
+function App() {
+  const tap = Gesture.Tap().onEnd(() => {
+    // i'm a worklet too!
+    // highlight-next-line
+    runOnJS(router.back)();
+  });
+}
+```
+
+Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/next/fundamentals/glossary#ui-thread):
+
+```javascript
+function App() {
+  const tap = Gesture.Tap().onEnd(() => {
+    // myFunction is defined on the UI thread 🚨
+    const myFunction = () => {};
+    runOnJS(myFunction)(); // 💥
+  });
+}
+```
+
+## Hoisting
+
+Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/next/fundamentals/glossary#javascript-thread).
+
+## Capturing closure
 
 Worklets are [closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures). They can access variables declared outside of their own scope. Only variables referenced in the worklet body will be captured inside the worklet scope.
 
@@ -94,6 +133,8 @@ function myWorklet() {
 }
 ```
 
+## Passing data to worklets
+
 Worklets can return data within the same thread.
 
 ```javascript
@@ -109,7 +150,7 @@ function someWorklet() {
 }
 ```
 
-To pass data between UI and JS thread we use [shared values](/docs/fundamentals/glossary#shared-value).
+To pass data between UI and JS thread we use [shared values](/docs/next/fundamentals/glossary#shared-value).
 
 ```javascript
 import { useSharedValue } from 'react-native-reanimated';
@@ -128,33 +169,14 @@ function App() {
 }
 ```
 
-You can run functions on the JS thread from the UI thread with [`runOnJS`](/docs/threading/runOnJS). Most frequently used to call functions that aren't marked with a `'worklet';` directive (i.e. most third-party libraries) or to update the React state.
+## Using worklets on the Web
 
-```javascript
-import { router } from 'expo-router';
-import { Gesture } from 'react-native-gesture-handler';
+There's no separate UI thread available on the Web. Because of that, when Reanimated runs in the browser, worklets are resolved to plain JavaScript functions.
 
-function App() {
-  const tap = Gesture.Tap().onEnd(() => {
-    // i'm a worklet too!
-    // highlight-next-line
-    runOnJS(router.back)();
-  });
-}
-```
+However, the `'worklet';` directive is still necessary on the Web, because Reanimated relies on the Babel plugin to capture dependencies inside worklet functions.
 
-Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
-
-```javascript
-function App() {
-  const tap = Gesture.Tap().onEnd(() => {
-    // myFunction is defined on the UI thread 🚨
-    const myFunction = () => {};
-    runOnJS(myFunction)(); // 💥
-  });
-}
-```
+## Other worklet runtimes
 
 Worklets can run in other runtimes than the one provided by Reanimated. For example [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) and [LiveMarkdown](https://github.com/Expensify/react-native-live-markdown) create their own worklet runtimes.
 
-You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
+You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/next/threading/createWorkletRuntime) function.

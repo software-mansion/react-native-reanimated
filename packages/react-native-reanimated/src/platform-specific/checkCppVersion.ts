@@ -1,8 +1,9 @@
 'use strict';
 
+import { logger } from 'react-native-worklets';
+
+import { ReanimatedError } from '../common';
 import { jsVersion } from './jsVersion';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
 
 export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;

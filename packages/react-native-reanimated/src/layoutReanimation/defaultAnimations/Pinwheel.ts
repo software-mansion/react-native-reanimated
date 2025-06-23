@@ -1,10 +1,10 @@
 'use strict';
-import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the
@@ -44,7 +44,7 @@ export class PinwheelIn
               scale: delayFunction(delay, animation(1, config)),
             },
             {
-              rotate: delayFunction(delay, animation('0', config)),
+              rotate: delayFunction(delay, animation('0rad', config)),
             },
           ],
         },
@@ -55,7 +55,7 @@ export class PinwheelIn
               scale: 0,
             },
             {
-              rotate: '5',
+              rotate: '5rad',
             },
           ],
           ...initialValues,
@@ -104,7 +104,7 @@ export class PinwheelOut
               scale: delayFunction(delay, animation(0, config)),
             },
             {
-              rotate: delayFunction(delay, animation('5', config)),
+              rotate: delayFunction(delay, animation('5rad', config)),
             },
           ],
         },
@@ -115,7 +115,7 @@ export class PinwheelOut
               scale: 1,
             },
             {
-              rotate: '0',
+              rotate: '0rad',
             },
           ],
           ...initialValues,

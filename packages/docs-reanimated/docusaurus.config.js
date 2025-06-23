@@ -5,6 +5,7 @@ const lightCodeTheme = require('./src/theme/CodeBlock/highlighting-light.js');
 const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
 const webpack = require('webpack');
+const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -51,18 +52,18 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-reanimated',
-          lastVersion: 'current', // <- this makes 3.x docs as default
+          lastVersion: '3.x', // <- this makes 3.x docs as default
           versions: {
             current: {
-              label: '3.x',
+              label: '4.x',
             },
           },
         },
         theme: {
           customCss: require.resolve('./src/css/index.css'),
         },
-        googleAnalytics: {
-          trackingID: 'UA-41044622-6',
+        gtag: {
+          trackingID: 'G-RNYQG9GVFJ',
           anonymizeIP: true,
         },
         blog: {
@@ -70,6 +71,7 @@ const config = {
           blogSidebarTitle: 'Examples',
           blogSidebarCount: 'ALL',
           showReadingTime: false,
+          onUntruncatedBlogPosts: 'ignore',
         },
       }),
     ],
@@ -78,6 +80,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/og-image.png',
+      colorMode: {
+        respectPrefersColorScheme: true,
+      },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -111,10 +116,12 @@ const config = {
           },
         ],
       },
+      // App.js 2025 Banner
       announcementBar: {
+        id: 'appjs-2025',
         content: ' ',
-        backgroundColor: '#03c',
-        textColor: '#fff',
+        backgroundColor: '#f7eded',
+        textColor: '#484dfc',
       },
       footer: {
         style: 'light',
@@ -123,6 +130,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
+        additionalLanguages: ['bash'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
@@ -133,6 +141,36 @@ const config = {
       },
     }),
   plugins: [
+    function svgModulePlugin() {
+      return {
+        name: 'svg-module-plugin',
+        configureWebpack(config, isServer, utils) {
+          return {
+            module: {
+              rules: [
+                {
+                  test: /\.js?$/,
+                  include: [
+                    path.resolve(
+                      __dirname,
+                      'node_modules/@react-native/assets-registry/registry'
+                    ),
+                  ],
+                  use: {
+                    loader: require.resolve('babel-loader'),
+                    options: {
+                      babelrc: false,
+                      configFile: false,
+                      presets: [require.resolve('@babel/preset-flow')],
+                    },
+                  },
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
     ].filter(Boolean),
@@ -153,17 +191,17 @@ const config = {
               new webpack.DefinePlugin({
                 ...processMock,
                 __DEV__: 'false',
-                setImmediate: () => {},
               }),
             ],
             module: {
               rules: [
                 {
-                  test: /\.txt/,
+                  test: /\.txt$/,
                   type: 'asset/source',
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
                 },
               ],
             },

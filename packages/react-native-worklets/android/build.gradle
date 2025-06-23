@@ -1,0 +1,315 @@
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
+import groovy.json.JsonSlurper
+import java.nio.file.Paths
+import org.apache.tools.ant.taskdefs.condition.Os
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+def safeAppExtGet(prop, fallback) {
+    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+    appProject?.ext?.has(prop) ? appProject.ext.get(prop) : fallback
+}
+
+def isNewArchitectureEnabled() {
+    // To opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+def resolveReactNativeDirectory() {
+    def reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
+    }
+
+    // Fallback to node resolver for custom directory structures like monorepos.
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
+    if (reactNativePackage.exists()) {
+        return reactNativePackage.parentFile
+    }
+
+    throw new GradleException(
+        "[Worklets] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
+    )
+}
+
+def getReactNativeMinorVersion() {
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def reactProperties = new Properties()
+    file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+    def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+    return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
+}
+
+def getWorkletsVersion() {
+    def inputFile = file(projectDir.path + '/../package.json')
+    def json = new JsonSlurper().parseText(inputFile.text)
+    return json.version
+}
+
+def toPlatformFileString(String path) {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        path = path.replace(File.separatorChar, '/' as char)
+    }
+    return path
+}
+
+if (isNewArchitectureEnabled()) {
+    apply plugin: "com.facebook.react"
+}
+
+def reactNativeRootDir = resolveReactNativeDirectory()
+def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
+def WORKLETS_VERSION = getWorkletsVersion()
+def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
+def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
+def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
+
+// Set version for prefab
+version WORKLETS_VERSION
+
+def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+
+def JS_RUNTIME = {
+    // Override JS runtime with environment variable
+    if (System.getenv("JS_RUNTIME")) {
+        return System.getenv("JS_RUNTIME")
+    }
+
+    // Check if Hermes is enabled in app setup
+    def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+    if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
+        return "hermes"
+    }
+
+    // Use JavaScriptCore (JSC) by default
+    return "jsc"
+}.call()
+
+def reactNativeArchitectures() {
+    def value = project.getProperties().get("reactNativeArchitectures")
+    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "de.undercouch:gradle-download-task:5.6.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
+    }
+}
+
+if (project == rootProject) {
+    apply from: "spotless.gradle"
+}
+
+apply plugin: "com.android.library"
+apply plugin: "maven-publish"
+apply plugin: "de.undercouch.download"
+
+
+android {
+    compileSdkVersion safeExtGet("compileSdkVersion", 34)
+
+    namespace "com.swmansion.worklets"
+
+    if (rootProject.hasProperty("ndkPath")) {
+        ndkPath rootProject.ext.ndkPath
+    }
+    if (rootProject.hasProperty("ndkVersion")) {
+        ndkVersion rootProject.ext.ndkVersion
+    }
+
+    buildFeatures {
+        prefab true
+        prefabPublishing true
+        buildConfig true
+    }
+
+    prefab {
+        worklets {
+            headers workletsPrefabHeadersDir.absolutePath
+        }
+    }
+
+    defaultConfig {
+        minSdkVersion safeExtGet("minSdkVersion", 23)
+        targetSdkVersion safeExtGet("targetSdkVersion", 34)
+        versionCode 1
+        versionName WORKLETS_VERSION
+
+        buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
+        buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
+        buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared",
+                        "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
+                        "-DANDROID_TOOLCHAIN=clang",
+                        "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
+                        "-DJS_RUNTIME=${JS_RUNTIME}",
+                        "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                abiFilters (*reactNativeArchitectures())
+                targets("worklets")
+            }
+        }
+
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+    externalNativeBuild {
+        cmake {
+            version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
+            path "CMakeLists.txt"
+        }
+    }
+    buildTypes {
+        debug {
+            externalNativeBuild {
+                cmake {
+                    if (JS_RUNTIME == "hermes") {
+                        //  React Native doesn't expose these flags, but not having them
+                        //  can lead to runtime errors due to ABI mismatches.
+                        //  There's also
+                        //    HERMESVM_PROFILER_OPCODE
+                        //    HERMESVM_PROFILER_BB
+                        //  which shouldn't be defined in standard setups.
+                        arguments "-DHERMES_ENABLE_DEBUGGER=1"
+                    }
+                }
+            }
+            packagingOptions {
+                doNotStrip "**/**/*.so"
+            }
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+    packagingOptions {
+        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
+        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
+        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // are only allowed to specify exclude patterns)
+        excludes = [
+                "META-INF",
+                "META-INF/**",
+                "**/libc++_shared.so",
+                "**/libfbjni.so",
+                "**/libjsi.so",
+                "**/libfolly_json.so",
+                "**/libfolly_runtime.so",
+                "**/libglog.so",
+                "**/libhermes.so",
+                "**/libhermes-executor-debug.so",
+                "**/libhermes_executor.so",
+                "**/libhermestooling.so",
+                "**/libreactnativejni.so",
+                "**/libturbomodulejsijni.so",
+                "**/libreactnative.so",
+                "**/libreact_nativemodule_core.so",
+                "**/libreact_render*.so",
+                "**/librrc_root.so",
+                "**/libjscexecutor.so",
+        ]
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    sourceSets {
+        main {
+            java {
+                if (EXPERIMENTAL_BUNDLING) {
+                    srcDirs += "src/experimentalBundling"
+                } else {
+                    srcDirs += "src/legacyBundling"
+                }
+            }
+        }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!IS_REANIMATED_EXAMPLE_APP) {
+                    return
+                }
+                def packageDir = new File("${project.projectDir}/..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${packageDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
+    }
+}
+
+task assertMinimalReactNativeVersionTask {
+    // If you change the minimal React Native version remember to update Compatibility Table in docs
+    def minimalReactNativeVersion = 75
+    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
+    doFirst {
+        throw new GradleException("[Worklets] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
+    }
+}
+
+preBuild.dependsOn(assertMinimalReactNativeVersionTask)
+
+task assertNewArchitectureEnabledTask {
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
+    doFirst {
+        throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
+
+task prepareWorkletsHeadersForPrefabs(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp")
+    include("worklets/**/*.h")
+    into(workletsPrefabHeadersDir)
+}
+
+task cleanCmakeCache() {
+    tasks.getByName("clean").dependsOn(cleanCmakeCache)
+    doFirst {
+        delete "${projectDir}/.cxx"
+    }
+}
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation "com.facebook.yoga:proguard-annotations:1.19.0"
+    implementation "androidx.transition:transition:1.1.0"
+    implementation "androidx.core:core:1.6.0"
+
+    implementation "com.facebook.react:react-android" // version substituted by RNGP
+    if (JS_RUNTIME == "hermes") {
+        implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+    }
+}
+
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)

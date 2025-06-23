@@ -7,11 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-build-workflow-rea-v3:
+  npm-reanimated-4-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/npm-reanimated-package-build.yml
     with:
       option: --nightly
       publish_on_npm: true
-    secrets:
-      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+    secrets: inherit
+
+  npm-reanimated-3-publish-nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/npm-reanimated-package-build.yml
+    with:
+      option: --nightly
+      publish_on_npm: true
+      # Remember to update the branch on new minor releases.
+      ref: 3.18-stable
+    secrets: inherit

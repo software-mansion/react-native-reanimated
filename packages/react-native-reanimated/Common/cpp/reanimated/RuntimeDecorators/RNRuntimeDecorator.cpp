@@ -1,14 +1,13 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#include <worklets/Tools/ReanimatedVersion.h>
+#include <reanimated/Tools/ReanimatedVersion.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 
 namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule) {
-  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
-
-  jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Runtime &uiRuntime,
+    const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")
@@ -21,30 +20,27 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
-
-  rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
-
 #ifndef NDEBUG
-  checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
+  checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "_registriesLeakCheck",
+      reanimatedModuleProxy->createRegistriesLeakCheck());
+#endif // IS_REANIMATED_EXAMPLE_APP
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
       rnRuntime,
       "_REANIMATED_IS_REDUCED_MOTION",
-      nativeReanimatedModule->isReducedMotion());
+      reanimatedModuleProxy->isReducedMotion());
 
   rnRuntime.global().setProperty(
       rnRuntime,
       "__reanimatedModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+      jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
 }
 
 } // namespace reanimated

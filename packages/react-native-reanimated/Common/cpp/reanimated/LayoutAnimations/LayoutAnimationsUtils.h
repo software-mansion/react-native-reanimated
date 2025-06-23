@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -96,7 +95,6 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
@@ -137,11 +135,10 @@ static inline void updateLayoutMetrics(
 }
 
 static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
-  return !std::strcmp(
-             node->mutation.oldChildShadowView.componentName,
-             "RNSScreenStack") ||
-      !std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSScreen");
+  const auto &componentName = node->mutation.oldChildShadowView.componentName;
+  return !std::strcmp(componentName, "RNSScreenStack") ||
+      !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
 }
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {

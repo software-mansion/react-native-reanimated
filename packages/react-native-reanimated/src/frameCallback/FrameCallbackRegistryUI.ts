@@ -1,5 +1,5 @@
 'use strict';
-import { runOnUIImmediately } from '../threads';
+import { runOnUI } from 'react-native-worklets';
 
 type CallbackDetails = {
   callback: (frameInfo: FrameInfo) => void;
@@ -26,7 +26,7 @@ export interface FrameCallbackRegistryUI {
   manageStateFrameCallback: (callbackId: number, state: boolean) => void;
 }
 
-export const prepareUIRegistry = runOnUIImmediately(() => {
+export const prepareUIRegistry = runOnUI(() => {
   'worklet';
 
   const frameCallbackRegistry: FrameCallbackRegistryUI = {

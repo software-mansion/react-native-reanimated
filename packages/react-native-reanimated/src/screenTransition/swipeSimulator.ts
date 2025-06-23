@@ -1,11 +1,11 @@
 'use strict';
 import type {
+  LockAxis,
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
-  LockAxis,
 } from './commonTypes';
-import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 import { RNScreensTurboModule } from './RNScreensTurboModule';
+import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 
 const BASE_VELOCITY = 400;
 const ADDITIONAL_VELOCITY_FACTOR_X = 400;
@@ -21,7 +21,8 @@ function computeEasingProgress(
   if (Math.abs(distance) < 1) {
     return 1;
   }
-  const elapsedTime = (_getAnimationTimestamp() - startingTimestamp) / 1000;
+  const elapsedTime =
+    (globalThis._getAnimationTimestamp() - startingTimestamp) / 1000;
   const currentPosition = velocity * elapsedTime;
   const progress = currentPosition / distance;
   return progress;
@@ -76,7 +77,7 @@ export function getSwipeSimulator(
 ) {
   'worklet';
   const screenDimensions = screenTransitionConfig.screenDimensions;
-  const startTimestamp = _getAnimationTimestamp();
+  const startTimestamp = globalThis._getAnimationTimestamp();
   const { isTransitionCanceled } = screenTransitionConfig;
   const startingPosition = {
     x: event.translationX,

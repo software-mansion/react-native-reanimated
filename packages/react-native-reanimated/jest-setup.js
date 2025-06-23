@@ -1,4 +1,5 @@
 delete global.MessageChannel;
+require('react-native-worklets/jestSetup');
 require('./src/jestUtils').setUpTests();
 
 global.__reanimatedLoggerConfig = {

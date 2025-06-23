@@ -6,10 +6,12 @@ on:
     paths:
       - .github/workflows/example-next-build-check-and-test.yml
       - 'packages/react-native-reanimated/src/**'
-      - 'packages/react-native-reanimated/NextExample/**'
+      - 'packages/react-native-worklets/src/**'
+      - 'apps/next-example/**'
   push:
     branches:
       - main
+  workflow_call:
   workflow_dispatch:
 
 jobs:

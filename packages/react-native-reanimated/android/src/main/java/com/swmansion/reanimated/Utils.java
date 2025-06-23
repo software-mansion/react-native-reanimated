@@ -8,8 +8,6 @@ import java.util.Map;
 
 public class Utils {
 
-  public static boolean isChromeDebugger = false;
-
   public static Map<String, Integer> processMapping(ReadableMap style) {
     ReadableMapKeySetIterator iter = style.keySetIterator();
     HashMap<String, Integer> mapping = new HashMap<>();
@@ -45,5 +43,15 @@ public class Utils {
       return ((Double) value).floatValue();
     }
     return 0;
+  }
+
+  public static Runnable combineRunnables(final Runnable... runnables) {
+    return new Runnable() {
+      public void run() {
+        for (Runnable r : runnables) {
+          r.run();
+        }
+      }
+    };
   }
 }

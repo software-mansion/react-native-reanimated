@@ -1,0 +1,102 @@
+---
+sidebar_position: 1
+---
+
+# animationName
+
+`animationName` lets you specify keyframes for the animation.
+
+import AnimationNameBasic from '@site/src/examples/css-animations/AnimationNameBasic';
+import AnimationNameBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationNameBasic';
+
+<InteractiveExample
+  src={AnimationNameBasicSrc}
+  component={AnimationNameBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        // highlight-start
+        animationName: {
+          '100%': {
+            transform: [{ translateX: 100 }],
+          },
+        },
+        // highlight-end
+        animationDuration: '300ms',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+
+type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+
+type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
+  CSSAnimationKeyframeSelector,
+  CSSAnimationKeyframeBlock<S>
+>;
+```
+
+</details>
+
+### Values
+
+#### `<keyframes>`
+
+A JavaScript object with offset values used as keys and corresponding style properties as values. This object controls the intermediate steps of an animation by providing styles for animation steps. The keys of a keyframes object can be:
+
+- `<percentage>` - a string which is a number between `0` and `100` followed by `%`,
+- `from` - an alias for `0%` offset,
+- `to`- an alias for `100%` offset.
+- `<number>` - a floating-point number between `0` and `1`.
+
+Keyframes can be defined inline (and provided directly to `animationName` property) or as a separate variable:
+
+import CollapsibleCode from '@site/src/components/CollapsibleCode';
+
+<CollapsibleCode src={AnimationNameBasicSrc} showLines={[5, 13]} />
+
+```javascript
+animationName: pulse,
+```
+
+#### `<keyframes[]>`
+
+An array of keyframe objects. The order in this array corresponds to the array of style properties passed to the [`animationDuration`](/docs/next/css-animations/animation-duration).
+
+```javascript
+animationName: [fadeInOut, moveLeft, bounce],
+animationDuration: ['2.5s', '5s', '1s'],
+```
+
+#### `none`
+
+No animation.
+
+## Example
+
+import AnimationName from '@site/src/examples/css-animations/AnimationName';
+import AnimationNameSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationName';
+
+<InteractiveExample src={AnimationNameSrc} component={AnimationName} />
+
+## Remarks
+
+- At minimum 1 keyframe is required to create an animation. Reanimated will take the current state of the element as the first keyframe.
+- If multiple animations target the same property, the animation later in the array will override changes from the previous one.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

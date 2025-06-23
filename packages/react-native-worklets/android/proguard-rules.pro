@@ -1,0 +1,3 @@
+-keep class com.swmansion.worklets.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
+-keep class com.facebook.react.fabric.** { *; }

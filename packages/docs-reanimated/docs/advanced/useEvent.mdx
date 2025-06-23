@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # useEvent
 
-`useEvent` is a low-level hook. It returns event handler that will be called when native event occurs. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
+`useEvent` is a low-level hook. It returns an event handler that will be called when a native event occurs. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -63,22 +63,22 @@ type EventHandlerProcessed<
 
 #### `handler`
 
-Function that receives event object with native payload, that can be passed to custom handler hook's worklets.
+Function that receives an event object with a native payload, which can be passed to the custom handler hook's worklets.
 
 - `event` - event object.
   The payload can differ depending on the type of the event.
 
 #### `eventNames` <Optional/>
 
-Array of event names that will be handled by handler.
+Array of event names that will be handled by the handler.
 
 #### `rebuild` <Optional/>
 
-Value indicating whether handler should be rebuilt.
+Value indicating whether the handler should be rebuilt.
 
 ### Returns
 
-The hook returns event handler that will be invoked when native event is dispatched. That handler may be connected to multiple components and will be invoked for each one's specific events.
+The hook returns an event handler that will be invoked when a native event is dispatched. That handler may be connected to multiple components and will be invoked for each one's specific events.
 
 ## Example
 
@@ -87,7 +87,7 @@ import useEventSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExample'
 
 <InteractiveExample src={useEventSrc} component={useEvent} />
 
-This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/).
 
 ## Remarks
 

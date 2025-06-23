@@ -1,20 +1,19 @@
 'use strict';
 
-import type { StyleProps } from '../commonTypes';
-import { isSharedValue } from '../isSharedValue';
-import { isChromeDebugger } from '../PlatformChecker';
-import { WorkletEventHandler } from '../WorkletEventHandler';
 import { initialUpdaterRun } from '../animation';
-import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
+import type { StyleProps } from '../commonTypes';
+import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
+import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
-  InitialComponentProps,
   IAnimatedComponentInternal,
+  InitialComponentProps,
   IPropsFilter,
 } from './commonTypes';
+import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
 import { flattenArray, has } from './utils';
-import { StyleSheet } from 'react-native';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -22,7 +21,7 @@ function dummyListener() {
 }
 
 export class PropsFilter implements IPropsFilter {
-  private _initialStyle = {};
+  private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
 
   public filterNonAnimatedProps(
     component: React.Component<unknown, unknown> & IAnimatedComponentInternal
@@ -30,29 +29,34 @@ export class PropsFilter implements IPropsFilter {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;
     const props: Record<string, unknown> = {};
+
     for (const key in inputProps) {
       const value = inputProps[key];
       if (key === 'style') {
         const styleProp = inputProps.style;
         const styles = flattenArray<StyleProps>(styleProp ?? []);
+
         const processedStyle: StyleProps[] = styles.map((style) => {
           if (style && style.viewDescriptors) {
-            // this is how we recognize styles returned by useAnimatedStyle
+            const handle = style as AnimatedStyleHandle;
+
             if (component._isFirstRender) {
-              this._initialStyle = {
-                ...style.initial.value,
-                ...this._initialStyle,
-                ...initialUpdaterRun<StyleProps>(style.initial.updater),
-              };
+              this._initialPropsMap.set(handle, {
+                ...handle.initial.value,
+                ...initialUpdaterRun(handle.initial.updater),
+              } as StyleProps);
             }
-            return this._initialStyle;
+
+            return this._initialPropsMap.get(handle) ?? {};
           } else if (hasInlineStyles(style)) {
             return getInlineStyle(style, component._isFirstRender);
           } else {
             return style;
           }
         });
-        props[key] = StyleSheet.flatten(processedStyle);
+        // keep styles as they were passed by the user
+        // it will help other libs to interpret styles correctly
+        props[key] = processedStyle;
       } else if (key === 'animatedProps') {
         const animatedProp = inputProps.animatedProps as Partial<
           AnimatedComponentProps<AnimatedProps>
@@ -82,7 +86,7 @@ export class PropsFilter implements IPropsFilter {
         if (component._isFirstRender) {
           props[key] = value.value;
         }
-      } else if (key !== 'onGestureHandlerStateChange' || !isChromeDebugger()) {
+      } else {
         props[key] = value;
       }
     }

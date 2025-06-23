@@ -1,0 +1,24 @@
+diff --git a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
+index aad38b2bf38cec3bc9fd90301b49b368c483f673..8ec286a78bb4d61313e1f45cc796da844f3b623f 100644
+--- a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
++++ b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
+@@ -37,7 +37,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>(), RNCViewPa
+         return PagerViewViewManagerImpl.NAME
+     }
+ 
+-    override fun receiveCommand(root: NestedScrollableHost, commandId: String?, args: ReadableArray?) {
++    override fun receiveCommand(root: NestedScrollableHost, commandId: String, args: ReadableArray?) {
+         mDelegate.receiveCommand(root, commandId, args)
+     }
+ 
+@@ -98,10 +98,6 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>(), RNCViewPa
+         return PagerViewViewManagerImpl.getChildAt(parent, index)
+     }
+ 
+-    override fun removeView(parent: NestedScrollableHost, view: View) {
+-        PagerViewViewManagerImpl.removeView(parent, view)
+-    }
+-
+     override fun removeAllViews(parent: NestedScrollableHost) {
+         PagerViewViewManagerImpl.removeAllViews(parent)
+     }

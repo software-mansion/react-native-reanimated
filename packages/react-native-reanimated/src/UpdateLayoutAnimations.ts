@@ -1,18 +1,14 @@
 'use strict';
-import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { SHOULD_BE_USE_WEB } from './common';
+import type {
+  LayoutAnimationBatchItem,
+  LayoutAnimationFunction,
+  LayoutAnimationType,
+} from './commonTypes';
 import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
 } from './core';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from './layoutReanimation';
-import type {
-  LayoutAnimationBatchItem,
-  ProgressAnimationCallback,
-  SharedTransitionAnimationsFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -29,7 +25,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        isFabric() ? this.flush() : setImmediate(this.flush);
+        this.flush();
       }
     },
     flush(this: void) {
@@ -49,11 +45,8 @@ function createUpdateManager() {
  * @param viewTag - The tag of the component you'd like to configure.
  * @param type - The type of the animation you'd like to configure -
  *   {@link LayoutAnimationType}.
- * @param config - The animation configuration - {@link LayoutAnimationFunction},
- *   {@link SharedTransitionAnimationsFunction}, {@link ProgressAnimationCallback}
+ * @param config - The animation configuration - {@link LayoutAnimationFunction}
  *   or {@link Keyframe}. Passing `undefined` will remove the animation.
- * @param sharedTransitionTag - The tag of the shared element transition you'd
- *   like to configure. Passing `undefined` will remove the transition.
  * @param isUnmounting - Determines whether the configuration should be included
  *   at the end of the batch, after all the non-deferred configurations (even
  *   those that were updated later). This is used to retain the correct ordering
@@ -62,34 +55,22 @@ function createUpdateManager() {
 export let updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?:
-    | Keyframe
-    | LayoutAnimationFunction
-    | SharedTransitionAnimationsFunction
-    | ProgressAnimationCallback,
-  sharedTransitionTag?: string,
+  config?: Keyframe | LayoutAnimationFunction,
   isUnmounting?: boolean
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op
   };
 } else {
   const updateLayoutAnimationsManager = createUpdateManager();
-  updateLayoutAnimations = (
-    viewTag,
-    type,
-    config,
-    sharedTransitionTag,
-    isUnmounting
-  ) =>
+  updateLayoutAnimations = (viewTag, type, config, isUnmounting) =>
     updateLayoutAnimationsManager.update(
       {
         viewTag,
         type,
         config: config ? makeShareableCloneRecursive(config) : undefined,
-        sharedTransitionTag,
       },
       isUnmounting
     );

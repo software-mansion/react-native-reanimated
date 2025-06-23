@@ -1,24 +1,19 @@
 <img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
 
-### React Native's Animated library reimplemented
+### Create smooth animations with an excellent developer experience.
 
-> Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
-
-React Native Reanimated provides a more comprehensive,
-low level abstraction for the Animated library API to be built
-on top of and hence allow for much greater flexibility especially when it
-comes to gesture based interactions.
+> Reanimated 4 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 
 ### Nightly CI state
 
 [![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
+[![NPM Worklets publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml)
+[![Lint clang-tidy [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 [![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
-[![Monorepo app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/monorepo-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/monorepo-app-reanimated-build-check-nightly.yml)
-[![Static framework Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml)
+[![Use frameworks Reanimated build check [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/use-frameworks-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/use-frameworks-reanimated-build-check-nightly.yml)
 [![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
 [![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
 [![Reanimated TypeScript compatibility test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml)
-[![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml)
 [![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
@@ -26,9 +21,11 @@ comes to gesture based interactions.
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.
 
-## Fabric
+## Compatibility
 
-'react-native-reanimated' works with Fabric (the New Architecture). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](apps/fabric-example/README.md).
+React Native Reanimated 4.x supports only the [New React Native architecture](https://reactnative.dev/architecture/landing-page) and three latest React Native versions.
+
+If your app still runs on the old architecture, please consider adopting the New Architecture or stay with latest 3.x release.
 
 ## Documentation
 
@@ -37,7 +34,7 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/fabric-example/README.md) for installation instructions.
 
 ## License
 

@@ -1,15 +1,14 @@
 'use strict';
+import { IS_WEB } from '../../common';
 import type {
   AnimatableValue,
-  AnimationObject,
   Animation,
+  AnimationObject,
   ReduceMotion,
-  Timestamp,
   RequiredKeys,
+  Timestamp,
 } from '../../commonTypes';
-import { isWeb } from '../../PlatformChecker';
 
-const IS_WEB = isWeb();
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 
@@ -18,7 +17,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: AnimatableValue;
+  current: AnimatableValue | undefined;
 }
 
 export interface InnerDecayAnimation

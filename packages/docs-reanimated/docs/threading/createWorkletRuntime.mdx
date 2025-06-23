@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # createWorkletRuntime
 
-`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/fundamentals/glossary#javascript-thread) or [UI thread](/docs/fundamentals/glossary#ui-thread). This function is supposed to be used by third-party libraries that need to integrate with worklets. The return value represents the runtime and it's supposed to be passed to C++ side using JSI (JavaScript Interface) for further operations.
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklets](/docs/next/fundamentals/glossary#worklet) possibly on different threads than [JS](/docs/next/fundamentals/glossary#javascript-thread) or [UI thread](/docs/next/fundamentals/glossary#ui-thread). This function is supposed to be used by third-party libraries that need to integrate with worklets. The return value represents the runtime and it's supposed to be passed to C++ side using JSI (JavaScript Interface) for further operations.
 
 ## Reference
 
@@ -68,6 +68,8 @@ An optional worklet that will be run synchronously on the same thread immediatel
 - In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
 
 - You can use Chrome DevTools to debug the runtime (Hermes only). The runtime will appear in the devices list as `name` passed to `createWorkletRuntime`.
+
+- [Shared values](/docs/next/fundamentals/glossary#shared-value) are only partially supported in worklet runtimes. If you want to write to a shared value from the RN runtime and read it on the worklet runtime, you need to perform the assignment using [`runOnRuntime`](/docs/next/threading/runOnRuntime). Otherwise, the value will be updated only in the RN and UI runtimes.
 
 ## Platform compatibility
 

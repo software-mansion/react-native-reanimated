@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Button } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-hooks';
+import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
+import { Button, View } from 'react-native';
+
 import type { SharedValue } from '../src';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from '../src';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../src';
 import { getAnimatedStyle } from '../src/jestUtils';
 
 interface Props {
@@ -66,12 +67,14 @@ describe('Tests of animations', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const view = getByTestId('view');
     const button = getByTestId('button');
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
     fireEvent.press(button);
     jest.advanceTimersByTime(600);
     style.width = 100;
     expect(view).toHaveAnimatedStyle(style);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, get animated style', () => {
@@ -82,6 +85,8 @@ describe('Tests of animations', () => {
     jest.advanceTimersByTime(600);
     const style = getAnimatedStyle(view);
     expect(style.width).toBe(100);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, width in a middle of animation', () => {
@@ -91,7 +96,7 @@ describe('Tests of animations', () => {
     const view = getByTestId('view');
     const button = getByTestId('button');
 
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
 
     fireEvent.press(button);
@@ -99,6 +104,8 @@ describe('Tests of animations', () => {
 
     style.width = 50; // value of component width after 150ms of animation
     expect(view).toHaveAnimatedStyle(style);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, compare all styles', () => {
@@ -112,6 +119,8 @@ describe('Tests of animations', () => {
     jest.advanceTimersByTime(250);
     style.width = 50; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style, { shouldMatchAllProps: true });
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, define shared value outside component', () => {
@@ -129,6 +138,11 @@ describe('Tests of animations', () => {
     fireEvent.press(button);
     jest.advanceTimersByTime(600);
     expect(view).toHaveAnimatedStyle({ width: 100 });
+    const rendered = render(
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
+      <AnimatedSharedValueComponent sharedValue={sharedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, change shared value outside component', () => {
@@ -145,5 +159,10 @@ describe('Tests of animations', () => {
     sharedValue.value = 50;
     jest.advanceTimersByTime(600);
     expect(view).toHaveAnimatedStyle({ width: 50 });
+    const rendered = render(
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
+      <AnimatedSharedValueComponent sharedValue={sharedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

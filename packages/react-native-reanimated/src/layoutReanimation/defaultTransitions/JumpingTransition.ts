@@ -1,9 +1,9 @@
 'use strict';
+import { withSequence, withTiming } from '../../animation';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
-import { withSequence, withTiming } from '../../animation';
+} from '../../commonTypes';
 import { Easing } from '../../Easing';
 import { BaseAnimationBuilder } from '../animationBuilder';
 

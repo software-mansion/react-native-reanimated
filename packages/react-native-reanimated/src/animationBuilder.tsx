@@ -1,14 +1,15 @@
 'use strict';
+import { logger } from 'react-native-worklets';
+
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
-} from './layoutReanimation';
-import type { StyleProps } from './commonTypes';
+  LayoutAnimationValues,
+  StyleProps,
+} from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
-import { logger } from './logger';
 
-const mockTargetValues: LayoutAnimationsValues = {
+const mockTargetValues: LayoutAnimationValues = {
   targetOriginX: 0,
   targetOriginY: 0,
   targetWidth: 0,

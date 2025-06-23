@@ -1,4 +1,3 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 namespace reanimated {
@@ -31,7 +30,13 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
 }
 
 void Node::applyMutationToIndices(ShadowViewMutation mutation) {
-  if (tag != mutation.parentShadowView.tag) {
+#if REACT_NATIVE_MINOR_VERSION >= 78
+  const auto parentTag = mutation.parentTag;
+#else
+  const auto parentTag = mutation.parentShadowView.tag;
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
+
+  if (tag != parentTag) {
     return;
   }
 
@@ -81,5 +86,3 @@ bool MutationNode::isMutationMode() {
   return true;
 }
 } // namespace reanimated
-
-#endif

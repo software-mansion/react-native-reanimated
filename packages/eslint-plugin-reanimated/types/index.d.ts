@@ -10,4 +10,14 @@ export declare const rules: {
     [],
     TSESLint.RuleListener
   >;
+  'use-worklets-error': TSESLint.RuleModule<
+    'useWorkletsError',
+    [],
+    TSESLint.RuleListener
+  >;
+  'use-global-this': TSESLint.RuleModule<
+    'useGlobalThis',
+    [],
+    TSESLint.RuleListener
+  >;
 };

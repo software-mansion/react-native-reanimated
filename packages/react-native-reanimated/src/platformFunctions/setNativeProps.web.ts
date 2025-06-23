@@ -1,9 +1,10 @@
 'use strict';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
-import { _updatePropsJS } from '../js-reanimated';
+import type { Component } from 'react';
+
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
-import type { Component } from 'react';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
 export function setNativeProps<T extends Component>(
   animatedRef: AnimatedRef<T>,

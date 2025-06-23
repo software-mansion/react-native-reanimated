@@ -1,11 +1,12 @@
 'use strict';
 import { useEffect } from 'react';
+import { logger } from 'react-native-worklets';
+
 import { ReduceMotion } from '../commonTypes';
 import {
-  ReducedMotionManager,
   isReducedMotionEnabledInSystem,
+  ReducedMotionManager,
 } from '../ReducedMotion';
-import { logger } from '../logger';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally
@@ -13,7 +14,7 @@ import { logger } from '../logger';
  *
  * @param mode - Determines default reduce motion behavior globally in your
  *   application. Configured with {@link ReduceMotion} enum.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReducedMotionConfig
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/device/ReducedMotionConfig
  */
 export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
   useEffect(() => {

@@ -17,6 +17,8 @@ on:
       - '.github/workflows/yarn-validation.yml'
       - '**/package.json'
       - '**/yarn.lock'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:
@@ -33,7 +35,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v41
+        uses: tj-actions/changed-files@v46
         with:
           files: |
             **/package.json

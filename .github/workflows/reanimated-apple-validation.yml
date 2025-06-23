@@ -23,17 +23,24 @@ on:
   merge_group:
     branches:
       - main
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:
     if: github.repository == 'software-mansion/react-native-reanimated'
+    env:
+      REANIMATED_DIR: packages/react-native-reanimated
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
       - name: Lint apple
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn lint:apple

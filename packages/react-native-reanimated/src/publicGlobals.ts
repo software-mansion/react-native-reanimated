@@ -1,5 +1,6 @@
 'use strict';
 /* eslint-disable no-var */
+/* eslint-disable reanimated/use-global-this */
 export {};
 
 declare global {
@@ -20,4 +21,7 @@ declare global {
    * Reanimated UI runtime.
    */
   var _WORKLET_RUNTIME: ArrayBuffer;
+
+  /** @deprecated Don't use. */
+  var _IS_FABRIC: boolean | undefined;
 }
