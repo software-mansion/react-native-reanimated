@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { runOnUI, useSharedValue } from 'react-native-reanimated';
+import { makeShareableCloneRecursive, runOnUI, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 
@@ -323,6 +323,70 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
+  test('makeShareableCloneSet', async () => {
+    // Arrange
+    const setValue = new Set([1, '1', true]);
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [
+            setValue.has(1),
+            setValue.has('1'),
+            setValue.has(true),
+            // setValue.has(/1/),
+            setValue.size === 3,
+            typeof setValue === 'object',
+            setValue instanceof Set,
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await wait(100);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
+  test('makeShareableCloneMap', async () => {
+    // Arrange
+    const mapValue = new Map<any, any>([
+      [1, 2],
+      ['1', '2'],
+      [true, false],
+    ]);
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [
+            mapValue.get(1) === 2,
+            mapValue.get('1') === '2',
+            mapValue.get(true) === false,
+            // mapValue.get(/1/).toString() === '/2/',
+            mapValue.size === 3,
+            typeof mapValue === 'object',
+            mapValue instanceof Map,
+          ];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await wait(100);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
   test('makeShareableCloneError', async () => {
     // Arrange
     const errorValue = new Error('test');
@@ -607,15 +671,19 @@ describe('Test makeShareableClone', () => {
 
   test('makeShareableInaccessibleObject', async () => {
     // Arrange
-    const set = new Set();
+    class Inaccessible {
+      access() {
+        return true;
+      }
+    }
+    const inaccessibleObject = new Inaccessible();
 
     // Act
     await render(
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          set.has(42);
-          return true;
+          return inaccessibleObject.access();
         }}
       />,
     );
