@@ -23,7 +23,6 @@ const rule: TSESLint.RuleModule<'useGlobalThis', []> = {
   },
   meta: {
     docs: {
-      recommended: 'recommended',
       description:
         'Warns when `_WORKLET` is used instead of `globalThis._WORKLET`.',
     },
