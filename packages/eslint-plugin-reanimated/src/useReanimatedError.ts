@@ -25,7 +25,6 @@ const rule: TSESLint.RuleModule<'useReanimatedError', []> = {
   },
   meta: {
     docs: {
-      recommended: 'recommended',
       description:
         'Warns when `new Error` is used instead of `new ReanimatedError`.',
     },
