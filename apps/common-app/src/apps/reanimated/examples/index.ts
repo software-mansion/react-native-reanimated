@@ -79,6 +79,7 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -111,6 +112,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
@@ -135,6 +137,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  ThirdPartyComponentsExample: {
+    icon: '3️⃣',
+    title: 'Third party components',
+    screen: ThirdPartyComponentsExample,
   },
   RuntimeTests: {
     icon: '⚙️',
@@ -713,5 +720,9 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
   },
 } as const;

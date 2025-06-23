@@ -61,7 +61,6 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
     let DOMElement: HTMLElement | null = null;
 
     if (SHOULD_BE_USE_WEB) {
@@ -85,10 +84,9 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
-      viewConfig = viewInfo.viewConfig;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
+    this._viewInfo = { viewTag, shadowNodeWrapper };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }
