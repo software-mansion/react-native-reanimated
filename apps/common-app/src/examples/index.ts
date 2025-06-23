@@ -78,6 +78,7 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -619,6 +620,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Transform origin example',
     screen: TransformOriginExample,
   },
+    ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
+  },
 
   // Layout Animations
 
@@ -825,5 +830,4 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
     missingOnFabric: true,
-  },
 } as const;
