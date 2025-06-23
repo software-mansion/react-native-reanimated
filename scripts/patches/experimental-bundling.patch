@@ -1,0 +1,119 @@
+diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
+index 3f9815cbf9..2e511df5ee 100644
+--- a/apps/fabric-example/android/gradle.properties
++++ b/apps/fabric-example/android/gradle.properties
+@@ -44,4 +44,4 @@ isReanimatedExampleApp=true
+ enableReanimatedProfiling=true
+ 
+ # Uncomment the next line to enable experimental bundling.
+-# workletsExperimentalBundling=true
++workletsExperimentalBundling=true
+diff --git a/apps/fabric-example/android/settings.gradle b/apps/fabric-example/android/settings.gradle
+index afaf8c45a5..c3c5434878 100644
+--- a/apps/fabric-example/android/settings.gradle
++++ b/apps/fabric-example/android/settings.gradle
+@@ -7,11 +7,11 @@ includeBuild('../../../node_modules/@react-native/gradle-plugin')
+ 
+ // Build from source (https://reactnative.dev/contributing/how-to-build-from-source)
+ // NOTE: Please do not remove these lines even though they are commented out.
+-// includeBuild('../../../node_modules/react-native') {
+-//     dependencySubstitution {
+-//         substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+-//         substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+-//         substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+-//         substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+-//     }
+-// }
++includeBuild('../../../node_modules/react-native') {
++    dependencySubstitution {
++        substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
++        substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
++        substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
++        substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
++    }
++}
+diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
+index d2b64b31e2..a61e28c344 100644
+--- a/apps/fabric-example/babel.config.js
++++ b/apps/fabric-example/babel.config.js
+@@ -6,7 +6,7 @@ module.exports = {
+       'react-native-worklets/plugin',
+       {
+         // Uncomment the next line to enable experimental bundling.
+-        // experimentalBundling: true,
++        experimentalBundling: true,
+       },
+     ],
+     [
+diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
+index 1a989a2d22..1f5c0c176f 100644
+--- a/apps/fabric-example/ios/Podfile
++++ b/apps/fabric-example/ios/Podfile
+@@ -10,7 +10,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
+ ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
+ 
+ # Uncomment the next line to enable experimental bundling.
+-# ENV['WORKLETS_EXPERIMENTAL_BUNDLING'] = '1'
++ENV['WORKLETS_EXPERIMENTAL_BUNDLING'] = '1'
+ 
+ platform :ios, min_ios_version_supported
+ prepare_react_native_project!
+diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
+index d15ee403d5..e0f24cf31f 100644
+--- a/apps/fabric-example/metro.config.js
++++ b/apps/fabric-example/metro.config.js
+@@ -24,30 +24,30 @@ const config = {
+   },
+   // Uncomment the following to enable experimental bundling.
+   // --------------------------------------------------------
+-  // serializer: {
+-  //   getModulesRunBeforeMainModule() {
+-  //     return [
+-  //       require.resolve('react-native-worklets/src/workletRuntimeEntry.ts'),
+-  //     ];
+-  //   },
+-  //   createModuleIdFactory() {
+-  //     let nextId = 0;
+-  //     const idFileMap = new Map();
+-  //     return (/** @type {string} */ moduleName) => {
+-  //       if (idFileMap.has(moduleName)) {
+-  //         return idFileMap.get(moduleName);
+-  //       }
+-  //       if (moduleName.includes('react-native-worklets/__generatedWorklets/')) {
+-  //         const base = path.basename(moduleName, '.js');
+-  //         const id = Number(base);
+-  //         idFileMap.set(moduleName, id);
+-  //         return id;
+-  //       }
+-  //       idFileMap.set(moduleName, nextId++);
+-  //       return idFileMap.get(moduleName);
+-  //     };
+-  //   },
+-  // },
++  serializer: {
++    getModulesRunBeforeMainModule() {
++      return [
++        require.resolve('react-native-worklets/src/workletRuntimeEntry.ts'),
++      ];
++    },
++    createModuleIdFactory() {
++      let nextId = 0;
++      const idFileMap = new Map();
++      return (/** @type {string} */ moduleName) => {
++        if (idFileMap.has(moduleName)) {
++          return idFileMap.get(moduleName);
++        }
++        if (moduleName.includes('react-native-worklets/__generatedWorklets/')) {
++          const base = path.basename(moduleName, '.js');
++          const id = Number(base);
++          idFileMap.set(moduleName, id);
++          return id;
++        }
++        idFileMap.set(moduleName, nextId++);
++        return idFileMap.get(moduleName);
++      };
++    },
++  },
+   // --------------------------------------------------------
+   server: {
+     enhanceMiddleware: (middleware) => {
