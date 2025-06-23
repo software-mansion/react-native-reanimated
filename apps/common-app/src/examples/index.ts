@@ -620,7 +620,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Transform origin example',
     screen: TransformOriginExample,
   },
-    ModalExitingExample: {
+  ModalExitingExample: {
     title: '[LA] Modal exiting example',
     screen: ModalExitingExample,
   },
@@ -830,4 +830,5 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
     missingOnFabric: true,
+  },
 } as const;
