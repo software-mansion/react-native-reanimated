@@ -9757,7 +9757,7 @@ __metadata:
     jest: "npm:^29.6.3"
     madge: "npm:^5.0.1"
     patch-package: "npm:^8.0.0"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:^3.5.3"
     react: "npm:19.1.0"
     react-native: "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch"
     react-native-gesture-handler: "npm:2.26.0"
