@@ -1,6 +1,5 @@
 import './types';
 
-import { useEffect } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';

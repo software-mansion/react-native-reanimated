@@ -79,6 +79,7 @@ export class TestRunner {
   }
 
   public useTestRef(name: string): MutableRefObject<Component | null> {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const ref = useRef(null);
     assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;

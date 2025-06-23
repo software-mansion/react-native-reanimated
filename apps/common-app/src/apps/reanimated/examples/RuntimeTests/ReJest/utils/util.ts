@@ -6,6 +6,7 @@ export function convertDecimalColor(color: unknown): string {
     return `${color?.toString()}`;
   }
 
+  // eslint-disable-next-line no-bitwise
   const posColor = color >= 0 ? color : 0xffffff & color;
   let hexColor = posColor.toString(16);
 

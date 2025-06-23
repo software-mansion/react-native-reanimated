@@ -4,17 +4,13 @@ import { globalIgnores } from 'eslint/config';
 import jsdoc from 'eslint-plugin-jsdoc';
 import tsdoc from 'eslint-plugin-tsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
-// @ts-ignore no types for this plugin
 import reactNative from 'eslint-plugin-react-native';
 import jest from 'eslint-plugin-jest';
-// @ts-ignore no types for this plugin
 import globals from 'globals';
-// @ts-ignore no types for this plugin
 import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
 import nodePlugin from 'eslint-plugin-n';
-// @ts-ignore no types for this plugin
 import pluginPromise from 'eslint-plugin-promise';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
@@ -171,7 +167,6 @@ const config = tsEslint.config(
 
   {
     files: ['**/*.js', '**/*.jsx'],
-    // @ts-ignore
     extends: [jsdoc.configs['flat/recommended']],
     plugins: { jsdoc },
     rules: {
@@ -179,7 +174,6 @@ const config = tsEslint.config(
       'no-unused-vars': 'off',
     },
   },
-  // @ts-ignore
   globalIgnores([
     '**/build/**',
     '**/coverage/**',

@@ -33,7 +33,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'yarn'
-          node-version: 22
 
       # Setup repo
       - name: Install dependencies

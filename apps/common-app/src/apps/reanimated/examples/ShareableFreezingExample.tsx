@@ -118,6 +118,7 @@ function tryModifyConvertedRegExpLiteral() {
 }
 
 function tryModifyConvertedRegExpInstance() {
+  // eslint-disable-next-line prefer-regex-literals
   const obj = new RegExp('a');
   makeShareableCloneRecursive(obj);
   // @ts-expect-error It's ok

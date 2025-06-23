@@ -53,7 +53,7 @@ describe('Test setting different values as sharedValue', () => {
     async testedValue => {
       await expect(async () => {
         await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
-
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
         await render(<ProgressBar progress={0} />);
       }).toThrow(

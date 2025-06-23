@@ -1,30 +1,24 @@
 import jsEslint from '@eslint/js';
 import tsEslint from 'typescript-eslint';
-// @ts-expect-error
 import reactNative from 'eslint-plugin-react-native';
 import { fixupPluginRules } from '@eslint/compat';
 import { globalIgnores } from 'eslint/config';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-// @ts-expect-error
 import reanimated from 'eslint-plugin-reanimated';
-// @ts-expect-error
 import noInlineStyles from 'eslint-plugin-no-inline-styles';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 /** @type {import('typescript-eslint').ConfigWithExtends[]} */
 export default tsEslint.config(
   jsEslint.configs.recommended,
+  react.configs.flat.recommended,
+  eslintPluginPrettierRecommended,
+  reactHooks.configs['recommended-latest'],
   {
-    // @ts-expect-error
-    extends: [eslintPluginPrettierRecommended, react.configs.flat.recommended],
     languageOptions: {
       globals: {
         React: true,
-      },
-      parserOptions: {
-        parser: tsEslint.parser,
-        project: '../../../tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
@@ -43,7 +37,11 @@ export default tsEslint.config(
       'react/jsx-fragments': ['error', 'syntax'],
       'react/prop-types': 'off',
       'react/display-name': 'off',
+      'no-new-wrappers': 'error',
       'reanimated/animated-style-non-animated-component': 'error',
+      'prefer-regex-literals': 'error',
+      'no-bitwise': 'error',
+      'no-useless-constructor': 'error',
     },
     settings: {
       'import/parsers': {
@@ -61,8 +59,14 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/**/*.tsx'],
     extends: [tsEslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        project: '../../../tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
       'no-unused-vars': 'warn',

@@ -54,6 +54,7 @@ const NOT_NUMBERS = [Infinity, -Infinity, NaN];
 // #region strings
 const TYPICAL_STRINGS = ['Aaaaaaa\n \t\t \v aaaaaa', 'Super long'.repeat(10000000), '', 'A string primitive'];
 
+// eslint-disable-next-line no-new-wrappers
 const STRING_OBJECTS = [new String('A String object')];
 
 const EMOJI_STRINGS = ['Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦', '👨‍👨‍👧‍👦', '😎', '👩🏽‍🏫'];
@@ -153,6 +154,7 @@ const DATES = [
   new Date(1999, 120, 17, 33, 54, 12),
 ];
 
+// eslint-disable-next-line prefer-regex-literals
 const REGEXPS = [/ab+c/i, new RegExp('ab+c', 'i'), new RegExp(/ab+c/, 'i'), /\d/y];
 
 // const MAX_SIZE_OF_ARRAY = Math.pow(2, 31) - 1;

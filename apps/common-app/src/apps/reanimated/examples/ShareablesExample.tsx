@@ -275,6 +275,7 @@ function RegExpDemo() {
   const handlePress = () => {
     const regex1 = /test/;
 
+    // eslint-disable-next-line prefer-regex-literals
     const regex2 = new RegExp('test');
     runOnUI(() => {
       'worklet';
