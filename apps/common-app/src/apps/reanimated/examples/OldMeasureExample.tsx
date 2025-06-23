@@ -27,13 +27,11 @@ function createSharedVariables() {
   const contentHeights = indices.map(() => useSharedValue(0));
 
   const contentHeightsCopy = contentHeights;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const result = [useSharedValue(0)];
   for (let i = 1; i < indices.length; i++) {
     const previousHeight = result[i - 1];
     const previousContentHeight = contentHeightsCopy[i - 1];
     result.push(
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       useDerivedValue(() => {
         return (
           previousHeight.value +

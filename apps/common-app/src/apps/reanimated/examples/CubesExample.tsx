@@ -207,7 +207,6 @@ function CubeWithEulerAngles() {
   });
 
   const sidesStyles = sidesRotations.map((rotation, i) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     useAnimatedStyle(() => {
       const pitch = animatedSensor.sensor.value.pitch;
       const roll = animatedSensor.sensor.value.roll;
@@ -247,7 +246,6 @@ function CubeWithQuaternions() {
   });
 
   const sidesStyles = sidesRotations.map((rotation, i) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     useAnimatedStyle(() => {
       const sideLength = 100;
       const origin = { x: 0, y: 0, z: -sideLength / 2 };

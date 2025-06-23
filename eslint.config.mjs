@@ -74,7 +74,6 @@ const jsDocRules = {
   'jsdoc/tag-lines': 'off',
   'jsdoc/require-param-description': 'off',
   'jsdoc/require-returns-description': 'off',
-  // 'jsdoc/require-jsdoc': 'off',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */

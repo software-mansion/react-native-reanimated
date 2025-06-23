@@ -1,5 +1,6 @@
 import './types';
 
+import { useEffect } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';
@@ -22,6 +23,8 @@ import { EXAMPLES } from './examples';
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
+
+const dupa = 1;
 
 interface HomeScreenProps {
   navigation:

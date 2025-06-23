@@ -20,7 +20,6 @@ import { globalIgnores } from 'eslint/config';
 export default tsEslint.config(
   jsEslint.configs.recommended,
   // @ts-ignore
-  perfectionist.configs['recommended-natural'],
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
   eslintPluginPrettierRecommended,
@@ -38,6 +37,7 @@ export default tsEslint.config(
       'react-native': fixupPluginRules(reactNative),
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
+      perfectionist,
     },
     rules: {
       camelcase: [
@@ -172,6 +172,7 @@ export default tsEslint.config(
       'no-undef-init': ['error'],
       'no-underscore-dangle': ['error'],
       'no-unexpected-multiline': ['error'],
+      'import/no-unresolved': 'warn',
       'no-unreachable-loop': [
         'error',
         {
@@ -186,7 +187,6 @@ export default tsEslint.config(
           allowTernary: true,
         },
       ],
-      'no-unused-vars': 'off',
       'no-useless-escape': ['error'],
       'no-void': [
         'error',
@@ -254,7 +254,7 @@ export default tsEslint.config(
         },
       ],
       strict: ['error', 'never'],
-      'unused-imports/no-unused-imports': 'warn',
+      'unused-imports/no-unused-imports': 'error',
       'use-isnan': ['error'],
       'valid-typeof': [
         'error',
@@ -279,7 +279,7 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: [tsEslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
@@ -326,10 +326,12 @@ export default tsEslint.config(
           ignoreMixedLogicalExpressions: true,
         },
       ],
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      'no-underscore-dangle': 'warn',
     },
+    ignores: ['**/apps/reanimated/**'],
   },
-  globalIgnores([
-    '**/eslint.config.mjs',
-    'index.ts',
-  ])
+  globalIgnores(['**/eslint.config.mjs'])
 );

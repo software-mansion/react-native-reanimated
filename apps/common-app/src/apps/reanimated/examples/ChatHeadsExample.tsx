@@ -92,6 +92,7 @@ function ChatHeads({
     <>
       {childrenArray.length > 1 && (
         <Followers
+          // eslint-disable-next-line react/no-children-prop
           children={childrenArray.slice(1)}
           transX={transX}
           transY={transY}
@@ -141,6 +142,7 @@ function Followers({
     <>
       {childrenArray.length > 1 && (
         <Followers
+          // eslint-disable-next-line react/no-children-prop
           children={childrenArray.slice(1)}
           transX={myTransX}
           transY={myTransY}

@@ -76,6 +76,7 @@ function CreateWorkletRuntimeDemo() {
     console.log(runtime.name);
     // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
     console.log(`${runtime}`);
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
     console.log(String(runtime));
   };
 
@@ -121,7 +122,7 @@ function PerformanceNowDemo() {
     });
     runOnUI(() => {
       console.log('UI', performance.now());
-      // @ts-ignore it works
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       console.log('AT', global._getAnimationTimestamp());
     })();
   };
