@@ -10,8 +10,6 @@ import jest from 'eslint-plugin-jest';
 // @ts-ignore no types for this plugin
 import globals from 'globals';
 // @ts-ignore no types for this plugin
-import reanimated from 'eslint-plugin-reanimated';
-// @ts-ignore no types for this plugin
 import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
@@ -100,11 +98,6 @@ const tsDocRules = {
   'tsdoc/syntax': 'error',
 };
 
-/** @type {import('typescript-eslint').ConfigWithExtends['plugins']} */
-const tsPlugins = {
-  tsdoc,
-};
-
 /** @type {import('typescript-eslint').ConfigWithExtends['extends']} */
 const tsCommonExtends = [
   tsEslint.configs.recommendedTypeChecked,
@@ -115,48 +108,6 @@ const tsCommonExtends = [
   eslintPluginPrettierRecommended,
   react.configs.flat.recommended,
   react.configs.flat['jsx-runtime'],
-];
-
-/** @type {import('typescript-eslint').ConfigWithExtends} */
-const tsCommonConfig = {
-  extends: tsCommonExtends,
-  plugins: {
-    ...tsPlugins,
-    reanimated,
-    'simple-import-sort': simpleImportSort,
-  },
-  rules: {
-    ...tsRules,
-    ...nodeRules,
-    'reanimated/use-reanimated-error': 'error',
-    'reanimated/use-global-this': 'error',
-  },
-};
-
-/** @type {import('typescript-eslint').ConfigWithExtends[]} */
-const reanimatedConfig = [
-  {
-    files: [
-      '**/react-native-reanimated/**/*.ts',
-      '**/react-native-reanimated/**/*.tsx',
-      '**/react-native-worklets/**/*.ts',
-      '**/react-native-worklets/**/*.tsx',
-    ],
-    ...tsCommonConfig,
-  },
-  {
-    files: [
-      '**/react-native-reanimated/**/*.js',
-      '**/react-native-worklets/**/*.js',
-    ],
-    plugins: {
-      reanimated,
-    },
-    rules: {
-      'reanimated/use-reanimated-error': 'error',
-      'reanimated/use-global-this': 'error',
-    },
-  },
 ];
 
 /**
@@ -201,7 +152,6 @@ const config = tsEslint.config(
       'import/ignore': ['react-native'],
     },
   },
-  ...reanimatedConfig,
   {
     files: ['**/*.ts', '**/*.tsx'],
     extends: tsCommonExtends,

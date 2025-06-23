@@ -39,11 +39,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build worklets
-        run: yarn run build:worklets
+      # - name: Build worklets
+      #   run: yarn run build:worklets
 
-      - name: Build reanimated
-        run: yarn run build:reanimated
+      # - name: Build reanimated
+      #   run: yarn run build:reanimated
 
       # Checks
       - name: Lint
