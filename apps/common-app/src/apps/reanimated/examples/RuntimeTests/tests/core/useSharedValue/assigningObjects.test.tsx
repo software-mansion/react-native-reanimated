@@ -57,7 +57,7 @@ describe('Test setting different values as sharedValue', () => {
         const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
         await render(<ProgressBar progress={0} />);
       }).toThrow(
-        'ReanimatedError: [Reanimated] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: reanimated',
+        'WorkletsError: [Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: Worklets',
       );
     },
   );
