@@ -11,9 +11,24 @@ export function bundleValueUnpacker(
 ): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
-    const factory = globalThis.__r(workletHash).default as WorkletFactory;
-    const worklet = factory(objectToUnpack.__closure as never);
-    return worklet;
+    if (__DEV__) {
+      try {
+        const factory = globalThis.__r(workletHash).default as WorkletFactory;
+        const worklet = factory(objectToUnpack.__closure as never);
+        return worklet;
+      } catch (error) {
+        console.error(
+          'Unable to resolve worklet with hash',
+          workletHash,
+          'try to reload the app.'
+        );
+        return undefined;
+      }
+    } else {
+      const factory = globalThis.__r(workletHash).default as WorkletFactory;
+      const worklet = factory(objectToUnpack.__closure as never);
+      return worklet;
+    }
   } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {

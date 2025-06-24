@@ -83,6 +83,22 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
+// TODO: Handle all runtimes.
+inline jsi::Value propagateModuleUpdate(
+    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
+    int moduleId,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
+    uiWorkletRuntime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+      rt.evaluateJavaScript(buffer, sourceUrl);
+      return jsi::Value::undefined();
+    });
+  }
+  return jsi::Value::undefined();
+}
+
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
@@ -155,6 +171,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 
   return propertyNames;
 }
@@ -431,6 +450,24 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "propagateModuleUpdate") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        3,
+        [uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return propagateModuleUpdate(
+              uiWorkletRuntime,
+              args[0].asNumber(),
+              args[1].asString(rt).utf8(rt),
+              args[2].asString(rt).utf8(rt));
         });
   }
 

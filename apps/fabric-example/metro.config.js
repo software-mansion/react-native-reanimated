@@ -12,6 +12,12 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
+const workletsPackageParentDir = path.resolve(
+  require.resolve('react-native-worklets/package.json'),
+  '..',
+  '..'
+);
+
 /**
  * Metro configuration https://reactnative.dev/docs/metro
  *
@@ -46,6 +52,17 @@ const config = {
   //       idFileMap.set(moduleName, nextId++);
   //       return idFileMap.get(moduleName);
   //     };
+  //   },
+  // },
+  // resolver: {
+  //   resolveRequest: (context, moduleName, platform) => {
+  //     if (moduleName.startsWith('react-native-worklets/__generatedWorklets/')) {
+  //       const fullModuleName = path.join(workletsPackageParentDir, moduleName);
+  //       console.log('moduleName', fullModuleName);
+  //       return { type: 'sourceFile', filePath: fullModuleName };
+  //     }
+  //     console.log(`Resolving request: ${moduleName} for platform: ${platform}`);
+  //     return context.resolveRequest(context, moduleName, platform);
   //   },
   // },
   // --------------------------------------------------------

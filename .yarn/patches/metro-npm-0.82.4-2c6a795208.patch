@@ -1,0 +1,18 @@
+diff --git a/src/node-haste/DependencyGraph.js b/src/node-haste/DependencyGraph.js
+index 99f206667a7ee7075cf032cf8228135a211b36a1..c466a9b5af81441c8ec023ebe4cb91af95c3892d 100644
+--- a/src/node-haste/DependencyGraph.js
++++ b/src/node-haste/DependencyGraph.js
+@@ -177,6 +177,13 @@ class DependencyGraph extends EventEmitter {
+     return nullthrows(this._fileSystem).getAllFiles();
+   }
+   async getOrComputeSha1(mixedPath) {
++    if(mixedPath.includes('react-native-worklets/__generatedWorklets/')){
++      const createHash = require("crypto").createHash;
++      return {
++        sha1: createHash("sha1")
++          .update(performance.now().toString()).digest("hex"),
++      }
++    }
+     const result = await this._fileSystem.getOrComputeSha1(mixedPath);
+     if (!result || !result.sha1) {
+       throw new Error(`Failed to get the SHA-1 for: ${mixedPath}.

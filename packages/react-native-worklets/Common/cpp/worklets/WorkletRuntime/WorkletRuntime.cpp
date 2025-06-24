@@ -137,6 +137,12 @@ jsi::Value WorkletRuntime::executeSync(
   return shareableResult->toJSValue(rt);
 }
 
+jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
+}
+
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,
     const jsi::PropNameID &propName) {

@@ -34,6 +34,19 @@ index ddc412b0f71..18c9c188be3 100644
  - (NSArray<NSString *> *)unstableModulesRequiringMainQueueSetup;
  
  - (NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *)thirdPartyFabricComponents;
+diff --git a/Libraries/Utilities/HMRClient.js b/Libraries/Utilities/HMRClient.js
+index 776056cf527..173515dbcc8 100644
+--- a/Libraries/Utilities/HMRClient.js
++++ b/Libraries/Utilities/HMRClient.js
+@@ -166,6 +166,8 @@ const HMRClient: HMRClientNativeInterface = {
+ 
+     hmrClient = client;
+ 
++    globalThis.HMRClient = hmrClient;
++
+     const {fullBundleUrl} = getDevServer();
+     pendingEntryPoints.push(
+       // HMRServer understands regular bundle URLs, so prefer that in case
 diff --git a/React/Base/RCTBundleConsumer.h b/React/Base/RCTBundleConsumer.h
 new file mode 100644
 index 00000000000..8f1eb972424

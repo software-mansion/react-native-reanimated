@@ -67,4 +67,5 @@ declare global {
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
   var WorkletsError: IWorkletsErrorConstructor;
+  var HMRClient: any;
 }
