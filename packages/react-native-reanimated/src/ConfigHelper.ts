@@ -1,8 +1,6 @@
 'use strict';
-import type { LoggerConfig } from 'react-native-worklets';
-import { logger, updateLoggerConfig } from 'react-native-worklets';
-
-import { SHOULD_BE_USE_WEB } from './common';
+import type { LoggerConfig } from './common';
+import { logger, SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
 export function addWhitelistedNativeProps(): void {

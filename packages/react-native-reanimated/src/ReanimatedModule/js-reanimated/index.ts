@@ -1,7 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
-import { ReanimatedError } from '../../common';
+import { logger, ReanimatedError } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import {
   createReactDOMStyle,
