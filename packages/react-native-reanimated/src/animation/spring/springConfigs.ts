@@ -1,3 +1,5 @@
+'use strict';
+
 import type { SpringConfig } from './springUtils';
 
 export const Reanimated3DefaultSpringConfig = {
