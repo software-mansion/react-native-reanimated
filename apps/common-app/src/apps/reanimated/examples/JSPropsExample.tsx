@@ -12,7 +12,9 @@ import Animated, {
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedG = Animated.createAnimatedComponent(G, {
+  jsPropNames: ['x', 'y'],
+});
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
 interface Point {

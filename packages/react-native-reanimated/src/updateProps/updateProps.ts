@@ -2,7 +2,7 @@
 'use strict';
 
 import type { MutableRefObject } from 'react';
-import { runOnUI } from 'react-native-worklets';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
@@ -16,13 +16,18 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
+import AnimatedComponent from '../createAnimatedComponent/AnimatedComponent';
+import type {
+  JSPropsOperation,
+  PropUpdates,
+} from '../createAnimatedComponent/commonTypes';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   isAnimatedProps?: boolean
 ) => void;
 
@@ -64,30 +69,72 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
+function updateJSProps(operations: JSPropsOperation[]) {
+  AnimatedComponent.jsPropsUpdater.updateProps(operations);
+}
+
+type NativePropsOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  updates: StyleProps;
+};
+
 function createUpdatePropsManager() {
   'worklet';
-  const operations: {
-    shadowNodeWrapper: ShadowNodeWrapper;
-    updates: StyleProps | AnimatedStyle<any>;
-  }[] = [];
+  const nativeOperations: NativePropsOperation[] = [];
+  const jsOperations: JSPropsOperation[] = [];
+
+  let flushPending = false;
+
   return {
-    update(
-      viewDescriptors: ViewDescriptorsWrapper,
-      updates: StyleProps | AnimatedStyle<any>
-    ) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        operations.push({
-          shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
-          updates,
+    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
+      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+        const viewTag = tag as number;
+
+        const nativePropUpdates: PropUpdates = {};
+        const jsPropUpdates: PropUpdates = {};
+
+        let hasNativeUpdates = false;
+        let hasJSUpdates = false;
+
+        Object.entries(updates).forEach(([propName, value]) => {
+          if (global._tagToJSPropNamesMapping[viewTag]?.[propName]) {
+            jsPropUpdates[propName] = value;
+            hasJSUpdates = true;
+          } else {
+            nativePropUpdates[propName] = value;
+            hasNativeUpdates = true;
+          }
         });
-        if (operations.length === 1) {
+
+        if (hasNativeUpdates) {
+          nativeOperations.push({
+            shadowNodeWrapper,
+            updates: nativePropUpdates,
+          });
+        }
+        if (hasJSUpdates) {
+          jsOperations.push({
+            tag: tag as number,
+            updates: jsPropUpdates,
+          });
+        }
+
+        if ((hasNativeUpdates || hasJSUpdates) && !flushPending) {
           queueMicrotask(this.flush);
+          flushPending = true;
         }
       });
     },
     flush(this: void) {
-      global._updateProps!(operations);
-      operations.length = 0;
+      if (nativeOperations.length) {
+        global._updateProps!(nativeOperations);
+        nativeOperations.length = 0;
+      }
+      if (jsOperations.length) {
+        runOnJS(updateJSProps)(jsOperations);
+        jsOperations.length = 0;
+      }
+      flushPending = false;
     },
   };
 }
