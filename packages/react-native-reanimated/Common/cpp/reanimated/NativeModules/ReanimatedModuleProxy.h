@@ -75,6 +75,10 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value setFeatureFlag(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &value) override;
   jsi::Value registerJSProps(
       jsi::Runtime &rt,
       const jsi::Value &componentName,

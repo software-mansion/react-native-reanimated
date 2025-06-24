@@ -321,6 +321,13 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   return jsi::Value::undefined();
 }
 
+jsi::Value setFeatureFlag(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &value) {
+  return jsi::Value::undefined();
+}
+
 jsi::Value ReanimatedModuleProxy::registerJSProps(
     jsi::Runtime &rt,
     const jsi::Value &componentName,

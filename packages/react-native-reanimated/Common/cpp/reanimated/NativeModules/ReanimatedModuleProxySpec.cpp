@@ -62,6 +62,16 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value REANIMATED_SPEC_PREFIX(setFeatureFlag)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->setFeatureFlag(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
 static jsi::Value REANIMATED_SPEC_PREFIX(registerJSProps)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
