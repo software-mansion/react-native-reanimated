@@ -82,7 +82,6 @@ export type { AnimatedScrollViewProps } from './component/ScrollView';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
   createWorkletRuntime,
-  enableLayoutAnimations,
   executeOnUIRuntimeSync,
   getViewProp,
   isConfigured,
