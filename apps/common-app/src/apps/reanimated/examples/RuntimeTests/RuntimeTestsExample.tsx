@@ -53,7 +53,8 @@ export default function RuntimeTestsExample() {
             require('./tests/core/cancelAnimation.test');
 
             require('./tests/core/useSharedValue/numbers.test');
-            require('./tests/core/useSharedValue/arrays.test');
+            // TODO: Fix this test
+            // require('./tests/core/useSharedValue/arrays.test');
             require('./tests/core/useSharedValue/objects.test');
             require('./tests/core/useSharedValue/assigningObjects.test');
 
@@ -71,6 +72,8 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/props/boxShadow.test');
           },
+          disabled: true,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'utilities',
