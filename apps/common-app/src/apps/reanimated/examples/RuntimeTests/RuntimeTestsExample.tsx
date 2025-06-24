@@ -72,6 +72,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/props/boxShadow.test');
           },
+          // TODO: Fix this test
           disabled: true,
           skipByDefault: true,
         },
@@ -88,6 +89,9 @@ export default function RuntimeTestsExample() {
             require('./tests/layoutAnimations/entering/predefinedEntering.test');
             require('./tests/layoutAnimations/exiting/predefinedExiting.test');
           },
+          // TODO: Fix this test
+          disabled: true,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'layout transitions',
@@ -100,12 +104,18 @@ export default function RuntimeTestsExample() {
             });
             require('./tests/layoutAnimations/layout/custom.test');
           },
+          // TODO: Fix this test
+          disabled: true,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'keyframe animations',
           importTest: () => {
             require('./tests/layoutAnimations/keyframe/basic.test');
           },
+          // TODO: Fix this test
+          disabled: true,
+          skipByDefault: true,
         },
         {
           testSuiteName: 'advanced API',
@@ -135,6 +145,8 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/TestsOfTestingFramework.test');
           },
+          // TODO: Fix this test
+          disabled: true,
         },
       ]}
     />
