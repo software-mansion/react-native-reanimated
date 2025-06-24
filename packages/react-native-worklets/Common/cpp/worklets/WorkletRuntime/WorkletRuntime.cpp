@@ -121,8 +121,7 @@ WorkletRuntime::WorkletRuntime(
            .name = "WorkletsError",
            .jsEngine = "Worklets"})
     }
-  };
-}
+  }
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =
