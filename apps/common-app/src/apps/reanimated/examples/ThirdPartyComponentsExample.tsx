@@ -106,7 +106,9 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
   );
 }
 
-const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedG = Animated.createAnimatedComponent(G, {
+  jsPropNames: ['x', 'y'], // TODO - remove once react-native-svg adds jsPropNames getter
+});
 
 function SvgGDemo({ sv }: { sv: SharedValue<number> }) {
   const animatedProps = useAnimatedProps(() => {

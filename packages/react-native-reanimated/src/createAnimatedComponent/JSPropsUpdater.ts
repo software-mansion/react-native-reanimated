@@ -49,9 +49,7 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
   public updateProps(operations: JSPropsOperation[]) {
     operations.forEach(({ tag, updates }) => {
       const component = JSPropsUpdaterNative._tagToComponentMapping.get(tag);
-      if (component) {
-        component.setNativeProps(updates);
-      }
+      component?.setNativeProps(updates);
     });
   }
 }
