@@ -72,7 +72,7 @@ def assert_new_architecture_enabled(new_arch_enabled)
 end
 
 def get_feature_flags()
-  feature_flags_path = File.path('./src/featureFlags.ts')
+  feature_flags_path = File.path('./src/featureFlags/staticFlags.ts')
   if !File.exist?(feature_flags_path)
     raise "[Reanimated] Feature flags file not found at #{feature_flags_path}."
   end

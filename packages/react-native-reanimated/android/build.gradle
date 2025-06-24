@@ -64,7 +64,7 @@ def toPlatformFileString(String path) {
 }
 
 def getReanimatedFeatureFlags() {
-    def file = file(projectDir.path + "/../src/featureFlags.ts")
+    def file = file(projectDir.path + "/../src/featureFlags/staticFlags.ts")
     if (!file.exists()) {
         throw new GradleException("[Reanimated] Feature flags file not found at ${file.absolutePath}.")
     }

@@ -299,3 +299,4 @@ export {
   isWorkletFunction,
   LogLevel as ReanimatedLogLevel,
 } from 'react-native-worklets';
+export { updateFeatureFlag } from './featureFlags/dynamicFlags';
