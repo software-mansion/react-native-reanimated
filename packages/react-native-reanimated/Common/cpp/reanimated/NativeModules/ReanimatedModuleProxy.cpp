@@ -321,10 +321,11 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   return jsi::Value::undefined();
 }
 
-jsi::Value setFeatureFlag(
+jsi::Value ReanimatedModuleProxy::setFeatureFlag(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &value) {
+  DynamicFeatureFlags::setFlag(name.asString(rt).utf8(rt), value.asBool());
   return jsi::Value::undefined();
 }
 
@@ -693,7 +694,7 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  if constexpr (getFlag("MLEKO")) {
+  if constexpr (StaticFeatureFlags::getFlag("TEST_STATIC_FLAG")) {
     return;
   }
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");

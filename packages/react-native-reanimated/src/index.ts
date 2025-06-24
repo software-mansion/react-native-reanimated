@@ -101,6 +101,7 @@ export type {
   EasingFunctionFactory,
 } from './Easing';
 export { Easing } from './Easing';
+export { setFeatureFlag } from './featureFlags/dynamicFlags';
 export type { FrameInfo } from './frameCallback';
 export type {
   Adaptable,
@@ -299,4 +300,3 @@ export {
   isWorkletFunction,
   LogLevel as ReanimatedLogLevel,
 } from 'react-native-worklets';
-export { updateFeatureFlag } from './featureFlags/dynamicFlags';
