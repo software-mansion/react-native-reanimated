@@ -1,7 +1,6 @@
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <reanimated/Tools/FeaturesConfig.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
@@ -318,13 +317,6 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
               funPtr->call(rnRuntime, resultValue);
             });
       });
-  return jsi::Value::undefined();
-}
-
-jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
-    jsi::Runtime &,
-    const jsi::Value &config) {
-  FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
 }
 
