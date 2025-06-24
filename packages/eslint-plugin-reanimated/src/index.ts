@@ -2,12 +2,14 @@ import type { TSESLint } from '@typescript-eslint/utils';
 
 import noAnimatedStyleToNonAnimatedComponent from './noAnimatedStyleToNonAnimatedComponent';
 import useGlobalThis from './useGlobalThis';
+import useLogger from './useLogger';
 import useReanimatedError from './useReanimatedError';
 import useWorkletsError from './useWorkletsError';
 
 export const rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent,
+  'use-logger': useLogger,
   'use-reanimated-error': useReanimatedError,
   'use-worklets-error': useWorkletsError,
   'use-global-this': useGlobalThis,

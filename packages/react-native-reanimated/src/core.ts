@@ -184,6 +184,7 @@ export function enableLayoutAnimations(
   console.warn(
     '[Reanimated] `enableLayoutAnimations` is deprecated and will be removed in the future.'
   );
+  console.error('test');
 }
 
 export function configureLayoutAnimationBatch(

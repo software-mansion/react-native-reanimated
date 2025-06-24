@@ -212,6 +212,58 @@ var require_useGlobalThis = __commonJS({
   },
 });
 
+// public/useLogger.js
+var require_useLogger = __commonJS({
+  'public/useLogger.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var rule = {
+      create(context) {
+        return {
+          CallExpression(node) {
+            const { callee } = node;
+            if (
+              callee.type === utils_1.AST_NODE_TYPES.MemberExpression &&
+              !callee.computed &&
+              callee.object.type === utils_1.AST_NODE_TYPES.Identifier &&
+              callee.object.name === 'console' &&
+              callee.property.type === utils_1.AST_NODE_TYPES.Identifier &&
+              (callee.property.name === 'warn' ||
+                callee.property.name === 'error')
+            ) {
+              const method = callee.property.name;
+              context.report({
+                node: callee,
+                messageId: 'useLogger',
+                data: { method },
+                fix(fixer) {
+                  return fixer.replaceText(callee.object, 'logger');
+                },
+              });
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          description:
+            'Require the use of logger instead of console for warnings and errors.',
+        },
+        messages: {
+          useLogger:
+            'Use logger.{{ method }}() instead of console.{{ method }}().',
+        },
+        type: 'problem',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
 // public/useReanimatedError.js
 var require_useReanimatedError = __commonJS({
   'public/useReanimatedError.js'(exports2) {
@@ -311,11 +363,13 @@ var noAnimatedStyleToNonAnimatedComponent_1 = __importDefault(
   require_noAnimatedStyleToNonAnimatedComponent()
 );
 var useGlobalThis_1 = __importDefault(require_useGlobalThis());
+var useLogger_1 = __importDefault(require_useLogger());
 var useReanimatedError_1 = __importDefault(require_useReanimatedError());
 var useWorkletsError_1 = __importDefault(require_useWorkletsError());
 exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
+  'use-logger': useLogger_1.default,
   'use-reanimated-error': useReanimatedError_1.default,
   'use-worklets-error': useWorkletsError_1.default,
   'use-global-this': useGlobalThis_1.default,
