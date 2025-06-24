@@ -161,7 +161,7 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (this._options?.jsPropNames) {
+    if (this._options?.jsPropNames?.length) {
       AnimatedComponent.jsPropsUpdater.unregisterComponent(this);
     }
 
