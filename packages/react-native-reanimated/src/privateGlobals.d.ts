@@ -1,3 +1,4 @@
+/* eslint-disable reanimated/use-global-this */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 'use strict';
@@ -21,7 +22,7 @@ import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
+  var _WORKLET: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
