@@ -2,6 +2,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -685,6 +686,9 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
+  if constexpr (getFlag("MLEKO")) {
+    return;
+  }
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
   jsi::Runtime &rt =

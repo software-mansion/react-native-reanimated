@@ -70,3 +70,11 @@ def assert_new_architecture_enabled(new_arch_enabled)
     raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
 end
+
+def get_feature_flags()
+  feature_flags_path = File.path('./src/featureFlags.ts')
+  if !File.exist?(feature_flags_path)
+    raise "[Reanimated] Feature flags file not found at #{feature_flags_path}."
+  end
+  return File.read(feature_flags_path).gsub("\n", "").gsub(" ", "")
+end

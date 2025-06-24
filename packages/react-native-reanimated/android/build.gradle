@@ -63,6 +63,14 @@ def toPlatformFileString(String path) {
   return path
 }
 
+def getReanimatedFeatureFlags() {
+    def file = file(projectDir.path + "/../src/featureFlags.ts")
+    if (!file.exists()) {
+        throw new GradleException("[Reanimated] Feature flags file not found at ${file.absolutePath}.")
+    }
+    return file.text.replaceAll("\n", "").replaceAll(" ", "")
+}
+
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
@@ -73,6 +81,7 @@ def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def REANIMATED_PROFILING = safeAppExtGet("enableReanimatedProfiling", false)
+def REANIMATED_FEATURE_FLAGS = getReanimatedFeatureFlags()
 
 // Set version for prefab
 version REANIMATED_VERSION
@@ -149,7 +158,8 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
-                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DREANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())
                 targets("reanimated")
             }
