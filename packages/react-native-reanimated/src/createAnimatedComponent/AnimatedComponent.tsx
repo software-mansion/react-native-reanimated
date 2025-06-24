@@ -33,7 +33,7 @@ import type {
   NestedArray,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
-import JSPropsUpdater from './JSPropsUpdater';
+import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
@@ -67,7 +67,6 @@ export default class AnimatedComponent
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
-  static jsPropsUpdater = new JSPropsUpdater();
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
@@ -115,10 +114,7 @@ export default class AnimatedComponent
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
     if (this._options?.jsPropNames?.length) {
-      AnimatedComponent.jsPropsUpdater.registerComponent(
-        this,
-        this._options.jsPropNames
-      );
+      jsPropsUpdater.registerComponent(this, this._options.jsPropNames);
     }
 
     const layout = this.props.layout;
@@ -162,7 +158,7 @@ export default class AnimatedComponent
     this._InlinePropManager.detachInlineProps();
 
     if (this._options?.jsPropNames?.length) {
-      AnimatedComponent.jsPropsUpdater.unregisterComponent(this);
+      jsPropsUpdater.unregisterComponent(this);
     }
 
     const exiting = this.props.exiting;

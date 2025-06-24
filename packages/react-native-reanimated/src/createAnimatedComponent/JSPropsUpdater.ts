@@ -89,4 +89,6 @@ if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterNative;
 }
 
-export default JSPropsUpdater;
+const jsPropsUpdater = new JSPropsUpdater();
+
+export default jsPropsUpdater;

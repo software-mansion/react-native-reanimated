@@ -16,11 +16,11 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import AnimatedComponent from '../createAnimatedComponent/AnimatedComponent';
 import type {
   JSPropsOperation,
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
+import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
@@ -70,7 +70,7 @@ export const updatePropsJestWrapper = (
 export default updateProps;
 
 function updateJSProps(operations: JSPropsOperation[]) {
-  AnimatedComponent.jsPropsUpdater.updateProps(operations);
+  jsPropsUpdater.updateProps(operations);
 }
 
 type NativePropsOperation = {
@@ -85,12 +85,12 @@ function createUpdatePropsManager() {
 
   let flushPending = false;
 
-  const processViewUpdates = ({ tag }: Descriptor, updates: PropUpdates) =>
+  const processViewUpdates = (tag: number, updates: PropUpdates) =>
     Object.entries(updates).reduce<{
       nativePropUpdates?: PropUpdates;
       jsPropUpdates?: PropUpdates;
     }>((acc, [propName, value]) => {
-      if (global._tagToJSPropNamesMapping[tag as number]?.[propName]) {
+      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
         acc.jsPropUpdates ??= {};
         acc.jsPropUpdates[propName] = value;
       } else {
@@ -103,8 +103,9 @@ function createUpdatePropsManager() {
   return {
     update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
       viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+        const viewTag = tag as number;
         const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
-          { tag, shadowNodeWrapper },
+          viewTag,
           updates
         );
 
@@ -116,7 +117,7 @@ function createUpdatePropsManager() {
         }
         if (jsPropUpdates) {
           jsOperations.push({
-            tag: tag as number,
+            tag: viewTag,
             updates: jsPropUpdates,
           });
         }
