@@ -857,21 +857,10 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
   if (mutation.type == ShadowViewMutation::Update &&
       !std::strcmp(
           mutation.oldChildShadowView.componentName, RootComponentName)) {
-    const auto [width, height] =
-        mutation.newChildShadowView.layoutMetrics.frame.size;
-    surfaceManager.updateWindow(surfaceId, width, height);
-  } else if (!surfaceManager.hasWindow(surfaceId)) {
-    // If Reanimated native module is initialized after the initial layout pass
-    // and no window size has been recorded, we have to get it from the root
-    // shadow node
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [&](const facebook::react::ShadowTree &shadowTree) {
-          const auto &currentRevision = shadowTree.getCurrentRevision();
-          const auto &rootShadowNode = currentRevision.rootShadowNode;
-          const auto [width, height] =
-              rootShadowNode->getLayoutMetrics().frame.size;
-          surfaceManager.updateWindow(surfaceId, width, height);
-        });
+    surfaceManager.updateWindow(
+        surfaceId,
+        mutation.newChildShadowView.layoutMetrics.frame.size.width,
+        mutation.newChildShadowView.layoutMetrics.frame.size.height);
   }
 }
 

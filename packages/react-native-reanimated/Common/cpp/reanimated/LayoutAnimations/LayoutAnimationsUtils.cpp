@@ -21,12 +21,12 @@ void SurfaceManager::updateWindow(
   windows_.insert_or_assign(surfaceId, Rect{windowWidth, windowHeight});
 }
 
-bool SurfaceManager::hasWindow(SurfaceId surfaceId) {
-  return windows_.find(surfaceId) != windows_.end();
-}
-
 Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
-  return hasWindow(surfaceId) ? windows_[surfaceId] : Rect{0, 0};
+  auto windowIt = windows_.find(surfaceId);
+  if (windowIt != windows_.end()) {
+    return windowIt->second;
+  }
+  return Rect{0, 0};
 }
 
 void Node::applyMutationToIndices(ShadowViewMutation mutation) {

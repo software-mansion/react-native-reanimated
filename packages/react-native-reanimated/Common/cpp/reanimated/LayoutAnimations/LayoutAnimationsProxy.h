@@ -8,7 +8,6 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
 #include <string>
@@ -44,20 +43,17 @@ struct LayoutAnimationsProxy
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  std::shared_ptr<UIManager> uiManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
-      std::shared_ptr<UIManager> uiManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       ContextContainer::Shared contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
-        uiManager_(uiManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),

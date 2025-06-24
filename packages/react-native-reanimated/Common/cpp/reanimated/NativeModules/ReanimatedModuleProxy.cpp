@@ -959,7 +959,6 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
   if (componentDescriptorRegistry) {
     layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
         layoutAnimationsManager_,
-        uiManager_,
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),

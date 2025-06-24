@@ -113,7 +113,6 @@ struct SurfaceManager {
   std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
   void
   updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  bool hasWindow(SurfaceId surfaceId);
   Rect getWindow(SurfaceId surfaceId);
 };
 
