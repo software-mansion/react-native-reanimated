@@ -6,12 +6,14 @@ import { SHOULD_BE_USE_WEB } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
 /** @deprecated This function is a no-op in Reanimated 4. */
-export function addWhitelistedNativeProps(): void {
+export function addWhitelistedNativeProps(
+  _props: Record<string, boolean>
+): void {
   // Do nothing. This is just for backward compatibility.
 }
 
 /** @deprecated This function is a no-op in Reanimated 4. */
-export function addWhitelistedUIProps(): void {
+export function addWhitelistedUIProps(_props: Record<string, boolean>): void {
   // Do nothing. This is just for backward compatibility.
 }
 
