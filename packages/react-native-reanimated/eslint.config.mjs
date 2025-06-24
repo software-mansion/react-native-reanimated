@@ -27,6 +27,7 @@ const config = tsEslint.config(
     rules: {
       'reanimated/use-reanimated-error': 'error',
       'reanimated/use-logger': 'error',
+      'reanimated/no-logger-message-prefix': 'error',
       'reanimated/use-global-this': 'error',
       'no-unused-expressions': 'error',
       'camelcase': 'error',

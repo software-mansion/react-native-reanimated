@@ -4,7 +4,7 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareableCloneRecursive } from 'react-native-worklets';
+import { logger, makeShareableCloneRecursive } from 'react-native-worklets';
 
 import { ReanimatedError } from './common';
 import type {
@@ -181,10 +181,9 @@ export function enableLayoutAnimations(
   _flag: boolean,
   _isCallByUser = true
 ): void {
-  console.warn(
-    '[Reanimated] `enableLayoutAnimations` is deprecated and will be removed in the future.'
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
   );
-  console.error('test');
 }
 
 export function configureLayoutAnimationBatch(

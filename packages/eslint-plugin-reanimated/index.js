@@ -169,6 +169,90 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
   },
 });
 
+// public/noLoggerMessagePrefix.js
+var require_noLoggerMessagePrefix = __commonJS({
+  'public/noLoggerMessagePrefix.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var PREFIX_REGEX = /^\s*(\[(?:Reanimated|Worklets)\])\s*/;
+    var rule = {
+      create(context) {
+        return {
+          CallExpression(node) {
+            const { callee, arguments: args } = node;
+            if (
+              callee.type === utils_1.AST_NODE_TYPES.MemberExpression &&
+              !callee.computed &&
+              callee.object.type === utils_1.AST_NODE_TYPES.Identifier &&
+              callee.object.name === 'logger' &&
+              callee.property.type === utils_1.AST_NODE_TYPES.Identifier &&
+              (callee.property.name === 'warn' ||
+                callee.property.name === 'error') &&
+              args.length > 0
+            ) {
+              const first = args[0];
+              if (
+                first.type === utils_1.AST_NODE_TYPES.Literal &&
+                typeof first.value === 'string'
+              ) {
+                const match = first.value.match(PREFIX_REGEX);
+                if (!match) {
+                  return;
+                }
+                context.report({
+                  node: first,
+                  messageId: 'noLoggerMessagePrefix',
+                  data: { prefix: match[1] },
+                  fix(fixer) {
+                    const without = first.value.replace(PREFIX_REGEX, '');
+                    return fixer.replaceText(first, JSON.stringify(without));
+                  },
+                });
+              } else if (
+                first.type === utils_1.AST_NODE_TYPES.TemplateLiteral
+              ) {
+                const firstQuasi = first.quasis[0];
+                const cooked = firstQuasi.value.cooked ?? '';
+                const match = cooked.match(PREFIX_REGEX);
+                if (!match) {
+                  return;
+                }
+                context.report({
+                  node: first,
+                  messageId: 'noLoggerMessagePrefix',
+                  data: { prefix: match[1] },
+                  fix(fixer) {
+                    const prefixLen = match[0].length;
+                    const removeStart = firstQuasi.range[0] + 1;
+                    const removeEnd = removeStart + prefixLen;
+                    return fixer.removeRange([removeStart, removeEnd]);
+                  },
+                });
+              }
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          description:
+            'Disallow redundant prefix that the logger adds automatically.',
+        },
+        messages: {
+          noLoggerMessagePrefix:
+            'Remove the redundant "{{prefix}}" prefix; it is added automatically.',
+        },
+        type: 'problem',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
 // public/useGlobalThis.js
 var require_useGlobalThis = __commonJS({
   'public/useGlobalThis.js'(exports2) {
@@ -362,6 +446,7 @@ exports.rules = void 0;
 var noAnimatedStyleToNonAnimatedComponent_1 = __importDefault(
   require_noAnimatedStyleToNonAnimatedComponent()
 );
+var noLoggerMessagePrefix_1 = __importDefault(require_noLoggerMessagePrefix());
 var useGlobalThis_1 = __importDefault(require_useGlobalThis());
 var useLogger_1 = __importDefault(require_useLogger());
 var useReanimatedError_1 = __importDefault(require_useReanimatedError());
@@ -370,6 +455,7 @@ exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
   'use-logger': useLogger_1.default,
+  'no-logger-message-prefix': noLoggerMessagePrefix_1.default,
   'use-reanimated-error': useReanimatedError_1.default,
   'use-worklets-error': useWorkletsError_1.default,
   'use-global-this': useGlobalThis_1.default,
