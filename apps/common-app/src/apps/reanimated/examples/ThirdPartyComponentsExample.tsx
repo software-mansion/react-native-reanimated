@@ -4,7 +4,6 @@ import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   interpolateColor,
-  registerJSProps,
   useAnimatedProps,
   useSharedValue,
   withRepeat,
@@ -108,8 +107,6 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
 }
 
 const AnimatedG = Animated.createAnimatedComponent(G);
-
-registerJSProps('RNSVGGroup', ['x', 'y']);
 
 function SvgGDemo({ sv }: { sv: SharedValue<number> }) {
   const animatedProps = useAnimatedProps(() => {

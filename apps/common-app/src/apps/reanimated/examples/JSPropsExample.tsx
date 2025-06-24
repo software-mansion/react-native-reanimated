@@ -4,7 +4,6 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
-  registerJSProps,
   runOnJS,
   useAnimatedProps,
   useDerivedValue,
@@ -15,8 +14,6 @@ import Svg, { Circle, G, Path } from 'react-native-svg';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
-
-registerJSProps('RNSVGGroup', ['x', 'y']);
 
 interface Point {
   x: number;

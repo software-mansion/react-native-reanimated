@@ -1,6 +1,4 @@
 'use strict';
-import { runOnJS, runOnUI } from 'react-native-worklets';
-
 import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedComponentProps,
@@ -15,18 +13,18 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
 
   constructor() {
     if (!JSPropsUpdaterNative.isInitialized) {
-      const updater = (viewTag: number, props: unknown) => {
-        const component =
-          JSPropsUpdaterNative._tagToComponentMapping.get(viewTag);
-        component?._updateFromNative(props);
-      };
-      runOnUI(() => {
-        'worklet';
-        global.updateJSProps = (viewTag: number, props: unknown) => {
-          runOnJS(updater)(viewTag, props);
-        };
-      })();
-      JSPropsUpdaterNative.isInitialized = true;
+      // const updater = (viewTag: number, props: unknown) => {
+      //   const component =
+      //     JSPropsUpdaterNative._tagToComponentMapping.get(viewTag);
+      //   component?._updateFromNative(props);
+      // };
+      // runOnUI(() => {
+      //   'worklet';
+      //   global.updateJSProps = (viewTag: number, props: unknown) => {
+      //     runOnJS(updater)(viewTag, props);
+      //   };
+      // })();
+      // JSPropsUpdaterNative.isInitialized = true;
     }
   }
 

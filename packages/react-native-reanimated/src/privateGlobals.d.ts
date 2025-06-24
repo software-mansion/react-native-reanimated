@@ -63,7 +63,6 @@ declare global {
   var __sensorContainer: SensorContainer;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
-  var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
   var _obtainProp: (
     shadowNodeWrapper: ShadowNodeWrapper,

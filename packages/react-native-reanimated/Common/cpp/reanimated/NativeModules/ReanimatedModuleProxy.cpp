@@ -48,12 +48,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -284,9 +286,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -317,23 +320,6 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
               funPtr->call(rnRuntime, resultValue);
             });
       });
-  return jsi::Value::undefined();
-}
-
-jsi::Value ReanimatedModuleProxy::registerJSProps(
-    jsi::Runtime &rt,
-    const jsi::Value &componentName,
-    const jsi::Value &jsPropsNames) {
-  const auto componentNameStr = componentName.asString(rt).utf8(rt);
-  const auto jsPropsNamesArray = jsPropsNames.asObject(rt).asArray(rt);
-  const auto size = jsPropsNamesArray.size(rt);
-  std::unordered_set<std::string> jsPropsNamesSet;
-  for (size_t i = 0; i < size; i++) {
-    jsPropsNamesSet.insert(
-        jsPropsNamesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
-  }
-  auto lock = std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
-  jsPropsNamesForComponentNames_[componentNameStr] = std::move(jsPropsNamesSet);
   return jsi::Value::undefined();
 }
 
@@ -550,35 +536,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterJSProps(
-    jsi::Runtime &rt,
-    const std::string &componentName,
-    const jsi::Value &props) {
-  const auto it = jsPropsNamesForComponentNames_.find(componentName);
-  const auto found = it != jsPropsNamesForComponentNames_.end();
-  if (!found) {
-    return jsi::Value::undefined();
-  }
-
-  const auto &jsPropsNamesForComponentName = it->second;
-  jsi::Object jsProps(rt);
-  bool empty = true;
-  const auto &propsObject = props.asObject(rt);
-  const auto &propsNamesArray = propsObject.getPropertyNames(rt);
-  for (size_t i = 0; i < propsNamesArray.size(rt); ++i) {
-    const auto &propName = propsNamesArray.getValueAtIndex(rt, i).asString(rt);
-    if (jsPropsNamesForComponentName.contains(propName.utf8(rt))) {
-      empty = false;
-      const auto &propValue = propsObject.getProperty(rt, propName);
-      jsProps.setProperty(rt, propName, propValue);
-    }
-  }
-  if (empty) {
-    return jsi::Value::undefined();
-  }
-  return jsProps;
-}
-
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -722,27 +679,6 @@ void ReanimatedModuleProxy::performOperations() {
     if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
-    }
-  }
-
-  {
-    auto lock =
-        std::unique_lock<std::mutex>(jsPropsNamesForComponentNamesMutex_);
-
-    for (const auto &jsiUpdate : animatedPropsRegistry_->getJSIUpdates()) {
-      const jsi::Value &jsProps =
-          filterJSProps(rt, jsiUpdate.componentName, *jsiUpdate.props);
-      if (jsProps.isUndefined()) {
-        continue;
-      }
-      jsi::Value maybeJSPropsUpdater =
-          rt.global().getProperty(rt, "updateJSProps");
-      react_native_assert(
-          maybeJSPropsUpdater.isObject() &&
-          "[Reanimated] `updateJSProps` not found");
-      jsi::Function jsPropsUpdater =
-          maybeJSPropsUpdater.asObject(rt).asFunction(rt);
-      jsPropsUpdater.call(rt, jsiUpdate.tag, jsProps);
     }
   }
 
