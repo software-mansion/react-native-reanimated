@@ -60,7 +60,7 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
     category: formattedMessage,
     componentStack: [],
     componentStackType: null,
-    // eslint-disable-next-line reanimated/use-reanimated-error
+    // eslint-disable-next-line reanimated/use-worklets-error
     stack: new Error().stack,
   };
 }

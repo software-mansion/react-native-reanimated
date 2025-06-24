@@ -42,6 +42,10 @@ export default tsEslint.config(
       'prefer-regex-literals': 'error',
       'no-bitwise': 'error',
       'no-useless-constructor': 'error',
+      'symbol-description': 'error',
+      'no-void': 'error',
+      'no-var': 'error',
+      'no-unused-expressions': 'error',
     },
     settings: {
       'import/parsers': {
@@ -59,7 +63,7 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: [tsEslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
@@ -69,8 +73,9 @@ export default tsEslint.config(
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-var-requires': 'error',
       'no-unused-vars': 'warn',
-      '@typescript-eslint/no-unused-expressions': 'warn',
+      '@typescript-eslint/no-unused-expressions': 'error',
       'no-constant-binary-expression': 'warn',
       'no-constant-condition': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',

@@ -580,6 +580,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   useEffect(() => {

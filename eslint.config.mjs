@@ -43,7 +43,7 @@ const tsRules = {
     },
   ],
 
-  '@typescript-eslint/no-var-requires': 'warn',
+  '@typescript-eslint/no-var-requires': 'error',
 
   '@typescript-eslint/consistent-type-imports': [
     'error',
@@ -162,6 +162,7 @@ const config = tsEslint.config(
       ...importRules,
       ...nodeRules,
       ...tsDocRules,
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
 
@@ -183,8 +184,8 @@ const config = tsEslint.config(
     '**/lib/**',
     '**/plugin/**',
     '**/eslint-plugin-reanimated/types/**',
-    '**/packages/docs-reanimated/**',
-    '**/apps/common-app/src/types/**',
+    'packages/**',
+    'apps/**',
   ])
 );
 

@@ -18,7 +18,7 @@ const config = tsEslint.config(
       'simple-import-sort': simpleImportSort,
     },
     rules: {
-      'reanimated/use-reanimated-error': 'error',
+      'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
     },
   }

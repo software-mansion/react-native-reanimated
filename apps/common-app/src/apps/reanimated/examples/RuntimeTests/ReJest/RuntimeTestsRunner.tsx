@@ -50,6 +50,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
 
   useEffect(() => {
     tests.forEach(testData => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       !testData.skipByDefault && testSelectionCallbacks.current.add(testData.importTest);
     });
   }, [tests]);
@@ -69,7 +70,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   function handleStartClick() {
     testSelectionCallbacks.current.forEach(callback => callback());
     setStarted(true);
-
+    // eslint-disable-next-line no-void
     void run();
   }
 

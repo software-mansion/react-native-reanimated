@@ -58,6 +58,7 @@ export function useAnimatedKeyboard(
       unsubscribeFromKeyboardEvents(listenerId.current);
       isSubscribed.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return ref.current;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 
 import { ReanimatedError } from '../common';

@@ -23,7 +23,7 @@
     "@react-native/eslint-config": "0.75.4",
     "@react-native/metro-config": "0.75.4",
     "@react-native/typescript-config": "0.75.4",
-    "prettier": "^3.3.3"
+    "prettier": "^3.5.3"
   },
   "engines": {
     "node": ">=18"

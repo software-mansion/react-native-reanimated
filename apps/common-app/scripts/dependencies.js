@@ -29,9 +29,9 @@ function getDependencies(currentAppDir = '.', exclude = []) {
   const currentAppPkg = require(path.resolve(currentAppDir, 'package.json'));
 
   const excludedDependencies = new Set([
-    ...exclude,
     ...Object.keys(currentAppPkg.dependencies),
     ...Object.keys(currentAppPkg.devDependencies),
+    ...exclude,
   ]);
 
   return {

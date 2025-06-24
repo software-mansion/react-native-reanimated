@@ -138,6 +138,7 @@ const BUFFER_ARRAYS = [new ArrayBuffer(8), new ArrayBuffer(0)];
 
 const EMPTIES = [[], null, undefined, {}, [[]], [{}], [null]];
 
+// eslint-disable-next-line symbol-description
 const SYMBOLS = [Symbol('Hello!'), Symbol(123), Symbol()];
 
 const DATES = [

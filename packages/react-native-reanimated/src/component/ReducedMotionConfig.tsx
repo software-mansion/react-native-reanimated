@@ -22,6 +22,7 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
       return;
     }
     logger.warn(`Reduced motion setting is overwritten with mode '${mode}'.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

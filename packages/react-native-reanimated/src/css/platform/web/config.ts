@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';

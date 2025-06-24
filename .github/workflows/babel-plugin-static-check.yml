@@ -54,6 +54,9 @@ jobs:
       - name: Check types
         working-directory: ${{ env.PLUGIN_DIR }}
         run: yarn type:check
+      - name: Lint and format
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn lint
       - name: Test
         working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn jest plugin

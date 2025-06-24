@@ -137,6 +137,7 @@ export default tsEslint.config(
       'no-lone-blocks': ['error'],
       'no-lonely-if': ['error'],
       'no-loop-func': ['error'],
+      'no-var': 'error',
       'no-new': ['error'],
       'no-new-object': ['error'],
       'no-new-wrappers': ['error'],
@@ -322,12 +323,11 @@ export default tsEslint.config(
           ignoreMixedLogicalExpressions: true,
         },
       ],
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
       'no-underscore-dangle': 'warn',
     },
-    ignores: ['**/apps/reanimated/**'],
   },
   globalIgnores(['**/eslint.config.mjs'])
 );

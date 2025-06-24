@@ -65,7 +65,8 @@ export function getViewProp<T>(
       component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
-          reject(new ReanimatedError(result));
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+          reject(result);
         } else {
           resolve(result);
         }

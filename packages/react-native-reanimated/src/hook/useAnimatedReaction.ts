@@ -69,5 +69,6 @@ export function useAnimatedReaction<PreparedResult>(
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 }
