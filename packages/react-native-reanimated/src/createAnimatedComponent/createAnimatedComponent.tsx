@@ -16,8 +16,9 @@ import type {
   InitialComponentProps,
 } from './commonTypes';
 
-type MaybeJSPropsComponent<C extends ComponentType<any>> = C & {
-  jsPropNames?: string[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnimatableComponent<C extends ComponentType<any>> = C & {
+  getJSPropNames?(): string[];
 };
 
 /**
@@ -30,19 +31,19 @@ type MaybeJSPropsComponent<C extends ComponentType<any>> = C & {
 
 // Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
-  component: MaybeJSPropsComponent<FunctionComponent<P>>,
+  component: AnimatableComponent<FunctionComponent<P>>,
   options?: Options<P>
 ): FunctionComponent<AnimateProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
-  component: MaybeJSPropsComponent<ComponentClass<P>>,
+  component: AnimatableComponent<ComponentClass<P>>,
   options?: Options<P>
 ): ComponentClass<AnimateProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
   // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
   // since some external components (like FastImage) are typed just as ComponentType
-  component: MaybeJSPropsComponent<ComponentType<P>>,
+  component: AnimatableComponent<ComponentType<P>>,
   options?: Options<P>
 ): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
 
@@ -52,12 +53,12 @@ export function createAnimatedComponent<P extends object>(
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
 export function createAnimatedComponent(
-  component: MaybeJSPropsComponent<typeof FlatList<unknown>>,
+  component: AnimatableComponent<typeof FlatList<unknown>>,
   options?: Options<typeof FlatList<unknown>>
 ): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
-  Component: MaybeJSPropsComponent<ComponentType<InitialComponentProps>>,
+  Component: AnimatableComponent<ComponentType<InitialComponentProps>>,
   options?: Options<InitialComponentProps>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
@@ -68,7 +69,7 @@ export function createAnimatedComponent(
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       // User can override library-defined jsPropNames via options
-      const jsPropNames = options?.jsPropNames || Component.jsPropNames;
+      const jsPropNames = options?.jsPropNames || Component.getJSPropNames?.();
       const modifiedOptions = jsPropNames?.length
         ? { ...options, jsPropNames }
         : options;
