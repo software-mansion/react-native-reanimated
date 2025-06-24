@@ -21,11 +21,7 @@ export function initializeReanimatedModule(
   }
 }
 
-// the React runtime global scope
-if (!globalThis._WORKLET) {
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-
-  if (!SHOULD_BE_USE_WEB) {
-    executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  }
+registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+if (!SHOULD_BE_USE_WEB) {
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
 }
