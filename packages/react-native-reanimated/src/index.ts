@@ -27,6 +27,10 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
+  GentleSpringConfig,
+  Reanimated3DefaultSpringConfig,
+  SnappySpringConfig,
+  WigglySpringConfig,
   withClamp,
   withDecay,
   withDelay,

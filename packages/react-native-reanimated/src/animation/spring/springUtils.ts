@@ -6,39 +6,40 @@ import type {
   Animation,
   ReduceMotion,
   Timestamp,
-} from '../commonTypes';
+} from '../../commonTypes';
 
 /**
  * Spring animation configuration.
  *
- * @param mass - The weight of the spring. Reducing this value makes the
- *   animation faster. Defaults to 1.
  * @param damping - How quickly a spring slows down. Higher damping means the
- *   spring will come to rest faster. Defaults to 10.
+ *   spring will come to rest faster. Defaults to 120.
+ * @param mass - The weight of the spring. Reducing this value makes the
+ *   animation faster. Defaults to 4.
+ * @param stiffness - How bouncy the spring is. Defaults to 900.
  * @param duration - Length of the animation (in milliseconds). Defaults to
- *   2000.
+ *   840ms if `dampingRatio` is provided.
  * @param dampingRatio - How damped the spring is. Value 1 means the spring is
  *   critically damped, and value `>`1 means the spring is overdamped. Defaults
- *   to 0.5.
- * @param stiffness - How bouncy the spring is. Defaults to 100.
+ *   to 1 if `duration` is provided.
  * @param velocity - Initial velocity applied to the spring equation. Defaults
  *   to 0.
- * @param overshootClamping - Whether a spring can bounce over the `toValue`.
- *   Defaults to false.
- * @param restDisplacementThreshold - The displacement below which the spring
- *   will snap to toValue without further oscillations. Defaults to 0.01.
- * @param restSpeedThreshold - The speed in pixels per second from which the
- *   spring will snap to toValue without further oscillations. Defaults to 2.
+ * @param overshootClamping - Whether a spring shouldn't bounce over the
+ *   `toValue`. Defaults to false.
+ * @param energyCutoff - Relative energy threshold below which the spring will
+ *   snap to `toValue` without further oscillations. Defaults to 2e-8.
  * @param reduceMotion - Determines how the animation responds to the device's
  *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
- *   {@link ReduceMotion}.
+ * @param restDisplacementThreshold - Deprecated, use `energyCutoff` parameter
+ *   instead. The displacement below which the spring will snap to toValue
+ *   without further oscillations. Defaults to 0.01.
+ * @param restSpeedThreshold - Deprecated, use `energyCutoff` parameter instead.
+ *   The speed in pixels per second from which the spring will snap to toValue
+ *   without further oscillations. Defaults to 2. {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
@@ -56,7 +57,21 @@ export type SpringConfig = {
       dampingRatio?: number;
       clamp?: { min?: number; max?: number };
     }
-);
+) &
+  (
+    | {
+        /** @deprecated Use `energyCutoff` instead. */
+        restDisplacementThreshold?: number;
+        /** @deprecated Use `energyCutoff` instead. */
+        restSpeedThreshold?: number;
+        energyCutoff?: never;
+      }
+    | {
+        restDisplacementThreshold?: never;
+        restSpeedThreshold?: never;
+        energyCutoff?: number;
+      }
+  );
 
 // This type contains all the properties from SpringConfig, which are changed to be required,
 // except for optional 'reduceMotion' and 'clamp'
@@ -69,6 +84,7 @@ export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
+  useManualThresholds: boolean;
   skipAnimation: boolean;
 }
 
@@ -82,6 +98,7 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   zeta: number;
   omega0: number;
   omega1: number;
+  initialEnergy: number;
 }
 
 export interface InnerSpringAnimation
@@ -384,25 +401,52 @@ export function underDampedSpringCalculations(
   return { position: underDampedPosition, velocity: underDampedVelocity };
 }
 
+export function getEnergy(
+  displacement: number,
+  velocity: number,
+  stiffness: number,
+  mass: number
+) {
+  'worklet';
+  const potentialEnergy = 0.5 * stiffness * displacement ** 2;
+  const kineticEnergy = 0.5 * mass * velocity ** 2;
+  let totalEnergy = potentialEnergy + kineticEnergy;
+  if (totalEnergy <= 0) {
+    // Correctly handle divisons by zero.
+    // i.e. when startValue and toValue are the same.
+    totalEnergy = Number.EPSILON;
+  }
+  return totalEnergy;
+}
+
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: DefaultSpringConfig
-): {
-  isOvershooting: boolean;
-  isVelocity: boolean;
-  isDisplacement: boolean;
-} {
+  config: DefaultSpringConfig & SpringConfigInner
+): boolean {
   'worklet';
-  const { toValue, velocity, startValue, current } = animation;
+  const { toValue, velocity, startValue, current, initialEnergy } = animation;
 
-  const isOvershooting = config.overshootClamping
-    ? (current > toValue && startValue < toValue) ||
+  if (config.overshootClamping) {
+    if (
+      (current > toValue && startValue < toValue) ||
       (current < toValue && startValue > toValue)
-    : false;
+    ) {
+      return true;
+    }
+  }
+  if (config.useManualThresholds) {
+    return (
+      Math.abs(velocity) < config.restSpeedThreshold &&
+      Math.abs(toValue - current) < config.restDisplacementThreshold
+    );
+  } else {
+    const currentEnergy = getEnergy(
+      toValue - current,
+      velocity,
+      config.stiffness,
+      config.mass
+    );
 
-  const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
-  const isDisplacement =
-    Math.abs(toValue - current) < config.restDisplacementThreshold;
-
-  return { isOvershooting, isVelocity, isDisplacement };
+    return currentEnergy / initialEnergy <= config.energyCutoff;
+  }
 }
