@@ -22,7 +22,7 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
       return;
     }
     logger.warn(`Reduced motion setting is overwritten with mode '${mode}'.`);
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     const wasEnabled = ReducedMotionManager.jsValue;
