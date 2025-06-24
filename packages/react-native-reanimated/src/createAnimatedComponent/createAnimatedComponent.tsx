@@ -68,7 +68,7 @@ export function createAnimatedComponent(
     })`;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
-      // User can override library-defined jsPropNames via options
+      // User can override component-defined jsPropNames via options
       const jsPropNames = options?.jsPropNames || Component.getJSPropNames?.();
       const modifiedOptions = jsPropNames?.length
         ? { ...options, jsPropNames }

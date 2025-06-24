@@ -122,7 +122,7 @@ function createUpdatePropsManager() {
           });
         }
 
-        if ((nativePropUpdates || jsPropUpdates) && !flushPending) {
+        if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
           queueMicrotask(this.flush);
           flushPending = true;
         }
