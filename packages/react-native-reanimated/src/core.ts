@@ -4,9 +4,9 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import { logger, makeShareableCloneRecursive } from 'react-native-worklets';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError } from './common';
+import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
