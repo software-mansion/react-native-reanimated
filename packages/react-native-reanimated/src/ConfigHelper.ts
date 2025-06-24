@@ -1,20 +1,16 @@
 'use strict';
 import type { LoggerConfig } from 'react-native-worklets';
-import { logger, updateLoggerConfig } from 'react-native-worklets';
+import { updateLoggerConfig } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
 export function addWhitelistedNativeProps(): void {
-  logger.warn(
-    '`addWhitelistedNativeProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
-  );
+  // Do nothing. This is just for backward compatibility.
 }
 
 export function addWhitelistedUIProps(): void {
-  logger.warn(
-    '`addWhitelistedUIProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
-  );
+  // Do nothing. This is just for backward compatibility.
 }
 
 /**
