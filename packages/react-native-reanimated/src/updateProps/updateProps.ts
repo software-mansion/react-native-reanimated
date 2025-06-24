@@ -85,41 +85,43 @@ function createUpdatePropsManager() {
 
   let flushPending = false;
 
+  const processViewUpdates = ({ tag }: Descriptor, updates: PropUpdates) =>
+    Object.entries(updates).reduce<{
+      nativePropUpdates?: PropUpdates;
+      jsPropUpdates?: PropUpdates;
+    }>((acc, [propName, value]) => {
+      if (global._tagToJSPropNamesMapping[tag as number]?.[propName]) {
+        acc.jsPropUpdates ??= {};
+        acc.jsPropUpdates[propName] = value;
+      } else {
+        acc.nativePropUpdates ??= {};
+        acc.nativePropUpdates[propName] = value;
+      }
+      return acc;
+    }, {});
+
   return {
     update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
       viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
-        const viewTag = tag as number;
+        const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
+          { tag, shadowNodeWrapper },
+          updates
+        );
 
-        const nativePropUpdates: PropUpdates = {};
-        const jsPropUpdates: PropUpdates = {};
-
-        let hasNativeUpdates = false;
-        let hasJSUpdates = false;
-
-        Object.entries(updates).forEach(([propName, value]) => {
-          if (global._tagToJSPropNamesMapping[viewTag]?.[propName]) {
-            jsPropUpdates[propName] = value;
-            hasJSUpdates = true;
-          } else {
-            nativePropUpdates[propName] = value;
-            hasNativeUpdates = true;
-          }
-        });
-
-        if (hasNativeUpdates) {
+        if (nativePropUpdates) {
           nativeOperations.push({
             shadowNodeWrapper,
             updates: nativePropUpdates,
           });
         }
-        if (hasJSUpdates) {
+        if (jsPropUpdates) {
           jsOperations.push({
             tag: tag as number,
             updates: jsPropUpdates,
           });
         }
 
-        if ((hasNativeUpdates || hasJSUpdates) && !flushPending) {
+        if ((nativePropUpdates || jsPropUpdates) && !flushPending) {
           queueMicrotask(this.flush);
           flushPending = true;
         }
