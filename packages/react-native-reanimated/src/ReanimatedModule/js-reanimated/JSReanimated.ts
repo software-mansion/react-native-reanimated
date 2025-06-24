@@ -57,16 +57,6 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  enableLayoutAnimations() {
-    if (IS_WEB) {
-      logger.warn('Layout Animations are not supported on web yet.');
-    } else if (IS_JEST) {
-      logger.warn('Layout Animations are no-ops when using Jest.');
-    } else {
-      logger.warn('Layout Animations are not supported on this configuration.');
-    }
-  }
-
   configureLayoutAnimationBatch() {
     // no-op
   }

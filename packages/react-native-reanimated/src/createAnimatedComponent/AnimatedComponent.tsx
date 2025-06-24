@@ -5,11 +5,10 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
@@ -339,10 +338,6 @@ export default class AnimatedComponent
 
     const { layout, entering, exiting } = this.props;
     if (layout || entering || exiting) {
-      if (!SHOULD_BE_USE_WEB) {
-        enableLayoutAnimations(true, false);
-      }
-
       if (exiting) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
