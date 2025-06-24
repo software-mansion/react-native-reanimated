@@ -20,33 +20,16 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
      ],
    };
    ```
-2. **Modify your Metro configuration**. In your `metro.config.js` file, add the following:
+2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode:
+
    ```javascript
-     serializer: {
-       getModulesRunBeforeMainModule() {
-         return [
-           require.resolve('react-native-worklets/src/workletRuntimeEntry.ts'),
-         ];
-       },
-       createModuleIdFactory() {
-         let nextId = 0;
-         const idFileMap = new Map();
-         return (modulePath) => {
-           if (idFileMap.has(modulePath)) {
-             return idFileMap.get(modulePath);
-           }
-           if (modulePath.includes('react-native-worklets/__generatedWorklets/')) {
-             const base = path.basename(modulePath, '.js');
-             const id = Number(base);
-             idFileMap.set(modulePath, id);
-             return id;
-           }
-           idFileMap.set(modulePath, nextId++);
-           return idFileMap.get(modulePath);
-         };
-       },
-     },
+   const config = {
+     ...require('react-native-worklets/bundleMode').bundleModeMetroConfig,
+   };
+
+   module.exports = mergeConfig(getDefaultConfig(__dirname), config);
    ```
+
 3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.4-af2762c07e.patch).
 4. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-rc.4-ad01aea617.patch).
 
