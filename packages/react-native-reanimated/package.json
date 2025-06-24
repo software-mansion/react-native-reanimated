@@ -31,7 +31,7 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
     "build": "yarn workspace react-native-worklets build && bob build",
-    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
+    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular lib",
     "use-strict-check": "node ../../scripts/validate-use-strict.js",
     "prepack": "cp ../../README.md ./README.md",
     "postpack": "rm ./README.md"
