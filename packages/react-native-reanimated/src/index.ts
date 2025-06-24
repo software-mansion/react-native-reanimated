@@ -1,7 +1,6 @@
 'use strict';
 
 import './publicGlobals';
-import './initializers';
 
 import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
