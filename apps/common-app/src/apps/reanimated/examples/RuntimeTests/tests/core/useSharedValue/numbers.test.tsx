@@ -112,13 +112,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     }
   });
 
-  test.each([
-    2,
-    // TODO: Fix this test case
-    // Expected 0.0011475 received 255, mode: NUMBER
-    // 0.0000045,
-    123456789,
-  ])('Test multiplication  *=%p, React API with function', async (factor: number) => {
+  test.each([2, 123456789])('Test multiplication  *=%p, React API with function', async (factor: number) => {
     for (const [index, preset] of Presets.numbers.entries()) {
       await testSharedValueMultiplication({
         initialValue: preset,
