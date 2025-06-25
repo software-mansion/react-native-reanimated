@@ -107,6 +107,7 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
 }
 
 const AnimatedPolygonNoJSProps = Animated.createAnimatedComponent(Polygon);
+
 const AnimatedPolygonJSProps = Animated.createAnimatedComponent(Polygon, {
   jsPropNames: ['points'],
 });
