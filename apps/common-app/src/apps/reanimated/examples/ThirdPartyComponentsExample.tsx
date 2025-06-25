@@ -111,7 +111,7 @@ const AnimatedPolygonJSProps = Animated.createAnimatedComponent(Polygon, {
   jsPropNames: ['points'],
 });
 
-function SvgPolygonComparisonDemo({ sv }: { sv: SharedValue<number> }) {
+function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
   const animatedProps = useAnimatedProps(() => {
     const topY = 75 - sv.value * 50;
     const leftX = 25 + sv.value * 15;
@@ -125,7 +125,7 @@ function SvgPolygonComparisonDemo({ sv }: { sv: SharedValue<number> }) {
 
   return (
     <View style={styles.demo}>
-      <Text style={styles.text}>AnimatedPolygon Comparison</Text>
+      <Text style={styles.text}>With vs without JS props</Text>
       <Svg height="200" width="200">
         <AnimatedPolygonJSProps
           fill="lime"
@@ -167,7 +167,7 @@ export default function ThirdPartyComponentsExample() {
       <SvgCircleDemo sv={sv} />
       <SvgRectDemo sv={sv} />
       <SvgPathDemo sv={sv} />
-      <SvgPolygonComparisonDemo sv={sv} />
+      <SvgPolygonsDemo sv={sv} />
     </ScrollView>
   );
 }
