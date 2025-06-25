@@ -61,6 +61,7 @@ const tsRules = {
 
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
+  'camelcase': 'error',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -84,8 +85,8 @@ const nodeRules = {
   'n/no-missing-import': 'off',
   'n/no-unpublished-import': 'warn',
   'n/no-unpublished-require': 'warn',
-  'n/no-extraneous-import': 'warn',
-  'n/no-extraneous-require': 'warn',
+  'n/no-extraneous-import': 'off',
+  'n/no-extraneous-require': 'off',
   'n/no-unsupported-features/node-builtins': 'warn',
 };
 

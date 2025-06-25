@@ -20,6 +20,7 @@ const config = tsEslint.config(
     rules: {
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
+      'no-bitwise': 'error',
     },
   },
 );
