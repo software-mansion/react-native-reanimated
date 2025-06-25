@@ -19032,7 +19032,7 @@ __metadata:
     react: "npm:19.1.0"
     react-native: "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
-    ts-prune: "npm:*"
+    ts-prune: "npm:^0.10.3"
     typescript: "npm:~5.3.0"
   peerDependencies:
     "@babel/core": ^7.0.0-0
@@ -21434,7 +21434,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-prune@npm:*, ts-prune@npm:^0.10.3":
+"ts-prune@npm:^0.10.3":
   version: 0.10.3
   resolution: "ts-prune@npm:0.10.3"
   dependencies:
