@@ -364,6 +364,7 @@ export default class AnimatedComponent
       return this._componentDOMRef.getBoundingClientRect();
     }
 
+    // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
     return null;
   }
 
