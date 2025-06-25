@@ -61,7 +61,7 @@ const tsRules = {
 
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
-  'camelcase': 'error',
+  camelcase: 'error',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
