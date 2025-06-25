@@ -2,7 +2,6 @@
 'use strict';
 import {
   isWorkletFunction,
-  logger,
   makeShareableCloneRecursive,
   runOnUI,
   shareableMappingCache,
@@ -17,7 +16,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,

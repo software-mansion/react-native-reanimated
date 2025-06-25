@@ -171,33 +171,18 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-type FeaturesConfig = {
-  enableLayoutAnimations: boolean;
-  setByUser: boolean;
-};
-
-let featuresConfig: FeaturesConfig = {
-  enableLayoutAnimations: false,
-  setByUser: false,
-};
-
+/**
+ * @deprecated This function no longer has any effect in Reanimated and will be
+ *   removed in the future.
+ */
+// ts-prune-ignore-next This function is needed for backward compatibility
 export function enableLayoutAnimations(
-  flag: boolean,
-  isCallByUser = true
+  _flag: boolean,
+  _isCallByUser = true
 ): void {
-  if (isCallByUser) {
-    featuresConfig = {
-      enableLayoutAnimations: flag,
-      setByUser: true,
-    };
-    ReanimatedModule.enableLayoutAnimations(flag);
-  } else if (
-    !featuresConfig.setByUser &&
-    featuresConfig.enableLayoutAnimations !== flag
-  ) {
-    featuresConfig.enableLayoutAnimations = flag;
-    ReanimatedModule.enableLayoutAnimations(flag);
-  }
+  console.warn(
+    '[Reanimated] `enableLayoutAnimations` is deprecated and will be removed in the future.'
+  );
 }
 
 export function configureLayoutAnimationBatch(
@@ -216,11 +201,11 @@ export function setShouldAnimateExitingForTag(
   );
 }
 
-export function jsiConfigureProps(
-  uiProps: string[],
-  nativeProps: string[]
+export function registerJSProps(
+  componentName: string,
+  jsPropsNames: string[]
 ): void {
   if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.configureProps(uiProps, nativeProps);
+    ReanimatedModule.registerJSProps(componentName, jsPropsNames);
   }
 }
