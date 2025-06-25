@@ -22,9 +22,6 @@ import type {
 interface MaybeScrollableComponent extends Component {
   getNativeScrollRef?: FlatList['getNativeScrollRef'];
   getScrollableNode?: FlatList['getScrollableNode'];
-  viewConfig?: {
-    uiViewClassName?: string;
-  };
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
@@ -58,18 +55,18 @@ function useAnimatedRefBase<TComponent extends Component>(
         fun.getTag = () =>
           findNodeHandle(getComponentOrScrollable(component) as Component)!;
         fun.current = component;
-      }
 
-      if (observers.size) {
-        const currentTag = fun?.getTag?.() ?? null;
-        observers.forEach((cleanup, observer) => {
-          // Perform the cleanup before calling the observer again.
-          // This ensures that all events that were set up in the observer
-          // are cleaned up before the observer sets up new events during
-          // the next call.
-          cleanup?.();
-          observers.set(observer, observer(currentTag));
-        });
+        if (observers.size) {
+          const currentTag = fun?.getTag?.() ?? null;
+          observers.forEach((cleanup, observer) => {
+            // Perform the cleanup before calling the observer again.
+            // This ensures that all events that were set up in the observer
+            // are cleaned up before the observer sets up new events during
+            // the next call.
+            cleanup?.();
+            observers.set(observer, observer(currentTag));
+          });
+        }
       }
 
       return wrapperRef.current;
