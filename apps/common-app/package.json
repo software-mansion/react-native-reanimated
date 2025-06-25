@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "yarn patch-package",
-    "lint": "yarn eslint . --flag unstable_config_lookup_from_file",
+    "lint": "eslint . --flag unstable_config_lookup_from_file",
     "format": "prettier --write --list-different .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
     "type:check": "tsc --noEmit"
