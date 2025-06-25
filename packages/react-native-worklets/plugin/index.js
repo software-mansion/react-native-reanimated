@@ -1694,7 +1694,10 @@ module.exports = function WorkletsBabelPlugin() {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
+      const error = e;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = "WorkletsBabelPluginError";
+      throw error;
     }
   }
   return {
