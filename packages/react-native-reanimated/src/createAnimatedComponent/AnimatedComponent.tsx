@@ -46,7 +46,7 @@ if (IS_WEB) {
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
-  jsPropNames?: string[];
+  jsProps?: string[];
 };
 
 export default class AnimatedComponent
@@ -113,8 +113,8 @@ export default class AnimatedComponent
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (this._options?.jsPropNames?.length) {
-      jsPropsUpdater.registerComponent(this, this._options.jsPropNames);
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
     const layout = this.props.layout;
@@ -157,7 +157,7 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (this._options?.jsPropNames?.length) {
+    if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
     }
 

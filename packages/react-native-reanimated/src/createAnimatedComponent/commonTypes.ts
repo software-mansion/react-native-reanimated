@@ -52,7 +52,7 @@ export type JSPropsOperation = {
 export interface IJSPropsUpdater {
   registerComponent(
     animatedComponent: AnimatedComponentType,
-    jsPropNames: string[]
+    jsProps: string[]
   ): void;
   unregisterComponent(animatedComponent: AnimatedComponentType): void;
   updateProps(operations: JSPropsOperation[]): void;

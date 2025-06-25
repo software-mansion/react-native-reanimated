@@ -25,14 +25,14 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
 
   public registerComponent(
     animatedComponent: AnimatedComponentType,
-    jsPropNames: string[]
+    jsProps: string[]
   ) {
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.set(viewTag, animatedComponent);
 
     runOnUI(() => {
       global._tagToJSPropNamesMapping[viewTag] = Object.fromEntries(
-        jsPropNames.map((propName) => [propName, true])
+        jsProps.map((propName) => [propName, true])
       );
     })();
   }
