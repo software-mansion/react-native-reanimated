@@ -273,8 +273,6 @@ export default class AnimatedComponent
   componentDidUpdate(
     prevProps: AnimatedComponentProps<InitialComponentProps>,
     _prevState: Readonly<unknown>,
-    // This type comes straight from React
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     snapshot: DOMRect | null
   ) {
     const layout = this.props.layout;
@@ -290,10 +288,9 @@ export default class AnimatedComponent
       saveSnapshot(this._componentDOMRef);
     }
 
-    // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
     if (
       IS_WEB &&
-      snapshot !== null &&
+      snapshot &&
       this.props.layout &&
       !getReducedMotionFromConfig(this.props.layout as CustomConfig)
     ) {
@@ -359,11 +356,9 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (IS_WEB && this._componentDOMRef?.getBoundingClientRect !== undefined) {
-      return this._componentDOMRef.getBoundingClientRect();
+    if (IS_WEB && this.props.layout) {
+      return this._componentDOMRef?.getBoundingClientRect?.();
     }
-
-    return null;
   }
 
   render() {
