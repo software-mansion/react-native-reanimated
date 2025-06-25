@@ -2,14 +2,25 @@ import { ReanimatedModule } from '../ReanimatedModule';
 
 type DynamicFlagsType = {
   TEST_DYNAMIC_FLAG: boolean;
+  init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
 };
-type DynamicFlagName = keyof Omit<DynamicFlagsType, 'setFlag'>;
+type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
 // ts-prune-ignore-next
 export const DynamicFlags: DynamicFlagsType = {
   TEST_DYNAMIC_FLAG: true,
 
+  init() {
+    Object.keys(DynamicFlags).forEach((key) => {
+      if (key !== 'init' && key !== 'setFlag') {
+        ReanimatedModule.setDynamicFeatureFlag(
+          key,
+          DynamicFlags[key as DynamicFlagName]
+        );
+      }
+    });
+  },
   setFlag(name, value) {
     if (name in DynamicFlags) {
       DynamicFlags[name] = value;
@@ -21,6 +32,7 @@ export const DynamicFlags: DynamicFlagsType = {
     }
   },
 };
+DynamicFlags.init();
 
 // Public API function to update a feature flag
 export function setDynamicFeatureFlag(
