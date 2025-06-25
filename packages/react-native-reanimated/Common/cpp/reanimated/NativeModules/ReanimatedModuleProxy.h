@@ -75,8 +75,6 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
-  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
-      override;
   jsi::Value registerJSProps(
       jsi::Runtime &rt,
       const jsi::Value &componentName,

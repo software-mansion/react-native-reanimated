@@ -31,8 +31,6 @@ export interface ReanimatedModuleProxy {
     callback?: (result: T) => void
   ): Promise<T>;
 
-  enableLayoutAnimations(flag: boolean): void;
-
   registerSensor(
     sensorType: number,
     interval: number,
