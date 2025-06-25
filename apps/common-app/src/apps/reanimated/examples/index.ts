@@ -175,7 +175,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   CircularSliderExample: {
     icon: '🔘',
-    title: 'Circular Slider Example',
+    title: 'Circular slider',
     screen: CircularSliderExample,
   },
   MemoExample: {
