@@ -67,6 +67,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   std::function<void(std::function<void(const double)>)>
   getForwardedRequestAnimationFrame();
 
+  std::function<bool()> getIsOnJSQueueThread();
+
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
