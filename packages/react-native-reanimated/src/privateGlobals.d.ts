@@ -107,4 +107,8 @@ declare global {
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
   var ReanimatedError: IReanimatedErrorConstructor;
+
+  // On UI Thread:
+  var __lastUpdateFrameTimeByTag: Record<number, number | undefined>;
+  var __lastUpdateByTag: Record<number, StyleProps | undefined>;
 }

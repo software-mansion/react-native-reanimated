@@ -138,6 +138,14 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
       setupConsole(runtimeBoundCapturableConsole);
       setupMicrotasks();
       setupRequestAnimationFrame();
+
+      // TODO: this needs to move to the reanimated package, but idk where
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      globalThis.__lastUpdateFrameTimeByTag = {};
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      globalThis.__lastUpdateByTag = {};
     })();
   }
 }
