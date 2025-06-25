@@ -356,9 +356,14 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (IS_WEB && this.props.layout) {
-      return this._componentDOMRef?.getBoundingClientRect?.();
+    if (
+      IS_WEB &&
+      this.props.layout &&
+      this._componentDOMRef?.getBoundingClientRect
+    ) {
+      return this._componentDOMRef.getBoundingClientRect();
     }
+
     return null;
   }
 
