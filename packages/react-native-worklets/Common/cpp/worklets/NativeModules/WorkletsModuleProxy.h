@@ -7,6 +7,7 @@
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -46,8 +47,8 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<jsi::HostObject> createJSIWorkletsModuleProxy()
-      const;
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
+  createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;
@@ -60,6 +61,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<const BigStringBuffer> script_;
   const std::string sourceUrl_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG

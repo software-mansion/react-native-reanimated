@@ -34,13 +34,12 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
       uiScheduler_(uiScheduler),
       script_(script),
-      sourceUrl_(sourceUrl) {
-  uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
+      sourceUrl_(sourceUrl),
+      runtimeManager_(std::make_shared<RuntimeManager>()) {
+  uiWorkletRuntime_ = runtimeManager_->createUIRuntime(
       createJSIWorkletsModuleProxy(),
       jsQueue_,
       jsScheduler_,
-      "Reanimated UI runtime",
-      true /* supportsLocking */,
       isDevBundle_,
       script_,
       sourceUrl_);
@@ -54,7 +53,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
 
-std::shared_ptr<jsi::HostObject>
+std::shared_ptr<JSIWorkletsModuleProxy>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   return std::make_shared<JSIWorkletsModuleProxy>(
       isDevBundle_,
@@ -63,6 +62,7 @@ WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
       jsQueue_,
       jsScheduler_,
       uiScheduler_,
+      runtimeManager_,
       uiWorkletRuntime_);
 }
 

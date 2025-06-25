@@ -15065,11 +15065,11 @@ __metadata:
 
 "metro-runtime@patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch":
   version: 0.82.4
-  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch::version=0.82.4&hash=26dc67"
+  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch::version=0.82.4&hash=3ff509"
   dependencies:
     "@babel/runtime": "npm:^7.25.0"
     flow-enums-runtime: "npm:^0.0.6"
-  checksum: 10/f0acd31c8034ed8b5444d1ac56246d0edee034c63728cfdd7b8a8d4e356ad74a5773070629b57c4ba773fafc525409b0a3330c93b732c96f957a465a5711a10c
+  checksum: 10/6493d2f77de041621bdfe7a83f86e620ed15c8df5c0332526b018216afddb0112d61676f58861feb0f6e283495e9ebb49f0494bd11e68a7625954bc16bc41674
   languageName: node
   linkType: hard
 

@@ -1,8 +1,10 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
+#include <memory>
 #include <utility>
 
 namespace worklets {
@@ -31,7 +33,9 @@ WorkletsModule::WorkletsModule(
   auto jsiWorkletsModuleProxy =
       workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::move(jsiWorkletsModuleProxy));
+      *rnRuntime_,
+      std::dynamic_pointer_cast<jsi::HostObject>(
+          std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
       *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy));
 }

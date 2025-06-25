@@ -1,4 +1,5 @@
 'use strict';
+import { logger } from './logger';
 import { WorkletsError } from './WorkletsError';
 import type { WorkletFactory, WorkletFunction } from './workletTypes';
 
@@ -11,24 +12,7 @@ export function bundleValueUnpacker(
 ): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
-    if (__DEV__) {
-      try {
-        const factory = globalThis.__r(workletHash).default as WorkletFactory;
-        const worklet = factory(objectToUnpack.__closure as never);
-        return worklet;
-      } catch (error) {
-        console.error(
-          'Unable to resolve worklet with hash',
-          workletHash,
-          'try to reload the app.'
-        );
-        return undefined;
-      }
-    } else {
-      const factory = globalThis.__r(workletHash).default as WorkletFactory;
-      const worklet = factory(objectToUnpack.__closure as never);
-      return worklet;
-    }
+    return getWorklet(workletHash, objectToUnpack.__closure);
   } else if (objectToUnpack.__init !== undefined) {
     let value = handleCache.get(objectToUnpack);
     if (value === undefined) {
@@ -53,6 +37,37 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       )}".`
     );
   }
+}
+
+function getWorklet(
+  workletHash: number,
+  closureVariables: Record<string, unknown>
+): WorkletFunction | undefined {
+  let worklet;
+  if (__DEV__) {
+    try {
+      worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+    } catch (error) {
+      logger.error(
+        'Unable to resolve worklet with hash' +
+          workletHash +
+          'try to reload the app.'
+      );
+    }
+  } else {
+    worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+  }
+  return worklet;
+}
+
+const metroRequire = globalThis.__r;
+
+function getWorkletFromMetroRequire(
+  workletHash: number,
+  closureVariables: Record<string, unknown>
+): WorkletFunction {
+  const factory = metroRequire(workletHash).default as WorkletFactory;
+  return factory(closureVariables);
 }
 
 interface ObjectToUnpack extends WorkletFunction {
