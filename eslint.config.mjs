@@ -182,7 +182,6 @@ const config = tsEslint.config(
     '**/ios/**',
     '**/android/**',
     '**/lib/**',
-    '**/plugin/**',
   ])
 );
 

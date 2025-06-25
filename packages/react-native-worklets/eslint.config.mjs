@@ -1,6 +1,7 @@
 import tsEslint from 'typescript-eslint';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import reanimated from 'eslint-plugin-reanimated';
+import { globalIgnores } from 'eslint/config';
 
 import eslintConfig from '../../eslint.config.mjs';
 
@@ -21,7 +22,10 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
     },
-  }
+  },
+  globalIgnores([
+    '**/plugin/**',
+  ])
 );
 
 export default config;
