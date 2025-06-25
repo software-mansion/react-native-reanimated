@@ -4,12 +4,13 @@ import type {
   ShareableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { logger, WorkletsModule } from 'react-native-worklets';
+import { WorkletsModule } from 'react-native-worklets';
 
 import {
   IS_JEST,
   IS_WEB,
   IS_WINDOW_AVAILABLE,
+  logger,
   ReanimatedError,
 } from '../../common';
 import type {
@@ -55,16 +56,6 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError(
       'unregisterEventHandler is not available in JSReanimated.'
     );
-  }
-
-  enableLayoutAnimations() {
-    if (IS_WEB) {
-      logger.warn('Layout Animations are not supported on web yet.');
-    } else if (IS_JEST) {
-      logger.warn('Layout Animations are no-ops when using Jest.');
-    } else {
-      logger.warn('Layout Animations are not supported on this configuration.');
-    }
   }
 
   configureLayoutAnimationBatch() {
@@ -260,9 +251,9 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  configureProps() {
+  registerJSProps() {
     throw new ReanimatedError(
-      'configureProps is not available in JSReanimated.'
+      'registerJSProps is not available in JSReanimated.'
     );
   }
 

@@ -5,12 +5,10 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import { adaptViewConfig } from '../ConfigHelper';
-import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
@@ -203,14 +201,7 @@ export default class AnimatedComponent
     const prevAnimatedProps = this._animatedProps;
     this._animatedProps = animatedProps;
 
-    const { viewTag, shadowNodeWrapper, viewConfig } = this._getViewInfo();
-
-    // update UI props whitelist for this view
-    const hasReanimated2Props =
-      this.props.animatedProps?.viewDescriptors || this._animatedStyles?.length;
-    if (hasReanimated2Props && viewConfig) {
-      adaptViewConfig(viewConfig);
-    }
+    const { viewTag, shadowNodeWrapper } = this._getViewInfo();
 
     // remove old styles
     if (this._prevAnimatedStyles) {
@@ -282,8 +273,6 @@ export default class AnimatedComponent
   componentDidUpdate(
     prevProps: AnimatedComponentProps<InitialComponentProps>,
     _prevState: Readonly<unknown>,
-    // This type comes straight from React
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     snapshot: DOMRect | null
   ) {
     const layout = this.props.layout;
@@ -299,10 +288,9 @@ export default class AnimatedComponent
       saveSnapshot(this._componentDOMRef);
     }
 
-    // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
     if (
       IS_WEB &&
-      snapshot !== null &&
+      snapshot &&
       this.props.layout &&
       !getReducedMotionFromConfig(this.props.layout as CustomConfig)
     ) {
@@ -347,10 +335,6 @@ export default class AnimatedComponent
 
     const { layout, entering, exiting } = this.props;
     if (layout || entering || exiting) {
-      if (!SHOULD_BE_USE_WEB) {
-        enableLayoutAnimations(true, false);
-      }
-
       if (exiting) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
@@ -372,10 +356,15 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (IS_WEB && this._componentDOMRef?.getBoundingClientRect !== undefined) {
+    if (
+      IS_WEB &&
+      this.props.layout &&
+      this._componentDOMRef?.getBoundingClientRect
+    ) {
       return this._componentDOMRef.getBoundingClientRect();
     }
 
+    // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
     return null;
   }
 

@@ -2,7 +2,6 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
-import { registerLoggerConfig } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
@@ -35,10 +34,6 @@ export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  // Assign to a different variable as __workletsLoggerConfig is not a captured
-  // identifier in the Worklet runtime.
-  const config = globalThis.__workletsLoggerConfig;
-
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
   return WorkletsModule.createWorkletRuntime(
     name,
@@ -46,7 +41,6 @@ export function createWorkletRuntime(
       'worklet';
       setupCallGuard();
       registerWorkletsError();
-      registerLoggerConfig(config);
       setupConsole(runtimeBoundCapturableConsole);
       initializer?.();
     })

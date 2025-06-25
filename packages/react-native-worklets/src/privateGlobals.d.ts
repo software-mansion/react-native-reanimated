@@ -58,7 +58,6 @@ declare global {
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
-  var __workletsLoggerConfig: LoggerConfigInternal;
   var _log: (value: unknown) => void;
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (
