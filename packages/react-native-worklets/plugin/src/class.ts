@@ -294,6 +294,7 @@ function recursiveTopoSort(
   stack: Set<string>
 ) {
   if (stack.has(current.name)) {
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error('Cycle detected. This should never happen.');
   }
   if (sorted.find((element) => element.name === current.name)) {
