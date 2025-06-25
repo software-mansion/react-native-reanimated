@@ -118,7 +118,7 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
     const rightX = 75 - sv.value * 15;
 
     return {
-      points: `50 ${topY}, ${leftX} 125, ${rightX} 125`, // this is JS prop
+      points: `50 ${topY}, ${leftX} 125, ${rightX} 125`, // this is a JS prop
       stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
     };
   }, []);
