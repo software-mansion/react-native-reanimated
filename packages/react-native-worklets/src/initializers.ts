@@ -157,15 +157,10 @@ function installRNBindingsOnUIRuntime() {
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
-  executeOnUIRuntimeSync(() => {
-    'worklet';
-    setupCallGuard();
-    setupConsole(runtimeBoundCapturableConsole);
-    setupMicrotasks();
-    setupRequestAnimationFrame();
-  })();
-
   if (!globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+    /** In experimental bundling Runtimes setup their callGuard themselves. */
+    executeOnUIRuntimeSync(setupCallGuard)();
+
     /**
      * Register WorkletsError in the UI runtime global scope. (we are using
      * `executeOnUIRuntimeSync` here to make sure that the changes are applied
@@ -175,4 +170,17 @@ function installRNBindingsOnUIRuntime() {
      */
     executeOnUIRuntimeSync(registerWorkletsError)();
   }
+
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+
+    setupConsole(runtimeBoundCapturableConsole);
+    /**
+     * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
+     * separate function once we have a better way to distinguish between
+     * Worklet Runtimes.
+     */
+    setupMicrotasks();
+    setupRequestAnimationFrame();
+  })();
 }
