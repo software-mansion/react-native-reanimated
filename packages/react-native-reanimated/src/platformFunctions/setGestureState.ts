@@ -1,8 +1,6 @@
 'use strict';
 
-import { logger } from 'react-native-worklets';
-
-import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 

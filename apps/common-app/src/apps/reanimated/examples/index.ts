@@ -106,7 +106,6 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
@@ -162,11 +161,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
-  },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
   },
   ModifyExample: {
     icon: '🪛',

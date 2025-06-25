@@ -35,6 +35,7 @@ interface TestData {
   testSuiteName: string;
   importTest: () => void;
   skipByDefault?: boolean;
+  disabled?: boolean;
 }
 
 interface RuntimeTestRunnerProps {
@@ -105,14 +106,16 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   );
 
   function selectAllClick(select: boolean) {
-    tests.forEach(button => {
-      setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
-      if (select) {
-        testSelectionCallbacks.current.add(button.importTest);
-      } else {
-        testSelectionCallbacks.current.delete(button.importTest);
-      }
-    });
+    tests
+      .filter(button => !button.disabled)
+      .forEach(button => {
+        setSelectedTests(selectedTests => new Map(selectedTests.set(button.testSuiteName, select)));
+        if (select) {
+          testSelectionCallbacks.current.add(button.importTest);
+        } else {
+          testSelectionCallbacks.current.delete(button.importTest);
+        }
+      });
   }
 
   function selectClick(button: TestData) {
@@ -136,6 +139,7 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
           return (
             <SelectTest
               key={item.testSuiteName}
+              disabled={item.disabled}
               testSuiteName={item.testSuiteName}
               selectClick={() => selectClick(item)}
               selectedTests={selectedTests}
@@ -151,9 +155,10 @@ interface SelectTestProps {
   testSuiteName: string;
   selectClick: () => void;
   selectedTests: Map<string, boolean>;
+  disabled?: boolean;
 }
 
-function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestProps) {
+function SelectTest({ testSuiteName, selectClick, selectedTests, disabled }: SelectTestProps) {
   const [isPressed, setIsPressed] = useState<boolean>(false);
 
   function handleSelectClickIn() {
@@ -167,7 +172,8 @@ function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestPro
 
   return (
     <Pressable
-      style={[styles.buttonWrapper, isPressed ? styles.pressedButton : {}]}
+      disabled={disabled}
+      style={[styles.buttonWrapper, isPressed ? styles.pressedButton : {}, disabled ? styles.disabledButton : {}]}
       onPressIn={() => handleSelectClickIn()}
       onPressOut={() => handleSelectClickOut()}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
@@ -275,5 +281,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFA',
     borderRadius: 10,
     borderColor: '#FFFF',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });

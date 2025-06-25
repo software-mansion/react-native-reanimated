@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect } from 'react';
-import { logger } from 'react-native-worklets';
 
+import { logger } from '../common';
 import { ReduceMotion } from '../commonTypes';
 import {
   isReducedMotionEnabledInSystem,
