@@ -183,7 +183,6 @@ const config = tsEslint.config(
     '**/android/**',
     '**/lib/**',
     '**/plugin/**',
-    '**/eslint-plugin-reanimated/types/**',
   ])
 );
 
