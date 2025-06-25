@@ -1,0 +1,16 @@
+If:
+  PathMatch: [.*/react-native/.*, .*/React/.*]
+Diagnostics:
+  Suppress: "*"
+  ClangTidy:
+    Remove: "*"
+---
+CompileFlags:
+  Remove:
+    [
+      -ivfsstatcache,
+      -index-store-path,
+      -index-unit-output-path,
+      -clang-vendor-feature*,
+      -fno-odr-hash-protocols,
+    ]
