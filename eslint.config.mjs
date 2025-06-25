@@ -184,8 +184,6 @@ const config = tsEslint.config(
     '**/lib/**',
     '**/plugin/**',
     '**/eslint-plugin-reanimated/types/**',
-    'packages/**',
-    'apps/**',
   ])
 );
 
