@@ -5,13 +5,7 @@ import { experimentalBundlingInit } from './workletRuntimeEntry';
 
 init();
 
-export type { LoggerConfig } from './logger';
-export {
-  logger,
-  LogLevel,
-  registerLoggerConfig,
-  updateLoggerConfig,
-} from './logger';
+export { logger } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {

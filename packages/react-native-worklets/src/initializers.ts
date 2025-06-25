@@ -4,47 +4,13 @@ import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequest
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
-import { reportFatalErrorOnJS } from './errors';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
+import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
-
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-function overrideLogFunctionImplementation(
-  boundLogToLogBoxAndConsole: typeof logToLogBoxAndConsole
-) {
-  'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(boundLogToLogBoxAndConsole)(data);
-  });
-}
-
-export function setupErrorUtils(
-  boundReportFatalErrorOnJS: typeof reportFatalErrorOnJS
-) {
-  'worklet';
-  globalThis.__ErrorUtils = {
-    reportFatalError: (error: Error) => {
-      runOnJS(boundReportFatalErrorOnJS)({
-        message: error.message,
-        moduleName: 'Worklets',
-        stack: error.stack,
-      });
-    },
-  };
-}
 
 let capturableConsole: typeof console;
 
@@ -151,10 +117,8 @@ function initializeRNRuntime() {
       );
     }
   }
-  // Register logger config and replace the log function implementation in
-  // the React runtime global scope
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  overrideLogFunctionImplementation(logToLogBoxAndConsole);
+
+  registerReportFatalRemoteError();
 }
 
 /** A function that should be ran only on Worklet runtimes. */
@@ -180,6 +144,10 @@ function initializeRuntimeOnWeb() {
   }
 }
 
+/**
+ * A function that should be ran on the RN Runtime to configure the UI Runtime
+ * with callback bindings.
+ */
 function installRNBindingsOnUIRuntime() {
   if (!WorkletsModule) {
     throw new WorkletsError(
@@ -187,26 +155,24 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   executeOnUIRuntimeSync(() => {
     'worklet';
-    setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
     setupCallGuard();
     setupConsole(runtimeBoundCapturableConsole);
     setupMicrotasks();
     setupRequestAnimationFrame();
   })();
 
-  const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
-
-  // Register WorkletsError and logger config in the UI runtime global scope.
-  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-  // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
-    runtimeBoundLogToLogBoxAndConsole
-  );
+  if (!globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+    /**
+     * Register WorkletsError in the UI runtime global scope. (we are using
+     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
+     * before any async operations are executed on the UI runtime).
+     *
+     * There's no need to register the error in experimental bundling.
+     */
+    executeOnUIRuntimeSync(registerWorkletsError)();
+  }
 }

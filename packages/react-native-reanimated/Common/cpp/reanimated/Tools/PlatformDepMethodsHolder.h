@@ -39,10 +39,6 @@ using RegisterSensorFunction =
     std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
-using ConfigurePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
