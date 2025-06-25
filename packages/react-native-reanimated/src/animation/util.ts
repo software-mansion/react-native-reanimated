@@ -23,6 +23,7 @@ import type {
   Animation,
   AnimationObject,
   EasingFunction,
+  SharedRegisterer,
   SharedValue,
   Timestamp,
 } from '../commonTypes';
@@ -104,9 +105,12 @@ export function assertEasingIsWorklet(
   }
 }
 
-export function initialUpdaterRun<T>(updater: () => T) {
+export function initialUpdaterRun<T>(
+  updater: (registerer?: SharedRegisterer) => T,
+  registerer?: SharedRegisterer
+) {
   IN_STYLE_UPDATER.current = true;
-  const result = updater();
+  const result = updater(registerer);
   IN_STYLE_UPDATER.current = false;
   return result;
 }
