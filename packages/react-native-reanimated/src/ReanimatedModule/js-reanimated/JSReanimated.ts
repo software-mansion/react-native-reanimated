@@ -250,6 +250,10 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
+  setFeatureFlag(_: string, __: boolean): void {
+    // noop
+  }
+
   registerJSProps() {
     throw new ReanimatedError(
       'registerJSProps is not available in JSReanimated.'

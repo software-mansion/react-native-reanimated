@@ -1,3 +1,5 @@
+import { ReanimatedModule } from '../ReanimatedModule';
+
 type DynamicFlagsType = {
   TEST_DYNAMIC_FLAG: boolean;
   setFlag(name: DynamicFlagName, value: boolean): void;
@@ -11,6 +13,7 @@ export const DynamicFlags: DynamicFlagsType = {
   setFlag(name, value) {
     if (name in DynamicFlags) {
       DynamicFlags[name] = value;
+      ReanimatedModule.setFeatureFlag(name, value);
     } else {
       console.warn(
         `[Reanimated] The feature flag: '${name}' no longer exists, you can safely remove invocation of \`setFeatureFlag('${name}')\` from your code.`

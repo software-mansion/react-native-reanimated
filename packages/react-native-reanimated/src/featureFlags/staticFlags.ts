@@ -1,2 +1,4 @@
 // ts-prune-ignore-next
-export const TEST_STATIC_FLAG = true;
+export const StaticFeatureFlags = {
+  TEST_STATIC_FLAG: true,
+};

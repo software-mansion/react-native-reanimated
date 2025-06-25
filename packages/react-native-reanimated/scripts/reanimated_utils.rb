@@ -72,9 +72,28 @@ def assert_new_architecture_enabled(new_arch_enabled)
 end
 
 def get_feature_flags()
-  feature_flags_path = File.path('./src/featureFlags/staticFlags.ts')
-  if !File.exist?(feature_flags_path)
-    raise "[Reanimated] Feature flags file not found at #{feature_flags_path}."
+  feature_flags = {}
+
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.ts')
+  if !File.exist?(static_feature_flags_path)
+    raise "[Reanimated] Feature flags file not found at #{static_feature_flags_path}."
   end
-  return File.read(feature_flags_path).gsub("\n", "").gsub(" ", "")
+  static_feature_flags_content = File.read(static_feature_flags_path).gsub(' ', '')
+  regex = /([A-Z_0-9]+):([a-z]+)/
+  static_feature_flags_content.scan(regex).each do |match|
+    feature_flags[match[0]] = match[1]
+  end
+
+  package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
+  if File.exist?(package_json_path)
+    package_json = JSON.parse(File.read(package_json_path))
+    if package_json['reanimated'] && package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json = package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json.each do |key, value|
+        feature_flags[key] = value.to_s
+      end
+    end
+  end
+
+  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end

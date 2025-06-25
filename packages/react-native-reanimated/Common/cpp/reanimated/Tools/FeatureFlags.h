@@ -19,7 +19,7 @@ public:
       // this will cause compilation error not runtime error
       throw std::logic_error("Unable to recognize flag: " + keyStr);
     }
-    return featureFlags.find("const" + keyStr + "=true") != std::string::npos;
+    return  featureFlags.find("[" + keyStr + ":true]") != std::string::npos;
   }
 
 #else

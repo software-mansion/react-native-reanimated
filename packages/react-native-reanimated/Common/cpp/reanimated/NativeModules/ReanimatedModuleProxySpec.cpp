@@ -235,6 +235,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerSensor)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterSensor)};
+  methodMap_["setFeatureFlag"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(setFeatureFlag)};
   methodMap_["registerJSProps"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerJSProps)};
   methodMap_["subscribeForKeyboardEvents"] =
