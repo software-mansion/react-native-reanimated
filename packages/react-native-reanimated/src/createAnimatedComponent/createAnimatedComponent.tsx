@@ -465,8 +465,6 @@ export function createAnimatedComponent(
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>,
       _prevState: Readonly<unknown>,
-      // This type comes straight from React
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       snapshot: DOMRect | null
     ) {
       const layout = this.props.layout;
@@ -488,10 +486,9 @@ export function createAnimatedComponent(
         saveSnapshot(this._componentDOMRef);
       }
 
-      // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
       if (
         IS_WEB &&
-        snapshot !== null &&
+        snapshot &&
         this.props.layout &&
         !getReducedMotionFromConfig(this.props.layout as CustomConfig)
       ) {
@@ -636,11 +633,13 @@ export function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       if (
         IS_WEB &&
-        this._componentDOMRef?.getBoundingClientRect !== undefined
+        this.props.layout &&
+        this._componentDOMRef?.getBoundingClientRect
       ) {
         return this._componentDOMRef.getBoundingClientRect();
       }
 
+      // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
       return null;
     }
 
