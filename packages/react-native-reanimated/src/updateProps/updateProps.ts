@@ -16,7 +16,7 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import type { Descriptor } from '../createAnimatedComponent/commonTypes';
+import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 

@@ -8,7 +8,6 @@ import { ReanimatedError } from '../../common';
 import type {
   AnimationFunction,
   EasingFunction,
-  EasingFunctionFactory,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
@@ -19,6 +18,7 @@ import type {
   ValidKeyframeProps,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import { Easing } from '../../Easing';
 
 interface KeyframePoint {

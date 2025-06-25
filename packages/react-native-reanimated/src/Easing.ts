@@ -1,6 +1,6 @@
 'use strict';
 import { Bezier } from './Bezier';
-import type { EasingFunction, EasingFunctionFactory } from './commonTypes';
+import type { EasingFunction } from './commonTypes';
 
 /**
  * The `Easing` module implements common easing functions. This module is used
@@ -50,6 +50,8 @@ import type { EasingFunction, EasingFunctionFactory } from './commonTypes';
 
 /** @deprecated Please use {@link EasingFunction} type instead. */
 export type EasingFn = EasingFunction;
+
+export type EasingFunctionFactory = { factory: () => EasingFunction };
 
 /** @deprecated Please use {@link EasingFunctionFactory} type instead. */
 export type EasingFactoryFn = EasingFunctionFactory;

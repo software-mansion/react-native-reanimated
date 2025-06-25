@@ -1,6 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import type { Descriptor } from '../createAnimatedComponent/commonTypes';
+import type { Descriptor } from '../hook/commonTypes';
 import { updateProps } from '../updateProps';
 import type {
   PanGestureHandlerEventPayload,
