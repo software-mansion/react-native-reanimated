@@ -9,7 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Circle, G, Path, Rect, Svg } from 'react-native-svg';
+import { Circle, Path, Polygon, Rect, Svg } from 'react-native-svg';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -106,25 +106,39 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
   );
 }
 
-const AnimatedG = Animated.createAnimatedComponent(G, {
-  jsPropNames: ['x', 'y'],
+const AnimatedPolygonNoJSProps = Animated.createAnimatedComponent(Polygon);
+const AnimatedPolygonJSProps = Animated.createAnimatedComponent(Polygon, {
+  jsPropNames: ['points'],
 });
 
-function SvgGDemo({ sv }: { sv: SharedValue<number> }) {
+function SvgPolygonComparisonDemo({ sv }: { sv: SharedValue<number> }) {
   const animatedProps = useAnimatedProps(() => {
+    const topY = 75 - sv.value * 50;
+    const leftX = 25 + sv.value * 15;
+    const rightX = 75 - sv.value * 15;
+
     return {
-      x: sv.value * 200,
-      y: Math.sin(sv.value * Math.PI) * 200,
+      points: `50 ${topY}, ${leftX} 125, ${rightX} 125`, // this is JS prop
+      stroke: interpolateColor(sv.value, [0, 1], ['black', 'white'], 'HSV'),
     };
   }, []);
 
   return (
     <View style={styles.demo}>
-      <Text style={styles.text}>AnimatedG</Text>
+      <Text style={styles.text}>AnimatedPolygon Comparison</Text>
       <Svg height="200" width="200">
-        <AnimatedG animatedProps={animatedProps}>
-          <Circle cx={0} cy={0} r={20} fill="black" />
-        </AnimatedG>
+        <AnimatedPolygonJSProps
+          fill="lime"
+          x={0}
+          strokeWidth={10}
+          animatedProps={animatedProps}
+        />
+        <AnimatedPolygonNoJSProps
+          fill="red"
+          x={100}
+          strokeWidth={10}
+          animatedProps={animatedProps}
+        />
       </Svg>
     </View>
   );
@@ -153,7 +167,7 @@ export default function ThirdPartyComponentsExample() {
       <SvgCircleDemo sv={sv} />
       <SvgRectDemo sv={sv} />
       <SvgPathDemo sv={sv} />
-      <SvgGDemo sv={sv} />
+      <SvgPolygonComparisonDemo sv={sv} />
     </ScrollView>
   );
 }
