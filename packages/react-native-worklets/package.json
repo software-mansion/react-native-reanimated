@@ -11,7 +11,7 @@
   "scripts": {
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:valueUnpacker",
     "build:valueUnpacker": "node ./scripts/export-value-unpacker.js",
-    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular lib",
+    "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
     "format:android": "yarn format:android:java && yarn format:android:cpp && yarn format:android:cmake",
