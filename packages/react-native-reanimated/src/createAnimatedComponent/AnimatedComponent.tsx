@@ -359,6 +359,7 @@ export default class AnimatedComponent
     if (IS_WEB && this.props.layout) {
       return this._componentDOMRef?.getBoundingClientRect?.();
     }
+    return null;
   }
 
   render() {
