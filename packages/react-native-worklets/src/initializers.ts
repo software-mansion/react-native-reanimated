@@ -4,7 +4,7 @@ import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequest
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
-import { reportFatalErrorOnJS } from './errors';
+import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
@@ -30,6 +30,7 @@ if (SHOULD_BE_USE_WEB) {
   globalThis._log = console.log;
   globalThis._getAnimationTimestamp = () => performance.now();
 } else if (!globalThis._WORKLET) {
+  registerReportFatalRemoteError();
   if (__DEV__) {
     const testWorklet = () => {
       'worklet';
@@ -45,21 +46,6 @@ if (SHOULD_BE_USE_WEB) {
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerWorkletsError)();
-}
-
-export function setupErrorUtils(
-  boundReportFatalErrorOnJS: typeof reportFatalErrorOnJS
-) {
-  'worklet';
-  globalThis.__ErrorUtils = {
-    reportFatalError: (error: Error) => {
-      runOnJS(boundReportFatalErrorOnJS)({
-        message: error.message,
-        moduleName: 'Worklets',
-        stack: error.stack,
-      });
-    },
-  };
 }
 
 let capturableConsole: typeof console;
@@ -143,13 +129,11 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
-  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   if (!SHOULD_BE_USE_WEB) {
     executeOnUIRuntimeSync(() => {
       'worklet';
-      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
       setupCallGuard();
       setupConsole(runtimeBoundCapturableConsole);
       setupMicrotasks();

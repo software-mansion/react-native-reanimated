@@ -140,4 +140,10 @@ class JSWorklets implements IWorkletsModule {
       'scheduleOnRuntime is not available in JSWorklets.'
     );
   }
+
+  reportFatalErrorOnJS(): never {
+    throw new WorkletsError(
+      'reportFatalErrorOnJS should never be called in JSWorklets.'
+    );
+  }
 }
