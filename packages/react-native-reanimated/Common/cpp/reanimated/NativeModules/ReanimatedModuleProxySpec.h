@@ -57,7 +57,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &listenerId) = 0;
 
   // other
-  virtual jsi::Value setFeatureFlag(
+  virtual jsi::Value setDynamicFeatureFlag(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &value) = 0;

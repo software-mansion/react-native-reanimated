@@ -162,8 +162,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  setFeatureFlag(name: string, value: boolean) {
-    this.#reanimatedModuleProxy.setFeatureFlag(name, value);
+  setDynamicFeatureFlag(name: string, value: boolean) {
+    this.#reanimatedModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
   registerJSProps(componentName: string, jsPropsNames: string[]) {
@@ -251,7 +251,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
-  setFeatureFlag(): void {}
+  setDynamicFeatureFlag(): void {}
   registerJSProps(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;

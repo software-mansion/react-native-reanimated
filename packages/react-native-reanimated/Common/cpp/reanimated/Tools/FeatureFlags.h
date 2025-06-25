@@ -34,7 +34,7 @@ public:
 class DynamicFeatureFlags {
 static std::unordered_map<std::string, bool> flags_;
 public:
-  static bool getFlag(const std::string& key);
+  static bool getFlag(const char* key);
   static void setFlag(const std::string& key, bool value);
 };
 

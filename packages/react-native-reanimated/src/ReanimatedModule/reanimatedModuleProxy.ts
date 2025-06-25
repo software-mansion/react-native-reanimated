@@ -40,7 +40,7 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
-  setFeatureFlag(name: string, value: boolean): void;
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 
   registerJSProps(componentName: string, jsPropsNames: string[]): void;
 
