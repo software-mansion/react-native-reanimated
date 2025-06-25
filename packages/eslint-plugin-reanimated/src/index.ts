@@ -6,13 +6,11 @@ import useGlobalThis from './useGlobalThis';
 import useLogger from './useLogger';
 import useReanimatedError from './useReanimatedError';
 import useWorkletsError from './useWorkletsError';
-import wrongLoggerImport from './wrongLoggerImport';
 
 export const rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent,
   'use-logger': useLogger,
-  'wrong-logger-import': wrongLoggerImport,
   'no-logger-message-prefix': noLoggerMessagePrefix,
   'use-reanimated-error': useReanimatedError,
   'use-worklets-error': useWorkletsError,

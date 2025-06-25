@@ -12,11 +12,6 @@ export declare const rules: {
     unknown,
     TSESLint.RuleListener
   >;
-  'wrong-logger-import': TSESLint.RuleModule<
-    'wrongLoggerImport',
-    [],
-    TSESLint.RuleListener
-  >;
   'no-logger-message-prefix': TSESLint.RuleModule<
     'noLoggerMessagePrefix',
     [],

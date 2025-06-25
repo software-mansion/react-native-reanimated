@@ -10,7 +10,6 @@ if (!globalThis._WORKLET) {
   initializeUIRuntime(WorkletsModule);
 }
 
-export { logger } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {

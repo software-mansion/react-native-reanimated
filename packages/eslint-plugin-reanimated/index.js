@@ -435,70 +435,6 @@ var require_useWorkletsError = __commonJS({
   },
 });
 
-// public/wrongLoggerImport.js
-var require_wrongLoggerImport = __commonJS({
-  'public/wrongLoggerImport.js'(exports2) {
-    'use strict';
-    Object.defineProperty(exports2, '__esModule', { value: true });
-    var utils_1 = require('@typescript-eslint/utils');
-    var PACKAGES = ['react-native-reanimated', 'react-native-worklets'];
-    var detectPackage = (filePath) =>
-      PACKAGES.find(
-        (pkg) => filePath.includes(`${pkg}/`) || filePath.includes(`${pkg}\\`)
-      );
-    var findLoggerImport = (body) =>
-      body.find(
-        (n) =>
-          n.type === utils_1.AST_NODE_TYPES.ImportDeclaration &&
-          n.specifiers.some((s) => s.local.name === 'logger')
-      );
-    var rule = {
-      create(context) {
-        return {
-          'Program:exit'(program) {
-            const pkg = detectPackage(context.filename);
-            if (!pkg) {
-              return;
-            }
-            const imp = findLoggerImport(program.body);
-            if (!imp || imp.source.type !== utils_1.AST_NODE_TYPES.Literal) {
-              return;
-            }
-            const foreignPkg = PACKAGES.find(
-              (p) => p !== pkg && String(imp.source.value).includes(p)
-            );
-            if (!foreignPkg) {
-              return;
-            }
-            const loggerSpecifier = imp.specifiers.find(
-              (s) => s.local.name === 'logger'
-            );
-            context.report({
-              node: loggerSpecifier?.local ?? imp.source,
-              messageId: 'wrongLoggerImport',
-              data: { foreignPkg },
-            });
-          },
-        };
-      },
-      meta: {
-        docs: {
-          recommended: 'recommended',
-          description: 'Require the use of logger from the local package.',
-        },
-        messages: {
-          wrongLoggerImport:
-            'Logger must be imported from the local package; current import points to "{{ foreignPkg }}".',
-        },
-        type: 'problem',
-        schema: [],
-      },
-      defaultOptions: [],
-    };
-    exports2.default = rule;
-  },
-});
-
 // public/index.js
 var __importDefault =
   (exports && exports.__importDefault) ||
@@ -515,12 +451,10 @@ var useGlobalThis_1 = __importDefault(require_useGlobalThis());
 var useLogger_1 = __importDefault(require_useLogger());
 var useReanimatedError_1 = __importDefault(require_useReanimatedError());
 var useWorkletsError_1 = __importDefault(require_useWorkletsError());
-var wrongLoggerImport_1 = __importDefault(require_wrongLoggerImport());
 exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
   'use-logger': useLogger_1.default,
-  'wrong-logger-import': wrongLoggerImport_1.default,
   'no-logger-message-prefix': noLoggerMessagePrefix_1.default,
   'use-reanimated-error': useReanimatedError_1.default,
   'use-worklets-error': useWorkletsError_1.default,
