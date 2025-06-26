@@ -2,6 +2,8 @@
 import { useEffect, useRef } from 'react';
 
 import type { WorkletFunction } from '../commonTypes';
+import { isWorkletFunction } from '../commonTypes';
+import { ReanimatedError } from '../errors';
 import { isJest, isWeb } from '../PlatformChecker';
 import { makeShareable } from '../shareables';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
@@ -82,6 +84,14 @@ export function useHandler<
   }, []);
 
   const { context, savedDependencies } = initRef.current;
+
+  for (const handlerName in handlers) {
+    if (!isWorkletFunction(handlers[handlerName])) {
+      throw new ReanimatedError(
+        'Passed a function is not a worklet. Please provide a worklet function.'
+      );
+    }
+  }
 
   dependencies = buildDependencies(
     dependencies,
