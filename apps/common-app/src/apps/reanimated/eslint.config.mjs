@@ -14,7 +14,6 @@ export default tsEslint.config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
   eslintPluginPrettierRecommended,
-  reactHooks.configs['recommended-latest'],
   {
     languageOptions: {
       globals: {
@@ -25,6 +24,7 @@ export default tsEslint.config(
       'no-inline-styles': noInlineStyles,
       'react-native': fixupPluginRules(reactNative),
       reanimated: reanimated,
+      'react-hooks': reactHooks,
     },
     rules: {
       '@typescript-eslint/no-shadow': 'off',
@@ -34,6 +34,8 @@ export default tsEslint.config(
       'react-native/no-raw-text': 'off', // This rule is great, we don't enable it because of its performance. If we ever find similar rule we should enable it.
       'react-native/no-single-element-style-arrays': 'error',
       'react-native/no-unused-styles': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react/jsx-fragments': ['error', 'syntax'],
       'react/prop-types': 'off',
       'react/display-name': 'off',

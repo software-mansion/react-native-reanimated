@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 'use strict';
 import {
   IS_ANDROID,
@@ -192,6 +191,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
+  // eslint-disable-next-line camelcase
   experimental_backgroundImage: false, // TODO
 
   /** Typography */

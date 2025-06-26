@@ -252,6 +252,7 @@ describe('Test `Bezier` function', () => {
     });
   });
 
+  // TODO: Fix this test
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   describe('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {});
 });

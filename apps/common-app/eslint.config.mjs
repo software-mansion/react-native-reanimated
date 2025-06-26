@@ -19,7 +19,6 @@ export default tsEslint.config(
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
   eslintPluginPrettierRecommended,
-  reactHooks.configs['recommended-latest'],
   {
     languageOptions: {
       globals: {
@@ -34,6 +33,7 @@ export default tsEslint.config(
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
       perfectionist,
+      'react-hooks': reactHooks,
     },
     rules: {
       camelcase: [
@@ -237,7 +237,7 @@ export default tsEslint.config(
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       'react-hooks/exhaustive-deps': 'warn',
-      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
       'react-native/no-unused-styles': 'warn',
       'react-native/sort-styles': 'warn',
       'require-atomic-updates': ['error'],
