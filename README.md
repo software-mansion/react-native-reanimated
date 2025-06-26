@@ -6,20 +6,8 @@
 
 React Native Reanimated provides a more comprehensive,
 low-level abstraction for the Animated library API on which to build,
-allowing for much greater flexibility, especially when it comes to 
+allowing for much greater flexibility, especially when it comes to
 gesture-based interactions.
-
-### Nightly CI state
-
-[![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
-[![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
-[![Static framework Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml)
-[![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
-[![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
-[![Reanimated TypeScript compatibility test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml)
-[![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml)
-[![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
-[![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
 ## Installation
 
