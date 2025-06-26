@@ -57,11 +57,11 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
-          runWithTaggedExceptions(() => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state);
-          });
+          runWithTaggedExceptions(
+            () =>
+              processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state)
+          );
         },
       },
       ObjectExpression: {

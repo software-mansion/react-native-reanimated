@@ -25,34 +25,6 @@ import {
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: 'beige',
-  },
-  brownComponent: {
-    width: 0,
-    height: 80,
-    backgroundColor: 'chocolate',
-    margin: 30,
-  },
-  greenComponent: {
-    width: 80,
-    height: 0,
-    backgroundColor: 'green',
-    margin: 30,
-  },
-  layoutAnimationComponent: {
-    top: 41,
-    left: 42,
-    width: 50,
-    height: 50,
-    backgroundColor: 'chocolate',
-    margin: 10,
-  },
-});
-
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
   const ref = useTestRef('BrownComponent');
@@ -127,6 +99,34 @@ const LayoutAnimation = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: 'beige',
+  },
+  brownComponent: {
+    width: 0,
+    height: 80,
+    backgroundColor: 'chocolate',
+    margin: 30,
+  },
+  greenComponent: {
+    width: 80,
+    height: 0,
+    backgroundColor: 'green',
+    margin: 30,
+  },
+  layoutAnimationComponent: {
+    top: 41,
+    left: 42,
+    width: 50,
+    height: 50,
+    backgroundColor: 'chocolate',
+    margin: 10,
+  },
+});
 
 describe('Wardrobe with drawers', () => {
   describe('Drawer *****1*****, with boxes', () => {

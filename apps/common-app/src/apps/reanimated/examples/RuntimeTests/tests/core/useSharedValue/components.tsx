@@ -15,7 +15,7 @@ export const ProgressBar = ({ progress }: { progress: number }) => {
   );
 };
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     margin: 30,
     borderWidth: 3,
