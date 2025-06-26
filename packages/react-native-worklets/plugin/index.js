@@ -1720,9 +1720,7 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
-            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
-          });
+          runWithTaggedExceptions(() => (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state));
         }
       },
       ObjectExpression: {

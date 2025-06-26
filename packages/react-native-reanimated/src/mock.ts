@@ -33,6 +33,7 @@ import {
   withReanimatedTimer,
 } from './index';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;

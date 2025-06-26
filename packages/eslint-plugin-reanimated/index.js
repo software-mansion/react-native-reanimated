@@ -16,7 +16,7 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           JSXOpeningElement(node) {
             if (node.name.type === utils_1.AST_NODE_TYPES.JSXMemberExpression) {
@@ -151,7 +151,6 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             "Don't pass a reanimated animated style into a non-animated component.",
         },
@@ -177,7 +176,7 @@ var require_useGlobalThis = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           Identifier(node) {
             if (
@@ -187,7 +186,7 @@ var require_useGlobalThis = __commonJS({
               context.report({
                 node,
                 messageId: 'useGlobalThis',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node, 'globalThis._WORKLET');
                 },
               });
@@ -197,7 +196,6 @@ var require_useGlobalThis = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `_WORKLET` is used instead of `globalThis._WORKLET`.',
         },
@@ -221,7 +219,7 @@ var require_useReanimatedError = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           NewExpression(node) {
             if (
@@ -231,7 +229,7 @@ var require_useReanimatedError = __commonJS({
               context.report({
                 node,
                 messageId: 'useReanimatedError',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node.callee, 'ReanimatedError');
                 },
               });
@@ -241,7 +239,6 @@ var require_useReanimatedError = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new ReanimatedError`.',
         },
@@ -266,7 +263,7 @@ var require_useWorkletsError = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           NewExpression(node) {
             if (
@@ -276,7 +273,7 @@ var require_useWorkletsError = __commonJS({
               context.report({
                 node,
                 messageId: 'useWorkletsError',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node.callee, 'WorkletsError');
                 },
               });
@@ -286,7 +283,6 @@ var require_useWorkletsError = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new WorkletsError`.',
         },

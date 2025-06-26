@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 
 import { bundleValueUnpacker } from './bundleUnpacker';
@@ -25,6 +24,7 @@ export function initializeLibraryOnWorkletRuntime() {
     // We have to throw an error here because otherwise
     // the next module to be ran would be the React Native one,
     // and we cannot allow it on a Worklet Runtime.
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error('Worklets initialized successfully');
   }
 }

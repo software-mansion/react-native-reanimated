@@ -129,8 +129,9 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
       <Text style={styles.text}>With vs without JS props</Text>
       <Text>
         Both components use the same animated props, but only the shape of the
-        left one is animated, because the 'points' property is a JS prop and
-        only this component specified 'points' as the JS prop.
+        left one is animated, because the &apos;points&apos; property is a JS
+        prop and only this component specified &apos;points&apos; as the JS
+        prop.
       </Text>
       <Svg height="200" width="200">
         <AnimatedPolygonJSProps

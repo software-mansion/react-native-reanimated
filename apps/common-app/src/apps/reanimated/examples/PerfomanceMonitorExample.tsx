@@ -17,10 +17,13 @@ enum Examples {
 export default function PerformanceMonitorExample() {
   const exampleElements = useRef(
     new Map<Examples, JSX.Element>([
-      [Examples.Empty, <EmptyExample />],
-      [Examples.Bokeh, <BokehExample />],
-      [Examples.Planets, <PlanetsExample />],
-      [Examples.Emojis, <EmojiWaterfallExample />],
+      [Examples.Empty, <EmptyExample key="empty-example" />],
+      [Examples.Bokeh, <BokehExample key="bokeh-example" />],
+      [Examples.Planets, <PlanetsExample key="planets-example" />],
+      [
+        Examples.Emojis,
+        <EmojiWaterfallExample key="emoji-waterfall-example" />,
+      ],
     ])
   );
 
