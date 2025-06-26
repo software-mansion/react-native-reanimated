@@ -10,10 +10,13 @@ import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletImport } from './workletTypes';
 
-/** An array of [worklet, args, resolve (optional)] pairs. */
-let runOnUIQueue: Array<
-  [WorkletFunction<unknown[], unknown>, unknown[], ((value: unknown) => void)?]
-> = [];
+type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args,
+  resolve?: (value: ReturnValue) => void,
+];
+
+let runOnUIQueue: UIJob[] = [];
 
 export function setupMicrotasks() {
   'worklet';
@@ -118,23 +121,11 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    runOnUIQueue.push([worklet as WorkletFunction, args]);
-    if (runOnUIQueue.length === 1) {
-      queueMicrotask(() => {
-        const queue = runOnUIQueue;
-        runOnUIQueue = [];
-        WorkletsModule.scheduleOnUI(
-          makeShareableCloneRecursive(() => {
-            'worklet';
-            // eslint-disable-next-line @typescript-eslint/no-shadow
-            queue.forEach(([worklet, args]) => {
-              worklet(...args);
-            });
-            callMicrotasks();
-          })
-        );
-      });
-    }
+
+    enqueueUI<Args, ReturnValue>(
+      worklet as WorkletFunction<Args, ReturnValue>,
+      args
+    );
   };
 }
 
@@ -309,29 +300,11 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         makeShareableCloneRecursive(args);
       }
 
-      runOnUIQueue.push([
-        worklet as WorkletFunction,
+      enqueueUI<Args, ReturnValue>(
+        worklet as WorkletFunction<Args, ReturnValue>,
         args,
-        resolve as (value: unknown) => void,
-      ]);
-      if (runOnUIQueue.length === 1) {
-        queueMicrotask(() => {
-          const queue = runOnUIQueue;
-          runOnUIQueue = [];
-          WorkletsModule.scheduleOnUI(
-            makeShareableCloneRecursive(() => {
-              'worklet';
-              queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
-                const result = workletFunction(...workletArgs);
-                if (jobResolve) {
-                  runOnJS(jobResolve)(result);
-                }
-              });
-              callMicrotasks();
-            })
-          );
-        });
-      }
+        resolve
+      );
     });
   };
 }
@@ -349,3 +322,34 @@ const shareableRunOnUIAsyncWorklet =
   makeShareableCloneRecursive(runOnUIAsyncWorklet);
 
 shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+
+function enqueueUI<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args,
+  resolve?: (value: ReturnValue) => void
+): void {
+  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  runOnUIQueue.push(job as unknown as UIJob);
+  if (runOnUIQueue.length === 1) {
+    flushUIQueue();
+  }
+}
+
+function flushUIQueue(): void {
+  queueMicrotask(() => {
+    const queue = runOnUIQueue;
+    runOnUIQueue = [];
+    WorkletsModule.scheduleOnUI(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
+          const result = workletFunction(...workletArgs);
+          if (jobResolve) {
+            runOnJS(jobResolve)(result);
+          }
+        });
+        callMicrotasks();
+      })
+    );
+  });
+}
