@@ -111,7 +111,7 @@ WorkletRuntime::WorkletRuntime(
   } catch (facebook::jsi::JSError error) {
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
-    if (!message.starts_with("Worklets initialized successfully")) {
+    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
       const auto newMessage =
           "[Worklets] Failed to initialize runtime. Reason: " + message;
       JSLogger::reportFatalErrorOnJS(
@@ -119,7 +119,7 @@ WorkletRuntime::WorkletRuntime(
           {.message = newMessage,
            .stack = stack,
            .name = "WorkletsError",
-           .jsEngine = "Worklets"})
+           .jsEngine = "Worklets"});
     }
   }
 #else

@@ -6,9 +6,7 @@ import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
-
-export function createNativeWorkletsModule(): IWorkletsModule {
+export function createNativeWorkletsModule(): NativeWorklets {
   return new NativeWorklets();
 }
 
