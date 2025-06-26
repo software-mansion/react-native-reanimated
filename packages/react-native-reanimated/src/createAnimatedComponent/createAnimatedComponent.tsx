@@ -18,7 +18,7 @@ import type {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {
-  getJSProps?(): string[];
+  jsProps?: string[];
 };
 
 /**
@@ -69,7 +69,7 @@ export function createAnimatedComponent(
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       // User can override component-defined jsProps via options
-      const jsProps = options?.jsProps || Component.getJSProps?.();
+      const jsProps = options?.jsProps ?? Component.jsProps;
       const modifiedOptions = jsProps?.length
         ? { ...options, jsProps }
         : options;

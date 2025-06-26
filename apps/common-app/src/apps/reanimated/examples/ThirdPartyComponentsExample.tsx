@@ -106,11 +106,11 @@ function SvgPathDemo({ sv }: { sv: SharedValue<number> }) {
   );
 }
 
-const AnimatedPolygonNoJSProps = Animated.createAnimatedComponent(Polygon);
-
 const AnimatedPolygonJSProps = Animated.createAnimatedComponent(Polygon, {
   jsProps: ['points'],
 });
+
+const AnimatedPolygonNoJSProps = Animated.createAnimatedComponent(Polygon);
 
 function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
   const animatedProps = useAnimatedProps(() => {
@@ -127,6 +127,11 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
   return (
     <View style={styles.demo}>
       <Text style={styles.text}>With vs without JS props</Text>
+      <Text>
+        Both components use the same animated props, but only the shape of the
+        left one is animated, because the 'points' property is a JS prop and
+        only this component specified 'points' as the JS prop.
+      </Text>
       <Svg height="200" width="200">
         <AnimatedPolygonJSProps
           fill="lime"
@@ -180,6 +185,9 @@ const styles = StyleSheet.create({
   },
   demo: {
     borderWidth: 1,
+    padding: 20,
+    width: '100%',
+    alignItems: 'center',
   },
   text: {
     textAlign: 'center',
