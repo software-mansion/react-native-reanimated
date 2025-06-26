@@ -1,7 +1,7 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 
 import { init } from './initializers';
+import { WorkletsError } from './WorkletsError';
 
 /**
  * This function is an entry point for Worklet Runtimes. We can use it to setup
@@ -19,10 +19,11 @@ export function experimentalBundlingInit() {
   globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
   if (globalThis._WORKLET) {
     /**
-     * We shouldn't call `init()` on RN Runtime here, as it would initialize our
-     * module before React Native has configured the RN Runtime.
+     * We shouldn't call `init()` on RN Runtime here, as it would initialize
+     * our module before React Native has configured the RN Runtime.
      */
     init();
+    throw new WorkletsError('Worklets initialized successfully');
   }
 }
 

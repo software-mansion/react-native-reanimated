@@ -5,7 +5,6 @@ import { experimentalBundlingInit } from './workletRuntimeEntry';
 
 init();
 
-export { logger } from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {

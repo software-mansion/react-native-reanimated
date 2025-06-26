@@ -98,14 +98,14 @@ export function init() {
   }
 }
 
-/** A function that should be ran on any kind of runtime. */
+/** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
   if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
 }
 
-/** A function that should be ran only on React Native runtime. */
+/** A function that should be run only on React Native runtime. */
 function initializeRNRuntime() {
   if (__DEV__) {
     const testWorklet = () => {
@@ -121,14 +121,14 @@ function initializeRNRuntime() {
   registerReportFatalRemoteError();
 }
 
-/** A function that should be ran only on Worklet runtimes. */
+/** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
     setupCallGuard();
   }
 }
 
-/** A function that should be ran only on RN Runtime in web implementation. */
+/** A function that should be run only on RN Runtime in web implementation. */
 function initializeRuntimeOnWeb() {
   globalThis._WORKLET = false;
   globalThis._log = console.log;
@@ -145,7 +145,7 @@ function initializeRuntimeOnWeb() {
 }
 
 /**
- * A function that should be ran on the RN Runtime to configure the UI Runtime
+ * A function that should be run on the RN Runtime to configure the UI Runtime
  * with callback bindings.
  */
 function installRNBindingsOnUIRuntime() {

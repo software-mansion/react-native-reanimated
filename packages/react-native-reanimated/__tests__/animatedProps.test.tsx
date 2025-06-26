@@ -37,7 +37,7 @@ export default function AnimatedComponent() {
   return (
     <View>
       <Svg>
-        // SVG components strip our jest props and cannot be tested
+        {/* SVG components strip our jest props and cannot be tested */}
         <AnimatedCircle
           cx="50%"
           cy="50%"

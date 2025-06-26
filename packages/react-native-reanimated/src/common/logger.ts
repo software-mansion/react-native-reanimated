@@ -1,3 +1,4 @@
+/* eslint-disable reanimated/use-logger */
 'use strict';
 
 const PREFIX = '[Reanimated]';

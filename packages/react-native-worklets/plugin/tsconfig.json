@@ -11,7 +11,8 @@
     "outDir": "lib",
     "rootDir": "src",
     "declaration": false,
-    "noEmit": false,
+    "noEmit": false
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["eslint.config.mjs"]
 }
