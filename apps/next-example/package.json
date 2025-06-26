@@ -30,8 +30,9 @@
     "cypress": "^13.2.0",
     "eslint": "^8.57.0",
     "next-compose-plugins": "^2.2.1",
-    "prettier": "^3.3.3",
-    "start-server-and-test": "^2.0.1"
+    "prettier": "*",
+    "start-server-and-test": "^2.0.1",
+    "typescript": "*"
   },
   "installConfig": {
     "selfReferences": false

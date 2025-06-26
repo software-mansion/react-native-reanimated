@@ -19,9 +19,9 @@
     "@typescript-eslint/utils": "^6.19.1",
     "esbuild": "^0.25.0",
     "eslint": "^8.57.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.3.3",
+    "jest": "*",
+    "prettier": "*",
     "ts-jest": "^29.1.2",
-    "typescript": "~5.3.0"
+    "typescript": "*"
   }
 }
