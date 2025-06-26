@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';

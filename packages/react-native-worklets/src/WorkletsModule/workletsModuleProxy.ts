@@ -80,4 +80,4 @@ export interface WorkletsModuleProxy {
   ): void;
 }
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+export type IWorkletsModule = WorkletsModuleProxy;

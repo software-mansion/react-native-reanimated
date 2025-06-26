@@ -99,14 +99,12 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
   globalThis.console = {
-    /* eslint-disable @typescript-eslint/unbound-method */
     assert: runOnJS(boundCapturableConsole.assert),
     debug: runOnJS(boundCapturableConsole.debug),
     log: runOnJS(boundCapturableConsole.log),
     warn: runOnJS(boundCapturableConsole.warn),
     error: runOnJS(boundCapturableConsole.error),
     info: runOnJS(boundCapturableConsole.info),
-    /* eslint-enable @typescript-eslint/unbound-method */
   };
 }
 
