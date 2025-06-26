@@ -2,7 +2,7 @@
 'use strict';
 
 import type { MutableRefObject } from 'react';
-import { runOnUI } from 'react-native-worklets';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
@@ -16,13 +16,18 @@ import type {
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
+import type {
+  JSPropsOperation,
+  PropUpdates,
+} from '../createAnimatedComponent/commonTypes';
+import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   isAnimatedProps?: boolean
 ) => void;
 
@@ -64,30 +69,75 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
+function updateJSProps(operations: JSPropsOperation[]) {
+  jsPropsUpdater.updateProps(operations);
+}
+
+type NativePropsOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  updates: StyleProps;
+};
+
 function createUpdatePropsManager() {
   'worklet';
-  const operations: {
-    shadowNodeWrapper: ShadowNodeWrapper;
-    updates: StyleProps | AnimatedStyle<any>;
-  }[] = [];
+  const nativeOperations: NativePropsOperation[] = [];
+  const jsOperations: JSPropsOperation[] = [];
+
+  let flushPending = false;
+
+  const processViewUpdates = (tag: number, updates: PropUpdates) =>
+    Object.entries(updates).reduce<{
+      nativePropUpdates?: PropUpdates;
+      jsPropUpdates?: PropUpdates;
+    }>((acc, [propName, value]) => {
+      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
+        acc.jsPropUpdates ??= {};
+        acc.jsPropUpdates[propName] = value;
+      } else {
+        acc.nativePropUpdates ??= {};
+        acc.nativePropUpdates[propName] = value;
+      }
+      return acc;
+    }, {});
+
   return {
-    update(
-      viewDescriptors: ViewDescriptorsWrapper,
-      updates: StyleProps | AnimatedStyle<any>
-    ) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        operations.push({
-          shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
-          updates,
-        });
-        if (operations.length === 1) {
+    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
+      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+        const viewTag = tag as number;
+        const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
+          viewTag,
+          updates
+        );
+
+        if (nativePropUpdates) {
+          nativeOperations.push({
+            shadowNodeWrapper,
+            updates: nativePropUpdates,
+          });
+        }
+        if (jsPropUpdates) {
+          jsOperations.push({
+            tag: viewTag,
+            updates: jsPropUpdates,
+          });
+        }
+
+        if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
           queueMicrotask(this.flush);
+          flushPending = true;
         }
       });
     },
     flush(this: void) {
-      global._updateProps!(operations);
-      operations.length = 0;
+      if (nativeOperations.length) {
+        global._updateProps!(nativeOperations);
+        nativeOperations.length = 0;
+      }
+      if (jsOperations.length) {
+        runOnJS(updateJSProps)(jsOperations);
+        jsOperations.length = 0;
+      }
+      flushPending = false;
     },
   };
 }
