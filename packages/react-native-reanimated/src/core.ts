@@ -16,7 +16,6 @@ import type {
   WorkletFunction,
 } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { initializeUIRuntime } from './initializers';
 import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
@@ -169,8 +168,6 @@ export function unregisterSensor(sensorId: number): void {
   const sensorContainer = getSensorContainer();
   return sensorContainer.unregisterSensor(sensorId);
 }
-
-initializeUIRuntime(ReanimatedModule);
 
 type FeaturesConfig = {
   enableLayoutAnimations: boolean;

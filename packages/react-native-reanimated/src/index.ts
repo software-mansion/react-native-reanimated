@@ -3,6 +3,10 @@
 import './publicGlobals';
 
 import * as Animated from './Animated';
+import { initializeUIRuntime } from './initializers';
+import { ReanimatedModule } from './ReanimatedModule';
+
+initializeUIRuntime(ReanimatedModule);
 
 export default Animated;
 
