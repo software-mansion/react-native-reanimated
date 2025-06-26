@@ -1,12 +1,7 @@
 'use strict';
 
 import { setupCallGuard } from './callGuard';
-import { reportFatalErrorOnJS } from './errors';
-import {
-  getMemorySafeCapturableConsole,
-  setupConsole,
-  setupErrorUtils,
-} from './initializers';
+import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
@@ -39,13 +34,11 @@ export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
-      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);

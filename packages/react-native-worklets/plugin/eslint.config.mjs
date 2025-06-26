@@ -20,6 +20,14 @@ const config = tsEslint.config(
     },
     ignores: [],
   },
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'no-bitwise': 'off',
+      'no-redeclare': 'warn'
+    },
+  },
 );
 
 export default config;

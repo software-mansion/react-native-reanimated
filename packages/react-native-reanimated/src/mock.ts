@@ -50,7 +50,6 @@ const hook = {
     _rebuild?: boolean
   ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
-  useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
     const value = { value: init };
     return new Proxy(value, {

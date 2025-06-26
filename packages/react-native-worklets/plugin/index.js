@@ -1145,7 +1145,6 @@ var require_autoworkletization = __commonJS({
       "useDerivedValue",
       "useAnimatedScrollHandler",
       "useAnimatedReaction",
-      "useWorkletCallback",
       "withTiming",
       "withSpring",
       "withDecay",
@@ -1162,7 +1161,6 @@ var require_autoworkletization = __commonJS({
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
       ["useAnimatedReaction", [0, 1]],
-      ["useWorkletCallback", [0]],
       ["withTiming", [2]],
       ["withSpring", [2]],
       ["withDecay", [1]],
@@ -1696,7 +1694,10 @@ module.exports = function WorkletsBabelPlugin() {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
+      const error = e;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = "WorkletsBabelPluginError";
+      throw error;
     }
   }
   return {
