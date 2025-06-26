@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { isFabric, isWeb, shouldBeUseWeb } from '../PlatformChecker';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import { shareableMappingCache } from '../shareableMappingCache';
 import { makeShareableCloneRecursive } from '../shareables';
@@ -18,7 +18,6 @@ import type {
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 
-const IS_WEB = isWeb();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface MaybeScrollableComponent extends Component {
@@ -32,21 +31,15 @@ interface MaybeScrollableComponent extends Component {
 }
 
 function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (isFabric() && component.getNativeScrollRef) {
+  if (component.getNativeScrollRef) {
     return component.getNativeScrollRef();
-  } else if (!isFabric() && component.getScrollableNode) {
+  }
+  if (component.getScrollableNode) {
     return component.getScrollableNode();
   }
   return component;
 }
 
-/**
- * Lets you get a reference of a view that you can use inside a worklet.
- *
- * @returns An object with a `.current` property which contains an instance of a
- *   component.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
- */
 function useAnimatedRefNative<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
@@ -68,19 +61,13 @@ function useAnimatedRefNative<
           ? getShadowNodeWrapperFromRef
           : findNodeHandle;
 
-        const getTagOrShadowNodeWrapper = () => {
-          return IS_WEB
-            ? getComponentOrScrollable(component)
-            : getTagValueFunction(getComponentOrScrollable(component));
-        };
+        const getTagOrShadowNodeWrapper = () =>
+          getTagValueFunction(getComponentOrScrollable(component));
 
         tag.value = getTagOrShadowNodeWrapper();
-
-        // On Fabric we have to unwrap the tag from the shadow node wrapper
-        fun.getTag = isFabric()
-          ? () => findNodeHandle(getComponentOrScrollable(component))
-          : getTagOrShadowNodeWrapper;
+        fun.getTag = () => findNodeHandle(getComponentOrScrollable(component));
         fun.current = component;
+
         // viewName is required only on iOS with Paper
         if (Platform.OS === 'ios' && !isFabric()) {
           viewName.value =
