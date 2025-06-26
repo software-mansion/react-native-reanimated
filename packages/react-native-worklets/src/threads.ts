@@ -1,5 +1,6 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { shareableMappingCache } from './shareableMappingCache';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -10,7 +11,7 @@ import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletImport } from './workletTypes';
 
 /** An array of [worklet, args, resolve (optional)] pairs. */
-let _runOnUIQueue: Array<
+let runOnUIQueue: Array<
   [WorkletFunction<unknown[], unknown>, unknown[], ((value: unknown) => void)?]
 > = [];
 
@@ -81,12 +82,6 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
-    throw new WorkletsError(
-      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
   if (
     __DEV__ &&
     !SHOULD_BE_USE_WEB &&
@@ -123,11 +118,11 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    _runOnUIQueue.push([worklet as WorkletFunction, args]);
-    if (_runOnUIQueue.length === 1) {
+    runOnUIQueue.push([worklet as WorkletFunction, args]);
+    if (runOnUIQueue.length === 1) {
       queueMicrotask(() => {
-        const queue = _runOnUIQueue;
-        _runOnUIQueue = [];
+        const queue = runOnUIQueue;
+        runOnUIQueue = [];
         WorkletsModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
@@ -142,6 +137,19 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     }
   };
 }
+
+function runOnUIWorklet(): void {
+  'worklet';
+  if (__DEV__) {
+    throw new WorkletsError(
+      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
+}
+
+const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
+
+shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
@@ -268,12 +276,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => Promise<ReturnValue> {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && globalThis._WORKLET) {
-    throw new WorkletsError(
-      '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
   }
@@ -307,15 +309,15 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         makeShareableCloneRecursive(args);
       }
 
-      _runOnUIQueue.push([
+      runOnUIQueue.push([
         worklet as WorkletFunction,
         args,
         resolve as (value: unknown) => void,
       ]);
-      if (_runOnUIQueue.length === 1) {
+      if (runOnUIQueue.length === 1) {
         queueMicrotask(() => {
-          const queue = _runOnUIQueue.slice();
-          _runOnUIQueue = [];
+          const queue = runOnUIQueue;
+          runOnUIQueue = [];
           WorkletsModule.scheduleOnUI(
             makeShareableCloneRecursive(() => {
               'worklet';
@@ -333,3 +335,17 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
     });
   };
 }
+
+function runOnUIAsyncWorklet(): void {
+  'worklet';
+  if (__DEV__) {
+    throw new WorkletsError(
+      '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
+}
+
+const shareableRunOnUIAsyncWorklet =
+  makeShareableCloneRecursive(runOnUIAsyncWorklet);
+
+shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
