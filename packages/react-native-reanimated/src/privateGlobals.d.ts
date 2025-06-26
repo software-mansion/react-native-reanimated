@@ -13,10 +13,9 @@ import type {
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
-  StyleProps,
 } from './commonTypes';
+import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
@@ -37,12 +36,13 @@ declare global {
   var _registriesLeakCheck: () => string;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
+  var _tagToJSPropNamesMapping: Record<number, Record<string, boolean>>;
   var _updateProps:
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
           // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-          updates: StyleProps | AnimatedStyle<any>;
+          updates: PropUpdates;
         }[]
       ) => void)
     | undefined;
@@ -63,7 +63,6 @@ declare global {
   var __sensorContainer: SensorContainer;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
-  var updateJSProps: (viewTag: number, props: Record<string, unknown>) => void;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
   var _obtainProp: (
     shadowNodeWrapper: ShadowNodeWrapper,
