@@ -95,7 +95,6 @@ export {
   isReanimated3,
   makeMutable,
   makeShareableCloneRecursive,
-  registerJSProps,
   runOnJS,
   runOnRuntime,
   runOnUI,
@@ -150,7 +149,6 @@ export {
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
-  useWorkletCallback,
 } from './hook';
 export type {
   InterpolateConfig,

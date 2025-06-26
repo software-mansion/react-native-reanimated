@@ -132,6 +132,13 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
+    },
+    "ios": {
+      "modulesConformingToProtocol": {
+        "RCTBundleConsumer": [
+          "WorkletsModule"
+        ]
+      }
     }
   }
 }

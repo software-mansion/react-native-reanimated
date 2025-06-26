@@ -4,19 +4,16 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
-  registerJSProps,
   runOnJS,
   useAnimatedProps,
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import Svg, { Circle, G, Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
-
-registerJSProps('RNSVGGroup', ['x', 'y']);
 
 interface Point {
   x: number;
@@ -104,11 +101,11 @@ function CircularSlider(props: CircularSliderProps) {
     };
   });
 
-  const animatedGProps = useAnimatedProps(() => {
+  const animatedKnobProps = useAnimatedProps(() => {
     const p = knobPosition.value;
     return {
-      x: p.x - knobRadius,
-      y: p.y - knobRadius,
+      cx: p.x,
+      cy: p.y,
     };
   });
 
@@ -147,14 +144,11 @@ function CircularSlider(props: CircularSliderProps) {
               fill="none"
               animatedProps={animatedPathProps}
             />
-            <AnimatedG animatedProps={animatedGProps}>
-              <Circle
-                cx={knobRadius}
-                cy={knobRadius}
-                r={knobRadius}
-                fill={knobColor}
-              />
-            </AnimatedG>
+            <AnimatedCircle
+              r={knobRadius}
+              fill={knobColor}
+              animatedProps={animatedKnobProps}
+            />
           </Svg>
         </Animated.View>
       </GestureDetector>

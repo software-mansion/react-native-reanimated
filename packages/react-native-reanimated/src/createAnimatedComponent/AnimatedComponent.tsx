@@ -33,7 +33,7 @@ import type {
   NestedArray,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
-import JSPropsUpdater from './JSPropsUpdater';
+import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
@@ -45,7 +45,8 @@ if (IS_WEB) {
 }
 
 export type Options<P> = {
-  setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
+  setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
+  jsProps?: string[];
 };
 
 export default class AnimatedComponent
@@ -63,7 +64,6 @@ export default class AnimatedComponent
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
-  _jsPropsUpdater = new JSPropsUpdater();
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
@@ -110,9 +110,12 @@ export default class AnimatedComponent
       this._NativeEventsManager = new NativeEventsManager(this, this._options);
     }
     this._NativeEventsManager?.attachEvents();
-    this._jsPropsUpdater.addOnJSPropsChangeListener(this);
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
+    }
 
     const layout = this.props.layout;
     if (layout) {
@@ -151,9 +154,12 @@ export default class AnimatedComponent
   componentWillUnmount() {
     super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
-    this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.unregisterComponent(this);
+    }
 
     const exiting = this.props.exiting;
 
@@ -185,7 +191,7 @@ export default class AnimatedComponent
     }
   }
 
-  _updateFromNative(props: StyleProps) {
+  setNativeProps(props: StyleProps) {
     if (this._options?.setNativeProps) {
       this._options.setNativeProps(
         this._componentRef as AnimatedComponentRef,
