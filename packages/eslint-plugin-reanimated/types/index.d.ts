@@ -6,6 +6,18 @@ export declare const rules: {
     unknown,
     TSESLint.RuleListener
   >;
+  'use-logger': TSESLint.RuleModule<
+    'useLogger',
+    [],
+    unknown,
+    TSESLint.RuleListener
+  >;
+  'no-logger-message-prefix': TSESLint.RuleModule<
+    'noLoggerMessagePrefix',
+    [],
+    unknown,
+    TSESLint.RuleListener
+  >;
   'use-reanimated-error': TSESLint.RuleModule<
     'useReanimatedError',
     [],
