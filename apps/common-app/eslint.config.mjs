@@ -326,7 +326,7 @@ export default tsEslint.config(
       '@typescript-eslint/no-unsafe-call': 'error',
       '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
-      'no-underscore-dangle': 'off',
+      'no-underscore-dangle': 'error',
     },
   },
   globalIgnores(['**/eslint.config.mjs'])
