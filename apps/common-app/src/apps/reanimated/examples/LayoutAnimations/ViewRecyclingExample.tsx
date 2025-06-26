@@ -49,7 +49,6 @@ const OptionInput = ({ onChange }: OptionProps) => {
 
   const handleSelect = (option: Option) => {
     setActiveOption(option);
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     onChange && onChange(option);
   };
 

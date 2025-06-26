@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export enum MutableAPI {
   ORIGINAL = 'ORIGINAL',
@@ -9,14 +9,20 @@ export enum MutableAPI {
 
 export const ProgressBar = ({ progress }: { progress: number }) => {
   return (
-    <View style={{ margin: 30, borderWidth: 3, borderColor: 'darkorange' }}>
-      <View
-        style={{
-          height: 80,
-          width: `${100 * progress}%`,
-          backgroundColor: 'darkorange',
-        }}
-      />
+    <View style={styles.container}>
+      <View style={[styles.progressBar, { width: `${100 * progress}%` }]} />
     </View>
   );
 };
+
+export const styles = StyleSheet.create({
+  container: {
+    margin: 30,
+    borderWidth: 3,
+    borderColor: 'darkorange',
+  },
+  progressBar: {
+    height: 80,
+    backgroundColor: 'darkorange',
+  },
+});

@@ -18,7 +18,6 @@ export function processWorkletizableObject(
         processWorklet(value, state);
       }
     } else {
-      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(
         `[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`
       );

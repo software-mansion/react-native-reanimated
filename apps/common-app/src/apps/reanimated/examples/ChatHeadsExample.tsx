@@ -91,12 +91,9 @@ function ChatHeads({
   return (
     <>
       {childrenArray.length > 1 && (
-        <Followers
-          // eslint-disable-next-line react/no-children-prop
-          children={childrenArray.slice(1)}
-          transX={transX}
-          transY={transY}
-        />
+        <Followers transX={transX} transY={transY}>
+          {childrenArray.slice(1)}
+        </Followers>
       )}
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[styles.headContainer, stylez]}>

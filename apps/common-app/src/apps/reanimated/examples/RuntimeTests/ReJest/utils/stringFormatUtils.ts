@@ -82,7 +82,6 @@ export function getColorSquare(color: unknown) {
   const green = (colorNumber >> 8) & 255;
   const blue = colorNumber & 255;
   /* eslint-enable no-bitwise */
-
   const colorAnsi = `\x1b[48;5;${rgbToAnsi256(red, green, blue)}m`;
   return colorAnsi + '  ' + RESET_BACKGROUND;
 }

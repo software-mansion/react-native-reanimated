@@ -26,7 +26,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     try {
       fun();
     } catch (e) {
-      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
     }
   }

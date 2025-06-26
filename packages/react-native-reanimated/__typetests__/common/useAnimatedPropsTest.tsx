@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
@@ -76,6 +75,7 @@ function UseAnimatedPropsTest() {
   }
 
   function UseAnimatedPropsTestPartial2() {
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const optionalProps = useAnimatedProps<FlatListProps<string>>(() => ({
       style: {},
     }));
@@ -92,6 +92,7 @@ function UseAnimatedPropsTest() {
   }
 
   function UseAnimatedPropsTestPartial3() {
+    const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const requiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
       data: ['1'],
       renderItem: () => null,

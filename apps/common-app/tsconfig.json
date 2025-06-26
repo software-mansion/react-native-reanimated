@@ -6,6 +6,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "index.ts"],
-  "exclude": ["**/*eslint.config.mjs"]
+  "include": ["src", "index.ts"]
 }

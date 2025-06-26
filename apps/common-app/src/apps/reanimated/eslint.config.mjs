@@ -75,7 +75,13 @@ export default tsEslint.config(
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-var-requires': 'error',
       'no-unused-vars': 'warn',
-      '@typescript-eslint/no-unused-expressions': 'error',
+      '@typescript-eslint/no-unused-expressions': [
+        'error',
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+        },
+      ],
       'no-constant-binary-expression': 'warn',
       'no-constant-condition': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'warn',

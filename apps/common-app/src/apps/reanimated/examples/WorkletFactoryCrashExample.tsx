@@ -7,7 +7,7 @@ export default function App() {
     function badWorklet() {
       'worklet';
       // @ts-expect-error This is an expected error
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions, no-unused-expressions
       nonExistingVariable;
     }
   }
