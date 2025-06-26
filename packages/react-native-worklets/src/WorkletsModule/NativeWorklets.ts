@@ -12,7 +12,7 @@ export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
 }
 
-class NativeWorklets {
+class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: ShareableRef<undefined>;
   #shareableNull: ShareableRef<null>;
