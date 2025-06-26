@@ -122,10 +122,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(args);
     }
 
-    enqueueUI<Args, ReturnValue>(
-      worklet as WorkletFunction<Args, ReturnValue>,
-      args
-    );
+    enqueueUI<Args, ReturnValue>(worklet, args);
   };
 }
 
