@@ -1,9 +1,9 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
-import { logger } from 'react-native-worklets';
 
 import type { SharedValue } from '../commonTypes';
 import type { AnimatedScrollView } from '../component/ScrollView';
+import { logger } from '../logger';
 import { isWeb } from '../PlatformChecker';
 import type {
   AnimatedRef,
