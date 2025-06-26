@@ -119,7 +119,7 @@ WorkletRuntime::WorkletRuntime(
           {.message = newMessage,
            .stack = stack,
            .name = "WorkletsError",
-            .jsEngine = "Worklets"});
+           .jsEngine = "Worklets"});
     }
   }
 #else

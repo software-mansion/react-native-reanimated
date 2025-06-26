@@ -19,8 +19,8 @@ export function experimentalBundlingInit() {
   globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
   if (globalThis._WORKLET) {
     /**
-     * We shouldn't call `init()` on RN Runtime here, as it would initialize
-     * our module before React Native has configured the RN Runtime.
+     * We shouldn't call `init()` on RN Runtime here, as it would initialize our
+     * module before React Native has configured the RN Runtime.
      */
     init();
     throw new WorkletsError('Worklets initialized successfully');
