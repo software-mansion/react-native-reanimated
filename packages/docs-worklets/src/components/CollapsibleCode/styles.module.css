@@ -1,0 +1,15 @@
+.container {
+  background-color: var(--swm-off-background);
+  border-radius: 0;
+  border: 1px solid var(--swm-border);
+  margin-bottom: 1em;
+}
+
+.container pre,
+.container code {
+  border: none;
+}
+
+.collapseButton {
+  padding: 1em 0 0 1em;
+}

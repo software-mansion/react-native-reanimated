@@ -1,0 +1,48 @@
+.background {
+  background: linear-gradient(
+    180deg,
+    var(--swm-purple-light-100) 0%,
+    var(--swm-red-light-100) 100%
+  );
+  margin-top: -1rem;
+  margin-bottom: -8rem;
+  height: fit-content;
+}
+
+[data-theme='dark'] .background {
+  background: linear-gradient(
+    180deg,
+    var(--swm-purple-dark-120) -0.35%,
+    var(--swm-purple-dark-100) -0.34%,
+    var(--swm-red-dark-100) 100%
+  );
+}
+
+.bottomWave {
+  margin-bottom: -4rem;
+}
+
+.backgroundWrapper {
+  position: relative;
+  display: flex;
+}
+
+.topWave > svg:first-child,
+.bottomWave > svg:first-child {
+  display: none;
+}
+
+.topWave > svg:nth-child(2),
+.bottomWave > svg:nth-child(2) {
+  display: block;
+}
+
+[data-theme='dark'] .topWave > svg:first-child,
+[data-theme='dark'] .bottomWave > svg:first-child {
+  display: block;
+}
+
+[data-theme='dark'] .topWave > svg:nth-child(2),
+[data-theme='dark'] .bottomWave > svg:nth-child(2) {
+  display: none;
+}

@@ -17,7 +17,8 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
-      WORKING_DIRECTORY: packages/docs-reanimated
+      REANIMATED_DOCS_DIR: packages/docs-reanimated
+      WORKLETS_DOCS_DIR: packages/docs-worklets
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -31,11 +32,20 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: yarn install
       - name: Install Reanimated docs node dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: ${{ env.REANIMATED_DOCS_DIR }}
         run: yarn install
-      - name: Lint check docs
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - name: Lint check Reanimated docs
+        working-directory: ${{ env.REANIMATED_DOCS_DIR }}
         run: yarn lint
-      - name: Build docs
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - name: Build Reanimated docs
+        working-directory: ${{ env.REANIMATED_DOCS_DIR }}
+        run: yarn build
+      - name: Install Worklets docs node dependencies
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn install
+      - name: Lint check Worklets docs
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn lint
+      - name: Build Worklets docs
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
         run: yarn build

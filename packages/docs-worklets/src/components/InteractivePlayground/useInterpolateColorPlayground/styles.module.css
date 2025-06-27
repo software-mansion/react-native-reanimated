@@ -1,0 +1,23 @@
+.example {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+
+  margin: 30px 0 20px 0;
+}
+
+@media (max-width: 600px) {
+  .example {
+    flex-direction: column;
+  }
+}
+
+.collapseButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  margin: 16px 0;
+}

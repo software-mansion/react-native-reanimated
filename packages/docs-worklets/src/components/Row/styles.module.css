@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  gap: 32px;
+}
+
+@media (max-width: 1280px) {
+  .container {
+    flex-direction: column-reverse;
+  }
+}
+
+@media (max-width: 996px) {
+  .container {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column-reverse;
+  }
+}

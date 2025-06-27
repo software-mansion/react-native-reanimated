@@ -1,0 +1,17 @@
+.colorSelection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+[class='react-colorful'] {
+  width: 150px !important;
+  height: 150px !important;
+
+  margin: 40px 0;
+}
+
+.colorInput {
+  width: 150px;
+  padding: 6px;
+}

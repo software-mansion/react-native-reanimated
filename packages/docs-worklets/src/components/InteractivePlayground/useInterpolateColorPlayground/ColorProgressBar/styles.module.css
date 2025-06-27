@@ -1,0 +1,40 @@
+.smallBox {
+  width: 20px;
+  height: 20px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.progressBarSection {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+
+  width: 55%;
+
+  height: 120px;
+
+  flex: 1;
+}
+
+.progressBarSectionPart {
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-evenly;
+  height: 100%;
+
+  flex: 1;
+}
+
+.progressBarLabels {
+  align-items: center;
+}
+
+.progressBarSection p {
+  --ifm-paragraph-margin-bottom: 0;
+}

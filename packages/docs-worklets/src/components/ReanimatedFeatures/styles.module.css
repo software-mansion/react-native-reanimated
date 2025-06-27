@@ -1,0 +1,77 @@
+.featuresContainer {
+  margin: 0 auto;
+  width: 60%;
+}
+
+@media (max-width: 1440px) {
+  .featuresContainer {
+    width: 75%;
+  }
+}
+
+@media (max-width: 768px) {
+  .featuresContainer {
+    width: 80%;
+  }
+}
+
+.featuresContainer h2,
+.featuresLowerContainer {
+  /* Move heading label of features section to the start of the box-shadow */
+  position: relative;
+  left: -12px;
+}
+
+.featuresContainer h2 {
+  font-family: var(--swm-title-landing-font);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: var(--swm-heading-letter-spacing-bigger);
+
+  margin-bottom: 80px;
+}
+
+@media (max-width: 768px) {
+  .featuresContainer h2 {
+    margin-bottom: 48px;
+  }
+}
+
+.featuresContainer h4 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.featuresLowerContainer {
+  display: flex;
+  align-items: center;
+
+  /* Add 12px to container width, as we're already moving this container to the left
+     * for the purpose of the feature-boxes shadows.
+     */
+  width: calc(100% + 12px);
+  margin-top: 80px;
+}
+
+@media (max-width: 768px) {
+  .featuresLowerContainer {
+    flex-direction: column;
+
+    margin-top: 48px;
+  }
+}
+
+.featuresLowerContainer h4 {
+  flex: 1 0;
+}
+
+.featuresLowerContainer [class*='homepageButton'] {
+  margin-left: 8px;
+}
+
+@media (max-width: 768px) {
+  .featuresLowerContainer [class*='homepageButton'] {
+    margin: 32px 0 0 0;
+  }
+}

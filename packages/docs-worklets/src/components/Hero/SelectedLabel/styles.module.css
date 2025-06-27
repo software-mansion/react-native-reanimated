@@ -1,0 +1,63 @@
+:root {
+  --swm-dash-width: 2px;
+  --swm-dash-spacing: 22px;
+}
+
+.selection {
+  display: inline-block;
+  position: absolute;
+  padding: 3px 10px 8px;
+  color: var(--swm-landing-heading-selected);
+  line-height: 1;
+  z-index: 1;
+
+  /* normally one would do this with border dashed but that doesn't allow for modifying spacing between dashes */
+  /* prettier-ignore */
+  background:
+    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) top/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x,
+    /* top */
+    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) right/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y,
+    /* right */
+    linear-gradient(to right, var(--swm-landing-heading-selected-border) 50%, transparent 0%) bottom/var(--swm-dash-spacing) var(--swm-dash-width) repeat-x,
+    /* bottom */
+    linear-gradient(var(--swm-landing-heading-selected-border) 50%, transparent 0%) left/var(--swm-dash-width) var(--swm-dash-spacing) repeat-y;
+  /* left */
+}
+
+.selectionContainer {
+  position: relative;
+  text-align: center;
+}
+
+.headerText {
+  position: relative;
+  margin-right: 4px;
+}
+
+.interactiveHeaderText {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --swm-dash-spacing: 20px;
+  }
+
+  .selection {
+    padding: 6px 2px 8px;
+    display: block;
+    margin: 6px 0;
+  }
+
+  .headerText {
+    margin: 0 10px;
+  }
+
+  .preInteractiveHeaderText {
+    margin-right: 0;
+  }
+}
