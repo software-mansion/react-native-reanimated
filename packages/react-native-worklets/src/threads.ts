@@ -122,7 +122,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(args);
     }
 
-    enqueueUI<Args, ReturnValue>(worklet, args);
+    enqueueUI(worklet, args);
   };
 }
 
@@ -297,11 +297,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         makeShareableCloneRecursive(args);
       }
 
-      enqueueUI<Args, ReturnValue>(
-        worklet as WorkletFunction<Args, ReturnValue>,
-        args,
-        resolve
-      );
+      enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
     });
   };
 }
