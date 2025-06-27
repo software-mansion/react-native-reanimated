@@ -1,0 +1,26 @@
+.swirl {
+  position: absolute;
+  top: -6vh;
+  right: -15vw;
+  z-index: 2;
+}
+
+@media (max-width: 1550px) {
+  .swirl {
+    right: -10vw;
+  }
+}
+
+@media (max-width: 1280px) {
+  .swirl {
+    top: -5vh;
+    right: -8vw;
+  }
+}
+
+@media (max-width: 996px) {
+  .swirl {
+    top: -7vh;
+    right: -20vw;
+  }
+}

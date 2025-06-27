@@ -1,0 +1,25 @@
+.supported {
+  color: var(--swm-compatibility-text-color);
+  background-color: var(--swm-compatibility-supported-background);
+  text-align: center;
+  text-transform: capitalize;
+  padding: 12px;
+}
+
+.notSupported {
+  color: var(--swm-compatibility-text-color);
+  background-color: var(--swm-compatibility-not-supported-background);
+  text-align: center;
+  text-transform: capitalize;
+  padding: 12px;
+}
+
+.version {
+  font-weight: bold;
+  text-align: center;
+  padding: 12px;
+}
+
+.spacer {
+  padding-top: 10px;
+}

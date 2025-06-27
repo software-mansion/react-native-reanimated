@@ -1,0 +1,50 @@
+.details {
+  background-color: var(--swm-details-foreground);
+  box-shadow: -8px 8px 0 var(--swm-details-background);
+
+  color: var(--swm-details-color);
+}
+
+.details a {
+  color: var(--swm-details-color);
+}
+
+.details > summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  padding: 1.5em 2em;
+}
+
+.details > summary > p {
+  margin: 0;
+}
+
+/* TODO: deprecation, need to remove this after Safari will support `::marker` */
+.details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.arrow {
+  height: 12px;
+  width: 12px;
+  margin-right: 1.5rem;
+  left: 0;
+
+  transition: var(--swm-expandable-transition);
+}
+
+.details[open]:not(.isBrowser) > summary > .arrow,
+    /* When JS works: we use the data-attribute for arrow animation */
+.details[data-collapsed='false'].isBrowser > summary > .arrow {
+  transform: rotate(180deg);
+}
+
+.collapsibleContent {
+  padding: 0 2em 1.5em 2em;
+}
+
+.collapsibleContent > *:last-child {
+  margin-bottom: 0;
+}

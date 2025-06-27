@@ -1,0 +1,28 @@
+.actionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.25em;
+  cursor: pointer;
+
+  /* Border applied to omit enlarging icon during the animation. */
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.iconClicked {
+  animation: 1s iconClick;
+}
+
+@keyframes iconClick {
+  0% {
+    border: 1px solid var(--swm-interactive-copy-button-off);
+  }
+  50% {
+    border: 1px solid var(--swm-interactive-copy-button-on);
+  }
+  100% {
+    border: 1px solid var(--swm-interactive-copy-button-off);
+  }
+}

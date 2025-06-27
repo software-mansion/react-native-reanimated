@@ -1,0 +1,29 @@
+.collapseButton {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.collapseButton button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+
+  font-family: var(--swm-body-font);
+  font-size: 16px;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+}
+
+.arrow {
+  height: 12px;
+  width: 12px;
+  margin-right: 1rem;
+  margin-top: 2px;
+
+  transition: var(--swm-expandable-transition);
+}
+
+.collapseButton[data-collapsed='false'] .arrow {
+  transform: rotate(180deg);
+}

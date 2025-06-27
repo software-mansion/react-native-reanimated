@@ -1,0 +1,28 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin: 50px 0;
+}
+
+.gifs {
+  border-radius: 5%;
+  height: 500px;
+}
+
+@media only screen and (max-width: 650px) {
+  .container {
+    flex-direction: column;
+  }
+}
+
+.rightArrow {
+  margin: 0 40px;
+  font-size: 50px;
+}
+
+.downArrow {
+  margin: 40px 0;
+  font-size: 50px;
+}

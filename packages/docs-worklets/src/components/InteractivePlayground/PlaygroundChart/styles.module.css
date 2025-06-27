@@ -1,0 +1,10 @@
+.graph {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 1em;
+}
+
+.graph canvas {
+  border: 1px solid var(--swm-border);
+}

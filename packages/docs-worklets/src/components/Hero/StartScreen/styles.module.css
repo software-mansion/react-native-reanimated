@@ -1,0 +1,191 @@
+.hero {
+  position: relative;
+  top: 0;
+
+  height: 100vh;
+  min-height: 70vw;
+  background-color: transparent;
+}
+
+.heading {
+  position: absolute;
+  margin-top: 25vh;
+  margin-left: 10vw;
+
+  width: 80%;
+  height: fit-content;
+}
+
+.headingLabel {
+  font-family: var(--swm-title-landing-font);
+  font-size: 64px;
+  font-weight: 700;
+
+  line-height: 1.1;
+  letter-spacing: 0;
+  color: var(--swm-landing-heading);
+}
+
+.rnLabel {
+  margin-right: 12px;
+}
+
+.subheadingLabel {
+  font-family: var(--swm-title-landing-font);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: var(--swm-heading-letter-spacing-bigger);
+  text-wrap: balance;
+
+  margin-top: 32px;
+  margin-bottom: 56px;
+  width: fit-content;
+  color: var(--swm-landing-heading);
+}
+
+@media (max-width: 996px) {
+  .subheadingLabel {
+    margin-top: 52px;
+  }
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .headingLabel {
+    font-size: 26px;
+  }
+
+  .subheadingLabel {
+    font-size: 20px;
+    width: 90%;
+    margin-bottom: 0;
+  }
+
+  .heading {
+    margin: 2em 0;
+  }
+}
+
+@media (max-height: 768px) {
+  .foregroundLabel {
+    display: flex;
+    justify-content: center;
+
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 1124px) and (max-height: 768px) {
+  .hero {
+    min-height: 660px;
+  }
+}
+
+@media (min-height: 768px) and (max-width: 768px) {
+  .hero {
+    position: relative;
+    top: 0;
+
+    height: calc(100vh - var(--ifm-navbar-height));
+  }
+
+  /* Height of hero: 100vh - height of navbar - possible height of announcement bar.
+     * Using variable --docusaurus-announcement-bar-height is not possible here, as the height
+     * of announcement bar is being calculated automatically there.
+     */
+  .hero[data-announcement-bar='true'] {
+    height: calc(100vh - var(--ifm-navbar-height) - 2.5em);
+  }
+
+  .heading {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    margin-top: 22px;
+    height: 100%;
+  }
+
+  .subheadingLabel {
+    margin-top: 64px;
+    margin-bottom: 24px;
+  }
+
+  .foregroundLabel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+    height: 90%;
+
+    margin-left: 0;
+  }
+
+  .lowerHeading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+
+    width: fit-content;
+  }
+}
+
+.heroBackground {
+  position: absolute;
+  top: 0;
+
+  background: linear-gradient(
+      357.23deg,
+      var(--swm-white) 2.25%,
+      rgba(252, 252, 255, 0) 53.95%
+    ),
+    linear-gradient(
+      180deg,
+      var(--swm-purple-light-60) 0%,
+      var(--swm-red-light-40) 40%,
+      var(--swm-yellow-light-40) 85%
+    );
+  width: 100%;
+  height: 100vh;
+  min-height: 70vw;
+  overflow: hidden;
+  z-index: -100;
+}
+
+[data-theme='dark'] .heroBackground {
+  background: linear-gradient(
+    180deg,
+    var(--swm-purple-dark-100) 0%,
+    var(--swm-navy) 85%
+  );
+}
+
+.heroBackground[data-announcement-bar='true'] {
+  top: var(--docusaurus-announcement-bar-height);
+}
+
+@media (max-width: 1124px) and (max-height: 768px) {
+  .heroBackground {
+    min-height: 768px;
+  }
+}
+
+@media (min-width: 680px) and (max-width: 996px) and (max-height: 996px) {
+  .heroBackground {
+    min-height: 1124px !important;
+  }
+}
+
+@media (min-width: 1600px) and (max-height: 996px) {
+  .heroBackground {
+    min-height: 70vw !important;
+  }
+}
