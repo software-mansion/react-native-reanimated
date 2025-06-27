@@ -13,17 +13,25 @@ jobs:
   publish:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
+    env:
+      REANIMATED_DOCS_DIR: packages/docs-reanimated
+      WORKLETS_DOCS_DIR: packages/docs-worklets
     steps:
       - name: Check out
         uses: actions/checkout@v4
 
-      - name: Generate awesome content
+      - name: Configure git user info
         run: >-
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
-          && cd packages/docs-reanimated
-          && yarn
-          && yarn build
+
+      - name: Build Reanimated docs
+        working-directory: ${{ env.REANIMATED_DOCS_DIR }}
+        run: yarn && yarn build
+
+      - name: Build Worklets docs
+        working-directory: ${{ env.WORKLETS_DOCS_DIR }}
+        run: yarn && yarn build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3

@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build && node -r esbuild-register scripts/build-og-images.jsx && mkdir -p ../react-native-reanimated/build/react-native-worklets && cp -r build/* ../react-native-reanimated/build/react-native-worklets",
+    "build": "docusaurus build && node -r esbuild-register scripts/build-og-images.jsx && mkdir -p ../docs-reanimated/build/react-native-worklets && mv build/* ../docs-reanimated/build/react-native-worklets",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
