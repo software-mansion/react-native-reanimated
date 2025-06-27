@@ -54,7 +54,7 @@ const StartScreen = () => {
               <Horse />
               <div className={styles.buttonContainer}>
                 <HomepageButton
-                  href="/react-native-worklets/docs"
+                  href="/react-native-reanimated/react-native-worklets/docs/"
                   title="Get started"
                 />
               </div>

@@ -16,7 +16,7 @@ const config = {
   url: 'https://docs.swmansion.com',
 
   // Change this to /react-native-worklets/ when deploying to GitHub pages
-  baseUrl: '/react-native-worklets/',
+  baseUrl: '/react-native-reanimated/react-native-worklets/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -97,7 +97,7 @@ const config = {
         },
         items: [
           {
-            to: 'docs/fundamentals/getting-started',
+            to: 'docs/',
             activeBasePath: 'docs',
             label: 'Docs',
             position: 'left',
