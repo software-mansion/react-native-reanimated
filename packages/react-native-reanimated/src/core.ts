@@ -176,7 +176,6 @@ export function unregisterSensor(sensorId: number): void {
  * @deprecated This function no longer has any effect in Reanimated and will be
  *   removed in the future.
  */
-// ts-prune-ignore-next This function is needed for backward compatibility
 export function enableLayoutAnimations(
   _flag: boolean,
   _isCallByUser = true

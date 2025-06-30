@@ -2,8 +2,6 @@
 export { withClamp } from './clamp';
 export type {
   DelayAnimation,
-  HigherOrderAnimation,
-  NextAnimation,
   RepeatAnimation,
   SequenceAnimation,
   StyleLayoutAnimation,

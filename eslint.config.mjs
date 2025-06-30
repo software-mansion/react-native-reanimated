@@ -160,6 +160,10 @@ const config = tsEslint.config(
       'simple-import-sort': simpleImportSort,
     },
 
+    settings: {
+      tsdoc: { configFile: './tsdoc.json' }
+    },
+
     rules: {
       ...tsRules,
       ...jsDocRules,

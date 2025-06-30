@@ -355,7 +355,6 @@ export const ColorProperties = makeShareable([
   'stroke',
 ]);
 
-// // ts-prune-ignore-next Exported for the purpose of tests only
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 

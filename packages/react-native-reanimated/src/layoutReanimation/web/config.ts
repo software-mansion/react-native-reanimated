@@ -134,4 +134,3 @@ export const Animations = {
 };
 
 export type AnimationNames = keyof typeof Animations;
-export type LayoutTransitionsNames = keyof typeof AnimationsData;

@@ -43,10 +43,6 @@ interface PropsUsedInUseAnimatedGestureHandler {
   oldState?: StateType;
 }
 
-export type GestureHandlerEvent<Event extends object> =
-  | ReanimatedEvent<Event>
-  | Event;
-
 type GestureHandler<
   Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
   Context extends Record<string, unknown>,

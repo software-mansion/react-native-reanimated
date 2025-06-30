@@ -10,10 +10,9 @@ function isWindowAvailable() {
 }
 
 export const IS_ANDROID: boolean = Platform.OS === 'android';
-export const IS_IOS: boolean = Platform.OS === 'ios';
 export const IS_WEB: boolean = Platform.OS === 'web';
 export const IS_JEST: boolean = !!process.env.JEST_WORKER_ID;
-export const IS_WINDOWS: boolean = Platform.OS === 'windows';
+const IS_WINDOWS: boolean = Platform.OS === 'windows';
 
 export const IS_WINDOW_AVAILABLE: boolean = isWindowAvailable();
 

@@ -247,7 +247,7 @@ const getInterpolateHSV = (
   };
 };
 
-export interface InterpolateLAB {
+interface InterpolateLAB {
   l: number[];
   a: number[];
   b: number[];

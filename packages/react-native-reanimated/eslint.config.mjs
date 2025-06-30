@@ -32,6 +32,9 @@ const config = tsEslint.config(
       'no-unused-expressions': 'error',
       'camelcase': 'error',
     },
+    settings: {
+      tsdoc: { configFile: './tsdoc.json' }
+    }
   }
 );
 
