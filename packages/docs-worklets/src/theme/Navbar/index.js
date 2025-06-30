@@ -1,6 +1,7 @@
 import React from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { Navbar } from '@swmansion/t-rex-ui';
+import styles from './styles.module.css';
 
 export default function NavbarWrapper(props) {
   const titleImages = {
@@ -13,6 +14,8 @@ export default function NavbarWrapper(props) {
     title: useBaseUrl('/img/title-hero.svg'),
   };
   return (
-    <Navbar heroImages={heroImages} titleImages={titleImages} {...props} />
+    <div className={styles.navbarWrapper}>
+      <Navbar heroImages={heroImages} titleImages={titleImages} {...props} />
+    </div>
   );
 }
