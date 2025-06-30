@@ -191,12 +191,12 @@ export function configureLayoutAnimationBatch(
   ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
-export function setShouldAnimateExitingForTag(
-  viewTag: number | HTMLElement,
+export function setShouldAnimateExitingForSubtree(
+  rootTag: number | HTMLElement,
   shouldAnimate: boolean
 ) {
-  ReanimatedModule.setShouldAnimateExitingForTag(
-    viewTag as number,
+  ReanimatedModule.setShouldAnimateExitingForSubtree(
+    rootTag as number,
     shouldAnimate
   );
 }

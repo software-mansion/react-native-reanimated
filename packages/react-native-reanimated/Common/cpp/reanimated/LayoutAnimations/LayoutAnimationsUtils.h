@@ -1,7 +1,5 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 
@@ -10,8 +8,12 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <jsi/jsi.h>
 
 namespace reanimated {
+
+using namespace facebook;
+using namespace react;
 
 struct Rect {
   double width, height;

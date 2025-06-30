@@ -84,6 +84,7 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
+      console.log('viewTag', viewTag);
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
     this._viewInfo = { viewTag, shadowNodeWrapper };

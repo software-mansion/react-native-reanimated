@@ -54,7 +54,10 @@ export interface ReanimatedModuleProxy {
     layoutAnimationsBatch: LayoutAnimationBatchItem[]
   ): void;
 
-  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+  setShouldAnimateExitingForSubtree(
+    rootTag: number,
+    shouldAnimate: boolean
+  ): void;
 
   setViewStyle(viewTag: number, style: StyleProps): void;
 

@@ -62,7 +62,7 @@ class JSReanimated implements IReanimatedModule {
     // no-op
   }
 
-  setShouldAnimateExitingForTag() {
+  setShouldAnimateExitingForSubtree() {
     // no-op
   }
 

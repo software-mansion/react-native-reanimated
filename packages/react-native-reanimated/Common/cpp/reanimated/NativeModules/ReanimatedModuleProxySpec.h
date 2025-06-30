@@ -67,9 +67,9 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) = 0;
 
-  virtual void setShouldAnimateExiting(
+  virtual void setShouldAnimateExitingForSubtree(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
+      const jsi::Value &rootTag,
       const jsi::Value &shouldAnimate) = 0;
 
   // JS View style

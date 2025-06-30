@@ -155,9 +155,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
-    this.#reanimatedModuleProxy.setShouldAnimateExitingForTag(
-      viewTag,
+  setShouldAnimateExitingForSubtree(rootTag: number, shouldAnimate: boolean) {
+    this.#reanimatedModuleProxy.setShouldAnimateExitingForSubtree(
+      rootTag,
       shouldAnimate
     );
   }
@@ -246,7 +246,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
-  setShouldAnimateExitingForTag(): void {}
+  setShouldAnimateExitingForSubtree(): void {}
   registerJSProps(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;

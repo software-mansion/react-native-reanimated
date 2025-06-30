@@ -48,12 +48,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -284,9 +286,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -363,12 +366,12 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
   return jsi::Value::undefined();
 }
 
-void ReanimatedModuleProxy::setShouldAnimateExiting(
+void ReanimatedModuleProxy::setShouldAnimateExitingForSubtree(
     jsi::Runtime &rt,
-    const jsi::Value &viewTag,
+    const jsi::Value &rootTag,
     const jsi::Value &shouldAnimate) {
-  layoutAnimationsManager_->setShouldAnimateExiting(
-      viewTag.asNumber(), shouldAnimate.getBool());
+  layoutAnimationsManager_->setShouldAnimateExitingForSubtree(
+      rootTag.asNumber(), shouldAnimate.getBool());
 }
 
 bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(

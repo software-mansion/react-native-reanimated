@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/JSLogger.h>
@@ -32,8 +33,10 @@ class LayoutAnimationsManager {
       : jsLogger_(jsLogger) {}
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
-  void setShouldAnimateExiting(const int tag, const bool value);
-  bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
+  void setShouldAnimateExitingForSubtree(const int rootTag, const bool value);
+  bool shouldAnimateExitingForSubtree(
+      const std::shared_ptr<MutationNode> node,
+      const bool parentShouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(
       jsi::Runtime &rt,
@@ -55,7 +58,7 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
-  std::unordered_map<int, bool> shouldAnimateExitingForTag_;
+  std::unordered_map<int, bool> shouldAnimateExitingForSubtree_;
   mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.

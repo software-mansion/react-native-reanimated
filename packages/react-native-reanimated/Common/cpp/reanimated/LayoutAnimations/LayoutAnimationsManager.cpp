@@ -23,20 +23,25 @@ void LayoutAnimationsManager::configureAnimationBatch(
   }
 }
 
-void LayoutAnimationsManager::setShouldAnimateExiting(
-    const int tag,
+void LayoutAnimationsManager::setShouldAnimateExitingForSubtree(
+    const int rootTag,
     const bool value) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  shouldAnimateExitingForTag_[tag] = value;
+  shouldAnimateExitingForSubtree_[rootTag] = value;
 }
 
-bool LayoutAnimationsManager::shouldAnimateExiting(
-    const int tag,
-    const bool shouldAnimate) {
+bool LayoutAnimationsManager::shouldAnimateExitingForSubtree(
+    const std::shared_ptr<MutationNode> node,
+    const bool parentShouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return shouldAnimateExitingForTag_.contains(tag)
-      ? shouldAnimateExitingForTag_[tag]
-      : shouldAnimate;
+  LOG(INFO) << "node tag " << node->tag << " " << (shouldAnimateExitingForSubtree_.contains(node->tag) ? shouldAnimateExitingForSubtree_[node->tag] ? "true" : "false" : "nope") << " parent tag " << node->parent->tag << " unflattened parent tag " << node->unflattenedParent->tag;
+  if (!shouldAnimateExitingForSubtree_.contains(node->tag)) {
+    return parentShouldAnimate;
+  }
+  if (shouldAnimateExitingForSubtree_[node->tag]) {
+    return true;
+  }
+  return node->state == DELETED;
 }
 
 bool LayoutAnimationsManager::hasLayoutAnimation(
@@ -51,7 +56,7 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
   enteringAnimations_.erase(tag);
   exitingAnimations_.erase(tag);
   layoutAnimations_.erase(tag);
-  shouldAnimateExitingForTag_.erase(tag);
+  shouldAnimateExitingForSubtree_.erase(tag);
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(

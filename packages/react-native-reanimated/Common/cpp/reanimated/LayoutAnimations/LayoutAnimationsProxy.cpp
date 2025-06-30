@@ -26,6 +26,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
             << surfaceId << std::endl;
 #endif
+  LOG(INFO) << "Mutations";
+  for (auto mutation: mutations) {
+    LOG(INFO) << "Mutation: " << mutation.parentTag;
+  }
+
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -33,7 +38,25 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, ShadowView> movedViews;
 
+
   parseRemoveMutations(movedViews, mutations, roots);
+  
+  if (roots.size() > 0) {
+      LOG(INFO) << "Roots: ";
+      for (auto root: roots) {
+        LOG(INFO) << "root: " << root->tag;
+      }
+      roots.pop_back();
+  }
+  
+  for (auto mutation : mutations) {
+    if (mutation.parentTag == 4 || mutation.oldChildShadowView.tag == 4 ||
+        mutation.oldChildShadowView.tag == 2) {
+      LOG(INFO) << "parentTag " << mutation.parentTag << " old child "
+                << mutation.oldChildShadowView.tag << " new child "
+                << mutation.newChildShadowView.tag;
+    }
+  }
 
   handleRemovals(filteredMutations, roots);
 
@@ -240,7 +263,7 @@ void LayoutAnimationsProxy::handleRemovals(
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
-  for (auto it = roots.rbegin(); it != roots.rend(); it++) {
+  for (auto it = roots.begin(); it != roots.end(); it++) {
     auto &node = *it;
     if (!startAnimationsRecursively(
             node, true, true, false, filteredMutations)) {
@@ -248,8 +271,9 @@ void LayoutAnimationsProxy::handleRemovals(
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != MOVED) {
         maybeCancelAnimation(node->tag);
-        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
-            node->mutation.oldChildShadowView));
+        filteredMutations.push_back(
+            ShadowViewMutation::DeleteMutation(
+                node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
 #ifdef LAYOUT_ANIMATIONS_LOGS
         LOG(INFO) << "delete " << node->tag << std::endl;
@@ -305,10 +329,11 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutationParent,
-                  oldShadowViewsForReparentings[tag],
-                  mutation.index));
+              filteredMutations.push_back(
+                  ShadowViewMutation::InsertMutation(
+                      mutationParent,
+                      oldShadowViewsForReparentings[tag],
+                      mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -316,8 +341,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           }
 
           auto oldView = *layoutAnimationIt->second.currentView;
-          filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-              mutationParent, oldView, mutation.index));
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(
+                  mutationParent, oldView, mutation.index));
           continue;
         }
 
@@ -336,8 +362,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         std::shared_ptr<ShadowView> newView =
             cloneViewWithoutOpacity(mutation, propsParserContext);
 
-        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView, *newView, mutationParent));
+        filteredMutations.push_back(
+            ShadowViewMutation::UpdateMutation(
+                mutation.newChildShadowView, *newView, mutationParent));
         break;
       }
 
@@ -394,15 +421,16 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    mutations.push_back(ShadowViewMutation::UpdateMutation(
-        *layoutAnimation.currentView,
-        *newView,
+    mutations.push_back(
+        ShadowViewMutation::UpdateMutation(
+            *layoutAnimation.currentView,
+            *newView,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-        layoutAnimation.parentTag
+            layoutAnimation.parentTag
 #else
-        *layoutAnimation.parentView
+            *layoutAnimation.parentView
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-        ));
+            ));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -471,9 +499,21 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   if (isRNSScreen(node)) {
     isScreenPop = true;
   }
+  
+
 
   shouldAnimate = !isScreenPop &&
-      layoutAnimationsManager_->shouldAnimateExiting(node->tag, shouldAnimate);
+      layoutAnimationsManager_->shouldAnimateExitingForSubtree(
+          node, shouldAnimate);
+          
+            LOG(INFO) << "Process node tag " << node->tag << " with parent " << node->parent->tag << " and children:";
+   for (auto it = node->unflattenedChildren.rbegin();
+       it != node->unflattenedChildren.rend();
+       it++) {
+    auto &subNode = *it;
+    LOG(INFO) << "> " << subNode->tag << " parent " << subNode->parent->tag;
+  }
+  LOG(INFO) << "and shouldAnimate? " << shouldAnimate;
 
   bool hasExitAnimation = shouldAnimate &&
       layoutAnimationsManager_->hasLayoutAnimation(
@@ -525,8 +565,9 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << subNode->tag << std::endl;
 #endif
-      mutations.push_back(ShadowViewMutation::DeleteMutation(
-          subNode->mutation.oldChildShadowView));
+      mutations.push_back(
+          ShadowViewMutation::DeleteMutation(
+              subNode->mutation.oldChildShadowView));
     } else {
       subNode->state = WAITING;
     }

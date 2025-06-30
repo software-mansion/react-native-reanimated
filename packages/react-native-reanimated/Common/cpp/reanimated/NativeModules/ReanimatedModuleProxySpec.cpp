@@ -101,13 +101,14 @@ static jsi::Value REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)(
       ->configureLayoutAnimationBatch(rt, std::move(args[0]));
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
+static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExitingForSubtree)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->setShouldAnimateExiting(rt, std::move(args[0]), std::move(args[1]));
+      ->setShouldAnimateExitingForSubtree(
+          rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -234,8 +235,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["configureLayoutAnimationBatch"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)};
-  methodMap_["setShouldAnimateExitingForTag"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
+  methodMap_["setShouldAnimateExitingForSubtree"] = MethodMetadata{
+      2, REANIMATED_SPEC_PREFIX(setShouldAnimateExitingForSubtree)};
 
   methodMap_["setViewStyle"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};

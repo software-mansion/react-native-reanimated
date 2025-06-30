@@ -8,8 +8,9 @@ import React, {
   useRef,
 } from 'react';
 
-import { setShouldAnimateExitingForTag } from '../core';
+import { setShouldAnimateExitingForSubtree } from '../core';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+import { View } from 'react-native';
 
 export const SkipEnteringContext =
   createContext<React.RefObject<boolean> | null>(null);
@@ -53,19 +54,12 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
  */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
-  getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1 && this.props.skipExiting
-      ? Children.map(this.props.children, (child) => (
-          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
-        ))
-      : this.props.children;
-  }
-
   setShouldAnimateExiting(shouldAnimate: boolean) {
     if (Children.count(this.props.children) === 1) {
-      const tag = findNodeHandle(this);
-      if (tag) {
-        setShouldAnimateExitingForTag(tag, shouldAnimate);
+      const rootTag = findNodeHandle(this);
+      console.log('rootTag', rootTag);
+      if (rootTag) {
+        setShouldAnimateExitingForSubtree(rootTag, shouldAnimate);
       }
     }
   }
@@ -87,15 +81,19 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
   }
 
   render(): ReactNode {
-    const children = this.getMaybeWrappedChildren();
-
     if (this.props.skipEntering === undefined) {
-      return children;
+      return (
+        <View style={{ backgroundColor: 'blue', padding: 10 }}>
+          {this.props.children}
+        </View>
+      );
     }
 
     return (
       <SkipEntering shouldSkip={this.props.skipEntering}>
-        {children}
+        <View style={{ backgroundColor: 'blue', padding: 10 }}>
+          {this.props.children}
+        </View>
       </SkipEntering>
     );
   }

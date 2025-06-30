@@ -82,9 +82,9 @@ class ReanimatedModuleProxy
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
-  void setShouldAnimateExiting(
+  void setShouldAnimateExitingForSubtree(
       jsi::Runtime &rt,
-      const jsi::Value &viewTag,
+      const jsi::Value &rootTag,
       const jsi::Value &shouldAnimate) override;
 
   void onRender(double timestampMs);
