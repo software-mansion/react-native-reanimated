@@ -71,6 +71,10 @@ export function reportFatalRemoteError(
   }
 }
 
+/**
+ * Registers `reportFatalRemoteError` function in global scope to allow to
+ * invoke it from C++.
+ */
 export function registerReportFatalRemoteError() {
   globalThis.__reportFatalRemoteError = reportFatalRemoteError;
 }

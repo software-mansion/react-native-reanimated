@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
-import type { WorkletsModuleProxy } from './workletsModuleProxy';
-
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+import type {
+  IWorkletsModule,
+  WorkletsModuleProxy,
+} from './workletsModuleProxy';
 
 export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
 }
 
-class NativeWorklets {
+class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: ShareableRef<undefined>;
   #shareableNull: ShareableRef<null>;

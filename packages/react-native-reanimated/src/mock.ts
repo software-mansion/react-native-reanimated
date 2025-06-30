@@ -1,4 +1,3 @@
-/* eslint-disable n/no-callback-literal */
 'use strict';
 
 import {

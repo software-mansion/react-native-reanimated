@@ -25,6 +25,7 @@ const tsRules = {
   '@typescript-eslint/no-unsafe-argument': 'off',
   '@typescript-eslint/no-explicit-any': 'warn',
   '@typescript-eslint/no-empty-object-type': 'warn',
+  '@typescript-eslint/unbound-method': 'error',
 
   '@typescript-eslint/ban-ts-comment': [
     'error',
@@ -58,6 +59,7 @@ const tsRules = {
   '@typescript-eslint/no-non-null-assertion': 'off',
   '@typescript-eslint/no-duplicate-type-constituents': 'error',
   '@typescript-eslint/no-shadow': 'error',
+  '@typescript-eslint/no-redundant-type-constituents': 'error',
 
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
@@ -69,6 +71,7 @@ const jsDocRules = {
   'jsdoc/tag-lines': 'off',
   'jsdoc/require-param-description': 'off',
   'jsdoc/require-returns-description': 'off',
+  'jsdoc/require-jsdoc': 'off',
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -164,6 +167,8 @@ const config = tsEslint.config(
       ...nodeRules,
       ...tsDocRules,
       'react-hooks/exhaustive-deps': 'error',
+      'no-eval': 'error',
+      'no-var': 'error',
     },
   },
 

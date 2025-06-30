@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-var */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -41,7 +39,7 @@ declare global {
     | ((
         operations: {
           shadowNodeWrapper: ShadowNodeWrapper;
-          // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+
           updates: PropUpdates;
         }[]
       ) => void)

@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError } from './common';
+import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -181,8 +181,8 @@ export function enableLayoutAnimations(
   _flag: boolean,
   _isCallByUser = true
 ): void {
-  console.warn(
-    '[Reanimated] `enableLayoutAnimations` is deprecated and will be removed in the future.'
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
   );
 }
 
