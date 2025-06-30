@@ -29,25 +29,6 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (globalThis.HMRClient) {
-      globalThis.HMRClient.addListener('update', (data) => {
-        data.added.forEach(({ module: [id, code], sourceURL }) =>
-          globalThis.__workletsModuleProxy?.propagateModuleUpdate(
-            id,
-            code,
-            sourceURL
-          )
-        );
-        console.log('NativeWorklets: HMR update', data);
-        data.modified.forEach(({ module: [id, code], sourceURL }) =>
-          globalThis.__workletsModuleProxy?.propagateModuleUpdate(
-            id,
-            code,
-            sourceURL
-          )
-        );
-      });
-    }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
     this.#shareableUndefined =
