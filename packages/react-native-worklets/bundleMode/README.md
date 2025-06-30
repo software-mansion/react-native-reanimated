@@ -42,8 +42,10 @@ To use `react-native-worklets`'s bundle mode feature, you need to make the follo
    );
    ```
 
-3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.4-af2762c07e.patch).
-4. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-rc.4-ad01aea617.patch).
+3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch).
+4. Patch `metro` with the [diff](../../.yarn/patches/metro-npm-0.82.4-2c6a795208.patch).
+5. Patch `metro-runtime` with the [diff](../../.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch).
+6. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-dababd395b.patch).
 
 ### iOS
 

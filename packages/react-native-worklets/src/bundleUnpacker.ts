@@ -47,7 +47,7 @@ function getWorklet(
   if (__DEV__) {
     try {
       worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
-    } catch (error) {
+    } catch (_e) {
       logger.error(
         'Unable to resolve worklet with hash' +
           workletHash +
