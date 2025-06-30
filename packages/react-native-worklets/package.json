@@ -96,6 +96,8 @@
     "android",
     "apple",
     "Common",
+    "bundleMode/index.js",
+    "bundleMode/index.d.ts",
     "scripts/worklets_utils.rb",
     "plugin/index.js",
     "*.podspec",
