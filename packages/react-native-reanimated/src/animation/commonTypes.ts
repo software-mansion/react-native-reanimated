@@ -9,7 +9,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 
-interface HigherOrderAnimation {
+export interface HigherOrderAnimation {
   isHigherOrder?: boolean;
 }
 

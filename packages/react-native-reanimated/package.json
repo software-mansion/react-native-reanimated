@@ -145,7 +145,6 @@
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.1.0",
     "shelljs": "^0.8.5",
-    "ts-prune": "^0.10.3",
     "typescript": "~5.3.0"
   },
   "react-native-builder-bob": {
