@@ -27,8 +27,9 @@ To use `react-native-worklets`'s bundle mode feature, you need to make the follo
      getDefaultConfig,
      mergeConfig,
    } = require('@react-native/metro-config');
-   const bundleModeMetroConfig =
-     require('react-native-worklets/bundleMode').bundleModeMetroConfig;
+   const {
+     bundleModeMetroConfig,
+   } = require('react-native-worklets/bundleMode');
 
    const config = {
      // Your config

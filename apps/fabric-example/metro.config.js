@@ -6,8 +6,7 @@ const {
   getMetroAndroidAssetsResolutionFix,
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
-const bundleModeMetroConfig =
-  require('react-native-worklets/bundleMode').bundleModeMetroConfig;
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 

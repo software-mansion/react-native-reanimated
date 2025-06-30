@@ -59,10 +59,10 @@ index f9c832e1f7..d82d448b93 100644
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index 97de2911b2..ba190cd6af 100644
+index cb4f1c4adc..b05b824d9c 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -35,7 +35,7 @@ let config = {
+@@ -34,7 +34,7 @@ let config = {
  config = mergeConfig(getDefaultConfig(__dirname), config);
  
  // Uncomment the following to enable bundle mode.
