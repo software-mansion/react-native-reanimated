@@ -1,13 +1,13 @@
 diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
-index 3f9815cbf9..2e511df5ee 100644
+index 628c28e453..edde3065d2 100644
 --- a/apps/fabric-example/android/gradle.properties
 +++ b/apps/fabric-example/android/gradle.properties
 @@ -44,4 +44,4 @@ isReanimatedExampleApp=true
  enableReanimatedProfiling=true
  
- # Uncomment the next line to enable experimental bundling.
--# workletsExperimentalBundling=true
-+workletsExperimentalBundling=true
+ # Uncomment the next line to enable bundle mode.
+-# workletsBundleMode=true
++workletsBundleMode=true
 diff --git a/apps/fabric-example/android/settings.gradle b/apps/fabric-example/android/settings.gradle
 index afaf8c45a5..c3c5434878 100644
 --- a/apps/fabric-example/android/settings.gradle
@@ -33,41 +33,41 @@ index afaf8c45a5..c3c5434878 100644
 +    }
 +}
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index d2b64b31e2..a61e28c344 100644
+index 259ed1ad84..ebdbea9d22 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
 @@ -6,7 +6,7 @@ module.exports = {
        'react-native-worklets/plugin',
        {
-         // Uncomment the next line to enable experimental bundling.
--        // experimentalBundling: true,
-+        experimentalBundling: true,
+         // Uncomment the next line to enable bundle mode.
+-        // bundleMode: true,
++        bundleMode: true,
        },
      ],
      [
 diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
-index 1a989a2d22..1f5c0c176f 100644
+index f9c832e1f7..d82d448b93 100644
 --- a/apps/fabric-example/ios/Podfile
 +++ b/apps/fabric-example/ios/Podfile
 @@ -10,7 +10,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
  ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
  
- # Uncomment the next line to enable experimental bundling.
--# ENV['WORKLETS_EXPERIMENTAL_BUNDLING'] = '1'
-+ENV['WORKLETS_EXPERIMENTAL_BUNDLING'] = '1'
+ # Uncomment the next line to enable bundle mode.
+-# ENV['WORKLETS_BUNDLE_MODE'] = '1'
++ENV['WORKLETS_BUNDLE_MODE'] = '1'
  
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index 1e46c6dd4b..91af33ee91 100644
+index 97de2911b2..ba190cd6af 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, '../..');
-  */
- const config = {
-   // Uncomment the following to enable experimental bundling.
--  // ...require('react-native-worklets/bundleMode').bundleModeMetroConfig,
-+  ...require('react-native-worklets/bundleMode').bundleModeMetroConfig,
-   watchFolders: [root],
-   transformer: {
-     publicPath: androidAssetsResolutionFix.publicPath,
+@@ -35,7 +35,7 @@ let config = {
+ config = mergeConfig(getDefaultConfig(__dirname), config);
+ 
+ // Uncomment the following to enable bundle mode.
+-// config = mergeConfig(config, bundleModeMetroConfig);
++config = mergeConfig(config, bundleModeMetroConfig);
+ 
+ module.exports = wrapWithReanimatedMetroConfig(
+   mergeConfig(getDefaultConfig(__dirname), config)

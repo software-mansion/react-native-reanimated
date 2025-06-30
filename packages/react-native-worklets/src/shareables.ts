@@ -165,7 +165,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (
-    globalThis._WORKLETS_EXPERIMENTAL_BUNDLING &&
+    globalThis._WORKLETS_BUNDLE_MODE &&
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
@@ -214,7 +214,7 @@ function makeShareableCloneRecursiveNative<T>(
   return inaccessibleObject(value);
 }
 
-if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
@@ -691,7 +691,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
 }
 
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+  globalThis._WORKLETS_BUNDLE_MODE
     ? makeShareableCloneRecursive
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

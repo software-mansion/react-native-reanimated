@@ -6,6 +6,9 @@ const {
   getMetroAndroidAssetsResolutionFix,
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
+const bundleModeMetroConfig =
+  require('react-native-worklets/bundleMode').bundleModeMetroConfig;
+
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 
 const path = require('path');
@@ -17,9 +20,7 @@ const root = path.resolve(__dirname, '../..');
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
-const config = {
-  // Uncomment the following to enable experimental bundling.
-  ...require('react-native-worklets/bundleMode').bundleModeMetroConfig,
+let config = {
   watchFolders: [root],
   transformer: {
     publicPath: androidAssetsResolutionFix.publicPath,
@@ -30,6 +31,11 @@ const config = {
     },
   },
 };
+
+config = mergeConfig(getDefaultConfig(__dirname), config);
+
+// Uncomment the following to enable bundle mode.
+// config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(getDefaultConfig(__dirname), config)

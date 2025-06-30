@@ -5,5 +5,5 @@
       "react-native-worklets": ["./src"]
     }
   },
-  "include": ["src", "bundleMode"]
+  "include": ["src"]
 }

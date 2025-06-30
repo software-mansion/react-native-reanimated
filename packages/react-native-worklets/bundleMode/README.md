@@ -1,10 +1,10 @@
-# Experimental bundling
+# Bundle mode
 
 ## Setup
 
 ### General
 
-To use `react-native-worklets`'s experimental bundling feature, you need to make the following changes in your repository:
+To use `react-native-worklets`'s bundle mode feature, you need to make the following changes in your repository:
 
 1. **Modify your Babel configuration**. In your `babel.config.js` file, add the following:
    ```javascript
@@ -13,21 +13,32 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
        [
          'react-native-worklets/plugin',
          {
-           experimentalBundling: true,
+           bundleMode: true,
          },
        ],
        // Your other plugins...
      ],
    };
    ```
-2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode:
+2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
    ```javascript
+   const {
+     getDefaultConfig,
+     mergeConfig,
+   } = require('@react-native/metro-config');
+   const bundleModeMetroConfig =
+     require('react-native-worklets/bundleMode').bundleModeMetroConfig;
+
    const config = {
-     ...require('react-native-worklets/bundleMode').bundleModeMetroConfig,
+     // Your config
    };
 
-   module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+   module.exports = mergeConfig(
+     getDefaultConfig(__dirname),
+     bundleModeMetroConfig,
+     config
+   );
    ```
 
 3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.4-af2762c07e.patch).
@@ -36,10 +47,12 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
 ### iOS
 
 1. **Modify your Podfile**. In your `ios/Podfile`, add the following:
-   ```ruby
-   # top level
-   ENV['WORKLETS_EXPERIMENTAL_BUNDLING'] = '1'
-   ```
+
+```ruby
+# top level
+ENV['WORKLETS_BUNDLE_MODE'] = '1'
+```
+
 2. Make sure to reinstall your pods.
 
 ### Android
@@ -47,7 +60,7 @@ To use `react-native-worklets`'s experimental bundling feature, you need to make
 1. Enable building [React Native from source](https://reactnative.dev/contributing/how-to-build-from-source#android).
 2. **Modify your `gradle.properties`**. In your `android/gradle.properties`, add the following:
    ```groovy
-   workletsExperimentalBundling=true
+   workletsBundleMode=true
    ```
 
 ## Running
