@@ -34,19 +34,6 @@ index ddc412b0f71..18c9c188be3 100644
  - (NSArray<NSString *> *)unstableModulesRequiringMainQueueSetup;
  
  - (NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *)thirdPartyFabricComponents;
-diff --git a/Libraries/Utilities/HMRClient.js b/Libraries/Utilities/HMRClient.js
-index 776056cf527..173515dbcc8 100644
---- a/Libraries/Utilities/HMRClient.js
-+++ b/Libraries/Utilities/HMRClient.js
-@@ -166,6 +166,8 @@ const HMRClient: HMRClientNativeInterface = {
- 
-     hmrClient = client;
- 
-+    globalThis.HMRClient = hmrClient;
-+
-     const {fullBundleUrl} = getDevServer();
-     pendingEntryPoints.push(
-       // HMRServer understands regular bundle URLs, so prefer that in case
 diff --git a/React/Base/RCTBundleConsumer.h b/React/Base/RCTBundleConsumer.h
 new file mode 100644
 index 00000000000..8f1eb972424
@@ -601,14 +588,14 @@ index 51709eebcd7..2868f9ef52c 100644
        std::function<void(jsi::Runtime& runtime)>&& beforeLoad = nullptr,
        std::function<void(jsi::Runtime& runtime)>&& afterLoad = nullptr);
 diff --git a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
-index 1e9917b8737..435c9e2c3fa 100644
+index 1e9917b8737..4cf2384ff64 100644
 --- a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
 +++ b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
 @@ -16,6 +16,8 @@ else
    source[:tag] = "v#{version}"
  end
  
-+experimental_bundling_flag = ENV["WORKLETS_EXPERIMENTAL_BUNDLING"] == "1" ? 'WORKLETS_EXPERIMENTAL_BUNDLING=1' : ''
++experimental_bundling_flag = ENV["WORKLETS_BUNDLE_MODE"] == "1" ? 'WORKLETS_BUNDLE_MODE=1' : ''
 +
  header_search_paths = [
    "$(PODS_ROOT)/Headers/Private/React-Core",
@@ -626,7 +613,7 @@ index 1e9917b8737..435c9e2c3fa 100644
    if ENV['USE_FRAMEWORKS']
      s.header_mappings_dir     = './'
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-index e76e1d18df9..9901eb7f5b1 100644
+index e76e1d18df9..e5abb247b80 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 @@ -11,6 +11,7 @@
@@ -662,14 +649,14 @@ index e76e1d18df9..9901eb7f5b1 100644
  
 -  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
 +  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete, turboModuleManager = self->_turboModuleManager, scriptBuffer, url](jsi::Runtime &_) {
-+    #ifdef WORKLETS_EXPERIMENTAL_BUNDLING
++    #ifdef WORKLETS_BUNDLE_MODE
 +    auto bundleConsumerNames = [RCTModulesConformingToProtocolsProvider bundleConsumerClassNames];
 +    for (id name in bundleConsumerNames) {
 +      id<RCTBundleConsumer> module = (id<RCTBundleConsumer>)[turboModuleManager moduleForName:[name UTF8String]];
 +      module.scriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
 +      module.sourceURL = @(url);
 +    }
-+    #endif // WORKLETS_EXPERIMENTAL_BUNDLING
++    #endif // WORKLETS_BUNDLE_MODE
 +    
      if (waitUntilModuleSetupComplete) {
        waitUntilModuleSetupComplete();

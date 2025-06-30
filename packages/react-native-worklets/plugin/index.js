@@ -454,7 +454,7 @@ var require_closure = __commonJS({
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
             return;
           }
-          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.experimentalBundling && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
+          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
             return;
           }
           if ("id" in funPath.node) {
@@ -470,7 +470,7 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && isImport(binding)) {
+          if (state.opts.bundleMode && isImport(binding)) {
             if (isImportRelative(binding) && isAllowedForRelativeImports(state.filename, state.opts.workletizableModules)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
@@ -834,7 +834,7 @@ var require_workletFactory = __commonJS({
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]));
@@ -845,10 +845,10 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.experimentalBundling && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
       if (!(0, utils_1.isRelease)()) {
@@ -864,19 +864,19 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = closureVariables.map((variableId) => {
         const clonedId = (0, types_12.cloneNode)(variableId, true);
-        if (!state.opts.experimentalBundling && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+        if (!state.opts.bundleMode && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
           clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
         }
         return clonedId;
       });
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         factoryParams.unshift((0, types_12.cloneNode)(initDataId, true));
       }
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      if (state.opts.experimentalBundling) {
+      if (state.opts.bundleMode) {
         (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       }
       factory.workletized = true;
@@ -954,7 +954,7 @@ var require_workletFactoryCall = __commonJS({
     function makeWorkletFactoryCall(path, state) {
       const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       let factoryCall;
-      if (state.opts.experimentalBundling) {
+      if (state.opts.bundleMode) {
         factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
           (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
         ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
@@ -1145,7 +1145,6 @@ var require_autoworkletization = __commonJS({
       "useDerivedValue",
       "useAnimatedScrollHandler",
       "useAnimatedReaction",
-      "useWorkletCallback",
       "withTiming",
       "withSpring",
       "withDecay",
@@ -1162,7 +1161,6 @@ var require_autoworkletization = __commonJS({
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
       ["useAnimatedReaction", [0, 1]],
-      ["useWorkletCallback", [0]],
       ["withTiming", [2]],
       ["withSpring", [2]],
       ["withDecay", [1]],
@@ -1696,7 +1694,10 @@ module.exports = function WorkletsBabelPlugin() {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
+      const error = e;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = "WorkletsBabelPluginError";
+      throw error;
     }
   }
   return {
@@ -1719,9 +1720,7 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
-            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
-          });
+          runWithTaggedExceptions(() => (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state));
         }
       },
       ObjectExpression: {

@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
-import type { WorkletsModuleProxy } from './workletsModuleProxy';
-
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+import type {
+  IWorkletsModule,
+  WorkletsModuleProxy,
+} from './workletsModuleProxy';
 
 export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
 }
 
-class NativeWorklets {
+class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: ShareableRef<undefined>;
   #shareableNull: ShareableRef<null>;
@@ -28,25 +28,6 @@ class NativeWorklets {
         `Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
-    }
-    if (globalThis.HMRClient) {
-      globalThis.HMRClient.addListener('update', (data) => {
-        data.added.forEach(({ module: [id, code], sourceURL }) =>
-          globalThis.__workletsModuleProxy?.propagateModuleUpdate(
-            id,
-            code,
-            sourceURL
-          )
-        );
-        console.log('NativeWorklets: HMR update', data);
-        data.modified.forEach(({ module: [id, code], sourceURL }) =>
-          globalThis.__workletsModuleProxy?.propagateModuleUpdate(
-            id,
-            code,
-            sourceURL
-          )
-        );
-      });
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
@@ -165,6 +146,20 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       shareableWorklet
+    );
+  }
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(
+      message,
+      stack,
+      name,
+      jsEngine
     );
   }
 }

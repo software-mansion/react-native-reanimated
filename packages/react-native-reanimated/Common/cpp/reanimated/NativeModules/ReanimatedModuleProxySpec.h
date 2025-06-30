@@ -57,10 +57,6 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &listenerId) = 0;
 
   // other
-  virtual jsi::Value registerJSProps(
-      jsi::Runtime &rt,
-      const jsi::Value &componentName,
-      const jsi::Value &jsPropsNames) = 0;
 
   // layout animations
   virtual jsi::Value configureLayoutAnimationBatch(

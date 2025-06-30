@@ -53,7 +53,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
 
-    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+    if (!BuildConfig.BUNDLE_MODE) {
       reactContext.assertOnJSQueueThread();
     }
 
@@ -66,7 +66,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   public boolean installTurboModule() {
     var context = getReactApplicationContext();
 
-    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
+    if (!BuildConfig.BUNDLE_MODE) {
       context.assertOnNativeModulesQueueThread();
     }
 
@@ -80,6 +80,14 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
+  }
+
+  /**
+   * @noinspection unused
+   */
+  @DoNotStrip
+  public boolean isOnJSQueueThread() {
+    return getReactApplicationContext().isOnJSQueueThread();
   }
 
   public void toggleSlowAnimations() {

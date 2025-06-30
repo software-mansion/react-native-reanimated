@@ -39,4 +39,3 @@ export { useHandler } from './useHandler';
 export { useReducedMotion } from './useReducedMotion';
 export { useScrollOffset } from './useScrollOffset';
 export { useSharedValue } from './useSharedValue';
-export { useWorkletCallback } from './useWorkletCallback';

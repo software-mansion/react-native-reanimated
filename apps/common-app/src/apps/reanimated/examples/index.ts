@@ -18,6 +18,7 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
@@ -40,7 +41,6 @@ import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -106,7 +106,6 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
@@ -163,20 +162,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
   },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
-  },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',
