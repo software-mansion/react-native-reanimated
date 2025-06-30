@@ -102,6 +102,7 @@ function validUrls(data) {
         }
         index++;
         sendRequest();
+        return;
       })
       .catch((/** @type {Error} */ error) => {
         isBrokenUrlDetected = true;

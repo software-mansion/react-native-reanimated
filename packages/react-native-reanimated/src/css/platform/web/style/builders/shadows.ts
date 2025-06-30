@@ -1,6 +1,7 @@
 'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 
+import { logger } from '../../../../../common';
 import { opacifyColor } from '../../utils';
 import { createRuleBuilder } from '../builderFactories';
 import { processColor, processShadowOffset } from '../processors';
@@ -28,7 +29,7 @@ export const boxShadowBuilder = createRuleBuilder<BoxShadowProps>(
       opacity !== 1 ? opacifyColor(shadowColor, opacity) : shadowColor;
 
     if (!processedColor) {
-      console.warn(`Cannot apply shadowOpacity to shadowColor: ${shadowColor}`);
+      logger.warn(`Cannot apply shadowOpacity to shadowColor: ${shadowColor}`);
     }
 
     return {

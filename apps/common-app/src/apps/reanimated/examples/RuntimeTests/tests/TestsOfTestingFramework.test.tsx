@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import Animated, { FadeIn, runOnUI, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import {
@@ -49,31 +49,9 @@ const AnimatedComponent = () => {
   }, [widthSV]);
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
-      <Animated.View
-        ref={ref}
-        style={[
-          {
-            width: 0,
-            height: 80,
-            backgroundColor: 'chocolate',
-            margin: 30,
-          },
-          animatedStyle1,
-        ]}
-      />
-      <Animated.View
-        ref={ref2}
-        style={[
-          {
-            width: 80,
-            height: 0,
-            backgroundColor: 'green',
-            margin: 30,
-          },
-          animatedStyle2,
-        ]}
-      />
+    <View style={styles.container}>
+      <Animated.View ref={ref} style={[styles.brownComponent, animatedStyle1]} />
+      <Animated.View ref={ref2} style={[styles.greenComponent, animatedStyle2]} />
     </View>
   );
 };
@@ -100,19 +78,8 @@ const AnimatedComponentWithNotify = () => {
   }, [widthSV]);
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
-      <Animated.View
-        ref={ref}
-        style={[
-          {
-            width: 0,
-            height: 80,
-            backgroundColor: 'chocolate',
-            margin: 30,
-          },
-          style,
-        ]}
-      />
+    <View style={styles.container}>
+      <Animated.View ref={ref} style={[styles.brownComponent, style]} />
     </View>
   );
 };
@@ -123,29 +90,43 @@ const SharedValueComponent = ({ initialValue }: { initialValue: any }) => {
   return <Text>{initialValue}</Text>;
 };
 
-const TOP = 41;
-const LEFT = 42;
-const MARGIN = 10;
 const LayoutAnimation = () => {
   const ref = useTestRef('LayoutAnimation');
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: 'beige' }}>
-      <Animated.View
-        ref={ref}
-        entering={FadeIn}
-        style={{
-          top: TOP,
-          left: LEFT,
-          width: 50,
-          height: 50,
-          backgroundColor: 'chocolate',
-          margin: MARGIN,
-        }}
-      />
+    <View style={styles.container}>
+      <Animated.View ref={ref} entering={FadeIn} style={styles.layoutAnimationComponent} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: 'beige',
+  },
+  brownComponent: {
+    width: 0,
+    height: 80,
+    backgroundColor: 'chocolate',
+    margin: 30,
+  },
+  greenComponent: {
+    width: 80,
+    height: 0,
+    backgroundColor: 'green',
+    margin: 30,
+  },
+  layoutAnimationComponent: {
+    top: 41,
+    left: 42,
+    width: 50,
+    height: 50,
+    backgroundColor: 'chocolate',
+    margin: 10,
+  },
+});
 
 describe('Wardrobe with drawers', () => {
   describe('Drawer *****1*****, with boxes', () => {
@@ -286,8 +267,8 @@ describe('Tests of Test Framework', () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
-    expect(await component.getAnimatedStyle('top')).toBe(`${TOP + MARGIN}`);
-    expect(await component.getAnimatedStyle('left')).toBe(`${LEFT + MARGIN}`);
+    expect(await component.getAnimatedStyle('top')).toBe('51');
+    expect(await component.getAnimatedStyle('left')).toBe('52');
   });
 
   test('layoutAnimation - opacity', async () => {

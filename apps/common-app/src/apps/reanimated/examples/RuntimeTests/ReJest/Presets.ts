@@ -54,10 +54,8 @@ const NOT_NUMBERS = [Infinity, -Infinity, NaN];
 // #region strings
 const TYPICAL_STRINGS = ['Aaaaaaa\n \t\t \v aaaaaa', 'Super long'.repeat(10000000), '', 'A string primitive'];
 
-const STRING_OBJECTS = [
-  // eslint-disable-next-line no-new-wrappers
-  new String('A String object'),
-];
+// eslint-disable-next-line no-new-wrappers
+const STRING_OBJECTS = [new String('A String object')];
 
 const EMOJI_STRINGS = ['Emoji consisting of multiple sub-emojis 👨‍👨‍👧‍👦', '👨‍👨‍👧‍👦', '😎', '👩🏽‍🏫'];
 

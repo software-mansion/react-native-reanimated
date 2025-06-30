@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -89,7 +90,7 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::string &code,
@@ -101,7 +102,23 @@ inline jsi::Value propagateModuleUpdate(
   });
   return jsi::Value::undefined();
 }
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
+
+inline jsi::Value reportFatalErrorOnJS(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::string &message,
+    const std::string &stack,
+    const std::string &name,
+    const std::string &jsEngine) {
+  JSLogger::reportFatalErrorOnJS(
+      jsScheduler,
+      JSErrorData{
+          .message = message,
+          .stack = stack,
+          .name = name,
+          .jsEngine = jsEngine});
+  return jsi::Value::undefined();
+}
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
@@ -178,11 +195,13 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   return propertyNames;
 }
@@ -464,7 +483,26 @@ jsi::Value JSIWorkletsModuleProxy::get(
         });
   }
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+  if (name == "reportFatalErrorOnJS") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return reportFatalErrorOnJS(
+              jsScheduler,
+              /* message */ args[0].asString(rt).utf8(rt),
+              /* stack */ args[1].asString(rt).utf8(rt),
+              /* name */ args[2].asString(rt).utf8(rt),
+              /* jsEngine */ args[3].asString(rt).utf8(rt));
+        });
+  }
+
+#ifdef WORKLETS_BUNDLE_MODE
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -481,7 +519,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
               args[1].asString(rt).utf8(rt));
         });
   }
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   return jsi::Value::undefined();
 }

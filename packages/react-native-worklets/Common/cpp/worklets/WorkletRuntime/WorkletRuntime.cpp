@@ -1,6 +1,7 @@
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -101,7 +102,7 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   if (!script) {
     throw std::runtime_error(
         "[Worklets] Expected to receive the bundle, but got nullptr instead.");
@@ -109,15 +110,26 @@ WorkletRuntime::WorkletRuntime(
 
   try {
     rt.evaluateJavaScript(script, sourceUrl);
-  } catch (facebook::jsi::JSIException ex) {
-    // Nothing
+  } catch (facebook::jsi::JSError error) {
+    const auto &message = error.getMessage();
+    const auto &stack = error.getStack();
+    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
+      const auto newMessage =
+          "[Worklets] Failed to initialize runtime. Reason: " + message;
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler,
+          {.message = newMessage,
+           .stack = stack,
+           .name = "WorkletsError",
+           .jsEngine = "Worklets"});
+    }
   }
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 }
 
 jsi::Value WorkletRuntime::executeSync(
