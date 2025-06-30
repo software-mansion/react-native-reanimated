@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -65,6 +65,7 @@ export function getViewProp<T>(
       component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           reject(result);
         } else {
           resolve(result);
@@ -180,8 +181,8 @@ export function enableLayoutAnimations(
   _flag: boolean,
   _isCallByUser = true
 ): void {
-  console.warn(
-    '[Reanimated] `enableLayoutAnimations` is deprecated and will be removed in the future.'
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
   );
 }
 
@@ -199,13 +200,4 @@ export function setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
-}
-
-export function registerJSProps(
-  componentName: string,
-  jsPropsNames: string[]
-): void {
-  if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.registerJSProps(componentName, jsPropsNames);
-  }
 }

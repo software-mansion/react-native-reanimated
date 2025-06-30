@@ -7,8 +7,8 @@ import { isSharedValue } from '../isSharedValue';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
+  AnimatedComponentType,
   AnimatedProps,
-  IAnimatedComponentInternal,
   InitialComponentProps,
   IPropsFilter,
 } from './commonTypes';
@@ -24,7 +24,7 @@ export class PropsFilter implements IPropsFilter {
   private _initialPropsMap = new Map<AnimatedStyleHandle, StyleProps>();
 
   public filterNonAnimatedProps(
-    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
+    component: AnimatedComponentType
   ): Record<string, unknown> {
     const inputProps =
       component.props as AnimatedComponentProps<InitialComponentProps>;

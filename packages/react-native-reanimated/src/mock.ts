@@ -1,4 +1,3 @@
-/* eslint-disable n/no-callback-literal */
 'use strict';
 
 import {
@@ -33,6 +32,7 @@ import {
   withReanimatedTimer,
 } from './index';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
@@ -49,7 +49,6 @@ const hook = {
     _rebuild?: boolean
   ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
-  useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
     const value = { value: init };
     return new Proxy(value, {

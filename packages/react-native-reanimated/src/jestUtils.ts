@@ -3,7 +3,7 @@
 
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { IS_JEST, ReanimatedError } from './common';
+import { IS_JEST, logger, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
@@ -250,7 +250,7 @@ const afterTest = () => {
 };
 
 export const withReanimatedTimer = (animationTest: () => void) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, you should define your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
   );
   beforeTest();
@@ -259,7 +259,7 @@ export const withReanimatedTimer = (animationTest: () => void) => {
 };
 
 export const advanceAnimationByTime = (time = frameTime) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(time);
@@ -267,7 +267,7 @@ export const advanceAnimationByTime = (time = frameTime) => {
 };
 
 export const advanceAnimationByFrame = (count: number) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(count * frameTime);

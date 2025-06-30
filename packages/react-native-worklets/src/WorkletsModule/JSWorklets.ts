@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
 import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
@@ -138,6 +137,12 @@ class JSWorklets implements IWorkletsModule {
   scheduleOnRuntime() {
     throw new WorkletsError(
       'scheduleOnRuntime is not available in JSWorklets.'
+    );
+  }
+
+  reportFatalErrorOnJS(): never {
+    throw new WorkletsError(
+      'reportFatalErrorOnJS should never be called in JSWorklets.'
     );
   }
 }

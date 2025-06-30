@@ -16,7 +16,7 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           JSXOpeningElement(node) {
             if (node.name.type === utils_1.AST_NODE_TYPES.JSXMemberExpression) {
@@ -151,7 +151,6 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             "Don't pass a reanimated animated style into a non-animated component.",
         },
@@ -170,6 +169,90 @@ var require_noAnimatedStyleToNonAnimatedComponent = __commonJS({
   },
 });
 
+// public/noLoggerMessagePrefix.js
+var require_noLoggerMessagePrefix = __commonJS({
+  'public/noLoggerMessagePrefix.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var PREFIX_REGEX = /^\s*(\[(?:Reanimated|Worklets)\])\s*/;
+    var rule = {
+      create(context) {
+        return {
+          CallExpression(node) {
+            const { callee, arguments: args } = node;
+            if (
+              callee.type === utils_1.AST_NODE_TYPES.MemberExpression &&
+              !callee.computed &&
+              callee.object.type === utils_1.AST_NODE_TYPES.Identifier &&
+              callee.object.name === 'logger' &&
+              callee.property.type === utils_1.AST_NODE_TYPES.Identifier &&
+              (callee.property.name === 'warn' ||
+                callee.property.name === 'error') &&
+              args.length > 0
+            ) {
+              const first = args[0];
+              if (
+                first.type === utils_1.AST_NODE_TYPES.Literal &&
+                typeof first.value === 'string'
+              ) {
+                const match = first.value.match(PREFIX_REGEX);
+                if (!match) {
+                  return;
+                }
+                context.report({
+                  node: first,
+                  messageId: 'noLoggerMessagePrefix',
+                  data: { prefix: match[1] },
+                  fix(fixer) {
+                    const without = first.value.replace(PREFIX_REGEX, '');
+                    return fixer.replaceText(first, JSON.stringify(without));
+                  },
+                });
+              } else if (
+                first.type === utils_1.AST_NODE_TYPES.TemplateLiteral
+              ) {
+                const firstQuasi = first.quasis[0];
+                const cooked = firstQuasi.value.cooked ?? '';
+                const match = cooked.match(PREFIX_REGEX);
+                if (!match) {
+                  return;
+                }
+                context.report({
+                  node: first,
+                  messageId: 'noLoggerMessagePrefix',
+                  data: { prefix: match[1] },
+                  fix(fixer) {
+                    const prefixLen = match[0].length;
+                    const removeStart = firstQuasi.range[0] + 1;
+                    const removeEnd = removeStart + prefixLen;
+                    return fixer.removeRange([removeStart, removeEnd]);
+                  },
+                });
+              }
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          description:
+            'Disallow redundant prefix that the logger adds automatically.',
+        },
+        messages: {
+          noLoggerMessagePrefix:
+            'Remove the redundant "{{prefix}}" prefix; it is added automatically.',
+        },
+        type: 'problem',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
 // public/useGlobalThis.js
 var require_useGlobalThis = __commonJS({
   'public/useGlobalThis.js'(exports2) {
@@ -177,7 +260,7 @@ var require_useGlobalThis = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           Identifier(node) {
             if (
@@ -187,7 +270,7 @@ var require_useGlobalThis = __commonJS({
               context.report({
                 node,
                 messageId: 'useGlobalThis',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node, 'globalThis._WORKLET');
                 },
               });
@@ -197,7 +280,6 @@ var require_useGlobalThis = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `_WORKLET` is used instead of `globalThis._WORKLET`.',
         },
@@ -214,6 +296,58 @@ var require_useGlobalThis = __commonJS({
   },
 });
 
+// public/useLogger.js
+var require_useLogger = __commonJS({
+  'public/useLogger.js'(exports2) {
+    'use strict';
+    Object.defineProperty(exports2, '__esModule', { value: true });
+    var utils_1 = require('@typescript-eslint/utils');
+    var rule = {
+      create(context) {
+        return {
+          CallExpression(node) {
+            const { callee } = node;
+            if (
+              callee.type === utils_1.AST_NODE_TYPES.MemberExpression &&
+              !callee.computed &&
+              callee.object.type === utils_1.AST_NODE_TYPES.Identifier &&
+              callee.object.name === 'console' &&
+              callee.property.type === utils_1.AST_NODE_TYPES.Identifier &&
+              (callee.property.name === 'warn' ||
+                callee.property.name === 'error')
+            ) {
+              const method = callee.property.name;
+              context.report({
+                node: callee,
+                messageId: 'useLogger',
+                data: { method },
+                fix(fixer) {
+                  return fixer.replaceText(callee.object, 'logger');
+                },
+              });
+            }
+          },
+        };
+      },
+      meta: {
+        docs: {
+          description:
+            'Require the use of logger instead of console for warnings and errors.',
+        },
+        messages: {
+          useLogger:
+            'Use logger.{{ method }}() instead of console.{{ method }}().',
+        },
+        type: 'problem',
+        schema: [],
+        fixable: 'code',
+      },
+      defaultOptions: [],
+    };
+    exports2.default = rule;
+  },
+});
+
 // public/useReanimatedError.js
 var require_useReanimatedError = __commonJS({
   'public/useReanimatedError.js'(exports2) {
@@ -221,7 +355,7 @@ var require_useReanimatedError = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           NewExpression(node) {
             if (
@@ -231,7 +365,7 @@ var require_useReanimatedError = __commonJS({
               context.report({
                 node,
                 messageId: 'useReanimatedError',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node.callee, 'ReanimatedError');
                 },
               });
@@ -241,7 +375,6 @@ var require_useReanimatedError = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new ReanimatedError`.',
         },
@@ -266,7 +399,7 @@ var require_useWorkletsError = __commonJS({
     Object.defineProperty(exports2, '__esModule', { value: true });
     var utils_1 = require('@typescript-eslint/utils');
     var rule = {
-      create: function (context) {
+      create(context) {
         return {
           NewExpression(node) {
             if (
@@ -276,7 +409,7 @@ var require_useWorkletsError = __commonJS({
               context.report({
                 node,
                 messageId: 'useWorkletsError',
-                fix: function (fixer) {
+                fix(fixer) {
                   return fixer.replaceText(node.callee, 'WorkletsError');
                 },
               });
@@ -286,7 +419,6 @@ var require_useWorkletsError = __commonJS({
       },
       meta: {
         docs: {
-          recommended: 'recommended',
           description:
             'Warns when `new Error` is used instead of `new WorkletsError`.',
         },
@@ -314,12 +446,16 @@ exports.rules = void 0;
 var noAnimatedStyleToNonAnimatedComponent_1 = __importDefault(
   require_noAnimatedStyleToNonAnimatedComponent()
 );
+var noLoggerMessagePrefix_1 = __importDefault(require_noLoggerMessagePrefix());
 var useGlobalThis_1 = __importDefault(require_useGlobalThis());
+var useLogger_1 = __importDefault(require_useLogger());
 var useReanimatedError_1 = __importDefault(require_useReanimatedError());
 var useWorkletsError_1 = __importDefault(require_useWorkletsError());
 exports.rules = {
   'animated-style-non-animated-component':
     noAnimatedStyleToNonAnimatedComponent_1.default,
+  'use-logger': useLogger_1.default,
+  'no-logger-message-prefix': noLoggerMessagePrefix_1.default,
   'use-reanimated-error': useReanimatedError_1.default,
   'use-worklets-error': useWorkletsError_1.default,
   'use-global-this': useGlobalThis_1.default,
