@@ -13,8 +13,8 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc --noEmit",
-    "lint": "prettier --check docs src versioned_docs versioned_docs",
-    "format": "prettier --write --list-different docs src versioned_docs versioned_docs"
+    "lint": "prettier --check docs src",
+    "format": "prettier --write --list-different docs src"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.18.6",
