@@ -15,7 +15,6 @@ const config = {
   // Set the production url of your site here
   url: 'https://docs.swmansion.com',
 
-  // Change this to /react-native-worklets/ when deploying to GitHub pages
   baseUrl: '/react-native-reanimated/react-native-worklets/',
 
   // GitHub pages deployment config.
@@ -52,7 +51,6 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-worklets',
-          // lastVersion: '1.x',
           versions: {
             current: {
               label: '1.x',
@@ -66,13 +64,6 @@ const config = {
           trackingID: 'G-RNYQG9GVFJ',
           anonymizeIP: true,
         },
-        // blog: {
-        //   routeBasePath: '/examples',
-        //   blogSidebarTitle: 'Examples',
-        //   blogSidebarCount: 'ALL',
-        //   showReadingTime: false,
-        //   onUntruncatedBlogPosts: 'ignore',
-        // },
       }),
     ],
   ],
@@ -88,10 +79,10 @@ const config = {
         { name: 'og:image:height', content: '630' },
       ],
       navbar: {
-        title: 'React Native Reanimated',
+        title: 'React Native Worklets',
         hideOnScroll: true,
         logo: {
-          alt: 'React Native Reanimated',
+          alt: 'React Native Worklets',
           src: 'img/logo.svg',
           srcDark: 'img/logo-dark.svg',
         },
@@ -102,14 +93,13 @@ const config = {
             label: 'Docs',
             position: 'left',
           },
-          // { to: 'examples/accordion', label: 'Examples', position: 'left' },
           {
             type: 'docsVersionDropdown',
             position: 'right',
             dropdownActiveClassDisabled: true,
           },
           {
-            href: 'https://github.com/software-mansion/react-native-reanimated/',
+            href: 'https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets',
             position: 'right',
             className: 'header-github',
             'aria-label': 'GitHub repository',
