@@ -78,8 +78,8 @@
   --swm-yellow-light-20: #fffae1;
 
   --swm-yellow-dark-140: #5a553a;
-  --swm-yellow-dark-120: #91823d;
-  --swm-yellow-dark-100: #ffdd44;
+  --swm-yellow-dark-120: #f59e0b;
+  --swm-yellow-dark-100: #fbbf24;
   --swm-yellow-dark-80: #ffe678;
   --swm-yellow-dark-60: #fff1b2;
   --swm-yellow-dark-40: #fff9db;
@@ -124,8 +124,8 @@
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-20);
-  --swm-tab-hover: var(--swm-purple-light-80);
-  --swm-tab-active: var(--swm-purple-light-100);
+  --swm-tab-hover: var(--swm-yellow-dark-100);
+  --swm-tab-active: var(--swm-yellow-dark-120);
 
   /* Table of Contents */
   --ifm-toc-border-color: transparent;
@@ -192,8 +192,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-100);
-  --swm-paginator-label: var(--swm-purple-light-80);
-  --swm-paginator-label-hover: var(--swm-purple-light-100);
+  --swm-paginator-label: var(--swm-yellow-dark-100);
+  --swm-paginator-label-hover: var(--swm-yellow-dark-120);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-100);
@@ -319,8 +319,8 @@
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-60);
-  --swm-tab-hover: var(--swm-purple-dark-60);
-  --swm-tab-active: var(--swm-purple-light-80);
+  --swm-tab-hover: var(--swm-yellow-light-60);
+  --swm-tab-active: var(--swm-yellow-light-80);
 
   /* Table of Contents */
   --ifm-toc-border-color: transparent;
@@ -380,8 +380,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-20);
-  --swm-paginator-label: var(--swm-purple-light-60);
-  --swm-paginator-label-hover: var(--swm-purple-light-40);
+  --swm-paginator-label: var(--swm-yellow-light-60);
+  --swm-paginator-label-hover: var(--swm-yellow-light-40);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-20);
