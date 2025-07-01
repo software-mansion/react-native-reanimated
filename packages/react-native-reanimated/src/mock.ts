@@ -311,7 +311,7 @@ const core = {
   runOnRuntime: NOOP,
   makeMutable: ID,
   makeShareableCloneRecursive: ID,
-  isReanimated3: () => true,
+  isReanimated3: () => false,
   reanimatedMajorVersion: 4,
   // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,

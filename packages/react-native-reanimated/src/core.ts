@@ -42,7 +42,7 @@ export const isReanimated3 = () => {
   logger.warn(
     'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedMajorVersion` instead.'
   );
-  return true;
+  return false;
 };
 
 /** @returns Reanimated major version, doesn't exist before Reanimated 4 */
