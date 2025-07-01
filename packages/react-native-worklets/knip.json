@@ -3,5 +3,6 @@
   "entry": ["src/index.ts"],
   "project": ["src/**"],
   "include": ["files", "exports", "types"],
-  "tags": ["-knipIgnore"]
+  "tags": ["-knipIgnore"],
+  "ignore": ["src/valueUnpacker.ts"]
 }

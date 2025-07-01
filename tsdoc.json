@@ -1,14 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
 
+  "noStandardTags": false,
+
   "tagDefinitions": [
     {
       "tagName": "@knipIgnore",
-      "syntaxKind": "modifier"
+      "syntaxKind": "modifier",
+      "allowMultiple": false
     }
-  ],
-
-  "supportForTags": {
-    "@knipIgnore": true
-  }
+  ]
 }

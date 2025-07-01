@@ -12,7 +12,7 @@
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:valueUnpacker",
     "build:valueUnpacker": "node ./scripts/export-value-unpacker.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
-    "find-unused-code:js": "yarn knip",
+    "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
     "format:android": "yarn format:android:java && yarn format:android:cpp && yarn format:android:cmake",
     "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
