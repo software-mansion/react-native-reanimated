@@ -27,5 +27,3 @@ export {
   IS_WINDOWS,
   SHOULD_BE_USE_WEB,
 };
-
-throw new WorkletsError('test');

@@ -126,7 +126,6 @@ const config = tsEslint.config(
       parserOptions: {
         ecmaFeatures: { jsx: true },
         projectService: true,
-        tsconfigRootDir: import.meta.dirname,
       },
       globals: {
         React: true,
@@ -158,9 +157,6 @@ const config = tsEslint.config(
     plugins: {
       tsdoc,
       'simple-import-sort': simpleImportSort,
-    },
-    settings: {
-      tsdoc: { configFile: './tsdoc.json' }
     },
     rules: {
       ...tsRules,
