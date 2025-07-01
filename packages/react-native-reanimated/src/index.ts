@@ -95,6 +95,7 @@ export {
   isReanimated3,
   makeMutable,
   makeShareableCloneRecursive,
+  reanimatedMajorVersion,
   runOnJS,
   runOnRuntime,
   runOnUI,

@@ -312,6 +312,12 @@ const core = {
   makeMutable: ID,
   makeShareableCloneRecursive: ID,
   isReanimated3: () => true,
+  get reanimatedMajorVersion() {
+    logger.warn(
+      '[reanimated] The core.reanimatedMajorVersion property is deprecated. Please use the exported variable reanimatedMajorVersion instead.'
+    );
+    return 4;
+  },
   // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,
   // getViewProp: ADD ME IF NEEDED
