@@ -53,7 +53,8 @@ function convertOklabToLrgb({
   alpha,
 }: LabColor): RgbColor {
   'worklet';
-  /* eslint-disable @typescript-eslint/no-loss-of-precision */
+
+  /* eslint-disable no-loss-of-precision */
   const L = Math.pow(
     l * 0.99999999845051981432 +
       0.39633779217376785678 * a +
@@ -61,20 +62,17 @@ function convertOklabToLrgb({
     3
   );
   const M = Math.pow(
-    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
     l * 1.0000000088817607767 -
       0.1055613423236563494 * a -
       0.063854174771705903402 * b,
     3
   );
   const S = Math.pow(
-    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
     l * 1.0000000546724109177 -
       0.089484182094965759684 * a -
       1.2914855378640917399 * b,
     3
   );
-  /* eslint-enable */
 
   return {
     r: +4.076741661347994 * L - 3.307711590408193 * M + 0.230969928729428 * S,
@@ -86,6 +84,7 @@ function convertOklabToLrgb({
       1.7076147009309444 * S,
     alpha,
   };
+  /* eslint-enable no-loss-of-precision */
 }
 
 function convertOklabToRgb(labColor: LabColor): RgbColor {

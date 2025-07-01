@@ -43,7 +43,7 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const REAL_VERSION = require('../../package.json').version;
 
 const MOCK_VERSION = 'x.y.z';
@@ -112,6 +112,7 @@ export function makeWorkletFactory(
 
   const { workletName, reactName } = makeWorkletName(fun, state);
 
+  // eslint-disable-next-line prefer-const
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,

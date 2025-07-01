@@ -31,13 +31,14 @@ function resolveFindHostInstance_DEPRECATED() {
     return;
   }
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
     // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
     // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
       ReactFabric?.default?.findHostInstance_DEPRECATED ??
       ReactFabric?.findHostInstance_DEPRECATED;
-  } catch (e) {
+  } catch (_e) {
     throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }

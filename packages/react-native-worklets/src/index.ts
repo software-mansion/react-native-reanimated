@@ -1,22 +1,10 @@
 'use strict';
 
-import { initializeUIRuntime } from './initializers';
-import { WorkletsModule } from './WorkletsModule';
+import { init } from './initializers';
+import { experimentalBundlingInit } from './workletRuntimeEntry';
 
-// TODO: Specify the initialization pipeline since now there's no
-// universal source of truth for it.
-if (!globalThis._WORKLET) {
-  // Don't call this method on Worklet Runtimes.
-  initializeUIRuntime(WorkletsModule);
-}
+init();
 
-export type { LoggerConfig } from './logger';
-export {
-  logger,
-  LogLevel,
-  registerLoggerConfig,
-  updateLoggerConfig,
-} from './logger';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
@@ -40,3 +28,10 @@ export type {
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
+
+// @ts-expect-error We must trick the bundler to include
+// the `workletRuntimeEntry` file the way it cannot optimize it out.
+if (globalThis._ALWAYS_FALSE) {
+  // Experimental bundling.
+  experimentalBundlingInit();
+}

@@ -6,7 +6,7 @@ import {
 import type { WorkletFunction } from 'react-native-worklets';
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
-import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -65,6 +65,7 @@ export function getViewProp<T>(
       component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           reject(result);
         } else {
           resolve(result);
@@ -171,33 +172,18 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-type FeaturesConfig = {
-  enableLayoutAnimations: boolean;
-  setByUser: boolean;
-};
-
-let featuresConfig: FeaturesConfig = {
-  enableLayoutAnimations: false,
-  setByUser: false,
-};
-
+/**
+ * @deprecated This function no longer has any effect in Reanimated and will be
+ *   removed in the future.
+ */
+// ts-prune-ignore-next This function is needed for backward compatibility
 export function enableLayoutAnimations(
-  flag: boolean,
-  isCallByUser = true
+  _flag: boolean,
+  _isCallByUser = true
 ): void {
-  if (isCallByUser) {
-    featuresConfig = {
-      enableLayoutAnimations: flag,
-      setByUser: true,
-    };
-    ReanimatedModule.enableLayoutAnimations(flag);
-  } else if (
-    !featuresConfig.setByUser &&
-    featuresConfig.enableLayoutAnimations !== flag
-  ) {
-    featuresConfig.enableLayoutAnimations = flag;
-    ReanimatedModule.enableLayoutAnimations(flag);
-  }
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
+  );
 }
 
 export function configureLayoutAnimationBatch(
@@ -214,13 +200,4 @@ export function setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
-}
-
-export function registerJSProps(
-  componentName: string,
-  jsPropsNames: string[]
-): void {
-  if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.registerJSProps(componentName, jsPropsNames);
-  }
 }

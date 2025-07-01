@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { createAnimatedComponent } from '../createAnimatedComponent';

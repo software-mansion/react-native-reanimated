@@ -120,7 +120,6 @@ export type Mismatch = {
   capturedSnapshot: OperationUpdate;
 };
 
-/* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
@@ -146,4 +145,3 @@ declare global {
     stop: (tag: number) => void;
   };
 }
-/* eslint-enable no-var */

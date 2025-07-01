@@ -5,11 +5,10 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import { enableLayoutAnimations } from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import {
@@ -34,7 +33,7 @@ import type {
   NestedArray,
 } from './commonTypes';
 import { InlinePropManager } from './InlinePropManager';
-import JSPropsUpdater from './JSPropsUpdater';
+import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
@@ -46,7 +45,8 @@ if (IS_WEB) {
 }
 
 export type Options<P> = {
-  setNativeProps: (ref: AnimatedComponentRef, props: P) => void;
+  setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
+  jsProps?: string[];
 };
 
 export default class AnimatedComponent
@@ -64,7 +64,6 @@ export default class AnimatedComponent
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
   jestAnimatedProps: { value: AnimatedProps } = { value: {} };
-  _jsPropsUpdater = new JSPropsUpdater();
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
@@ -111,9 +110,12 @@ export default class AnimatedComponent
       this._NativeEventsManager = new NativeEventsManager(this, this._options);
     }
     this._NativeEventsManager?.attachEvents();
-    this._jsPropsUpdater.addOnJSPropsChangeListener(this);
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
+    }
 
     const layout = this.props.layout;
     if (layout) {
@@ -152,9 +154,12 @@ export default class AnimatedComponent
   componentWillUnmount() {
     super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
-    this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
+
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.unregisterComponent(this);
+    }
 
     const exiting = this.props.exiting;
 
@@ -186,7 +191,7 @@ export default class AnimatedComponent
     }
   }
 
-  _updateFromNative(props: StyleProps) {
+  setNativeProps(props: StyleProps) {
     if (this._options?.setNativeProps) {
       this._options.setNativeProps(
         this._componentRef as AnimatedComponentRef,
@@ -274,8 +279,6 @@ export default class AnimatedComponent
   componentDidUpdate(
     prevProps: AnimatedComponentProps<InitialComponentProps>,
     _prevState: Readonly<unknown>,
-    // This type comes straight from React
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     snapshot: DOMRect | null
   ) {
     const layout = this.props.layout;
@@ -291,10 +294,9 @@ export default class AnimatedComponent
       saveSnapshot(this._componentDOMRef);
     }
 
-    // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
     if (
       IS_WEB &&
-      snapshot !== null &&
+      snapshot &&
       this.props.layout &&
       !getReducedMotionFromConfig(this.props.layout as CustomConfig)
     ) {
@@ -339,10 +341,6 @@ export default class AnimatedComponent
 
     const { layout, entering, exiting } = this.props;
     if (layout || entering || exiting) {
-      if (!SHOULD_BE_USE_WEB) {
-        enableLayoutAnimations(true, false);
-      }
-
       if (exiting) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
@@ -364,10 +362,15 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (IS_WEB && this._componentDOMRef?.getBoundingClientRect !== undefined) {
+    if (
+      IS_WEB &&
+      this.props.layout &&
+      this._componentDOMRef?.getBoundingClientRect
+    ) {
       return this._componentDOMRef.getBoundingClientRect();
     }
 
+    // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
     return null;
   }
 
