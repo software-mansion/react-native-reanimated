@@ -34,19 +34,15 @@ export {
 const EDGE_TO_EDGE = isEdgeToEdge();
 
 /**
- * @deprecated Please use the exported variable `reanimatedMajorVersion`
- *   instead.
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
  */
 export const isReanimated3 = () => {
   logger.warn(
-    'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedMajorVersion` instead.'
+    'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedVersion` instead.'
   );
   return false;
 };
-
-/** @returns Reanimated major version, doesn't exist before Reanimated 4 */
-export const reanimatedMajorVersion = 4;
 
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.

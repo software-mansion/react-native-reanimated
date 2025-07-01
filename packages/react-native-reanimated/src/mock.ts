@@ -26,6 +26,7 @@ import {
   InterfaceOrientation,
   IOSReferenceFrame,
   KeyboardState,
+  reanimatedVersion,
   ReduceMotion,
   SensorType,
   setUpTests,
@@ -312,7 +313,6 @@ const core = {
   makeMutable: ID,
   makeShareableCloneRecursive: ID,
   isReanimated3: () => false,
-  reanimatedMajorVersion: 4,
   // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,
   // getViewProp: ADD ME IF NEEDED
@@ -489,6 +489,7 @@ const Reanimated = {
 
 module.exports = {
   __esModule: true,
+  reanimatedVersion,
   ...Reanimated,
   default: Animated,
 };
