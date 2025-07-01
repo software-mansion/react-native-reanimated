@@ -1,0 +1,2 @@
+export const SONG_HEIGHT = 70;
+export const SCROLL_HEIGHT_THRESHOLD = SONG_HEIGHT;
