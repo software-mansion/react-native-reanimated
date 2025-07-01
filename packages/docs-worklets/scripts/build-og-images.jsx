@@ -39,10 +39,8 @@ async function saveStreamToFile(stream, filePath) {
 
 async function buildOGImages() {
   const docsDirPath = path.resolve(__dirname, '../docs');
-  const blogDirPath = path.resolve(__dirname, '../blog');
 
   const docsFiles = globSync(`${docsDirPath}/*/*.{md,mdx}`);
-  const blogFiles = globSync(`${blogDirPath}/*.{md,mdx}`);
 
   const ogImageTargets = path.resolve(__dirname, '../build/img/og');
 
@@ -58,9 +56,7 @@ async function buildOGImages() {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  const allFiles = [...docsFiles, ...blogFiles];
-
-  for (const filePath of allFiles) {
+  for (const filePath of docsFiles) {
     const header = filePath.startsWith(docsDirPath)
       ? getDocsMarkdownHeader(filePath)
       : getExampleMardownHeader(filePath);

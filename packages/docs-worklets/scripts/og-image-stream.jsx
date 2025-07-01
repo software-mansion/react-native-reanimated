@@ -59,7 +59,7 @@ export default async function OGImageStream(header, base64Image) {
               fontFamily: 'Aeonik Regular',
               textWrap: 'wrap',
             }}>
-            {'Check out the React Native\nReanimated documentation.'}
+            {'Check out the React Native\nWorklets documentation.'}
           </pre>
         </div>
       </div>

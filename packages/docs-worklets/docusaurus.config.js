@@ -22,12 +22,7 @@ const config = {
   organizationName: 'software-mansion', // Usually your GitHub org/user name.
   projectName: 'react-native-worklets', // Usually your repo name.
 
-  scripts: [
-    {
-      src: '/react-native-worklets/js/snack-helpers.js',
-      async: true,
-    },
-  ],
+  scripts: [],
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
@@ -60,10 +55,11 @@ const config = {
         theme: {
           customCss: require.resolve('./src/css/index.css'),
         },
-        gtag: {
-          trackingID: 'G-RNYQG9GVFJ',
-          anonymizeIP: true,
-        },
+        // TODO: Add google analytics
+        // gtag: {
+        //   trackingID: 'G-RNYQG9GVFJ',
+        //   anonymizeIP: true,
+        // },
       }),
     ],
   ],
@@ -87,12 +83,6 @@ const config = {
           srcDark: 'img/logo-dark.svg',
         },
         items: [
-          {
-            to: 'docs/',
-            activeBasePath: 'docs',
-            label: 'Docs',
-            position: 'left',
-          },
           {
             type: 'docsVersionDropdown',
             position: 'right',
