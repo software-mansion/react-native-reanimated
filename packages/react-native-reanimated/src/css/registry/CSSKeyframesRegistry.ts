@@ -17,7 +17,7 @@ type KeyframesEntry = {
  * side only when used for the first time and unregistered when removed from the
  * last view that uses them.
  */
-export default class CSSKeyframesRegistry {
+class CSSKeyframesRegistry {
   private readonly cssTextToNameMap_: Map<string, string> = new Map();
   private readonly nameToKeyframes_: Map<string, KeyframesEntry> = new Map();
 
@@ -74,4 +74,13 @@ export default class CSSKeyframesRegistry {
       unregisterCSSKeyframes(animationName);
     }
   }
+
+  clear() {
+    this.nameToKeyframes_.clear();
+    this.cssTextToNameMap_.clear();
+  }
 }
+
+const cssKeyframesRegistry = new CSSKeyframesRegistry();
+
+export default cssKeyframesRegistry;
