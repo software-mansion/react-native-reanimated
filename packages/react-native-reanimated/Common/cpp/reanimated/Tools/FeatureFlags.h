@@ -10,8 +10,8 @@ class StaticFeatureFlags {
 
 // Convert the value under x into a string
 #define XTOSTRING(x) #x
-// Evaluate the flag value; without this step, it would stringify the flag name itself
-// instead of the flag value
+// Evaluate the flag value; without this step, it would stringify the flag name
+// itself instead of the flag value
 #define TOSTRING(x) XTOSTRING(x)
 
   static constexpr bool getFlag(const std::string_view &name) {
