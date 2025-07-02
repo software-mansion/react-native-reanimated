@@ -1,5 +1,5 @@
 'use strict';
 // ts-prune-ignore-next
 export const StaticFeatureFlags = {
-  TEST_STATIC_FLAG: true,
+  EXAMPLE_STATIC_FLAG: true,
 };

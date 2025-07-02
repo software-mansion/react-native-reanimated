@@ -63,7 +63,7 @@ def toPlatformFileString(String path) {
   return path
 }
 
-def getReanimatedFeatureFlags() {
+def getReanimatedStaticFeatureFlags() {
     def featureFlags = new HashMap<String, String>()
 
     def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.ts")
@@ -98,7 +98,7 @@ def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def REANIMATED_PROFILING = safeAppExtGet("enableReanimatedProfiling", false)
-def REANIMATED_FEATURE_FLAGS = getReanimatedFeatureFlags()
+def REANIMATED_FEATURE_FLAGS = getReanimatedStaticFeatureFlags()
 
 // Set version for prefab
 version REANIMATED_VERSION

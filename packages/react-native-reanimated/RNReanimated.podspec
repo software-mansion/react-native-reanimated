@@ -18,7 +18,7 @@ compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
-feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_feature_flags()}\""
+feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
 
 Pod::Spec.new do |s|
 

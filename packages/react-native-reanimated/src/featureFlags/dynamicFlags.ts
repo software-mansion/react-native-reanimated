@@ -1,4 +1,5 @@
 'use strict';
+import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
 
 type DynamicFlagsType = {
@@ -27,8 +28,8 @@ export const DynamicFlags: DynamicFlagsType = {
       DynamicFlags[name] = value;
       ReanimatedModule.setDynamicFeatureFlag(name, value);
     } else {
-      console.warn(
-        `[Reanimated] The feature flag: '${name}' no longer exists, you can safely remove invocation of \`setDynamicFeatureFlag('${name}')\` from your code.`
+      logger.warn(
+        `The feature flag: '${name}' no longer exists, you can safely remove invocation of \`setDynamicFeatureFlag('${name}')\` from your code.`
       );
     }
   },
@@ -42,6 +43,3 @@ export function setDynamicFeatureFlag(
 ): void {
   DynamicFlags.setFlag(name, value);
 }
-
-// ts-prune-ignore-next
-export default DynamicFlags;

@@ -71,7 +71,7 @@ def assert_new_architecture_enabled(new_arch_enabled)
   end
 end
 
-def get_feature_flags()
+def get_static_feature_flags()
   feature_flags = {}
 
   static_feature_flags_path = File.path('./src/featureFlags/staticFlags.ts')

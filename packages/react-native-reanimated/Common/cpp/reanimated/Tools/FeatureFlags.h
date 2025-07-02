@@ -15,7 +15,7 @@ class StaticFeatureFlags {
   static constexpr bool getFlag(const char *key) {
     const std::string keyStr = key;
     std::string featureFlags = REANIMATED_FEATURE_FLAGS_STRING;
-    if (featureFlags.find(key) == std::string::npos) {
+    if (featureFlags.find("[" + keyStr + ":") == std::string::npos) {
       // this will cause compilation error not runtime error
       throw std::logic_error("Unable to recognize flag: " + keyStr);
     }
@@ -35,8 +35,8 @@ class DynamicFeatureFlags {
   static std::unordered_map<std::string, bool> flags_;
 
  public:
-  static bool getFlag(const char *key);
-  static void setFlag(const std::string &key, bool value);
+  static bool getFlag(const std::string &name);
+  static void setFlag(const std::string &name, bool value);
 };
 
 } // namespace reanimated
