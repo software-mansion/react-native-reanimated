@@ -1,10 +1,10 @@
 /* eslint-disable reanimated/use-global-this */
-/* eslint-disable no-var */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
+import type { reportFatalRemoteError } from './errors';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
@@ -51,14 +51,12 @@ declare global {
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var __ErrorUtils: {
-    reportFatalError: (error: Error) => void;
-  };
+  /** Available only on RN Runtime */
+  var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
-  var __workletsLoggerConfig: LoggerConfigInternal;
   var _log: (value: unknown) => void;
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (

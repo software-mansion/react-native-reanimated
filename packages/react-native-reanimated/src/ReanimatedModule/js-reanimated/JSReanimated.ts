@@ -4,12 +4,13 @@ import type {
   ShareableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { logger, WorkletsModule } from 'react-native-worklets';
+import { WorkletsModule } from 'react-native-worklets';
 
 import {
   IS_JEST,
   IS_WEB,
   IS_WINDOW_AVAILABLE,
+  logger,
   ReanimatedError,
 } from '../../common';
 import type {
@@ -36,6 +37,7 @@ class JSReanimated implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
@@ -137,7 +139,8 @@ class JSReanimated implements IReanimatedModule {
         };
       case SensorType.ROTATION:
         return () => {
-          let [qw, qx, qy, qz] = sensor.quaternion;
+          const [qw, qx] = sensor.quaternion;
+          let [, , qy, qz] = sensor.quaternion;
 
           // Android sensors have a different coordinate system than iOS
           if (this.platform === Platform.WEB_ANDROID) {
@@ -252,12 +255,6 @@ class JSReanimated implements IReanimatedModule {
 
   setDynamicFeatureFlag(_: string, __: boolean): void {
     // noop
-  }
-
-  registerJSProps() {
-    throw new ReanimatedError(
-      'registerJSProps is not available in JSReanimated.'
-    );
   }
 
   setViewStyle(_viewTag: number, _style: StyleProps): void {

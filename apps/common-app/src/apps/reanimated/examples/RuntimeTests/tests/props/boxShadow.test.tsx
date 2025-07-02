@@ -18,7 +18,7 @@ import {
 } from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
 
-describe.skip('animation of BoxShadow', () => {
+describe('animation of BoxShadow', () => {
   enum Component {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',

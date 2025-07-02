@@ -42,8 +42,6 @@ export interface ReanimatedModuleProxy {
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
-  registerJSProps(componentName: string, jsPropsNames: string[]): void;
-
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
