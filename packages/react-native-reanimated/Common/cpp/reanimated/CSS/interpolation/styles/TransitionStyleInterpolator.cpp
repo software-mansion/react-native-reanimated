@@ -78,7 +78,10 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     if (shouldCreateInterpolator) {
       const auto newInterpolator = createPropertyInterpolator(
-          propertyName, {}, {}, viewStylesRepository_);
+          propertyName,
+          {},
+          getInterpolators(componentName_),
+          viewStylesRepository_);
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 

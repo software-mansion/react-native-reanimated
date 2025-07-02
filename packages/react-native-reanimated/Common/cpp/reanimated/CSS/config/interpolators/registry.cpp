@@ -4,26 +4,25 @@ namespace reanimated::css {
 
 namespace {
 
-ComponentInterpolatorsMap registry_; // Keep the map private
+ComponentInterpolatorsMap registry_ = {{"View", VIEW_INTERPOLATORS}};
 
 } // namespace
 
 void registerInterpolators(
-    std::string_view componentName,
+    const std::string &componentName,
     InterpolatorFactoriesRecord factories) {
-  auto [it, inserted] =
-      registry_.emplace(std::string(componentName), std::move(factories));
+  auto [it, inserted] = registry_.emplace(componentName, std::move(factories));
 
   // If interpolators for the component are already registered, throw an error
   if (!inserted) {
     throw std::logic_error(
         "[Reanimated] Interpolators already registered for component '" +
-        std::string(componentName) + "'");
+        componentName + "'");
   }
 }
 
 const InterpolatorFactoriesRecord &getInterpolators(
-    std::string_view componentName) {
+    const std::string &componentName) {
   const auto it = registry_.find(std::string(componentName));
 
   if (it == registry_.end()) {
@@ -33,21 +32,6 @@ const InterpolatorFactoriesRecord &getInterpolators(
   }
 
   return it->second;
-}
-
-bool hasInterpolators(const std::string &componentName) {
-  return registry_.find(componentName) != registry_.end();
-}
-
-bool isDiscreteProperty(
-    const std::string &propName,
-    const std::string &componentName) {
-  const auto &interpolators = getInterpolators(componentName);
-  const auto it = interpolators.find(propName);
-  if (it == interpolators.end()) {
-    return false;
-  }
-  return it->second->isDiscreteProperty();
 }
 
 } // namespace reanimated::css

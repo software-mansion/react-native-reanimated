@@ -19,7 +19,7 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       : RecordPropertiesInterpolator(
             // TODO - use hasInterpolators check and show error if there are no
             // interpolators for the component
-            {},
+            getInterpolators(componentName),
             {},
             viewStylesRepository) {
     updateKeyframes(keyframes);
