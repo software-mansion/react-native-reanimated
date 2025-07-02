@@ -66,15 +66,12 @@ def toPlatformFileString(String path) {
 def getReanimatedStaticFeatureFlags() {
     def featureFlags = new HashMap<String, String>()
 
-    def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.ts")
+    def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.json")
     if (!staticFeatureFlagsFile.exists()) {
         throw new GradleException("[Reanimated] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
     }
-    staticFeatureFlagsFile.text.replaceAll(' ', '').eachLine { line ->
-        def matcher = line =~ /([A-Z_0-9]+):([a-z]+)/
-        if (matcher.find()) {
-            featureFlags[matcher.group(1)] = matcher.group(2)
-        }
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
+        featureFlags[key] = value.toString()
     }
 
     def packageJsonFile = file(rootDir.path + "/../package.json")

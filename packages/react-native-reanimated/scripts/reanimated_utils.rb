@@ -74,14 +74,13 @@ end
 def get_static_feature_flags()
   feature_flags = {}
 
-  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.ts')
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
   if !File.exist?(static_feature_flags_path)
     raise "[Reanimated] Feature flags file not found at #{static_feature_flags_path}."
   end
-  static_feature_flags_content = File.read(static_feature_flags_path).gsub(' ', '')
-  regex = /([A-Z_0-9]+):([a-z]+)/
-  static_feature_flags_content.scan(regex).each do |match|
-    feature_flags[match[0]] = match[1]
+  static_feature_flags_json = JSON.parse(File.read(static_feature_flags_path))
+  static_feature_flags_json.each do |key, value|
+    feature_flags[key] = value.to_s
   end
 
   package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
