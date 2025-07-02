@@ -3,7 +3,7 @@ import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
 
 type DynamicFlagsType = {
-  TEST_DYNAMIC_FLAG: boolean;
+  EXAMPLE_DYNAMIC_FLAG: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
 };
@@ -11,7 +11,7 @@ type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
 // ts-prune-ignore-next
 export const DynamicFlags: DynamicFlagsType = {
-  TEST_DYNAMIC_FLAG: true,
+  EXAMPLE_DYNAMIC_FLAG: true,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {
