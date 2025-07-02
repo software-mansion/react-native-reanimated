@@ -2,6 +2,17 @@
 
 namespace reanimated::css {
 
+bool isDiscreteProperty(
+    const std::string &propName,
+    const std::string &componentName) {
+  const auto &interpolators = getInterpolators(componentName);
+  const auto it = interpolators.find(propName);
+  if (it == interpolators.end()) {
+    return false;
+  }
+  return it->second->isDiscreteProperty();
+}
+
 bool areArraysDifferentRecursive(
     const folly::dynamic &oldArray,
     const folly::dynamic &newArray) {
