@@ -12,7 +12,6 @@ CSSKeyframesRegistry::getOrCreateInterpolator(
     const std::string &componentName) {
   const auto &interpolatorsIt = styleInterpolators_.find(animationName);
   if (interpolatorsIt == styleInterpolators_.end()) {
-    LOG(INFO) << "No interpolators for animation: " << animationName;
     // If there is an animation with this name, there always should be
     // a map with interpolators (either empty if no interpolator was created
     // yet or non-empty if at least one interpolator was created)
@@ -21,8 +20,6 @@ CSSKeyframesRegistry::getOrCreateInterpolator(
 
   if (interpolatorsIt->second.find(componentName) ==
       interpolatorsIt->second.end()) {
-    LOG(INFO) << "Create interpolator for animation: " << animationName
-              << " and component: " << componentName;
     // If there is no interpolator for this component type, create one
     const auto interpolator = std::make_shared<AnimationStyleInterpolator>(
         keyframeDefinitions_[animationName],
@@ -43,7 +40,6 @@ CSSKeyframesRegistry::getKeyframeEasingFunctions(
 void CSSKeyframesRegistry::set(
     const std::string &animationName,
     CSSKeyframesConfig &&config) {
-  LOG(INFO) << "Set animation: " << animationName;
   keyframeDefinitions_[animationName] = std::move(config.keyframes);
   keyframeEasingFunctions_[animationName] =
       std::move(config.keyframeEasingFunctions);
