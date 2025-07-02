@@ -8,6 +8,7 @@ import {
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
 } from '../../platform/native/native';
+import { cssKeyframesRegistry } from '../../registry';
 import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';
@@ -31,6 +32,7 @@ describe('CSSAnimationsManager', () => {
     manager = new CSSAnimationsManager(shadowNodeWrapper, viewTag);
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
+    cssKeyframesRegistry.clear();
   });
 
   // TODO - add tests with keyframes rule class
