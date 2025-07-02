@@ -46,17 +46,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      viewStylesRepository_(
-          std::make_shared<ViewStylesRepository>(
-              staticPropsRegistry_,
-              animatedPropsRegistry_)),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(
           std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(
-          std::make_shared<CSSTransitionsRegistry>(
-              staticPropsRegistry_,
-              getAnimationTimestamp_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          staticPropsRegistry_,
+          getAnimationTimestamp_)),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -287,10 +285,9 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(
-      std::string(
-          "Getting property `" + propName +
-          "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(

@@ -4,6 +4,7 @@
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
