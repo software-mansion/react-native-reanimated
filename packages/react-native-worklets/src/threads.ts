@@ -126,18 +126,19 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   };
 }
 
-function runOnUIWorklet(): void {
-  'worklet';
-  if (__DEV__) {
+if (__DEV__) {
+  function runOnUIWorklet(): void {
+    'worklet';
+
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
+
+  const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
+
+  shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
-
-const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
-
-shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
@@ -302,19 +303,20 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   };
 }
 
-function runOnUIAsyncWorklet(): void {
-  'worklet';
-  if (__DEV__) {
+if (__DEV__) {
+  function runOnUIAsyncWorklet(): void {
+    'worklet';
+
     throw new WorkletsError(
       '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
+
+  const shareableRunOnUIAsyncWorklet =
+    makeShareableCloneRecursive(runOnUIAsyncWorklet);
+
+  shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 }
-
-const shareableRunOnUIAsyncWorklet =
-  makeShareableCloneRecursive(runOnUIAsyncWorklet);
-
-shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
