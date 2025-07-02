@@ -7,9 +7,9 @@ init();
 
 export {
   makeShareable,
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-  shareableMappingCache,
+  makeSerializable,
+  makeSerializable,
+  serializableMappingCache,
 } from './memory';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export {

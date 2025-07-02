@@ -12,9 +12,9 @@ import type {
   WorkletImport,
 } from '../workletTypes';
 import {
-  shareableMappingCache,
-  shareableMappingFlag,
-} from './shareableMappingCache';
+  serializableMappingCache,
+  serializableMappingFlag,
+} from './serializableMappingCache';
 
 // for web and jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -42,8 +42,8 @@ function isTurboModuleLike(object: object): object is Record<string, unknown> {
 }
 
 function getFromCache(value: object) {
-  const cached = shareableMappingCache.get(value);
-  if (cached === shareableMappingFlag) {
+  const cached = serializableMappingCache.get(value);
+  if (cached === serializableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
     return value;
   }
@@ -114,11 +114,11 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-function makeShareableCloneRecursiveWeb<T>(value: T): ShareableRef<T> {
+function makeSerializableWeb<T>(value: T): ShareableRef<T> {
   return value as ShareableRef<T>;
 }
 
-function makeShareableCloneRecursiveNative<T>(
+function makeSerializableNative<T>(
   value: T,
   shouldPersistRemote = false,
   depth = 0
@@ -216,7 +216,7 @@ function makeShareableCloneRecursiveNative<T>(
 
 if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
   // TODO: Do it programatically.
-  makeShareableCloneRecursiveNative.__bundleData = {
+  makeSerializableNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
     // @ts-expect-error resolveWeak is defined by Metro
     source: require.resolveWeak('./index'),
@@ -227,9 +227,9 @@ interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
 }
 
-export const makeShareableCloneRecursive: MakeShareableClone = SHOULD_BE_USE_WEB
-  ? makeShareableCloneRecursiveWeb
-  : makeShareableCloneRecursiveNative;
+export const makeSerializable: MakeShareableClone = SHOULD_BE_USE_WEB
+  ? makeSerializableWeb
+  : makeSerializableNative;
 
 function detectCyclicObject(value: unknown, depth: number) {
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -294,7 +294,7 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = makeShareableCloneRecursive(
+    clonedProps[key] = makeSerializable(
       element,
       shouldPersistRemote,
       depth + 1
@@ -322,14 +322,14 @@ function cloneArray<T extends unknown[]>(
   depth: number
 ): ShareableRef<T> {
   const clonedElements = value.map((element) =>
-    makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
+    makeSerializable(element, shouldPersistRemote, depth + 1)
   );
   const clone = WorkletsModule.makeShareableArray(
     clonedElements,
     shouldPersistRemote
   ) as ShareableRef<T>;
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   freezeObjectInDev(value);
   return clone;
@@ -339,8 +339,8 @@ function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
   value: (...args: TArgs) => TReturn
 ): ShareableRef<TReturn> {
   const clone = WorkletsModule.makeShareableFunction(value);
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   freezeObjectInDev(value);
   return clone;
@@ -351,8 +351,8 @@ function cloneHostObject<T extends object>(value: T): ShareableRef<T> {
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
   const clone = WorkletsModule.makeShareableHostObject(value);
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   return clone;
 }
@@ -392,11 +392,7 @@ function cloneWorklet<T extends WorkletFunction>(
   // that the __initData field that contains long strings representing the
   // worklet code, source map, and location, will always be
   // serialized/deserialized once.
-  clonedProps.__initData = makeShareableCloneRecursive(
-    value.__initData,
-    true,
-    depth + 1
-  );
+  clonedProps.__initData = makeSerializable(value.__initData, true, depth + 1);
 
   const clone = WorkletsModule.makeShareableWorklet(
     clonedProps,
@@ -404,8 +400,8 @@ function cloneWorklet<T extends WorkletFunction>(
     // retain all worklets
     true
   ) as ShareableRef<T>;
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   freezeObjectInDev(value);
   return clone;
@@ -438,7 +434,7 @@ function cloneContextObject<T extends object>(value: T): ShareableRef<T> {
       return workletContextObjectFactory();
     },
   });
-  shareableMappingCache.set(value, handle);
+  serializableMappingCache.set(value, handle);
   return handle as ShareableRef<T>;
 }
 
@@ -457,8 +453,8 @@ function clonePlainJSObject<T extends object>(
     shouldPersistRemote,
     value
   ) as ShareableRef<T>;
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   freezeObjectInDev(value);
   return clone;
@@ -473,7 +469,7 @@ function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
       return new RegExp(pattern, flags);
     },
   }) as unknown as ShareableRef<T>;
-  shareableMappingCache.set(value, handle);
+  serializableMappingCache.set(value, handle);
 
   return handle;
 }
@@ -491,7 +487,7 @@ function cloneError<T extends Error>(value: T): ShareableRef<T> {
       return error;
     },
   });
-  shareableMappingCache.set(value, handle);
+  serializableMappingCache.set(value, handle);
   return handle as unknown as ShareableRef<T>;
 }
 
@@ -504,8 +500,8 @@ function cloneArrayBuffer<T extends ArrayBuffer>(
     shouldPersistRemote,
     value
   );
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   return clone;
 }
@@ -528,7 +524,7 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
       return new constructor(buffer);
     },
   }) as unknown as ShareableRef<T>;
-  shareableMappingCache.set(value, handle);
+  serializableMappingCache.set(value, handle);
 
   return handle;
 }
@@ -539,8 +535,8 @@ function cloneImport<TValue extends WorkletImport>(
   const { source, imported } = value.__bundleData;
   const clone = WorkletsModule.makeShareableImport(source, imported);
 
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(clone);
+  serializableMappingCache.set(value, clone);
+  serializableMappingCache.set(clone);
 
   return clone as ShareableRef<TValue>;
 }
@@ -554,8 +550,8 @@ function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
   // as attributes of objects being captured by worklets but should never
   // be used on the UI runtime regardless. If they are being accessed, the user
   // will get an appropriate error message.
-  const clone = makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT as T);
-  shareableMappingCache.set(value, clone);
+  const clone = makeSerializable<T>(INACCESSIBLE_OBJECT as T);
+  serializableMappingCache.set(value, clone);
   return clone;
 }
 
@@ -692,25 +688,25 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
 
 export const makeShareableCloneOnUIRecursive = (
   globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
-    ? makeShareableCloneRecursive
+    ? makeSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
-function makeShareableJS<T extends object>(value: T): T {
+function makeShareableJSTODO<T extends object>(value: T): T {
   return value;
 }
 
-function makeShareableNative<T extends object>(value: T): T {
-  if (shareableMappingCache.get(value)) {
+function makeShareableNativeTODO<T extends object>(value: T): T {
+  if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = makeShareableCloneRecursive({
+  const handle = makeSerializable({
     __init: () => {
       'worklet';
       return value;
     },
   });
-  shareableMappingCache.set(value, handle);
+  serializableMappingCache.set(value, handle);
   return value;
 }
 
@@ -719,6 +715,6 @@ function makeShareableNative<T extends object>(value: T): T {
  * the UI thread will be seen by all worklets. Use it when you want to create a
  * value that is read and written only on the UI thread.
  */
-export const makeShareable = SHOULD_BE_USE_WEB
-  ? makeShareableJS
-  : makeShareableNative;
+export const makeShareableWHAT = SHOULD_BE_USE_WEB
+  ? makeShareableJSTODO
+  : makeShareableNativeTODO;
