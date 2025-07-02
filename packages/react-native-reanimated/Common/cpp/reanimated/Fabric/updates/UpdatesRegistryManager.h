@@ -1,5 +1,4 @@
 #pragma once
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>

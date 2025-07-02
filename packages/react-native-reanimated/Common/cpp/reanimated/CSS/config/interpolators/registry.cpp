@@ -39,4 +39,15 @@ bool hasInterpolators(const std::string &componentName) {
   return registry_.find(componentName) != registry_.end();
 }
 
+bool isDiscreteProperty(
+    const std::string &propName,
+    const std::string &componentName) {
+  const auto &interpolators = getInterpolators(componentName);
+  const auto it = interpolators.find(propName);
+  if (it == interpolators.end()) {
+    return false;
+  }
+  return it->second->isDiscreteProperty();
+}
+
 } // namespace reanimated::css

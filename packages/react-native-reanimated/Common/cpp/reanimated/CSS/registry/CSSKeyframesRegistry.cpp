@@ -24,8 +24,10 @@ CSSKeyframesRegistry::getOrCreateInterpolator(
     LOG(INFO) << "Create interpolator for animation: " << animationName
               << " and component: " << componentName;
     // If there is no interpolator for this component type, create one
-    const auto interpolator =
-        std::make_shared<AnimationStyleInterpolator>(viewStylesRepository_);
+    const auto interpolator = std::make_shared<AnimationStyleInterpolator>(
+        keyframeDefinitions_[animationName],
+        componentName,
+        viewStylesRepository_);
     interpolatorsIt->second[componentName] = interpolator;
   }
 

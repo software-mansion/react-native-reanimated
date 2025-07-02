@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+#include <reanimated/CSS/config/interpolators/registry.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
@@ -14,7 +14,7 @@
 
 namespace reanimated::css {
 
-const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
+registerInterpolators("View", []() {
   // Local constants
   const auto BLACK = CSSColor(0, 0, 0, 255);
   const auto TRANSPARENT = CSSColor::Transparent;
@@ -165,8 +165,9 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
            {"offsetX", value<CSSDouble>(0)},
            {"offsetY", value<CSSDouble>(0)},
 #ifdef ANDROID
-           // For some reason Android crashes when blurRadius is smaller than 1,
-           // so we use a custom value type that will never be smaller than 1
+           // For some reason Android crashes when blurRadius is smaller
+           // than 1, so we use a custom value type that will never be
+           // smaller than 1
            {"blurRadius", value<CSSShadowRadiusAndroid>(1)},
 #else
            {"blurRadius", value<CSSDouble>(0)},
@@ -179,7 +180,8 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // BORDERS
       // Radius
       // TODO - fix interpolation between absolute and relative values
-      // when yoga supports it (relativeProperty "width" is just a placeholder)
+      // when yoga supports it (relativeProperty "width" is just a
+      // placeholder)
       {"borderRadius", value<CSSDimension>(RelativeTo::Self, "width", 0)},
       // top-left
       {"borderTopLeftRadius",
@@ -297,6 +299,6 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // Others
       {"isolation", value<CSSKeyword>("auto")},
   };
-}();
+}());
 
 } // namespace reanimated::css
