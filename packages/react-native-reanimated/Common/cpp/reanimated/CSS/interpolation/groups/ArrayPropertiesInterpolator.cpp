@@ -31,16 +31,13 @@ bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(
 }
 
 void ArrayPropertiesInterpolator::updateKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &keyframes) {
-  const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
-  const size_t valuesCount = keyframesArray.size(rt);
+    const folly::dynamic &keyframes) {
+  const size_t valuesCount = keyframes.size();
 
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    interpolators_[i]->updateKeyframes(
-        rt, keyframesArray.getValueAtIndex(rt, i));
+    interpolators_[i]->updateKeyframes(keyframes[i]);
   }
 }
 
