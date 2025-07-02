@@ -154,7 +154,6 @@ export function useAnimatedSensor(
         }
       }
       sensorData.value = data;
-      callMicrotasks();
     });
 
     if (id !== -1) {
