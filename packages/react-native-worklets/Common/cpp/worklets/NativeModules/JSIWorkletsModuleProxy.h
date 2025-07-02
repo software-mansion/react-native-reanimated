@@ -7,6 +7,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -32,6 +33,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      std::shared_ptr<RuntimeManager> runtimeManager,
       std::shared_ptr<WorkletRuntime> uiWorkletRuntime);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
@@ -49,6 +51,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
   // TODO: Make it non-nullptr on the UI runtime.
   std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };

@@ -22,6 +22,7 @@ class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
+      uint64_t runtimeId,
       std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -61,6 +62,11 @@ class WorkletRuntime : public jsi::HostObject,
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
+  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
+
+  jsi::Value executeSync(
+      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
@@ -69,7 +75,16 @@ class WorkletRuntime : public jsi::HostObject,
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
+  [[nodiscard]] auto getRuntimeId() const -> uint64_t {
+    return runtimeId_;
+  }
+
+  [[nodiscard]] auto getRuntimeName() const -> std::string {
+    return name_;
+  }
+
  private:
+  const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
 #ifndef NDEBUG

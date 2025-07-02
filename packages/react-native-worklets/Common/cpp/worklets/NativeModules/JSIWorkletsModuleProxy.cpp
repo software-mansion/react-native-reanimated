@@ -60,27 +60,33 @@ inline jsi::Value executeOnUIRuntimeSync(
 }
 
 inline jsi::Value createWorkletRuntime(
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl,
+    const std::weak_ptr<RuntimeManager> &runtimeManager,
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
-  auto workletRuntime = std::make_shared<WorkletRuntime>(
+  auto manager = runtimeManager.lock();
+  if (!manager) {
+    return jsi::Value::undefined();
+  }
+
+  auto workletRuntime = manager->createWorkletRuntime(
       std::move(jsiWorkletsModuleProxy),
       jsQueue,
       jsScheduler,
-      name.asString(rt).utf8(rt),
-      true /* supportsLocking */,
       isDevBundle,
+      true /* supportsLocking */,
       script,
-      sourceUrl);
-  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, initializer, "[Worklets] Initializer must be a worklet.");
-  workletRuntime->runGuarded(initializerShareable);
+      sourceUrl,
+      rt,
+      name,
+      initializer);
+
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
@@ -107,6 +113,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::shared_ptr<RuntimeManager> runtimeManager,
     std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
@@ -115,6 +122,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime) {}
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -126,6 +134,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
+      runtimeManager_(other.runtimeManager_),
       uiWorkletRuntime_(other.uiWorkletRuntime_) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
@@ -420,18 +429,20 @@ jsi::Value JSIWorkletsModuleProxy::get(
          isDevBundle = isDevBundle_,
          script = script_,
          sourceUrl = sourceUrl_,
+         runtimeManager = runtimeManager_,
          clone](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
           return createWorkletRuntime(
+              std::move(clone),
               jsQueue,
               jsScheduler,
-              std::move(clone),
               isDevBundle,
               script,
               sourceUrl,
+              runtimeManager,
               rt,
               args[0],
               args[1]);
