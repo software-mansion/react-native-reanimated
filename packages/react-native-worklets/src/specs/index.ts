@@ -1,7 +1,8 @@
 'use strict';
 
+import type { Spec } from './NativeWorkletsModule';
 import RNWorkletsTurboModule from './NativeWorkletsModule';
 
-export const WorkletsTurboModule = globalThis._WORKLET
+export const WorkletsTurboModule: Spec | null = globalThis._WORKLET
   ? null
   : RNWorkletsTurboModule;
