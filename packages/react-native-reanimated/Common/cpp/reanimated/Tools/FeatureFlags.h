@@ -8,18 +8,20 @@ class StaticFeatureFlags {
  public:
 #ifdef REANIMATED_FEATURE_FLAGS
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define REANIMATED_FEATURE_FLAGS_STRING TOSTRING(REANIMATED_FEATURE_FLAGS)
+// Convert the value under x into a string
+#define XTOSTRING(x) #x
+// Evaluate the flag value; without this step, it would stringify the flag name itself
+// instead of the flag value
+#define TOSTRING(x) XTOSTRING(x)
 
-  static constexpr bool getFlag(const char *key) {
-    const std::string keyStr = key;
-    std::string featureFlags = REANIMATED_FEATURE_FLAGS_STRING;
-    if (featureFlags.find("[" + keyStr + ":") == std::string::npos) {
+  static constexpr bool getFlag(const std::string_view &name) {
+    std::string nameStr = name.data();
+    std::string featureFlags = TOSTRING(REANIMATED_FEATURE_FLAGS);
+    if (featureFlags.find("[" + nameStr + ":") == std::string::npos) {
       // this will cause compilation error not runtime error
-      throw std::logic_error("Unable to recognize flag: " + keyStr);
+      throw std::logic_error("Unable to recognize flag: " + nameStr);
     }
-    return featureFlags.find("[" + keyStr + ":true]") != std::string::npos;
+    return featureFlags.find("[" + nameStr + ":true]") != std::string::npos;
   }
 
 #else
