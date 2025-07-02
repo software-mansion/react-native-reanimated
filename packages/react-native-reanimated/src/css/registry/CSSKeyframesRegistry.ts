@@ -5,6 +5,11 @@ import {
   unregisterCSSKeyframes,
 } from '../platform/native';
 
+type KeyframesEntry = {
+  keyframesRule: CSSKeyframesRuleImpl;
+  viewTags: Set<number>;
+};
+
 /**
  * This class is responsible for managing the registry of CSS animation
  * keyframes. It keeps track of views that use specific animations and handles
@@ -13,26 +18,36 @@ import {
  * last view that uses them.
  */
 export default class CSSKeyframesRegistry {
-  private readonly registry_: Map<
-    string,
-    {
-      keyframesRule: CSSKeyframesRuleImpl;
-      viewTags: Set<number>;
-    }
-  > = new Map();
+  private readonly cssTextToNameMap_: Map<string, string> = new Map();
+  private readonly nameToKeyframes_: Map<string, KeyframesEntry> = new Map();
 
-  has(animationName: string) {
-    return this.registry_.has(animationName);
+  get(nameOrCssText: string) {
+    const result = this.nameToKeyframes_.get(nameOrCssText);
+    if (result) {
+      return result.keyframesRule;
+    }
+
+    const animationName = this.cssTextToNameMap_.get(nameOrCssText);
+    if (animationName) {
+      return this.nameToKeyframes_.get(animationName)?.keyframesRule;
+    }
   }
 
   add(keyframesRule: CSSKeyframesRuleImpl, viewTag: number) {
-    if (this.has(keyframesRule.name)) {
-      this.registry_.get(keyframesRule.name)!.viewTags.add(viewTag);
+    const existingEntry = this.nameToKeyframes_.get(keyframesRule.name);
+    if (existingEntry) {
+      existingEntry.viewTags.add(viewTag);
     } else {
-      this.registry_.set(keyframesRule.name, {
+      this.nameToKeyframes_.set(keyframesRule.name, {
         keyframesRule,
         viewTags: new Set([viewTag]),
       });
+
+      // Store the keyframes to name mapping in order to reuse the same
+      // animation name when possible (when the same inline keyframes object
+      // is used)
+      this.cssTextToNameMap_.set(keyframesRule.cssText, keyframesRule.name);
+
       // Register animation keyframes only if they are not already registered
       // (when they are added for the first time)
       registerCSSKeyframes(
@@ -43,7 +58,7 @@ export default class CSSKeyframesRegistry {
   }
 
   remove(animationName: string, viewTag: number) {
-    const entry = this.registry_.get(animationName);
+    const entry = this.nameToKeyframes_.get(animationName);
     if (!entry) {
       return;
     }
@@ -52,7 +67,8 @@ export default class CSSKeyframesRegistry {
     viewTags.delete(viewTag);
 
     if (viewTags.size === 0) {
-      this.registry_.delete(animationName);
+      this.nameToKeyframes_.delete(animationName);
+      this.cssTextToNameMap_.delete(entry.keyframesRule.cssText);
       // Unregister animation keyframes if there are no more references to them
       // (no more views that have an animation with this name)
       unregisterCSSKeyframes(animationName);

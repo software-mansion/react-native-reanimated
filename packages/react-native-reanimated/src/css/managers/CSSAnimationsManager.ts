@@ -115,7 +115,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       createSingleCSSAnimationProperties(animationProperties);
 
     const processedAnimations = singleAnimationPropertiesArray.map(
-      (properties, i) => {
+      (properties) => {
         const keyframes = properties.animationName;
         let keyframesRule: CSSKeyframesRuleImpl;
 
@@ -125,22 +125,20 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
           // to preserve the same animation. If used inline, it will restart the animation
           // on every component re-render)
           keyframesRule = keyframes;
-        } else if (
-          this.attachedAnimations[i]?.keyframesRule.cssText !==
-          JSON.stringify(keyframes)
-        ) {
+        } else {
           // If the keyframes are not an instance of the CSSKeyframesRule class (e.g. someone
           // passes a keyframes object inline in the component's style without using css.keyframes()
           // function), we don't want to restart the animation on every component re-render.
-          // In this case, we need to compare the stringified keyframes of the old and the new
-          // animation configuration object to determine if the animation has changed.
-          keyframesRule = new CSSKeyframesRuleImpl(
-            keyframes as CSSAnimationKeyframes
-          );
-        } else {
-          // Otherwise, if keyframes are the same, we can just use the existing keyframes rule
-          // instance
-          keyframesRule = this.attachedAnimations[i]?.keyframesRule;
+          // In this case, we need to check if the animation with the same keyframes is already
+          // registered in the registry. If it is, we can just use the existing keyframes rule.
+          // Otherwise, we need to create a new keyframes rule.
+          const cssText = JSON.stringify(keyframes);
+          keyframesRule =
+            CSSAnimationsManager.animationKeyframesRegistry.get(cssText) ??
+            new CSSKeyframesRuleImpl(
+              keyframes as CSSAnimationKeyframes,
+              cssText
+            );
         }
 
         return {
