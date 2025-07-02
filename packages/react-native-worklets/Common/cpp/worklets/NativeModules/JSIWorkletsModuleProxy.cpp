@@ -96,6 +96,7 @@ inline jsi::Value propagateModuleUpdate(
     const std::string &code,
     const std::string &sourceUrl) {
   runtimeManager->forEachRuntime([code, sourceUrl](jsi::Runtime &rt) {
+    // TODO: add try catch here.
     const auto buffer = std::make_shared<jsi::StringBuffer>(code);
     rt.evaluateJavaScript(buffer, sourceUrl);
     return jsi::Value::undefined();

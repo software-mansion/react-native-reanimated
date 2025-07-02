@@ -11,7 +11,8 @@ import type { ValueUnpacker } from './workletTypes';
 
 declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
-  var __r: (moduleId: number) => Record<string, unknown>;
+  var __r: ((moduleId: number) => Record<string, unknown>) &
+    Record<string, unknown>;
   var __workletsCache: Map<number, () => unknown>;
   var __handleCache: WeakMap<object, unknown>;
   var evalWithSourceMap:

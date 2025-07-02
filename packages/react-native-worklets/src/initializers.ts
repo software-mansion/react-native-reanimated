@@ -123,6 +123,24 @@ function initializeRNRuntime() {
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     setupCallGuard();
+
+    if (__DEV__) {
+      /**
+       * Temporary workaround for Metro bundler. We must implement a dummy
+       * Refresh module to prevent Metro from throwing irrelevant errors.
+       */
+
+      const Refresh = new Proxy(
+        {},
+        {
+          get() {
+            return () => {};
+          },
+        }
+      );
+
+      globalThis.__r.Refresh = Refresh;
+    }
   }
 }
 

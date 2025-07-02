@@ -1,18 +1,18 @@
 'use strict';
 import type { LoggerConfig } from './common';
-import { logger, SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
+import { SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
 import { executeOnUIRuntimeSync } from './core';
 
-export function addWhitelistedNativeProps(): void {
-  logger.warn(
-    '`addWhitelistedNativeProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
-  );
+/** @deprecated This function is a no-op in Reanimated 4. */
+export function addWhitelistedNativeProps(
+  _props: Record<string, boolean>
+): void {
+  // Do nothing. This is just for backward compatibility.
 }
 
-export function addWhitelistedUIProps(): void {
-  logger.warn(
-    '`addWhitelistedUIProps` is no longer necessary in Reanimated 4 and will be removed in next version. Please remove this call from your code.'
-  );
+/** @deprecated This function is a no-op in Reanimated 4. */
+export function addWhitelistedUIProps(_props: Record<string, boolean>): void {
+  // Do nothing. This is just for backward compatibility.
 }
 
 /**
