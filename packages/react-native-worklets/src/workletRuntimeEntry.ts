@@ -43,7 +43,7 @@ export function bundleModeInit() {
         module.exports = new Proxy(
           {},
           {
-            get: function get(_target, prop) {
+            get(_target, prop) {
               globalThis.console.warn(
                 `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
               );
@@ -70,6 +70,18 @@ export function bundleModeInit() {
       };
 
       modules.set(ReactNativeModuleId, mod);
+
+      const Refresh = new Proxy(
+        {},
+        {
+          get() {
+            return () => {};
+          },
+        }
+      );
+
+      // @ts-expect-error type not exposed by Metro
+      globalThis.__r.Refresh = Refresh;
     }
 
     throw new WorkletsError('Worklets initialized successfully');
