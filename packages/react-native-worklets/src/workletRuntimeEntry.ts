@@ -13,10 +13,10 @@ import { WorkletsError } from './WorkletsError';
  * error is caught in C++ code.
  *
  * This function has no effect on the RN Runtime beside setting the
- * `_WORKLETS_EXPERIMENTAL_BUNDLING` flag.
+ * `_WORKLETS_BUNDLE_MODE` flag.
  */
-export function experimentalBundlingInit() {
-  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
+export function bundleModeInit() {
+  globalThis._WORKLETS_BUNDLE_MODE = true;
   if (globalThis._WORKLET) {
     /**
      * We shouldn't call `init()` on RN Runtime here, as it would initialize our
@@ -27,4 +27,4 @@ export function experimentalBundlingInit() {
   }
 }
 
-experimentalBundlingInit();
+bundleModeInit();

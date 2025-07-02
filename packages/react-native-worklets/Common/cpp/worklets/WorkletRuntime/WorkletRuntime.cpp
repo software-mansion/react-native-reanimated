@@ -100,7 +100,7 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   if (!script) {
     throw std::runtime_error(
         "[Worklets] Expected to receive the bundle, but got nullptr instead.");
@@ -127,7 +127,7 @@ WorkletRuntime::WorkletRuntime(
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 }
 
 jsi::Value WorkletRuntime::executeSync(

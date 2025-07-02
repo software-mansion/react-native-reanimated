@@ -5,9 +5,9 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/jni/JMessageQueueThread.h>
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
 #include <react/fabric/BigStringBufferWrapper.h>
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/android/AndroidUIScheduler.h>
@@ -33,12 +33,12 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
           jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
           androidUIScheduler
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
       ,
       jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
           scriptWrapper,
       const std::string &sourceURL
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
   );
 
   static void registerNatives();
