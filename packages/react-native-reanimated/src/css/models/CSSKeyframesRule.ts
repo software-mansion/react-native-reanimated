@@ -9,8 +9,8 @@ export default class CSSKeyframesRuleImpl<
 > extends CSSKeyframesRuleBase<S> {
   private normalizedKeyframes_: NormalizedCSSAnimationKeyframesConfig;
 
-  constructor(keyframes: CSSAnimationKeyframes<S>) {
-    super(keyframes);
+  constructor(keyframes: CSSAnimationKeyframes<S>, cssText?: string) {
+    super(keyframes, cssText);
     this.normalizedKeyframes_ = normalizeAnimationKeyframes(keyframes);
   }
 
