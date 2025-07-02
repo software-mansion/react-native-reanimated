@@ -129,14 +129,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 if (__DEV__) {
   function runOnUIWorklet(): void {
     'worklet';
-
     throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
 
   const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
-
   shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
 
@@ -306,7 +304,6 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 if (__DEV__) {
   function runOnUIAsyncWorklet(): void {
     'worklet';
-
     throw new WorkletsError(
       '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
@@ -314,7 +311,6 @@ if (__DEV__) {
 
   const shareableRunOnUIAsyncWorklet =
     makeShareableCloneRecursive(runOnUIAsyncWorklet);
-
   shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 }
 
