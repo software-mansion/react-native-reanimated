@@ -10,8 +10,10 @@ CSSTransition::CSSTransition(
       viewStylesRepository_(viewStylesRepository),
       properties_(config.properties),
       settings_(config.settings),
-      progressProvider_(TransitionProgressProvider()),
-      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
+      styleInterpolator_(TransitionStyleInterpolator(
+          shadowNode_->getComponentName(),
+          viewStylesRepository)),
+      progressProvider_(TransitionProgressProvider()) {}
 
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
@@ -125,7 +127,7 @@ void CSSTransition::updateTransitionProperties(
 }
 
 bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
-  if (!isDiscreteProperty(propertyName)) {
+  if (!isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
     return true;
   }
 

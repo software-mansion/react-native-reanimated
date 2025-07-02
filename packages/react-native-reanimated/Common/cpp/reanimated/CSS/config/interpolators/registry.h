@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
 #include <stdexcept>
 #include <string>
@@ -20,5 +20,9 @@ const InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName);
 
 bool hasInterpolators(const std::string &componentName);
+
+bool isDiscreteProperty(
+    const std::string &propName,
+    const std::string &componentName);
 
 } // namespace reanimated::css

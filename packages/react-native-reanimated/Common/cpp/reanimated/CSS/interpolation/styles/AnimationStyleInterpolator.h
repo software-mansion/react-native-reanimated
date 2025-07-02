@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
+#include <reanimated/CSS/config/interpolators/registry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 #include <memory>
@@ -13,11 +13,17 @@ namespace reanimated::css {
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
   explicit AnimationStyleInterpolator(
+      const folly::dynamic &keyframes,
+      const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
-            PROPERTY_INTERPOLATORS_CONFIG,
+            // TODO - use hasInterpolators check and show error if there are no
+            // interpolators for the component
             {},
-            viewStylesRepository) {}
+            {},
+            viewStylesRepository) {
+    updateKeyframes(keyframes);
+  }
 };
 
 } // namespace reanimated::css
