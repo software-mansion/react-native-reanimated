@@ -1,5 +1,11 @@
 const path = require('path');
 
+const workletsPackageParentDir = path.resolve(
+  require.resolve('react-native-worklets/package.json'),
+  '..',
+  '..'
+);
+
 module.exports = {
   bundleModeMetroConfig: {
     serializer: {
@@ -30,6 +36,15 @@ module.exports = {
           return idFileMap.get(moduleName);
         };
       },
+        resolver: {
+    resolveRequest: (context, moduleName, platform) => {
+      if (moduleName.startsWith('react-native-worklets/__generatedWorklets/')) {
+        const fullModuleName = path.join(workletsPackageParentDir, moduleName);
+        return { type: 'sourceFile', filePath: fullModuleName };
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
+  },
     },
   },
 };

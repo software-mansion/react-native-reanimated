@@ -49,6 +49,12 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch"
+    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch",
+    "metro@npm:^0.82.0": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:^0.82.2": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:0.82.4": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro-runtime@npm:^0.82.0": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:^0.82.2": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:0.82.4": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch"
   }
 }
