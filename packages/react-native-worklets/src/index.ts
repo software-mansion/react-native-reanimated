@@ -5,13 +5,13 @@ import { experimentalBundlingInit } from './workletRuntimeEntry';
 
 init();
 
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { shareableMappingCache } from './shareableMappingCache';
 export {
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
+  shareableMappingCache,
+} from './memory';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

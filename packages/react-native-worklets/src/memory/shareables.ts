@@ -1,20 +1,20 @@
 'use strict';
-import { registerWorkletStackDetails } from './errors';
-import { logger } from './logger';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
-import {
-  shareableMappingCache,
-  shareableMappingFlag,
-} from './shareableMappingCache';
-import { isWorkletFunction } from './workletFunction';
-import { WorkletsError } from './WorkletsError';
-import { WorkletsModule } from './WorkletsModule';
+import { registerWorkletStackDetails } from '../errors';
+import { logger } from '../logger';
+import { SHOULD_BE_USE_WEB } from '../PlatformChecker';
+import { isWorkletFunction } from '../workletFunction';
+import { WorkletsError } from '../WorkletsError';
+import { WorkletsModule } from '../WorkletsModule';
 import type {
   FlatShareableRef,
   ShareableRef,
   WorkletFunction,
   WorkletImport,
-} from './workletTypes';
+} from '../workletTypes';
+import {
+  shareableMappingCache,
+  shareableMappingFlag,
+} from './shareableMappingCache';
 
 // for web and jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used

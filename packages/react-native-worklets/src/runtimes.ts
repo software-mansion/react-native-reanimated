@@ -2,11 +2,11 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
+} from './memory';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';

@@ -1,6 +1,6 @@
 'use strict';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
-import type { ShareableRef } from './workletTypes';
+import { SHOULD_BE_USE_WEB } from '../PlatformChecker';
+import type { ShareableRef } from '../workletTypes';
 
 /**
  * This symbol is used to represent a mapping from the value to itself.
