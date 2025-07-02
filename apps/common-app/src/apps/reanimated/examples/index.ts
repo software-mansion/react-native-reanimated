@@ -68,6 +68,7 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
@@ -719,5 +720,9 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  ReparentingExample: {
+    title: '[LA] Reparenting',
+    screen: ReparentingExample,
   },
 } as const;

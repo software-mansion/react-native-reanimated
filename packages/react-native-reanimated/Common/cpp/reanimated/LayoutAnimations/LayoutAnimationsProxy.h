@@ -74,7 +74,7 @@ struct LayoutAnimationsProxy
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
-      std::unordered_map<Tag, ShadowView> &movedViews,
+      std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
   void handleRemovals(
@@ -83,7 +83,7 @@ struct LayoutAnimationsProxy
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
-      const std::unordered_map<Tag, ShadowView> &movedViews,
+      const std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
