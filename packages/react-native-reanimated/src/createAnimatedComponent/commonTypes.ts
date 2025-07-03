@@ -21,6 +21,7 @@ export interface AnimatedProps extends Record<string, unknown> {
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
+  componentName?: string;
   DOMElement?: HTMLElement | null;
 }
 

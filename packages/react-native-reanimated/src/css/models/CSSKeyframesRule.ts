@@ -1,20 +1,35 @@
 'use strict';
 import type { NormalizedCSSAnimationKeyframesConfig } from '../platform/native';
-import { normalizeAnimationKeyframes } from '../platform/native';
+import {
+  getStyleBuilder,
+  normalizeAnimationKeyframes,
+} from '../platform/native';
 import type { CSSAnimationKeyframes, PlainStyle } from '../types';
 import CSSKeyframesRuleBase from './CSSKeyframesRuleBase';
 
 export default class CSSKeyframesRuleImpl<
   S extends PlainStyle = PlainStyle,
 > extends CSSKeyframesRuleBase<S> {
-  private normalizedKeyframes_: NormalizedCSSAnimationKeyframesConfig;
+  private readonly normalizedKeyframesCache_: Record<
+    string,
+    NormalizedCSSAnimationKeyframesConfig
+  > = {};
 
   constructor(keyframes: CSSAnimationKeyframes<S>, cssText?: string) {
     super(keyframes, cssText);
-    this.normalizedKeyframes_ = normalizeAnimationKeyframes(keyframes);
   }
 
-  get normalizedKeyframesConfig(): NormalizedCSSAnimationKeyframesConfig {
-    return this.normalizedKeyframes_;
+  getNormalizedKeyframesConfig(
+    componentName: string
+  ): NormalizedCSSAnimationKeyframesConfig {
+    if (!this.normalizedKeyframesCache_[componentName]) {
+      this.normalizedKeyframesCache_[componentName] =
+        normalizeAnimationKeyframes(
+          this.cssRules,
+          getStyleBuilder(componentName)
+        );
+    }
+
+    return this.normalizedKeyframesCache_[componentName];
   }
 }

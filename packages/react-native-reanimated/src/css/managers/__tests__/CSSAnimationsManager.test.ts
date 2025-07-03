@@ -29,7 +29,7 @@ describe('CSSAnimationsManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSAnimationsManager(shadowNodeWrapper, viewTag);
+    manager = new CSSAnimationsManager(shadowNodeWrapper, 'View', viewTag);
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
     cssKeyframesRegistry.clear();
