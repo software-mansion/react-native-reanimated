@@ -108,6 +108,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  makeShareableMap<TKey, TValue>(
+    keys: TKey[],
+    values: TValue[]
+  ): ShareableRef<Map<TKey, TValue>> {
+    return this.#workletsModuleProxy.makeShareableMap(keys, values);
+  }
+
+  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>> {
+    return this.#workletsModuleProxy.makeShareableSet(values);
+  }
+
   makeShareableInitializer(obj: object) {
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
