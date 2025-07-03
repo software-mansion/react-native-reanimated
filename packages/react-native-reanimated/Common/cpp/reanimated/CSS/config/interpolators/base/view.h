@@ -75,6 +75,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
              {"color", value<CSSColor>(BLACK)},
              {"inset", value<CSSBoolean>(false)},
          })})},
-        {"mixBlendMode", value<CSSKeyword>("normal")}});
+        {"mixBlendMode", value<CSSKeyword>("normal")},
+        {"r", value<CSSDouble>(0)}});
 
 } // namespace reanimated::css
