@@ -36,24 +36,14 @@ class RuntimeManager {
 
   auto createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const bool isDevBundle,
       const bool supportsLocking,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl,
-      jsi::Runtime &rt,
-      const jsi::Value &name,
+      const std::string &name,
       const jsi::Value &initializer = jsi::Value::undefined())
       -> std::shared_ptr<WorkletRuntime>;
 
-  auto createUIRuntime(
-      std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl) -> std::shared_ptr<WorkletRuntime>;
+  auto createUninitializedUIRuntime(
+      const std::shared_ptr<MessageQueueThread> &jsQueue)
+      -> std::shared_ptr<WorkletRuntime>;
 
  private:
   auto getNextRuntimeId() -> uint64_t {
