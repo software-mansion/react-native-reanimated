@@ -21,9 +21,9 @@ class JSIWorkletsModuleProxy;
 /**
  * Unused, but kept for possible future use.
  */
-static constexpr uint64_t rnRuntimeId{0};
-static constexpr uint64_t uiRuntimeId{1};
-static constexpr std::string uiRuntimeName{"UI"};
+constexpr uint64_t rnRuntimeId{0};
+constexpr uint64_t uiRuntimeId{1};
+extern const std::string uiRuntimeName;
 
 class RuntimeManager {
  public:
