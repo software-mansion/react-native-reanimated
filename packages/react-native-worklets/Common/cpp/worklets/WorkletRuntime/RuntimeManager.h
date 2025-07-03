@@ -1,12 +1,15 @@
 #pragma once
 
-// #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <jsi/jsi.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
+#include <map>
+#include <memory>
 #include <shared_mutex>
+#include <string>
+#include <vector>
 
 namespace worklets {
 

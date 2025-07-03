@@ -1,6 +1,8 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <utility>
+
 namespace worklets {
 auto RuntimeManager::getRuntime(uint64_t runtimeId) const
     -> std::shared_ptr<WorkletRuntime> {
@@ -68,7 +70,7 @@ auto RuntimeManager::createWorkletRuntime(
     auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
         rt, initializer, "[Worklets] Initializer must be a worklet.");
     workletRuntime->runGuarded(initializerShareable);
-  };
+  }
 
   std::unique_lock lock(runtimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
