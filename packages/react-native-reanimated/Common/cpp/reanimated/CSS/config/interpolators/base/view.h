@@ -127,10 +127,6 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = {
     // COLORS
     // Background
     {"backgroundColor", value<CSSColor>(TRANSPARENT)},
-    // Text
-    {"color", value<CSSColor>(BLACK)},
-    {"textDecorationColor", value<CSSColor>(BLACK)},
-    {"textShadowColor", value<CSSColor>(BLACK)},
     // Border
     {"borderColor", value<CSSColor>(BLACK)},
     {"borderTopColor", value<CSSColor>(BLACK)},
