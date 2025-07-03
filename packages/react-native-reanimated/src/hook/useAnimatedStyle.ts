@@ -528,6 +528,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationRunning: false,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
+      updaterContainer: { ref: null },
     };
   }
 
@@ -574,6 +575,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         );
       };
     }
+    animatedUpdaterData.current.updaterContainer.ref = fun;
     const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
@@ -605,7 +607,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           jestAnimatedValues,
           toJSON: animatedStyleHandleToJSON,
         }
-      : { viewDescriptors, initial };
+      : { viewDescriptors, initial, updaterContainer: animatedUpdaterData.current.updaterContainer };
   }
 
   return animatedStyleHandle.current;
