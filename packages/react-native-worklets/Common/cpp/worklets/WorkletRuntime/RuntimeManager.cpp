@@ -4,31 +4,31 @@
 #include <utility>
 
 namespace worklets {
-auto RuntimeManager::getRuntime(uint64_t runtimeId) const
+auto RuntimeManager::getRuntime(uint64_t runtimeId)
     -> std::shared_ptr<WorkletRuntime> {
-  if (runtimeId == rnRuntimeId) {
-    return getUIRuntime();
-  }
+  std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
     return weakRuntimes_.at(runtimeId).lock();
   }
   return nullptr;
 }
 
-auto RuntimeManager::getRuntime(const std::string &name) const
+auto RuntimeManager::getRuntime(const std::string &name)
     -> std::shared_ptr<WorkletRuntime> {
+  std::shared_lock lock(weakRuntimesMutex_);
   if (nameToRuntimeId_.contains(name)) {
     return getRuntime(nameToRuntimeId_.at(name));
   }
   return nullptr;
 }
 
-auto RuntimeManager::getAllRuntimes() const
+auto RuntimeManager::getAllRuntimes()
     -> std::vector<std::shared_ptr<WorkletRuntime>> {
+  std::shared_lock lock(weakRuntimesMutex_);
+
   auto runtimes = std::vector<std::shared_ptr<WorkletRuntime>>{};
   runtimes.reserve(weakRuntimes_.size());
 
-  std::shared_lock lock(runtimesMutex_);
   for (const auto &pair : weakRuntimes_) {
     if (auto runtime = pair.second.lock()) {
       runtimes.push_back(runtime);
@@ -38,7 +38,7 @@ auto RuntimeManager::getAllRuntimes() const
   return runtimes;
 }
 
-auto RuntimeManager::getUIRuntime() const -> std::shared_ptr<WorkletRuntime> {
+auto RuntimeManager::getUIRuntime() -> std::shared_ptr<WorkletRuntime> {
   return getRuntime(uiRuntimeId);
 }
 
@@ -64,7 +64,7 @@ auto RuntimeManager::createWorkletRuntime(
     workletRuntime->runGuarded(initializerShareable);
   }
 
-  std::unique_lock lock(runtimesMutex_);
+  std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
   nameToRuntimeId_[name] = runtimeId;
 
@@ -77,7 +77,7 @@ auto RuntimeManager::createUninitializedUIRuntime(
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       uiRuntimeId, jsQueue, uiRuntimeName, true /* supportsLocking */
   );
-  std::unique_lock lock(runtimesMutex_);
+  std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[uiRuntimeId] = uiRuntime;
   return uiRuntime;
 }
