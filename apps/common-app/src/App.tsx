@@ -1,169 +1,44 @@
-import { PortalProvider } from '@gorhom/portal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import type { NavigationState } from '@react-navigation/native';
-import {
-  getPathFromState,
-  NavigationContainer,
-} from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+/**
+ * This example is meant to be used for temporary purposes only. Code in this
+ * file should be replaced with the actual example implementation.
+ */
 
-import { colors, flex, radius, text } from '@/theme';
-import { IS_MACOS, IS_WEB, noop } from '@/utils';
+import React from 'react';
+import { Text } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { Circle, Svg } from 'react-native-svg';
 
-import { CSSApp, ReanimatedApp } from './apps';
-import { LeakCheck, NukeContext } from './components';
+import { Screen } from '@/apps/css/components';
+import { flex } from '@/theme';
 
-export default function App() {
-  const [nuked, setNuked] = useState(false);
-  const { isReady, navigationState, updateNavigationState } =
-    useNavigationState();
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-  if (nuked) {
-    return (
-      <NukeContext value={() => setNuked(false)}>
-        <LeakCheck />
-      </NukeContext>
-    );
-  }
-
-  if (!isReady) {
-    return (
-      <View style={[flex.fill, flex.center]}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
+export default function Playground() {
   return (
-    <NukeContext value={() => setNuked(true)}>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={flex.fill}>
-          <NavigationContainer
-            initialState={navigationState}
-            linking={{
-              getPathFromState: (state, options) =>
-                getPathFromState(state, options).replace(/%2F/g, '/'),
-              getStateFromPath: (path) => {
-                const chunks = path.split('/').filter(Boolean);
-                if (chunks.length === 0) return { routes: [] };
-
-                const drawerRoute = chunks[0];
-                const stackRoutes = chunks.slice(1).map((_, index, array) => ({
-                  name: array.slice(0, index + 1).join('/'),
-                }));
-
-                return {
-                  routes: [
-                    {
-                      name: drawerRoute,
-                      state: {
-                        routes: stackRoutes,
-                      },
-                    },
-                  ],
-                };
+    <Screen style={flex.center}>
+      <Text>Hello world!</Text>
+      <Svg height={200} width={200}>
+        <AnimatedCircle
+          cx={100}
+          cy={100}
+          r={50}
+          animatedProps={[
+            {
+              animationName: {
+                from: {
+                  r: 10,
+                },
+                to: {
+                  r: 100,
+                  cy: 500,
+                },
               },
-              prefixes: [],
-            }}
-            onStateChange={updateNavigationState}>
-            <PortalProvider>
-              <Navigator />
-            </PortalProvider>
-          </NavigationContainer>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
-    </NukeContext>
+              animationDuration: 1000,
+              animationIterationCount: 'infinite',
+            },
+          ]}
+        />
+      </Svg>
+    </Screen>
   );
-}
-
-const SCREENS = [
-  {
-    component: CSSApp,
-    name: 'CSS',
-  },
-  {
-    component: ReanimatedApp,
-    name: 'Reanimated',
-  },
-];
-
-function Navigator() {
-  if (IS_MACOS) {
-    return <ReanimatedApp />;
-  }
-
-  const Drawer = createDrawerNavigator();
-  const screens = IS_WEB ? SCREENS : SCREENS.reverse();
-
-  return (
-    <Drawer.Navigator
-      screenOptions={{
-        drawerActiveBackgroundColor: colors.primaryLight,
-        drawerActiveTintColor: colors.primaryDark,
-        drawerInactiveTintColor: colors.primary,
-        drawerItemStyle: {
-          borderRadius: radius.lg,
-        },
-        drawerLabelStyle: text.heading4,
-        drawerPosition: 'right',
-        drawerStyle: {
-          backgroundColor: colors.background1,
-        },
-        headerShown: false,
-      }}>
-      {screens.map(({ component, name }) => (
-        <Drawer.Screen component={component} key={name} name={name} />
-      ))}
-    </Drawer.Navigator>
-  );
-}
-
-// copied from https://reactnavigation.org/docs/state-persistence/
-const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
-
-function useNavigationState() {
-  const [isReady, setIsReady] = useState(!__DEV__);
-
-  const [navigationState, setNavigationState] = useState<
-    NavigationState | undefined
-  >();
-
-  const updateNavigationState = useCallback((state?: NavigationState) => {
-    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
-  }, []);
-
-  useEffect(() => {
-    const restoreState = async () => {
-      try {
-        const initialUrl = await Linking.getInitialURL();
-
-        if (!IS_MACOS && !IS_WEB && initialUrl === null) {
-          // Only restore state if there's no deep link and we're not on web
-          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
-          // Erase the state immediately after fetching it.
-          // This prevents the app to boot on the screen that previously crashed.
-          updateNavigationState();
-          const state = savedStateString
-            ? (JSON.parse(savedStateString) as NavigationState)
-            : undefined;
-
-          if (state !== undefined) {
-            setNavigationState(state);
-          }
-        }
-      } finally {
-        setIsReady(true);
-      }
-    };
-
-    if (!isReady) {
-      restoreState().catch(noop);
-    }
-  }, [isReady, updateNavigationState]);
-
-  return { isReady, navigationState, updateNavigationState };
 }

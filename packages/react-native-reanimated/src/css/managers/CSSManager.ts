@@ -1,8 +1,9 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import { setViewStyle, styleBuilder } from '../platform/native';
-import type { CSSStyle } from '../types';
+import type { StyleBuilder } from '../platform/native';
+import { getStyleBuilder, setViewStyle } from '../platform/native';
+import type { AnyRecord, CSSStyle } from '../types';
 import type { ICSSManager } from '../types/interfaces';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager';
@@ -12,20 +13,26 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
+  private readonly styleBuilder: StyleBuilder<AnyRecord>;
   private isFirstUpdate: boolean = true;
 
-  constructor({ shadowNodeWrapper, viewTag }: ViewInfo) {
+  constructor({ shadowNodeWrapper, viewTag, componentName }: ViewInfo) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
+    this.styleBuilder = getStyleBuilder(componentName);
 
-    this.cssAnimationsManager = new CSSAnimationsManager(wrapper, tag);
+    this.cssAnimationsManager = new CSSAnimationsManager(
+      wrapper,
+      componentName ?? 'View',
+      tag
+    );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }
 
   update(style: CSSStyle): void {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
-    const normalizedStyle = styleBuilder.buildFrom(filteredStyle);
+    const normalizedStyle = this.styleBuilder.buildFrom(filteredStyle);
 
     // If the update is called during the first css style update, we won't
     // trigger CSS transitions and set styles before attaching CSS transitions

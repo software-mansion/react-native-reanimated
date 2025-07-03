@@ -9,8 +9,7 @@ import type {
   CSSAnimationTimingFunction,
 } from '../../../../types';
 import { isDefined, isNumber } from '../../../../utils';
-import { SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES } from '../../config';
-import styleBuilder from '../../styleBuilder';
+import type { StyleBuilder } from '../../style';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframesStyle,
@@ -69,7 +68,8 @@ type ProcessedKeyframes = Array<{
 }>;
 
 function processKeyframes(
-  keyframes: CSSAnimationKeyframes
+  keyframes: CSSAnimationKeyframes,
+  styleBuilder: StyleBuilder<AnyRecord>
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
@@ -101,7 +101,8 @@ function processKeyframes(
 function processStyleProperties<S extends AnyRecord>(
   offset: number,
   style: S,
-  keyframeStyle: AnyRecord
+  keyframeStyle: AnyRecord,
+  styleBuilder: StyleBuilder<AnyRecord>
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -111,12 +112,17 @@ function processStyleProperties<S extends AnyRecord>(
     if (typeof value === 'object') {
       if (
         !Array.isArray(value) ||
-        SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES.has(property)
+        styleBuilder.isSeparatelyInterpolatedArrayProperty(property)
       ) {
         if (!keyframeStyle[property]) {
           keyframeStyle[property] = Array.isArray(value) ? [] : {};
         }
-        processStyleProperties(offset, value, keyframeStyle[property]);
+        processStyleProperties(
+          offset,
+          value,
+          keyframeStyle[property],
+          styleBuilder
+        );
         return;
       }
     }
@@ -129,17 +135,20 @@ function processStyleProperties<S extends AnyRecord>(
 }
 
 export function normalizeAnimationKeyframes(
-  keyframes: CSSAnimationKeyframes
+  keyframes: CSSAnimationKeyframes,
+  styleBuilder: StyleBuilder<AnyRecord>
 ): NormalizedCSSAnimationKeyframesConfig {
   const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
-  processKeyframes(keyframes).forEach(({ offset, style, timingFunction }) => {
-    processStyleProperties(offset, style, keyframesStyle);
-    if (timingFunction && offset < 1) {
-      timingFunctions[offset] = normalizeTimingFunction(timingFunction);
+  processKeyframes(keyframes, styleBuilder).forEach(
+    ({ offset, style, timingFunction }) => {
+      processStyleProperties(offset, style, keyframesStyle, styleBuilder);
+      if (timingFunction && offset < 1) {
+        timingFunctions[offset] = normalizeTimingFunction(timingFunction);
+      }
     }
-  });
+  );
 
   return { keyframesStyle, keyframeTimingFunctions: timingFunctions };
 }

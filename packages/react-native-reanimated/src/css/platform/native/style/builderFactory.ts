@@ -1,30 +1,43 @@
 'use strict';
 import type { AnyRecord } from '../../../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../../../utils';
-import type { BuildHandler, StyleBuilder, StyleBuilderConfig } from './types';
+import type {
+  StyleBuilder,
+  StyleBuilderConfig,
+  StyleBuildMiddleware,
+} from './types';
+
+export type StyleBuilderOptions<P extends AnyRecord> = {
+  buildMiddleware?: StyleBuildMiddleware<P>;
+  separatelyInterpolatedArrayProperties?: (keyof P)[];
+};
 
 class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
-  private readonly buildHandler: BuildHandler<P>;
-
+  private readonly buildMiddleware: StyleBuildMiddleware<P>;
   private readonly config: StyleBuilderConfig<P>;
+  private readonly separatelyInterpolatedArrayProperties_: (keyof P)[];
 
   private processedProps = {} as P;
 
-  constructor(config: StyleBuilderConfig<P>, buildHandler: BuildHandler<P>) {
+  constructor(config: StyleBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
     this.config = config;
-    this.buildHandler = buildHandler;
+    this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
+    this.separatelyInterpolatedArrayProperties_ =
+      options?.separatelyInterpolatedArrayProperties ?? [];
+  }
+
+  isSeparatelyInterpolatedArrayProperty(property: keyof P): boolean {
+    return this.separatelyInterpolatedArrayProperties_.includes(property);
   }
 
   add(property: keyof P, value: P[keyof P]): void {
     const configValue = this.config[property];
 
-    // Exclude only explicitly excluded properties or these for which
-    // the value is not defined (was not passed)
-    if (configValue === false || !isDefined(value)) {
+    if (!configValue || !isDefined(value)) {
       return;
     }
 
-    if (configValue === true || configValue === undefined) {
+    if (configValue === true) {
       this.maybeAssignProp(property, value);
     } else if (isConfigPropertyAlias<P>(configValue)) {
       this.add(configValue.as, value);
@@ -45,7 +58,7 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   }
 
   build(): P | null {
-    const result = this.buildHandler(this.processedProps);
+    const result = this.buildMiddleware(this.processedProps);
     this.cleanup();
 
     if (Object.keys(result).length === 0) {
@@ -77,7 +90,7 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
 
 export default function createStyleBuilder<P extends AnyRecord>(
   config: StyleBuilderConfig<P>,
-  buildHandler: BuildHandler<P> = (props) => props
+  options?: StyleBuilderOptions<P>
 ): StyleBuilder<Partial<P>> {
-  return new StyleBuilderImpl(config, buildHandler);
+  return new StyleBuilderImpl(config, options);
 }
