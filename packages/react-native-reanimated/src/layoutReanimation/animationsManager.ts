@@ -1,7 +1,7 @@
 'use strict';
 import { runOnUI } from 'react-native-worklets';
 
-import { withStyleAnimation } from '../animation/styleAnimation';
+import { withStyleAnimation } from '../animation';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,

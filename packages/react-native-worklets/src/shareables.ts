@@ -165,7 +165,7 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (
-    globalThis._WORKLETS_EXPERIMENTAL_BUNDLING &&
+    globalThis._WORKLETS_BUNDLE_MODE &&
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
@@ -198,6 +198,12 @@ function makeShareableCloneRecursiveNative<T>(
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
   }
+  if (value instanceof Set) {
+    return cloneSet(value);
+  }
+  if (value instanceof Map) {
+    return cloneMap(value);
+  }
   if (value instanceof RegExp) {
     return cloneRegExp(value);
   }
@@ -214,7 +220,7 @@ function makeShareableCloneRecursiveNative<T>(
   return inaccessibleObject(value);
 }
 
-if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
   makeShareableCloneRecursiveNative.__bundleData = {
     imported: 'makeShareableCloneRecursive',
@@ -464,6 +470,39 @@ function clonePlainJSObject<T extends object>(
   return clone;
 }
 
+function cloneMap<T extends Map<unknown, unknown>>(value: T): ShareableRef<T> {
+  const clonedKeys: unknown[] = [];
+  const clonedValues: unknown[] = [];
+  for (const [key, element] of value.entries()) {
+    clonedKeys.push(makeShareableCloneRecursive(key));
+    clonedValues.push(makeShareableCloneRecursive(element));
+  }
+  const clone = WorkletsModule.makeShareableMap(
+    clonedKeys,
+    clonedValues
+  ) as ShareableRef<T>;
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  freezeObjectInDev(value);
+  return clone;
+}
+
+function cloneSet<T extends Set<unknown>>(value: T): ShareableRef<T> {
+  const clonedElements: unknown[] = [];
+  for (const element of value) {
+    clonedElements.push(makeShareableCloneRecursive(element));
+  }
+  const clone = WorkletsModule.makeShareableSet(
+    clonedElements
+  ) as ShareableRef<T>;
+  shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
+
+  freezeObjectInDev(value);
+  return clone;
+}
+
 function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
   const pattern = value.source;
   const flags = value.flags;
@@ -691,7 +730,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
 }
 
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
+  globalThis._WORKLETS_BUNDLE_MODE
     ? makeShareableCloneRecursive
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

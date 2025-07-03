@@ -1,7 +1,7 @@
 'use strict';
 
 import { init } from './initializers';
-import { experimentalBundlingInit } from './workletRuntimeEntry';
+import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
@@ -32,6 +32,6 @@ export type {
 // @ts-expect-error We must trick the bundler to include
 // the `workletRuntimeEntry` file the way it cannot optimize it out.
 if (globalThis._ALWAYS_FALSE) {
-  // Experimental bundling.
-  experimentalBundlingInit();
+  // Bundle mode.
+  bundleModeInit();
 }

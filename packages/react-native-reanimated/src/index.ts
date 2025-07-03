@@ -278,6 +278,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,
