@@ -153,7 +153,7 @@ export function setElementAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   shouldSavePosition = false,
-  parent: Element | null = null
+  originalElement?: HTMLElement
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -173,15 +173,25 @@ export function setElementAnimation(
     configureAnimation();
   }
 
+  const maybeRunCleanup = () => {
+    if (!originalElement) {
+      return;
+    }
+
+    while (element.firstChild) {
+      originalElement.appendChild(element.firstChild);
+    }
+
+    element.remove();
+    element.removedAfterAnimation = true;
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRunCleanup();
 
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
@@ -190,11 +200,7 @@ export function setElementAnimation(
   const animationCancelHandler = () => {
     animationConfig.callback?.(false);
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
-
+    maybeRunCleanup();
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
@@ -301,6 +307,8 @@ export function handleExitingAnimation(
   element.style.animationName = '';
   dummy.style.animationName = '';
 
+  element.style.visibility = 'hidden';
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -339,5 +347,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  setElementAnimation(dummy, animationConfig, false, parent);
+  setElementAnimation(dummy, animationConfig, false, element);
 }
