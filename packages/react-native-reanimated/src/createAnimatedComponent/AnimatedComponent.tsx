@@ -312,7 +312,10 @@ export default class AnimatedComponent
   }
 
   _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void {
-    const filtered = filterStyles(flattenArray(props.style ?? []));
+    const filtered = filterStyles(
+      flattenArray([props.style, props.animatedProps])
+    );
+    console.log(filtered);
     this._prevAnimatedStyles = this._animatedStyles;
     this._animatedStyles = filtered.animatedStyles;
     this._cssStyle = filtered.cssStyle;

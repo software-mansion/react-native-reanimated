@@ -9,8 +9,8 @@ ComponentInterpolatorsMap registry_ = {
     {"View", VIEW_INTERPOLATORS},
     {"Paragraph", TEXT_INTERPOLATORS},
     {"Image", IMAGE_INTERPOLATORS},
-    // svg
-    // TODO
+    // react-native-svg
+    {"Circle", SVG_CIRCLE_INTERPOLATORS},
 };
 
 } // namespace

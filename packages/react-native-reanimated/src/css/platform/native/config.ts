@@ -226,6 +226,10 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Others
   filter: false, // web only
   isolation: true,
+
+  // TODO - remove
+  // @ts-expect-error - temporary
+  r: true,
 };
 
 export const SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES = new Set([
