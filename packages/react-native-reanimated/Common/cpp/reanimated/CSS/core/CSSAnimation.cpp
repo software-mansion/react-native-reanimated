@@ -17,15 +17,14 @@ CSSAnimation::CSSAnimation(
       styleInterpolator_(cssKeyframesRegistry->getOrCreateInterpolator(
           name_,
           shadowNode_->getComponentName())),
-      progressProvider_(
-          std::make_shared<AnimationProgressProvider>(
-              timestamp,
-              settings.duration,
-              settings.delay,
-              settings.iterationCount,
-              settings.direction,
-              settings.easingFunction,
-              cssKeyframesRegistry->getKeyframeEasingFunctions(name_))) {
+      progressProvider_(std::make_shared<AnimationProgressProvider>(
+          timestamp,
+          settings.duration,
+          settings.delay,
+          settings.iterationCount,
+          settings.direction,
+          settings.easingFunction,
+          cssKeyframesRegistry->getKeyframeEasingFunctions(name_))) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }

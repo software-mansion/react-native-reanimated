@@ -2,7 +2,10 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <reanimated/CSS/config/interpolators/view.h>
+// react-native style props interpolators
+#include <reanimated/CSS/config/interpolators/base/image.h>
+#include <reanimated/CSS/config/interpolators/base/text.h>
+#include <reanimated/CSS/config/interpolators/base/view.h>
 
 #include <stdexcept>
 #include <string>
@@ -13,10 +16,6 @@ namespace reanimated::css {
 
 using ComponentInterpolatorsMap =
     std::unordered_map<std::string, InterpolatorFactoriesRecord>;
-
-void registerInterpolators(
-    const std::string &componentName,
-    InterpolatorFactoriesRecord factories);
 
 const InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName);
