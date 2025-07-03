@@ -16,10 +16,10 @@ export type TrackerCallCount = {
   onUI: number;
 };
 
-export type SharedValueSnapshot = {
+export type SharedValueSnapshot<TValue extends TestValue> = {
   name: string;
-  onJS: TestValue;
-  onUI: TestValue;
+  onJS: TValue;
+  onUI: TValue;
 };
 
 export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
@@ -120,7 +120,6 @@ export type Mismatch = {
   capturedSnapshot: OperationUpdate;
 };
 
-/* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
@@ -146,4 +145,3 @@ declare global {
     stop: (tag: number) => void;
   };
 }
-/* eslint-enable no-var */

@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -74,12 +75,6 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
-  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
-      override;
-  jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -210,10 +205,6 @@ class ReanimatedModuleProxy
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
-  jsi::Value filterNonAnimatableProps(
-      jsi::Runtime &rt,
-      const jsi::Value &props);
-
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
@@ -240,8 +231,6 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_set<std::string>
-      animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;

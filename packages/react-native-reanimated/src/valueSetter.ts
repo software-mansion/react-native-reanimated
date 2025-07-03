@@ -34,7 +34,7 @@ export function valueSetter<Value>(
       !animation.isHigherOrder &&
       !forceUpdate
     ) {
-      animation.callback && animation.callback(true);
+      animation.callback?.(true);
       return;
     }
     // animated set
@@ -56,7 +56,7 @@ export function valueSetter<Value>(
           : newTimestamp;
 
       if (animation.cancelled) {
-        animation.callback && animation.callback(false /* finished */);
+        animation.callback?.(false /* finished */);
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
@@ -67,7 +67,7 @@ export function valueSetter<Value>(
       // but actually need to dive into animations to understand it
       mutable._value = animation.current!;
       if (finished) {
-        animation.callback && animation.callback(true /* finished */);
+        animation.callback?.(true /* finished */);
       } else {
         requestAnimationFrame(step);
       }

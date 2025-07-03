@@ -1,5 +1,5 @@
 import { useHeaderHeight } from '@react-navigation/elements';
-import React from 'react';
+import type React from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';

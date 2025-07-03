@@ -111,8 +111,8 @@ export function registerValue<TValue = unknown>(name: string, value: SharedValue
   return valueRegistry.registerValue(name, value);
 }
 
-export async function getRegisteredValue(name: string) {
-  return await valueRegistry.getRegisteredValue(name);
+export async function getRegisteredValue<TValue extends TestValue>(name: string) {
+  return await valueRegistry.getRegisteredValue<TValue>(name);
 }
 
 export function getTestComponent(name: string): TestComponent {

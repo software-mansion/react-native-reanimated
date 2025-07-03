@@ -36,13 +36,14 @@ import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
 
 import { getClosure } from './closure';
+import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const REAL_VERSION = require('../../package.json').version;
 
 const MOCK_VERSION = 'x.y.z';
@@ -50,7 +51,11 @@ const MOCK_VERSION = 'x.y.z';
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): { factory: FunctionExpression; factoryCallParamPack: ObjectExpression } {
+): {
+  factory: FunctionExpression;
+  factoryCallParamPack: ObjectExpression;
+  workletHash: number;
+} {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
@@ -88,7 +93,11 @@ export function makeWorkletFactory(
   assert(transformed, '[Reanimated] `transformed` is undefined.');
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
-  const closureVariables = getClosure(fun, state);
+  const {
+    closureVariables,
+    libraryBindingsToImport,
+    relativeBindingsToImport,
+  } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -103,6 +112,7 @@ export function makeWorkletFactory(
 
   const { workletName, reactName } = makeWorkletName(fun, state);
 
+  // eslint-disable-next-line prefer-const
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
@@ -181,7 +191,8 @@ export function makeWorkletFactory(
   }
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-  if (shouldIncludeInitData) {
+
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -210,6 +221,7 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
+            !state.opts.bundleMode &&
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -246,7 +258,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  if (shouldIncludeInitData) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -295,19 +307,23 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const factoryParams = [
-    cloneNode(initDataId, true),
-    ...closureVariables.map((variableId) => {
-      const clonedId = cloneNode(variableId, true);
-      if (clonedId.name.endsWith(workletClassFactorySuffix)) {
-        clonedId.name = clonedId.name.slice(
-          0,
-          clonedId.name.length - workletClassFactorySuffix.length
-        );
-      }
-      return clonedId;
-    }),
-  ];
+  const factoryParams = closureVariables.map((variableId) => {
+    const clonedId = cloneNode(variableId, true);
+    if (
+      !state.opts.bundleMode &&
+      clonedId.name.endsWith(workletClassFactorySuffix)
+    ) {
+      clonedId.name = clonedId.name.slice(
+        0,
+        clonedId.name.length - workletClassFactorySuffix.length
+      );
+    }
+    return clonedId;
+  });
+
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
+    factoryParams.unshift(cloneNode(initDataId, true));
+  }
 
   const factoryParamObjectPattern = objectPattern(
     factoryParams.map((param) =>
@@ -339,18 +355,31 @@ export function makeWorkletFactory(
     )
   );
 
+  if (state.opts.bundleMode) {
+    generateWorkletFile(
+      libraryBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      workletHash,
+      state
+    );
+  }
+
   // @ts-expect-error We must mark the factory as workletized
   // to avoid further workletization inside the factory.
   factory.workletized = true;
 
-  return { factory, factoryCallParamPack };
+  return { factory, factoryCallParamPack, workletHash };
 }
 
 function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
-    DirectiveLiteral(path) {
-      if (path.node.value === 'worklet' && path.getFunctionParent() === fun) {
-        path.parentPath.remove();
+    DirectiveLiteral(nodePath) {
+      if (
+        nodePath.node.value === 'worklet' &&
+        nodePath.getFunctionParent() === fun
+      ) {
+        nodePath.parentPath.remove();
       }
     },
   });

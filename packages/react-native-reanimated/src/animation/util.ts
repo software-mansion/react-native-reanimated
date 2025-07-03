@@ -2,7 +2,6 @@
 'use strict';
 import {
   isWorkletFunction,
-  logger,
   makeShareableCloneRecursive,
   runOnUI,
   shareableMappingCache,
@@ -17,7 +16,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -244,7 +243,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
         // FIXME
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }

@@ -1,9 +1,7 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
-import { ReanimatedError } from '../../common';
+import { logger, ReanimatedError } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
-import { PropsAllowlists } from '../../propsAllowlists';
+import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
 import {
   createReactDOMStyle,
   createTextShadowValue,
@@ -54,8 +52,7 @@ export interface ReanimatedHTMLElement extends HTMLElement {
 
 // TODO: Move these functions outside of index file.
 export const _updatePropsJS = (
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   viewRef: (JSReanimatedComponent | ReanimatedHTMLElement) & {
     getAnimatableRef?: () => JSReanimatedComponent | ReanimatedHTMLElement;
   },
@@ -111,15 +108,9 @@ const setNativeProps = (
   isAnimatedProps?: boolean
 ): void => {
   if (isAnimatedProps) {
-    const uiProps: Record<string, unknown> = {};
-    for (const key in newProps) {
-      if (isNativeProp(key)) {
-        uiProps[key] = newProps[key];
-      }
-    }
     // Only update UI props directly on the component,
     // other props can be updated as standard style props.
-    component.setNativeProps?.(uiProps);
+    component.setNativeProps?.(newProps);
   }
 
   const previousStyle = component.previousStyle ? component.previousStyle : {};
@@ -173,7 +164,3 @@ const updatePropsDOM = (
     }
   }
 };
-
-function isNativeProp(propName: string): boolean {
-  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
-}

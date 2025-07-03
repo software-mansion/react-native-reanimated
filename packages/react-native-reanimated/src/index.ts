@@ -3,6 +3,12 @@
 import './publicGlobals';
 
 import * as Animated from './Animated';
+import { initializeReanimatedModule } from './initializers';
+import { ReanimatedModule } from './ReanimatedModule';
+
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
+initializeReanimatedModule(ReanimatedModule);
 
 export default Animated;
 
@@ -31,7 +37,7 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export { processColor } from './common';
+export { processColor, ReanimatedLogLevel } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -139,9 +145,10 @@ export {
   useFrameCallback,
   useHandler,
   useReducedMotion,
-  useScrollViewOffset,
+  useScrollOffset,
+  /** @deprecated Please use {@link useScrollOffset} instead. */
+  useScrollOffset as useScrollViewOffset,
   useSharedValue,
-  useWorkletCallback,
 } from './hook';
 export type {
   InterpolateConfig,
@@ -270,6 +277,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,
@@ -292,7 +300,4 @@ export {
   startScreenTransition,
 } from './screenTransition';
 export type { WorkletRuntime } from 'react-native-worklets';
-export {
-  isWorkletFunction,
-  LogLevel as ReanimatedLogLevel,
-} from 'react-native-worklets';
+export { isWorkletFunction } from 'react-native-worklets';

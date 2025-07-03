@@ -1,3 +1,4 @@
+#import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -32,6 +33,12 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
+#if __has_include(<React/RCTBundleConsumer.h>)
+// Bundle mode
+@synthesize scriptBuffer = scriptBuffer_;
+@synthesize sourceURL = sourceURL_;
+#endif // __has_include(<React/RCTBundleConsumer.h>)
+
 - (void)checkBridgeless
 {
   auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
@@ -56,18 +63,33 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
+  std::string sourceURL = "";
+  std::shared_ptr<const BigStringBuffer> script = nullptr;
+#ifdef WORKLETS_BUNDLE_MODE
+  script = [scriptBuffer_ getBuffer];
+  sourceURL = [sourceURL_ UTF8String];
+#endif // WORKLETS_BUNDLE_MODE
+
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
       [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
         [animationFrameQueue requestAnimationFrame:callback];
       });
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(forwardedRequestAnimationFrame));
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(isJavaScriptQueue),
+      std::move(forwardedRequestAnimationFrame),
+      script,
+      sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy =
-      worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
+  auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
+      rnRuntime, std::dynamic_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy));
 
   return @YES;

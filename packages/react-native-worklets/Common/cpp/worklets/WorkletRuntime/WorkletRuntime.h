@@ -2,8 +2,8 @@
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 
-#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -18,18 +18,21 @@ using namespace react;
 
 namespace worklets {
 
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
+class JSIWorkletsModuleProxy;
+
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
-      jsi::Runtime &rnRuntime,
+      uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
       const bool supportsLocking);
 
-  void init(
-      jsi::Runtime &rnRuntime,
-      std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy);
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
@@ -69,13 +72,22 @@ class WorkletRuntime : public jsi::HostObject,
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
+  [[nodiscard]] auto getRuntimeId() const -> uint64_t {
+    return runtimeId_;
+  }
+
+  [[nodiscard]] auto getRuntimeName() const -> std::string {
+    return name_;
+  }
+
  private:
+  const uint64_t runtimeId_;
+  const std::string name_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
-  const std::shared_ptr<jsi::Runtime> runtime_;
 #ifndef NDEBUG
   const bool supportsLocking_;
 #endif
-  const std::string name_;
+  const std::shared_ptr<jsi::Runtime> runtime_;
   std::shared_ptr<AsyncQueue> queue_;
 };
 

@@ -9,6 +9,8 @@
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
+#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -17,6 +19,7 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 using namespace facebook;
@@ -29,10 +32,13 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceUrl,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime);
+      const std::shared_ptr<RuntimeManager> &runtimeManager,
+      const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
 
@@ -58,11 +64,26 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return isDevBundle_;
   }
 
+  [[nodiscard]] std::shared_ptr<const BigStringBuffer> getScript() const {
+    return script_;
+  }
+
+  [[nodiscard]] std::string getSourceUrl() const {
+    return sourceUrl_;
+  }
+
+  [[nodiscard]] std::shared_ptr<RuntimeManager> getRuntimeManager() const {
+    return runtimeManager_;
+  }
+
  private:
   const bool isDevBundle_;
+  const std::shared_ptr<const BigStringBuffer> script_;
+  const std::string sourceUrl_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };
 

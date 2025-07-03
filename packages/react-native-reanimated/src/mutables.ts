@@ -1,13 +1,12 @@
 'use strict';
 import {
   executeOnUIRuntimeSync,
-  logger,
   makeShareableCloneRecursive,
   runOnUI,
   shareableMappingCache,
 } from 'react-native-worklets';
 
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';

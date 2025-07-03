@@ -33,7 +33,7 @@ inline jsi::Value runOnRuntimeGuarded(
   return getCallGuard(rt).call(rt, function, args...);
 #else
   return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif
+#endif // NDEBUG
 }
 
 inline void cleanupIfRuntimeExists(
@@ -78,12 +78,15 @@ class Shareable {
     StringType,
     ObjectType,
     ArrayType,
+    MapType,
+    SetType,
     WorkletType,
     RemoteFunctionType,
     HandleType,
     HostObjectType,
     HostFunctionType,
     ArrayBufferType,
+    TurboModuleLikeType,
     ImportType,
   };
 
@@ -158,9 +161,20 @@ jsi::Value makeShareableUndefined(jsi::Runtime &rt);
 
 jsi::Value makeShareableNull(jsi::Runtime &rt);
 
+jsi::Value makeShareableTurboModuleLike(
+    jsi::Runtime &rt,
+    const jsi::Object &object,
+    const std::shared_ptr<jsi::HostObject> &proto);
+
+jsi::Value makeShareableObject(
+    jsi::Runtime &rt,
+    jsi::Object object,
+    bool shouldRetainRemote,
+    const jsi::Value &nativeStateSource);
+
 jsi::Value makeShareableImport(
     jsi::Runtime &rt,
-    const jsi::String &source,
+    const double source,
     const jsi::String &imported);
 
 jsi::Value makeShareableHostObject(
@@ -172,9 +186,18 @@ jsi::Value makeShareableArray(
     const jsi::Array &array,
     const jsi::Value &shouldRetainRemote);
 
+jsi::Value makeShareableMap(
+    jsi::Runtime &rt,
+    const jsi::Array &keys,
+    const jsi::Array &values);
+
+jsi::Value makeShareableSet(jsi::Runtime &rt, const jsi::Array &values);
+
 jsi::Value makeShareableInitializer(
     jsi::Runtime &rt,
     const jsi::Object &initializerObject);
+
+jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeShareableWorklet(
     jsi::Runtime &rt,
@@ -227,6 +250,30 @@ class ShareableObject : public Shareable {
   std::shared_ptr<jsi::NativeState> nativeState_;
 };
 
+class ShareableMap : public Shareable {
+ public:
+  ShareableMap(
+      jsi::Runtime &rt,
+      const jsi::Array &keys,
+      const jsi::Array &values);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::vector<std::pair<std::shared_ptr<Shareable>, std::shared_ptr<Shareable>>>
+      data_;
+};
+
+class ShareableSet : public Shareable {
+ public:
+  ShareableSet(jsi::Runtime &rt, const jsi::Array &values);
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ protected:
+  std::vector<std::shared_ptr<Shareable>> data_;
+};
+
 class ShareableHostObject : public Shareable {
  public:
   ShareableHostObject(
@@ -244,9 +291,7 @@ class ShareableHostFunction : public Shareable {
  public:
   ShareableHostFunction(jsi::Runtime &rt, jsi::Function function)
       : Shareable(HostFunctionType),
-        hostFunction_(
-            (assert(function.isHostFunction(rt)),
-             function.getHostFunction(rt))),
+        hostFunction_(function.getHostFunction(rt)),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
@@ -286,16 +331,14 @@ class ShareableImport : public Shareable {
  public:
   ShareableImport(
       jsi::Runtime &rt,
-      const jsi::String &source,
+      const double source,
       const jsi::String &imported)
-      : Shareable(ImportType),
-        source_(source.utf8(rt)),
-        imported_(imported.utf8(rt)) {}
+      : Shareable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::string source_;
+  const double source_;
   const std::string imported_;
 };
 
@@ -393,6 +436,23 @@ class ShareableScalar : public Shareable {
 
  private:
   Data data_;
+};
+
+class ShareableTurboModuleLike : public Shareable {
+ public:
+  ShareableTurboModuleLike(
+      jsi::Runtime &rt,
+      const jsi::Object &object,
+      const std::shared_ptr<jsi::HostObject> &proto)
+      : Shareable(TurboModuleLikeType),
+        proto_(std::make_unique<ShareableHostObject>(rt, proto)),
+        properties_(std::make_unique<ShareableObject>(rt, object)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::unique_ptr<ShareableHostObject> proto_;
+  const std::unique_ptr<ShareableObject> properties_;
 };
 
 } // namespace worklets
