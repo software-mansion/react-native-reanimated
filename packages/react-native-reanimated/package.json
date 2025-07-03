@@ -52,6 +52,8 @@
     "apple/",
     "RNReanimated.podspec",
     "scripts/reanimated_utils.rb",
+    "scripts/validate-worklets-version.js",
+    "scripts/workletsVersion.json",
     "mock.js",
     "plugin/index.js",
     "metro-config",

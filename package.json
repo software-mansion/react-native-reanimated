@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.9",
+    "@react-native-community/cli": "^18.0.0",
     "@types/node": "^24.0.3",
     "@types/shelljs": "^0.8.15",
     "eslint": "^9.29.0",
