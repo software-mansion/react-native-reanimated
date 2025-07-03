@@ -13,6 +13,9 @@
 
 namespace worklets {
 
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
 class JSIWorkletsModuleProxy;
 
 /**
