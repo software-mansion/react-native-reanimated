@@ -27,13 +27,12 @@ static constexpr std::string uiRuntimeName{"UI"};
 
 class RuntimeManager {
  public:
-  auto getRuntime(uint64_t runtimeId) const -> std::shared_ptr<WorkletRuntime>;
-  auto getRuntime(const std::string &name) const
-      -> std::shared_ptr<WorkletRuntime>;
+  auto getRuntime(uint64_t runtimeId) -> std::shared_ptr<WorkletRuntime>;
+  auto getRuntime(const std::string &name) -> std::shared_ptr<WorkletRuntime>;
 
-  auto getAllRuntimes() const -> std::vector<std::shared_ptr<WorkletRuntime>>;
+  auto getAllRuntimes() -> std::vector<std::shared_ptr<WorkletRuntime>>;
 
-  auto getUIRuntime() const -> std::shared_ptr<WorkletRuntime>;
+  auto getUIRuntime() -> std::shared_ptr<WorkletRuntime>;
 
   auto createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
@@ -63,7 +62,7 @@ class RuntimeManager {
 
   std::atomic_uint64_t nextRuntimeId_{uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
-  std::shared_mutex runtimesMutex_;
+  std::shared_mutex weakRuntimesMutex_;
   std::map<std::string, uint64_t> nameToRuntimeId_;
 };
 
