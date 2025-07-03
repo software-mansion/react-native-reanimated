@@ -19,7 +19,7 @@ const getDocsMarkdownHeader = (path) => {
     }))
     .sort((a, b) => a.level - b.level || a.index - b.index);
 
-  return headers[0]?.title || 'React Native Reanimated';
+  return headers[0]?.title || 'React Native Worklets';
 };
 
 const getExampleMardownHeader = (path) => {
@@ -29,7 +29,7 @@ const getExampleMardownHeader = (path) => {
     .filter((line) => line.startsWith('title:'))
     .map((line) => line.replace('title:', '').trim());
 
-  return headers[0] || 'React Native Reanimated';
+  return headers[0] || 'React Native Worklets';
 };
 
 async function saveStreamToFile(stream, filePath) {
