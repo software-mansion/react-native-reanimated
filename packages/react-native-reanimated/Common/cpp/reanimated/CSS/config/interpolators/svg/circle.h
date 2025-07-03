@@ -5,11 +5,9 @@
 namespace reanimated::css {
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = {
-    {"cx",
-     value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
-    {"cy",
-     value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
-    {"r", value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+    {"cx", value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+    {"cy", value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", 0)},
+    {"r", value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
 };
 
 } // namespace reanimated::css
