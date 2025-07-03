@@ -113,7 +113,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::shared_ptr<RuntimeManager> runtimeManager,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),

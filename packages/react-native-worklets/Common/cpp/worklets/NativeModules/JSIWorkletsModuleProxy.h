@@ -33,7 +33,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      std::shared_ptr<RuntimeManager> runtimeManager,
+      const std::shared_ptr<RuntimeManager> &runtimeManager,
       std::shared_ptr<WorkletRuntime> uiWorkletRuntime);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
