@@ -18,8 +18,6 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
-            // TODO - use hasInterpolators check and show error if there are no
-            // interpolators for the component
             getInterpolators(componentName),
             {},
             viewStylesRepository) {
