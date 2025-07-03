@@ -66,16 +66,11 @@ inline jsi::Value createWorkletRuntime(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl,
-    const std::weak_ptr<RuntimeManager> &runtimeManager,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
-  auto manager = runtimeManager.lock();
-  if (!manager) {
-    return jsi::Value::undefined();
-  }
-
-  auto workletRuntime = manager->createWorkletRuntime(
+  auto workletRuntime = runtimeManager->createWorkletRuntime(
       std::move(jsiWorkletsModuleProxy),
       jsQueue,
       jsScheduler,
