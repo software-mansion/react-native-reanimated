@@ -4,31 +4,26 @@ namespace reanimated::css {
 
 namespace {
 
-ComponentInterpolatorsMap registry_ = {{"View", VIEW_INTERPOLATORS}};
+ComponentInterpolatorsMap registry_ = {
+    // react-native
+    {"View", VIEW_INTERPOLATORS},
+    {"Paragraph", TEXT_INTERPOLATORS},
+    {"Image", IMAGE_INTERPOLATORS},
+    // svg
+    // TODO
+};
 
 } // namespace
-
-void registerInterpolators(
-    const std::string &componentName,
-    InterpolatorFactoriesRecord factories) {
-  auto [it, inserted] = registry_.emplace(componentName, std::move(factories));
-
-  // If interpolators for the component are already registered, throw an error
-  if (!inserted) {
-    throw std::logic_error(
-        "[Reanimated] Interpolators already registered for component '" +
-        componentName + "'");
-  }
-}
 
 const InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName) {
   const auto it = registry_.find(std::string(componentName));
 
   if (it == registry_.end()) {
-    throw std::logic_error(
-        "[Reanimated] No interpolators registered for component '" +
-        std::string(componentName) + "'");
+    // Use View interpolators as a fallback for unknown components
+    // (e.g. we get the ScrollView component name for the ScrollView component
+    // but it should be styled in the same way as a View)
+    return VIEW_INTERPOLATORS;
   }
 
   return it->second;
