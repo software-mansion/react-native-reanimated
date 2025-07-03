@@ -9,7 +9,7 @@ type DynamicFlagsType = {
 };
 type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
-// ts-prune-ignore-next
+/** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: true,
 
