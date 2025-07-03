@@ -22,18 +22,21 @@ export default function Playground() {
           cx={100}
           cy={100}
           r={50}
-          animatedProps={{
-            animationName: {
-              from: {
-                r: 10,
+          animatedProps={[
+            {
+              animationName: {
+                from: {
+                  r: 10,
+                },
+                to: {
+                  r: 100,
+                  cy: 500,
+                },
               },
-              to: {
-                r: 100,
-              },
+              animationDuration: 1000,
+              animationIterationCount: 'infinite',
             },
-            animationDuration: 1000,
-            animationIterationCount: 'infinite',
-          }}
+          ]}
         />
       </Svg>
     </Screen>

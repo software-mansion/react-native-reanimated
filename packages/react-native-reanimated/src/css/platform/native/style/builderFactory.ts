@@ -18,11 +18,13 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   add(property: keyof P, value: P[keyof P]): void {
     const configValue = this.config[property];
 
-    if (!configValue || !isDefined(value)) {
+    // Exclude only explicitly excluded properties or these for which
+    // the value is not defined (was not passed)
+    if (configValue === false || !isDefined(value)) {
       return;
     }
 
-    if (configValue === true) {
+    if (configValue === true || configValue === undefined) {
       this.maybeAssignProp(property, value);
     } else if (isConfigPropertyAlias<P>(configValue)) {
       this.add(configValue.as, value);
