@@ -15,9 +15,13 @@ ComponentInterpolatorsMap registry_ = {
 
 } // namespace
 
+const bool hasInterpolators(const std::string &componentName) {
+  return registry_.find(componentName) != registry_.end();
+}
+
 const InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName) {
-  const auto it = registry_.find(std::string(componentName));
+  const auto it = registry_.find(componentName);
 
   if (it == registry_.end()) {
     // Use View interpolators as a fallback for unknown components

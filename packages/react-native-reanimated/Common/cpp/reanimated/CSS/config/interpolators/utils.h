@@ -4,7 +4,7 @@
 
 namespace reanimated::css {
 
-InterpolatorFactoriesRecord mergeInterpolators(
+inline InterpolatorFactoriesRecord mergeInterpolators(
     const InterpolatorFactoriesRecord &map) {
   return map;
 }
