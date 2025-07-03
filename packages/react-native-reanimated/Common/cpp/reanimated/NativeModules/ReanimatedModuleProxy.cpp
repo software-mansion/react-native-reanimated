@@ -246,6 +246,22 @@ static inline std::string intColorToHex(const int val) {
   return hexColor;
 }
 
+static inline std::string boxShadowToJsonString(const BoxShadow boxShadow) {
+    std::stringstream boxShadowStream;
+    boxShadowStream << "{";
+    boxShadowStream << "\"color\": \"" << intColorToHex(*boxShadow.color)
+                    << "\",";
+    boxShadowStream << "\"blurRadius\": " << boxShadow.blurRadius << ",";
+    boxShadowStream << "\"offsetX\": " << boxShadow.offsetX << ",";
+    boxShadowStream << "\"offsetY\": " << boxShadow.offsetY << ",";
+    boxShadowStream << "\"spreadDistance\": " << boxShadow.spreadDistance
+                    << ",";
+    boxShadowStream << "\"inset\": " << (boxShadow.inset ? "true" : "false");
+
+    boxShadowStream << "}";
+    return boxShadowStream.str();
+}
+
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
@@ -281,7 +297,18 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
       }
     } else if (propName == "backgroundColor") {
       return intColorToHex(*viewProps->backgroundColor);
-    }
+    } else if (propName == "boxShadow") {
+        if (viewProps->boxShadow.empty()) {
+          return "[]";
+        }
+        std::stringstream boxShadowStream;
+        boxShadowStream << "[";
+        for (const auto &shadow : viewProps->boxShadow) {
+            boxShadowStream << boxShadowToJsonString(shadow);
+        }
+        boxShadowStream << "]";
+        return boxShadowStream.str();
+      }
   }
 
   throw std::runtime_error(std::string(
