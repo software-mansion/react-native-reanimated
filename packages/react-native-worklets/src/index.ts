@@ -1,5 +1,7 @@
 'use strict';
 
+import './publicGlobals';
+
 import { init } from './initializers';
 import { bundleModeInit } from './workletRuntimeEntry';
 
