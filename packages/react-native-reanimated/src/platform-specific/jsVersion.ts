@@ -1,4 +1,7 @@
 'use strict';
+
+import workletsVersion from './workletsVersion.json';
+
 /**
  * We hardcode the version of Reanimated here in order to compare it with the
  * version used to build the native part of the library in runtime. Remember to
@@ -11,10 +14,11 @@ export const jsVersion = '4.0.0-beta.5';
  * if the App compiles there could be ABI mismatches.
  */
 export const acceptedWorkletsVersion = {
-  min: '0.4.0' satisfies ValidVersion,
+  // min: '0.4.0' satisfies ValidVersion,
+  min: workletsVersion.min as ValidVersion,
   // TODO: Placeholding "infinity" version for now.
   // Set it to a proper value when releasing stable Reanimated 4.
-  max: '1000.0.0' satisfies ValidVersion,
+  max: workletsVersion.max as ValidVersion,
 };
 
 type ValidVersion = `${number}.${number}.${number}`;
