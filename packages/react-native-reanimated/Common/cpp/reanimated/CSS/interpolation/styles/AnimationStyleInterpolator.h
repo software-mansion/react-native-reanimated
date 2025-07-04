@@ -14,14 +14,15 @@ namespace reanimated::css {
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
   explicit AnimationStyleInterpolator(
-      const folly::dynamic &keyframes,
+      jsi::Runtime &rt,
+      const jsi::Value &keyframes,
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
             getInterpolators(componentName),
             {},
             viewStylesRepository) {
-    updateKeyframes(keyframes);
+    updateKeyframes(rt, keyframes);
   }
 };
 

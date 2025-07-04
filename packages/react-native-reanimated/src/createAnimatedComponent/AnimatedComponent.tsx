@@ -317,6 +317,7 @@ export default class AnimatedComponent
     );
     this._prevAnimatedStyles = this._animatedStyles;
     this._animatedStyles = filtered.animatedStyles;
+    this._cssStyle = filtered.cssStyle;
   }
 
   _configureLayoutAnimation(

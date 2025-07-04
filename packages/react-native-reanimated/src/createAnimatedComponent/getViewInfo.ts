@@ -4,10 +4,10 @@ import type { HostInstance } from '../platform-specific/findHostInstance';
 
 export function getViewInfo(element: HostInstance): {
   viewTag?: number;
-  componentName?: string;
+  viewName?: string;
 } {
   return {
-    componentName: (element?._viewConfig?.uiViewClassName ??
+    viewName: (element?._viewConfig?.uiViewClassName ??
       element?.__internalInstanceHandle?.type ??
       element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,

@@ -7,7 +7,7 @@ import type {
   StyleBuildMiddleware,
 } from './types';
 
-export type StyleBuilderOptions<P extends AnyRecord> = {
+type StyleBuilderOptions<P extends AnyRecord> = {
   buildMiddleware?: StyleBuildMiddleware<P>;
   separatelyInterpolatedArrayProperties?: (keyof P)[];
 };
