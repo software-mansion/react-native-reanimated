@@ -4,95 +4,13 @@ import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequest
 import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
-import { reportFatalErrorOnJS } from './errors';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
-import { IS_JEST, IS_WEB, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { registerReportFatalRemoteError } from './errors';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
-import { initializeLibraryOnWorkletRuntime } from './workletRuntimeEntry';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
-import type { IWorkletsModule } from './WorkletsModule';
+import { WorkletsModule } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
-
-if (!globalThis._WORKLET && globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
-  globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
-}
-
-// @ts-expect-error We must trick the bundler to include
-// the `workletRuntimeEntry` file the way it cannot optimize it out.
-if (globalThis._ALWAYS_FALSE) {
-  // Experimental bundling.
-  initializeLibraryOnWorkletRuntime();
-}
-
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-function overrideLogFunctionImplementation(
-  boundLogToLogBoxAndConsole: typeof logToLogBoxAndConsole
-) {
-  'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(boundLogToLogBoxAndConsole)(data);
-  });
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-if (!globalThis._WORKLET) {
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  overrideLogFunctionImplementation(logToLogBoxAndConsole);
-}
-
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  globalThis._WORKLET = false;
-  globalThis._log = console.log;
-  globalThis._getAnimationTimestamp = () => performance.now();
-} else if (!globalThis._WORKLET) {
-  if (__DEV__) {
-    const testWorklet = () => {
-      'worklet';
-    };
-    if (!isWorkletFunction(testWorklet)) {
-      throw new WorkletsError(
-        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
-      );
-    }
-  }
-
-  const runtimeBoundLogToLogBoxAndConsole = logToLogBoxAndConsole;
-
-  // Register WorkletsError and logger config in the UI runtime global scope.
-  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-  // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)(
-    runtimeBoundLogToLogBoxAndConsole
-  );
-}
-
-export function setupErrorUtils(
-  boundReportFatalErrorOnJS: typeof reportFatalErrorOnJS
-) {
-  'worklet';
-  globalThis.__ErrorUtils = {
-    reportFatalError: (error: Error) => {
-      runOnJS(boundReportFatalErrorOnJS)({
-        message: error.message,
-        moduleName: 'Worklets',
-        stack: error.stack,
-      });
-    },
-  };
-}
 
 let capturableConsole: typeof console;
 
@@ -145,26 +63,74 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
   globalThis.console = {
-    /* eslint-disable @typescript-eslint/unbound-method */
     assert: runOnJS(boundCapturableConsole.assert),
     debug: runOnJS(boundCapturableConsole.debug),
     log: runOnJS(boundCapturableConsole.log),
     warn: runOnJS(boundCapturableConsole.warn),
     error: runOnJS(boundCapturableConsole.error),
     info: runOnJS(boundCapturableConsole.info),
-    /* eslint-enable @typescript-eslint/unbound-method */
   };
 }
 
-export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
-  if (IS_WEB || globalThis._WORKLET) {
+let initialized = false;
+
+export function init() {
+  if (initialized) {
     return;
   }
-  if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
-    );
+  initialized = true;
+
+  initializeRuntime();
+
+  if (SHOULD_BE_USE_WEB) {
+    initializeRuntimeOnWeb();
   }
+
+  if (globalThis._WORKLET) {
+    initializeWorkletRuntime();
+  } else {
+    initializeRNRuntime();
+    if (!SHOULD_BE_USE_WEB) {
+      installRNBindingsOnUIRuntime();
+    }
+  }
+}
+
+/** A function that should be run on any kind of runtime. */
+function initializeRuntime() {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  }
+}
+
+/** A function that should be run only on React Native runtime. */
+function initializeRNRuntime() {
+  if (__DEV__) {
+    const testWorklet = () => {
+      'worklet';
+    };
+    if (!isWorkletFunction(testWorklet)) {
+      throw new WorkletsError(
+        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      );
+    }
+  }
+
+  registerReportFatalRemoteError();
+}
+
+/** A function that should be run only on Worklet runtimes. */
+function initializeWorkletRuntime() {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    setupCallGuard();
+  }
+}
+
+/** A function that should be run only on RN Runtime in web implementation. */
+function initializeRuntimeOnWeb() {
+  globalThis._WORKLET = false;
+  globalThis._log = console.log;
+  globalThis._getAnimationTimestamp = () => performance.now();
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
     // the method directly using setTimeout, therefore the callback doesn't get the
@@ -174,18 +140,45 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
+}
 
-  const runtimeBoundReportFatalErrorOnJS = reportFatalErrorOnJS;
+/**
+ * A function that should be run on the RN Runtime to configure the UI Runtime
+ * with callback bindings.
+ */
+function installRNBindingsOnUIRuntime() {
+  if (!WorkletsModule) {
+    throw new WorkletsError(
+      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    );
+  }
+
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
-  if (!SHOULD_BE_USE_WEB) {
-    executeOnUIRuntimeSync(() => {
-      'worklet';
-      setupErrorUtils(runtimeBoundReportFatalErrorOnJS);
-      setupCallGuard();
-      setupConsole(runtimeBoundCapturableConsole);
-      setupMicrotasks();
-      setupRequestAnimationFrame();
-    })();
+  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+    /** In bundle mode Runtimes setup their callGuard themselves. */
+    executeOnUIRuntimeSync(setupCallGuard)();
+
+    /**
+     * Register WorkletsError in the UI runtime global scope. (we are using
+     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
+     * before any async operations are executed on the UI runtime).
+     *
+     * There's no need to register the error in bundle mode.
+     */
+    executeOnUIRuntimeSync(registerWorkletsError)();
   }
+
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+
+    setupConsole(runtimeBoundCapturableConsole);
+    /**
+     * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
+     * separate function once we have a better way to distinguish between
+     * Worklet Runtimes.
+     */
+    setupMicrotasks();
+    setupRequestAnimationFrame();
+  })();
 }

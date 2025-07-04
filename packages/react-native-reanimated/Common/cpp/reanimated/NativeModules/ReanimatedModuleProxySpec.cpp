@@ -38,16 +38,6 @@ static jsi::Value REANIMATED_SPEC_PREFIX(getViewProp)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(enableLayoutAnimations)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->enableLayoutAnimations(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 static jsi::Value REANIMATED_SPEC_PREFIX(registerSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -69,16 +59,6 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->unregisterSensor(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(registerJSProps)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerJSProps(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -231,14 +211,10 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["getViewProp"] =
       MethodMetadata{3, REANIMATED_SPEC_PREFIX(getViewProp)};
-  methodMap_["enableLayoutAnimations"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(enableLayoutAnimations)};
   methodMap_["registerSensor"] =
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerSensor)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterSensor)};
-  methodMap_["registerJSProps"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerJSProps)};
   methodMap_["subscribeForKeyboardEvents"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =

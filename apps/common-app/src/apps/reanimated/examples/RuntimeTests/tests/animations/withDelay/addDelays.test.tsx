@@ -21,9 +21,9 @@ const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';
 const WIDTH_COMPONENT_INLINE_REF = 'WidthComponentInline';
 
 enum ComponentType {
-  'ACTIVE' = WIDTH_COMPONENT_ACTIVE_REF,
-  'PASSIVE' = WIDTH_COMPONENT_PASSIVE_REF,
-  'INLINE' = WIDTH_COMPONENT_INLINE_REF,
+  ACTIVE = WIDTH_COMPONENT_ACTIVE_REF,
+  PASSIVE = WIDTH_COMPONENT_PASSIVE_REF,
+  INLINE = WIDTH_COMPONENT_INLINE_REF,
 }
 
 const ActiveWidthComponent = ({ delays }: { delays: [number] | [number, number, number] }) => {

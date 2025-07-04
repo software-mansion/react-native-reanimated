@@ -18,6 +18,7 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
@@ -40,7 +41,6 @@ import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -80,6 +80,7 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -106,7 +107,6 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
@@ -163,20 +163,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
   },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
-  },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',
@@ -724,5 +719,9 @@ export const EXAMPLES: Record<string, Example> = {
   ReparentingExample: {
     title: '[LA] Reparenting',
     screen: ReparentingExample,
+  },
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
   },
 } as const;

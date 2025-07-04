@@ -20,7 +20,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const override;
 
-  void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
+  void updateKeyframes(const folly::dynamic &keyframes) override;
   void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,

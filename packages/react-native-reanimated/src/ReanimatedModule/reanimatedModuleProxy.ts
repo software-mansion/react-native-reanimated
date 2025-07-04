@@ -31,8 +31,6 @@ export interface ReanimatedModuleProxy {
     callback?: (result: T) => void
   ): Promise<T>;
 
-  enableLayoutAnimations(flag: boolean): void;
-
   registerSensor(
     sensorType: number,
     interval: number,
@@ -41,8 +39,6 @@ export interface ReanimatedModuleProxy {
   ): number;
 
   unregisterSensor(sensorId: number): void;
-
-  registerJSProps(componentName: string, jsPropsNames: string[]): void;
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,

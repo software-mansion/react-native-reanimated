@@ -1,3 +1,3 @@
 'use strict';
-export * from './animation';
-export * from './transition';
+export type * from './animation';
+export type * from './transition';

@@ -1,20 +1,25 @@
+/* eslint-disable reanimated/use-logger */
 'use strict';
-import type { LogBoxLogLevel, LogData } from './LogBox';
-import { addLogBoxLog } from './LogBox';
 
+const PREFIX = '[Reanimated]';
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
 const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
 
-type LogFunction = (data: LogData) => void;
-
-export enum LogLevel {
+export enum ReanimatedLogLevel {
   warn = 1,
   error = 2,
 }
 
+type LogData = {
+  level: ReanimatedLogLevel;
+  message: string;
+};
+
+type LogFunction = (data: LogData) => void;
+
 export type LoggerConfig = {
-  level?: LogLevel;
+  level?: ReanimatedLogLevel;
   strict?: boolean;
 };
 
@@ -25,56 +30,20 @@ export type LoggerConfigInternal = {
 function logToConsole(data: LogData) {
   'worklet';
   switch (data.level) {
-    case 'warn':
-      console.warn(data.message.content);
+    case ReanimatedLogLevel.warn:
+      console.warn(data.message);
       break;
-    case 'error':
-    case 'fatal':
-    case 'syntax':
-      console.error(data.message.content);
+    case ReanimatedLogLevel.error:
+      console.error(data.message);
       break;
   }
 }
 
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
-  level: LogLevel.warn,
+  level: ReanimatedLogLevel.warn,
   strict: true,
 };
-
-function formatMessage(message: string) {
-  'worklet';
-  return `[Worklets] ${message}`;
-}
-
-function createLog(level: LogBoxLogLevel, message: string): LogData {
-  'worklet';
-  const formattedMessage = formatMessage(message);
-
-  return {
-    level,
-    message: {
-      content: formattedMessage,
-      substitutions: [],
-    },
-    category: formattedMessage,
-    componentStack: [],
-    componentStackType: null,
-    // eslint-disable-next-line reanimated/use-worklets-error
-    stack: new Error().stack,
-  };
-}
-
-/**
- * Function that logs to LogBox and console. Used to replace the default console
- * logging with logging to LogBox on the UI thread when runOnJS is available.
- *
- * @param data - The details of the log.
- */
-export function logToLogBoxAndConsole(data: LogData) {
-  addLogBoxLog(data);
-  logToConsole(data);
-}
 
 /**
  * Registers the logger configuration. use it only for Worklet runtimes.
@@ -83,17 +52,7 @@ export function logToLogBoxAndConsole(data: LogData) {
  */
 export function registerLoggerConfig(config: LoggerConfigInternal) {
   'worklet';
-  global.__workletsLoggerConfig = config;
-}
-
-/**
- * Replaces the default log function with a custom implementation.
- *
- * @param logFunction - The custom log function.
- */
-export function replaceLoggerImplementation(logFunction: LogFunction) {
-  'worklet';
-  registerLoggerConfig({ ...global.__workletsLoggerConfig, logFunction });
+  global.__reanimatedLoggerConfig = config;
 }
 
 /**
@@ -108,7 +67,7 @@ export function replaceLoggerImplementation(logFunction: LogFunction) {
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
   registerLoggerConfig({
-    ...global.__workletsLoggerConfig,
+    ...global.__reanimatedLoggerConfig,
     // Don't reuse previous level and strict values from the global config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
@@ -120,18 +79,18 @@ type LogOptions = {
 };
 
 function handleLog(
-  level: Exclude<LogBoxLogLevel, 'syntax' | 'fatal'>,
+  level: ReanimatedLogLevel,
   message: string,
   options: LogOptions
 ) {
   'worklet';
-  const config = global.__workletsLoggerConfig;
+  const config = global.__reanimatedLoggerConfig;
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging
     (options.strict && !config.strict) ||
     // Don't log if the log level is below the minimum configured level
-    LogLevel[level] < config.level
+    level < config.level
   ) {
     return;
   }
@@ -140,16 +99,19 @@ function handleLog(
     message += `\n\n${DOCS_REFERENCE}`;
   }
 
-  config.logFunction(createLog(level, message));
+  config.logFunction({
+    level,
+    message: `${PREFIX} ${message}`,
+  });
 }
 
 export const logger = {
   warn(message: string, options: LogOptions = {}) {
     'worklet';
-    handleLog('warn', message, options);
+    handleLog(ReanimatedLogLevel.warn, message, options);
   },
   error(message: string, options: LogOptions = {}) {
     'worklet';
-    handleLog('error', message, options);
+    handleLog(ReanimatedLogLevel.error, message, options);
   },
 };

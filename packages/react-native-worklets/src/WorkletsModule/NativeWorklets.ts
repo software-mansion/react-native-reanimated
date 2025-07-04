@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
-import type { WorkletsModuleProxy } from './workletsModuleProxy';
-
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+import type {
+  IWorkletsModule,
+  WorkletsModuleProxy,
+} from './workletsModuleProxy';
 
 export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
 }
 
-class NativeWorklets {
+class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: ShareableRef<undefined>;
   #shareableNull: ShareableRef<null>;
@@ -108,6 +108,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  makeShareableMap<TKey, TValue>(
+    keys: TKey[],
+    values: TValue[]
+  ): ShareableRef<Map<TKey, TValue>> {
+    return this.#workletsModuleProxy.makeShareableMap(keys, values);
+  }
+
+  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>> {
+    return this.#workletsModuleProxy.makeShareableSet(values);
+  }
+
   makeShareableInitializer(obj: object) {
     return this.#workletsModuleProxy.makeShareableInitializer(obj);
   }
@@ -146,6 +157,20 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       shareableWorklet
+    );
+  }
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ) {
+    return this.#workletsModuleProxy.reportFatalErrorOnJS(
+      message,
+      stack,
+      name,
+      jsEngine
     );
   }
 }
