@@ -1,3 +1,4 @@
+'use strict';
 import type { GestureResponderHandlers } from 'react-native';
 import type {
   AccessibilityProps,
@@ -47,16 +48,16 @@ const clipProps: StyleBuilderConfig<ClipProps> = {
 };
 
 const transformProps: StyleBuilderConfig<TransformProps> = {
-  translate: true,
+  translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
   translateX: true,
   translateY: true,
-  origin: true,
+  origin: true, // TODO - add preprocessor (NumberArray) and split to originX and originY
   originX: true,
   originY: true,
-  scale: true,
+  scale: true, // TODO - add preprocessor (NumberArray) and split to scaleX and scaleY
   scaleX: true,
   scaleY: true,
-  skew: true,
+  skew: true, // TODO - add preprocessor (NumberArray) and split to skewX and skewY
   skewX: true,
   skewY: true,
   rotation: true,
