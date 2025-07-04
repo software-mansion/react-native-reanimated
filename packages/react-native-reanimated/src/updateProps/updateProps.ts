@@ -6,6 +6,7 @@ import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
+  processBoxShadow,
   processColorsInProps,
   processTransformOrigin,
   ReanimatedError,
@@ -45,6 +46,9 @@ if (SHOULD_BE_USE_WEB) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+    }
+    if ('boxShadow' in updates) {
+      updates.boxShadow = processBoxShadow(updates.boxShadow);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
