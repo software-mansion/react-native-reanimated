@@ -8,7 +8,7 @@ export default function ReparentingExample() {
   return (
     <View style={styles.container}>
       <Button
-        title="Toggle Collapsable"
+        title="Toggle collapsable"
         onPress={() => setCollapsable(!collapsable)}
       />
       <View collapsable={false}>
