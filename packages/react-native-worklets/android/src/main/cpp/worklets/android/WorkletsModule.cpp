@@ -44,23 +44,23 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
     ,
     jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
         scriptWrapper,
     const std::string &sourceURL
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   script = scriptWrapper->cthis()->getScript();
 #else
   const auto sourceURL = std::string{};
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   return makeCxxInstance(
       jThis,

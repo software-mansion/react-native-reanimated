@@ -33,7 +33,7 @@ using worklets::WorkletsModuleProxy;
 }
 
 #if __has_include(<React/RCTBundleConsumer.h>)
-// Experimental bundling
+// Bundle mode
 @synthesize scriptBuffer = scriptBuffer_;
 @synthesize sourceURL = sourceURL_;
 #endif // __has_include(<React/RCTBundleConsumer.h>)
@@ -64,10 +64,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   script = [scriptBuffer_ getBuffer];
   sourceURL = [sourceURL_ UTF8String];
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();

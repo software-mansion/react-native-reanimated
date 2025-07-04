@@ -21,7 +21,7 @@ export function makeWorkletFactoryCall(
   );
 
   let factoryCall: CallExpression;
-  if (state.opts.experimentalBundling) {
+  if (state.opts.bundleMode) {
     factoryCall = callExpression(
       memberExpression(
         callExpression(identifier('require'), [

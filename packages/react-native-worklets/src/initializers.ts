@@ -98,7 +98,7 @@ export function init() {
 
 /** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
-  if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
 }
@@ -121,7 +121,7 @@ function initializeRNRuntime() {
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
-  if (globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
     setupCallGuard();
   }
 }
@@ -155,8 +155,8 @@ function installRNBindingsOnUIRuntime() {
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
-  if (!globalThis._WORKLETS_EXPERIMENTAL_BUNDLING) {
-    /** In experimental bundling Runtimes setup their callGuard themselves. */
+  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+    /** In bundle mode Runtimes setup their callGuard themselves. */
     executeOnUIRuntimeSync(setupCallGuard)();
 
     /**
@@ -164,7 +164,7 @@ function installRNBindingsOnUIRuntime() {
      * `executeOnUIRuntimeSync` here to make sure that the changes are applied
      * before any async operations are executed on the UI runtime).
      *
-     * There's no need to register the error in experimental bundling.
+     * There's no need to register the error in bundle mode.
      */
     executeOnUIRuntimeSync(registerWorkletsError)();
   }

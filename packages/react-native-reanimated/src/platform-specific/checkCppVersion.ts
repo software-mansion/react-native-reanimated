@@ -20,8 +20,6 @@ export function checkCppVersion() {
   }
 }
 
-// This is used only in test files, therefore it is reported by ts-prune (which is desired)
-// ts-prune-ignore-next
 export function matchVersion(version1: string, version2: string) {
   if (version1.match(/^\d+\.\d+\.\d+$/) && version2.match(/^\d+\.\d+\.\d+$/)) {
     // x.y.z, compare only major and minor, skip patch
