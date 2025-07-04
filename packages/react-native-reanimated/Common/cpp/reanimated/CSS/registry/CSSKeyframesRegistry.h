@@ -16,25 +16,22 @@ class CSSKeyframesRegistry {
   CSSKeyframesRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  const std::shared_ptr<AnimationStyleInterpolator> getOrCreateInterpolator(
+  const CSSKeyframesConfig &get(
       const std::string &animationName,
       const std::string &componentName);
-  const std::shared_ptr<KeyframeEasingFunctions> getKeyframeEasingFunctions(
-      const std::string &animationName);
-
-  void set(const std::string &animationName, CSSKeyframesConfig &&config);
-  void remove(const std::string &animationName);
+  void set(
+      const std::string &animationName,
+      const std::string &componentName,
+      CSSKeyframesConfig &&config);
+  void remove(
+      const std::string &animationName,
+      const std::string &componentName);
 
  private:
-  using StyleInterpolatorsByComponentName = std::
-      unordered_map<std::string, std::shared_ptr<AnimationStyleInterpolator>>;
+  using ConfigsByComponentName =
+      std::unordered_map<std::string, CSSKeyframesConfig>;
 
-  std::unordered_map<std::string, folly::dynamic> keyframeDefinitions_;
-  std::unordered_map<std::string, std::shared_ptr<KeyframeEasingFunctions>>
-      keyframeEasingFunctions_;
-  std::unordered_map<std::string, StyleInterpolatorsByComponentName>
-      styleInterpolators_;
-
+  std::unordered_map<std::string, ConfigsByComponentName> registry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };
 

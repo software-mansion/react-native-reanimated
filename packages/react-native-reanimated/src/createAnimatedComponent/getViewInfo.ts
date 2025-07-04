@@ -7,7 +7,9 @@ export function getViewInfo(element: HostInstance): {
   viewTag?: number;
 } {
   return {
-    viewName: element?._viewConfig?.uiViewClassName as string,
+    viewName: (element?._viewConfig?.uiViewClassName ??
+      element?.__internalInstanceHandle?.type ??
+      element?.__internalInstanceHandle?.elementType) as string,
     viewTag: element?.__nativeTag,
   };
 }

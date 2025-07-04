@@ -8,7 +8,6 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
-#include <folly/dynamic.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -58,6 +57,9 @@ struct TransformOperation {
   virtual TransformOperationType type() const = 0;
   virtual bool isRelative() const;
 
+  static std::shared_ptr<TransformOperation> fromJSIValue(
+      jsi::Runtime &rt,
+      const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(
       const folly::dynamic &value);
   folly::dynamic toDynamic() const;

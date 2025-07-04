@@ -1,9 +1,12 @@
 'use strict';
 import { ReanimatedError } from '../../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../../types';
+import { getStyleBuilder } from '../../../styleBuilder';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
 describe(normalizeAnimationKeyframes, () => {
+  const styleBuilder = getStyleBuilder('base');
+
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
       it.each([
@@ -17,7 +20,10 @@ describe(normalizeAnimationKeyframes, () => {
         [1, 1],
       ])(`normalizes %p to %p`, (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } })
+          normalizeAnimationKeyframes(
+            { [offset]: { opacity: 1 } },
+            styleBuilder
+          )
         ).toEqual({
           keyframesStyle: { opacity: [{ offset: expected, value: 1 }] },
           keyframeTimingFunctions: {},
@@ -31,7 +37,10 @@ describe(normalizeAnimationKeyframes, () => {
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
           expect(() =>
-            normalizeAnimationKeyframes({ [value]: { opacity: 1 } })
+            normalizeAnimationKeyframes(
+              { [value]: { opacity: 1 } },
+              styleBuilder
+            )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
           );
@@ -43,7 +52,7 @@ describe(normalizeAnimationKeyframes, () => {
       it.each([-1, 2, Infinity, '101%'])('throws an error for %p', (offset) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } })
+          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, styleBuilder)
         ).toThrow(
           new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
         );
@@ -61,7 +70,10 @@ describe(normalizeAnimationKeyframes, () => {
         ['0, 0.5, 1', [0, 0.5, 1]],
       ])('normalizes %p to %p', (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } })
+          normalizeAnimationKeyframes(
+            { [offset]: { opacity: 1 } },
+            styleBuilder
+          )
         ).toEqual({
           keyframeTimingFunctions: {},
           keyframesStyle: {
@@ -82,7 +94,7 @@ describe(normalizeAnimationKeyframes, () => {
       ])('throws an error for %p', (offset, errorMsg) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } })
+          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, styleBuilder)
         ).toThrow(new ReanimatedError(errorMsg));
       });
     });
@@ -91,11 +103,14 @@ describe(normalizeAnimationKeyframes, () => {
   describe('keyframesStyle', () => {
     it('converts keyframes to style with properties with offset', () => {
       expect(
-        normalizeAnimationKeyframes({
-          from: { opacity: 0 },
-          '50%': { opacity: 0.5 },
-          to: { opacity: 1 },
-        })
+        normalizeAnimationKeyframes(
+          {
+            from: { opacity: 0 },
+            '50%': { opacity: 0.5 },
+            to: { opacity: 1 },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [
@@ -110,10 +125,13 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('handles nested style properties', () => {
       expect(
-        normalizeAnimationKeyframes({
-          from: { shadowOffset: { width: 0, height: 0 } },
-          to: { shadowOffset: { width: 10, height: 10 } },
-        })
+        normalizeAnimationKeyframes(
+          {
+            from: { shadowOffset: { width: 0, height: 0 } },
+            to: { shadowOffset: { width: 10, height: 10 } },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           shadowOffset: {
@@ -133,13 +151,16 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('orders property values by offset', () => {
       expect(
-        normalizeAnimationKeyframes({
-          to: { opacity: 1 },
-          '50%': { opacity: 0.5 },
-          '75%': { opacity: 0.75 },
-          '25%': { opacity: 0.25 },
-          from: { opacity: 0 },
-        })
+        normalizeAnimationKeyframes(
+          {
+            to: { opacity: 1 },
+            '50%': { opacity: 0.5 },
+            '75%': { opacity: 0.75 },
+            '25%': { opacity: 0.25 },
+            from: { opacity: 0 },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [
@@ -156,10 +177,13 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('treats array values as primitives', () => {
       expect(
-        normalizeAnimationKeyframes({
-          from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
-          to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
-        })
+        normalizeAnimationKeyframes(
+          {
+            from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
+            to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           transform: [
@@ -173,10 +197,13 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('ignores undefined values', () => {
       expect(
-        normalizeAnimationKeyframes({
-          from: { opacity: 0, transform: undefined },
-          to: { opacity: 1 },
-        })
+        normalizeAnimationKeyframes(
+          {
+            from: { opacity: 0, transform: undefined },
+            to: { opacity: 1 },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [
@@ -190,11 +217,14 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('ignores empty keyframes', () => {
       expect(
-        normalizeAnimationKeyframes({
-          from: {},
-          '50%': { opacity: 0.5 },
-          to: {},
-        })
+        normalizeAnimationKeyframes(
+          {
+            from: {},
+            '50%': { opacity: 0.5 },
+            to: {},
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [{ offset: 0.5, value: 0.5 }],
@@ -207,12 +237,15 @@ describe(normalizeAnimationKeyframes, () => {
   describe('keyframeTimingFunctions', () => {
     it('moves timing functions from keyframes to keyframeTimingFunctions', () => {
       expect(
-        normalizeAnimationKeyframes({
-          '0%, 90%': { opacity: 0, animationTimingFunction: 'ease-in' },
-          '25%, 35%, 70%': { opacity: 0.5, animationTimingFunction: 'ease' },
-          '50%': { opacity: 0.75 },
-          '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
-        })
+        normalizeAnimationKeyframes(
+          {
+            '0%, 90%': { opacity: 0, animationTimingFunction: 'ease-in' },
+            '25%, 35%, 70%': { opacity: 0.5, animationTimingFunction: 'ease' },
+            '50%': { opacity: 0.75 },
+            '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [
@@ -238,9 +271,12 @@ describe(normalizeAnimationKeyframes, () => {
 
     it('ignores timing function for keyframe with offset 1', () => {
       expect(
-        normalizeAnimationKeyframes({
-          '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
-        })
+        normalizeAnimationKeyframes(
+          {
+            '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
+          },
+          styleBuilder
+        )
       ).toEqual({
         keyframesStyle: {
           opacity: [
