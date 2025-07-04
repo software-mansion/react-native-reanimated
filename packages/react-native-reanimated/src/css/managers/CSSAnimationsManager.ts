@@ -25,9 +25,9 @@ type ProcessedAnimation = {
 };
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
-  private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  private readonly viewName: string;
   private readonly viewTag: number;
+  private readonly viewName: string;
+  private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
@@ -36,9 +36,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     viewName: string,
     viewTag: number
   ) {
+    this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewName = viewName;
-    this.viewTag = viewTag;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {

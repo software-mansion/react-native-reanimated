@@ -23,7 +23,7 @@ void RecordPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
-  // used (for now, for simplicity, we only add new ones)
+  // used  (for now, for simplicity, we only add new ones)
   const jsi::Object keyframesObject = keyframes.asObject(rt);
 
   jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
