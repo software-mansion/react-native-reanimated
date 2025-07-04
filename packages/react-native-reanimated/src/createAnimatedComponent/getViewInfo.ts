@@ -3,8 +3,8 @@
 import type { HostInstance } from '../platform-specific/findHostInstance';
 
 export function getViewInfo(element: HostInstance): {
-  viewTag?: number;
   viewName?: string;
+  viewTag?: number;
 } {
   return {
     viewName: (element?._viewConfig?.uiViewClassName ??
