@@ -1,18 +1,5 @@
-/* eslint-disable perfectionist/sort-objects */
-
-import type { RouteNames, Routes } from '@/apps/css/navigation/types';
-import { IS_WEB } from '@/utils';
-
-import routeCards from './routeCards';
-import {
-  animatedProperties,
-  animationSettings,
-  miscellaneous,
-  realWorldExamples,
-  testExamples,
-} from './screens';
-
-/* Animated Properties routes */
+import { animatedProperties } from '@/apps/css/examples/animations/screens';
+import type { Routes } from '@/apps/css/navigation/types';
 
 const layoutAndPositioningRoutes = {
   FlexBox: {
@@ -465,141 +452,21 @@ const othersRoutes = {
   },
 } satisfies Routes;
 
-/* Animations routes */
-
-const routes = {
-  AnimatedProperties: {
-    name: 'Animated Properties',
-    CardComponent: routeCards.AnimatedPropertiesCard,
-    flatten: true,
-    routes: {
-      LayoutAndPositioning: {
-        name: 'Layout and Positioning',
-        routes: layoutAndPositioningRoutes,
-      },
-      Appearance: {
-        name: 'Appearance',
-        routes: appearanceRoutes,
-      },
-      Typography: {
-        name: 'Typography',
-        routes: typographyRoutes,
-      },
-      Others: {
-        name: 'Others',
-        routes: othersRoutes,
-      },
-    },
+export const baseAnimatedPropertiesRoutes = {
+  LayoutAndPositioning: {
+    name: 'Layout and Positioning',
+    routes: layoutAndPositioningRoutes,
   },
-  AnimationSettings: {
-    name: 'Animation Settings',
-    CardComponent: routeCards.AnimationSettingsCard,
-    routes: {
-      Duration: {
-        name: 'Duration',
-        Component: animationSettings.AnimationDuration,
-      },
-      TimingFunction: {
-        name: 'Timing Function',
-        Component: animationSettings.AnimationTimingFunction,
-      },
-      Delay: {
-        name: 'Delay',
-        Component: animationSettings.AnimationDelay,
-      },
-      IterationCount: {
-        name: 'Iteration Count',
-        Component: animationSettings.AnimationIterationCount,
-      },
-      Direction: {
-        name: 'Direction',
-        Component: animationSettings.AnimationDirection,
-      },
-      FillMode: {
-        name: 'Fill Mode',
-        Component: animationSettings.AnimationFillMode,
-      },
-      PlayState: {
-        name: 'Play State',
-        Component: animationSettings.AnimationPlayState,
-      },
-    },
+  Appearance: {
+    name: 'Appearance',
+    routes: appearanceRoutes,
   },
-  Miscellaneous: {
-    name: 'Miscellaneous',
-    CardComponent: routeCards.MiscellaneousCard,
-    routes: {
-      ChangingAnimation: {
-        name: 'Changing Animation',
-        Component: miscellaneous.ChangingAnimation,
-      },
-      UpdatingAnimationSettings: {
-        name: 'Updating Animation Settings',
-        Component: miscellaneous.UpdatingAnimationSettings,
-      },
-      KeyframeTimingFunctions: {
-        name: 'Keyframe Timing Functions',
-        Component: miscellaneous.KeyframeTimingFunctions,
-      },
-      MultipleAnimations: {
-        name: 'Multiple Animations',
-        Component: miscellaneous.MultipleAnimations,
-      },
-    },
+  Typography: {
+    name: 'Typography',
+    routes: typographyRoutes,
   },
-  RealWorldExamples: {
-    name: 'Real World Examples',
-    CardComponent: routeCards.RealWorldExamplesCard,
-    routes: {
-      SpinnersAndLoaders: {
-        name: 'Spinners and Loaders',
-        Component: realWorldExamples.SpinnersAndLoaders,
-      },
-      Emojis: {
-        name: 'Emojis',
-        Component: realWorldExamples.Emojis,
-      },
-      Campfire: {
-        name: 'Campfire',
-        Component: realWorldExamples.Campfire,
-      },
-      RocketInSpace: {
-        name: 'Rocket In Space',
-        Component: realWorldExamples.RocketInSpace,
-      },
-      SquishySquashy: {
-        name: 'Squishy Squashy',
-        Component: realWorldExamples.SquishySquashy,
-      },
-    },
-  },
-  TestExamples: {
-    name: 'Test Examples',
-    CardComponent: routeCards.TestExamplesCard,
-    routes: {
-      Playground: {
-        name: 'Playground',
-        Component: testExamples.Playground,
-      },
-      IterationCountAndFillMode: {
-        name: 'Iteration Count and Fill Mode',
-        displayed: !IS_WEB,
-        labelTypes: ['needsFix'],
-        Component: testExamples.IterationCountAndFillMode,
-      },
-      RelativeMargins: {
-        name: 'Relative Margins',
-        displayed: !IS_WEB,
-        labelTypes: ['needsFix'],
-        Component: testExamples.RelativeMargins,
-      },
-    },
+  Others: {
+    name: 'Others',
+    routes: othersRoutes,
   },
 } satisfies Routes;
-
-export type AnimationsNavigationRouteName = RouteNames<
-  'Animations',
-  typeof routes
->;
-
-export default routes;
