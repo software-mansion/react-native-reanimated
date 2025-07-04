@@ -41,8 +41,8 @@ class CSSTransition {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
-  TransitionProgressProvider progressProvider_;
   TransitionStyleInterpolator styleInterpolator_;
+  TransitionProgressProvider progressProvider_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
   bool isAllowedProperty(const std::string &propertyName) const;
