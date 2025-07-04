@@ -6,7 +6,10 @@ import createStyleBuilder from '../builderFactory';
 
 describe(createStyleBuilder, () => {
   const styleBuilder = createStyleBuilder({
-    height: false,
+    width: true,
+    margin: true,
+    borderRadius: true,
+    flexDirection: true,
   });
 
   it("doesn't include undefined values", () => {
@@ -23,7 +26,7 @@ describe(createStyleBuilder, () => {
     });
   });
 
-  it("doesn't include properties that are marked as false in the config", () => {
+  it("doesn't include properties that are not in the config", () => {
     const style: PlainStyle = {
       width: 100,
       height: 100, // height is not in the config
