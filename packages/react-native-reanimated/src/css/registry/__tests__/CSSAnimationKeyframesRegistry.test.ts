@@ -6,7 +6,7 @@ import {
 } from '../../platform/native';
 import cssKeyframesRegistry from '../CSSKeyframesRegistry';
 
-const COMPONENT_NAME = 'View';
+const VIEW_NAME = 'ViewName';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSKeyframes: jest.fn(),
@@ -34,42 +34,46 @@ describe('CSSKeyframesRegistry', () => {
 
   describe('add', () => {
     it('calls registerCSSKeyframes when adding a new animation', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
         keyframesRule1.name,
-        keyframesRule1.getNormalizedKeyframesConfig(COMPONENT_NAME)
+        VIEW_NAME,
+        keyframesRule1.getNormalizedKeyframesConfig(VIEW_NAME)
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
     it('does not call registerCSSKeyframes when adding an existing animation', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag2); // animation won't be registered again, even though the viewTag is different
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag2); // animation won't be registered again, even though the viewTag is different
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
         keyframesRule1.name,
-        keyframesRule1.getNormalizedKeyframesConfig(COMPONENT_NAME)
+        VIEW_NAME,
+        keyframesRule1.getNormalizedKeyframesConfig(VIEW_NAME)
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
     it('calls registerCSSKeyframes for the new animation added', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
-      cssKeyframesRegistry.add(keyframesRule2, COMPONENT_NAME, viewTag1); // viewTag can be the same, animations aren't added separately for different views
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule2, VIEW_NAME, viewTag1); // viewTag can be the same, animations aren't added separately for different views
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
       expect(registerCSSKeyframes).toHaveBeenNthCalledWith(
         1,
         keyframesRule1.name,
-        keyframesRule1.getNormalizedKeyframesConfig(COMPONENT_NAME)
+        VIEW_NAME,
+        keyframesRule1.getNormalizedKeyframesConfig(VIEW_NAME)
       );
       expect(registerCSSKeyframes).toHaveBeenNthCalledWith(
         2,
         keyframesRule2.name,
-        keyframesRule2.getNormalizedKeyframesConfig(COMPONENT_NAME)
+        VIEW_NAME,
+        keyframesRule2.getNormalizedKeyframesConfig(VIEW_NAME)
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
@@ -77,54 +81,37 @@ describe('CSSKeyframesRegistry', () => {
 
   describe('remove', () => {
     it('calls unregisterCSSKeyframes when removed animation is used only by a single view', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
-      cssKeyframesRegistry.remove(
-        keyframesRule1.name,
-        COMPONENT_NAME,
-        viewTag1
-      );
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
+      cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag1);
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1);
-      expect(unregisterCSSKeyframes).toHaveBeenCalledWith(keyframesRule1.name);
+      expect(unregisterCSSKeyframes).toHaveBeenCalledWith(
+        keyframesRule1.name,
+        VIEW_NAME
+      );
     });
 
     it('does not call unregisterCSSKeyframes when viewTag is not found', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
-      cssKeyframesRegistry.remove(
-        keyframesRule1.name,
-        COMPONENT_NAME,
-        viewTag2
-      );
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
+      cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag2);
 
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
     it('does not call unregisterCSSKeyframes until removed for the last view that uses it', () => {
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag1);
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag2);
-      cssKeyframesRegistry.add(keyframesRule1, COMPONENT_NAME, viewTag3);
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag2);
+      cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag3);
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      cssKeyframesRegistry.remove(
-        keyframesRule1.name,
-        COMPONENT_NAME,
-        viewTag1
-      );
+      cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag1);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      cssKeyframesRegistry.remove(
-        keyframesRule1.name,
-        COMPONENT_NAME,
-        viewTag2
-      );
+      cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag2);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      cssKeyframesRegistry.remove(
-        keyframesRule1.name,
-        COMPONENT_NAME,
-        viewTag3
-      );
+      cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag3);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1); // Finally, the animation is removed
     });
   });
