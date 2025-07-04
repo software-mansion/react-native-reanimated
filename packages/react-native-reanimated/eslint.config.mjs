@@ -36,6 +36,9 @@ const config = tsEslint.config(
       'reanimated/use-global-this': 'error',
       'no-unused-expressions': 'error',
       'camelcase': 'error',
+      'n/no-unpublished-import': ['warn', {
+        "ignoreTypeImport": true
+      }],
     },
   },
   {

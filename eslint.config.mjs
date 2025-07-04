@@ -86,7 +86,7 @@ const importRules = {
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
 const nodeRules = {
   'n/no-missing-import': 'off',
-  'n/no-unpublished-import': 'warn',
+  'n/no-unpublished-import': ['warn'],
   'n/no-unpublished-require': 'warn',
   'n/no-extraneous-import': 'off',
   'n/no-extraneous-require': 'off',
