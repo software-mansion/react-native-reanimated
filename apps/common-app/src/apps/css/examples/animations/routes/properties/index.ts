@@ -1,18 +1,18 @@
 import type { Routes } from '@/apps/css/navigation/types';
 
-import { baseAnimatedPropertiesRoutes } from './base';
-import { svgAnimatedPropertiesRoutes } from './svg';
+import { basePropertiesRoutes } from './base';
+import { svgPropertiesRoutes } from './svg';
 
 // TODO - maybe add custom route cards with animations
 export const animatedPropertiesRoutes = {
-  BaseAnimatedProperties: {
+  BaseProperties: {
     flatten: true,
-    name: 'Base Animated Properties',
-    routes: baseAnimatedPropertiesRoutes,
+    name: 'Base Properties',
+    routes: basePropertiesRoutes,
   },
-  SVGAnimatedProperties: {
+  SVGProperties: {
     flatten: true,
-    name: 'SVG Animated Properties',
-    routes: svgAnimatedPropertiesRoutes,
+    name: 'SVG Properties',
+    routes: svgPropertiesRoutes,
   },
 } satisfies Routes;

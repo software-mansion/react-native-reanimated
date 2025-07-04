@@ -452,7 +452,7 @@ const othersRoutes = {
   },
 } satisfies Routes;
 
-export const baseAnimatedPropertiesRoutes = {
+export const basePropertiesRoutes = {
   LayoutAndPositioning: {
     name: 'Layout and Positioning',
     routes: layoutAndPositioningRoutes,
