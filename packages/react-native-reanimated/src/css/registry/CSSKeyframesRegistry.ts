@@ -33,16 +33,11 @@ class CSSKeyframesRegistry {
     }
   }
 
-  add(
-    keyframesRule: CSSKeyframesRuleImpl,
-    componentName: string,
-    viewTag: number
-  ) {
+  add(keyframesRule: CSSKeyframesRuleImpl, viewName: string, viewTag: number) {
     const existingKeyframesEntry = this.nameToKeyframes_.get(
       keyframesRule.name
     );
-    const existingComponentEntry =
-      existingKeyframesEntry?.usedBy[componentName];
+    const existingComponentEntry = existingKeyframesEntry?.usedBy[viewName];
 
     if (existingComponentEntry) {
       // Just add the view tag to the existing component entry if keyframes
@@ -54,11 +49,11 @@ class CSSKeyframesRegistry {
     // Otherwise, we have to register keyframes preprocessed for the specific
     // component name
     if (existingKeyframesEntry) {
-      existingKeyframesEntry.usedBy[componentName] = new Set([viewTag]);
+      existingKeyframesEntry.usedBy[viewName] = new Set([viewTag]);
     } else {
       this.nameToKeyframes_.set(keyframesRule.name, {
         keyframesRule,
-        usedBy: { [componentName]: new Set([viewTag]) },
+        usedBy: { [viewName]: new Set([viewTag]) },
       });
     }
 
@@ -71,29 +66,28 @@ class CSSKeyframesRegistry {
     // (when they are added for the first time)
     registerCSSKeyframes(
       keyframesRule.name,
-      keyframesRule.getNormalizedKeyframesConfig(componentName)
+      viewName,
+      keyframesRule.getNormalizedKeyframesConfig(viewName)
     );
   }
 
-  remove(animationName: string, componentName: string, viewTag: number) {
+  remove(animationName: string, viewName: string, viewTag: number) {
     const keyframesEntry = this.nameToKeyframes_.get(animationName);
     if (!keyframesEntry) {
       return;
     }
 
-    const componentEntry = keyframesEntry.usedBy[componentName];
+    const componentEntry = keyframesEntry.usedBy[viewName];
     componentEntry.delete(viewTag);
 
     if (componentEntry.size === 0) {
-      delete keyframesEntry.usedBy[componentName];
+      delete keyframesEntry.usedBy[viewName];
+      unregisterCSSKeyframes(animationName, viewName);
     }
 
     if (Object.keys(keyframesEntry.usedBy).length === 0) {
       this.nameToKeyframes_.delete(animationName);
       this.cssTextToNameMap_.delete(keyframesEntry.keyframesRule.cssText);
-      // Unregister animation keyframes if there are no more references to them
-      // (no more views that have an animation with this name)
-      unregisterCSSKeyframes(animationName);
     }
   }
 

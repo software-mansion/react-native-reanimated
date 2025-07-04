@@ -1,4 +1,5 @@
 'use strict';
+
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { StyleBuilder } from '../platform/native';
@@ -16,14 +17,14 @@ export default class CSSManager implements ICSSManager {
   private readonly styleBuilder: StyleBuilder<AnyRecord>;
   private isFirstUpdate: boolean = true;
 
-  constructor({ shadowNodeWrapper, viewTag, componentName }: ViewInfo) {
+  constructor({ shadowNodeWrapper, viewTag, viewName }: ViewInfo) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
-    this.styleBuilder = getStyleBuilder(componentName);
+    this.styleBuilder = getStyleBuilder(viewName);
 
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
-      componentName ?? 'View',
+      viewName ?? 'View',
       tag
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
