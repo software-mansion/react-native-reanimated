@@ -4,6 +4,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 
 export default function ReparentingExample() {
   const [collapsable, setCollapsable] = React.useState(false);
+
   return (
     <View style={styles.container}>
       <Button
