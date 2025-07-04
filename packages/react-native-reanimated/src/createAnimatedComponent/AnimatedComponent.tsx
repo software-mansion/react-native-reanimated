@@ -5,7 +5,7 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB } from '../common';
+import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -307,9 +307,15 @@ export default class AnimatedComponent
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
 
-    this._cssStyle = filteredStyles.cssStyle;
-  }
+    if (filteredStyles.cssStyle && filteredAnimatedProps.cssStyle) {
+      logger.warn(
+        'AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from animatedProps.'
+      );
+    }
 
+    this._cssStyle =
+      filteredAnimatedProps.cssStyle ?? filteredStyles.cssStyle ?? {};
+  }
   _configureLayoutAnimation(
     type: LayoutAnimationType,
     currentConfig: LayoutAnimationOrBuilder | undefined,

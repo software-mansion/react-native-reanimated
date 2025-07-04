@@ -37,7 +37,7 @@ export class PropsFilter implements IPropsFilter {
         const styles = flattenArray<StyleProps>(styleProp ?? []);
 
         const processedStyle: StyleProps[] = styles.map((style) => {
-          if (style?.viewDescriptors) {
+          if (style && style.viewDescriptors) {
             const handle = style as AnimatedStyleHandle;
 
             if (component._isFirstRender) {
