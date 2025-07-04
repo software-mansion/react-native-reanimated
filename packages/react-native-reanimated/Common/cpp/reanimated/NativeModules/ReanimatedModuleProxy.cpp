@@ -430,7 +430,6 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
       componentNameByReactViewName(viewName.asString(rt).utf8(rt));
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      componentName,
       parseCSSAnimationKeyframesConfig(
           rt, keyframesConfig, componentName, viewStylesRepository_));
 }
