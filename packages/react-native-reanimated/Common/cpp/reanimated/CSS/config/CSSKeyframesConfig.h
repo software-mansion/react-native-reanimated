@@ -5,7 +5,6 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
-#include <string>
 #include <unordered_map>
 
 namespace reanimated::css {
