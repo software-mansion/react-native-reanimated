@@ -6,6 +6,7 @@
 
 #include <set>
 #include <utility>
+
 namespace reanimated {
 
 // We never modify the Shadow Tree, we just send some additional
