@@ -43,6 +43,10 @@ if (SHOULD_BE_USE_WEB) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
+    /* TODO: Improve this config structure in the future
+     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
+     * containing only properties that require processing and their associated processors
+     * */
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
