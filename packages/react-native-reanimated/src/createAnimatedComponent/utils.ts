@@ -3,17 +3,17 @@ import type { StyleProps } from '../commonTypes';
 import type { CSSStyle } from '../css';
 import type { NestedArray } from './commonTypes';
 
-export function flattenArray<T>(array: NestedArray<T | undefined>): T[] {
+export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
-    return array ? [array] : [];
+    return [array];
   }
   const resultArr: T[] = [];
 
-  const _flattenArray = (arr: NestedArray<T | undefined>[]): void => {
+  const _flattenArray = (arr: NestedArray<T>[]): void => {
     arr.forEach((item) => {
       if (Array.isArray(item)) {
         _flattenArray(item);
-      } else if (item !== undefined) {
+      } else {
         resultArr.push(item);
       }
     });
