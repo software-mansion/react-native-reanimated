@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
 import { memo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
 import { RouteCard, ScrollScreen, Stagger, Text } from '@/apps/css/components';
@@ -12,11 +12,12 @@ import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
-import { BottomTabBar } from './components';
+import BottomTabBar from './BottomTabBar';
 import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
+import { searchRoutes } from './search/fuse';
 import type { Routes, TabRoute } from './types';
 import { isRouteWithRoutes } from './utils';
 
@@ -221,6 +222,19 @@ function Navigator() {
           )
         )}
       </Stack.Navigator>
+      <TextInput
+        style={{
+          position: 'absolute',
+          top: 50,
+          left: 0,
+          right: 0,
+          height: 50,
+          backgroundColor: 'blue',
+        }}
+        onChangeText={(text) => {
+          console.log(text, searchRoutes(text));
+        }}
+      />
       <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
     </LocalNavigationProvider>
   );
