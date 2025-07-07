@@ -25,6 +25,7 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
+import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -42,6 +43,14 @@ class JSReanimated implements IReanimatedModule {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
+
+  constructor() {
+    this.#workletsModule = WorkletsModule;
+    // These checks have to split since version checking depend on the execution order
+    if (__DEV__) {
+      assertWorkletsVersion();
+    }
+  }
 
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
