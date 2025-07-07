@@ -3,10 +3,10 @@ import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
 import { memo } from 'react';
-import { Platform, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
-import { RouteCard, ScrollScreen, Stagger, Text } from '@/apps/css/components';
+import { RouteCard, Stagger, Text } from '@/apps/css/components';
 import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
 import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
@@ -17,7 +17,7 @@ import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
-import { searchRoutes } from './search/fuse';
+import { SearchScreen } from './search';
 import type { Routes, TabRoute } from './types';
 import { isRouteWithRoutes } from './utils';
 
@@ -99,18 +99,18 @@ function createRoutesScreen(
 ): React.ComponentType {
   function RoutesScreen() {
     const navigation = useNavigation();
-    const ref = useLocalNavigationRef();
+    const localNavigationRef = useLocalNavigationRef();
 
-    if (!ref.current) {
-      ref.current = navigation;
+    if (!localNavigationRef.current) {
+      localNavigationRef.current = navigation;
     }
 
     return (
-      <ScrollScreen contentContainerStyle={styles.scrollViewContent}>
+      <SearchScreen>
         <Stagger interval={50}>
           {createRouteCards(routes, path, flatten)}
         </Stagger>
-      </ScrollScreen>
+      </SearchScreen>
     );
   }
 
@@ -206,6 +206,7 @@ function Navigator() {
         }}
         screenOptions={{
           animation: 'default',
+          gestureEnabled: true,
           headerStyle: {
             backgroundColor: colors.background1,
           },
@@ -222,7 +223,7 @@ function Navigator() {
           )
         )}
       </Stack.Navigator>
-      <TextInput
+      {/* <TextInput
         style={{
           position: 'absolute',
           top: 50,
@@ -234,7 +235,7 @@ function Navigator() {
         onChangeText={(text) => {
           console.log(text, searchRoutes(text));
         }}
-      />
+      /> */}
       <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
     </LocalNavigationProvider>
   );
@@ -256,11 +257,6 @@ const styles = StyleSheet.create({
   listTitleWrapper: {
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  scrollViewContent: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
   },
 });
 
