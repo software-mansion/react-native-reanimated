@@ -1,4 +1,4 @@
-export function hasSuffix(value: unknown): value is string {
+function hasSuffix(value: unknown): value is string {
   return typeof value === 'string' && isNaN(parseInt(value[value.length - 1]));
 }
 
