@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { WithSpringConfig } from 'react-native-reanimated';
@@ -9,10 +9,12 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { ScrollScreen } from '@/apps/css/components';
+import { ScrollScreen, Stagger, Text } from '@/apps/css/components';
 import { flex, spacing } from '@/theme';
 
+import { searchRoutes } from './fuse';
 import SearchBar, { MIN_SEARCH_SHOW_TRANSLATE_Y } from './SearchBar';
+import SearchResults from './SearchResults';
 
 const BOUNCE = 0.3; // 0 = no overshoot, 1 = infinite bounce
 const DURATION = 0.5; // perceptual duration in seconds (≈ 500 ms)
@@ -31,9 +33,35 @@ type SearchScreenProps = {
 
 export default function SearchScreen({ children }: SearchScreenProps) {
   const [inputEnabled, setInputEnabled] = useState(false);
+  const [isFirstRender, setIsFirstRender] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const translateY = useSharedValue(0);
   const searchBarHeight = useSharedValue(0);
+  const searchBarShown = useSharedValue(false);
+
+  const hasQuery = !!searchQuery;
+  const searchResults = useMemo(() => searchRoutes(searchQuery), [searchQuery]);
+
+  const showSearchBar = useCallback(() => {
+    'worklet';
+    if (searchBarShown.value) {
+      return;
+    }
+    searchBarShown.value = true;
+    translateY.value = withSpring(searchBarHeight.value, rubberBandSpring);
+    runOnJS(setInputEnabled)(true);
+  }, [translateY, searchBarHeight, searchBarShown]);
+
+  const hideSearchBar = useCallback(() => {
+    'worklet';
+    if (!searchBarShown.value) {
+      return;
+    }
+    searchBarShown.value = false;
+    translateY.value = withSpring(0, rubberBandSpring);
+    runOnJS(setInputEnabled)(false);
+  }, [translateY, searchBarShown]);
 
   const gesture = useMemo(() => {
     const panGesture = Gesture.Pan()
@@ -44,21 +72,17 @@ export default function SearchScreen({ children }: SearchScreenProps) {
       })
       .onEnd(() => {
         if (translateY.value > MIN_SEARCH_SHOW_TRANSLATE_Y) {
-          runOnJS(setInputEnabled)(true);
-          translateY.value = withSpring(
-            searchBarHeight.value,
-            rubberBandSpring
-          );
+          showSearchBar();
         } else {
-          runOnJS(setInputEnabled)(false);
-          translateY.value = withSpring(0, rubberBandSpring);
+          hideSearchBar();
         }
-      });
+      })
+      .enabled(!hasQuery);
 
     const nativeGesture = Gesture.Native();
 
     return Gesture.Simultaneous(panGesture, nativeGesture);
-  }, [translateY, searchBarHeight]);
+  }, [translateY, hideSearchBar, showSearchBar, hasQuery]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -71,18 +95,34 @@ export default function SearchScreen({ children }: SearchScreenProps) {
       <SearchBar
         inputEnabled={inputEnabled}
         translateY={translateY}
-        onSearch={() => {}}
+        value={searchQuery}
         onMeasure={(height) => {
           searchBarHeight.value = height;
+        }}
+        onSearch={(query) => {
+          setSearchQuery(query);
+          setIsFirstRender(false);
         }}
       />
       <GestureDetector gesture={gesture}>
         <Animated.View style={[flex.fill, animatedStyle]}>
-          <ScrollScreen
-            bounces={false}
-            contentContainerStyle={styles.scrollViewContent}>
-            {children}
-          </ScrollScreen>
+          {searchResults.length ? (
+            <SearchResults
+              searchBarHeight={searchBarHeight}
+              searchQuery={searchQuery}
+              searchResults={searchResults}
+            />
+          ) : searchQuery ? (
+            <Text>No results found</Text>
+          ) : (
+            <ScrollScreen
+              bounces={false}
+              contentContainerStyle={styles.scrollViewContent}>
+              <Stagger enabled={isFirstRender} interval={50}>
+                {children}
+              </Stagger>
+            </ScrollScreen>
+          )}
         </Animated.View>
       </GestureDetector>
     </>

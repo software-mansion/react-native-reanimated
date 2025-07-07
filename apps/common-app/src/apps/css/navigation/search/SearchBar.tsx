@@ -15,6 +15,7 @@ export const MIN_SEARCH_SHOW_TRANSLATE_Y = 100;
 type SearchBarProps = {
   onMeasure: (height: number) => void;
   onSearch: (query: string) => void;
+  value: string;
   inputEnabled: boolean;
   translateY: SharedValue<number>;
 };
@@ -22,6 +23,7 @@ type SearchBarProps = {
 export default function SearchBar({
   onMeasure,
   onSearch,
+  value,
   inputEnabled,
   translateY,
 }: SearchBarProps) {
@@ -68,9 +70,8 @@ export default function SearchBar({
           placeholderTextColor={colors.foreground3}
           ref={inputRef}
           style={styles.input}
-          onFocus={() => {
-            inputRef.current?.focus();
-          }}
+          value={value}
+          onChangeText={onSearch}
         />
       </Animated.View>
     </Animated.View>
@@ -95,7 +96,8 @@ const styles = StyleSheet.create({
     ...text.subHeading2,
   },
   inputContainer: {
+    paddingBottom: spacing.xs,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
   },
 });

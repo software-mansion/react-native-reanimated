@@ -106,11 +106,7 @@ function createRoutesScreen(
     }
 
     return (
-      <SearchScreen>
-        <Stagger interval={50}>
-          {createRouteCards(routes, path, flatten)}
-        </Stagger>
-      </SearchScreen>
+      <SearchScreen>{createRouteCards(routes, path, flatten)}</SearchScreen>
     );
   }
 
