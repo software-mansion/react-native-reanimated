@@ -1,0 +1,140 @@
+.container {
+  display: flex;
+  flex-direction: column;
+
+  contain: content;
+
+  background-color: var(--swm-off-background);
+  border: 1px solid var(--swm-border);
+  margin-bottom: var(--ifm-leading);
+}
+
+.largerContainer {
+  min-height: 400px;
+}
+
+/* Preferred height in code section of container. */
+.container[data-ispreview='false'] {
+  height: 400px;
+}
+
+/* Classes used to omit default docusaurus styling. */
+[class*='codeBlockContainer'] {
+  box-shadow: none;
+}
+
+.interactiveCodeBlock [class*='codeBlockContent'] pre {
+  border: none;
+}
+
+.interactiveCodeBlock [class*='codeBlockContent'] code {
+  background-color: var(--swm-off-background);
+  width: 100%;
+  padding: 0;
+  border: none;
+}
+
+/* Hide default action buttons, displayed by Docusaurus */
+.interactiveCodeBlock [class*='buttonGroup'] {
+  display: none;
+}
+
+.code {
+  flex: 1;
+}
+
+.buttonsContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  padding: 0.25em 0.75em 0.25em 1.25em;
+  margin: 1.5em 2em 1.5em 1.5em;
+}
+
+.upperButtonsContainer {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 996px) {
+  .upperButtonsContainer {
+    justify-content: center;
+
+    margin: 1.5em 0;
+  }
+}
+
+.lowerButtonsContainer {
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.iconStub {
+  width: 30px;
+  height: 30px;
+}
+
+.container[data-ispreview='false'] .buttonsContainer {
+  position: absolute;
+  right: 0;
+  top: 0;
+
+  border-radius: 25px;
+  background-color: var(--swm-code-lines-buttons-background);
+
+  z-index: 1;
+}
+
+@media (max-width: 996px) {
+  .container[data-ispreview='false'] .buttonsContainer {
+    position: relative;
+    width: fit-content;
+    margin: 1.5em auto;
+  }
+}
+
+.previewContainer {
+  flex: 1 1 auto;
+}
+
+/* Style preview only when user is in the 'code' section. */
+.container[data-ispreview='false'] .previewContainer {
+  flex: 1 1 auto;
+  overflow-y: auto;
+
+  padding: 0 24px;
+  margin: 16px 8px 8px 0;
+}
+
+@media (max-width: 996px) {
+  .container[data-ispreview='false'] .previewContainer {
+    margin-top: 0;
+  }
+}
+
+.actionButton {
+  margin-right: 0.5em;
+  padding: 0 0 2px 0;
+
+  border: none;
+  background-color: inherit;
+  color: var(--swm-interactive-button-color);
+  cursor: pointer;
+
+  font-family: var(--swm-body-font);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.actionButton:last-of-type {
+  margin-right: 2em;
+}
+
+.actionButtonActive {
+  color: var(--swm-interactive-button-active);
+  border-bottom: 1px solid var(--swm-interactive-button-active);
+}
+
+.label {
+  /* position: absolute; */
+}

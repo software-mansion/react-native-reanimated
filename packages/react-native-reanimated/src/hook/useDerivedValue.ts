@@ -73,6 +73,7 @@ export function useDerivedValue<Value>(
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   return sharedValue;

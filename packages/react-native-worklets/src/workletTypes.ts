@@ -31,7 +31,7 @@ export type WorkletStackDetails = [
 
 type WorkletClosure = Record<string, unknown>;
 
-export interface WorkletInitData {
+interface WorkletInitData {
   code: string;
   /** Only in dev builds. */
   location?: string;
@@ -41,7 +41,7 @@ export interface WorkletInitData {
   version?: string;
 }
 
-export interface WorkletProps {
+interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
   __initData: WorkletInitData;

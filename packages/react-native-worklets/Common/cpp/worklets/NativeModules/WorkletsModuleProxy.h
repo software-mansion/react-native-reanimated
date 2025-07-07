@@ -22,6 +22,7 @@ class WorkletsModuleProxy
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      std::function<bool()> &&isJavaScriptQueue,
       std::function<void(std::function<void(const double)>)>
           &&forwardedRequestAnimationFrame,
       const std::shared_ptr<const BigStringBuffer> &script,
