@@ -3,6 +3,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
+#include <reanimated/Tools/WeakableReference.h>
 
 #include <worklets/android/WorkletsModule.h>
 
@@ -142,7 +143,7 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
 };
 
 class NativeProxy : public jni::HybridClass<NativeProxy>,
-                    std::enable_shared_from_this<NativeProxy> {
+                    public std::enable_shared_from_this<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
@@ -169,8 +170,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
+  WeakableReference<jni::global_ref<LayoutAnimations::javaobject>> weakableLayoutAnimations_;
+  std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();

@@ -41,15 +41,15 @@ NativeProxy::NativeProxy(
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
+      layoutAnimations_(std::move(layoutAnimations)),
+      weakableLayoutAnimations_(layoutAnimations_),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
           jsCallInvoker,
           getPlatformDependentMethods(),
           isBridgeless,
-          getIsReducedMotion())),
-      layoutAnimations_(std::move(layoutAnimations)) {
-  reanimatedModuleProxy_->init(getPlatformDependentMethods());
+          getIsReducedMotion())){
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -159,6 +159,7 @@ void NativeProxy::installJSIBindings() {
 
   registerEventHandler();
   setupLayoutAnimations();
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
@@ -450,13 +451,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [weakThis = weak_from_this()](
+  auto endLayoutAnimation = [weakLayoutAnimations = weakableLayoutAnimations_.getWeak()](
                                 int tag, bool removeView) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
+    auto layoutAnimationsRef = weakLayoutAnimations.lock();
+    if (!layoutAnimationsRef) {
       return;
     }
-    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+    layoutAnimationsRef->getValue()->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
