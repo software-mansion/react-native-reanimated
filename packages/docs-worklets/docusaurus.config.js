@@ -15,7 +15,7 @@ const config = {
   // Set the production url of your site here
   url: 'https://docs.swmansion.com',
 
-  baseUrl: '/react-native-reanimated/react-native-worklets/',
+  baseUrl: '/react-native-worklets/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
