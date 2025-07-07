@@ -3,7 +3,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
-#include <reanimated/Tools/WeakableReference.h>
 
 #include <worklets/android/WorkletsModule.h>
 
@@ -171,7 +170,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-  WeakableReference<jni::global_ref<LayoutAnimations::javaobject>> weakableLayoutAnimations_;
+  std::shared_ptr<jni::global_ref<LayoutAnimations::javaobject>> layoutAnimationsShared_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
