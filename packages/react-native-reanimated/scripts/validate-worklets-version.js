@@ -1,8 +1,8 @@
-/* eslint-disable reanimated/use-reanimated-error */
+/* eslint-disable reanimated/use-logger */
 'use strict';
 
 const semverSatisfies = require('semver/functions/satisfies');
-const expectedVersion = require('./workletsVersion.json');
+const expectedVersion = require('./worklets-version.json');
 const { exit } = require('process');
 
 function assertWorkletsVersion() {
@@ -27,11 +27,11 @@ function assertWorkletsVersion() {
     return;
   }
 
-  const acceptedRange = `"${expectedVersion.min}" - "${expectedVersion.max}"`;
+  const acceptedRange = `${expectedVersion.min} - ${expectedVersion.max}`;
 
   if (!semverSatisfies(workletsVersion, acceptedRange)) {
     console.error(
-      `[Reanimated] Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range ${acceptedRange}. Please install a compatible version of \`react-native-worklets\`.`
+      `[Reanimated] Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${acceptedRange}". Please install a compatible version of \`react-native-worklets\`.`
     );
     exit(2);
   }
