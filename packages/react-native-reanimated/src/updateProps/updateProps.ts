@@ -6,13 +6,13 @@ import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadow,
+  processBoxShadowNative,
+  processBoxShadowWeb,
   processColorsInProps,
   processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb } from '../common/processors';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -56,7 +56,7 @@ if (SHOULD_BE_USE_WEB) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
     if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadow(updates.boxShadow);
+      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
