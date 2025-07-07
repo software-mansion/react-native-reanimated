@@ -22,6 +22,7 @@ import type {
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
+import { processBoxShadow as processBoxShadowWeb } from '../css/platform/web/style/processors/shadows';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
@@ -37,6 +38,9 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
+      if ('boxShadow' in updates) {
+        updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
