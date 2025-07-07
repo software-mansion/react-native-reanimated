@@ -42,11 +42,14 @@ const MOCK_SOURCE_MAP = 'mock source map';
 export function buildWorkletString(
   fun: BabelFile,
   state: ReanimatedPluginPass,
-  closureVariables: Array<Identifier>,
+  closureVariablesOG: Array<Identifier>,
   workletName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
   restoreRecursiveCalls(fun, workletName);
+  const closureVariables = closureVariablesOG.map((variable) =>
+    identifier(variable.name)
+  );
 
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
