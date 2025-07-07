@@ -17,9 +17,8 @@ namespace reanimated::css {
 using ComponentInterpolatorsMap =
     std::unordered_map<std::string, InterpolatorFactoriesRecord>;
 
-const bool hasInterpolators(const std::string &componentName);
+bool hasInterpolators(const std::string &componentName);
 
-const InterpolatorFactoriesRecord &getInterpolators(
-    const std::string &componentName);
+InterpolatorFactoriesRecord &getInterpolators(const std::string &componentName);
 
 } // namespace reanimated::css

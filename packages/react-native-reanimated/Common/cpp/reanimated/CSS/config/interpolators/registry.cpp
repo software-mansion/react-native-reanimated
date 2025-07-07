@@ -15,11 +15,11 @@ ComponentInterpolatorsMap registry_ = {
 
 } // namespace
 
-const bool hasInterpolators(const std::string &componentName) {
-  return registry_.find(componentName) != registry_.end();
+bool hasInterpolators(const std::string &componentName) {
+  return registry_.contains(componentName);
 }
 
-const InterpolatorFactoriesRecord &getInterpolators(
+InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName) {
   const auto it = registry_.find(componentName);
 
