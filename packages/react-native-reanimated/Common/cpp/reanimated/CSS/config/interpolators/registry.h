@@ -19,6 +19,7 @@ using ComponentInterpolatorsMap =
 
 bool hasInterpolators(const std::string &componentName);
 
-InterpolatorFactoriesRecord &getInterpolators(const std::string &componentName);
+const InterpolatorFactoriesRecord &getInterpolators(
+    const std::string &componentName);
 
 } // namespace reanimated::css

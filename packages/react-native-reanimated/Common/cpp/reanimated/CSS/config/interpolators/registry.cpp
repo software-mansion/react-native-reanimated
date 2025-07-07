@@ -19,7 +19,7 @@ bool hasInterpolators(const std::string &componentName) {
   return registry_.contains(componentName);
 }
 
-InterpolatorFactoriesRecord &getInterpolators(
+const InterpolatorFactoriesRecord &getInterpolators(
     const std::string &componentName) {
   const auto it = registry_.find(componentName);
 
