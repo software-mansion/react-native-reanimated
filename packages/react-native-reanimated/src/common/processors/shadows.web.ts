@@ -1,12 +1,12 @@
 'use strict';
 import type { BoxShadowValue, ViewStyle } from 'react-native';
 
-import { parseBoxShadowString } from '../../../../../common';
-import { maybeAddSuffix } from '../../utils';
 import type { ValueProcessor } from '../types';
+import { maybeAddSuffix, parseBoxShadowString } from '../utils';
 
-export const processBoxShadow: ValueProcessor<
-  string | ReadonlyArray<BoxShadowValue>
+export const processBoxShadowWeb: ValueProcessor<
+  string | ReadonlyArray<BoxShadowValue>,
+  Record<string, string> | string
 > = (value) => {
   const parsedShadow =
     typeof value === 'string' ? parseBoxShadowString(value) : value;
@@ -37,5 +37,10 @@ export const processBoxShadow: ValueProcessor<
 
 type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;
 
-export const processShadowOffset: ValueProcessor<ShadowOffset> = (value) =>
-  `${value.width}px ${value.height}px`;
+export const processShadowOffset: ValueProcessor<
+  ShadowOffset,
+  Record<string, string> | string
+> = (value) => ({
+  width: `${value.width}px`,
+  height: `${value.height}px`,
+});

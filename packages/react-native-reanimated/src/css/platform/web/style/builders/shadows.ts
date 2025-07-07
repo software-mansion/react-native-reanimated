@@ -1,10 +1,10 @@
 'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 
-import { logger } from '../../../../../common';
+import { logger, processShadowOffset } from '../../../../../common';
 import { opacifyColor } from '../../utils';
 import { createRuleBuilder } from '../builderFactories';
-import { processColor, processShadowOffset } from '../processors';
+import { processColor } from '../processors';
 
 type BoxShadowProps = Pick<
   ViewStyle,

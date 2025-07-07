@@ -12,6 +12,7 @@ import {
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
+import { processBoxShadowWeb } from '../common/processors';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -22,7 +23,6 @@ import type {
   PropUpdates,
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
-import { processBoxShadow as processBoxShadowWeb } from '../css/platform/web/style/processors/shadows';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
