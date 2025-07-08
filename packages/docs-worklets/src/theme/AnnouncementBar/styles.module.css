@@ -1,0 +1,20 @@
+:root {
+  --docusaurus-announcement-bar-font-size: 24px;
+}
+
+.announcementBar {
+  display: flex;
+  font-size: var(--docusaurus-announcement-bar-font-size);
+  background-position: 0;
+  background-size: cover;
+  color: var(--swm-off-white);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+@media print {
+  .announcementBar {
+    display: none;
+  }
+}
