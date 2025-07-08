@@ -48,7 +48,7 @@ NativeProxy::NativeProxy(
           jsCallInvoker,
           getPlatformDependentMethods(),
           isBridgeless,
-          getIsReducedMotion())){
+          getIsReducedMotion())) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
