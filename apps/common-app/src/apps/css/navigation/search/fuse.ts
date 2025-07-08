@@ -35,7 +35,7 @@ function flattenRoutes(
   });
 }
 
-export const DOCS = flattenRoutes({
+export const ROUTES = {
   Animations: {
     name: 'Animations',
     routes: animationRoutes,
@@ -44,7 +44,9 @@ export const DOCS = flattenRoutes({
     name: 'Transitions',
     routes: transitionRoutes,
   },
-});
+};
+
+const SEARCH_DOCS = flattenRoutes(ROUTES);
 
 const options = {
   keys: [
@@ -61,9 +63,9 @@ const options = {
 } satisfies IFuseOptions<SearchDoc>;
 
 export const fuse = new Fuse(
-  DOCS,
+  SEARCH_DOCS,
   options,
-  Fuse.createIndex(options.keys, DOCS)
+  Fuse.createIndex(options.keys, SEARCH_DOCS)
 );
 
 export function searchRoutes(q: string): Array<SearchDoc> {

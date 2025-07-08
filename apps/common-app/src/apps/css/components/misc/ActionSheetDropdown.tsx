@@ -68,7 +68,6 @@ type ActionSheetDropdownStyleOptions = {
   offsetY?: number;
   dropdownMaxHeight?: number;
   dropdownZIndex?: number;
-  fitInScreen?: boolean;
 };
 
 type ActionSheetDropdownProps = PropsWithChildren<{
@@ -77,6 +76,7 @@ type ActionSheetDropdownProps = PropsWithChildren<{
     backdropOpacity?: number;
     dropdownStyle?: StyleProp<ViewStyle>;
   } & ActionSheetDropdownStyleOptions;
+  fitInScreen?: boolean;
   hitSlop?: number;
   onOpen?: () => void;
   onClose?: () => void;
@@ -145,7 +145,7 @@ export default function ActionSheetDropdown({
                 {...contentProps}
                 alignment={styleOptions?.alignment}
                 dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
-                fitInScreen={styleOptions?.fitInScreen}
+                fitInScreen={contentProps.fitInScreen}
                 handleClose={closeDropdown}
                 offsetX={styleOptions?.offsetX}
                 offsetY={styleOptions?.offsetY}

@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -9,6 +9,7 @@ import { colors, radius, spacing, text } from '@/theme';
 
 import type { SearchDoc } from './fuse';
 import { searchRoutes } from './fuse';
+import SearchFilters from './SearchFilters';
 
 type SearchResultsProps = {
   searchQuery: string;
@@ -26,7 +27,24 @@ export default function SearchResults({
   searchQuery,
   searchBarHeight,
 }: SearchResultsProps) {
-  const searchResults = useMemo(() => searchRoutes(searchQuery), [searchQuery]);
+  const navigation = useNavigation();
+  const state = navigation.getState();
+
+  const [currentFilter, setCurrentFilter] = useState<Array<string> | null>(
+    () => state?.routes[state.routes.length - 1]?.name.split('/') ?? null
+  );
+  const searchResults = useMemo(() => {
+    const result = searchRoutes(searchQuery);
+
+    if (currentFilter) {
+      return result.filter((current) =>
+        currentFilter?.every((chunk, index) => current.path[index] === chunk)
+      );
+    }
+
+    return result;
+  }, [searchQuery, currentFilter]);
+
   const groupedResults = useMemo(() => {
     return searchResults.reduce<GroupedResults>((acc, result) => {
       const mainGroup = result.path[0];
@@ -57,6 +75,10 @@ export default function SearchResults({
     <>
       {/* Spacer component */}
       <Animated.View style={{ height: searchBarHeight }} />
+      <SearchFilters
+        currentFilter={currentFilter}
+        setCurrentFilter={setCurrentFilter}
+      />
       {searchResults.length ? (
         <ScrollScreen
           contentContainerStyle={styles.scrollViewContent}

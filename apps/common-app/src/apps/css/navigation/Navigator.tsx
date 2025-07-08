@@ -6,7 +6,7 @@ import { memo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
-import { RouteCard, Stagger, Text } from '@/apps/css/components';
+import { RouteCard, Text } from '@/apps/css/components';
 import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
 import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
