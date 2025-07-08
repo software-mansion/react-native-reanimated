@@ -1,53 +1,50 @@
-import { useEffect, useRef } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  Extrapolation,
+  dispatchCommand,
+  FadeIn,
+  FadeOut,
   interpolate,
+  useAnimatedReaction,
+  useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
 } from 'react-native-reanimated';
 
+import { Button } from '@/apps/css/components';
 import { colors, radius, spacing, text } from '@/theme';
 
 export const MIN_SEARCH_SHOW_TRANSLATE_Y = 100;
 
 type SearchBarProps = {
+  value: string;
+  showProgress: SharedValue<number>;
+  translateY: SharedValue<number>;
   onMeasure: (height: number) => void;
   onSearch: (query: string) => void;
-  value: string;
-  inputEnabled: boolean;
-  translateY: SharedValue<number>;
 };
 
 export default function SearchBar({
   onMeasure,
   onSearch,
   value,
-  inputEnabled,
+  showProgress,
   translateY,
 }: SearchBarProps) {
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useAnimatedRef<TextInput>();
 
   const containerHeight = useDerivedValue(() => Math.max(0, translateY.value));
-  const showProgress = useDerivedValue(() =>
-    inputEnabled
-      ? 1
-      : interpolate(
-          containerHeight.value,
-          [0, MIN_SEARCH_SHOW_TRANSLATE_Y],
-          [0, 1],
-          Extrapolation.CLAMP
-        )
-  );
 
-  useEffect(() => {
-    if (inputEnabled) {
-      inputRef.current?.focus();
-    } else {
-      inputRef.current?.blur();
+  useAnimatedReaction(
+    () => showProgress.value,
+    (progress) => {
+      if (progress === 1) {
+        dispatchCommand(inputRef, 'focus');
+      } else if (progress === 0) {
+        dispatchCommand(inputRef, 'blur');
+      }
     }
-  }, [inputEnabled]);
+  );
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     height: containerHeight.value,
@@ -73,12 +70,27 @@ export default function SearchBar({
           value={value}
           onChangeText={onSearch}
         />
+        {value && (
+          <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut}
+            style={styles.buttonWrapper}>
+            <Button size="small" title="Clear" onPress={() => onSearch('')} />
+          </Animated.View>
+        )}
       </Animated.View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  buttonWrapper: {
+    marginTop: spacing.md,
+    position: 'absolute',
+    right: spacing.lg + spacing.xs,
+    top: '50%',
+    transform: [{ translateY: '-50%' }],
+  },
   container: {
     justifyContent: 'center',
     left: 0,

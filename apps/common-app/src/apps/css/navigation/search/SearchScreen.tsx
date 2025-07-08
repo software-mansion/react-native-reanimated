@@ -1,99 +1,172 @@
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { WithSpringConfig } from 'react-native-reanimated';
 import Animated, {
-  runOnJS,
+  clamp,
+  measure,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ScrollScreen, Stagger, Text } from '@/apps/css/components';
-import { flex, spacing } from '@/theme';
+import { Stagger, Text } from '@/apps/css/components';
+import { spacing } from '@/theme';
 
+import { BOTTOM_BAR_HEIGHT } from '../constants';
 import { searchRoutes } from './fuse';
-import SearchBar, { MIN_SEARCH_SHOW_TRANSLATE_Y } from './SearchBar';
+import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 
-const BOUNCE = 0.3; // 0 = no overshoot, 1 = infinite bounce
-const DURATION = 0.5; // perceptual duration in seconds (≈ 500 ms)
-
-const rubberBandSpring: WithSpringConfig = {
-  stiffness: Math.pow((2 * Math.PI) / DURATION, 2),
-  damping: ((1 - BOUNCE) * 4 * Math.PI) / DURATION,
-  overshootClamping: false,
-  restDisplacementThreshold: 0.1,
-  restSpeedThreshold: 4,
-};
+const SPRING: WithSpringConfig = { stiffness: 140, damping: 22, mass: 0.6 };
+const POW = 0.9;
+const EDGE_SLACK = 2;
+const VELOCITY_FACTOR = 6;
+const OUT_MS = 100;
 
 type SearchScreenProps = {
   children: React.ReactNode;
 };
 
 export default function SearchScreen({ children }: SearchScreenProps) {
-  const [inputEnabled, setInputEnabled] = useState(false);
-  const [isFirstRender, setIsFirstRender] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const insets = useSafeAreaInsets();
 
+  const inset = Platform.select({
+    default: insets.bottom,
+    web: spacing.md,
+  });
+
+  const scrollY = useSharedValue(0);
+  const velocityY = useSharedValue(0);
   const translateY = useSharedValue(0);
+  const dragStartTranslateY = useSharedValue(0);
   const searchBarHeight = useSharedValue(0);
-  const searchBarShown = useSharedValue(false);
+  const searchBarShowProgress = useSharedValue(0);
 
-  const hasQuery = !!searchQuery;
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const contentRef = useAnimatedRef<View>();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
   const searchResults = useMemo(() => searchRoutes(searchQuery), [searchQuery]);
 
-  const showSearchBar = useCallback(() => {
-    'worklet';
-    if (searchBarShown.value) {
-      return;
-    }
-    searchBarShown.value = true;
-    translateY.value = withSpring(searchBarHeight.value, rubberBandSpring);
-    runOnJS(setInputEnabled)(true);
-  }, [translateY, searchBarHeight, searchBarShown]);
-
-  const hideSearchBar = useCallback(() => {
-    'worklet';
-    if (!searchBarShown.value) {
-      return;
-    }
-    searchBarShown.value = false;
-    translateY.value = withSpring(0, rubberBandSpring);
-    runOnJS(setInputEnabled)(false);
-  }, [translateY, searchBarShown]);
-
   const gesture = useMemo(() => {
-    const panGesture = Gesture.Pan()
+    const pan = Gesture.Pan()
+      .onStart(() => {
+        dragStartTranslateY.value = translateY.value;
+      })
       .onUpdate((e) => {
-        if (e.translationY > 0) {
-          translateY.value = Math.pow(e.translationY, 0.9);
-        }
-      })
-      .onEnd(() => {
-        if (translateY.value > MIN_SEARCH_SHOW_TRANSLATE_Y) {
-          showSearchBar();
+        const scrollViewMeasurements = measure(scrollRef);
+        const contentMeasurements = measure(contentRef);
+
+        if (translateY.value > 0) {
+          translateY.value = dragStartTranslateY.value + e.translationY;
+        } else if (
+          scrollViewMeasurements &&
+          contentMeasurements &&
+          (scrollY.value <= 0 ||
+            scrollY.value >=
+              Math.floor(
+                contentMeasurements.height - scrollViewMeasurements.height
+              ))
+        ) {
+          translateY.value =
+            Math.sign(e.translationY) * Math.pow(Math.abs(e.translationY), POW);
         } else {
-          hideSearchBar();
+          return;
         }
+
+        searchBarShowProgress.value = clamp(
+          translateY.value / searchBarHeight.value,
+          0,
+          1
+        );
       })
-      .enabled(!hasQuery);
+      .onFinalize(() => {
+        if (translateY.value > searchBarHeight.value) {
+          translateY.value = withSpring(searchBarHeight.value, SPRING);
+          searchBarShowProgress.value = withSpring(1, SPRING);
+        } else {
+          translateY.value = withSpring(0, SPRING);
+          searchBarShowProgress.value = withSpring(0, SPRING);
+        }
+      });
 
-    const nativeGesture = Gesture.Native();
+    return Gesture.Simultaneous(pan, Gesture.Native());
+  }, [
+    contentRef,
+    scrollRef,
+    scrollY,
+    translateY,
+    dragStartTranslateY,
+    searchBarHeight,
+    searchBarShowProgress,
+  ]);
 
-    return Gesture.Simultaneous(panGesture, nativeGesture);
-  }, [translateY, hideSearchBar, showSearchBar, hasQuery]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      const y = e.contentOffset.y;
+      const dy = y - scrollY.value;
+      velocityY.value = dy * VELOCITY_FACTOR; // px/s (approx)
+      scrollY.value = y;
+    },
+    onMomentumEnd: (e) => {
+      const sv = measure(scrollRef);
+      const cv = measure(contentRef);
+      if (!sv || !cv) return;
+      const y = e.contentOffset.y;
+      if (y > EDGE_SLACK && y < cv.height - sv.height - EDGE_SLACK) {
+        return;
+      }
+      const v = velocityY.value;
+      const outward = -Math.sign(v) * Math.pow(Math.abs(v), POW);
+      translateY.value = withSequence(
+        withTiming(outward, { duration: OUT_MS }),
+        withSpring(0, SPRING)
+      );
+    },
   });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
   return (
     <>
+      {searchResults.length ? (
+        <SearchResults
+          searchBarHeight={searchBarHeight}
+          searchQuery={searchQuery}
+          searchResults={searchResults}
+        />
+      ) : searchQuery ? (
+        <Text>No results found</Text>
+      ) : (
+        <GestureDetector gesture={gesture}>
+          <Animated.ScrollView
+            bounces={false}
+            overScrollMode="never"
+            ref={scrollRef}
+            onScroll={scrollHandler}>
+            <Animated.View
+              ref={contentRef}
+              style={[styles.scrollViewContent, animatedStyle]}>
+              <Stagger enabled={isFirstRender} interval={50}>
+                {children}
+              </Stagger>
+            </Animated.View>
+            <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
+          </Animated.ScrollView>
+        </GestureDetector>
+      )}
       <SearchBar
-        inputEnabled={inputEnabled}
+        showProgress={searchBarShowProgress}
         translateY={translateY}
         value={searchQuery}
         onMeasure={(height) => {
@@ -104,33 +177,13 @@ export default function SearchScreen({ children }: SearchScreenProps) {
           setIsFirstRender(false);
         }}
       />
-      <GestureDetector gesture={gesture}>
-        <Animated.View style={[flex.fill, animatedStyle]}>
-          {searchResults.length ? (
-            <SearchResults
-              searchBarHeight={searchBarHeight}
-              searchQuery={searchQuery}
-              searchResults={searchResults}
-            />
-          ) : searchQuery ? (
-            <Text>No results found</Text>
-          ) : (
-            <ScrollScreen
-              bounces={false}
-              contentContainerStyle={styles.scrollViewContent}>
-              <Stagger enabled={isFirstRender} interval={50}>
-                {children}
-              </Stagger>
-            </ScrollScreen>
-          )}
-        </Animated.View>
-      </GestureDetector>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   scrollViewContent: {
+    flex: 1,
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

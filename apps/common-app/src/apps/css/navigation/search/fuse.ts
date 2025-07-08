@@ -6,10 +6,10 @@ import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
 import type { Route, Routes } from '../types';
 
 export interface SearchDoc {
-  key: string;
+  key: string; // route key
   name: string;
-  breadcrumb: string; // full path
-  segments: Array<string>; // segments of the path
+  breadcrumb: string; // created from screen names
+  path: Array<string>; // segments of the path (from route keys)
   node: Route; // original object from the routes tree
 }
 
@@ -19,15 +19,16 @@ function flattenRoutes(
   names: Array<string> = []
 ): Array<SearchDoc> {
   return Object.entries(routes).flatMap(([k, r]) => {
-    const segments = [...names, r.name];
+    const nameSegments = [...names, r.name];
+    const pathSegments = [...keys, k];
     return 'routes' in r
-      ? flattenRoutes(r.routes, [...keys, k], [...names, r.name])
+      ? flattenRoutes(r.routes, pathSegments, nameSegments)
       : [
           {
-            key: [...keys, k].join('.'),
+            key: pathSegments.join('/'),
             name: r.name,
-            breadcrumb: segments.join(' / '),
-            segments,
+            breadcrumb: nameSegments.join(' / '),
+            path: pathSegments,
             node: r,
           },
         ];

@@ -20,21 +20,23 @@ export default function SearchResults({
 }: SearchResultsProps) {
   // TODO - add custom scrollbar
   return (
-    <ScrollScreen contentContainerStyle={styles.scrollViewContent}>
-      {searchResults.map((result) => (
-        // TODO - fix these links, some are invalid
-        <View key={result.key} style={styles.resultCard}>
-          <Text
-            navLink={result.breadcrumb.replace(/\s+/g, '')}
-            style={styles.resultName}>
-            {result.name}
-          </Text>
-          <Text style={styles.fullPath}>{result.breadcrumb}</Text>
-        </View>
-      ))}
+    <>
       {/* Spacer component */}
       <Animated.View style={{ height: searchBarHeight }} />
-    </ScrollScreen>
+      <ScrollScreen
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator>
+        {searchResults.map((result) => (
+          // TODO - fix these links, some are invalid
+          <View key={result.key} style={styles.resultCard}>
+            <Text navLink={result.key} style={styles.resultName}>
+              {result.name}
+            </Text>
+            <Text style={styles.fullPath}>{result.breadcrumb}</Text>
+          </View>
+        ))}
+      </ScrollScreen>
+    </>
   );
 }
 
