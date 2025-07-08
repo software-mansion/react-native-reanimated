@@ -3,13 +3,13 @@ import type { BoxShadowValue } from 'react-native';
 
 import { processColor } from '../colors';
 import type { ProcessedBoxShadowValue } from '../shadows';
-import { processBoxShadow } from '../shadows';
+import { processBoxShadowNative } from '../shadows';
 
-describe(processBoxShadow, () => {
+describe(processBoxShadowNative, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
       it('returns undefined when input is "none"', () => {
-        expect(processBoxShadow('none')).toBeUndefined();
+        expect(processBoxShadowNative('none')).toBeUndefined();
       });
 
       it.each([
@@ -18,7 +18,7 @@ describe(processBoxShadow, () => {
         ['0 0 10px 0 red', 1],
         ['0 0 10px 0 red, 0 0 20px 0 blue', 2],
       ])('returns a correct number of shadows', (input, expected) => {
-        expect(processBoxShadow(input)).toHaveLength(expected);
+        expect(processBoxShadowNative(input)).toHaveLength(expected);
       });
     });
 
@@ -36,7 +36,7 @@ describe(processBoxShadow, () => {
       ] satisfies [BoxShadowValue[], number][])(
         'returns a correct number of shadows',
         (input, expected) => {
-          expect(processBoxShadow(input)).toHaveLength(expected);
+          expect(processBoxShadowNative(input)).toHaveLength(expected);
         }
       );
     });
@@ -45,7 +45,7 @@ describe(processBoxShadow, () => {
   describe('returns correct shadow values', () => {
     describe('when input is a string', () => {
       it('provides proper default values', () => {
-        expect(processBoxShadow('0 0')).toEqual([
+        expect(processBoxShadowNative('0 0')).toEqual([
           {
             offsetX: 0,
             offsetY: 0,
@@ -85,7 +85,7 @@ describe(processBoxShadow, () => {
       ] satisfies [string | BoxShadowValue[], ProcessedBoxShadowValue[]][])(
         'for input %s returns %s',
         (input, expected) => {
-          expect(processBoxShadow(input)).toEqual(expected);
+          expect(processBoxShadowNative(input)).toEqual(expected);
         }
       );
     });
@@ -137,7 +137,7 @@ describe(processBoxShadow, () => {
       ] satisfies [BoxShadowValue[], ProcessedBoxShadowValue[]][])(
         'returns a correct number of shadows',
         (input, expected) => {
-          expect(processBoxShadow(input)).toEqual(expected);
+          expect(processBoxShadowNative(input)).toEqual(expected);
         }
       );
     });

@@ -6,7 +6,8 @@ import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadow,
+  processBoxShadowNative,
+  processBoxShadowWeb,
   processColorsInProps,
   processTransformOrigin,
   ReanimatedError,
@@ -37,18 +38,25 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
+      if ('boxShadow' in updates) {
+        updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
+    /* TODO: Improve this config structure in the future
+     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
+     * containing only properties that require processing and their associated processors
+     * */
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
     if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadow(updates.boxShadow);
+      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
