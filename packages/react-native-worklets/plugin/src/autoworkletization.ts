@@ -34,7 +34,6 @@ const reanimatedFunctionHooks = new Set([
   'useDerivedValue',
   'useAnimatedScrollHandler',
   'useAnimatedReaction',
-  'useWorkletCallback',
   // animations' callbacks
   'withTiming',
   'withSpring',
@@ -54,7 +53,6 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
-  ['useWorkletCallback', [0]],
   ['withTiming', [2]],
   ['withSpring', [2]],
   ['withDecay', [1]],

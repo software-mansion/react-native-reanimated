@@ -40,7 +40,7 @@ export function withSequence(
   // this is done to allow the reduce motion config prop to be optional
   if (_reduceMotionOrFirstAnimation) {
     if (typeof _reduceMotionOrFirstAnimation === 'string') {
-      reduceMotion = _reduceMotionOrFirstAnimation as ReduceMotion;
+      reduceMotion = _reduceMotionOrFirstAnimation;
     } else {
       _animations.unshift(
         _reduceMotionOrFirstAnimation as NextAnimation<AnimationObject>

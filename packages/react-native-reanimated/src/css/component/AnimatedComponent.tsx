@@ -1,6 +1,6 @@
 'use strict';
 import type { ComponentProps, Ref } from 'react';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 

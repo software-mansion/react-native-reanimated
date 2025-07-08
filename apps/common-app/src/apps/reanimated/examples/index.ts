@@ -18,6 +18,8 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import JSPropsExample from './CircularSliderExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
@@ -40,7 +42,6 @@ import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -177,6 +178,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🟨',
     title: 'JS props',
     screen: JSPropsExample,
+  },
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',

@@ -1,6 +1,6 @@
 'use strict';
-import { logger } from 'react-native-worklets';
 
+import { logger } from './common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,

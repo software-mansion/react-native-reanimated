@@ -1,6 +1,7 @@
 'use strict';
 import { logger, ReanimatedError } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
+import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
 import {
   createReactDOMStyle,
   createTextShadowValue,
@@ -51,8 +52,7 @@ export interface ReanimatedHTMLElement extends HTMLElement {
 
 // TODO: Move these functions outside of index file.
 export const _updatePropsJS = (
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   viewRef: (JSReanimatedComponent | ReanimatedHTMLElement) & {
     getAnimatableRef?: () => JSReanimatedComponent | ReanimatedHTMLElement;
   },

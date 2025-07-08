@@ -95,7 +95,6 @@ export {
   isReanimated3,
   makeMutable,
   makeShareableCloneRecursive,
-  registerJSProps,
   runOnJS,
   runOnRuntime,
   runOnUI,
@@ -151,7 +150,6 @@ export {
   useScrollOffset as useScrollViewOffset,
   useSharedArray,
   useSharedValue,
-  useWorkletCallback,
 } from './hook';
 export type {
   InterpolateConfig,
@@ -280,6 +278,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,

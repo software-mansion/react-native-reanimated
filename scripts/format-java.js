@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /*
  * This script is a wrapper for gradle & spotlessApply to make
  * it work properly with lint-staged.
@@ -23,7 +22,7 @@ const command =
 function execSyncGuarded(command) {
   try {
     execSync(command);
-  } catch (error) {
+  } catch {
     exit(1);
   }
 }

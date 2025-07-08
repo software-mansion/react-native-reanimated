@@ -40,8 +40,6 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
-  registerJSProps(componentName: string, jsPropsNames: string[]): void;
-
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,

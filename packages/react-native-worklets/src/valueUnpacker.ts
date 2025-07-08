@@ -1,8 +1,6 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 import type { WorkletFunction } from './workletTypes';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function __valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
@@ -62,12 +60,14 @@ function __valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
+      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error(
       `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
         objectToUnpack

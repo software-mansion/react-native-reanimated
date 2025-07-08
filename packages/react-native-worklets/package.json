@@ -12,7 +12,7 @@
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:valueUnpacker",
     "build:valueUnpacker": "node ./scripts/export-value-unpacker.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
-    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
+    "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
     "format:android": "yarn format:android:java && yarn format:android:cpp && yarn format:android:cmake",
     "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
@@ -72,12 +72,12 @@
     "@react-native/eslint-config": "0.80.0",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
     "babel-plugin-worklets": "workspace:*",
     "clang-format-node": "^1.3.1",
-    "eslint": "^8.57.0",
+    "eslint": "^9.29.0",
     "eslint-plugin-reanimated": "workspace:*",
     "jest": "^29.0.0",
+    "knip": "^5.61.3",
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.1.0",
@@ -96,6 +96,8 @@
     "android",
     "apple",
     "Common",
+    "bundleMode/index.js",
+    "bundleMode/index.d.ts",
     "scripts/worklets_utils.rb",
     "plugin/index.js",
     "*.podspec",
@@ -131,6 +133,13 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
+    },
+    "ios": {
+      "modulesConformingToProtocol": {
+        "RCTBundleConsumer": [
+          "WorkletsModule"
+        ]
+      }
     }
   }
 }
