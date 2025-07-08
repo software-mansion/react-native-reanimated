@@ -118,6 +118,7 @@ const config = {
         appId: 'HTRBY5HZ15',
         apiKey: '93f840a25edfcf77d2af4a5f2b386214',
         indexName: 'react-native-worklets',
+        contextualSearch: false,
       },
     }),
   plugins: [
