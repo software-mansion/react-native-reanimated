@@ -72,7 +72,6 @@ function SearchFilters({
       addNewOptions(chunk, currentRoutes);
 
       nextRoute = currentRoutes[chunk];
-      console.log('nextRoute', nextRoute);
       if (!isRouteWithRoutes(nextRoute)) {
         return options;
       }
@@ -85,11 +84,9 @@ function SearchFilters({
       isRouteWithRoutes(nextRoute) &&
       Object.values(nextRoute.routes).some(isRouteWithRoutes)
     ) {
-      console.log('>>>', nextRoute);
       addNewOptions(NEXT_FILTER_KEY, nextRoute.routes);
     }
     if (!options.length) {
-      console.log('!!>>>', currentRoutes);
       addNewOptions(NEXT_FILTER_KEY, currentRoutes);
     }
 
