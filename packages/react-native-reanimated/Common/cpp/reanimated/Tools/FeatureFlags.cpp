@@ -8,7 +8,7 @@ bool DynamicFeatureFlags::getFlag(const std::string &name) {
   return flags_.contains(name) && flags_[name];
 }
 
-void DynamicFeatureFlags::setFlag(const std::string &name, const bool value) {
+void DynamicFeatureFlags::setFlag(const std::string &name, bool value) {
   flags_[name] = value;
 }
 

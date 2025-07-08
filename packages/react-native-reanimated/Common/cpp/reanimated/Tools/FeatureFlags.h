@@ -14,7 +14,7 @@ class StaticFeatureFlags {
 // itself instead of the flag value
 #define TOSTRING(x) XTOSTRING(x)
 
-  static constexpr bool getFlag(const std::string_view &name) {
+  static consteval bool getFlag(const std::string_view &name) {
     std::string nameStr = name.data();
     std::string featureFlags = TOSTRING(REANIMATED_FEATURE_FLAGS);
     if (featureFlags.find("[" + nameStr + ":") == std::string::npos) {
@@ -25,7 +25,7 @@ class StaticFeatureFlags {
 
 #else
 
-  static constexpr bool getFlag(const char *) {
+  static consteval bool getFlag(const std::string_view &) {
     return false;
   }
 
@@ -33,11 +33,12 @@ class StaticFeatureFlags {
 };
 
 class DynamicFeatureFlags {
-  static std::unordered_map<std::string, bool> flags_;
-
- public:
+public:
   static bool getFlag(const std::string &name);
   static void setFlag(const std::string &name, bool value);
+
+private:
+  static std::unordered_map<std::string, bool> flags_;
 };
 
 } // namespace reanimated
