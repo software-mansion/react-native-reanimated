@@ -41,8 +41,7 @@ NativeProxy::NativeProxy(
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      layoutAnimations_(std::move(layoutAnimations)),
-      layoutAnimationsShared_(std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(layoutAnimations_)),
+      layoutAnimations_(std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(std::move(layoutAnimations))),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
@@ -50,6 +49,7 @@ NativeProxy::NativeProxy(
           getPlatformDependentMethods(),
           isBridgeless,
           getIsReducedMotion())){
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -159,7 +159,6 @@ void NativeProxy::installJSIBindings() {
 
   registerEventHandler();
   setupLayoutAnimations();
-  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
@@ -408,7 +407,7 @@ void NativeProxy::progressLayoutAnimation(
     const jsi::Object &newProps,
     bool isSharedTransition) {
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
-  layoutAnimations_->cthis()->progressLayoutAnimation(
+  (*layoutAnimations_)->cthis()->progressLayoutAnimation(
       tag, newPropsJNI, isSharedTransition);
 }
 
@@ -451,7 +450,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [layoutAnimationsWeak = std::weak_ptr<jni::global_ref<LayoutAnimations::javaobject>>(layoutAnimationsShared_)](
+  auto endLayoutAnimation = [layoutAnimationsWeak = std::weak_ptr<jni::global_ref<LayoutAnimations::javaobject>>(layoutAnimations_)](
                                 int tag, bool removeView) {
     if (auto layoutAnimations = layoutAnimationsWeak.lock()) {
       (*layoutAnimations)->cthis()->endLayoutAnimation(tag, removeView);
@@ -488,8 +487,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 void NativeProxy::setupLayoutAnimations() {
   auto weakReanimatedModuleProxy =
       std::weak_ptr<ReanimatedModuleProxy>(reanimatedModuleProxy_);
+  auto layoutAnimations = (*layoutAnimations_);
 
-  layoutAnimations_->cthis()->setAnimationStartingBlock(
+  layoutAnimations->cthis()->setAnimationStartingBlock(
       [weakReanimatedModuleProxy](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
@@ -519,7 +519,7 @@ void NativeProxy::setupLayoutAnimations() {
         }
       });
 
-  layoutAnimations_->cthis()->setHasAnimationBlock(
+  layoutAnimations->cthis()->setHasAnimationBlock(
       [weakReanimatedModuleProxy](int tag, int type) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           return reanimatedModuleProxy->layoutAnimationsManager()
@@ -528,7 +528,7 @@ void NativeProxy::setupLayoutAnimations() {
         return false;
       });
 
-  layoutAnimations_->cthis()->setShouldAnimateExitingBlock(
+  layoutAnimations->cthis()->setShouldAnimateExitingBlock(
       [weakReanimatedModuleProxy](int tag, bool shouldAnimate) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           return reanimatedModuleProxy->layoutAnimationsManager()
@@ -538,7 +538,7 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
 #ifndef NDEBUG
-  layoutAnimations_->cthis()->setCheckDuplicateSharedTag(
+  layoutAnimations->cthis()->setCheckDuplicateSharedTag(
       [weakReanimatedModuleProxy](int viewTag, int screenTag) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           reanimatedModuleProxy->layoutAnimationsManager()
@@ -547,7 +547,7 @@ void NativeProxy::setupLayoutAnimations() {
       });
 #endif
 
-  layoutAnimations_->cthis()->setClearAnimationConfigBlock(
+  layoutAnimations->cthis()->setClearAnimationConfigBlock(
       [weakReanimatedModuleProxy](int tag) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           reanimatedModuleProxy->layoutAnimationsManager()
@@ -555,7 +555,7 @@ void NativeProxy::setupLayoutAnimations() {
         }
       });
 
-  layoutAnimations_->cthis()->setCancelAnimationForTag(
+  layoutAnimations->cthis()->setCancelAnimationForTag(
       [weakReanimatedModuleProxy](int tag) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
@@ -564,7 +564,7 @@ void NativeProxy::setupLayoutAnimations() {
         }
       });
 
-  layoutAnimations_->cthis()->setFindPrecedingViewTagForTransition(
+  layoutAnimations->cthis()->setFindPrecedingViewTagForTransition(
       [weakReanimatedModuleProxy](int tag) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           return reanimatedModuleProxy->layoutAnimationsManager()
@@ -574,7 +574,7 @@ void NativeProxy::setupLayoutAnimations() {
         }
       });
 
-  layoutAnimations_->cthis()->setGetSharedGroupBlock(
+  layoutAnimations->cthis()->setGetSharedGroupBlock(
       [weakReanimatedModuleProxy](int tag) -> std::vector<int> {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           return reanimatedModuleProxy->layoutAnimationsManager()
@@ -586,7 +586,7 @@ void NativeProxy::setupLayoutAnimations() {
 }
 
 void NativeProxy::invalidateCpp() {
-  layoutAnimations_->cthis()->invalidate();
+  (*layoutAnimations_)->cthis()->invalidate();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();
