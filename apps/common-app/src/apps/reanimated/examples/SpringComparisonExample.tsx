@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  runOnUI,
 } from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';
@@ -113,6 +114,29 @@ export default function SpringComparisonExample() {
   const [criticalRelativeWidthToggle, setCriticalRelativeWidthToggle] =
     useState(false);
 
+  const noVelocityDurationTestWidth200 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const noVelocityDurationTestWidth400 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const noVelocityDurationTestWidth600 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const noVelocityDurationTestWidth800 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const noVelocityDurationTestWidth1000 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const [
+    noVelocityDurationTestWidthToggle,
+    setNoVelocityDurationTestWidthToggle,
+  ] = useState(false);
+
+  const velocityDurationTestWidth6 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth12 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth25 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth50 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth100 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth200 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth400 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth800 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth1600 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth3200 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const [velocityDurationTestWidthToggle, setVelocityDurationTestWidthToggle] =
+    useState(false);
+
   const oldDefaultNoTimingConfig = {
     damping: 10,
     mass: 1,
@@ -135,103 +159,199 @@ export default function SpringComparisonExample() {
     dampingRatio: 1,
   };
 
-  const oldDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
+  // const oldDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(configNoTimingWidth.value, oldDefaultNoTimingConfig),
+  //   };
+  // });
+
+  // const newDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(configNoTimingWidth.value, newDefaultNoTimingConfig),
+  //   };
+  // });
+
+  // const oldDefaultConfigTimingStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(configTimingWidth.value, oldDefaultTimingConfig),
+  //   };
+  // });
+
+  // const newDefaultConfigTimingStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(configTimingWidth.value, newDefaultTimingConfig),
+  //   };
+  // });
+
+  // const oldEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(undercriticalConditionsWidth.value, {
+  //       ...oldDefaultNoTimingConfig,
+  //       restDisplacementThreshold: 0.01,
+  //       restSpeedThreshold: 2,
+  //     }),
+  //   };
+  // });
+
+  // const newEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(
+  //       undercriticalConditionsWidth.value,
+  //       oldDefaultNoTimingConfig
+  //     ),
+  //   };
+  // });
+
+  // const oldEndConditionsCriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(criticalConditionsWidth.value, {
+  //       ...newDefaultNoTimingConfig,
+  //       restDisplacementThreshold: 0.01,
+  //       restSpeedThreshold: 2,
+  //     }),
+  //   };
+  // });
+
+  // const newEndConditionsCriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width: withSpring(
+  //       criticalConditionsWidth.value,
+  //       newDefaultNoTimingConfig
+  //     ),
+  //   };
+  // });
+
+  // const oldEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width:
+  //       oldUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+  //       LOWER_SPRING_TO_VALUE,
+  //   };
+  // });
+
+  // const newEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width:
+  //       newUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+  //       LOWER_SPRING_TO_VALUE,
+  //   };
+  // });
+
+  // const oldConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width:
+  //       oldCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+  //       LOWER_SPRING_TO_VALUE,
+  //   };
+  // });
+
+  // const newConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+  //   return {
+  //     width:
+  //       newCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+  //       LOWER_SPRING_TO_VALUE,
+  //   };
+  // });
+
+  const noVelocityDurationTestStyle100 = useAnimatedStyle(() => {
     return {
-      width: withSpring(configNoTimingWidth.value, oldDefaultNoTimingConfig),
+      width: noVelocityDurationTestWidth1000.value,
     };
   });
 
-  const newDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
+  const noVelocityDurationTestStyle200 = useAnimatedStyle(() => {
     return {
-      width: withSpring(configNoTimingWidth.value, newDefaultNoTimingConfig),
+      width: noVelocityDurationTestWidth200.value,
     };
   });
 
-  const oldDefaultConfigTimingStyle = useAnimatedStyle(() => {
+  const noVelocityDurationTestStyle400 = useAnimatedStyle(() => {
     return {
-      width: withSpring(configTimingWidth.value, oldDefaultTimingConfig),
+      width: noVelocityDurationTestWidth400.value,
     };
   });
 
-  const newDefaultConfigTimingStyle = useAnimatedStyle(() => {
+  const noVelocityDurationTestStyle600 = useAnimatedStyle(() => {
     return {
-      width: withSpring(configTimingWidth.value, newDefaultTimingConfig),
+      width: noVelocityDurationTestWidth600.value,
     };
   });
 
-  const oldEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+  const noVelocityDurationTestStyle800 = useAnimatedStyle(() => {
     return {
-      width: withSpring(undercriticalConditionsWidth.value, {
-        ...oldDefaultNoTimingConfig,
-        restDisplacementThreshold: 0.01,
-        restSpeedThreshold: 2,
-      }),
+      width: noVelocityDurationTestWidth800.value,
     };
   });
 
-  const newEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+  const noVelocityDurationTestStyle1000 = useAnimatedStyle(() => {
     return {
-      width: withSpring(
-        undercriticalConditionsWidth.value,
-        oldDefaultNoTimingConfig
-      ),
+      width: noVelocityDurationTestWidth1000.value,
     };
   });
 
-  const oldEndConditionsCriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle6 = useAnimatedStyle(() => {
     return {
-      width: withSpring(criticalConditionsWidth.value, {
-        ...newDefaultNoTimingConfig,
-        restDisplacementThreshold: 0.01,
-        restSpeedThreshold: 2,
-      }),
+      width: velocityDurationTestWidth6.value,
     };
   });
 
-  const newEndConditionsCriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle12 = useAnimatedStyle(() => {
     return {
-      width: withSpring(
-        criticalConditionsWidth.value,
-        newDefaultNoTimingConfig
-      ),
+      width: velocityDurationTestWidth12.value,
     };
   });
 
-  const oldEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle25 = useAnimatedStyle(() => {
     return {
-      width:
-        oldUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-        LOWER_SPRING_TO_VALUE,
+      width: velocityDurationTestWidth25.value,
     };
   });
 
-  const newEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle50 = useAnimatedStyle(() => {
     return {
-      width:
-        newUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-        LOWER_SPRING_TO_VALUE,
+      width: velocityDurationTestWidth50.value,
     };
   });
 
-  const oldConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle100 = useAnimatedStyle(() => {
     return {
-      width:
-        oldCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-        LOWER_SPRING_TO_VALUE,
+      width: velocityDurationTestWidth100.value,
     };
   });
 
-  const newConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+  const velocityDurationTestStyle200 = useAnimatedStyle(() => {
     return {
-      width:
-        newCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-        LOWER_SPRING_TO_VALUE,
+      width: velocityDurationTestWidth200.value,
+    };
+  });
+
+  const velocityDurationTestStyle400 = useAnimatedStyle(() => {
+    return {
+      width: velocityDurationTestWidth400.value,
+    };
+  });
+
+  const velocityDurationTestStyle800 = useAnimatedStyle(() => {
+    return {
+      width: velocityDurationTestWidth800.value,
+    };
+  });
+
+  const velocityDurationTestStyle1600 = useAnimatedStyle(() => {
+    return {
+      width: velocityDurationTestWidth1600.value,
+    };
+  });
+
+  const velocityDurationTestStyle3200 = useAnimatedStyle(() => {
+    return {
+      width: velocityDurationTestWidth3200.value,
     };
   });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <>
+      {/* <>
         <Visualiser
           testedStyle={oldDefaultConfigNoTimingStyle}
           description="Old default config, no timing"
@@ -376,6 +496,233 @@ export default function SpringComparisonExample() {
               newDefaultNoTimingConfig
             );
             setCriticalRelativeWidthToggle(!criticalRelativeWidthToggle);
+          }}
+        />
+      </> */}
+
+      <>
+        <Visualiser
+          testedStyle={noVelocityDurationTestStyle200}
+          description="No velocity, duration 200"
+        />
+        <Visualiser
+          testedStyle={noVelocityDurationTestStyle400}
+          description="No velocity, duration 400"
+        />
+        <Visualiser
+          testedStyle={noVelocityDurationTestStyle600}
+          description="No velocity, duration 600"
+        />
+        <Visualiser
+          testedStyle={noVelocityDurationTestStyle800}
+          description="No velocity, duration 800"
+        />
+        <Visualiser
+          testedStyle={noVelocityDurationTestStyle1000}
+          description="No velocity, duration 1000"
+        />
+        <Button
+          title="toggle"
+          onPress={() => {
+            runOnUI(() => {
+              // console.log('start:', performance.now());
+              const start = performance.now();
+
+              noVelocityDurationTestWidth200.value = withSpring(
+                noVelocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                { duration: 200 },
+                () => console.log('duration 200:', performance.now() - start)
+              );
+              noVelocityDurationTestWidth400.value = withSpring(
+                noVelocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                { duration: 400 },
+                () => console.log('duration 400:', performance.now() - start)
+              );
+              noVelocityDurationTestWidth600.value = withSpring(
+                noVelocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                { duration: 600 },
+                () => console.log('duration 600:', performance.now() - start)
+              );
+              noVelocityDurationTestWidth800.value = withSpring(
+                noVelocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                { duration: 800 },
+                () => console.log('duration 800:', performance.now() - start)
+              );
+              noVelocityDurationTestWidth1000.value = withSpring(
+                noVelocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                { duration: 1000 },
+                () => console.log('duration 1000:', performance.now() - start)
+              );
+            })();
+            setNoVelocityDurationTestWidthToggle(
+              !noVelocityDurationTestWidthToggle
+            );
+          }}
+        />
+      </>
+
+      <>
+        <Visualiser
+          testedStyle={velocityDurationTestStyle6}
+          description="Velocity 6, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle12}
+          description="Velocity 12, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle25}
+          description="Velocity 25, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle50}
+          description="Velocity 50, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle100}
+          description="Velocity 100, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle200}
+          description="Velocity 200, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle400}
+          description="Velocity 400, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle800}
+          description="Velocity 800, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle1600}
+          description="Velocity 1600, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle3200}
+          description="Velocity 3200, duration 800"
+        />
+
+        <Button
+          title="toggle"
+          onPress={() => {
+            runOnUI(() => {
+              // console.log('start:', performance.now());
+              const start = performance.now();
+              velocityDurationTestWidth6.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 6 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 6:', performance.now() - start)
+              );
+              velocityDurationTestWidth12.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 12 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 12:', performance.now() - start)
+              );
+              velocityDurationTestWidth25.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 25 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 25:', performance.now() - start)
+              );
+              velocityDurationTestWidth50.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 50 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 50:', performance.now() - start)
+              );
+              velocityDurationTestWidth100.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 100 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 100:', performance.now() - start)
+              );
+              velocityDurationTestWidth200.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 200 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 200:', performance.now() - start)
+              );
+              velocityDurationTestWidth400.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 400 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 400:', performance.now() - start)
+              );
+              velocityDurationTestWidth800.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 800 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 800:', performance.now() - start)
+              );
+              velocityDurationTestWidth1600.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 1600 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 1600:', performance.now() - start)
+              );
+              velocityDurationTestWidth3200.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 3200 * (velocityDurationTestWidthToggle ? -1 : 1),
+                },
+                () => console.log('velocity 3200:', performance.now() - start)
+              );
+            })();
+            setVelocityDurationTestWidthToggle(
+              !velocityDurationTestWidthToggle
+            );
           }}
         />
       </>

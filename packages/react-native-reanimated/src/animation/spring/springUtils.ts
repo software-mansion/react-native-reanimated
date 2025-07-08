@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../common';
+import { logger } from '../../common';
 import type {
   AnimatableValue,
   Animation,
@@ -155,13 +155,15 @@ export function bisectRoot({
   maxIterations?: number;
 }) {
   'worklet';
-  const ACCURACY = 0.00005;
+  const ACCURACY_IN_MS = 1; // We don't need to be more accurate than 1ms.
+  const direction = func(max) >= func(min) ? 1 : -1;
   let idx = maxIterations;
   let current = (max + min) / 2;
-  while (Math.abs(func(current)) > ACCURACY && idx > 0) {
+
+  while (Math.abs(func(current)) > ACCURACY_IN_MS && idx > 0) {
     idx -= 1;
 
-    if (func(current) < 0) {
+    if (func(current) * direction < 0) {
       min = current;
     } else {
       max = current;
@@ -172,7 +174,7 @@ export function bisectRoot({
 }
 
 export function initialCalculations(
-  mass = 0,
+  stiffness = 0,
   config: DefaultSpringConfig & SpringConfigInner
 ): {
   zeta: number;
@@ -186,14 +188,14 @@ export function initialCalculations(
   }
 
   if (config.useDuration) {
-    const { stiffness: k, dampingRatio: zeta } = config;
+    const { mass: m, dampingRatio: zeta } = config;
 
     /**
      * Omega0 and omega1 denote angular frequency and natural angular frequency,
      * see this link for formulas:
      * https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
      */
-    const omega0 = Math.sqrt(k / mass);
+    const omega0 = Math.sqrt(stiffness / m);
     const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
 
     return { zeta, omega0, omega1 };
@@ -280,7 +282,7 @@ export function scaleZetaToMatchClamps(
 }
 
 /** Runs before initial */
-export function calculateNewMassToMatchDuration(
+export function calculateNewStiffnessToMatchDuration(
   x0: number,
   config: DefaultSpringConfig & SpringConfigInner,
   v0: number
@@ -312,25 +314,81 @@ export function calculateNewMassToMatchDuration(
    *       And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)
    */
   const {
-    stiffness: k,
     dampingRatio: zeta,
-    restSpeedThreshold: threshold,
-    duration,
+    energyCutoff: threshold,
+    mass: m,
+    duration: targetDuration,
   } = config;
 
-  const durationForMass = (mass: number) => {
+  //   const { damping: c, mass: m, stiffness: k } = config;
+
+  // const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
+  let result = {
+    duration: 0,
+    stiffness: 0,
+    damping: 0,
+    maxAmplitude: 0,
+    maxVelocity: 0,
+    initialTimeshift: 0,
+  };
+
+  const durationForStiffness = (stiffness: number) => {
     'worklet';
-    const amplitude =
-      (mass * v0 * v0 + k * x0 * x0) / (Math.exp(1 - 0.5 * zeta) * k);
-    const c = zeta * 2 * Math.sqrt(k * mass);
+    const perceptualCoefficient = 1.5;
+    // const perceptualOffset = 32;
+
+    const MILLISECONDS_IN_SECOND = 1000;
+
+    const maxAmplitude = Math.sqrt(
+      (m * v0 * v0 + stiffness * x0 * x0) / stiffness
+    );
+    const maxVelocity = Math.sqrt(stiffness / m) * maxAmplitude;
+    const c = 2 * Math.sqrt(stiffness * m) * zeta;
+    const duration =
+      MILLISECONDS_IN_SECOND * ((-2 * m) / c) * Math.log(Math.sqrt(threshold));
+    const initialTimeshift =
+      MILLISECONDS_IN_SECOND *
+      ((-2 * m) / c) *
+      Math.log(Math.abs(x0) / maxAmplitude);
+    // console.log('x0', x0);
+    // console.log('maxAmplitude', maxAmplitude);
+    // console.log('maxVelocity', maxVelocity);
+    // console.log('initialTimeshift', initialTimeshift);
+    result.duration = duration;
+    result.stiffness = stiffness;
+    result.damping = c;
+    result.maxAmplitude = maxAmplitude;
+    result.maxVelocity = maxVelocity;
+    result.initialTimeshift = initialTimeshift;
     return (
-      1000 * ((-2 * mass) / c) * Math.log((threshold * 0.01) / amplitude) -
-      duration
+      duration - (targetDuration * perceptualCoefficient - initialTimeshift)
     );
   };
 
   // Bisection turns out to be much faster than Newton's method in our case
-  return bisectRoot({ min: 0, max: 100, func: durationForMass });
+  // return bisectRoot({ min: 1, max: 1000000, func: durationForStiffness });
+  const res = bisectRoot({
+    min: Number.EPSILON,
+    max: 8e3 /* Stiffness for 8ms animation doesn't exceed 2e3, we add some safety margin on top of that. */,
+    func: durationForStiffness,
+    maxIterations: 100,
+  });
+
+  console.log();
+  console.log('----------------------------------');
+  console.log('taget');
+  console.log('    duration', targetDuration);
+  console.log('    v0', v0);
+  console.log('    x0', x0);
+  console.log('calculated');
+  console.log('    duration', result.duration);
+  console.log('    maxAmplitude', result.maxAmplitude);
+  console.log('    maxVelocity', result.maxVelocity);
+  console.log('    initialTimeshift', result.initialTimeshift);
+  console.log('    stiffness', result.stiffness);
+  console.log('    damping', result.damping);
+
+  return res;
 }
 
 export function criticallyDampedSpringCalculations(

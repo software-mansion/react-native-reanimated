@@ -5,6 +5,7 @@ import './publicGlobals';
 import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
+// import { calculateNewStiffnessToMatchDuration } from './animation/spring/springUtils';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
@@ -305,3 +306,61 @@ export {
 } from './screenTransition';
 export type { WorkletRuntime } from 'react-native-worklets';
 export { isWorkletFunction } from 'react-native-worklets';
+
+// const config = {
+//   mass: 1,
+//   stiffness: 100,
+//   energyCutoff: 9e-9,
+//   dampingRatio: 1,
+// };
+
+// const x0 = 100;
+
+// const v0 = 10;
+
+// for (let i = 1; i <= 10; i++) {
+//   calculateNewStiffnessToMatchDuration(
+//     x0,
+//     {
+//       ...config,
+//       duration: 200 * i,
+//     },
+//     1000
+//   );
+// }
+
+// calculateNewStiffnessToMatchDuration(
+//   100,
+//   {
+//     mass: 1,
+//     stiffness: 100,
+//     dampingRatio: 1,
+//     duration: 200,
+//     energyCutoff: 2e-8,
+//   },
+//   0
+// );
+
+// calculateNewStiffnessToMatchDuration(
+//   100,
+//   {
+//     mass: 1,
+//     stiffness: 100,
+//     dampingRatio: 1,
+//     duration: 400,
+//     energyCutoff: 2e-8,
+//   },
+//   0
+// );
+
+// calculateNewStiffnessToMatchDuration(
+//   100,
+//   {
+//     mass: 1,
+//     stiffness: 100,
+//     dampingRatio: 1,
+//     duration: 600,
+//     energyCutoff: 2e-8,
+//   },
+//   0
+// );

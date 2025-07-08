@@ -15,7 +15,7 @@ import type {
   SpringConfigInner,
 } from './springUtils';
 import {
-  calculateNewMassToMatchDuration,
+  calculateNewStiffnessToMatchDuration,
   checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
   getEnergy,
@@ -59,7 +59,7 @@ export const withSpring = ((
       overshootClamping: false,
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
-      energyCutoff: 2e-8,
+      energyCutoff: 8e-9,
       velocity: 0,
       duration: 840,
       dampingRatio: 1,
@@ -88,16 +88,7 @@ export const withSpring = ((
       now: Timestamp
     ): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
-      const { toValue, startTimestamp, current } = animation;
-
-      const timeFromStart = now - startTimestamp;
-
-      if (config.useDuration && timeFromStart >= config.duration) {
-        animation.current = toValue;
-        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-        animation.lastTimestamp = 0;
-        return true;
-      }
+      const { toValue, current } = animation;
 
       if (config.skipAnimation) {
         animation.current = toValue;
@@ -135,10 +126,7 @@ export const withSpring = ((
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      if (
-        !config.useDuration &&
-        isAnimationTerminatingCalculation(animation, config)
-      ) {
+      if (isAnimationTerminatingCalculation(animation, config)) {
         animation.velocity = 0;
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -179,7 +167,7 @@ export const withSpring = ((
       );
       animation.initialEnergy = initialEnergy;
 
-      let mass = config.mass;
+      let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
       const duration = config.duration;
@@ -214,14 +202,14 @@ export const withSpring = ((
             : duration;
 
           config.duration = actualDuration;
-          mass = calculateNewMassToMatchDuration(
+          stiffness = calculateNewStiffnessToMatchDuration(
             x0 as number,
             config,
             animation.velocity
           );
         }
 
-        const { zeta, omega0, omega1 } = initialCalculations(mass, config);
+        const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
