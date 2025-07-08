@@ -20,7 +20,7 @@ type SearchBarProps = {
   translateY: SharedValue<number>;
   searchBarHeight: SharedValue<number>;
   onSearch: (query: string) => void;
-  onClose: () => void;
+  onCancel: () => void;
 };
 
 export default function SearchBar({
@@ -29,7 +29,7 @@ export default function SearchBar({
   showProgress,
   translateY,
   searchBarHeight,
-  onClose,
+  onCancel,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
   const isFocused = useSharedValue(false);
@@ -53,7 +53,6 @@ export default function SearchBar({
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     height: containerHeight.value,
-    pointerEvents: isFocused.value ? 'auto' : 'none',
   }));
 
   const animatedInnerContainerStyle = useAnimatedStyle(() => ({
@@ -95,7 +94,7 @@ export default function SearchBar({
               title="Cancel"
               onPress={() => {
                 onSearch('');
-                onClose();
+                onCancel();
                 inputRef.current?.blur();
               }}
             />

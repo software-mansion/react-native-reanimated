@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.xxs,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xxs,
   },
   dropdown: {
     minWidth: sizes.xxl,

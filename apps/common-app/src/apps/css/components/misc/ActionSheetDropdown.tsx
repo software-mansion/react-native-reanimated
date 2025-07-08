@@ -2,12 +2,14 @@ import { Portal } from '@gorhom/portal';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-  Gesture,
-  GestureDetector,
+  Dimensions,
   Pressable,
-} from 'react-native-gesture-handler';
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
