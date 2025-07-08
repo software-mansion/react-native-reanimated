@@ -1,5 +1,3 @@
-// TODO: Enable this test after RuntimeTests are implemented on Fabric
-
 import { useEffect } from 'react';
 import { BoxShadowValue, StyleSheet, View } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
@@ -33,22 +31,27 @@ describe('animation of BoxShadow', () => {
     finalBoxShadow: BoxShadowValue;
     startBoxShadow: BoxShadowValue;
   }) {
-    // TODO: It seems that boxShadow is not working properly with active animations (withSpring...etc)
-    // const boxShadowActiveSV = useSharedValue(startBoxShadow);
+    const boxShadowActiveSV = useSharedValue(startBoxShadow);
     const boxShadowPassiveSV = useSharedValue(startBoxShadow);
 
-    // const refActive = useTestRef('ACTIVE');
+    const refActive = useTestRef('ACTIVE');
     const refPassive = useTestRef('PASSIVE');
 
-    // const styleActive = useAnimatedStyle(() => {
-    //   return {
-    //     boxShadow: [
-    //       withSpring(boxShadowActiveSV.value as unknown as AnimatableValue, {
-    //         duration: 700,
-    //       }),
-    //     ],
-    //   } as DefaultStyle;
-    // });
+    const styleActive = useAnimatedStyle(() => {
+      return {
+        boxShadow: [
+          withSpring(
+            boxShadowActiveSV.value as unknown as AnimatableValue,
+            {
+              duration: 2000,
+            },
+            () => {
+              notify(NOTIFICATION_NAME);
+            },
+          ),
+        ],
+      } as DefaultStyle;
+    });
 
     const stylePassive = useAnimatedStyle(() => {
       return {
@@ -58,17 +61,16 @@ describe('animation of BoxShadow', () => {
 
     useEffect(() => {
       const timeout = setTimeout(() => {
-        // boxShadowActiveSV.value = finalBoxShadow;
+        boxShadowActiveSV.value = finalBoxShadow;
         boxShadowPassiveSV.value = finalBoxShadow;
-        notify(NOTIFICATION_NAME);
-      }, 300);
+      }, 500);
 
       return () => clearTimeout(timeout);
-    }, [finalBoxShadow, boxShadowPassiveSV]);
+    }, [finalBoxShadow, boxShadowActiveSV, boxShadowPassiveSV]);
 
     return (
       <View style={styles.container}>
-        {/* <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} /> */}
+        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
         <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
       </View>
     );
@@ -97,25 +99,30 @@ describe('animation of BoxShadow', () => {
   ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {
     await render(<BoxShadowComponent finalBoxShadow={finalBoxShadow} startBoxShadow={startBoxShadow} />);
 
-    // const activeComponent = getTestComponent(Component.ACTIVE);
+    const activeComponent = getTestComponent(Component.ACTIVE);
     const passiveComponent = getTestComponent(Component.PASSIVE);
 
-    // const activeBoxShadow = JSON.parse(
-    //   await activeComponent.getAnimatedStyle('boxShadow'),
-    // ) as unknown as BoxShadowValue[];
+    const activeBoxShadow = JSON.parse(
+      await activeComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
     const passiveBoxShadow = JSON.parse(
       await passiveComponent.getAnimatedStyle('boxShadow'),
     ) as unknown as BoxShadowValue[];
-    // expect(activeBoxShadow).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+
+    expect(activeBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
     expect(passiveBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
 
     await waitForNotify(NOTIFICATION_NAME);
 
-    const passiveBoxShadow2 = JSON.parse(
+    const passiveBoxShadowFinal = JSON.parse(
       await passiveComponent.getAnimatedStyle('boxShadow'),
     ) as unknown as BoxShadowValue[];
+    const activeBoxShadowFinal = JSON.parse(
+      await activeComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
 
-    expect(passiveBoxShadow2).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+    expect(activeBoxShadowFinal).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+    expect(passiveBoxShadowFinal).toBe([finalBoxShadow], ComparisonMode.ARRAY);
   });
 });
 
