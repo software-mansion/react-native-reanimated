@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { WithSpringConfig } from 'react-native-reanimated';
@@ -33,6 +34,7 @@ type SearchScreenProps = {
 };
 
 export default function SearchScreen({ children }: SearchScreenProps) {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
   const inset = Platform.select({
@@ -52,6 +54,18 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isFirstRender, setIsFirstRender] = useState(true);
+
+  const hasSearchQuery = !!searchQuery;
+
+  useEffect(() => {
+    return navigation.addListener('focus', () => {
+      if (!hasSearchQuery) {
+        setSearchQuery('');
+        translateY.value = 0;
+        searchBarShowProgress.value = 0;
+      }
+    });
+  }, [navigation, hasSearchQuery, translateY, searchBarShowProgress]);
 
   const gesture = useMemo(() => {
     const pan = Gesture.Pan()
@@ -172,6 +186,10 @@ export default function SearchScreen({ children }: SearchScreenProps) {
         showProgress={searchBarShowProgress}
         translateY={translateY}
         value={searchQuery}
+        onClose={() => {
+          translateY.value = withSpring(0, SPRING);
+          searchBarShowProgress.value = withSpring(0, SPRING);
+        }}
         onSearch={(query) => {
           setSearchQuery(query);
           setIsFirstRender(false);

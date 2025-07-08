@@ -1,4 +1,3 @@
-import { faExchange, faFire } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -7,34 +6,19 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
 import { RouteCard, Text } from '@/apps/css/components';
-import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
 import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
 import BottomTabBar from './BottomTabBar';
+import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './constants';
 import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
 import { SearchScreen } from './search';
-import type { Routes, TabRoute } from './types';
+import type { Routes } from './types';
 import { isRouteWithRoutes } from './utils';
-
-// We use stack navigator to mimic the tab navigator, thus top-level routes will be
-// displayed as tabs in the bottom tab bar
-const tabRoutes = {
-  Animations: {
-    icon: faFire,
-    name: 'Animations',
-    routes: animationRoutes,
-  },
-  Transitions: {
-    icon: faExchange,
-    name: 'Transitions',
-    routes: transitionRoutes,
-  },
-} satisfies Record<string, TabRoute>;
 
 type RootStackParamList = Record<string, React.ComponentType>;
 
@@ -184,13 +168,10 @@ function createStackScreens(
   ];
 }
 
-const INITIAL_ROUTE_NAME = Object.values(tabRoutes)[0]?.name;
-
 function Navigator() {
   const shouldReduceMotion = useReducedMotion();
   const currentRoute = useSharedValue<string | undefined>(INITIAL_ROUTE_NAME);
-
-  const tabRoutesArray = Object.values(tabRoutes);
+  const tabRoutesArray = Object.values(TAB_ROUTES);
 
   return (
     <LocalNavigationProvider>
@@ -210,7 +191,7 @@ function Navigator() {
           headerTitleAlign: 'center',
           statusBarStyle: 'dark',
         }}>
-        {Object.entries(tabRoutes).flatMap(([key, value]) =>
+        {Object.entries(TAB_ROUTES).flatMap(([key, value]) =>
           createStackScreens(
             value.routes,
             value.name,
@@ -219,19 +200,6 @@ function Navigator() {
           )
         )}
       </Stack.Navigator>
-      {/* <TextInput
-        style={{
-          position: 'absolute',
-          top: 50,
-          left: 0,
-          right: 0,
-          height: 50,
-          backgroundColor: 'blue',
-        }}
-        onChangeText={(text) => {
-          console.log(text, searchRoutes(text));
-        }}
-      /> */}
       <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
     </LocalNavigationProvider>
   );

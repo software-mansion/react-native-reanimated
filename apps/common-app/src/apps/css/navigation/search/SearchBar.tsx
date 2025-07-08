@@ -20,6 +20,7 @@ type SearchBarProps = {
   translateY: SharedValue<number>;
   searchBarHeight: SharedValue<number>;
   onSearch: (query: string) => void;
+  onClose: () => void;
 };
 
 export default function SearchBar({
@@ -28,6 +29,7 @@ export default function SearchBar({
   showProgress,
   translateY,
   searchBarHeight,
+  onClose,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
   const isFocused = useSharedValue(false);
@@ -90,9 +92,10 @@ export default function SearchBar({
             style={styles.buttonWrapper}>
             <Button
               size="small"
-              title="Clear"
+              title="Cancel"
               onPress={() => {
                 onSearch('');
+                onClose();
                 inputRef.current?.blur();
               }}
             />

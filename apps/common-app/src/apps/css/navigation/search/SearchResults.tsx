@@ -1,13 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ScrollScreen, Text } from '@/apps/css/components';
+import { Text } from '@/apps/css/components';
 import { colors, radius, spacing, text } from '@/theme';
 
-import type { SearchDoc } from './fuse';
+import { BOTTOM_BAR_HEIGHT, INITIAL_ROUTE_NAME } from '../constants';
 import { searchRoutes } from './fuse';
 import SearchFilters from './SearchFilters';
 
@@ -16,22 +17,22 @@ type SearchResultsProps = {
   searchBarHeight: SharedValue<number>;
 };
 
-type GroupedResults = {
-  [mainGroup: string]: {
-    subGroups: { [subGroup: string]: Array<SearchDoc> };
-    directResults: Array<SearchDoc>;
-  };
-};
-
 export default function SearchResults({
   searchQuery,
   searchBarHeight,
 }: SearchResultsProps) {
   const navigation = useNavigation();
   const state = navigation.getState();
+  const insets = useSafeAreaInsets();
 
   const [currentFilter, setCurrentFilter] = useState<Array<string> | null>(
-    () => state?.routes[state.routes.length - 1]?.name.split('/') ?? null
+    () => {
+      const routeName = state?.routes[state.routes.length - 1]?.name;
+      if (routeName === INITIAL_ROUTE_NAME) {
+        return null;
+      }
+      return routeName?.split('/') ?? null;
+    }
   );
   const searchResults = useMemo(() => {
     const result = searchRoutes(searchQuery);
@@ -45,32 +46,6 @@ export default function SearchResults({
     return result;
   }, [searchQuery, currentFilter]);
 
-  const groupedResults = useMemo(() => {
-    return searchResults.reduce<GroupedResults>((acc, result) => {
-      const mainGroup = result.path[0];
-      const subGroup = result.path[1];
-
-      if (!acc[mainGroup]) {
-        acc[mainGroup] = {
-          subGroups: {},
-          directResults: [],
-        };
-      }
-
-      if (subGroup) {
-        // Create subgroup if second path segment exists
-        if (!acc[mainGroup].subGroups[subGroup]) {
-          acc[mainGroup].subGroups[subGroup] = [];
-        }
-        acc[mainGroup].subGroups[subGroup].push(result);
-      } else {
-        // No subgroup, store directly
-        acc[mainGroup].directResults.push(result);
-      }
-      return acc;
-    }, {});
-  }, [searchResults]);
-
   return (
     <>
       {/* Spacer component */}
@@ -80,17 +55,22 @@ export default function SearchResults({
         setCurrentFilter={setCurrentFilter}
       />
       {searchResults.length ? (
-        <ScrollScreen
+        <FlatList
           contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator>
-          {Object.entries(groupedResults).map(([mainTitle, groupData]) => (
-            <MainGroup
-              groupData={groupData}
-              key={mainTitle}
-              mainTitle={mainTitle}
-            />
-          ))}
-        </ScrollScreen>
+          data={searchResults}
+          ListFooterComponent={() => (
+            <View style={{ height: BOTTOM_BAR_HEIGHT + insets.bottom }} />
+          )}
+          renderItem={({ item }) => (
+            <Pressable
+              key={item.key}
+              style={styles.resultCard}
+              onPress={() => navigation.navigate(item.key as never)}>
+              <Text style={styles.resultName}>{item.name}</Text>
+              <Text style={styles.fullPath}>{item.breadcrumb}</Text>
+            </Pressable>
+          )}
+        />
       ) : (
         <Text style={styles.noResults}>No results found</Text>
       )}
@@ -98,75 +78,10 @@ export default function SearchResults({
   );
 }
 
-type MainGroupProps = {
-  mainTitle: string;
-  groupData: {
-    subGroups: { [subGroup: string]: Array<SearchDoc> };
-    directResults: Array<SearchDoc>;
-  };
-};
-
-function MainGroup({ mainTitle, groupData }: MainGroupProps) {
-  const navigation = useNavigation();
-  const { subGroups, directResults } = groupData;
-
-  return (
-    <View style={styles.group}>
-      <Text style={styles.mainGroupTitle}>{mainTitle}</Text>
-      {directResults.length > 0 &&
-        directResults.map((result) => (
-          <Pressable
-            key={result.key}
-            style={styles.resultCard}
-            onPress={() => navigation.navigate(result.key as never)}>
-            <Text style={styles.resultName}>{result.name}</Text>
-            <Text style={styles.fullPath}>{result.breadcrumb}</Text>
-          </Pressable>
-        ))}
-      {Object.entries(subGroups).map(([subTitle, results]) => (
-        <SubGroup key={subTitle} results={results} subTitle={subTitle} />
-      ))}
-    </View>
-  );
-}
-
-type SubGroupProps = {
-  subTitle: string;
-  results: Array<SearchDoc>;
-};
-
-function SubGroup({ subTitle, results }: SubGroupProps) {
-  const navigation = useNavigation();
-
-  return (
-    <View style={styles.group}>
-      <Text style={styles.subGroupTitle}>{subTitle}</Text>
-      {results.map((result) => (
-        // TODO - fix these links, some are invalid
-        <Pressable
-          key={result.key}
-          style={styles.resultCard}
-          onPress={() => navigation.navigate(result.key as never)}>
-          <Text style={styles.resultName}>{result.name}</Text>
-          <Text style={styles.fullPath}>{result.breadcrumb}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   fullPath: {
     ...text.body1,
     color: colors.foreground3,
-  },
-  group: {
-    gap: spacing.xs,
-  },
-  mainGroupTitle: {
-    ...text.heading3,
-    color: colors.foreground1,
-    marginTop: spacing.sm,
   },
   noResults: {
     ...text.subHeading2,
@@ -187,12 +102,5 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-  },
-  subGroupTitle: {
-    ...text.subHeading2,
-    color: colors.foreground2,
-    marginBottom: spacing.xs,
-    marginLeft: spacing.xs,
-    marginTop: spacing.xxs,
   },
 });
