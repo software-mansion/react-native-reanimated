@@ -123,37 +123,36 @@ describe('withSequence animation of color', () => {
       middleColor: 'hsl(70, 100%, 75%)',
       finalColor: 'hsl(120,100%,50%)',
     },
-    // TODO: Fix this test
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsl(120,100%,50%)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsl(120,100%,50%)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgb(101,255,50)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsla( 120 , 100% , 50%, 0.5 )',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgb(101,255,50)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgba(100,255,50,0.5)',
-    // },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsl(120,100%,50%)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsl(120,100%,50%)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'rgb(101,255,50)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsla( 120 , 100% , 50%, 0.5 )',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'rgb(101,255,50)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hwb(180, 50%, 50%)',
+      finalColor: 'hwb(100, 50%, 0%)',
+    },
   ])(
     'Animate ${startColor} → ${finalColor} → ${middleColor} → ${finalColor}',
     async ({ startColor, middleColor, finalColor }) => {
@@ -162,9 +161,12 @@ describe('withSequence animation of color', () => {
       const passiveComponent = getTestComponent(Component.PASSIVE);
 
       await wait(DELAY / 2);
-      // TODO Decide what should be the starting value of activeComponent
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
+      // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
+      // It will be fixed in the future.
+      if (!startColor.startsWith('hwb')) {
+        expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
+        expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
+      }
       await waitForNotify(START_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
