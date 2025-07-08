@@ -320,9 +320,6 @@ export function calculateNewStiffnessToMatchDuration(
     duration: targetDuration,
   } = config;
 
-  //   const { damping: c, mass: m, stiffness: k } = config;
-
-  // const zeta = c / (2 * Math.sqrt(k * m)); // damping ratio
   let result = {
     duration: 0,
     stiffness: 0,
@@ -335,7 +332,6 @@ export function calculateNewStiffnessToMatchDuration(
   const durationForStiffness = (stiffness: number) => {
     'worklet';
     const perceptualCoefficient = 1.5;
-    // const perceptualOffset = 32;
 
     const MILLISECONDS_IN_SECOND = 1000;
 
