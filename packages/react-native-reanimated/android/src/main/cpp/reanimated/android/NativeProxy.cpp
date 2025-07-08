@@ -487,7 +487,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 void NativeProxy::setupLayoutAnimations() {
   auto weakReanimatedModuleProxy =
       std::weak_ptr<ReanimatedModuleProxy>(reanimatedModuleProxy_);
-  auto layoutAnimations = (*layoutAnimations_);
+  const auto &layoutAnimations = (*layoutAnimations_);
 
   layoutAnimations->cthis()->setAnimationStartingBlock(
       [weakReanimatedModuleProxy](
