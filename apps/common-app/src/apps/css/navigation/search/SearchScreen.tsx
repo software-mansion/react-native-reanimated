@@ -15,11 +15,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Stagger, Text } from '@/apps/css/components';
+import { Stagger } from '@/apps/css/components';
 import { spacing } from '@/theme';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
-import { searchRoutes } from './fuse';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 
@@ -54,8 +53,6 @@ export default function SearchScreen({ children }: SearchScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFirstRender, setIsFirstRender] = useState(true);
 
-  const searchResults = useMemo(() => searchRoutes(searchQuery), [searchQuery]);
-
   const gesture = useMemo(() => {
     const pan = Gesture.Pan()
       .onStart(() => {
@@ -65,21 +62,29 @@ export default function SearchScreen({ children }: SearchScreenProps) {
         const scrollViewMeasurements = measure(scrollRef);
         const contentMeasurements = measure(contentRef);
 
-        if (translateY.value > 0) {
+        if (dragStartTranslateY.value > 0) {
           translateY.value = dragStartTranslateY.value + e.translationY;
-        } else if (
-          scrollViewMeasurements &&
-          contentMeasurements &&
-          (scrollY.value <= 0 ||
-            scrollY.value >=
-              Math.floor(
-                contentMeasurements.height - scrollViewMeasurements.height
-              ))
-        ) {
-          translateY.value =
-            Math.sign(e.translationY) * Math.pow(Math.abs(e.translationY), POW);
         } else {
-          return;
+          const shouldShowSearchBar = scrollY.value <= 0;
+          const shouldBounce =
+            contentMeasurements &&
+            scrollViewMeasurements &&
+            (shouldShowSearchBar ||
+              scrollY.value >=
+                Math.floor(
+                  contentMeasurements.height - scrollViewMeasurements.height
+                ));
+
+          if (shouldBounce) {
+            translateY.value =
+              Math.sign(e.translationY) *
+              Math.pow(Math.abs(e.translationY), POW);
+          }
+
+          if (!shouldBounce || !shouldShowSearchBar) {
+            searchBarShowProgress.value = 0;
+            return;
+          }
         }
 
         searchBarShowProgress.value = clamp(
@@ -89,9 +94,8 @@ export default function SearchScreen({ children }: SearchScreenProps) {
         );
       })
       .onFinalize(() => {
-        if (translateY.value > searchBarHeight.value) {
+        if (searchBarShowProgress.value === 1) {
           translateY.value = withSpring(searchBarHeight.value, SPRING);
-          searchBarShowProgress.value = withSpring(1, SPRING);
         } else {
           translateY.value = withSpring(0, SPRING);
           searchBarShowProgress.value = withSpring(0, SPRING);
@@ -115,17 +119,18 @@ export default function SearchScreen({ children }: SearchScreenProps) {
       const dy = y - scrollY.value;
       velocityY.value = dy * VELOCITY_FACTOR; // px/s (approx)
       scrollY.value = y;
-    },
-    onMomentumEnd: (e) => {
+
       const sv = measure(scrollRef);
       const cv = measure(contentRef);
       if (!sv || !cv) return;
-      const y = e.contentOffset.y;
+
       if (y > EDGE_SLACK && y < cv.height - sv.height - EDGE_SLACK) {
         return;
       }
+
       const v = velocityY.value;
       const outward = -Math.sign(v) * Math.pow(Math.abs(v), POW);
+
       translateY.value = withSequence(
         withTiming(outward, { duration: OUT_MS }),
         withSpring(0, SPRING)
@@ -139,14 +144,11 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 
   return (
     <>
-      {searchResults.length ? (
+      {searchQuery ? (
         <SearchResults
           searchBarHeight={searchBarHeight}
           searchQuery={searchQuery}
-          searchResults={searchResults}
         />
-      ) : searchQuery ? (
-        <Text>No results found</Text>
       ) : (
         <GestureDetector gesture={gesture}>
           <Animated.ScrollView
@@ -160,18 +162,16 @@ export default function SearchScreen({ children }: SearchScreenProps) {
               <Stagger enabled={isFirstRender} interval={50}>
                 {children}
               </Stagger>
+              <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
             </Animated.View>
-            <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
           </Animated.ScrollView>
         </GestureDetector>
       )}
       <SearchBar
+        searchBarHeight={searchBarHeight}
         showProgress={searchBarShowProgress}
         translateY={translateY}
         value={searchQuery}
-        onMeasure={(height) => {
-          searchBarHeight.value = height;
-        }}
         onSearch={(query) => {
           setSearchQuery(query);
           setIsFirstRender(false);

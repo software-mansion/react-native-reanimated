@@ -86,13 +86,11 @@ export default function BounceScrollView({ children, ...rest }: Props) {
       const dy = y - scrollY.value;
       velocityY.value = dy * VELOCITY_FACTOR; // px/s (approx)
       scrollY.value = y;
-    },
-    onMomentumEnd: (e) => {
+
       const sv = measure(scrollRef);
       const cv = measure(contentRef);
       if (!sv || !cv) return;
 
-      const y = e.contentOffset.y;
       if (y > EDGE_SLACK && y < cv.height - sv.height - EDGE_SLACK) {
         return;
       }

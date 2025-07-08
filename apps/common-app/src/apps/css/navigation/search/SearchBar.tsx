@@ -1,5 +1,5 @@
 import { StyleSheet, TextInput } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
+import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 import Animated, {
   dispatchCommand,
   FadeIn,
@@ -12,35 +12,38 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Button } from '@/apps/css/components';
-import { colors, radius, spacing, text } from '@/theme';
-
-export const MIN_SEARCH_SHOW_TRANSLATE_Y = 100;
+import { colors, radius, sizes, spacing, text } from '@/theme';
 
 type SearchBarProps = {
   value: string;
   showProgress: SharedValue<number>;
   translateY: SharedValue<number>;
-  onMeasure: (height: number) => void;
+  searchBarHeight: SharedValue<number>;
   onSearch: (query: string) => void;
 };
 
 export default function SearchBar({
-  onMeasure,
   onSearch,
   value,
   showProgress,
   translateY,
+  searchBarHeight,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
+  const isFocused = useSharedValue(false);
 
-  const containerHeight = useDerivedValue(() => Math.max(0, translateY.value));
+  const containerHeight = useDerivedValue(() =>
+    showProgress.value === 0 ? 0 : Math.max(0, translateY.value)
+  );
 
   useAnimatedReaction(
     () => showProgress.value,
     (progress) => {
       if (progress === 1) {
+        isFocused.value = true;
         dispatchCommand(inputRef, 'focus');
       } else if (progress === 0) {
+        isFocused.value = false;
         dispatchCommand(inputRef, 'blur');
       }
     }
@@ -48,11 +51,18 @@ export default function SearchBar({
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
     height: containerHeight.value,
+    pointerEvents: isFocused.value ? 'auto' : 'none',
   }));
 
   const animatedInnerContainerStyle = useAnimatedStyle(() => ({
     opacity: showProgress.value,
-    transform: [{ scale: interpolate(showProgress.value, [0, 1], [0.9, 1]) }],
+    transform: [
+      isFocused.value
+        ? {
+            translateY: Math.min(translateY.value - searchBarHeight.value, 0),
+          }
+        : { scale: interpolate(showProgress.value, [0, 1], [0.9, 1]) },
+    ],
   }));
 
   return (
@@ -60,9 +70,12 @@ export default function SearchBar({
       <Animated.View
         style={[styles.inputContainer, animatedInnerContainerStyle]}
         onLayout={(e) => {
-          onMeasure(e.nativeEvent.layout.height);
+          searchBarHeight.value = e.nativeEvent.layout.height;
         }}>
         <TextInput
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect={false}
           placeholder="Search"
           placeholderTextColor={colors.foreground3}
           ref={inputRef}
@@ -75,7 +88,14 @@ export default function SearchBar({
             entering={FadeIn}
             exiting={FadeOut}
             style={styles.buttonWrapper}>
-            <Button size="small" title="Clear" onPress={() => onSearch('')} />
+            <Button
+              size="small"
+              title="Clear"
+              onPress={() => {
+                onSearch('');
+                inputRef.current?.blur();
+              }}
+            />
           </Animated.View>
         )}
       </Animated.View>
@@ -104,6 +124,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     color: colors.foreground1,
+    height: sizes.md,
     padding: spacing.sm,
     ...text.subHeading2,
   },
