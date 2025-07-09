@@ -40,8 +40,6 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    console.log('normalizedStyle', normalizedStyle);
-
     this.cssTransitionsManager.update(transitionProperties);
     this.cssAnimationsManager.update(animationProperties);
 
