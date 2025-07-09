@@ -27,14 +27,14 @@ extern const std::string uiRuntimeName;
 
 class RuntimeManager {
  public:
-  auto getRuntime(uint64_t runtimeId) -> std::shared_ptr<WorkletRuntime>;
-  auto getRuntime(const std::string &name) -> std::shared_ptr<WorkletRuntime>;
+  std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
+  std::shared_ptr<WorkletRuntime> getRuntime(const std::string &name);
 
-  auto getAllRuntimes() -> std::vector<std::shared_ptr<WorkletRuntime>>;
+  std::vector<std::shared_ptr<WorkletRuntime>> getAllRuntimes();
 
-  auto getUIRuntime() -> std::shared_ptr<WorkletRuntime>;
+  std::shared_ptr<WorkletRuntime> getUIRuntime();
 
-  auto createWorkletRuntime(
+  std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -44,21 +44,18 @@ class RuntimeManager {
       const std::string &sourceUrl,
       jsi::Runtime &rt,
       const jsi::Value &name,
-      const jsi::Value &initializer = jsi::Value::undefined())
-      -> std::shared_ptr<WorkletRuntime>;
+      const jsi::Value &initializer = jsi::Value::undefined());
 
-  auto createUIRuntime(
+  std::shared_ptr<WorkletRuntime> createUIRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const bool isDevBundle,
       const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl) -> std::shared_ptr<WorkletRuntime>;
+      const std::string &sourceUrl);
 
  private:
-  auto getNextRuntimeId() -> uint64_t {
-    return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
-  }
+  uint64_t getNextRuntimeId();
 
   std::atomic_uint64_t nextRuntimeId_{uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
