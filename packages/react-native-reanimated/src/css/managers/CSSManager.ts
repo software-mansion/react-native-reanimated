@@ -1,5 +1,4 @@
 'use strict';
-
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { StyleBuilder } from '../platform/native';
@@ -40,6 +39,8 @@ export default class CSSManager implements ICSSManager {
     if (this.isFirstUpdate && normalizedStyle) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
+
+    console.log('normalizedStyle', normalizedStyle);
 
     this.cssTransitionsManager.update(transitionProperties);
     this.cssAnimationsManager.update(animationProperties);
