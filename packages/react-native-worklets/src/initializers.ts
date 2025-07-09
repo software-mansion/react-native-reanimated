@@ -6,6 +6,8 @@ import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
+import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -180,5 +182,7 @@ function installRNBindingsOnUIRuntime() {
      */
     setupMicrotasks();
     setupRequestAnimationFrame();
+    setupSetTimeout();
+    setupSetImmediate();
   })();
 }
