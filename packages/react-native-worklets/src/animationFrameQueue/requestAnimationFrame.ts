@@ -6,8 +6,7 @@ export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  let animationFrameCallbacks: Map<number, (timestamp: number) => void> =
-    new Map();
+  let animationFrameCallbacks: ((timestamp: number) => void)[] = [];
   let callbacksBegin = 0;
   let callbacksEnd = 0;
 
@@ -21,7 +20,7 @@ export function setupRequestAnimationFrame() {
     globalThis.__frameTimestamp = timestamp;
 
     flushedCallbacks = animationFrameCallbacks;
-    animationFrameCallbacks = new Map();
+    animationFrameCallbacks = [];
 
     flushedCallbacksBegin = callbacksBegin;
     flushedCallbacksEnd = callbacksEnd;
@@ -29,7 +28,7 @@ export function setupRequestAnimationFrame() {
 
     flushRequested = false;
 
-    for (const [, callback] of flushedCallbacks) {
+    for (const callback of flushedCallbacks) {
       callback(timestamp);
     }
 
@@ -44,7 +43,8 @@ export function setupRequestAnimationFrame() {
     callback: (timestamp: number) => void
   ): number => {
     const handle = callbacksEnd++;
-    animationFrameCallbacks.set(handle, callback);
+
+    animationFrameCallbacks.push(callback);
     if (!flushRequested) {
       flushRequested = true;
 
@@ -59,9 +59,9 @@ export function setupRequestAnimationFrame() {
     }
 
     if (handle < flushedCallbacksEnd) {
-      flushedCallbacks.set(handle, () => {});
+      flushedCallbacks[handle - flushedCallbacksBegin] = () => {};
     } else {
-      animationFrameCallbacks.set(handle, () => {});
+      animationFrameCallbacks[handle - callbacksBegin] = () => {};
     }
   };
 }
