@@ -9,7 +9,10 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 // instead of a default value
 export default function CircleExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<CircleProps> }>
+    <ExamplesScreen<
+      { keyframes: CSSAnimationKeyframes<CircleProps> },
+      CircleProps
+    >
       buildAnimation={({ keyframes }) => ({
         animationName: keyframes,
         animationDirection: 'alternate',
