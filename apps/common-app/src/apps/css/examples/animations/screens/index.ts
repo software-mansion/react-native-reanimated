@@ -1,4 +1,4 @@
-export { default as animatedProperties } from './animatedProperties';
+export * from './animatedProperties';
 export { default as animationSettings } from './animationSettings';
 export { default as miscellaneous } from './miscellaneous';
 export { default as realWorldExamples } from './realWorldExamples';
