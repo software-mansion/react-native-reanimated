@@ -7,7 +7,7 @@ import {
 
 type KeyframesEntry = {
   keyframesRule: CSSKeyframesRuleImpl;
-  viewTags: Set<number>;
+  usedBy: Record<string, Set<number>>;
 };
 
 /**
@@ -33,45 +33,61 @@ class CSSKeyframesRegistry {
     }
   }
 
-  add(keyframesRule: CSSKeyframesRuleImpl, viewTag: number) {
-    const existingEntry = this.nameToKeyframes_.get(keyframesRule.name);
-    if (existingEntry) {
-      existingEntry.viewTags.add(viewTag);
-    } else {
-      this.nameToKeyframes_.set(keyframesRule.name, {
-        keyframesRule,
-        viewTags: new Set([viewTag]),
-      });
+  add(keyframesRule: CSSKeyframesRuleImpl, viewName: string, viewTag: number) {
+    const existingKeyframesEntry = this.nameToKeyframes_.get(
+      keyframesRule.name
+    );
+    const existingComponentEntry = existingKeyframesEntry?.usedBy[viewName];
 
-      // Store the keyframes to name mapping in order to reuse the same
-      // animation name when possible (when the same inline keyframes object
-      // is used)
-      this.cssTextToNameMap_.set(keyframesRule.cssText, keyframesRule.name);
-
-      // Register animation keyframes only if they are not already registered
-      // (when they are added for the first time)
-      registerCSSKeyframes(
-        keyframesRule.name,
-        keyframesRule.normalizedKeyframesConfig
-      );
-    }
-  }
-
-  remove(animationName: string, viewTag: number) {
-    const entry = this.nameToKeyframes_.get(animationName);
-    if (!entry) {
+    if (existingComponentEntry) {
+      // Just add the view tag to the existing component entry if keyframes
+      // for the specific animation and component name are already registered
+      existingComponentEntry.add(viewTag);
       return;
     }
 
-    const viewTags = entry.viewTags;
-    viewTags.delete(viewTag);
+    // Otherwise, we have to register keyframes preprocessed for the specific
+    // component name
+    if (existingKeyframesEntry) {
+      existingKeyframesEntry.usedBy[viewName] = new Set([viewTag]);
+    } else {
+      this.nameToKeyframes_.set(keyframesRule.name, {
+        keyframesRule,
+        usedBy: { [viewName]: new Set([viewTag]) },
+      });
+    }
 
-    if (viewTags.size === 0) {
+    // Store the keyframes to name mapping in order to reuse the same
+    // animation name when possible (when the same inline keyframes object
+    // is used)
+    this.cssTextToNameMap_.set(keyframesRule.cssText, keyframesRule.name);
+
+    // Register animation keyframes only if they are not already registered
+    // (when they are added for the first time)
+    registerCSSKeyframes(
+      keyframesRule.name,
+      viewName,
+      keyframesRule.getNormalizedKeyframesConfig(viewName)
+    );
+  }
+
+  remove(animationName: string, viewName: string, viewTag: number) {
+    const keyframesEntry = this.nameToKeyframes_.get(animationName);
+    if (!keyframesEntry) {
+      return;
+    }
+
+    const componentEntry = keyframesEntry.usedBy[viewName];
+    componentEntry.delete(viewTag);
+
+    if (componentEntry.size === 0) {
+      delete keyframesEntry.usedBy[viewName];
+      unregisterCSSKeyframes(animationName, viewName);
+    }
+
+    if (Object.keys(keyframesEntry.usedBy).length === 0) {
       this.nameToKeyframes_.delete(animationName);
-      this.cssTextToNameMap_.delete(entry.keyframesRule.cssText);
-      // Unregister animation keyframes if there are no more references to them
-      // (no more views that have an animation with this name)
-      unregisterCSSKeyframes(animationName);
+      this.cssTextToNameMap_.delete(keyframesEntry.keyframesRule.cssText);
     }
   }
 

@@ -3,9 +3,9 @@ import {
   IS_ANDROID,
   processBoxShadowNative,
   processTransformOrigin,
-} from '../../../common';
-import type { PlainStyle } from '../../types';
-import type { StyleBuilderConfig } from './style';
+} from '../../../../common';
+import type { PlainStyle } from '../../../types';
+import type { StyleBuilderConfig } from '../style';
 import {
   processAspectRatio,
   processColor,
@@ -15,11 +15,11 @@ import {
   processInsetBlock,
   processInsetInline,
   processTransform,
-} from './style';
+} from '../style';
 
 const colorAttributes = { process: processColor };
 
-export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
+export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
@@ -227,8 +227,3 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   filter: false, // web only
   isolation: true,
 };
-
-export const SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES = new Set([
-  'transformOrigin',
-  'boxShadow',
-]);

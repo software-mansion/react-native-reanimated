@@ -2,8 +2,16 @@
 
 namespace reanimated::css {
 
-folly::dynamic getKeyframes(jsi::Runtime &rt, const jsi::Object &config) {
-  return dynamicFromValue(rt, config.getProperty(rt, "keyframesStyle"));
+std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
+    jsi::Runtime &rt,
+    const jsi::Object &config,
+    const std::string &componentName,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+  return std::make_shared<AnimationStyleInterpolator>(
+      rt,
+      config.getProperty(rt, "keyframesStyle"),
+      componentName,
+      viewStylesRepository);
 }
 
 std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
@@ -30,10 +38,15 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
+    const jsi::Value &config,
+    const std::string &componentName,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto &configObj = config.asObject(rt);
+
   return {
-      getKeyframes(rt, configObj), getKeyframeTimingFunctions(rt, configObj)};
+      createStyleInterpolator(
+          rt, configObj, componentName, viewStylesRepository),
+      getKeyframeTimingFunctions(rt, configObj)};
 }
 
 } // namespace reanimated::css
