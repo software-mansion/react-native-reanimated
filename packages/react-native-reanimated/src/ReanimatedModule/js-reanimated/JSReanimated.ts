@@ -283,7 +283,6 @@ class JSReanimated implements IReanimatedModule {
   registerCSSKeyframes(
     _animationName: string,
     _viewName: string,
-    _componentName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void {
     throw new ReanimatedError(
@@ -291,11 +290,7 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  unregisterCSSKeyframes(
-    _animationName: string,
-    _viewName: string,
-    _componentName: string
-  ): void {
+  unregisterCSSKeyframes(_animationName: string, _viewName: string): void {
     throw new ReanimatedError(
       '`unregisterCSSKeyframes` is not available in JSReanimated.'
     );
