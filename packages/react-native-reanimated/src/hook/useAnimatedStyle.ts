@@ -5,12 +5,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import {
-  IS_JEST,
-  processBoxShadow,
-  ReanimatedError,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -221,13 +216,6 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
-      /* TODO: Improve this config structure in the future
-       * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-       * containing only properties that require processing and their associated processors
-       * */
-      if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
-        newValues[key] = processBoxShadow(value);
-      }
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
