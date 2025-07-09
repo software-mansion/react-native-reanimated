@@ -7,6 +7,7 @@ import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
@@ -184,5 +185,6 @@ function installRNBindingsOnUIRuntime() {
     setupRequestAnimationFrame();
     setupSetTimeout();
     setupSetImmediate();
+    setupSetInterval();
   })();
 }
