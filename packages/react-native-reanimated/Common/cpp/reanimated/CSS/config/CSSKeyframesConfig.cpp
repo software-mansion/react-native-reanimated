@@ -39,16 +39,13 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
-    const jsi::Value &componentName,
+    const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto &configObj = config.asObject(rt);
 
   return {
       createStyleInterpolator(
-          rt,
-          configObj,
-          componentName.asString(rt).utf8(rt),
-          viewStylesRepository),
+          rt, configObj, componentName, viewStylesRepository),
       getKeyframeTimingFunctions(rt, configObj)};
 }
 
