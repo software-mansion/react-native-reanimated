@@ -11,6 +11,7 @@ const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
         {"cy",
          value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", 0)},
         {"r", value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+        {"opacity", value<CSSDouble>(1)},
     });
 
 } // namespace reanimated::css

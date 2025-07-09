@@ -2,6 +2,7 @@ import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
 import { Circle, type CircleProps, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
+import { colors } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -22,7 +23,13 @@ export default function CircleExample() {
       })}
       renderExample={({ animation }) => (
         <Svg height={100} width={100}>
-          <AnimatedCircle animatedProps={animation} cx={50} cy={50} r={20} />
+          <AnimatedCircle
+            animatedProps={animation}
+            cx={50}
+            cy={50}
+            fill={colors.primary}
+            r={20}
+          />
         </Svg>
       )}
       sections={[
@@ -80,6 +87,19 @@ export default function CircleExample() {
             },
           ],
           title: 'Circle Center Y',
+        },
+        {
+          examples: [
+            {
+              keyframes: {
+                to: {
+                  opacity: 0,
+                },
+              },
+              title: 'Opacity',
+            },
+          ],
+          title: 'Opacity',
         },
       ]}
     />
