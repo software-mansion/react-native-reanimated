@@ -33,11 +33,11 @@ class StaticFeatureFlags {
 };
 
 class DynamicFeatureFlags {
-public:
+ public:
   static bool getFlag(const std::string &name);
   static void setFlag(const std::string &name, bool value);
 
-private:
+ private:
   static std::unordered_map<std::string, bool> flags_;
 };
 
