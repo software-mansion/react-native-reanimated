@@ -18,7 +18,7 @@ import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
 import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
-import { useLocalNavigationRef } from '../LocalNavigationProvider';
+import { useLocalNavigationRef } from './LocalNavigationProvider';
 
 const TABS_GAP = spacing.xxs;
 

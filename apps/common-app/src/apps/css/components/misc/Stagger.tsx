@@ -13,6 +13,7 @@ import Animated, {
 type StaggerProps = PropsWithChildren<{
   interval?: number;
   delay?: number;
+  enabled?: boolean;
   ParentComponent?: React.ComponentType<{
     children: ReactNode;
     style?: ViewStyle;
@@ -29,6 +30,7 @@ export default function Stagger({
   children,
   delay = 0,
   interval = 100,
+  enabled = true,
   itemLayout = LinearTransition,
   wrapperStye,
 }: StaggerProps) {
@@ -44,7 +46,9 @@ export default function Stagger({
         layout={itemLayout}
         style={style}
         entering={
-          interval >= 0 ? FadeInDown.delay(delay + index * interval) : undefined
+          enabled && interval >= 0
+            ? FadeInDown.delay(delay + index * interval)
+            : undefined
         }>
         {child}
       </Animated.View>
