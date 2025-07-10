@@ -10,8 +10,11 @@ import type {
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { makeMutableUI } from '../mutables';
+import { Platform } from 'react-native';
 
 const TAG_OFFSET = 1e9;
+
+const IS_ANDROID = Platform.OS === 'android';
 
 function startObservingProgress(
   tag: number,
@@ -41,8 +44,59 @@ function createLayoutAnimationManager(): {
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
 
-  return {
-    start(
+  const startActually = (
+    tag: number,
+    type: LayoutAnimationType,
+    /**
+     * CreateLayoutAnimationManager creates an animation manager for Layout
+     * animations.
+     */
+    yogaValues: Partial<LayoutAnimationValues>,
+    config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
+  ) => {
+    const style = config(yogaValues);
+    let currentAnimation = style.animations;
+
+    // When layout animation is requested, but a previous one is still running, we merge
+    // new layout animation targets into the ongoing animation
+    const previousAnimation = currentAnimationForTag.get(tag);
+    if (previousAnimation) {
+      currentAnimation = { ...previousAnimation, ...style.animations };
+    }
+    currentAnimationForTag.set(tag, currentAnimation);
+
+    let value = mutableValuesForTag.get(tag);
+    if (value === undefined) {
+      value = makeMutableUI(style.initialValues);
+      mutableValuesForTag.set(tag, value);
+    } else {
+      stopObservingProgress(tag, value);
+      value._value = style.initialValues;
+    }
+
+    // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
+    const animation = withStyleAnimation(currentAnimation);
+
+    animation.callback = (finished?: boolean) => {
+      if (finished) {
+        currentAnimationForTag.delete(tag);
+        mutableValuesForTag.delete(tag);
+        const shouldRemoveView = type === LayoutAnimationType.EXITING;
+        stopObservingProgress(tag, value, shouldRemoveView);
+      }
+      if (style.callback) {
+        style.callback(finished === undefined ? false : finished);
+      }
+    };
+
+    startObservingProgress(tag, value);
+    value.value = animation;
+  };
+
+  let start = startActually;
+
+  if (IS_ANDROID) {
+    start = (
       tag: number,
       type: LayoutAnimationType,
       /**
@@ -51,45 +105,15 @@ function createLayoutAnimationManager(): {
        */
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
-    ) {
-      const style = config(yogaValues);
-      let currentAnimation = style.animations;
+    ) => {
+      requestAnimationFrame(() => {
+        startActually(tag, type, yogaValues, config);
+      });
+    };
+  }
 
-      // When layout animation is requested, but a previous one is still running, we merge
-      // new layout animation targets into the ongoing animation
-      const previousAnimation = currentAnimationForTag.get(tag);
-      if (previousAnimation) {
-        currentAnimation = { ...previousAnimation, ...style.animations };
-      }
-      currentAnimationForTag.set(tag, currentAnimation);
-
-      let value = mutableValuesForTag.get(tag);
-      if (value === undefined) {
-        value = makeMutableUI(style.initialValues);
-        mutableValuesForTag.set(tag, value);
-      } else {
-        stopObservingProgress(tag, value);
-        value._value = style.initialValues;
-      }
-
-      // @ts-ignore The line below started failing because I added types to the method – don't have time to fix it right now
-      const animation = withStyleAnimation(currentAnimation);
-
-      animation.callback = (finished?: boolean) => {
-        if (finished) {
-          currentAnimationForTag.delete(tag);
-          mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, shouldRemoveView);
-        }
-        if (style.callback) {
-          style.callback(finished === undefined ? false : finished);
-        }
-      };
-
-      startObservingProgress(tag, value);
-      value.value = animation;
-    },
+  return {
+    start,
     stop(tag: number) {
       const value = mutableValuesForTag.get(tag);
       if (!value) {
