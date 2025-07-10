@@ -4,38 +4,64 @@ import { callMicrotasks } from '../threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  const nativeRequestAnimationFrame = global.requestAnimationFrame;
+  const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+  let animationFrameCallbacks: ((timestamp: number) => void)[] = [];
+  let callbacksBegin = 0;
+  let callbacksEnd = 0;
+
+  let flushedCallbacks = animationFrameCallbacks;
+  let flushedCallbacksBegin = 0;
+  let flushedCallbacksEnd = 0;
+
   let flushRequested = false;
 
-  global.__flushAnimationFrame = (frameTimestamp: number) => {
-    const currentCallbacks = animationFrameCallbacks;
+  globalThis.__flushAnimationFrame = (timestamp: number) => {
+    globalThis.__frameTimestamp = timestamp;
+
+    flushedCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
-    currentCallbacks.forEach((f) => f(frameTimestamp));
+
+    flushedCallbacksBegin = callbacksBegin;
+    flushedCallbacksEnd = callbacksEnd;
+    callbacksBegin = callbacksEnd;
+
+    flushRequested = false;
+
+    for (const callback of flushedCallbacks) {
+      callback(timestamp);
+    }
+
+    flushedCallbacksBegin = callbacksEnd;
+
     callMicrotasks();
+
+    globalThis.__frameTimestamp = undefined;
   };
 
-  global.requestAnimationFrame = (
+  globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
+    const handle = callbacksEnd++;
+
     animationFrameCallbacks.push(callback);
     if (!flushRequested) {
       flushRequested = true;
-      nativeRequestAnimationFrame((timestamp) => {
-        flushRequested = false;
-        global.__frameTimestamp = timestamp;
-        global.__flushAnimationFrame(timestamp);
-        global.__frameTimestamp = undefined;
-      });
+
+      nativeRequestAnimationFrame(globalThis.__flushAnimationFrame);
     }
-    return animationFrameCallbacks.length - 1;
+    return handle;
   };
 
-  global.cancelAnimationFrame = (id: number) => {
-    if (id < 0 || id >= animationFrameCallbacks.length) {
+  globalThis.cancelAnimationFrame = (handle: number) => {
+    if (handle < flushedCallbacksBegin || handle >= callbacksEnd) {
       return;
     }
-    animationFrameCallbacks[id] = () => {};
+
+    if (handle < flushedCallbacksEnd) {
+      flushedCallbacks[handle - flushedCallbacksBegin] = () => {};
+    } else {
+      animationFrameCallbacks[handle - callbacksBegin] = () => {};
+    }
   };
 }
