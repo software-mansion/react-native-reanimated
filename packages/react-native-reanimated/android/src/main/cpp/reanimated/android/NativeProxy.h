@@ -168,7 +168,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  // We keep a shared_ptr to a jni::global_ref because you cannot make weak_ptrs from jni::global_ref.
+  // We keep a shared_ptr to a jni::global_ref because you can't make weak_ptrs from jni::global_ref.
   std::shared_ptr<jni::global_ref<LayoutAnimations::javaobject>> layoutAnimations_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
