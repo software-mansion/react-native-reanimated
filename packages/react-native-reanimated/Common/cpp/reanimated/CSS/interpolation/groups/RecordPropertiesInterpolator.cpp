@@ -20,23 +20,15 @@ bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
 }
 
 void RecordPropertiesInterpolator::updateKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &keyframes) {
-  // TODO - maybe add a possibility to remove interpolators that are no longer
-  // used  (for now, for simplicity, we only add new ones)
-  const jsi::Object keyframesObject = keyframes.asObject(rt);
+    const folly::dynamic &keyframes) {
+  // TODO - maybe add a possibility to remove interpolators that are no
+  // longer used  (for now, for simplicity, we only add new ones)
+  for (const auto &item : keyframes.items()) {
+    const auto &propName = item.first.getString();
+    const auto &propValue = item.second;
 
-  jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
-  size_t propertiesCount = propertyNames.size(rt);
-
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const std::string propertyName =
-        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const jsi::Value &propertyKeyframes = keyframesObject.getProperty(
-        rt, jsi::PropNameID::forUtf8(rt, propertyName));
-
-    maybeCreateInterpolator(propertyName);
-    interpolators_[propertyName]->updateKeyframes(rt, propertyKeyframes);
+    maybeCreateInterpolator(propName);
+    interpolators_[propName]->updateKeyframes(propValue);
   }
 }
 

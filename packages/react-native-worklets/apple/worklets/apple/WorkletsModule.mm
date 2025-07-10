@@ -1,3 +1,4 @@
+#import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -33,7 +34,7 @@ using worklets::WorkletsModuleProxy;
 }
 
 #if __has_include(<React/RCTBundleConsumer.h>)
-// Experimental bundling
+// Bundle mode
 @synthesize scriptBuffer = scriptBuffer_;
 @synthesize sourceURL = sourceURL_;
 #endif // __has_include(<React/RCTBundleConsumer.h>)
@@ -64,10 +65,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   script = [scriptBuffer_ getBuffer];
   sourceURL = [sourceURL_ UTF8String];
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
@@ -87,8 +88,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       script,
       sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy =
-      worklets::jsi_utils::optimizedFromHostObject(rnRuntime, std::move(jsiWorkletsModuleProxy));
+  auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
+      rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy));
 
   return @YES;

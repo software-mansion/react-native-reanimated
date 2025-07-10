@@ -1,7 +1,9 @@
 const { transformFileSync, traverse } = require('@babel/core');
+const { program } = require('@babel/types');
 const generate = require('@babel/generator').default;
 const path = require('path');
 const fs = require('fs');
+const assert = require('assert').strict;
 
 const transformed = transformFileSync(
   path.resolve(__dirname, '../src/valueUnpacker.ts'),
@@ -17,19 +19,26 @@ const transformed = transformFileSync(
   }
 );
 
-// @ts-expect-error
+assert(
+  transformed && transformed.ast,
+  'Transformation failed or AST not generated.'
+);
+
+let valueUnpackerFn;
+
 traverse(transformed.ast, {
-  Program(path) {
-    path.get('directives').forEach((directive) => {
-      // We must strip top-level directives since
-      // they cannot be present in top-level code.
-      directive.remove();
-    });
+  FunctionDeclaration(path) {
+    if (path.node?.id?.name === '__valueUnpacker') {
+      valueUnpackerFn = path.node;
+    }
   },
 });
 
-// @ts-expect-error
-const transformFrom = generate(transformed.ast, {
+assert(valueUnpackerFn, 'Value unpacker function not found in the AST.');
+
+const prog = program([valueUnpackerFn]);
+
+const transformFrom = generate(prog, {
   comments: false,
   compact: false,
 });

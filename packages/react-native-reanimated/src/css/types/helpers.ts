@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyRecord = Record<string, any>;
 
-export type NoUndef<T> = T extends undefined ? never : T;
+type NoUndef<T> = T extends undefined ? never : T;
 
 export type Repeat<
   T,
@@ -11,7 +11,7 @@ export type Repeat<
   R extends T[] = [],
 > = R['length'] extends N ? R : Repeat<T, N, [...R, T]>;
 
-export type Simplify<T> = {
+type Simplify<T> = {
   [K in keyof T]: T[K];
 } & {};
 

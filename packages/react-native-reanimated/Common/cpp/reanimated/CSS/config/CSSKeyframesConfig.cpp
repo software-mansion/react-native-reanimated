@@ -10,7 +10,7 @@ std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
       std::make_shared<AnimationStyleInterpolator>(viewStylesRepository);
 
   const auto keyframes = config.getProperty(rt, "keyframesStyle");
-  styleInterpolator->updateKeyframes(rt, keyframes);
+  styleInterpolator->updateKeyframes(dynamicFromValue(rt, keyframes));
 
   return styleInterpolator;
 }

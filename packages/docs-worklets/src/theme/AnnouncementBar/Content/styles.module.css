@@ -1,0 +1,133 @@
+.content {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-areas: 'logo headline link close';
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1440px;
+
+  padding: 8px 16px;
+}
+
+.logo {
+  height: 24px;
+  grid-area: logo;
+}
+
+.content a {
+  color: inherit;
+}
+
+.headline {
+  font-size: 16px;
+  text-wrap: balance;
+  margin: 0;
+  font-weight: 500;
+  grid-area: headline;
+  color: var(--swm-appjs-2025-primary);
+}
+
+p.subText {
+  font-size: 14px;
+  text-wrap: balance;
+  margin: 0;
+  grid-area: subText;
+}
+
+a.link {
+  text-decoration: none;
+}
+
+.link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  padding: 4px 12px;
+  border: 1px solid var(--swm-appjs-2025-primary);
+  background-color: var(--swm-appjs-2025-primary);
+  transition: border 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  grid-area: link;
+  margin-left: auto;
+  margin-right: 64px;
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+
+.linkTitle {
+  color: var(--swm-white);
+  font-weight: bold;
+  text-wrap: nowrap;
+  transition: all 0.2s ease-in-out;
+}
+
+.link:hover {
+  background-color: var(--swm-appjs-2025-primary-hover);
+  border-color: var(--swm-appjs-2025-primary-hover);
+  text-decoration: none;
+}
+
+.link:hover .linkTitle,
+.link:hover .linkArrow {
+  color: var(--swm-white);
+}
+
+.linkArrow {
+  width: 16px;
+  height: 16px;
+  color: var(--swm-white);
+  transition: all 0.2s ease-in-out;
+}
+
+.linkArrowContainer {
+  display: flex;
+  align-items: center;
+}
+
+.close {
+  opacity: 1;
+  grid-area: close;
+}
+
+.close svg g {
+  stroke: var(--swm-appjs-2025-primary);
+  stroke-width: 2;
+}
+
+@media screen and (max-width: 1200px) {
+  .content {
+    grid-template-columns: auto 1fr 1fr auto;
+    grid-template-areas:
+      'logo logo link close'
+      'headline headline link close';
+    gap: 8px;
+  }
+  .link {
+    margin: auto;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .content {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'logo logo close'
+      'headline headline  close'
+      'link link link';
+  }
+  .link {
+    margin: 0;
+  }
+  .logo {
+    margin-bottom: auto;
+  }
+  .close {
+    padding: 8px !important;
+    margin-bottom: auto;
+  }
+}

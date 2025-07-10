@@ -33,8 +33,16 @@ export {
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 
-/** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
-export const isReanimated3 = () => true;
+/**
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
+ */
+export const isReanimated3 = () => {
+  logger.warn(
+    'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedVersion` instead.'
+  );
+  return false;
+};
 
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
@@ -176,7 +184,6 @@ export function unregisterSensor(sensorId: number): void {
  * @deprecated This function no longer has any effect in Reanimated and will be
  *   removed in the future.
  */
-// ts-prune-ignore-next This function is needed for backward compatibility
 export function enableLayoutAnimations(
   _flag: boolean,
   _isCallByUser = true

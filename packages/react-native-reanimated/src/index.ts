@@ -106,6 +106,7 @@ export type {
   EasingFunctionFactory,
 } from './Easing';
 export { Easing } from './Easing';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export type { FrameInfo } from './frameCallback';
 export type {
   Adaptable,
@@ -187,7 +188,6 @@ export {
   BounceOutLeft,
   BounceOutRight,
   BounceOutUp,
-  combineTransition,
   ComplexAnimationBuilder,
   CurvedTransition,
   EntryExitTransition,
@@ -277,6 +277,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,

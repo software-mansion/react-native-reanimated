@@ -6,7 +6,7 @@ export type ValueProcessor<V> = (
   value: V
 ) => Maybe<string> | Record<string, string>;
 
-export type ProcessedProps<P extends AnyRecord> = {
+type ProcessedProps<P extends AnyRecord> = {
   [K in keyof P]: string;
 };
 
@@ -36,7 +36,7 @@ export type RuleBuilder<P extends AnyRecord> = BuilderBase<
   Record<string, string>
 >;
 
-export type PropertyAlias<P extends AnyRecord> = {
+type PropertyAlias<P extends AnyRecord> = {
   as: keyof P;
 };
 

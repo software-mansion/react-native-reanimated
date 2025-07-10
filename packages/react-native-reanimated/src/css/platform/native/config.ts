@@ -1,7 +1,7 @@
 'use strict';
 import {
   IS_ANDROID,
-  processBoxShadow,
+  processBoxShadowNative,
   processTransformOrigin,
 } from '../../../common';
 import type { PlainStyle } from '../../types';
@@ -139,7 +139,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
-  boxShadow: { process: processBoxShadow },
+  boxShadow: { process: processBoxShadowNative },
 
   // BORDERS
   // Radius

@@ -1,19 +1,16 @@
 'use strict';
 import type { ColorValue, DimensionValue } from 'react-native';
 
-import { processColor, ReanimatedError } from '../../../common';
+import {
+  hasSuffix,
+  maybeAddSuffix,
+  processColor,
+  ReanimatedError,
+} from '../../../common';
 import type { ParametrizedTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import type { AddArrayPropertyType, ConvertValuesToArrays } from '../../types';
 import { kebabizeCamelCase } from '../../utils';
-
-export function hasSuffix(value: unknown): value is string {
-  return typeof value === 'string' && isNaN(parseInt(value[value.length - 1]));
-}
-
-export function maybeAddSuffix(value: unknown, suffix: string) {
-  return hasSuffix(value) ? value : `${String(value)}${suffix}`;
-}
 
 export function maybeAddSuffixes<T, K extends keyof T>(
   object: ConvertValuesToArrays<T>,

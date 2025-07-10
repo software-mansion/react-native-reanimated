@@ -19,4 +19,11 @@ if (!globalThis._WORKLET) {
   SHOULD_BE_USE_WEB = RN_SHOULD_BE_USE_WEB;
 }
 
-export { IS_JEST, IS_WEB, IS_WINDOWS, SHOULD_BE_USE_WEB };
+export {
+  IS_JEST,
+  /** @knipIgnore */
+  IS_WEB,
+  /** @knipIgnore */
+  IS_WINDOWS,
+  SHOULD_BE_USE_WEB,
+};

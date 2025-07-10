@@ -5,7 +5,7 @@ import type { BoxShadowValue } from 'react-native';
 import { IS_ANDROID } from '../constants';
 import { ReanimatedError } from '../errors';
 import type { ValueProcessor } from '../types';
-import { parseBoxShadowString } from '../utils';
+import { maybeAddSuffix, parseBoxShadowString } from '../utils';
 import { processColor } from './colors';
 
 const ERROR_MESSAGES = {
@@ -17,10 +17,10 @@ const ERROR_MESSAGES = {
 };
 
 export type ProcessedBoxShadowValue = {
+  offsetX: number;
+  offsetY: number;
   blurRadius?: number;
   color?: number;
-  offsetX?: number;
-  offsetY?: number;
   spreadDistance?: number;
   inset?: boolean;
 };
@@ -33,7 +33,7 @@ const parseBlurRadius = (value: string) => {
   return parseFloat(value);
 };
 
-export const processBoxShadow: ValueProcessor<
+export const processBoxShadowNative: ValueProcessor<
   ReadonlyArray<BoxShadowValue> | string,
   ProcessedBoxShadowValue[]
 > = (value) => {
@@ -74,4 +74,35 @@ export const processBoxShadow: ValueProcessor<
       spreadDistance: parseFloat(spreadDistance as string),
     };
   });
+};
+
+export const processBoxShadowWeb: ValueProcessor<
+  string | ReadonlyArray<BoxShadowValue>,
+  string
+> = (value) => {
+  const parsedShadow =
+    typeof value === 'string' ? parseBoxShadowString(value) : value;
+
+  return parsedShadow
+    .map(
+      ({
+        offsetX,
+        offsetY,
+        color = '#000',
+        blurRadius = '',
+        spreadDistance = '',
+        inset = '',
+      }) =>
+        [
+          maybeAddSuffix(offsetX, 'px'),
+          maybeAddSuffix(offsetY, 'px'),
+          maybeAddSuffix(blurRadius, 'px'),
+          maybeAddSuffix(spreadDistance, 'px'),
+          color,
+          inset ? 'inset' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+    )
+    .join(', ');
 };

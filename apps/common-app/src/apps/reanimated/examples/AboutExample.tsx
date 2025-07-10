@@ -63,12 +63,10 @@ export default function AboutExample() {
             {getReactNativeVersion()}
           </Text>
           <Text style={styles.text}>
-            <Text style={styles.bold}>Experimental bundling:</Text>{' '}
+            <Text style={styles.bold}>Bundle mode:</Text>{' '}
             {
               // @ts-expect-error This global is not exposed.
-              globalThis._WORKLETS_EXPERIMENTAL_BUNDLING
-                ? 'Enabled'
-                : 'Disabled'
+              globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'
             }
           </Text>
         </>

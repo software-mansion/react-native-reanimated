@@ -1,7 +1,7 @@
 'use strict';
 import type { FilterFunction } from 'react-native';
 
-import { maybeAddSuffix } from '../../utils';
+import { maybeAddSuffix } from '../../../../../common';
 import type { ValueProcessor } from '../types';
 
 const FILTER_SUFFIXES: Record<string, string> = {

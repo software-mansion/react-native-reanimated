@@ -192,7 +192,7 @@ export function makeWorkletFactory(
 
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -221,7 +221,7 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
-            !state.opts.experimentalBundling &&
+            !state.opts.bundleMode &&
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -258,7 +258,7 @@ export function makeWorkletFactory(
     ),
   ];
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -310,7 +310,7 @@ export function makeWorkletFactory(
   const factoryParams = closureVariables.map((variableId) => {
     const clonedId = cloneNode(variableId, true);
     if (
-      !state.opts.experimentalBundling &&
+      !state.opts.bundleMode &&
       clonedId.name.endsWith(workletClassFactorySuffix)
     ) {
       clonedId.name = clonedId.name.slice(
@@ -321,7 +321,7 @@ export function makeWorkletFactory(
     return clonedId;
   });
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
@@ -355,7 +355,7 @@ export function makeWorkletFactory(
     )
   );
 
-  if (state.opts.experimentalBundling) {
+  if (state.opts.bundleMode) {
     generateWorkletFile(
       libraryBindingsToImport,
       relativeBindingsToImport,
