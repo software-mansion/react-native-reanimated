@@ -20,7 +20,7 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 
 void ReanimatedMountHook::shadowTreeDidMount(
     const RootShadowNode::Shared &rootShadowNode,
-    double) noexcept {
+    HighResTimeStamp) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
   auto reaShadowNode =
