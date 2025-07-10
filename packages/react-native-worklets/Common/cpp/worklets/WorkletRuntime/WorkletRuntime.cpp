@@ -73,6 +73,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 }
 
 WorkletRuntime::WorkletRuntime(
+    uint64_t runtimeId,
     std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -81,7 +82,8 @@ WorkletRuntime::WorkletRuntime(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
-    : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+    : runtimeId_(runtimeId),
+      runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
