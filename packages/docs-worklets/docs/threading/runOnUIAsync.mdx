@@ -15,10 +15,10 @@ import { runOnUIAsync } from 'react-native-worklets';
 // RN Runtime, JS thread
 
 const result: Promise<number> = runOnUIAsync((): number => {
-  return 2137;
+  return 1;
 })();
 
-await result; // 2137
+await result; // 1
 ```
 
 <details>

@@ -41,6 +41,12 @@ To convert a JavaScript function into a serializable object which can be copied 
 
 Functions marked with `"worklet";` directive are automatically picked up and workletized by the Reanimated Babel plugin.
 
+## Worklet Runtime
+
+A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets. 
+
+It isn't coupled to any thread, but there might be a thread dedicated to its execution.
+
 ## JavaScript thread
 
 JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app.
@@ -58,3 +64,11 @@ You can learn more about it by reading the [Threading model](https://reactnative
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
 You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).
+
+## Shareable
+
+A `Shareable` is an object which can be assigned to a specific [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime), where it's shared across worklets.
+
+Accessing a `Shareable` on a runtime different from the assigned runtime means reading or modifying it on a different [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime). 
+
+A `Shareable` cannot hold a function.
