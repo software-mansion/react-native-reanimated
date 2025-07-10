@@ -16,7 +16,6 @@ def find_config()
     :react_native_common_dir => nil,
     :dynamic_frameworks_reanimated_dir => nil,
     :dynamic_frameworks_worklets_dir => nil,
-    :has_compatible_worklets => nil,
   }
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
