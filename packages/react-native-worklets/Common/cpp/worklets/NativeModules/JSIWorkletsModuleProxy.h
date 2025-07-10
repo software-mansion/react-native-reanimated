@@ -7,8 +7,6 @@
 
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 

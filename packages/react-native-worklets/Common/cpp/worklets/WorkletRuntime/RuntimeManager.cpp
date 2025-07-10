@@ -4,8 +4,10 @@
 #include <utility>
 
 namespace worklets {
-auto RuntimeManager::getRuntime(uint64_t runtimeId)
-    -> std::shared_ptr<WorkletRuntime> {
+
+const std::string uiRuntimeName{"UI"};
+
+std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
     return weakRuntimes_.at(runtimeId).lock();
@@ -13,8 +15,8 @@ auto RuntimeManager::getRuntime(uint64_t runtimeId)
   return nullptr;
 }
 
-auto RuntimeManager::getRuntime(const std::string &name)
-    -> std::shared_ptr<WorkletRuntime> {
+std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
+    const std::string &name) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (nameToRuntimeId_.contains(name)) {
     return getRuntime(nameToRuntimeId_.at(name));
@@ -22,15 +24,14 @@ auto RuntimeManager::getRuntime(const std::string &name)
   return nullptr;
 }
 
-auto RuntimeManager::getAllRuntimes()
-    -> std::vector<std::shared_ptr<WorkletRuntime>> {
+std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
   std::shared_lock lock(weakRuntimesMutex_);
 
-  auto runtimes = std::vector<std::shared_ptr<WorkletRuntime>>{};
+  std::vector<std::shared_ptr<WorkletRuntime>> runtimes;
   runtimes.reserve(weakRuntimes_.size());
 
-  for (const auto &pair : weakRuntimes_) {
-    if (auto runtime = pair.second.lock()) {
+  for (const auto &[id, weakRuntime] : weakRuntimes_) {
+    if (auto runtime = weakRuntime.lock()) {
       runtimes.push_back(runtime);
     }
   }
@@ -38,15 +39,15 @@ auto RuntimeManager::getAllRuntimes()
   return runtimes;
 }
 
-auto RuntimeManager::getUIRuntime() -> std::shared_ptr<WorkletRuntime> {
+std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
   return getRuntime(uiRuntimeId);
 }
 
-auto RuntimeManager::createWorkletRuntime(
+std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool supportsLocking,
     const std::string &name,
-    const jsi::Value &initializer) -> std::shared_ptr<WorkletRuntime> {
+    std::shared_ptr<ShareableWorklet> initializer) {
   const auto runtimeId = getNextRuntimeId();
   const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
@@ -56,12 +57,8 @@ auto RuntimeManager::createWorkletRuntime(
 
   workletRuntime->init(std::move(jsiWorkletsModuleProxy));
 
-  if (!initializer.isUndefined()) {
-    auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-        workletRuntime->getJSIRuntime(),
-        initializer,
-        "[Worklets] Initializer must be a worklet.");
-    workletRuntime->runGuarded(initializerShareable);
+  if (initializer) {
+    workletRuntime->runGuarded(initializer);
   }
 
   std::unique_lock lock(weakRuntimesMutex_);
@@ -71,15 +68,18 @@ auto RuntimeManager::createWorkletRuntime(
   return workletRuntime;
 }
 
-auto RuntimeManager::createUninitializedUIRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue)
-    -> std::shared_ptr<WorkletRuntime> {
+std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
+    const std::shared_ptr<MessageQueueThread> &jsQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       uiRuntimeId, jsQueue, uiRuntimeName, true /* supportsLocking */
   );
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[uiRuntimeId] = uiRuntime;
   return uiRuntime;
+}
+
+uint64_t RuntimeManager::getNextRuntimeId() {
+  return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
 }
 
 } // namespace worklets

@@ -246,15 +246,3 @@ export class EntryExitTransition
     };
   };
 }
-
-/**
- * @deprecated Please use
- *   `EntryExitTransition.entering(entering).exiting(exiting)` instead.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
- */
-export function combineTransition(
-  exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
-  entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
-): EntryExitTransition {
-  return EntryExitTransition.entering(entering).exiting(exiting);
-}

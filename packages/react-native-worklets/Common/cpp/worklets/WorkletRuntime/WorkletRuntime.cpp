@@ -79,18 +79,18 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const bool supportsLocking)
     : runtimeId_(runtimeId),
-      name_(name),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
 #endif
-      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)) {
+      name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
 
 void WorkletRuntime::init(
-    std::shared_ptr<JSIWorkletsModuleProxy> &&jsiWorkletsModuleProxy) {
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();

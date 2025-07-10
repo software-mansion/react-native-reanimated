@@ -63,7 +63,7 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
-    const jsi::Value &initializer = jsi::Value::undefined()) {
+    std::shared_ptr<ShareableWorklet> &initializer) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
       jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
@@ -438,13 +438,16 @@ jsi::Value JSIWorkletsModuleProxy::get(
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
+              rt, args[1], "[Worklets] Initializer must be a worklet.");
+
           return createWorkletRuntime(
               rt,
               clone->getRuntimeManager(),
               clone->getJSQueue(),
               clone,
               args[0].asString(rt).utf8(rt),
-              args[1]);
+              shareableInitializer);
         });
   }
 

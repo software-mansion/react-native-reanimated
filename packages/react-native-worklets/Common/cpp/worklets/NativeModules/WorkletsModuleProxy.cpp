@@ -31,7 +31,10 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
+      jsScheduler_(std::make_shared<JSScheduler>(
+          rnRuntime,
+          jsCallInvoker,
+          std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
       script_(script),
       sourceUrl_(sourceUrl),
