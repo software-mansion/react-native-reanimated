@@ -1,0 +1,14 @@
+diff --git a/common/cpp/react/renderer/components/safeareacontext/RNCSafeAreaViewShadowNode.h b/common/cpp/react/renderer/components/safeareacontext/RNCSafeAreaViewShadowNode.h
+index 3b4da5ebe5c4ea3cdc9635cfebb6a2d176d2c135..f98b0c7a93029b01729ed156f2c3fae15d5e0a40 100644
+--- a/common/cpp/react/renderer/components/safeareacontext/RNCSafeAreaViewShadowNode.h
++++ b/common/cpp/react/renderer/components/safeareacontext/RNCSafeAreaViewShadowNode.h
+@@ -25,7 +25,8 @@ class JSI_EXPORT RNCSafeAreaViewShadowNode final
+  public:
+   static ShadowNodeTraits BaseTraits() {
+     auto traits = ConcreteViewShadowNode::BaseTraits();
+-    traits.set(ShadowNodeTraits::Trait::DirtyYogaNode);
++    // See https://github.com/AppAndFlow/react-native-safe-area-context/issues/645
++    // traits.set(ShadowNodeTraits::Trait::DirtyYogaNode);
+     return traits;
+   }
+ 
