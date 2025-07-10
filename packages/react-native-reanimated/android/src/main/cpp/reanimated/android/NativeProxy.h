@@ -141,8 +141,7 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
   std::function<void(int, int)> callback_;
 };
 
-class NativeProxy : public jni::HybridClass<NativeProxy>,
-                    std::enable_shared_from_this<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
@@ -169,8 +168,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
+  // We keep a shared_ptr to a jni::global_ref because you can't make weak_ptrs from jni::global_ref.
+  std::shared_ptr<jni::global_ref<LayoutAnimations::javaobject>> layoutAnimations_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
-  jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();
