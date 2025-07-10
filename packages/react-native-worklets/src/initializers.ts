@@ -1,11 +1,14 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
-import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { mockedRequestAnimationFrame } from './runLoop/mockedRequestAnimationFrame';
+import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
+import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/setIntervalPolyfill';
+import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -198,5 +201,8 @@ function installRNBindingsOnUIRuntime() {
      */
     setupMicrotasks();
     setupRequestAnimationFrame();
+    setupSetTimeout();
+    setupSetImmediate();
+    setupSetInterval();
   })();
 }
