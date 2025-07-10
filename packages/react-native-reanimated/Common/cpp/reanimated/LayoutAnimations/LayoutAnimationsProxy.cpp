@@ -481,7 +481,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   bool hasAnimatedChildren = false;
 
   shouldRemoveSubviewsWithoutAnimations =
-      shouldRemoveSubviewsWithoutAnimations && (!hasExitAnimation || node->state == MOVED);
+      shouldRemoveSubviewsWithoutAnimations &&
+      (!hasExitAnimation || node->state == MOVED);
   std::vector<std::shared_ptr<MutationNode>> toBeRemoved;
 
   // iterate from the end, so that children
