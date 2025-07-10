@@ -12,7 +12,7 @@ void AnimatedPropsRegistry::update(
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
-    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+    auto shadowNode = Bridging<ShadowNode::Shared>::fromJs(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
