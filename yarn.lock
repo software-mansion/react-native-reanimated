@@ -9996,7 +9996,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
     react-native: "npm:0.81.0-rc.0"
-    react-native-gesture-handler: "npm:2.26.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch"
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
@@ -20512,6 +20512,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch":
+  version: 2.26.0
+  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch::version=2.26.0&hash=eebbf5"
+  dependencies:
+    "@egjs/hammerjs": "npm:^2.0.17"
+    hoist-non-react-statics: "npm:^3.3.0"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/a27b0c7f44f1110fbd87ea50f782226363051a1358d8b6ad1545826c70c8cc9ece719ce8b611154063004af2377de75ca6636208ae3d12f6447e32340e65fa60
+  languageName: node
+  linkType: hard
+
 "react-native-is-edge-to-edge@npm:1.1.7":
   version: 1.1.7
   resolution: "react-native-is-edge-to-edge@npm:1.1.7"
@@ -20686,7 +20700,7 @@ __metadata:
     react: "npm:19.1.0"
     react-native: "npm:0.81.0-rc.0"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
-    react-native-gesture-handler: "npm:2.26.0"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch"
     react-native-is-edge-to-edge: "npm:1.1.7"
     react-native-web: "npm:0.20.0"
     react-native-worklets: "workspace:*"
