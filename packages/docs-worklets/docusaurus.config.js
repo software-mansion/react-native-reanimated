@@ -115,9 +115,10 @@ const config = {
         darkTheme: darkCodeTheme,
       },
       algolia: {
-        appId: 'CHLGM6BFRG',
-        apiKey: 'b87befadf62b27ce46142fee664e9c9c',
-        indexName: 'react-native-reanimated',
+        appId: 'HTRBY5HZ15',
+        apiKey: '93f840a25edfcf77d2af4a5f2b386214',
+        indexName: 'react-native-worklets',
+        contextualSearch: false,
       },
     }),
   plugins: [
