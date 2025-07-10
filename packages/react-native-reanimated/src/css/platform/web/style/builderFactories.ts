@@ -1,5 +1,6 @@
 'use strict';
 
+import { hasSuffix } from '../../../../common';
 import type { AnyRecord } from '../../../types';
 import {
   hasProp,
@@ -8,7 +9,6 @@ import {
   isRecord,
   kebabizeCamelCase,
 } from '../../../utils';
-import { hasSuffix } from '../utils';
 import type {
   AnyBuilderConfig,
   RuleBuilder,

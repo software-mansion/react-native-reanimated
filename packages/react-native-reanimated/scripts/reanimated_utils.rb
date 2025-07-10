@@ -76,3 +76,29 @@ def assert_new_architecture_enabled(new_arch_enabled)
     raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
 end
+
+def get_static_feature_flags()
+  feature_flags = {}
+
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
+  if !File.exist?(static_feature_flags_path)
+    raise "[Reanimated] Feature flags file not found at #{static_feature_flags_path}."
+  end
+  static_feature_flags_json = JSON.parse(File.read(static_feature_flags_path))
+  static_feature_flags_json.each do |key, value|
+    feature_flags[key] = value.to_s
+  end
+
+  package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
+  if File.exist?(package_json_path)
+    package_json = JSON.parse(File.read(package_json_path))
+    if package_json['reanimated'] && package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json = package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json.each do |key, value|
+        feature_flags[key] = value.to_s
+      end
+    end
+  end
+
+  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
+end
