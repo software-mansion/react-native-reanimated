@@ -18,8 +18,6 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
-import JSPropsExample from './CircularSliderExample';
-import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
@@ -124,6 +122,8 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import PerformanceSharedArrayExample from './PerformanceSharedArrayExample';
+import PerformanceSharedArrayAnimationExample from './PerformacneSharedArrayAnimationExample';
 
 interface Example {
   icon?: string;
@@ -138,6 +138,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  PerformanceSharedArrayExample: {
+    icon: '🔄',
+    title: 'Performance shared array',
+    screen: PerformanceSharedArrayExample,
+  },
+  PerformanceSharedArrayAnimationExample: {
+    icon: '🔄',
+    title: 'Performance shared array animation',
+    screen: PerformanceSharedArrayAnimationExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
@@ -174,16 +184,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Use shared array',
     screen: UseSharedArrayExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
-  },
-  CircularSliderExample: {
-    icon: '🔘',
-    title: 'Circular slider',
-    screen: CircularSliderExample,
-  },
+  // JSPropsExample: {
+  //   icon: '🟨',
+  //   title: 'JS props',
+  //   screen: JSPropsExample,
+  // },
+  // CircularSliderExample: {
+  //   icon: '🔘',
+  //   title: 'Circular slider',
+  //   screen: CircularSliderExample,
+  // },
   MemoExample: {
     icon: '🧠',
     title: 'Memo',

@@ -188,7 +188,7 @@ function createMapperRegistry() {
             sharedRegisterer.has(sv)
           ) {
             const sharedRegistryItem = sharedRegisterer.get(sv);
-            if (sharedRegistryItem?.keys.includes(key)) {
+            if (sharedRegistryItem?.includes(key)) {
               mapper.dirty = true;
               maybeRequestUpdates();
             }

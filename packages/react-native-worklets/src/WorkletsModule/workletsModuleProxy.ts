@@ -63,6 +63,9 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): ShareableRef<object>;
 
+  makeShareableArrayOfNumbers(array: number[]): ShareableRef<number[]>;
+  makeShareableArrayOfStrings(array: string[]): ShareableRef<string[]>;
+
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

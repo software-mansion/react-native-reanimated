@@ -137,6 +137,18 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeShareableArrayOfNumbers(): ShareableRef<number[]> {
+    throw new WorkletsError(
+      'makeShareableArrayOfNumbers should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableArrayOfStrings(): ShareableRef<string[]> {
+    throw new WorkletsError(
+      'makeShareableArrayOfStrings should never be called in JSWorklets.'
+    );
+  }
+
   createWorkletRuntime(
     _name: string,
     _initializer: ShareableRef<() => void>

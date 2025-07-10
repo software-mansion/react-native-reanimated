@@ -74,6 +74,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     return this.#shareableUndefined;
   }
 
+  makeShareableArrayOfNumbers(array: number[]) {
+    return this.#workletsModuleProxy.makeShareableArrayOfNumbers(array);
+  }
+
+  makeShareableArrayOfStrings(array: string[]) {
+    return this.#workletsModuleProxy.makeShareableArrayOfStrings(array);
+  }
+
   makeShareableNull() {
     return this.#shareableNull;
   }
