@@ -35,7 +35,7 @@ WorkletsModule::WorkletsModule(
       workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       *rnRuntime_,
-      std::dynamic_pointer_cast<jsi::HostObject>(
+      std::static_pointer_cast<jsi::HostObject>(
           std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
       *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy));

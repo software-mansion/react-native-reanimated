@@ -253,6 +253,10 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
+  setDynamicFeatureFlag(_name: string, _value: boolean): void {
+    // noop
+  }
+
   setViewStyle(_viewTag: number, _style: StyleProps): void {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
@@ -326,7 +330,7 @@ class JSReanimated implements IReanimatedModule {
 
 // Lack of this export breaks TypeScript generation since
 // an enum transpiles into JavaScript code.
-// ts-prune-ignore-next
+/** @knipIgnore */
 export enum Platform {
   WEB_IOS = 'web iOS',
   WEB_ANDROID = 'web Android',
