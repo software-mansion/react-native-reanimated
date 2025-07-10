@@ -42,8 +42,10 @@ To use `react-native-worklets`'s bundle mode feature, you need to make the follo
    );
    ```
 
-3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-rc.4-af2762c07e.patch).
-4. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-rc.4-ad01aea617.patch).
+3. Patch `@react-native-community/cli` with the [diff](../../.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch).
+4. Patch `metro` with the [diff](../../.yarn/patches/metro-npm-0.82.4-2c6a795208.patch).
+5. Patch `metro-runtime` with the [diff](../../.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch).
+6. Patch `react-native` with the [diff](../../.yarn/patches/react-native-npm-0.80.0-dababd395b.patch).
 
 ### iOS
 
@@ -63,10 +65,3 @@ ENV['WORKLETS_BUNDLE_MODE'] = '1'
    ```groovy
    workletsBundleMode=true
    ```
-
-## Running
-
-- When running the app, it will initially throw errors like `Unable to resolve module react-native-worklets/__generatedWorklets/...`. This is expected, because the bundle has not yet converged. When it happens, reload the app. On Android you might need to restart the app. After several reloads, the bundle will converge and the errors will be gone.
-- In rare cases where the same error would reappear, re-run Metro bundler with the `--reset-cache` flag to enforce rebuilding the worklets bundle.
-- Fast refresh will not work when you modify code in worklets. You need to reload the app in these cases.
-- In production builds bundling is a compilation step - which means that the compilation will fail several times until the bundle converges. Keep restarting the build until it succeeds.
