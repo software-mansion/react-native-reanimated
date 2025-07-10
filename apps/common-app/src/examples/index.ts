@@ -60,6 +60,7 @@ import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation'
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedTest from './LayoutAnimations/Nested';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
@@ -748,6 +749,10 @@ export const EXAMPLES: Record<string, Example> = {
   ModalExitingExample: {
     title: '[LA] Modal exiting example',
     screen: ModalExitingExample,
+  },
+  MoveWithExiting: {
+    title: '[LA] Move with exiting',
+    screen: MoveWithExiting,
   },
 
   // Shared Element Transitions
