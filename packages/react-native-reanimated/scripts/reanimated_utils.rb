@@ -31,6 +31,12 @@ def find_config()
     raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
+  validate_worklets_script = File.expand_path(File.join(__dir__, 'validate-worklets-version.js'))
+  unless system("node \"#{validate_worklets_script}\"")
+    abort("[Reanimated] Failed to validate worklets version")
+  end
+
+
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
