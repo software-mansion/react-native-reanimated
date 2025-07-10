@@ -7,30 +7,32 @@ export function setupSetInterval() {
 
   const setIntervalPolyfill = (
     callback: (...args: unknown[]) => void,
-    delay: number,
+    delay: number = 0,
     ...args: unknown[]
   ) => {
-    const timeoutHandle = setTimeout(() => {
-      callback(...args);
-      const newTimeoutHandle = setTimeout(
-        callback,
-        delay,
-        ...args
+    let intervalHandle = 0;
+
+    const repeatingCallback = () => {
+      const timeoutHandle = setTimeout(
+        repeatingCallback,
+        delay
       ) as unknown as number;
-      intervalHandleToTimeoutHandle.set(timeoutHandle, newTimeoutHandle);
-    }, delay) as unknown as number;
+      intervalHandleToTimeoutHandle.set(intervalHandle, timeoutHandle);
+      callback(...args);
+    };
 
-    return timeoutHandle;
+    intervalHandle = setTimeout(repeatingCallback, delay) as unknown as number;
+    intervalHandleToTimeoutHandle.set(intervalHandle, intervalHandle);
+
+    return intervalHandle;
   };
 
-  const clearIntervalPolyfill = (id: number) => {
-    const timeoutHandle = intervalHandleToTimeoutHandle.get(id);
-    intervalHandleToTimeoutHandle.delete(id);
+  const clearIntervalPolyfill = (intervalHandle: number) => {
+    const timeoutHandle = intervalHandleToTimeoutHandle.get(intervalHandle);
     clearTimeout(timeoutHandle);
+    intervalHandleToTimeoutHandle.delete(intervalHandle);
   };
 
-  // @ts-expect-error TODO:
-  globalThis.setInterval = setIntervalPolyfill;
-  // @ts-expect-error TODO:
-  globalThis.clearInterval = clearIntervalPolyfill;
+  globalThis.setInterval = setIntervalPolyfill as typeof setInterval;
+  globalThis.clearInterval = clearIntervalPolyfill as typeof clearInterval;
 }

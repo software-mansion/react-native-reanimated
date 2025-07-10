@@ -3,31 +3,38 @@
 export function setupSetTimeout() {
   'worklet';
 
+  const timeoutHandleToRafHandle: Map<number, number> = new Map();
+
   const setTimeoutPolyfill = (
     callback: (...args: unknown[]) => void,
-    delay: number,
+    delay: number = 1,
     ...args: unknown[]
   ) => {
-    const time = performance.now();
-    return globalThis.requestAnimationFrame(() => {
+    const start = performance.now();
+    let timeoutHandle = 0;
+
+    const rafCallback = () => {
       const now = performance.now();
-      if (performance.now() - time >= delay) {
+      if (now - start >= delay) {
         callback(...args);
+        timeoutHandleToRafHandle.delete(timeoutHandle);
       } else {
-        const newDelay = delay - (now - time);
-        globalThis.requestAnimationFrame(() => {
-          setTimeoutPolyfill(callback, newDelay, ...args);
-        });
+        const rafHandle = requestAnimationFrame(rafCallback);
+        timeoutHandleToRafHandle.set(timeoutHandle, rafHandle);
       }
-    });
+    };
+
+    timeoutHandle = requestAnimationFrame(rafCallback);
+    timeoutHandleToRafHandle.set(timeoutHandle, timeoutHandle);
+    return timeoutHandle;
   };
 
-  const clearTimeoutPolyfill = (id: number) => {
-    globalThis.cancelAnimationFrame(id);
+  const clearTimeoutPolyfill = (timeoutHandle: number) => {
+    const rafHandle = timeoutHandleToRafHandle.get(timeoutHandle);
+    timeoutHandleToRafHandle.delete(timeoutHandle);
+    cancelAnimationFrame(rafHandle!);
   };
 
-  // @ts-expect-error TODO:
-  globalThis.setTimeout = setTimeoutPolyfill;
-  // @ts-expect-error TODO:
-  globalThis.clearTimeout = clearTimeoutPolyfill;
+  globalThis.setTimeout = setTimeoutPolyfill as typeof setTimeout;
+  globalThis.clearTimeout = clearTimeoutPolyfill as typeof clearTimeout;
 }

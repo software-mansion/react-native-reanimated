@@ -7,15 +7,14 @@ export function setupSetImmediate() {
     callback: (...args: unknown[]) => void,
     ...args: unknown[]
   ) => {
-    setTimeout(callback, 0, ...args);
+    return setTimeout(callback, 0, ...args);
   };
 
-  const clearImmediatePolyfill = (id: number) => {
-    clearTimeout(id);
+  const clearImmediatePolyfill = (immediateHandle: number) => {
+    clearTimeout(immediateHandle);
   };
 
-  // @ts-expect-error TODO:
-  globalThis.setImmediate = setImmediatePolyfill;
-  // @ts-expect-error TODO:
-  globalThis.clearImmediate = clearImmediatePolyfill;
+  globalThis.setImmediate =
+    setImmediatePolyfill as unknown as typeof setImmediate;
+  globalThis.clearImmediate = clearImmediatePolyfill as typeof clearImmediate;
 }

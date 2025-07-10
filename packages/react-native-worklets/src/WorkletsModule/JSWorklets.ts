@@ -1,6 +1,6 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
+import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { IS_JEST } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';

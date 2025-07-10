@@ -52,6 +52,12 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
             require('./tests/runLoop/cancelAnimationFrame.test');
+            require('./tests/runLoop/setTimeoutPolyfill.test');
+            require('./tests/runLoop/clearTimeoutPolyfill.test');
+            require('./tests/runLoop/setImmediatePolyfill.test');
+            require('./tests/runLoop/clearImmediatePolyfill.test');
+            require('./tests/runLoop/setIntervalPolyfill.test');
+            require('./tests/runLoop/clearIntervalPolyfill.test');
           },
         },
         {
