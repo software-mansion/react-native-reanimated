@@ -1,3 +1,4 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -74,14 +75,9 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
-    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl)
+    const bool supportsLocking)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
@@ -91,13 +87,20 @@ WorkletRuntime::WorkletRuntime(
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+}
+
+void WorkletRuntime::init(
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+  jsi::Runtime &rt = *runtime_;
+  const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt,
-      name,
+      name_,
       jsScheduler,
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
