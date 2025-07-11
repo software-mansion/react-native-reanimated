@@ -17,13 +17,13 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 using RegistryMap =
-    std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
+    std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
-  ShadowNode::Shared shadowNode;
+  std::shared_ptr<const ShadowNode> shadowNode;
   std::unordered_set<std::string> props;
 };
 
@@ -53,11 +53,11 @@ class UpdatesRegistry {
   RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &props);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 

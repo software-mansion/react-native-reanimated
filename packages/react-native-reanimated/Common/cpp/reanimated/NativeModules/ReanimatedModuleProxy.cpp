@@ -15,7 +15,6 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
 
 #include <functional>
 #include <iomanip>
@@ -250,7 +249,7 @@ static inline std::string intColorToHex(const int val) {
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
-    const ShadowNode::Shared &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
@@ -298,7 +297,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
-  const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+  const auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rnRuntime, shadowNodeWrapper);
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
       [=, weakThis = weak_from_this()]() {
         auto strongThis = weakThis.lock();
@@ -428,7 +427,7 @@ void ReanimatedModuleProxy::setViewStyle(
 void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
@@ -458,7 +457,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
   const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
 
@@ -511,7 +510,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
       std::move(shadowNode),
@@ -785,7 +784,7 @@ void ReanimatedModuleProxy::dispatchCommand(
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
     const jsi::Value &argsValue) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  std::shared_ptr<const ShadowNode> shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
   const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
@@ -810,7 +809,7 @@ jsi::String ReanimatedModuleProxy::obtainProp(
   jsi::Runtime &uiRuntime =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
-  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
   const auto resultStr =
       obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
   return jsi::String::createFromUtf8(rt, resultStr);
@@ -821,7 +820,7 @@ jsi::Value ReanimatedModuleProxy::measure(
     const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
 
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeValue);
   auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
 

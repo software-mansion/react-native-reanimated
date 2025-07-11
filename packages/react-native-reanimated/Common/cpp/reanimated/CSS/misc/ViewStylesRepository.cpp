@@ -9,7 +9,7 @@ ViewStylesRepository::ViewStylesRepository(
       animatedPropsRegistry_(animatedPropsRegistry) {}
 
 jsi::Value ViewStylesRepository::getNodeProp(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
   int tag = shadowNode->getTag();
 
@@ -46,12 +46,12 @@ jsi::Value ViewStylesRepository::getNodeProp(
 }
 
 jsi::Value ViewStylesRepository::getParentNodeProp(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::string &propName) {
   const auto surfaceId = shadowNode->getSurfaceId();
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
-  ShadowNode::Shared parentNode = nullptr;
+  std::shared_ptr<const ShadowNode> parentNode = nullptr;
 
   shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
     auto currentRevision = shadowTree.getCurrentRevision();
@@ -84,7 +84,7 @@ void ViewStylesRepository::clearNodesCache() {
 
 void ViewStylesRepository::updateCacheIfNeeded(
     CachedShadowNode &cachedNode,
-    const ShadowNode::Shared &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
