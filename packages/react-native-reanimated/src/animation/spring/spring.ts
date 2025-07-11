@@ -4,7 +4,9 @@ import type {
   Animation,
   AnimationCallback,
   Timestamp,
-} from '../commonTypes';
+} from '../../commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import { GentleSpringConfig } from './springConfigs';
 import type {
   DefaultSpringConfig,
   InnerSpringAnimation,
@@ -13,15 +15,15 @@ import type {
   SpringConfigInner,
 } from './springUtils';
 import {
-  calculateNewMassToMatchDuration,
+  calculateNewStiffnessToMatchDuration,
   checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
+  getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(
@@ -53,15 +55,14 @@ export const withSpring = ((
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
     const defaultConfig: DefaultSpringConfig = {
-      damping: 10,
-      mass: 1,
-      stiffness: 100,
+      ...GentleSpringConfig,
       overshootClamping: false,
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
+      energyCutoff: 8e-9,
       velocity: 0,
-      duration: 2000,
-      dampingRatio: 0.5,
+      duration: 840,
+      dampingRatio: 1,
       reduceMotion: undefined,
       clamp: undefined,
     } as const;
@@ -70,6 +71,9 @@ export const withSpring = ((
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
+      useManualThresholds: !!(
+        userConfig?.restDisplacementThreshold || userConfig?.restSpeedThreshold
+      ),
       skipAnimation: false,
     };
 
@@ -84,16 +88,7 @@ export const withSpring = ((
       now: Timestamp
     ): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
-      const { toValue, startTimestamp, current } = animation;
-
-      const timeFromStart = now - startTimestamp;
-
-      if (config.useDuration && timeFromStart >= config.duration) {
-        animation.current = toValue;
-        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-        animation.lastTimestamp = 0;
-        return true;
-      }
+      const { toValue, current } = animation;
 
       if (config.skipAnimation) {
         animation.current = toValue;
@@ -131,13 +126,7 @@ export const withSpring = ((
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      const { isOvershooting, isVelocity, isDisplacement } =
-        isAnimationTerminatingCalculation(animation, config);
-
-      const springIsNotInMove =
-        isOvershooting || (isVelocity && isDisplacement);
-
-      if (!config.useDuration && springIsNotInMove) {
+      if (isAnimationTerminatingCalculation(animation, config)) {
         animation.velocity = 0;
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -170,7 +159,15 @@ export const withSpring = ((
       animation.current = value;
       animation.startValue = value;
 
-      let mass = config.mass;
+      const initialEnergy = getEnergy(
+        animation.startValue - (animation.toValue as number),
+        config.velocity,
+        config.stiffness,
+        config.mass
+      );
+      animation.initialEnergy = initialEnergy;
+
+      let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
       const duration = config.duration;
@@ -205,14 +202,14 @@ export const withSpring = ((
             : duration;
 
           config.duration = actualDuration;
-          mass = calculateNewMassToMatchDuration(
+          stiffness = calculateNewStiffnessToMatchDuration(
             x0 as number,
             config,
             animation.velocity
           );
         }
 
-        const { zeta, omega0, omega1 } = initialCalculations(mass, config);
+        const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
@@ -242,6 +239,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      initialEnergy: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });
