@@ -2,6 +2,7 @@
 'use strict';
 
 const semverSatisfies = require('semver/functions/satisfies');
+const semverPrerelease = require('semver/functions/prerelease');
 const expectedVersion = require('./worklets-version.json');
 const { exit } = require('process');
 
@@ -22,8 +23,11 @@ function assertWorkletsVersion() {
     exit(1);
   }
 
-  if (workletsVersion.includes('nightly')) {
-    // Don't perform any checks for nightly versions, the user knows what they're doing.
+  if (semverPrerelease(workletsVersion)) {
+    /**
+     * Don't perform any checks for pre-release versions, like nightlies or
+     * feature previews. The user knows what they're doing.
+     */
     return;
   }
 
