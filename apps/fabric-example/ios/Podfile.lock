@@ -2601,122 +2601,6 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNScreens (4.10.0):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-RCTImage
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.10.0)
-    - SocketRocket
-    - Yoga
-  - RNScreens/common (4.10.0):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-RCTImage
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - SocketRocket
-    - Yoga
-  - RNSVG (15.12.0):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.12.0)
-    - SocketRocket
-    - Yoga
-  - RNSVG/common (15.12.0):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - SocketRocket
-    - Yoga
   - RNWorklets (0.4.0):
     - boost
     - DoubleConversion
@@ -2886,8 +2770,6 @@ DEPENDENCIES:
   - "RNFlashList (from `../../../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../../node_modules/react-native-reanimated`)
-  - RNScreens (from `../../../node_modules/react-native-screens`)
-  - RNSVG (from `../../../node_modules/react-native-svg`)
   - RNWorklets (from `../../../node_modules/react-native-worklets`)
   - SocketRocket (~> 0.7.1)
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
@@ -3054,10 +2936,6 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../../../node_modules/react-native-reanimated"
-  RNScreens:
-    :path: "../../../node_modules/react-native-screens"
-  RNSVG:
-    :path: "../../../node_modules/react-native-svg"
   RNWorklets:
     :path: "../../../node_modules/react-native-worklets"
   Yoga:
@@ -3142,8 +3020,6 @@ SPEC CHECKSUMS:
   RNFlashList: 111b418801ce1b2ae616edbf96d6ef594305e053
   RNGestureHandler: 6922ca28d7a014e0019893c32b422b0d5d5ba8b8
   RNReanimated: dc5d350bfe532f6b48183d688741e9da6baa7710
-  RNScreens: 59db7a81c802f0e65697c2ca0e782c76cf813074
-  RNSVG: d6b2fc2f4058b36a2fcbde615ef859f2913cdee4
   RNWorklets: d0378dff4a7fd581923daccf110570d62f41fed5
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 463fb69091efea832b3a9c5bc15cfaeac94b375c
