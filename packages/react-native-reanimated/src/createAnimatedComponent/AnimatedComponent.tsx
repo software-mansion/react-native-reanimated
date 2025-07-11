@@ -37,6 +37,7 @@ import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
+import { runOnUI } from '../core';
 
 let id = 0;
 
@@ -246,6 +247,13 @@ export default class AnimatedComponent
         tag: viewTag,
         shadowNodeWrapper,
       });
+      const fn = style.updaterContainer.ref;
+      runOnUI(() => {
+        'worklet'
+        if (!!fn) {
+          fn();
+        }
+      })();
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
