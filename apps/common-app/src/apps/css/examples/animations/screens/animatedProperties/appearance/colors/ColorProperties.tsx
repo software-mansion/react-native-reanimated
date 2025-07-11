@@ -317,7 +317,7 @@ function OtherColors() {
           }}
         />
         <ImageExample
-          labelTypes={['iOS', 'Android']}
+          labelTypes={['Android']}
           source={splashImage}
           title="tintColor"
           animation={{
