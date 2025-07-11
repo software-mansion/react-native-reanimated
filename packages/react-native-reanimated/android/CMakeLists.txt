@@ -18,9 +18,10 @@ string(
     -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
     -DREANIMATED_VERSION=${REANIMATED_VERSION}")
 
+# TODO: use react-native-flags.cmake
 string(APPEND CMAKE_CXX_FLAGS
        " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
-   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror -DRN_SERIALIZABLE_STATE")
 
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
