@@ -4,38 +4,64 @@ import { callMicrotasks } from '../threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';
+  const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
-  // so we avoid doing requestAnimationFrame batching in Jest environment.
-  const nativeRequestAnimationFrame = global.requestAnimationFrame;
+  let animationFrameCallbacks: ((timestamp: number) => void)[] = [];
+  let callbacksBegin = 0;
+  let callbacksEnd = 0;
 
-  let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
+  let flushedCallbacks = animationFrameCallbacks;
+  let flushedCallbacksBegin = 0;
+  let flushedCallbacksEnd = 0;
+
   let flushRequested = false;
 
-  global.__flushAnimationFrame = (frameTimestamp: number) => {
-    const currentCallbacks = animationFrameCallbacks;
+  globalThis.__flushAnimationFrame = (timestamp: number) => {
+    globalThis.__frameTimestamp = timestamp;
+
+    flushedCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
-    currentCallbacks.forEach((f) => f(frameTimestamp));
+
+    flushedCallbacksBegin = callbacksBegin;
+    flushedCallbacksEnd = callbacksEnd;
+    callbacksBegin = callbacksEnd;
+
+    flushRequested = false;
+
+    for (const callback of flushedCallbacks) {
+      callback(timestamp);
+    }
+
+    flushedCallbacksBegin = callbacksEnd;
+
     callMicrotasks();
+
+    globalThis.__frameTimestamp = undefined;
   };
 
-  global.requestAnimationFrame = (
+  globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
+    const handle = callbacksEnd++;
+
     animationFrameCallbacks.push(callback);
     if (!flushRequested) {
       flushRequested = true;
-      nativeRequestAnimationFrame((timestamp) => {
-        flushRequested = false;
-        global.__frameTimestamp = timestamp;
-        global.__flushAnimationFrame(timestamp);
-        global.__frameTimestamp = undefined;
-      });
+
+      nativeRequestAnimationFrame(globalThis.__flushAnimationFrame);
     }
-    // Reanimated currently does not support cancelling callbacks requested with
-    // requestAnimationFrame. We return -1 as identifier which isn't in line
-    // with the spec but it should give users better clue in case they actually
-    // attempt to store the value returned from rAF and use it for cancelling.
-    return -1;
+    return handle;
+  };
+
+  globalThis.cancelAnimationFrame = (handle: number) => {
+    if (handle < flushedCallbacksBegin || handle >= callbacksEnd) {
+      return;
+    }
+
+    if (handle < flushedCallbacksEnd) {
+      flushedCallbacks[handle - flushedCallbacksBegin] = () => {};
+    } else {
+      animationFrameCallbacks[handle - callbacksBegin] = () => {};
+    }
   };
 }

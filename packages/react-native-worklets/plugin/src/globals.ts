@@ -110,6 +110,7 @@ const notCapturedIdentifiers = [
   'performance',
   'queueMicrotask',
   'requestAnimationFrame',
+  'cancelAnimationFrame',
   'setImmediate',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',

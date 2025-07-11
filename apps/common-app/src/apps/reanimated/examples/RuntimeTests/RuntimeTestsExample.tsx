@@ -48,6 +48,13 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'run loop',
+          importTest: () => {
+            require('./tests/runLoop/requestAnimationFrame.test');
+            require('./tests/runLoop/cancelAnimationFrame.test');
+          },
+        },
+        {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/cancelAnimation.test');
