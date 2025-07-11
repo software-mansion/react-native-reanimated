@@ -3019,7 +3019,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNFlashList: 111b418801ce1b2ae616edbf96d6ef594305e053
   RNGestureHandler: 6922ca28d7a014e0019893c32b422b0d5d5ba8b8
-  RNReanimated: dc5d350bfe532f6b48183d688741e9da6baa7710
+  RNReanimated: 1f11fbce2cf847cbcb0bc14b430528cb8ea86925
   RNWorklets: d0378dff4a7fd581923daccf110570d62f41fed5
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 463fb69091efea832b3a9c5bc15cfaeac94b375c

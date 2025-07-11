@@ -1,6 +1,7 @@
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
@@ -316,6 +317,14 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
               funPtr->call(rnRuntime, resultValue);
             });
       });
+  return jsi::Value::undefined();
+}
+
+jsi::Value ReanimatedModuleProxy::setDynamicFeatureFlag(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &value) {
+  DynamicFeatureFlags::setFlag(name.asString(rt).utf8(rt), value.asBool());
   return jsi::Value::undefined();
 }
 

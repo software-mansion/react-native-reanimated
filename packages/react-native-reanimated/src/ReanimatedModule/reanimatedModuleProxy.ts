@@ -40,6 +40,8 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
+  setDynamicFeatureFlag(name: string, value: boolean): void;
+
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,

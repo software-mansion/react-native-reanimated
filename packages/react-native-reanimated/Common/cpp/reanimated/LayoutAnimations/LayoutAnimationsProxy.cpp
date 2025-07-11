@@ -31,7 +31,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   ShadowViewMutationList filteredMutations;
 
   std::vector<std::shared_ptr<MutationNode>> roots;
-  std::unordered_map<Tag, ShadowView> movedViews;
+  std::unordered_map<Tag, Tag> movedViews;
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -133,7 +133,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
  traversals and index maintenance
  */
 void LayoutAnimationsProxy::parseRemoveMutations(
-    std::unordered_map<Tag, ShadowView> &movedViews,
+    std::unordered_map<Tag, Tag> &movedViews,
     ShadowViewMutationList &mutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   std::set<Tag> deletedViews;
@@ -178,8 +178,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
       }
       if (!deletedViews.contains(mutation.oldChildShadowView.tag)) {
         mutationNode->state = MOVED;
-        movedViews.insert_or_assign(
-            mutation.oldChildShadowView.tag, mutation.oldChildShadowView);
+        movedViews.insert_or_assign(mutation.oldChildShadowView.tag, -1);
       }
       nodeForTag_[tag] = mutationNode;
 
@@ -209,7 +208,13 @@ void LayoutAnimationsProxy::parseRemoveMutations(
       auto node = nodeForTag_[mutation.newChildShadowView.tag];
       auto mutationNode = std::static_pointer_cast<MutationNode>(node);
       mutationNode->mutation.oldChildShadowView = mutation.oldChildShadowView;
-      movedViews[mutation.newChildShadowView.tag] = mutation.oldChildShadowView;
+    }
+  }
+
+  for (const auto &mutation : mutations) {
+    if (mutation.type == ShadowViewMutation::Insert &&
+        movedViews.contains(mutation.newChildShadowView.tag)) {
+      movedViews[mutation.newChildShadowView.tag] = mutation.parentTag;
     }
   }
 
@@ -269,7 +274,7 @@ void LayoutAnimationsProxy::handleRemovals(
 
 void LayoutAnimationsProxy::handleUpdatesAndEnterings(
     ShadowViewMutationList &filteredMutations,
-    const std::unordered_map<Tag, ShadowView> &movedViews,
+    const std::unordered_map<Tag, Tag> &movedViews,
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
@@ -318,6 +323,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto oldView = *layoutAnimationIt->second.currentView;
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(
               mutationParent, oldView, mutation.index));
+          if (movedViews.contains(tag)) {
+            layoutAnimationIt->second.parentTag = movedViews.at(tag);
+          }
           continue;
         }
 
@@ -362,7 +370,12 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         // store the oldChildShadowView, so that we can use this ShadowView when
         // the view is inserted
         oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
-        startLayoutAnimation(tag, mutation);
+        if (movedViews.contains(tag)) {
+          mutation.parentTag = movedViews.at(tag);
+        }
+        if (mutation.parentTag != -1) {
+          startLayoutAnimation(tag, mutation);
+        }
         break;
       }
 
@@ -481,7 +494,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   bool hasAnimatedChildren = false;
 
   shouldRemoveSubviewsWithoutAnimations =
-      shouldRemoveSubviewsWithoutAnimations && !hasExitAnimation;
+      shouldRemoveSubviewsWithoutAnimations &&
+      (!hasExitAnimation || node->state == MOVED);
   std::vector<std::shared_ptr<MutationNode>> toBeRemoved;
 
   // iterate from the end, so that children
