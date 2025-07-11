@@ -1,0 +1,58 @@
+---
+sidebar_position: 4
+---
+
+# executeOnUIRuntimeSync
+
+`executeOnUIRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread). 
+
+## Reference
+
+```jsx
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const result: number = executeOnUIRuntimeSync((): number => {
+  return 1;
+})();
+
+console.log(result); // 1
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
+```
+
+</details>
+
+### Arguments
+
+#### worklet
+
+A reference to a function you want to execute on the UI Runtime on the current thread. Arguments to your function have to be passed to the function returned from `executeOnUIRuntimeSync` i.e. `executeOnUIRuntimeSync(setValue)(10);`.
+
+### Returns
+
+`executeOnUIRuntimeSync` returns the return value of the worklet.
+
+:::info
+Don't forget to call the function returned from `executeOnUIRuntimeSync`.
+:::
+
+## Remarks
+
+- It's a common mistake to execute function inside of `executeOnUIRuntimeSync` like this: ~~`executeOnUIRuntimeSync(myWorklet(10))()`~~. Here, the correct usage would be `executeOnUIRuntimeSync(myWorklet)(10)`.
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- Make sure not to execute `executeOnUIRuntimeSync` on the UI thread as this will result in an error.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

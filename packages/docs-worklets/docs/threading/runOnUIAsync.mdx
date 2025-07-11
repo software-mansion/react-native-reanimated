@@ -1,0 +1,51 @@
+---
+sidebar_position: 3
+---
+
+# runOnUIAsync
+
+`runOnUIAsync` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+
+## Reference
+
+```javascript   
+import { runOnUIAsync } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const result: Promise<number> = runOnUIAsync((): number => {
+  return 1;
+})();
+
+await result; // 1
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function runOnUIAsync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => Promise<ReturnValue> 
+```
+
+</details>
+
+### Arguments
+
+#### worklet
+
+A reference to a function you want to execute on the UI thread. Arguments to your function have to be passed to the function returned from `runOnUIAsync` i.e. `runOnUIAsync(setValue)(10);`.
+
+## Remarks
+
+- It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))()`~~. Here, the correct usage would be `runOnUIAsync(myWorklet)(10)`.
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- Make sure not to execute `runOnUIAsync` on the UI thread as this will result in an error.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
