@@ -32,7 +32,7 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
-  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
@@ -48,7 +48,7 @@ class UpdatesRegistryManager {
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
+  std::unordered_map<Tag, std::shared_ptr<const ShadowNode>> removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
@@ -57,7 +57,7 @@ class UpdatesRegistryManager {
 
   static void addToPropsMap(
       PropsMap &propsMap,
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const folly::dynamic &props);
 #endif
 };

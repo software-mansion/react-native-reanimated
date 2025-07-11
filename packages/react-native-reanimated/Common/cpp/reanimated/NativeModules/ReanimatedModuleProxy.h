@@ -40,7 +40,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
@@ -165,7 +165,7 @@ class ReanimatedModuleProxy
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,

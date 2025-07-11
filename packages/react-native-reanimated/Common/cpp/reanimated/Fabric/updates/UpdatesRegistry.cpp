@@ -52,13 +52,13 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNode, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
 #ifdef ANDROID

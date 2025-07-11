@@ -43,7 +43,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(
-    const ShadowNode::Shared &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
@@ -95,7 +95,7 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   auto &family = shadowNode->getFamily();
   auto it = propsMap.find(&family);
