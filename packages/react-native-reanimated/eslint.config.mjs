@@ -17,6 +17,9 @@ const config = tsEslint.config(
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
+      'n/no-unpublished-import': ['warn', {
+        "ignoreTypeImport": true
+      }],
     },
   },
   {
@@ -36,9 +39,6 @@ const config = tsEslint.config(
       'reanimated/use-global-this': 'error',
       'no-unused-expressions': 'error',
       'camelcase': 'error',
-      'n/no-unpublished-import': ['warn', {
-        "ignoreTypeImport": true
-      }],
     },
   },
   {
