@@ -48,8 +48,7 @@ export function buildWorkletString(
 
   const draftExpression =
     fun.program.body.find((obj) => isFunctionDeclaration(obj)) ||
-    fun.program.body.find((obj) => isExpressionStatement(obj)) ||
-    undefined;
+    fun.program.body.find((obj) => isExpressionStatement(obj));
 
   assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
 

@@ -647,7 +647,7 @@ var require_workletStringCode = __commonJS({
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
       restoreRecursiveCalls(fun, workletName);
-      const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
+      const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj));
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
