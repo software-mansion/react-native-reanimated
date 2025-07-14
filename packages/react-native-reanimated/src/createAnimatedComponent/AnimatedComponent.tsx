@@ -328,14 +328,14 @@ export default class AnimatedComponent
     }
 
     updateLayoutAnimations(
-      type == LayoutAnimationType.ENTERING
-        ? this.getComponentViewTag()
-        : this.reanimatedID,
+      type === LayoutAnimationType.ENTERING
+        ? this.reanimatedID
+        : this.getComponentViewTag(),
       type,
       currentConfig &&
         maybeBuild(
           currentConfig,
-          type == LayoutAnimationType.LAYOUT
+          type === LayoutAnimationType.LAYOUT
             ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */
             : this.props?.style,
           this._displayName
