@@ -16,14 +16,14 @@ To prevent misconceptions about it we freeze the original value for object-like 
 import { makeShareableCloneRecursive } from 'react-native-worklets';
 
 // The function `() => { console.log('Hello world!'); }` is converted into a Shareable reference,
-// that can be passed to native C++ code via custom function `global._runOnUI()`.
+// that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
 const shareable = makeShareableCloneRecursive(() => {
   console.log('Hello world!');
 });
 
 // The shareable reference allows the function to be executed on different runtimes,
 // while maintaining its original behavior.
-global._runOnUI(shareable);
+global.customWorkletScheduler(shareable);
 ```
 
 <details>

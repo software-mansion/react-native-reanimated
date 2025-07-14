@@ -59,6 +59,20 @@ UI thread is responsible for handling user interface updates. Also known as Main
 
 You can learn more about it by reading the [Threading model](https://reactnative.dev/architecture/threading-model) article in the official React Native docs.
 
+## Animations in inline styling
+
+Passing shared values directly to `style` property without the use of `useAnimatedStyle`.
+
+For example:
+
+```jsx
+function App() {
+  const width = useSharedValue(100);
+
+  return <Animated.View style={{ width }} />;
+}
+```
+
 ## Reanimated Babel plugin
 
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
@@ -66,5 +80,7 @@ The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-wo
 You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).
 
 ## Shareable
+
+<DeprecatedBanner />
 
 A `Shareable` is an object which can be assigned to a specific [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime), where it's shared across worklets in the same runtime.
