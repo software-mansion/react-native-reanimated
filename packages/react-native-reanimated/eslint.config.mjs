@@ -17,6 +17,9 @@ const config = tsEslint.config(
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
+      'n/no-unpublished-import': ['warn', {
+        "ignoreTypeImport": true
+      }],
     },
   },
   {

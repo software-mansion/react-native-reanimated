@@ -91,7 +91,7 @@ class CSSValueVariant final : public CSSValue {
       // Otherwise, try each type in turn
       if (!tryConstruct(std::forward<TValue>(value))) {
         throw std::runtime_error(
-            "[RNReanimated] No compatible type found for construction");
+            "[Reanimated] No compatible type found for construction");
       }
     }
   }

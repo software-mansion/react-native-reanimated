@@ -4,10 +4,12 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
+#include <folly/json.h>
 #include <iomanip>
 #include <regex>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace reanimated::css {
@@ -20,9 +22,12 @@ struct CSSAngle : public CSSSimpleValue<CSSAngle> {
   CSSAngle();
   explicit CSSAngle(double value);
   explicit CSSAngle(const std::string &rotationString);
+  explicit CSSAngle(const char *cstr);
   explicit CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSAngle(const folly::dynamic &value);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
