@@ -86,7 +86,7 @@
   "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
     "react-native-is-edge-to-edge": "1.1.7",
-    "semver": "^7.7.1"
+    "semver": "7.7.2"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
