@@ -50,7 +50,7 @@ interface AnimatedUpdaterData {
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
-  forceUpdateCounter: ForceUpdateContainer;
+  forceUpdateContainer: ForceUpdateContainer;
 }
 
 function prepareAnimation(
@@ -519,7 +519,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationRunning: false,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
-      forceUpdateCounter: { current: undefined },
+      forceUpdateContainer: { current: undefined },
     };
   }
 
@@ -569,7 +569,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       };
     }
     if (animatedUpdaterData.current) {
-      animatedUpdaterData.current.forceUpdateCounter.current = fun;
+      animatedUpdaterData.current.forceUpdateContainer.current = fun;
     }
     const mapperId = startMapper(fun, inputs);
     return () => {
@@ -595,16 +595,17 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
-    const forceUpdateCounter = animatedUpdaterData.current.forceUpdateCounter;
+    const forceUpdateContainer =
+      animatedUpdaterData.current.forceUpdateContainer;
     animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,
           jestAnimatedValues,
           toJSON: animatedStyleHandleToJSON,
-          forceUpdateContainer: forceUpdateCounter,
+          forceUpdateContainer,
         }
-      : { viewDescriptors, initial, forceUpdateContainer: forceUpdateCounter };
+      : { viewDescriptors, initial, forceUpdateContainer };
   }
 
   return animatedStyleHandle.current;
