@@ -20,7 +20,7 @@ const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
     {"fill", value<CSSColor>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
-    {"fillRule", value<CSSKeyword>("nonzero")},
+    {"fillRule", value<CSSInteger>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {

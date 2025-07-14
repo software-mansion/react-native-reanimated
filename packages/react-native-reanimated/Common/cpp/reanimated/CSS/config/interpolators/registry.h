@@ -7,6 +7,7 @@
 #include <reanimated/CSS/config/interpolators/base/text.h>
 #include <reanimated/CSS/config/interpolators/base/view.h>
 #include <reanimated/CSS/config/interpolators/svg/circle.h>
+#include <reanimated/CSS/config/interpolators/svg/path.h>
 
 #include <stdexcept>
 #include <string>

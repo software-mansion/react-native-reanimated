@@ -9,9 +9,9 @@ export const svgPropertiesRoutes = {
   Common: {
     name: 'Common',
     routes: {
-      Colors: {
-        name: 'Colors',
-        Component: svgAnimatedProperties.common.Colors,
+      FillAndColor: {
+        name: 'Fill and Color',
+        Component: svgAnimatedProperties.common.FillAndColor,
       },
     },
   },

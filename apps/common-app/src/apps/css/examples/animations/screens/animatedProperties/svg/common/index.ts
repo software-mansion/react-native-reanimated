@@ -1,5 +1,5 @@
-import Colors from './Colors';
+import FillAndColor from './FillAndColor';
 
 export default {
-  Colors,
+  FillAndColor,
 };

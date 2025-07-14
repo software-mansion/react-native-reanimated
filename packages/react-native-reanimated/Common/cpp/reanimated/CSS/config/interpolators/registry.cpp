@@ -14,6 +14,7 @@ ComponentInterpolatorsMap registry_ = [] {
   if constexpr (StaticFeatureFlags::getFlag(
                     "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     result["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
+    result["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
   }
   return result;
 }();
