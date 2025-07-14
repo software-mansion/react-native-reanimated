@@ -51,7 +51,7 @@ If you're using [gorhom/react-native-bottom-sheet](https://github.com/gorhom/rea
 
 ### Removed `addWhitelistedNativeProps` and `addWhitelistedUIProps`
 
-Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativeProps` and `addWhitelistedUIProps` are now no-ops, deprecated and will be removed in a future release of Reanimated. You are safe to remove all usages of these functions across your codebase.
+Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativeProps` and `addWhitelistedUIProps` are now no-ops, marked as deprecated and planned to be removed in a future release of Reanimated. You are safe to remove all usages of these functions across your codebase.
 
 ### Removed `combineTransition`
 
