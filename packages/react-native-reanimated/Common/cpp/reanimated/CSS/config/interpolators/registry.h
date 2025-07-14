@@ -8,6 +8,7 @@
 #include <reanimated/CSS/config/interpolators/base/view.h>
 // react-native-svg style props interpolators
 #include <reanimated/CSS/config/interpolators/svg/circle.h>
+#include <reanimated/CSS/config/interpolators/svg/path.h>
 
 #include <stdexcept>
 #include <string>

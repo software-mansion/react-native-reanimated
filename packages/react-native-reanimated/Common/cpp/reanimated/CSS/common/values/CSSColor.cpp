@@ -38,11 +38,14 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     channels[2] = color & 0xFF; // Blue
     channels[3] = (color >> 24) & 0xFF; // Alpha
     colorType = ColorType::Rgba;
-  } else if (
-      jsiValue.isUndefined() ||
-      (jsiValue.isString() &&
-       jsiValue.getString(rt).utf8(rt) == "transparent")) {
-    colorType = ColorType::Transparent;
+  } else if (jsiValue.isUndefined() || jsiValue.isString()) {
+    const auto colorString = jsiValue.getString(rt).utf8(rt);
+    if (colorString == "transparent") {
+      colorType = ColorType::Transparent;
+    } else if (colorString == "currentColor") {
+      colorType = ColorType::CurrentColor;
+    }
+    return;
   } else {
     throw std::invalid_argument(
         "[Reanimated] CSSColor: Invalid value type: " +
@@ -65,10 +68,14 @@ CSSColor::CSSColor(const folly::dynamic &value)
     channels[2] = color & 0xFF; // Blue
     channels[3] = (color >> 24) & 0xFF; // Alpha
     colorType = ColorType::Rgba;
-  } else if (
-      value.empty() ||
-      (value.isString() && value.getString() == "transparent")) {
-    colorType = ColorType::Transparent;
+  } else if (value.empty() || value.isString()) {
+    const auto colorString = value.getString();
+    if (colorString == "transparent") {
+      colorType = ColorType::Transparent;
+    } else if (colorString == "currentColor") {
+      colorType = ColorType::CurrentColor;
+    }
+    return;
   } else {
     throw std::invalid_argument(
         "[Reanimated] CSSColor: Invalid value type: " + folly::toJson(value));
@@ -98,16 +105,19 @@ std::string CSSColor::toString() const {
     return "rgba(" + std::to_string(channels[0]) + "," +
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
-  } else {
-    return "transparent";
+  } else if (colorType == ColorType::CurrentColor) {
+    return "currentColor";
   }
+  return "transparent";
 }
 
 CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
     const {
   if (to.colorType == ColorType::Transparent &&
-      colorType == ColorType::Transparent) {
-    return *this;
+          colorType == ColorType::Transparent ||
+      colorType == ColorType::CurrentColor ||
+      to.colorType == ColorType::CurrentColor) {
+    return progress < 0.5 ? *this : to;
   }
 
   ColorChannels fromChannels = channels;

@@ -14,6 +14,7 @@ using namespace worklets;
 enum class ColorType {
   Rgba,
   Transparent,
+  CurrentColor, // for SVG
 };
 
 struct CSSColor : public CSSSimpleValue<CSSColor> {

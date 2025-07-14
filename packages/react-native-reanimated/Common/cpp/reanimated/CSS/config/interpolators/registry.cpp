@@ -11,6 +11,7 @@ ComponentInterpolatorsMap registry_ = {
     {"Image", IMAGE_INTERPOLATORS},
     // react-native-svg
     {"RNSVGCircle", SVG_CIRCLE_INTERPOLATORS},
+    {"RNSVGPath", SVG_PATH_INTERPOLATORS},
 };
 
 } // namespace
