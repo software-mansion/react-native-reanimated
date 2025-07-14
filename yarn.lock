@@ -9993,7 +9993,7 @@ __metadata:
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A5.3.0#~/.yarn/patches/react-native-safe-area-context-npm-5.3.0-c3dc3aade9.patch"
+    react-native-safe-area-context: "npm:5.5.2"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
     react-test-renderer: "npm:19.1.0"
@@ -20607,23 +20607,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-safe-area-context@npm:5.3.0":
-  version: 5.3.0
-  resolution: "react-native-safe-area-context@npm:5.3.0"
+"react-native-safe-area-context@npm:5.5.2":
+  version: 5.5.2
+  resolution: "react-native-safe-area-context@npm:5.5.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/771abab96577fcdf7ff77835174d58ebb032df06938a99b30d24f192e2c8eb823cec88f289a33b862b7c10f35c6fccc5da02698aadcb2a199741cbf829ee4ea6
-  languageName: node
-  linkType: hard
-
-"react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A5.3.0#~/.yarn/patches/react-native-safe-area-context-npm-5.3.0-c3dc3aade9.patch":
-  version: 5.3.0
-  resolution: "react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A5.3.0#~/.yarn/patches/react-native-safe-area-context-npm-5.3.0-c3dc3aade9.patch::version=5.3.0&hash=739969"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/eb4a8b6bfc76fb0475c652142a2466c20542d848fbc14c2d33b119f9129c2d0159f9e9a1b3ec34cad9a7d2c6042c0bbbadf7c4ff3b85b0068e710d4cca141486
+  checksum: 10/3f0ba6a09ba7dfeb34147f9625700e5cc05b4590a94cc6bc982ac0e4db337caa461f83f619e925ac52dffe9fc207346036e880d47cbb4a2c9884f2d767e56687
   languageName: node
   linkType: hard
 
