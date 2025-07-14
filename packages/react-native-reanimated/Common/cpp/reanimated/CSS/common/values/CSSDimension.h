@@ -24,6 +24,8 @@ struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
+  CSSDimension interpolate(double progress, const CSSDimension &to)
+      const override;
   CSSDimension interpolate(
       double progress,
       const CSSDimension &to,
@@ -38,6 +40,11 @@ struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
       std::ostream &os,
       const CSSDimension &dimension);
 #endif // NDEBUG
+
+ private:
+  bool canInterpolateDirectly(const CSSDimension &to) const;
+  CSSDimension interpolateDirectly(double progress, const CSSDimension &to)
+      const;
 };
 
 } // namespace reanimated::css

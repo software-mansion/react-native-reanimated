@@ -58,11 +58,29 @@ export default function CircleExample() {
             },
             {
               keyframes: {
+                from: {
+                  cx: 0,
+                },
                 to: {
                   cx: '100%',
                 },
               },
-              title: 'Relative value',
+              title: 'Relative value (from 0 to 100%)',
+              description:
+                '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
+            },
+            {
+              keyframes: {
+                from: {
+                  cx: 50,
+                },
+                to: {
+                  cx: '100%',
+                },
+              },
+              title: 'Mixed values (from 50 to 100%)',
+              description:
+                'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
             },
           ],
           title: 'Circle Center X',
@@ -79,11 +97,29 @@ export default function CircleExample() {
             },
             {
               keyframes: {
+                from: {
+                  cy: 0,
+                },
                 to: {
                   cy: '100%',
                 },
               },
-              title: 'Relative value',
+              title: 'Relative values (from 0 to 100%)',
+              description:
+                '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
+            },
+            {
+              keyframes: {
+                from: {
+                  cy: 50,
+                },
+                to: {
+                  cy: '100%',
+                },
+              },
+              title: 'Mixed values (from 50 to 100%)',
+              description:
+                'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
             },
           ],
           title: 'Circle Center Y',

@@ -38,6 +38,15 @@ struct CSSSimpleValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
 
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
+  virtual TDerived interpolate(
+      double progress,
+      const TDerived &to,
+      const CSSResolvableValueInterpolationContext &context) const {
+    // By default, we throw an error if a non-resolvable value is interpolated
+    // as resolvable
+    throw std::runtime_error(
+        "[Reanimated] Non-resolvable value cannot be interpolated as resolvable");
+  }
 };
 
 // Base for leaf values that need resolution before interpolation
@@ -45,6 +54,12 @@ template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
 
+  virtual TDerived interpolate(double progress, const TDerived &to) const {
+    // By default, we throw an error if a resolvable value is interpolated as
+    // non-resolvable
+    throw std::runtime_error(
+        "[Reanimated] Resolvable value cannot be interpolated as non-resolvable");
+  }
   virtual TDerived interpolate(
       double progress,
       const TDerived &to,
