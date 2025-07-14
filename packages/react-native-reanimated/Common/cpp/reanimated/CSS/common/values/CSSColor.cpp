@@ -9,6 +9,21 @@ CSSColor::CSSColor()
 CSSColor::CSSColor(ColorType colorType)
     : channels{0, 0, 0, 0}, colorType(colorType) {}
 
+CSSColor::CSSColor(double numberValue)
+    : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
+  uint32_t color;
+  if (numberValue < 0) {
+    color = static_cast<int32_t>(numberValue);
+  } else {
+    color = static_cast<uint32_t>(numberValue);
+  }
+  channels[0] = (color >> 16) & 0xFF; // Red
+  channels[1] = (color >> 8) & 0xFF; // Green
+  channels[2] = color & 0xFF; // Blue
+  channels[3] = (color >> 24) & 0xFF; // Alpha
+  colorType = ColorType::Rgba;
+}
+
 CSSColor::CSSColor(const uint8_t r, const uint8_t g, const uint8_t b)
     : channels{r, g, b, 255}, colorType(ColorType::Rgba) {}
 
@@ -26,60 +41,46 @@ CSSColor::CSSColor(const ColorChannels &colorChannels)
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
-    double numberValue = jsiValue.asNumber();
-    uint32_t color;
-    if (numberValue < 0) {
-      color = static_cast<int32_t>(numberValue);
-    } else {
-      color = static_cast<uint32_t>(numberValue);
-    }
-    channels[0] = (color >> 16) & 0xFF; // Red
-    channels[1] = (color >> 8) & 0xFF; // Green
-    channels[2] = color & 0xFF; // Blue
-    channels[3] = (color >> 24) & 0xFF; // Alpha
-    colorType = ColorType::Rgba;
-  } else if (jsiValue.isUndefined() || jsiValue.isString()) {
+    *this = CSSColor(jsiValue.asNumber());
+    return;
+  }
+
+  if (jsiValue.isUndefined() || jsiValue.isString()) {
     const auto colorString = jsiValue.getString(rt).utf8(rt);
     if (colorString == "transparent") {
       colorType = ColorType::Transparent;
+      return;
     } else if (colorString == "currentColor") {
       colorType = ColorType::CurrentColor;
+      return;
     }
-    return;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
   }
+
+  throw std::invalid_argument(
+      "[Reanimated] CSSColor: Invalid value: " +
+      stringifyJSIValue(rt, jsiValue));
 }
 
 CSSColor::CSSColor(const folly::dynamic &value)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
-    double numberValue = value.asDouble();
-    uint32_t color;
-    if (numberValue < 0) {
-      color = static_cast<int32_t>(numberValue);
-    } else {
-      color = static_cast<uint32_t>(numberValue);
-    }
-    channels[0] = (color >> 16) & 0xFF; // Red
-    channels[1] = (color >> 8) & 0xFF; // Green
-    channels[2] = color & 0xFF; // Blue
-    channels[3] = (color >> 24) & 0xFF; // Alpha
-    colorType = ColorType::Rgba;
-  } else if (value.empty() || value.isString()) {
+    *this = CSSColor(value.asDouble());
+    return;
+  }
+
+  if (value.empty() || value.isString()) {
     const auto colorString = value.getString();
     if (colorString == "transparent") {
       colorType = ColorType::Transparent;
+      return;
     } else if (colorString == "currentColor") {
       colorType = ColorType::CurrentColor;
+      return;
     }
-    return;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid value type: " + folly::toJson(value));
   }
+
+  throw std::invalid_argument(
+      "[Reanimated] CSSColor: Invalid value: " + folly::toJson(value));
 }
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
@@ -113,8 +114,8 @@ std::string CSSColor::toString() const {
 
 CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
     const {
-  if (to.colorType == ColorType::Transparent &&
-          colorType == ColorType::Transparent ||
+  if ((to.colorType == ColorType::Transparent &&
+       colorType == ColorType::Transparent) ||
       colorType == ColorType::CurrentColor ||
       to.colorType == ColorType::CurrentColor) {
     return progress < 0.5 ? *this : to;

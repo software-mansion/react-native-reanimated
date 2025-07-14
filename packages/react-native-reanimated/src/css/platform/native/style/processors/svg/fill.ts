@@ -1,3 +1,4 @@
+'use strict';
 import type { FillRule } from 'react-native-svg';
 
 import type { ValueProcessor } from '../../types';

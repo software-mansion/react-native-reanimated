@@ -1,3 +1,4 @@
+'use strict';
 import type { PathProps } from 'react-native-svg';
 
 import type { SvgStyleBuilderConfig } from './common';
