@@ -323,4 +323,17 @@ dependencies {
     }
 }
 
+task prepareKotlinBuildScriptModel {
+  // This task is run during Gradle Sync in Android Studio.
+}
+
+// This fixes linking errors due to undefined symbols from libworklets.so.
+// During Gradle Sync, Android Gradle Plugin runs Prefab and treats worklets
+// like a header-only library. During build, config files are not regenerated
+// because the cache key does not change and AGP thinks that they are up-to-date.
+afterEvaluate {
+  prepareKotlinBuildScriptModel.dependsOn(":react-native-reanimated:prefabDebugPackage")
+  prepareKotlinBuildScriptModel.dependsOn(":react-native-reanimated:prefabReleasePackage")
+}
+
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
