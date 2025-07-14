@@ -7,6 +7,6 @@ const validateVersion = require('./validate-worklets-version');
 const result = validateVersion();
 if (!result.ok) {
   // eslint-disable-next-line reanimated/use-logger
-  console.error('[Reanimated]' + result.message);
+  console.error('[Reanimated] ' + result.message);
   process.exit(1);
 }

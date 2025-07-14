@@ -1,6 +1,6 @@
 'use strict';
 
-//@ts-expect-error There's no types for this script.
+// @ts-expect-error There's no types for this script.
 import validateWorkletsVersion from 'react-native-reanimated/scripts/validate-worklets-version';
 
 import { ReanimatedError } from '../common/errors';
