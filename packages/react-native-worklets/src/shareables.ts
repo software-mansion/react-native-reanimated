@@ -233,6 +233,11 @@ interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
 }
 
+/**
+ * @deprecated This function is deprecated and will be removed in the next major
+ *   Please import `makeShareableCloneRecursive` directly from
+ *   `react-native-worklets` instead of `react-native-reanimated`.
+ */
 export const makeShareableCloneRecursive: MakeShareableClone = SHOULD_BE_USE_WEB
   ? makeShareableCloneRecursiveWeb
   : makeShareableCloneRecursiveNative;

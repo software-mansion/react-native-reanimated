@@ -1,30 +1,35 @@
+/* eslint-disable tsdoc/syntax */
 'use strict';
 
 import type { WorkletFunction } from './workletTypes';
 
 /**
- * This function allows you to determine if a given function is a worklet. It
- * only works with Reanimated Babel plugin enabled. Unless you are doing
- * something with internals of Reanimated you shouldn't need to use this
- * function.
+ * @deprecated This function is deprecated and will be removed in the next major
+ *   Please import `isWorkletFunction` directly from `react-native-worklets`
+ *   instead of `react-native-reanimated`.
  *
- * ### Note
+ *   This function allows you to determine if a given function is a worklet. It
+ *   only works with Reanimated Babel plugin enabled. Unless you are doing
+ *   something with internals of Reanimated you shouldn't need to use this
+ *   function.
  *
- * Do not call it before the worklet is declared, as it will always return false
- * then. E.g.:
+ *   ### Note
  *
- * ```ts
- * isWorkletFunction(myWorklet); // Will always return false.
+ *   Do not call it before the worklet is declared, as it will always return false
+ *   then. E.g.:
  *
- * function myWorklet() {
- *   'worklet';
- * }
- * ```
+ *   ```ts
+ *   isWorkletFunction(myWorklet); // Will always return false.
  *
- * ### Maintainer note
+ *   function myWorklet() {
+ *     'worklet';
+ *   }
+ *   ```
  *
- * This function is supposed to be used only in the React Runtime. It always
- * returns `false` in Worklet Runtimes.
+ *   ### Maintainer note
+ *
+ *   This function is supposed to be used only in the React Runtime. It always
+ *   returns `false` in Worklet Runtimes.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],

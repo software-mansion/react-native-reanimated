@@ -18,6 +18,11 @@ export type ShareableRef<T = unknown> = {
 export type FlatShareableRef<T> =
   T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
 
+/**
+ * @deprecated This type is deprecated and will be removed in the next major
+ *   Please import `WorkletRuntime` directly from `react-native-worklets`
+ *   instead of `react-native-reanimated`.
+ */
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
   readonly name: string;

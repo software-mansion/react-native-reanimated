@@ -13,9 +13,12 @@ import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletRuntime } from './workletTypes';
 
 /**
- * Lets you create a new JS runtime which can be used to run worklets possibly
- * on different threads than JS or UI thread.
+ * @deprecated This function is deprecated and will be removed in the next major
+ *   Please import `createWorkletRuntime` directly from `react-native-worklets`
+ *   instead of `react-native-reanimated`.
  *
+ *   Lets you create a new JS runtime which can be used to run worklets possibly
+ *   on different threads than JS or UI thread.
  * @param name - A name used to identify the runtime which will appear in
  *   devices list in Chrome DevTools.
  * @param initializer - An optional worklet that will be run synchronously on
@@ -47,6 +50,11 @@ export function createWorkletRuntime(
   );
 }
 
+/**
+ * @deprecated This function is deprecated and will be removed in the next major
+ *   Please import `runOnRuntime` directly from `react-native-worklets` instead
+ *   of `react-native-reanimated`.
+ */
 // @ts-expect-error Check `runOnUI` overload.
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
