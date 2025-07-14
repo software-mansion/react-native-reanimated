@@ -37,7 +37,6 @@ import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
-import { runOnUI } from '../core';
 
 let id = 0;
 
@@ -243,17 +242,13 @@ export default class AnimatedComponent
     }
 
     this._animatedStyles.forEach((style) => {
-      style.viewDescriptors.add({
-        tag: viewTag,
-        shadowNodeWrapper,
-      });
-      const fn = style.updaterContainer.ref;
-      runOnUI(() => {
-        'worklet'
-        if (!!fn) {
-          fn();
-        }
-      })();
+      style.viewDescriptors.add(
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
+        style.forceUpdateContainer
+      );
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
@@ -277,10 +272,13 @@ export default class AnimatedComponent
 
     // attach animatedProps property
     if (this.props.animatedProps?.viewDescriptors) {
-      this.props.animatedProps.viewDescriptors.add({
-        tag: viewTag as number,
-        shadowNodeWrapper: shadowNodeWrapper!,
-      });
+      this.props.animatedProps.viewDescriptors.add(
+        {
+          tag: viewTag as number,
+          shadowNodeWrapper: shadowNodeWrapper!,
+        },
+        this.props.animatedProps.forceUpdateContainer
+      );
     }
   }
 

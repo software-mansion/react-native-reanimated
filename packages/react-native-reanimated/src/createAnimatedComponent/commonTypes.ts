@@ -4,6 +4,7 @@ import type { Component, MutableRefObject, Ref } from 'react';
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
+  ForceUpdateContainer,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
@@ -16,6 +17,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
+  forceUpdateContainer?: ForceUpdateContainer;
 }
 
 export interface ViewInfo {

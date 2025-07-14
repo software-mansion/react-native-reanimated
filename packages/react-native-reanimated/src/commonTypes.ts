@@ -1,5 +1,6 @@
 'use strict';
 
+import type { RefObject } from 'react';
 import type {
   ImageStyle,
   TextStyle,
@@ -220,7 +221,7 @@ export type MapperOutputs = SharedValue[];
 export type MapperRegistry = {
   start: (
     mapperID: number,
-    worklet: () => void,
+    worklet: (forceUpdate?: boolean) => void,
     inputs: MapperRawInputs,
     outputs?: MapperOutputs
   ) => void;
@@ -440,6 +441,10 @@ export type AnimatedStyle<Style = DefaultStyle> =
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
+>;
+
+export type ForceUpdateContainer = RefObject<
+  ((forceUpdate: boolean) => void) | undefined
 >;
 
 /** @deprecated Please use {@link AnimatedStyle} type instead. */
