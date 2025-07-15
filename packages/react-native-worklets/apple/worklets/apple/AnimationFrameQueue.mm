@@ -1,8 +1,8 @@
+#import <worklets/Tools/FeatureFlags.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
-#import <worklets/Tools/FeatureFlags.h>
 #import <chrono>
 
 #import <React/RCTAssert.h>
@@ -48,7 +48,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   } else {
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
   }
-  
+
 #if TARGET_OS_OSX
   // nothing
 #else // TARGET_OS_OSX
