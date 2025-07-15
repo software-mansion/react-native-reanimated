@@ -2,7 +2,7 @@
 
 namespace reanimated::css {
 
-CSSStrokeDashArray::CSSStrokeDashArray() : values(0) {}
+CSSStrokeDashArray::CSSStrokeDashArray() : values() {}
 
 CSSStrokeDashArray::CSSStrokeDashArray(const std::vector<CSSDimension> &values)
     : values(values) {}
@@ -72,8 +72,22 @@ CSSStrokeDashArray CSSStrokeDashArray::interpolate(
     double progress,
     const CSSStrokeDashArray &to) const {
   std::vector<CSSDimension> result;
-  const auto fromSize = values.size();
-  const auto toSize = to.values.size();
+  auto fromValues = values;
+  auto toValues = to.values;
+
+  // If one of the arrays is empty, we take the fist value from the second
+  // one and put it as the only element of the first (empty) array
+  // (this is how it works on the web)
+  if (fromValues.size() == 0 && toValues.size() > 0) {
+    fromValues = {toValues[0]};
+  }
+  if (toValues.size() == 0 && fromValues.size() > 0) {
+    toValues = {fromValues[0]};
+  }
+
+  const auto fromSize = fromValues.size();
+  const auto toSize = toValues.size();
+
   // We need to find the least common multiple of the two arrays to get
   // a smooth interpolation of the dash array pattern
   const auto resultSize = std::lcm(fromSize, toSize);
@@ -81,7 +95,7 @@ CSSStrokeDashArray CSSStrokeDashArray::interpolate(
 
   for (size_t i = 0; i < resultSize; i++) {
     result.emplace_back(
-        values[i % fromSize].interpolate(progress, to.values[i % toSize]));
+        fromValues[i % fromSize].interpolate(progress, toValues[i % toSize]));
   }
 
   return CSSStrokeDashArray(result);

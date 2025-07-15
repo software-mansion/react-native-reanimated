@@ -23,13 +23,8 @@ export const processStrokeDashArray: ValueProcessor<
     // "If the number of values is odd, the pattern behaves as if it was duplicated
     // to yield an even number of values"
     // (https://www.w3.org/TR/fill-stroke-3/#valdef-stroke-dasharray-length-percentage)
-    if (value.length > 2) {
-      result = value.length % 2 === 0 ? value : value.concat(value);
-    } else if (value.length > 0) {
-      result = value;
-    } else {
-      result = [0];
-    }
+    result =
+      value.length % 2 === 0 || value.length < 3 ? value : value.concat(value);
   } else if (value === 'none') {
     return 'none';
   } else {
