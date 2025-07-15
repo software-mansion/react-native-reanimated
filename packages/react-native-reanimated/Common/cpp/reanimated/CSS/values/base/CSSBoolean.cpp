@@ -1,4 +1,4 @@
-#include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/values/base/CSSBoolean.h>
 
 namespace reanimated::css {
 

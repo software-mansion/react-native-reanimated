@@ -1,9 +1,9 @@
 #pragma once
 
-#include <reanimated/CSS/config/interpolators/base/view.h>
+#include <reanimated/CSS/config/props/base/view.h>
 
-#include <reanimated/CSS/common/values/CSSBoolean.h>
-#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
+#include <reanimated/CSS/values/base/CSSBoolean.h>
+#include <reanimated/CSS/values/base/CSSDiscreteArray.h>
 
 #include <vector>
 

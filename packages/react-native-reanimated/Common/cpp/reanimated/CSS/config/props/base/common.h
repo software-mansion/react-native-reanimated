@@ -4,13 +4,13 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
-#include <reanimated/CSS/config/interpolators/constants.h>
-#include <reanimated/CSS/config/interpolators/utils.h>
+#include <reanimated/CSS/config/props/constants.h>
+#include <reanimated/CSS/config/props/utils.h>
 
-#include <reanimated/CSS/common/values/CSSColor.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
-#include <reanimated/CSS/common/values/CSSKeyword.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/values/base/CSSColor.h>
+#include <reanimated/CSS/values/base/CSSDimension.h>
+#include <reanimated/CSS/values/base/CSSKeyword.h>
+#include <reanimated/CSS/values/base/CSSNumber.h>
 
 namespace reanimated::css {
 

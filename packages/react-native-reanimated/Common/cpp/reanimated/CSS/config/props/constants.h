@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSColor.h>
+#include <reanimated/CSS/values/base/CSSColor.h>
 
 namespace reanimated::css {
 

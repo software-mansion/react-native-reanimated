@@ -1,4 +1,4 @@
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/values/base/CSSDimension.h>
 
 namespace reanimated::css {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSDimension.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+#include <reanimated/CSS/values/base/CSSDimension.h>
 
 #include <memory>
 #include <string>

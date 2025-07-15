@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSValue.h>
+#include <reanimated/CSS/values/CSSValue.h>
 
 #include <worklets/Tools/JSISerializer.h>
 

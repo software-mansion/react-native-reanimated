@@ -1,4 +1,4 @@
-#include <reanimated/CSS/common/values/CSSAngle.h>
+#include <reanimated/CSS/values/base/CSSAngle.h>
 
 namespace reanimated::css {
 

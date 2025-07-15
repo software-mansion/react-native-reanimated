@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/config/interpolators/base/common.h>
+#include <reanimated/CSS/config/props/base/common.h>
 
-#include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/values/base/CSSBoolean.h>
 
 namespace reanimated::css {
 
