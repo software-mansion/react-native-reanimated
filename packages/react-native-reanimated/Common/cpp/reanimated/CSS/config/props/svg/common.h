@@ -12,6 +12,8 @@
 
 #include <reanimated/CSS/values/svg/CSSStrokeDashArray.h>
 
+#include <vector>
+
 namespace reanimated::css {
 
 // TODO - check if default values are correct

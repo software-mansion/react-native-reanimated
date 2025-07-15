@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../../../../common';
 import { ERROR_MESSAGES, processStrokeDashArray } from '../stroke';
 
