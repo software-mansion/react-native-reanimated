@@ -5,8 +5,8 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
-#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/FeatureFlags.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -517,14 +517,13 @@ jsi::Value JSIWorkletsModuleProxy::get(
         rt,
         propName,
         2,
-        [](
-            jsi::Runtime &rt,
-            const jsi::Value &thisValue,
-            const jsi::Value *args,
-            size_t count) {
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
           DynamicFeatureFlags::setFlag(
-            /* name */ args[0].asString(rt).utf8(rt),
-            /* value */ args[1].asBool());
+              /* name */ args[0].asString(rt).utf8(rt),
+              /* value */ args[1].asBool());
           return jsi::Value::undefined();
         });
   }
