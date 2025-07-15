@@ -63,6 +63,18 @@ def toPlatformFileString(String path) {
   return path
 }
 
+def validateWorkletsVersion() {
+    def result = providers.exec {
+        workingDir(projectDir.path)
+        commandLine("node", "./../scripts/validate-worklets-build.js")
+        ignoreExitValue = true
+    }
+
+    if (result.getResult().get().exitValue != 0) {
+        throw new GradleException(result.getStandardError().getAsText().get().trim())
+    }
+}
+
 def getReanimatedStaticFeatureFlags() {
     def featureFlags = new HashMap<String, String>()
 
@@ -266,6 +278,14 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
+task assertWorkletsVersionTask {
+    doFirst {
+        validateWorkletsVersion()
+    }
+}
+
+preBuild.dependsOn(assertWorkletsVersionTask)
+
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
@@ -292,9 +312,14 @@ dependencies {
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
  
-    if (project != rootProject) {
+    if (project == rootProject) {
         // This is needed for linting in Reanimated's repo.
-        implementation project(":react-native-worklets")
+    } else {
+        if (rootProject.subprojects.find { it.name == "react-native-worklets" }) {
+            implementation project(":react-native-worklets")
+        } else {
+            throw new GradleException("[Reanimated] `react-native-worklets` library not found. Please install it as a dependency in your project. Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Read the documentation for more details: https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unable-to-find-a-specification-for-rnworklets-depended-upon-by-rnreanimated")
+        }
     }
 }
 
