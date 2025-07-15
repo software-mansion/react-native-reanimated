@@ -85,6 +85,8 @@ export interface WorkletsModuleProxy {
     name: string,
     jsEngine: string
   ): void;
+
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;
