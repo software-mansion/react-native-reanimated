@@ -26,6 +26,10 @@ describe(processStrokeDashArray, () => {
       );
     });
 
+    it('returns an array with a single 0 value if an empty array is passed', () => {
+      expect(processStrokeDashArray([])).toEqual([0]);
+    });
+
     describe('duplicates the array if it has an odd number of elements (only if there are more than 2 elements)', () => {
       it.each([
         [[10], [10]],
