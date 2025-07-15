@@ -59,9 +59,9 @@ export const withSpring = ((
       overshootClamping: false,
       restDisplacementThreshold: 0.01,
       restSpeedThreshold: 2,
-      energyCutoff: 8e-9,
+      energyCutoff: 6e-9,
       velocity: 0,
-      duration: 840,
+      duration: 550,
       dampingRatio: 1,
       reduceMotion: undefined,
       clamp: undefined,
@@ -102,16 +102,10 @@ export const withSpring = ((
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
-      // const v0 = -velocity;
-      const v0 = velocity;
+      const v0 = velocity as number;
       const x0 = current - toValue;
 
       const { zeta, omega0, omega1 } = animation;
-
-      // console.log('zeta', zeta);
-      // console.log('omega0', omega0);
-      // console.log('omega1', omega1);
-      // console.log('x0', x0, 'v0', v0);
 
       const { position: newPosition, velocity: newVelocity } =
         zeta < 1
@@ -164,7 +158,6 @@ export const withSpring = ((
       previousAnimation: SpringAnimation | undefined
     ): void {
       animation.current = value;
-      animation.startValue = value;
 
       let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
@@ -175,10 +168,9 @@ export const withSpring = ((
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
           (previousAnimation?.startValue as number)
-        : -Number(animation.toValue) + value;
+        : value - (animation.toValue as number);
 
-      // console.log('triggeredTwice', triggeredTwice);
-      // console.log('x0', x0);
+      animation.startValue = x0;
 
       if (previousAnimation) {
         animation.velocity =
@@ -189,16 +181,12 @@ export const withSpring = ((
         animation.velocity = config.velocity || 0;
       }
 
-      // console.log('animation.velocity', animation.velocity);
-
       if (triggeredTwice) {
-        // console.log('triggeredTwice');
         animation.zeta = previousAnimation?.zeta || 0;
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
-          // console.log('calciulating');
           const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed

@@ -291,13 +291,7 @@ export function getEnergy(
   'worklet';
   const potentialEnergy = 0.5 * stiffness * displacement ** 2;
   const kineticEnergy = 0.5 * mass * velocity ** 2;
-  let totalEnergy = potentialEnergy + kineticEnergy;
-  if (totalEnergy <= 0) {
-    // Correctly handle divisons by zero.
-    // i.e. when startValue and toValue are the same.
-    totalEnergy = Number.EPSILON;
-  }
-  return totalEnergy;
+  return potentialEnergy + kineticEnergy;
 }
 
 /** Runs before initial */
@@ -421,12 +415,9 @@ export function underDampedSpringCalculations(
   }
 ): { position: number; velocity: number } {
   'worklet';
-  const { toValue, current, velocity } = animation;
+  const { toValue } = animation;
 
-  const { zeta, t, omega0, omega1 } = precalculatedValues;
-
-  const v0 = -velocity;
-  const x0 = toValue - current;
+  const { zeta, t, omega0, omega1, x0, v0 } = precalculatedValues;
 
   const sin1 = Math.sin(omega1 * t);
   const cos1 = Math.cos(omega1 * t);
@@ -437,10 +428,10 @@ export function underDampedSpringCalculations(
     underDampedEnvelope *
     (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
 
-  const underDampedPosition = toValue - underDampedFrag1;
+  const underDampedPosition = toValue + underDampedFrag1;
   // This looks crazy -- it's actually just the derivative of the oscillation function
   const underDampedVelocity =
-    zeta * omega0 * underDampedFrag1 -
+    -zeta * omega0 * underDampedFrag1 +
     underDampedEnvelope *
       (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
 
@@ -475,6 +466,9 @@ export function isAnimationTerminatingCalculation(
       config.mass
     );
 
-    return currentEnergy / initialEnergy <= config.energyCutoff;
+    return (
+      initialEnergy === 0 ||
+      currentEnergy / initialEnergy <= config.energyCutoff
+    );
   }
 }

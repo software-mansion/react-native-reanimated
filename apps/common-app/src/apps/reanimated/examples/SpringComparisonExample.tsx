@@ -134,6 +134,8 @@ export default function SpringComparisonExample() {
   const velocityDurationTestWidth800 = useSharedValue(LOWER_SPRING_TO_VALUE);
   const velocityDurationTestWidth1600 = useSharedValue(LOWER_SPRING_TO_VALUE);
   const velocityDurationTestWidth3200 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth6400 = useSharedValue(LOWER_SPRING_TO_VALUE);
+  const velocityDurationTestWidth12800 = useSharedValue(LOWER_SPRING_TO_VALUE);
   const [velocityDurationTestWidthToggle, setVelocityDurationTestWidthToggle] =
     useState(false);
 
@@ -159,103 +161,97 @@ export default function SpringComparisonExample() {
     dampingRatio: 1,
   };
 
-  // const oldDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(configNoTimingWidth.value, oldDefaultNoTimingConfig),
-  //   };
-  // });
-
-  // const newDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(configNoTimingWidth.value, newDefaultNoTimingConfig),
-  //   };
-  // });
-
-  // const oldDefaultConfigTimingStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(configTimingWidth.value, oldDefaultTimingConfig),
-  //   };
-  // });
-
-  // const newDefaultConfigTimingStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(configTimingWidth.value, newDefaultTimingConfig),
-  //   };
-  // });
-
-  // const oldEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(undercriticalConditionsWidth.value, {
-  //       ...oldDefaultNoTimingConfig,
-  //       restDisplacementThreshold: 0.01,
-  //       restSpeedThreshold: 2,
-  //     }),
-  //   };
-  // });
-
-  // const newEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(
-  //       undercriticalConditionsWidth.value,
-  //       oldDefaultNoTimingConfig
-  //     ),
-  //   };
-  // });
-
-  // const oldEndConditionsCriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(criticalConditionsWidth.value, {
-  //       ...newDefaultNoTimingConfig,
-  //       restDisplacementThreshold: 0.01,
-  //       restSpeedThreshold: 2,
-  //     }),
-  //   };
-  // });
-
-  // const newEndConditionsCriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width: withSpring(
-  //       criticalConditionsWidth.value,
-  //       newDefaultNoTimingConfig
-  //     ),
-  //   };
-  // });
-
-  // const oldEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width:
-  //       oldUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-  //       LOWER_SPRING_TO_VALUE,
-  //   };
-  // });
-
-  // const newEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width:
-  //       newUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-  //       LOWER_SPRING_TO_VALUE,
-  //   };
-  // });
-
-  // const oldConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width:
-  //       oldCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-  //       LOWER_SPRING_TO_VALUE,
-  //   };
-  // });
-
-  // const newConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
-  //   return {
-  //     width:
-  //       newCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
-  //       LOWER_SPRING_TO_VALUE,
-  //   };
-  // });
-
-  const noVelocityDurationTestStyle100 = useAnimatedStyle(() => {
+  const oldDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
     return {
-      width: noVelocityDurationTestWidth1000.value,
+      width: withSpring(configNoTimingWidth.value, oldDefaultNoTimingConfig),
+    };
+  });
+
+  const newDefaultConfigNoTimingStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(configNoTimingWidth.value, newDefaultNoTimingConfig),
+    };
+  });
+
+  const oldDefaultConfigTimingStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(configTimingWidth.value, oldDefaultTimingConfig),
+    };
+  });
+
+  const newDefaultConfigTimingStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(configTimingWidth.value, newDefaultTimingConfig),
+    };
+  });
+
+  const oldEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(undercriticalConditionsWidth.value, {
+        ...oldDefaultNoTimingConfig,
+        restDisplacementThreshold: 0.01,
+        restSpeedThreshold: 2,
+      }),
+    };
+  });
+
+  const newEndConditionsUndercriticalStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(
+        undercriticalConditionsWidth.value,
+        oldDefaultNoTimingConfig
+      ),
+    };
+  });
+
+  const oldEndConditionsCriticalStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(criticalConditionsWidth.value, {
+        ...newDefaultNoTimingConfig,
+        restDisplacementThreshold: 0.01,
+        restSpeedThreshold: 2,
+      }),
+    };
+  });
+
+  const newEndConditionsCriticalStyle = useAnimatedStyle(() => {
+    return {
+      width: withSpring(
+        criticalConditionsWidth.value,
+        newDefaultNoTimingConfig
+      ),
+    };
+  });
+
+  const oldEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+    return {
+      width:
+        oldUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+        LOWER_SPRING_TO_VALUE,
+    };
+  });
+
+  const newEndConditionsRelativeUndercriticalStyle = useAnimatedStyle(() => {
+    return {
+      width:
+        newUndercriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+        LOWER_SPRING_TO_VALUE,
+    };
+  });
+
+  const oldConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+    return {
+      width:
+        oldCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+        LOWER_SPRING_TO_VALUE,
+    };
+  });
+
+  const newConditionsRelativeCriticalStyle = useAnimatedStyle(() => {
+    return {
+      width:
+        newCriticalRelativeWidth.value * RELATIVE_COEFFICIENT +
+        LOWER_SPRING_TO_VALUE,
     };
   });
 
@@ -349,9 +345,27 @@ export default function SpringComparisonExample() {
     };
   });
 
+  const velocityDurationTestStyle6400 = useAnimatedStyle(() => {
+    return {
+      width: velocityDurationTestWidth6400.value,
+    };
+  });
+
+  const velocityDurationTestStyle12800 = useAnimatedStyle(() => {
+    return {
+      width: LOWER_SPRING_TO_VALUE,
+      transform: [
+        {
+          scaleX: velocityDurationTestWidth12800.value / LOWER_SPRING_TO_VALUE,
+        },
+      ],
+      transformOrigin: 'left',
+    };
+  });
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* <>
+      <>
         <Visualiser
           testedStyle={oldDefaultConfigNoTimingStyle}
           description="Old default config, no timing"
@@ -498,7 +512,7 @@ export default function SpringComparisonExample() {
             setCriticalRelativeWidthToggle(!criticalRelativeWidthToggle);
           }}
         />
-      </> */}
+      </>
 
       <>
         <Visualiser
@@ -532,35 +546,35 @@ export default function SpringComparisonExample() {
                 noVelocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
                   : UPPER_SPRING_TO_VALUE,
-                { duration: 200 },
+                { duration: 200, dampingRatio: 1 },
                 () => console.log('duration 200:', performance.now() - start)
               );
               noVelocityDurationTestWidth400.value = withSpring(
                 noVelocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
                   : UPPER_SPRING_TO_VALUE,
-                { duration: 400 },
+                { duration: 400, dampingRatio: 1 },
                 () => console.log('duration 400:', performance.now() - start)
               );
               noVelocityDurationTestWidth600.value = withSpring(
                 noVelocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
                   : UPPER_SPRING_TO_VALUE,
-                { duration: 600 },
+                { duration: 600, dampingRatio: 1 },
                 () => console.log('duration 600:', performance.now() - start)
               );
               noVelocityDurationTestWidth800.value = withSpring(
                 noVelocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
                   : UPPER_SPRING_TO_VALUE,
-                { duration: 800 },
+                { duration: 800, dampingRatio: 1 },
                 () => console.log('duration 800:', performance.now() - start)
               );
               noVelocityDurationTestWidth1000.value = withSpring(
                 noVelocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
                   : UPPER_SPRING_TO_VALUE,
-                { duration: 1000 },
+                { duration: 1000, dampingRatio: 1 },
                 () => console.log('duration 1000:', performance.now() - start)
               );
             })();
@@ -612,13 +626,21 @@ export default function SpringComparisonExample() {
           testedStyle={velocityDurationTestStyle3200}
           description="Velocity 3200, duration 800"
         />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle6400}
+          description="Velocity 6400, duration 800"
+        />
+        <Visualiser
+          testedStyle={velocityDurationTestStyle12800}
+          description="Velocity 12800, duration 800"
+        />
 
         <Button
           title="toggle"
           onPress={() => {
             runOnUI(() => {
               // console.log('start:', performance.now());
-              const start = performance.now();
+              let start = performance.now();
               velocityDurationTestWidth6.value = withSpring(
                 velocityDurationTestWidthToggle
                   ? LOWER_SPRING_TO_VALUE
@@ -626,6 +648,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 6 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 6:', performance.now() - start)
               );
@@ -636,6 +659,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 12 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 12:', performance.now() - start)
               );
@@ -646,6 +670,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 25 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 25:', performance.now() - start)
               );
@@ -656,6 +681,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 50 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 50:', performance.now() - start)
               );
@@ -666,6 +692,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 100 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 100:', performance.now() - start)
               );
@@ -676,6 +703,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 200 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 200:', performance.now() - start)
               );
@@ -686,6 +714,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 400 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 400:', performance.now() - start)
               );
@@ -696,6 +725,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 800 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 800:', performance.now() - start)
               );
@@ -706,6 +736,7 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 1600 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 1600:', performance.now() - start)
               );
@@ -716,9 +747,33 @@ export default function SpringComparisonExample() {
                 {
                   duration: 800,
                   velocity: 3200 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
                 },
                 () => console.log('velocity 3200:', performance.now() - start)
               );
+              velocityDurationTestWidth6400.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 6400 * (velocityDurationTestWidthToggle ? 1 : 1),
+                  dampingRatio: 1,
+                },
+                () => console.log('velocity 6400:', performance.now() - start)
+              );
+              velocityDurationTestWidth12800.value = withSpring(
+                velocityDurationTestWidthToggle
+                  ? LOWER_SPRING_TO_VALUE
+                  : UPPER_SPRING_TO_VALUE,
+                {
+                  duration: 800,
+                  velocity: 12800 * (velocityDurationTestWidthToggle ? -1 : 1),
+                  dampingRatio: 1,
+                },
+                () => console.log('velocity 12800:', performance.now() - start)
+              );
+              start = performance.now();
             })();
             setVelocityDurationTestWidthToggle(
               !velocityDurationTestWidthToggle
