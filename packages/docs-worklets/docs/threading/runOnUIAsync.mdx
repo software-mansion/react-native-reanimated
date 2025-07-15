@@ -1,0 +1,58 @@
+---
+sidebar_position: 9
+---
+
+# runOnUIAsync
+
+`runOnUIAsync` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+## Reference
+
+```javascript
+import { runOnUIAsync } from 'react-native-reanimated';
+
+const result = await runOnUIAsync((greeting) => {
+    return `${greeting} from the UI thread`;
+})('Howdy');
+
+console.log(result); // Howdy from the UI thread
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function runOnUIAsync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => Promise<ReturnValue>
+```
+
+</details>
+
+### Arguments
+
+#### worklet
+
+A reference to a function you want to execute asynchronously on the [UI thread](/docs/fundamentals/glossary#ui-thread) from the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Arguments to your function have to be passed to the function returned from `runOnUIAsync` i.e. `runOnUIAsync(myWorklet)(10);`.
+
+### Returns
+
+`runOnUIAsync` returns a function that accepts arguments for the function passed as the first argument.
+
+:::info
+Don't forget to call the function returned from `runOnUIAsync`.
+:::
+
+## Remarks
+
+- It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))()`~~. Here, the correct usage would be `runOnUIAsync(myWorklet)(10)`.
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+- Make sure not to execute `runOnUIAsync` on the UI thread as this will result in an error.
+
+- In browsers there's no separate UI thread available. Because of that, on the Web, `runOnUIAsync` behaves similarly to `requestAnimationFrame`. It creates a function that, when called, will be scheduled to run with given arguments on next animation frame.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
