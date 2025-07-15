@@ -117,7 +117,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-export function bisectRoot({
+function bisectRoot({
   min,
   max,
   func,
