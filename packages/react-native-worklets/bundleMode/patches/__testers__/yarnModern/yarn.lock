@@ -3,7 +3,7 @@
 
 __metadata:
   version: 8
-  cacheKey: 10c0
+  cacheKey: 10
 
 "yarnModern@workspace:.":
   version: 0.0.0-use.local
