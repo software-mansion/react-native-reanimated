@@ -60,8 +60,11 @@ export const isTimeUnit = (value: unknown): value is TimeUnit =>
 export const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
 
-export const isPercentage = (value: string | number): value is `${number}%` =>
+export const isPercentage = (value: unknown): value is `${number}%` =>
   typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
+
+export const isLength = (value: unknown): value is `${number}%` | number =>
+  isNumber(value) || isPercentage(value);
 
 export const isAngleValue = (
   value: string | number

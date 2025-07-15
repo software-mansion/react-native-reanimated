@@ -22,6 +22,7 @@ import {
   convertPercentageToNumber,
   processColorSVG,
   processFillRule,
+  processStrokeDashArray,
 } from '../../style';
 
 const colorAttributes = { process: processColorSVG };
@@ -40,7 +41,7 @@ const stokeProps: StyleBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
   strokeOpacity: { process: convertPercentageToNumber },
-  strokeDasharray: true, // TODO - add preprocessor
+  strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
   strokeLinecap: true,
   strokeLinejoin: true,
