@@ -1,4 +1,7 @@
-import type { WorkletRuntime as WorkletRuntimeFromWorklets } from 'react-native-worklets';
+import type {
+  MakeShareableClone,
+  WorkletRuntime as WorkletRuntimeFromWorklets,
+} from 'react-native-worklets';
 import {
   createWorkletRuntime as createWorkletRuntimeFromWorklets,
   executeOnUIRuntimeSync as executeOnUIRuntimeSyncFromWorklets,
@@ -8,7 +11,6 @@ import {
   runOnRuntime as runOnRuntimeFromWorklets,
   runOnUI as runOnUIFromWorklets,
 } from 'react-native-worklets';
-import type { MakeShareableClone } from 'react-native-worklets/lib/typescript/shareables';
 
 /**
  * @deprecated This function is deprecated and will be removed in the next major
