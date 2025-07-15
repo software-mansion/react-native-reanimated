@@ -1,14 +1,13 @@
 'use strict';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
 import { SHOULD_BE_USE_WEB } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
-import {
-  configureLayoutAnimationBatch,
-  makeShareableCloneRecursive,
-} from './core';
+import { configureLayoutAnimationBatch } from './core';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
