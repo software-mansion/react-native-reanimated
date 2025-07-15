@@ -2,12 +2,11 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-// react-native style props interpolators
-#include <reanimated/CSS/config/interpolators/base/image.h>
-#include <reanimated/CSS/config/interpolators/base/text.h>
-#include <reanimated/CSS/config/interpolators/base/view.h>
-#include <reanimated/CSS/config/interpolators/svg/circle.h>
-#include <reanimated/CSS/config/interpolators/svg/path.h>
+#include <reanimated/CSS/config/props/base/image.h>
+#include <reanimated/CSS/config/props/base/text.h>
+#include <reanimated/CSS/config/props/base/view.h>
+#include <reanimated/CSS/config/props/svg/circle.h>
+#include <reanimated/CSS/config/props/svg/path.h>
 
 #include <stdexcept>
 #include <string>

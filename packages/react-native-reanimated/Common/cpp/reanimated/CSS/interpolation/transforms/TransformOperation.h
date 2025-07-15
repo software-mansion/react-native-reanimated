@@ -2,9 +2,9 @@
 
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/values/base/CSSAngle.h>
+#include <reanimated/CSS/values/base/CSSDimension.h>
+#include <reanimated/CSS/values/base/CSSNumber.h>
 
 #include <react/renderer/core/ShadowNode.h>
 

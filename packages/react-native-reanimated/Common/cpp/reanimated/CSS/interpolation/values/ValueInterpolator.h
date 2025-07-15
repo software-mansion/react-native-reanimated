@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/util/keyframes.h>
+#include <reanimated/CSS/values/CSSValueVariant.h>
 
 #include <memory>
 #include <string>

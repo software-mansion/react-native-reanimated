@@ -2,13 +2,13 @@
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
-#include <reanimated/CSS/config/interpolators/constants.h>
-#include <reanimated/CSS/config/interpolators/utils.h>
+#include <reanimated/CSS/config/props/constants.h>
+#include <reanimated/CSS/config/props/utils.h>
 
-#include <reanimated/CSS/common/values/CSSColor.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
-#include <reanimated/CSS/common/values/CSSKeyword.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/values/base/CSSColor.h>
+#include <reanimated/CSS/values/base/CSSDimension.h>
+#include <reanimated/CSS/values/base/CSSKeyword.h>
+#include <reanimated/CSS/values/base/CSSNumber.h>
 
 namespace reanimated::css {
 
@@ -25,9 +25,10 @@ const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"stroke", value<CSSColor>(BLACK)},
-    {"strokeWidth", value<CSSDouble>(1)},
+    {"strokeWidth", value<CSSDimension>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<CSSDouble>(0)}, // TODO - add support for array
+    {"strokeDasharray",
+     value<CSSDouble, CSSKeyword>(0)}, // TODO - add support for array
     {"strokeDashoffset", value<CSSDouble>(0)},
     {"strokeLinecap", value<CSSKeyword>("butt")},
     {"strokeLinejoin", value<CSSKeyword>("miter")},

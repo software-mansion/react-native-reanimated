@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/config/interpolators/svg/common.h>
+#include <reanimated/CSS/config/props/svg/common.h>
 
 namespace reanimated::css {
 

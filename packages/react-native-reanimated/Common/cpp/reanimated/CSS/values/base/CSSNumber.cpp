@@ -1,5 +1,5 @@
 #include <folly/json.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/values/base/CSSNumber.h>
 
 namespace reanimated::css {
 

@@ -1,4 +1,4 @@
-#include <reanimated/CSS/config/interpolators/registry.h>
+#include <reanimated/CSS/config/props/registry.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 namespace reanimated::css {

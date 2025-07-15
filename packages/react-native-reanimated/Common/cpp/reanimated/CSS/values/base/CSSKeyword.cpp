@@ -1,5 +1,5 @@
 #include <folly/json.h>
-#include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <reanimated/CSS/values/base/CSSKeyword.h>
 
 #include <utility>
 

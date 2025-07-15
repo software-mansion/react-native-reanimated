@@ -1,5 +1,5 @@
 #include <folly/json.h>
-#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
+#include <reanimated/CSS/values/base/CSSDiscreteArray.h>
 
 namespace reanimated::css {
 
