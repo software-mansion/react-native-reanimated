@@ -10,11 +10,24 @@ Bundle Mode is a feature that gives worklets access to your whole JavaScript bun
 
 ## Setup
 
+Bundle Mode is available in a prerelease version of `react-native-worklets`. To install it use the tag `bundle-mode-preview`, e.g.
+
+```sh
+yarn add react-native-worklets@bundle-mode-preview
+```
+
+or
+
+```sh
+npm i react-native-worklets@bundle-mode-preview
+```
+
 ### All platforms
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
 1. **Modify your Babel configuration**. In your `babel.config.js` file, add the following:
+
    ```javascript
    module.exports = {
      plugins: [
@@ -29,6 +42,9 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
      ],
    };
    ```
+
+   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
+
 2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
    ```javascript
@@ -55,6 +71,8 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
    );
    ```
 
+   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/metro.config.js)
+
 3. Apply the necessary package patches from [worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
 
 ### iOS
@@ -66,15 +84,21 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 ENV['WORKLETS_BUNDLE_MODE'] = '1'
 ```
 
+[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/ios/Podfile#L11)
+
 2. Make sure to reinstall your pods.
 
 ### Android
 
 1. Enable building [React Native from source](https://reactnative.dev/contributing/how-to-build-from-source#android).
+
+   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/android/settings.gradle#L8)
+
 2. **Modify your `gradle.properties`**. In your `android/gradle.properties`, add the following:
    ```groovy
    workletsBundleMode=true
    ```
+   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/android/gradle.properties#L41)
 
 ## Usage
 
@@ -97,3 +121,5 @@ module.exports = {
   ],
 };
 ```
+
+[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
