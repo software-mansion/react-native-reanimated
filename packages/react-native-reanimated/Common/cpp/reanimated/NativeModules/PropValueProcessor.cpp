@@ -7,21 +7,28 @@
 
 namespace reanimated {
 const std::array<std::string, 4> PropValueProcessor::layoutProps = {
-    "width", "height", "top", "left"};
+    "width",
+    "height",
+    "top",
+    "left"};
 const std::array<std::string, 4> PropValueProcessor::styleProps = {
-    "opacity", "zIndex", "backgroundColor", "boxShadow"};
+    "opacity",
+    "zIndex",
+    "backgroundColor",
+    "boxShadow"};
 
-std::string
-PropValueProcessor::processPropValue(const std::string &propName,
-                                     const ShadowNode::Shared &shadowNode,
-                                     jsi::Runtime &rt) {
+std::string PropValueProcessor::processPropValue(
+    const std::string &propName,
+    const ShadowNode::Shared &shadowNode,
+    jsi::Runtime &rt) {
   if (isLayoutProp(propName)) {
     auto layoutableShadowNode =
         dynamic_cast<const LayoutableShadowNode *>(shadowNode.get());
     if (!layoutableShadowNode) {
-      throw std::runtime_error("Cannot cast shadow node to "
-                               "LayoutableShadowNode for layout property: " +
-                               propName);
+      throw std::runtime_error(
+          "Cannot cast shadow node to "
+          "LayoutableShadowNode for layout property: " +
+          propName);
     }
     return processLayoutProp(propName, layoutableShadowNode);
   } else if (isStyleProp(propName)) {
@@ -30,9 +37,9 @@ PropValueProcessor::processPropValue(const std::string &propName,
     return processStyleProp(propName, viewProps, rt);
   }
 
-  throw std::runtime_error(
-      std::string("Getting property `" + propName +
-                  "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 std::string PropValueProcessor::processLayoutProp(
@@ -55,7 +62,8 @@ std::string PropValueProcessor::processLayoutProp(
 
 std::string PropValueProcessor::processStyleProp(
     const std::string &propName,
-    const std::shared_ptr<const ViewProps> &viewProps, jsi::Runtime &rt) {
+    const std::shared_ptr<const ViewProps> &viewProps,
+    jsi::Runtime &rt) {
   if (propName == "opacity") {
     return std::to_string(viewProps->opacity);
   } else if (propName == "zIndex") {
@@ -82,9 +90,9 @@ std::string PropValueProcessor::processStyleProp(
   throw std::runtime_error("Unsupported style property: " + propName);
 }
 
-jsi::Object
-PropValueProcessor::boxShadowPreprocessing(const BoxShadow &boxShadow,
-                                           jsi::Runtime &rt) {
+jsi::Object PropValueProcessor::boxShadowPreprocessing(
+    const BoxShadow &boxShadow,
+    jsi::Runtime &rt) {
   jsi::Object result(rt);
   result.setProperty(rt, "offsetX", boxShadow.offsetX);
   result.setProperty(rt, "offsetY", boxShadow.offsetY);
@@ -110,12 +118,12 @@ std::string PropValueProcessor::intColorToHex(const int val) {
 
 bool PropValueProcessor::isLayoutProp(const std::string &propName) {
   return std::find(layoutProps.begin(), layoutProps.end(), propName) !=
-         layoutProps.end();
+      layoutProps.end();
 }
 
 bool PropValueProcessor::isStyleProp(const std::string &propName) {
   return std::find(styleProps.begin(), styleProps.end(), propName) !=
-         styleProps.end();
+      styleProps.end();
 }
 
 } // namespace reanimated

@@ -13,28 +13,30 @@ using namespace facebook;
 using namespace react;
 
 class PropValueProcessor {
-public:
+ public:
   static const std::array<std::string, 4> layoutProps;
   static const std::array<std::string, 4> styleProps;
 
-  static std::string processPropValue(const std::string &propName,
-                                      const ShadowNode::Shared &shadowNode,
-                                      jsi::Runtime &rt);
+  static std::string processPropValue(
+      const std::string &propName,
+      const ShadowNode::Shared &shadowNode,
+      jsi::Runtime &rt);
 
-private:
-  static std::string
-  processLayoutProp(const std::string &propName,
-                    const LayoutableShadowNode *layoutableShadowNode);
+ private:
+  static std::string processLayoutProp(
+      const std::string &propName,
+      const LayoutableShadowNode *layoutableShadowNode);
 
-  static std::string
-  processStyleProp(const std::string &propName,
-                   const std::shared_ptr<const ViewProps> &viewProps,
-                   jsi::Runtime &rt);
+  static std::string processStyleProp(
+      const std::string &propName,
+      const std::shared_ptr<const ViewProps> &viewProps,
+      jsi::Runtime &rt);
 
   static std::string intColorToHex(const int val);
 
-  static jsi::Object boxShadowPreprocessing(const BoxShadow &boxShadow,
-                                            jsi::Runtime &rt);
+  static jsi::Object boxShadowPreprocessing(
+      const BoxShadow &boxShadow,
+      jsi::Runtime &rt);
 
   static bool isLayoutProp(const std::string &propName);
 
