@@ -8,13 +8,14 @@ import {
   runOnRuntime as runOnRuntimeFromWorklets,
   runOnUI as runOnUIFromWorklets,
 } from 'react-native-worklets';
+import type { MakeShareableClone } from 'react-native-worklets/lib/typescript/shareables';
 
 /**
  * @deprecated This function is deprecated and will be removed in the next major
  *   Please import `makeShareableCloneRecursive` directly from
  *   `react-native-worklets` instead of `react-native-reanimated`.
  */
-export const makeShareableCloneRecursive =
+export const makeShareableCloneRecursive: MakeShareableClone =
   makeShareableCloneRecursiveFromWorklets;
 
 /**
