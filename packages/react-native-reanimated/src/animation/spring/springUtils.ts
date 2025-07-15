@@ -147,20 +147,21 @@ export function bisectRoot({
   min,
   max,
   func,
+  precision,
   maxIterations = 20,
 }: {
   min: number;
   max: number;
   func: (x: number) => number;
+  precision: number;
   maxIterations?: number;
 }) {
   'worklet';
-  const ACCURACY_IN_MS = 1; // We don't need to be more accurate than 1ms.
   const direction = func(max) >= func(min) ? 1 : -1;
   let idx = maxIterations;
   let current = (max + min) / 2;
 
-  while (Math.abs(func(current)) > ACCURACY_IN_MS && idx > 0) {
+  while (Math.abs(func(current)) > precision && idx > 0) {
     idx -= 1;
 
     if (func(current) * direction < 0) {
@@ -281,6 +282,24 @@ export function scaleZetaToMatchClamps(
   return Math.max(...zetaSatisfyingClamp, zeta);
 }
 
+export function getEnergy(
+  displacement: number,
+  velocity: number,
+  stiffness: number,
+  mass: number
+) {
+  'worklet';
+  const potentialEnergy = 0.5 * stiffness * displacement ** 2;
+  const kineticEnergy = 0.5 * mass * velocity ** 2;
+  let totalEnergy = potentialEnergy + kineticEnergy;
+  if (totalEnergy <= 0) {
+    // Correctly handle divisons by zero.
+    // i.e. when startValue and toValue are the same.
+    totalEnergy = Number.EPSILON;
+  }
+  return totalEnergy;
+}
+
 /** Runs before initial */
 export function calculateNewStiffnessToMatchDuration(
   x0: number,
@@ -320,69 +339,44 @@ export function calculateNewStiffnessToMatchDuration(
     duration: targetDuration,
   } = config;
 
-  let result = {
-    duration: 0,
-    stiffness: 0,
-    damping: 0,
-    maxAmplitude: 0,
-    maxVelocity: 0,
-    initialTimeshift: 0,
-  };
-
-  const durationForStiffness = (stiffness: number) => {
+  const energyDiffForStiffness = (stiffness: number) => {
     'worklet';
     const perceptualCoefficient = 1.5;
-
     const MILLISECONDS_IN_SECOND = 1000;
 
-    const maxAmplitude = Math.sqrt(
-      (m * v0 * v0 + stiffness * x0 * x0) / stiffness
-    );
-    const maxVelocity = Math.sqrt(stiffness / m) * maxAmplitude;
-    const c = 2 * Math.sqrt(stiffness * m) * zeta;
-    const duration =
-      MILLISECONDS_IN_SECOND * ((-2 * m) / c) * Math.log(Math.sqrt(threshold));
-    const initialTimeshift =
-      MILLISECONDS_IN_SECOND *
-      ((-2 * m) / c) *
-      Math.log(Math.abs(x0) / maxAmplitude);
-    // console.log('x0', x0);
-    // console.log('maxAmplitude', maxAmplitude);
-    // console.log('maxVelocity', maxVelocity);
-    // console.log('initialTimeshift', initialTimeshift);
-    result.duration = duration;
-    result.stiffness = stiffness;
-    result.damping = c;
-    result.maxAmplitude = maxAmplitude;
-    result.maxVelocity = maxVelocity;
-    result.initialTimeshift = initialTimeshift;
-    return (
-      duration - (targetDuration * perceptualCoefficient - initialTimeshift)
-    );
+    const settlingDuration =
+      (targetDuration * perceptualCoefficient) / MILLISECONDS_IN_SECOND;
+    const omega0 = Math.sqrt(stiffness / m) * zeta;
+
+    const xtk =
+      (x0 + (v0 + x0 * omega0) * settlingDuration) *
+      Math.exp(-omega0 * settlingDuration);
+
+    const vtk =
+      (x0 + (v0 + x0 * omega0) * settlingDuration) *
+        Math.exp(-omega0 * settlingDuration) *
+        -omega0 +
+      (v0 + x0 * omega0) * Math.exp(-omega0 * settlingDuration);
+
+    const e0 = getEnergy(x0, v0, stiffness, m);
+
+    const etk = getEnergy(xtk, vtk, stiffness, m);
+
+    const energyFraction = etk / e0;
+
+    return energyFraction - threshold;
   };
 
   // Bisection turns out to be much faster than Newton's method in our case
-  // return bisectRoot({ min: 1, max: 1000000, func: durationForStiffness });
   const res = bisectRoot({
     min: Number.EPSILON,
     max: 8e3 /* Stiffness for 8ms animation doesn't exceed 2e3, we add some safety margin on top of that. */,
-    func: durationForStiffness,
+    func: energyDiffForStiffness,
+    precision: config.energyCutoff * 1e-3,
     maxIterations: 100,
   });
 
-  console.log();
-  console.log('----------------------------------');
-  console.log('taget');
-  console.log('    duration', targetDuration);
-  console.log('    v0', v0);
-  console.log('    x0', x0);
-  console.log('calculated');
-  console.log('    duration', result.duration);
-  console.log('    maxAmplitude', result.maxAmplitude);
-  console.log('    maxVelocity', result.maxVelocity);
-  console.log('    initialTimeshift', result.initialTimeshift);
-  console.log('    stiffness', result.stiffness);
-  console.log('    damping', result.damping);
+  console.log('Calculated stiffness:', res);
 
   return res;
 }
@@ -403,11 +397,11 @@ export function criticallyDampedSpringCalculations(
 
   const criticallyDampedEnvelope = Math.exp(-omega0 * t);
   const criticallyDampedPosition =
-    toValue - criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
+    toValue + criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
 
   const criticallyDampedVelocity =
-    criticallyDampedEnvelope *
-    (v0 * (t * omega0 - 1) + t * x0 * omega0 * omega0);
+    criticallyDampedEnvelope * -omega0 * (x0 + (v0 + omega0 * x0) * t) +
+    criticallyDampedEnvelope * (v0 + omega0 * x0);
 
   return {
     position: criticallyDampedPosition,
@@ -451,24 +445,6 @@ export function underDampedSpringCalculations(
       (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
 
   return { position: underDampedPosition, velocity: underDampedVelocity };
-}
-
-export function getEnergy(
-  displacement: number,
-  velocity: number,
-  stiffness: number,
-  mass: number
-) {
-  'worklet';
-  const potentialEnergy = 0.5 * stiffness * displacement ** 2;
-  const kineticEnergy = 0.5 * mass * velocity ** 2;
-  let totalEnergy = potentialEnergy + kineticEnergy;
-  if (totalEnergy <= 0) {
-    // Correctly handle divisons by zero.
-    // i.e. when startValue and toValue are the same.
-    totalEnergy = Number.EPSILON;
-  }
-  return totalEnergy;
 }
 
 export function isAnimationTerminatingCalculation(

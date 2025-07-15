@@ -98,13 +98,20 @@ export const withSpring = ((
       const { lastTimestamp, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
+
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
-      const v0 = -velocity;
-      const x0 = toValue - current;
+      // const v0 = -velocity;
+      const v0 = velocity;
+      const x0 = current - toValue;
 
       const { zeta, omega0, omega1 } = animation;
+
+      // console.log('zeta', zeta);
+      // console.log('omega0', omega0);
+      // console.log('omega1', omega1);
+      // console.log('x0', x0, 'v0', v0);
 
       const { position: newPosition, velocity: newVelocity } =
         zeta < 1
@@ -159,14 +166,6 @@ export const withSpring = ((
       animation.current = value;
       animation.startValue = value;
 
-      const initialEnergy = getEnergy(
-        animation.startValue - (animation.toValue as number),
-        config.velocity,
-        config.stiffness,
-        config.mass
-      );
-      animation.initialEnergy = initialEnergy;
-
       let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
@@ -175,8 +174,11 @@ export const withSpring = ((
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          previousAnimation?.startValue
-        : Number(animation.toValue) - value;
+          (previousAnimation?.startValue as number)
+        : -Number(animation.toValue) + value;
+
+      // console.log('triggeredTwice', triggeredTwice);
+      // console.log('x0', x0);
 
       if (previousAnimation) {
         animation.velocity =
@@ -187,12 +189,16 @@ export const withSpring = ((
         animation.velocity = config.velocity || 0;
       }
 
+      // console.log('animation.velocity', animation.velocity);
+
       if (triggeredTwice) {
+        // console.log('triggeredTwice');
         animation.zeta = previousAnimation?.zeta || 0;
         animation.omega0 = previousAnimation?.omega0 || 0;
         animation.omega1 = previousAnimation?.omega1 || 0;
       } else {
         if (config.useDuration) {
+          // console.log('calciulating');
           const actualDuration = triggeredTwice
             ? // If animation is triggered twice we want to continue the previous animation
               // so we need to include the time that already elapsed
@@ -203,10 +209,11 @@ export const withSpring = ((
 
           config.duration = actualDuration;
           stiffness = calculateNewStiffnessToMatchDuration(
-            x0 as number,
+            x0,
             config,
             animation.velocity
           );
+          config.stiffness = stiffness;
         }
 
         const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
@@ -218,6 +225,14 @@ export const withSpring = ((
           animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
         }
       }
+
+      const initialEnergy = getEnergy(
+        x0,
+        config.velocity,
+        config.stiffness,
+        config.mass
+      );
+      animation.initialEnergy = initialEnergy;
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
 
