@@ -106,7 +106,7 @@ std::string CSSColor::toString() const {
     return "rgba(" + std::to_string(channels[0]) + "," +
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
-  } else if (colorType == ColorType::CurrentColor) {
+  if (colorType == ColorType::CurrentColor) {
     return "currentColor";
   }
   return "transparent";
