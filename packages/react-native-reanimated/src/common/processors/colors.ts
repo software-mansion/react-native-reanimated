@@ -5,7 +5,6 @@ import type { StyleProps } from '../../commonTypes';
 import { IS_ANDROID } from '../constants';
 
 export function processColor(color: unknown): number | null | undefined {
-  'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
     return undefined;
@@ -27,7 +26,6 @@ export function processColor(color: unknown): number | null | undefined {
 }
 
 export function processColorsInProps(props: StyleProps) {
-  'worklet';
   for (const key in props) {
     if (ColorProperties.includes(key)) {
       if (Array.isArray(props[key])) {

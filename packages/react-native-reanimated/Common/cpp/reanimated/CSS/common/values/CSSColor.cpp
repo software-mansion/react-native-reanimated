@@ -1,4 +1,3 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 
 namespace reanimated::css {
@@ -12,6 +11,12 @@ CSSColor::CSSColor(ColorType colorType)
 CSSColor::CSSColor(double numberValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
   uint32_t color;
+  // On Android, colors are represented as signed 32-bit integers. In JS, we use
+  // a bitwise operation (normalizedColor = normalizedColor | 0x0) to ensure the
+  // value is treated as a signed int, causing numbers above 2^31 to become
+  // negative. To correctly interpret these in C++, we cast negative values to
+  // int32_t to preserve their bit pattern, then assign to uint32_t. This wraps
+  // the bits (modulo 2^32), effectively reversing the JS-side bit shift.
   if (numberValue < 0) {
     color = static_cast<int32_t>(numberValue);
   } else {
@@ -22,6 +27,18 @@ CSSColor::CSSColor(double numberValue)
   channels[2] = color & 0xFF; // Blue
   channels[3] = (color >> 24) & 0xFF; // Alpha
   colorType = ColorType::Rgba;
+}
+
+CSSColor::CSSColor(const std::string &colorString)
+    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+  if (colorString == "transparent") {
+    colorType = ColorType::Transparent;
+  } else if (colorString == "currentColor") {
+    colorType = ColorType::CurrentColor;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSColor: Invalid string value: " + colorString);
+  }
 }
 
 CSSColor::CSSColor(const uint8_t r, const uint8_t g, const uint8_t b)
@@ -41,56 +58,41 @@ CSSColor::CSSColor(const ColorChannels &colorChannels)
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
-    *this = CSSColor(jsiValue.asNumber());
-    return;
+    *this = CSSColor(jsiValue.getNumber());
+  } else if (jsiValue.isString()) {
+    *this = CSSColor(jsiValue.getString(rt).utf8(rt));
+  } else if (jsiValue.isUndefined()) {
+    *this = Transparent;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSColor: Invalid value: " +
+        stringifyJSIValue(rt, jsiValue));
   }
-
-  if (jsiValue.isUndefined() || jsiValue.isString()) {
-    const auto colorString = jsiValue.getString(rt).utf8(rt);
-    if (colorString == "transparent") {
-      colorType = ColorType::Transparent;
-      return;
-    } else if (colorString == "currentColor") {
-      colorType = ColorType::CurrentColor;
-      return;
-    }
-  }
-
-  throw std::invalid_argument(
-      "[Reanimated] CSSColor: Invalid value: " +
-      stringifyJSIValue(rt, jsiValue));
 }
 
 CSSColor::CSSColor(const folly::dynamic &value)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
-    *this = CSSColor(value.asDouble());
-    return;
+    *this = CSSColor(value.getDouble());
+  } else if (value.isString()) {
+    *this = CSSColor(value.getString());
+  } else if (value.empty()) {
+    *this = Transparent;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSColor: Invalid value: " + folly::toJson(value));
   }
-
-  if (value.empty() || value.isString()) {
-    const auto colorString = value.getString();
-    if (colorString == "transparent") {
-      colorType = ColorType::Transparent;
-      return;
-    } else if (colorString == "currentColor") {
-      colorType = ColorType::CurrentColor;
-      return;
-    }
-  }
-
-  throw std::invalid_argument(
-      "[Reanimated] CSSColor: Invalid value: " + folly::toJson(value));
 }
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  // TODO - improve canConstruct check and add check for string correctness
-  return jsiValue.isNumber() || jsiValue.isString();
+  return jsiValue.isNumber() || jsiValue.isUndefined() ||
+      (jsiValue.isString() &&
+       isValidColorString(jsiValue.getString(rt).utf8(rt)));
 }
 
 bool CSSColor::canConstruct(const folly::dynamic &value) {
-  // TODO - improve canConstruct check and add check for string correctness
-  return value.isNumber() || value.isString();
+  return value.isNumber() || value.empty() ||
+      (value.isString() && isValidColorString(value.getString()));
 }
 
 folly::dynamic CSSColor::toDynamic() const {
@@ -106,6 +108,7 @@ std::string CSSColor::toString() const {
     return "rgba(" + std::to_string(channels[0]) + "," +
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
+  }
   if (colorType == ColorType::CurrentColor) {
     return "currentColor";
   }
@@ -159,6 +162,10 @@ bool CSSColor::operator==(const CSSColor &other) const {
 std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
   os << "CSSColor(" << colorValue.toString() << ")";
   return os;
+}
+
+bool CSSColor::isValidColorString(const std::string &colorString) {
+  return colorString == "transparent" || colorString == "currentColor";
 }
 
 #endif // NDEBUG
