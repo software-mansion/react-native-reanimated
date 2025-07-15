@@ -4,15 +4,6 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import {
-  createWorkletRuntime as createWorkletRuntimeFromWorklets,
-  executeOnUIRuntimeSync as executeOnUIRuntimeSyncFromWorklets,
-  makeShareable as makeShareableFromWorklets,
-  makeShareableCloneRecursive as makeShareableCloneRecursiveFromWorklets,
-  runOnJS as runOnJSFromWorklets,
-  runOnRuntime as runOnRuntimeFromWorklets,
-  runOnUI as runOnUIFromWorklets,
-} from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -26,59 +17,10 @@ import type {
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
+import { makeShareableCloneRecursive } from './workletFunctions';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `makeShareableCloneRecursive` directly from
- *   `react-native-worklets` instead of `react-native-reanimated`.
- */
-export const makeShareableCloneRecursive =
-  makeShareableCloneRecursiveFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `createWorkletRuntime` directly from `react-native-worklets`
- *   instead of `react-native-reanimated`.
- */
-export const createWorkletRuntime = createWorkletRuntimeFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `executeOnUIRuntimeSync` directly from
- *   `react-native-worklets` instead of `react-native-reanimated`.
- */
-export const executeOnUIRuntimeSync = executeOnUIRuntimeSyncFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `makeShareable` directly from `react-native-worklets` instead
- *   of `react-native-reanimated`.
- */
-export const makeShareable = makeShareableFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `runOnJS` directly from `react-native-worklets` instead of
- *   `react-native-reanimated`.
- */
-export const runOnJS = runOnJSFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `runOnUI` directly from `react-native-worklets` instead of
- *   `react-native-reanimated`.
- */
-export const runOnUI = runOnUIFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `runOnRuntime` directly from `react-native-worklets` instead
- *   of `react-native-reanimated`.
- */
-export const runOnRuntime = runOnRuntimeFromWorklets;
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 

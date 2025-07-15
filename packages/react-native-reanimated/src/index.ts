@@ -2,9 +2,6 @@
 
 import './publicGlobals';
 
-import type { WorkletRuntime as WorkletRuntimeFromWorklets } from 'react-native-worklets';
-import { isWorkletFunction as isWorkletFunctionFromWorklets } from 'react-native-worklets';
-
 import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
@@ -90,17 +87,11 @@ export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
-  createWorkletRuntime,
   enableLayoutAnimations,
-  executeOnUIRuntimeSync,
   getViewProp,
   isConfigured,
   isReanimated3,
   makeMutable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
 } from './core';
 export * from './css';
 export type {
@@ -302,17 +293,13 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-
-/**
- * @deprecated This type is deprecated and will be removed in the next major
- *   Please import `WorkletRuntime` directly from `react-native-worklets`
- *   instead of `react-native-reanimated`.
- */
-export type WorkletRuntime = WorkletRuntimeFromWorklets;
-
-/**
- * @deprecated This function is deprecated and will be removed in the next major
- *   Please import `isWorkletFunction` directly from `react-native-worklets`
- *   instead of `react-native-reanimated`.
- */
-export const isWorkletFunction = isWorkletFunctionFromWorklets;
+export type { WorkletRuntime } from './workletFunctions';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  isWorkletFunction,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './workletFunctions';

@@ -1,7 +1,7 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import type { WorkletFunction } from 'react-native-worklets';
+import { makeShareable, type WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
@@ -16,7 +16,7 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
+import { makeMutable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
