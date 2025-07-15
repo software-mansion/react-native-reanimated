@@ -13,7 +13,7 @@ export class ValueRegistry {
     this._valueRegistry[name] = value as SharedValue;
   }
 
-  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
+  public async getRegisteredValue<TValue extends TestValue>(name: string): Promise<SharedValueSnapshot<TValue>> {
     const jsValue = this._valueRegistry[name].value;
     const sharedValue = this._valueRegistry[name];
     const valueContainer = makeMutable<unknown>(null);
@@ -24,8 +24,8 @@ export class ValueRegistry {
     const uiValue = valueContainer.value;
     return {
       name,
-      onJS: jsValue as TestValue,
-      onUI: uiValue as TestValue,
+      onJS: jsValue as TValue,
+      onUI: uiValue as TValue,
     };
   }
 }

@@ -3,7 +3,11 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 #include <react/jni/JMessageQueueThread.h>
+#ifdef WORKLETS_BUNDLE_MODE
+#include <react/fabric/BigStringBufferWrapper.h>
+#endif // WORKLETS_BUNDLE_MODE
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/android/AndroidUIScheduler.h>
@@ -28,7 +32,14 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
-          androidUIScheduler);
+          androidUIScheduler
+#ifdef WORKLETS_BUNDLE_MODE
+      ,
+      jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
+          scriptWrapper,
+      const std::string &sourceURL
+#endif // WORKLETS_BUNDLE_MODE
+  );
 
   static void registerNatives();
 
@@ -42,7 +53,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jsi::Runtime *rnRuntime,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
+      const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceURL);
 
   void invalidateCpp();
 
@@ -53,6 +66,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   std::function<void(std::function<void(const double)>)>
   getForwardedRequestAnimationFrame();
+
+  std::function<bool()> getIsOnJSQueueThread();
 
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;

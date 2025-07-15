@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Text } from 'react-native';
@@ -44,7 +41,7 @@ function useComposedEventHandlerTest() {
       <>
         <Animated.ScrollView onScroll={composedHandler}>
           {[...new Array(20)].map((_each, index) => (
-            <Text>{index}</Text>
+            <Text key={index}>{index}</Text>
           ))}
         </Animated.ScrollView>
       </>
@@ -84,7 +81,7 @@ function useComposedEventHandlerTest() {
           // same as above
           onMomentumScrollEnd={composedHandler2}>
           {[...new Array(20)].map((_each, index) => (
-            <Text>{index}</Text>
+            <Text key={index}>{index}</Text>
           ))}
         </Animated.ScrollView>
       </>

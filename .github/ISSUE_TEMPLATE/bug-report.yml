@@ -98,7 +98,6 @@ body:
       options:
         - JSC
         - Hermes
-        - V8
 
   - type: dropdown
     id: workflow

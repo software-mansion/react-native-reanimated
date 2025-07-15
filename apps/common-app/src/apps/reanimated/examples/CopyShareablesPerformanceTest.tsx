@@ -44,7 +44,7 @@ export default function CopyShareablesPerformanceTest() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Text style={styles.description}>
-          This test measures the performance of Reanimated's
+          This test measures the performance of Reanimated&apos;s
           makeShareableCloneRecursive function.{'\n\n'}
           The test creates an array of objects with random numeric values and
           measures how long it takes to make them shareable. You can configure:

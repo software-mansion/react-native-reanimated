@@ -28,11 +28,6 @@ function getRuntime() {
       global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
     return `Hermes (${version})`;
   }
-  if ('_v8runtime' in global) {
-    // @ts-ignore this is fine
-    const version = global._v8runtime().version;
-    return `V8 (${version})`;
-  }
   return 'JSC';
 }
 
@@ -66,6 +61,13 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>RN version:</Text>{' '}
             {getReactNativeVersion()}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>Bundle mode:</Text>{' '}
+            {
+              // @ts-expect-error This global is not exposed.
+              globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'
+            }
           </Text>
         </>
       )}

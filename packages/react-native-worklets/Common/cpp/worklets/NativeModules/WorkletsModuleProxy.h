@@ -2,13 +2,16 @@
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
+#include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
+#include <string>
 
 namespace worklets {
 
@@ -20,8 +23,11 @@ class WorkletsModuleProxy
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      std::function<bool()> &&isJavaScriptQueue,
       std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+          &&forwardedRequestAnimationFrame,
+      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::string &sourceUrl);
 
   ~WorkletsModuleProxy();
 
@@ -42,8 +48,8 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<jsi::HostObject> createJSIWorkletsModuleProxy()
-      const;
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
+  createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;
@@ -54,6 +60,9 @@ class WorkletsModuleProxy
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<const BigStringBuffer> script_;
+  const std::string sourceUrl_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG

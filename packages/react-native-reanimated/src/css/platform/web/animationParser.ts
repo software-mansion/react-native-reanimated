@@ -1,4 +1,5 @@
 'use strict';
+import { hasSuffix } from '../../../common';
 import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
@@ -6,7 +7,7 @@ import type {
 } from '../../types';
 import { PROPERTIES_CONFIG } from './config';
 import { createStyleBuilder } from './style';
-import { hasSuffix, parseTimingFunction } from './utils';
+import { parseTimingFunction } from './utils';
 
 const styleBuilder = createStyleBuilder(PROPERTIES_CONFIG);
 

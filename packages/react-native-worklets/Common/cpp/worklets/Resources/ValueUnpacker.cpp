@@ -48,7 +48,7 @@ const char ValueUnpackerCode[] =
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(_toString(objectToUnpack), "\"."));
+    throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(globalThis._toString(objectToUnpack), "\"."));
   }
 })VALUE_UNPACKER";
 } // namespace worklets

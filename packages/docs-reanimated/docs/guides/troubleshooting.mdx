@@ -278,3 +278,21 @@ In this example, `callee` cannot be called from a worklet ran on UI thread becau
 ```
 
 Check [this page](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet) to learn more about Reanimated and its worklets.
+
+## Dependency issues
+
+### Unable to find a specification for RNWorklets depended upon by RNReanimated
+
+**Problem:** This happens when you have installed Reanimated 4 but don't have `react-native-worklets` installed as a dependency.
+
+**Platform:** iOS
+
+**Solution:** Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Make sure to install a [compatible version](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) of `react-native-worklets` for your Reanimated version.
+
+### Unable to resolve module react-native-worklets
+
+**Problem:** This happens when you have installed Reanimated 4 but don't have `react-native-worklets` installed as a dependency.
+
+**Platform:** Web
+
+**Solution:** Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Make sure to install a [compatible version](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility) of `react-native-worklets` for your Reanimated version.

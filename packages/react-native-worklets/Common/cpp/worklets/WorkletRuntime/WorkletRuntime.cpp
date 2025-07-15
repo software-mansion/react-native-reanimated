@@ -1,6 +1,7 @@
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -15,8 +16,6 @@
 
 #if JS_RUNTIME_HERMES
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
-#elif JS_RUNTIME_V8
-#include <v8runtime/V8RuntimeFactory.h>
 #else
 #include <jsc/JSCRuntime.h>
 #endif // JS_RUNTIME
@@ -53,24 +52,16 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 };
 
 static std::shared_ptr<jsi::Runtime> makeRuntime(
-    jsi::Runtime &rnRuntime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
     const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
-  (void)rnRuntime; // used only by V8
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
   jsiRuntime = std::make_shared<WorkletHermesRuntime>(
       std::move(hermesRuntime), jsQueue, name);
-#elif JS_RUNTIME_V8
-  auto config = std::make_unique<rnv8::V8RuntimeConfig>();
-  config->enableInspector = false;
-  config->appName = name;
-  jsiRuntime = rnv8::createSharedV8Runtime(&rnRuntime, std::move(config));
 #else
-  (void)rnRuntime; // used only by V8
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
@@ -82,20 +73,18 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 }
 
 WorkletRuntime::WorkletRuntime(
-    jsi::Runtime &rnRuntime,
+    uint64_t runtimeId,
     std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
-    const bool isDevBundle)
-    : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(
-          rnRuntime,
-          jsQueue,
-          name,
-          supportsLocking,
-          runtimeMutex_)),
+    const bool isDevBundle,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
+    : runtimeId_(runtimeId),
+      runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
 #endif
@@ -113,15 +102,40 @@ WorkletRuntime::WorkletRuntime(
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
 
+#ifdef WORKLETS_BUNDLE_MODE
+  if (!script) {
+    throw std::runtime_error(
+        "[Worklets] Expected to receive the bundle, but got nullptr instead.");
+  }
+
+  try {
+    rt.evaluateJavaScript(script, sourceUrl);
+  } catch (facebook::jsi::JSError error) {
+    const auto &message = error.getMessage();
+    const auto &stack = error.getStack();
+    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
+      const auto newMessage =
+          "[Worklets] Failed to initialize runtime. Reason: " + message;
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler,
+          {.message = newMessage,
+           .stack = stack,
+           .name = "WorkletsError",
+           .jsEngine = "Worklets"});
+    }
+  }
+#else
+  // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+#endif // WORKLETS_BUNDLE_MODE
 }
 
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  assert(
+  react_native_assert(
       supportsLocking_ &&
       ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());

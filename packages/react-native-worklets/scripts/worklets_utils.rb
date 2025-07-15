@@ -8,6 +8,7 @@ end
 
 def worklets_find_config()
   result = {
+    :bundle_mode => nil,
     :is_reanimated_example_app => nil,
     :react_native_version => nil,
     :react_native_minor_version => nil,
@@ -15,6 +16,8 @@ def worklets_find_config()
     :react_native_common_dir => nil,
     :dynamic_frameworks_worklets_dir => nil,
   }
+
+  result[:bundle_mode] = ENV["WORKLETS_BUNDLE_MODE"] == "1"
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
   react_native_json = worklets_try_to_parse_react_native_package_json(react_native_node_modules_dir)
@@ -54,5 +57,11 @@ def worklets_assert_minimal_react_native_version(config)
   minimalReactNativeVersion = 75
   if config[:react_native_minor_version] < minimalReactNativeVersion
     raise "[Worklets] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
+  end
+end
+
+def worklets_assert_new_architecture_enabled(new_arch_enabled)
+  if !new_arch_enabled
+    raise "[Worklets] Worklets require the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
 end
