@@ -1,13 +1,13 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
-import type { TransformsArray } from '../../../../types';
+import { ReanimatedError } from '../../../../../../common';
+import type { TransformsArray } from '../../../../../types';
 import {
   isAngleValue,
   isNumber,
   isNumberArray,
   isPercentage,
-} from '../../../../utils';
-import type { ValueProcessor } from '../types';
+} from '../../../../../utils';
+import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
   invalidTransform: (transform: string) =>

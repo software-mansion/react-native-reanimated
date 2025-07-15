@@ -6,4 +6,13 @@ export const svgPropertiesRoutes = {
     name: 'Circle',
     Component: svgAnimatedProperties.Circle,
   },
+  Common: {
+    name: 'Common',
+    routes: {
+      FillAndColor: {
+        name: 'Fill and Color',
+        Component: svgAnimatedProperties.common.FillAndColor,
+      },
+    },
+  },
 } satisfies Routes;
