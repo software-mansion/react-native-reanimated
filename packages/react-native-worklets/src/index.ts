@@ -7,6 +7,7 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
@@ -30,7 +31,6 @@ export type {
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 
 // @ts-expect-error We must trick the bundler to include
 // the `workletRuntimeEntry` file the way it cannot optimize it out.
