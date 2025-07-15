@@ -5,7 +5,12 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 $worklets_config = worklets_find_config()
 worklets_assert_minimal_react_native_version($worklets_config)
 
+$new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
+worklets_assert_new_architecture_enabled($new_arch_enabled)
+
 ios_min_version = '13.4'
+
+feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
@@ -42,7 +47,9 @@ Pod::Spec.new do |s|
   #   HERMESVM_PROFILER_OPCODE
   #   HERMESVM_PROFILER_BB
   # which shouldn't be defined in standard setups.
-  hermes_debug_hidden_flags = '$(inherited) HERMES_ENABLE_DEBUGGER=1'
+  hermes_debug_hidden_flags = 'HERMES_ENABLE_DEBUGGER=1'
+
+  bundle_mode_flag = $worklets_config[:bundle_mode] ? 'WORKLETS_BUNDLE_MODE=1' : ''
   
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
@@ -59,8 +66,9 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => hermes_debug_hidden_flags,
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags} #{bundle_mode_flag}",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{bundle_mode_flag}",
+    "OTHER_CFLAGS" => "$(inherited) #{feature_flags}",
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [

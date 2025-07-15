@@ -24,7 +24,7 @@ type TransformType = NonNullable<TransformsStyle['transform']>;
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 //
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function addPxToTransform(transform: TransformType) {
   type RNTransformProp = (typeof transform)[number];
 

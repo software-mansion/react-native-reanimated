@@ -15,14 +15,14 @@ const ColorComponent = ({ color1, color2 }: { color1: string | number; color2: s
   const refActive = useTestRef(COMPONENT_REF_ACTIVE);
   const refPassive = useTestRef(COMPONENT_REF_PASSIVE);
 
-  // @ts-ignore number is not a valid color
+  // @ts-expect-error number is not a valid color
   const styleActive = useAnimatedStyle(() => {
     return {
       backgroundColor: withDelay(100, withTiming(colorActiveSV.value, { duration: 400 })),
     };
   });
 
-  // @ts-ignore number is not a valid color
+  // @ts-expect-error number is not a valid color
   const stylePassive = useAnimatedStyle(() => {
     return {
       backgroundColor: colorPassiveSV.value,

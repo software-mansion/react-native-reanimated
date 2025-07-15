@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/index.ts", "mock.js"],
+  "project": ["src/**"],
+  "include": ["files", "exports", "types"],
+  "tags": ["-knipIgnore"]
+}

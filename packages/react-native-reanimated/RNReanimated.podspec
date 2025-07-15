@@ -9,7 +9,6 @@ $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
 assert_new_architecture_enabled($new_arch_enabled)
 
 boost_compiler_flags = '-Wno-documentation'
-fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flags = "-DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_version]} -DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 ios_min_version = '13.4'
@@ -18,6 +17,8 @@ ios_min_version = '13.4'
 compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
+
+feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
 
 Pod::Spec.new do |s|
 
@@ -89,7 +90,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{fabric_flags} #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags}",
   }
   s.requires_arc = true
 

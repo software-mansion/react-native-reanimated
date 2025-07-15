@@ -23,7 +23,6 @@ import {
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   ScreenStackHeaderConfig
 );
-Animated.addWhitelistedNativeProps({ title: true });
 
 export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);

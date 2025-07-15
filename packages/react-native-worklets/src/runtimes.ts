@@ -1,8 +1,8 @@
 'use strict';
 
-import { setupCallGuard, setupConsole } from './initializers';
-import { registerLoggerConfig } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { setupCallGuard } from './callGuard';
+import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -11,8 +11,6 @@ import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletRuntime } from './workletTypes';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
@@ -36,17 +34,14 @@ export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  // Assign to a different variable as __workletsLoggerConfig is not a captured
-  // identifier in the Worklet runtime.
-  const config = __workletsLoggerConfig;
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
-      registerWorkletsError();
-      registerLoggerConfig(config);
       setupCallGuard();
-      setupConsole();
+      registerWorkletsError();
+      setupConsole(runtimeBoundCapturableConsole);
       initializer?.();
     })
   );

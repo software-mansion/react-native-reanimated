@@ -1,64 +1,61 @@
 'use strict';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { runOnUI } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedComponentProps,
+  AnimatedComponentType,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
+  JSPropsOperation,
 } from './commonTypes';
 
 class JSPropsUpdaterNative implements IJSPropsUpdater {
-  private static _tagToComponentMapping = new Map();
-  private static isInitialized = false;
+  private static _tagToComponentMapping = new Map<
+    number,
+    AnimatedComponentType
+  >();
 
   constructor() {
-    if (!JSPropsUpdaterNative.isInitialized) {
-      const updater = (viewTag: number, props: unknown) => {
-        const component =
-          JSPropsUpdaterNative._tagToComponentMapping.get(viewTag);
-        component?._updateFromNative(props);
-      };
-      runOnUI(() => {
-        'worklet';
-        global.updateJSProps = (viewTag: number, props: unknown) => {
-          runOnJS(updater)(viewTag, props);
-        };
-      })();
-      JSPropsUpdaterNative.isInitialized = true;
-    }
+    runOnUI(() => {
+      global._tagToJSPropNamesMapping = {};
+    })();
   }
 
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
+  public registerComponent(
+    animatedComponent: AnimatedComponentType,
+    jsProps: string[]
   ) {
-    if (!JSPropsUpdaterNative.isInitialized) {
-      return;
-    }
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.set(viewTag, animatedComponent);
+
+    runOnUI(() => {
+      global._tagToJSPropNamesMapping[viewTag] = Object.fromEntries(
+        jsProps.map((propName) => [propName, true])
+      );
+    })();
   }
 
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    if (!JSPropsUpdaterNative.isInitialized) {
-      return;
-    }
+  public unregisterComponent(animatedComponent: AnimatedComponentType) {
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.delete(viewTag);
+
+    runOnUI(() => {
+      delete global._tagToJSPropNamesMapping[viewTag];
+    })();
+  }
+
+  public updateProps(operations: JSPropsOperation[]) {
+    operations.forEach(({ tag, updates }) => {
+      const component = JSPropsUpdaterNative._tagToComponentMapping.get(tag);
+      component?.setNativeProps(updates);
+    });
   }
 }
 
 class JSPropsUpdaterWeb implements IJSPropsUpdater {
-  public addOnJSPropsChangeListener(
+  public registerComponent(
     _animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
     > &
@@ -67,12 +64,16 @@ class JSPropsUpdaterWeb implements IJSPropsUpdater {
     // noop
   }
 
-  public removeOnJSPropsChangeListener(
+  public unregisterComponent(
     _animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
     > &
       IAnimatedComponentInternal
   ) {
+    // noop
+  }
+
+  public updateProps(_operations: JSPropsOperation[]) {
     // noop
   }
 }
@@ -88,4 +89,6 @@ if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterNative;
 }
 
-export default JSPropsUpdater;
+const jsPropsUpdater = new JSPropsUpdater();
+
+export default jsPropsUpdater;

@@ -1,7 +1,5 @@
 'use strict';
-
-import { logger } from 'react-native-worklets';
-
+import { logger } from '../../common';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';

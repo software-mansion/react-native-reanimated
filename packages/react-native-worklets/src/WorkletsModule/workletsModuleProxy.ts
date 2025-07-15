@@ -27,6 +27,17 @@ export interface WorkletsModuleProxy {
 
   makeShareableNull(): ShareableRef<null>;
 
+  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+    props: TProps,
+    proto: TProto
+  ): ShareableRef<TProps>;
+
+  makeShareableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
+
   makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
 
   makeShareableArray(
@@ -34,7 +45,18 @@ export interface WorkletsModuleProxy {
     shouldRetainRemote: boolean
   ): ShareableRef<unknown[]>;
 
+  makeShareableMap<TKey, TValue>(
+    keys: TKey[],
+    values: TValue[]
+  ): ShareableRef<Map<TKey, TValue>>;
+
+  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>>;
+
   makeShareableInitializer(obj: object): ShareableRef<object>;
+
+  makeShareableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ): ShareableRef<TReturn>;
 
   makeShareableWorklet(
     worklet: object,
@@ -56,6 +78,15 @@ export interface WorkletsModuleProxy {
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<TValue>
   ): void;
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ): void;
+
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 }
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+export type IWorkletsModule = WorkletsModuleProxy;

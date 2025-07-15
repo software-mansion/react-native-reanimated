@@ -16,15 +16,19 @@ string(
   CMAKE_CXX_FLAGS
   " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
     -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
-    -DREANIMATED_VERSION=${REANIMATED_VERSION}")
+    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+    -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 
-string(APPEND CMAKE_CXX_FLAGS
-       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
-   -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
+  include(
+    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  target_compile_reactnative_options(reanimated PUBLIC)
+else()
+  string(APPEND CMAKE_CXX_FLAGS
+         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 endif()
+
+string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
@@ -55,17 +59,13 @@ target_include_directories(
   PRIVATE "${COMMON_CPP_DIR}"
           "${ANDROID_CPP_DIR}"
           "${REACT_NATIVE_DIR}/ReactCommon"
+          "${REACT_NATIVE_DIR}/ReactCommon/yoga"
           "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor")
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
-  target_include_directories(
-    reanimated
-    PRIVATE
-      "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-      "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx")
-endif()
+          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+)
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 

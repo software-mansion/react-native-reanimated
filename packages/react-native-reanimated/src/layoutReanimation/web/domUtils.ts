@@ -1,7 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
-import { IS_WINDOW_AVAILABLE, ReanimatedError } from '../../common';
+import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { setElementPosition, snapshots } from './componentStyle';
 import type { AnimationNames } from './config';

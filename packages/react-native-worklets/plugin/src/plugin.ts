@@ -26,7 +26,10 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
+      const error = e as Error;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = 'WorkletsBabelPluginError';
+      throw error;
     }
   }
 
@@ -54,10 +57,11 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
-          runWithTaggedExceptions(() => {
-            processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state);
-          });
+          runWithTaggedExceptions(
+            () =>
+              processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state)
+          );
         },
       },
       ObjectExpression: {

@@ -1,9 +1,9 @@
 'use strict';
+import { processBoxShadowWeb } from '../../../common';
 import type { PlainStyle } from '../../types';
 import type { StyleBuilderConfig } from './style';
 import {
   boxShadowBuilder,
-  processBoxShadow,
   processColor,
   processFilter,
   processFontVariant,
@@ -138,7 +138,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   elevation: false, // Android only
   textShadowOffset: textShadowBuilder,
   textShadowRadius: textShadowBuilder,
-  boxShadow: { process: processBoxShadow },
+  boxShadow: { process: processBoxShadowWeb },
 
   // BORDERS
   // Radius
@@ -190,6 +190,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
+  // eslint-disable-next-line camelcase
   experimental_backgroundImage: false, // TODO
 
   /** Typography */

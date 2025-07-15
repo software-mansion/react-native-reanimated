@@ -1,6 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
+import { logger } from '../common';
 import type {
   AnimatableValue,
   Animation,
@@ -127,7 +126,6 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-// ts-prune-ignore-next This function is exported to be tested
 export function bisectRoot({
   min,
   max,

@@ -3,6 +3,12 @@
 import './publicGlobals';
 
 import * as Animated from './Animated';
+import { initializeReanimatedModule } from './initializers';
+import { ReanimatedModule } from './ReanimatedModule';
+
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
+initializeReanimatedModule(ReanimatedModule);
 
 export default Animated;
 
@@ -31,7 +37,7 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export { processColor } from './common';
+export { processColor, ReanimatedLogLevel } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -81,17 +87,11 @@ export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
-  createWorkletRuntime,
   enableLayoutAnimations,
-  executeOnUIRuntimeSync,
   getViewProp,
   isConfigured,
   isReanimated3,
   makeMutable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
 } from './core';
 export * from './css';
 export type {
@@ -100,6 +100,7 @@ export type {
   EasingFunctionFactory,
 } from './Easing';
 export { Easing } from './Easing';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export type { FrameInfo } from './frameCallback';
 export type {
   Adaptable,
@@ -139,9 +140,10 @@ export {
   useFrameCallback,
   useHandler,
   useReducedMotion,
-  useScrollViewOffset,
+  useScrollOffset,
+  /** @deprecated Please use {@link useScrollOffset} instead. */
+  useScrollOffset as useScrollViewOffset,
   useSharedValue,
-  useWorkletCallback,
 } from './hook';
 export type {
   InterpolateConfig,
@@ -180,7 +182,6 @@ export {
   BounceOutLeft,
   BounceOutRight,
   BounceOutUp,
-  combineTransition,
   ComplexAnimationBuilder,
   CurvedTransition,
   EntryExitTransition,
@@ -270,6 +271,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,
@@ -291,8 +293,13 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export type { WorkletRuntime } from 'react-native-worklets';
+export type { WorkletRuntime } from './workletFunctions';
 export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
   isWorkletFunction,
-  LogLevel as ReanimatedLogLevel,
-} from 'react-native-worklets';
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './workletFunctions';

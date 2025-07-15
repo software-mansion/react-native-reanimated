@@ -25,20 +25,28 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    std::function<bool()> &&isJavaScriptThread,
     std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame)
+        &&forwardedRequestAnimationFrame,
+    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),
-      jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker)),
-      uiScheduler_(uiScheduler) {
-  uiWorkletRuntime_ = std::make_shared<WorkletRuntime>(
-      rnRuntime,
+      jsScheduler_(std::make_shared<JSScheduler>(
+          rnRuntime,
+          jsCallInvoker,
+          std::move(isJavaScriptThread))),
+      uiScheduler_(uiScheduler),
+      script_(script),
+      sourceUrl_(sourceUrl),
+      runtimeManager_(std::make_shared<RuntimeManager>()) {
+  uiWorkletRuntime_ = runtimeManager_->createUIRuntime(
       createJSIWorkletsModuleProxy(),
       jsQueue_,
       jsScheduler_,
-      "Reanimated UI runtime",
-      true /* supportsLocking */,
-      isDevBundle_);
+      isDevBundle_,
+      script_,
+      sourceUrl_);
 
   animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
       uiWorkletRuntime_->getJSIRuntime(),
@@ -49,10 +57,17 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       animationFrameBatchinator_->getJsiRequestAnimationFrame());
 }
 
-std::shared_ptr<jsi::HostObject>
+std::shared_ptr<JSIWorkletsModuleProxy>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   return std::make_shared<JSIWorkletsModuleProxy>(
-      isDevBundle_, jsQueue_, jsScheduler_, uiScheduler_, uiWorkletRuntime_);
+      isDevBundle_,
+      script_,
+      sourceUrl_,
+      jsQueue_,
+      jsScheduler_,
+      uiScheduler_,
+      runtimeManager_,
+      uiWorkletRuntime_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
