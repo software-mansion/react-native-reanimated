@@ -107,7 +107,25 @@ export default function StrokeExample() {
               props: {
                 strokeWidth: 5,
               },
-              title: 'Single value',
+              title: 'From default to single value',
+              description:
+                'Does not animate and this is a correct behavior (the same as on the web)',
+            },
+            {
+              keyframes: {
+                from: {
+                  strokeDasharray: 0,
+                },
+                to: {
+                  strokeDasharray: 10,
+                },
+              },
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'From single to single value',
+              description:
+                'Animates properly if values are specified in all keyframes',
             },
             {
               keyframes: {
@@ -119,6 +137,8 @@ export default function StrokeExample() {
                 strokeWidth: 5,
               },
               title: 'Array value',
+              description:
+                'Uses `10` as the `from` keyframe value (always the first element of the second keyframe in the interpolation pair if the first one is empty)',
             },
             {
               keyframes: {

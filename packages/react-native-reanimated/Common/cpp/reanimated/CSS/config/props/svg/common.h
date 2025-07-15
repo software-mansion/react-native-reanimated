@@ -30,8 +30,7 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeWidth", value<CSSDimension>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray",
-     value<CSSStrokeDashArray, CSSKeyword>(
-         std::vector<CSSDimension>{CSSDimension(0.0)})},
+     value<CSSStrokeDashArray, CSSKeyword>(CSSStrokeDashArray())},
     {"strokeDashoffset", value<CSSDouble>(0)},
     {"strokeLinecap", value<CSSKeyword>("butt")},
     {"strokeLinejoin", value<CSSKeyword>("miter")},
