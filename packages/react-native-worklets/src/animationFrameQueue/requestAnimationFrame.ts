@@ -6,11 +6,11 @@ export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  let animationFrameCallbacks: ((timestamp: number) => void)[] = [];
-  let callbacksBegin = 0;
-  let callbacksEnd = 0;
+  let queuedCallbacks: ((timestamp: number) => void)[] = [];
+  let queuedCallbacksBegin = 0;
+  let queuedCallbacksEnd = 0;
 
-  let flushedCallbacks = animationFrameCallbacks;
+  let flushedCallbacks = queuedCallbacks;
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
 
@@ -19,12 +19,12 @@ export function setupRequestAnimationFrame() {
   globalThis.__flushAnimationFrame = (timestamp: number) => {
     globalThis.__frameTimestamp = timestamp;
 
-    flushedCallbacks = animationFrameCallbacks;
-    animationFrameCallbacks = [];
+    flushedCallbacks = queuedCallbacks;
+    queuedCallbacks = [];
 
-    flushedCallbacksBegin = callbacksBegin;
-    flushedCallbacksEnd = callbacksEnd;
-    callbacksBegin = callbacksEnd;
+    flushedCallbacksBegin = queuedCallbacksBegin;
+    flushedCallbacksEnd = queuedCallbacksEnd;
+    queuedCallbacksBegin = queuedCallbacksEnd;
 
     flushRequested = false;
 
@@ -32,7 +32,7 @@ export function setupRequestAnimationFrame() {
       callback(timestamp);
     }
 
-    flushedCallbacksBegin = callbacksEnd;
+    flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
 
@@ -42,9 +42,9 @@ export function setupRequestAnimationFrame() {
   globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
-    const handle = callbacksEnd++;
+    const handle = queuedCallbacksEnd++;
 
-    animationFrameCallbacks.push(callback);
+    queuedCallbacks.push(callback);
     if (!flushRequested) {
       flushRequested = true;
 
@@ -54,14 +54,14 @@ export function setupRequestAnimationFrame() {
   };
 
   globalThis.cancelAnimationFrame = (handle: number) => {
-    if (handle < flushedCallbacksBegin || handle >= callbacksEnd) {
+    if (handle < flushedCallbacksBegin || handle >= queuedCallbacksEnd) {
       return;
     }
 
     if (handle < flushedCallbacksEnd) {
       flushedCallbacks[handle - flushedCallbacksBegin] = () => {};
     } else {
-      animationFrameCallbacks[handle - callbacksBegin] = () => {};
+      queuedCallbacks[handle - queuedCallbacksBegin] = () => {};
     }
   };
 }
