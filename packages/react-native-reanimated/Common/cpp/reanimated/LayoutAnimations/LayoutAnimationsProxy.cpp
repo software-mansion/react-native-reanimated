@@ -5,7 +5,6 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <set>
-#include <utility>
 
 namespace reanimated {
 
@@ -32,6 +31,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
+
+  addOngoingAnimations(surfaceId, filteredMutations);
+
+  for (const auto tag : finishedAnimationTags_) {
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+  }
+  finishedAnimationTags_.clear();
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -110,11 +118,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     layoutAnimation.count--;
     return {};
   }
-
+  finishedAnimationTags_.push_back(tag);
   auto surfaceId = layoutAnimation.finalView->surfaceId;
-  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  layoutAnimations_.erase(tag);
-  updateMap.erase(tag);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return {};
