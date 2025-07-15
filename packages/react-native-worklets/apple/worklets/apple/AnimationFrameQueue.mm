@@ -2,6 +2,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/SlowAnimations.h>
+#import <worklets/Tools/FeatureFlags.h>
 #import <chrono>
 
 #import <React/RCTAssert.h>
@@ -39,10 +40,15 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 - (instancetype)init
 {
   AssertJavaScriptQueue();
-  bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
-  SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
-  curentFrameRate_ = supportsProMotion ? BEST : STANDARD;
-  displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
+  if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
+    bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
+    SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
+    curentFrameRate_ = supportsProMotion ? BEST : STANDARD;
+    displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
+  } else {
+    displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
+  }
+  
 #if TARGET_OS_OSX
   // nothing
 #else // TARGET_OS_OSX
