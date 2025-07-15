@@ -1,8 +1,8 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { makeShareable, type WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
+import type { WorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
