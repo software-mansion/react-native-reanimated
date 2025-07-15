@@ -6,6 +6,7 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/FeatureFlags.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -180,6 +181,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
 
   return propertyNames;
 }
@@ -506,6 +509,23 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* stack */ args[1].asString(rt).utf8(rt),
               /* name */ args[2].asString(rt).utf8(rt),
               /* jsEngine */ args[3].asString(rt).utf8(rt));
+        });
+  }
+
+  if (name == "setDynamicFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          DynamicFeatureFlags::setFlag(
+            /* name */ args[0].asString(rt).utf8(rt),
+            /* value */ args[1].asBool());
+          return jsi::Value::undefined();
         });
   }
 

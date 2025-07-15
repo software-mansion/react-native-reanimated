@@ -30,6 +30,7 @@ export type {
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 
 // @ts-expect-error We must trick the bundler to include
 // the `workletRuntimeEntry` file the way it cannot optimize it out.
