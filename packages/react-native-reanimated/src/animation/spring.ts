@@ -13,9 +13,10 @@ import type {
   SpringConfigInner,
 } from './springUtils';
 import {
-  calculateNewMassToMatchDuration,
+  calculateNewStiffnessToMatchDuration,
   checkIfConfigIsValid,
   criticallyDampedSpringCalculations,
+  getEnergy,
   initialCalculations,
   isAnimationTerminatingCalculation,
   scaleZetaToMatchClamps,
@@ -57,8 +58,7 @@ export const withSpring = ((
       mass: 1,
       stiffness: 100,
       overshootClamping: false,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 2,
+      energyThreshold: 6e-9,
       velocity: 0,
       duration: 2000,
       dampingRatio: 0.5,
@@ -84,16 +84,7 @@ export const withSpring = ((
       now: Timestamp
     ): boolean {
       // eslint-disable-next-line @typescript-eslint/no-shadow
-      const { toValue, startTimestamp, current } = animation;
-
-      const timeFromStart = now - startTimestamp;
-
-      if (config.useDuration && timeFromStart >= config.duration) {
-        animation.current = toValue;
-        // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
-        animation.lastTimestamp = 0;
-        return true;
-      }
+      const { toValue, current } = animation;
 
       if (config.skipAnimation) {
         animation.current = toValue;
@@ -106,8 +97,8 @@ export const withSpring = ((
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
-      const v0 = -velocity;
-      const x0 = toValue - current;
+      const v0 = velocity as number;
+      const x0 = current - toValue;
 
       const { zeta, omega0, omega1 } = animation;
 
@@ -131,13 +122,7 @@ export const withSpring = ((
       animation.current = newPosition;
       animation.velocity = newVelocity;
 
-      const { isOvershooting, isVelocity, isDisplacement } =
-        isAnimationTerminatingCalculation(animation, config);
-
-      const springIsNotInMove =
-        isOvershooting || (isVelocity && isDisplacement);
-
-      if (!config.useDuration && springIsNotInMove) {
+      if (isAnimationTerminatingCalculation(animation, config)) {
         animation.velocity = 0;
         animation.current = toValue;
         // clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -168,9 +153,8 @@ export const withSpring = ((
       previousAnimation: SpringAnimation | undefined
     ): void {
       animation.current = value;
-      animation.startValue = value;
 
-      let mass = config.mass;
+      let stiffness = config.stiffness;
       const triggeredTwice = isTriggeredTwice(previousAnimation, animation);
 
       const duration = config.duration;
@@ -178,8 +162,10 @@ export const withSpring = ((
       const x0 = triggeredTwice
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
-          previousAnimation?.startValue
-        : Number(animation.toValue) - value;
+          (previousAnimation?.startValue as number)
+        : value - (animation.toValue as number);
+
+      animation.startValue = x0;
 
       if (previousAnimation) {
         animation.velocity =
@@ -205,14 +191,15 @@ export const withSpring = ((
             : duration;
 
           config.duration = actualDuration;
-          mass = calculateNewMassToMatchDuration(
-            x0 as number,
+          stiffness = calculateNewStiffnessToMatchDuration(
+            x0,
             config,
             animation.velocity
           );
+          config.stiffness = stiffness;
         }
 
-        const { zeta, omega0, omega1 } = initialCalculations(mass, config);
+        const { zeta, omega0, omega1 } = initialCalculations(stiffness, config);
         animation.zeta = zeta;
         animation.omega0 = omega0;
         animation.omega1 = omega1;
@@ -221,6 +208,14 @@ export const withSpring = ((
           animation.zeta = scaleZetaToMatchClamps(animation, config.clamp);
         }
       }
+
+      const initialEnergy = getEnergy(
+        x0,
+        config.velocity,
+        config.stiffness,
+        config.mass
+      );
+      animation.initialEnergy = initialEnergy;
 
       animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
 
@@ -242,6 +237,7 @@ export const withSpring = ((
       zeta: 0,
       omega0: 0,
       omega1: 0,
+      initialEnergy: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });

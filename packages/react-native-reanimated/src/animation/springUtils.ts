@@ -24,10 +24,8 @@ import type {
  *   to 0.
  * @param overshootClamping - Whether a spring can bounce over the `toValue`.
  *   Defaults to false.
- * @param restDisplacementThreshold - The displacement below which the spring
- *   will snap to toValue without further oscillations. Defaults to 0.01.
- * @param restSpeedThreshold - The speed in pixels per second from which the
- *   spring will snap to toValue without further oscillations. Defaults to 2.
+ * @param energyThreshold - Relative energy threshold below which the spring
+ *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
  * @param reduceMotion - Determines how the animation responds to the device's
  *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
  *   {@link ReduceMotion}.
@@ -36,8 +34,7 @@ import type {
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
+  energyThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
@@ -81,6 +78,7 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
   zeta: number;
   omega0: number;
   omega1: number;
+  initialEnergy: number;
 }
 
 export interface InnerSpringAnimation
@@ -92,14 +90,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorMessage = '';
   (
-    [
-      'stiffness',
-      'damping',
-      'dampingRatio',
-      'restDisplacementThreshold',
-      'restSpeedThreshold',
-      'mass',
-    ] as const
+    ['stiffness', 'damping', 'dampingRatio', 'mass', 'energyThreshold'] as const
   ).forEach((prop) => {
     const value = config[prop];
     if (value <= 0) {
@@ -130,21 +121,23 @@ export function bisectRoot({
   min,
   max,
   func,
+  precision,
   maxIterations = 20,
 }: {
   min: number;
   max: number;
   func: (x: number) => number;
+  precision: number;
   maxIterations?: number;
 }) {
   'worklet';
-  const ACCURACY = 0.00005;
+  const direction = func(max) >= func(min) ? 1 : -1;
   let idx = maxIterations;
   let current = (max + min) / 2;
-  while (Math.abs(func(current)) > ACCURACY && idx > 0) {
+  while (Math.abs(func(current)) > precision && idx > 0) {
     idx -= 1;
 
-    if (func(current) < 0) {
+    if (func(current) * direction < 0) {
       min = current;
     } else {
       max = current;
@@ -155,7 +148,7 @@ export function bisectRoot({
 }
 
 export function initialCalculations(
-  mass = 0,
+  stiffness = 0,
   config: DefaultSpringConfig & SpringConfigInner
 ): {
   zeta: number;
@@ -169,14 +162,14 @@ export function initialCalculations(
   }
 
   if (config.useDuration) {
-    const { stiffness: k, dampingRatio: zeta } = config;
+    const { mass: m, dampingRatio: zeta } = config;
 
     /**
      * Omega0 and omega1 denote angular frequency and natural angular frequency,
      * see this link for formulas:
      * https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
      */
-    const omega0 = Math.sqrt(k / mass);
+    const omega0 = Math.sqrt(stiffness / m);
     const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
 
     return { zeta, omega0, omega1 };
@@ -204,14 +197,12 @@ export function scaleZetaToMatchClamps(
   const { zeta, toValue, startValue } = animation;
   const toValueNum = Number(toValue);
 
-  if (toValueNum === startValue) {
+  if (startValue === 0) {
     return zeta;
   }
 
   const [firstBound, secondBound] =
-    toValueNum - startValue > 0
-      ? [clamp.min, clamp.max]
-      : [clamp.max, clamp.min];
+    startValue <= 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
 
   /**
    * The extrema we get from equation below are relative (we obtain a ratio), To
@@ -226,12 +217,12 @@ export function scaleZetaToMatchClamps(
 
   const relativeExtremum1 =
     secondBound !== undefined
-      ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+      ? Math.abs((secondBound - toValueNum) / startValue)
       : undefined;
 
   const relativeExtremum2 =
     firstBound !== undefined
-      ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+      ? Math.abs((firstBound - toValueNum) / startValue)
       : undefined;
 
   /**
@@ -262,8 +253,20 @@ export function scaleZetaToMatchClamps(
   return Math.max(...zetaSatisfyingClamp, zeta);
 }
 
+export function getEnergy(
+  displacement: number,
+  velocity: number,
+  stiffness: number,
+  mass: number
+) {
+  'worklet';
+  const potentialEnergy = 0.5 * stiffness * displacement ** 2;
+  const kineticEnergy = 0.5 * mass * velocity ** 2;
+  return potentialEnergy + kineticEnergy;
+}
+
 /** Runs before initial */
-export function calculateNewMassToMatchDuration(
+export function calculateNewStiffnessToMatchDuration(
   x0: number,
   config: DefaultSpringConfig & SpringConfigInner,
   v0: number
@@ -283,37 +286,52 @@ export function calculateNewMassToMatchDuration(
    *             ⎜-⎜──⎟ ⋅ duration⎟
    *             ⎝ ⎝2m⎠           ⎠
    *        A ⋅ e                   = threshold
-   *
-   *
-   *       Amplitude calculated using "Conservation of energy"
-   *                        _________________
-   *                       ╱      2         2
-   *                      ╱ m ⋅ v0  + k ⋅ x0
-   *       amplitude =   ╱  ─────────────────
-   *                   ╲╱           k
-   *
-   *       And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)
    */
   const {
-    stiffness: k,
     dampingRatio: zeta,
-    restSpeedThreshold: threshold,
-    duration,
+    energyThreshold: threshold,
+    mass: m,
+    duration: targetDuration,
   } = config;
 
-  const durationForMass = (mass: number) => {
+  const energyDiffForStiffness = (stiffness: number) => {
     'worklet';
-    const amplitude =
-      (mass * v0 * v0 + k * x0 * x0) / (Math.exp(1 - 0.5 * zeta) * k);
-    const c = zeta * 2 * Math.sqrt(k * mass);
-    return (
-      1000 * ((-2 * mass) / c) * Math.log((threshold * 0.01) / amplitude) -
-      duration
-    );
+    const perceptualCoefficient = 1.5;
+    const MILLISECONDS_IN_SECOND = 1000;
+
+    const settlingDuration =
+      (targetDuration * perceptualCoefficient) / MILLISECONDS_IN_SECOND;
+    const omega0 = Math.sqrt(stiffness / m) * zeta;
+
+    const xtk =
+      (x0 + (v0 + x0 * omega0) * settlingDuration) *
+      Math.exp(-omega0 * settlingDuration);
+
+    const vtk =
+      (x0 + (v0 + x0 * omega0) * settlingDuration) *
+        Math.exp(-omega0 * settlingDuration) *
+        -omega0 +
+      (v0 + x0 * omega0) * Math.exp(-omega0 * settlingDuration);
+
+    const e0 = getEnergy(x0, v0, stiffness, m);
+
+    const etk = getEnergy(xtk, vtk, stiffness, m);
+
+    const energyFraction = etk / e0;
+
+    return energyFraction - threshold;
   };
 
+  const precision = config.energyThreshold * 1e-3; // Experimentally seems to be good enough.
+
   // Bisection turns out to be much faster than Newton's method in our case
-  return bisectRoot({ min: 0, max: 100, func: durationForMass });
+  return bisectRoot({
+    min: Number.EPSILON,
+    max: 8e3 /* Stiffness for 8ms animation doesn't exceed 2e3, we add some safety margin on top of that. */,
+    func: energyDiffForStiffness,
+    precision,
+    maxIterations: 100,
+  });
 }
 
 export function criticallyDampedSpringCalculations(
@@ -332,11 +350,11 @@ export function criticallyDampedSpringCalculations(
 
   const criticallyDampedEnvelope = Math.exp(-omega0 * t);
   const criticallyDampedPosition =
-    toValue - criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
+    toValue + criticallyDampedEnvelope * (x0 + (v0 + omega0 * x0) * t);
 
   const criticallyDampedVelocity =
-    criticallyDampedEnvelope *
-    (v0 * (t * omega0 - 1) + t * x0 * omega0 * omega0);
+    criticallyDampedEnvelope * -omega0 * (x0 + (v0 + omega0 * x0) * t) +
+    criticallyDampedEnvelope * (v0 + omega0 * x0);
 
   return {
     position: criticallyDampedPosition,
@@ -356,12 +374,9 @@ export function underDampedSpringCalculations(
   }
 ): { position: number; velocity: number } {
   'worklet';
-  const { toValue, current, velocity } = animation;
+  const { toValue } = animation;
 
-  const { zeta, t, omega0, omega1 } = precalculatedValues;
-
-  const v0 = -velocity;
-  const x0 = toValue - current;
+  const { zeta, t, omega0, omega1, x0, v0 } = precalculatedValues;
 
   const sin1 = Math.sin(omega1 * t);
   const cos1 = Math.cos(omega1 * t);
@@ -372,10 +387,10 @@ export function underDampedSpringCalculations(
     underDampedEnvelope *
     (sin1 * ((v0 + zeta * omega0 * x0) / omega1) + x0 * cos1);
 
-  const underDampedPosition = toValue - underDampedFrag1;
+  const underDampedPosition = toValue + underDampedFrag1;
   // This looks crazy -- it's actually just the derivative of the oscillation function
   const underDampedVelocity =
-    zeta * omega0 * underDampedFrag1 -
+    -zeta * omega0 * underDampedFrag1 +
     underDampedEnvelope *
       (cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
 
@@ -384,23 +399,28 @@ export function underDampedSpringCalculations(
 
 export function isAnimationTerminatingCalculation(
   animation: InnerSpringAnimation,
-  config: DefaultSpringConfig
-): {
-  isOvershooting: boolean;
-  isVelocity: boolean;
-  isDisplacement: boolean;
-} {
+  config: DefaultSpringConfig & SpringConfigInner
+): boolean {
   'worklet';
-  const { toValue, velocity, startValue, current } = animation;
+  const { toValue, velocity, startValue, current, initialEnergy } = animation;
 
-  const isOvershooting = config.overshootClamping
-    ? (current > toValue && startValue < toValue) ||
+  if (config.overshootClamping) {
+    if (
+      (current > toValue && startValue < toValue) ||
       (current < toValue && startValue > toValue)
-    : false;
+    ) {
+      return true;
+    }
+  }
+  const currentEnergy = getEnergy(
+    toValue - current,
+    velocity,
+    config.stiffness,
+    config.mass
+  );
 
-  const isVelocity = Math.abs(velocity) < config.restSpeedThreshold;
-  const isDisplacement =
-    Math.abs(toValue - current) < config.restDisplacementThreshold;
-
-  return { isOvershooting, isVelocity, isDisplacement };
+  return (
+    initialEnergy === 0 ||
+    currentEnergy / initialEnergy <= config.energyThreshold
+  );
 }
