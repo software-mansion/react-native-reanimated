@@ -33,6 +33,7 @@
     "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.5.2",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch",
     "react-native-svg": "patch:react-native-svg@npm%3A15.12.0#~/.yarn/patches/react-native-svg-npm-15.12.0-f663d699a9.patch",
     "react-native-worklets": "workspace:*",
     "react-strict-dom": "0.0.27"
