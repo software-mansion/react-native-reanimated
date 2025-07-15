@@ -17,8 +17,13 @@ import type {
   VectorEffectProps,
 } from 'react-native-svg';
 
-import { type StyleBuilderConfig } from '../../style';
-import { processColorSVG, processFillRule } from '../../style';
+import type { StyleBuilderConfig } from '../../style';
+import {
+  convertPercentageToNumber,
+  processColorSVG,
+  processFillRule,
+  processStrokeDashArray,
+} from '../../style';
 
 const colorAttributes = { process: processColorSVG };
 
@@ -35,8 +40,8 @@ const fillProps: StyleBuilderConfig<FillProps> = {
 const stokeProps: StyleBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
-  strokeOpacity: true,
-  strokeDasharray: true, // TODO - add preprocessor
+  strokeOpacity: { process: convertPercentageToNumber },
+  strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
   strokeLinecap: true,
   strokeLinejoin: true,
