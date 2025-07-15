@@ -10,6 +10,8 @@
 #include <reanimated/CSS/values/base/CSSKeyword.h>
 #include <reanimated/CSS/values/base/CSSNumber.h>
 
+#include <reanimated/CSS/values/svg/CSSStrokeDashArray.h>
+
 namespace reanimated::css {
 
 // TODO - check if default values are correct
@@ -28,7 +30,8 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeWidth", value<CSSDimension>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray",
-     value<CSSDouble, CSSKeyword>(0)}, // TODO - add support for array
+     value<CSSStrokeDashArray, CSSKeyword>(
+         std::vector<CSSDimension>{CSSDimension(0.0)})},
     {"strokeDashoffset", value<CSSDouble>(0)},
     {"strokeLinecap", value<CSSKeyword>("butt")},
     {"strokeLinejoin", value<CSSKeyword>("miter")},

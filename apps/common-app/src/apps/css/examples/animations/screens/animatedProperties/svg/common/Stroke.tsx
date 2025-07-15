@@ -22,81 +22,79 @@ export default function StrokeExample() {
       renderExample={({ animation, props }) => (
         <Svg height={100} viewBox="0 0 100 100" width={100}>
           <AnimatedCircle
-            // animatedProps={animation}
+            animatedProps={animation}
             cx={50}
             cy={50}
             fill={colors.primary}
             r={20}
             stroke="red"
-            strokeDasharray={['10%', 20, 5]}
-            strokeWidth={5}
             {...props}
           />
         </Svg>
       )}
       sections={[
-        // {
-        //   title: 'Stroke',
-        //   examples: [
-        //     {
-        //       keyframes: {
-        //         from: {
-        //           stroke: 'blue',
-        //         },
-        //         to: {
-        //           stroke: 'red',
-        //         },
-        //       },
-        //       title: 'Changing stroke (color)',
-        //       description: '`strokeWidth` is set to `10`',
-        //       props: {
-        //         strokeWidth: 10,
-        //       },
-        //     },
-        //   ],
-        // },
-        // {
-        //   title: 'strokeWidth',
-        //   examples: [
-        //     {
-        //       keyframes: {
-        //         to: {
-        //           strokeWidth: 20,
-        //         },
-        //       },
-        //       title: 'Absolute value',
-        //     },
-        //     {
-        //       keyframes: {
-        //         from: {
-        //           strokeWidth: '10%',
-        //         },
-        //         to: {
-        //           strokeWidth: '20%',
-        //         },
-        //       },
-        //       title: 'Relative value',
-        //       description:
-        //         'The default `strokeWidth` is 1 and it is not smoothly animated to `20%`. To get a smooth animation, we need to specify a % value in all keyframes',
-        //     },
-        //   ],
-        // },
-        // {
-        //   title: 'strokeOpacity',
-        //   examples: [
-        //     {
-        //       keyframes: {
-        //         to: {
-        //           strokeOpacity: 0,
-        //         },
-        //       },
-        //       props: {
-        //         strokeWidth: 10,
-        //       },
-        //       title: 'Absolute value',
-        //     },
-        //   ],
-        // },
+        {
+          title: 'Stroke',
+          examples: [
+            {
+              keyframes: {
+                from: {
+                  stroke: 'blue',
+                },
+                to: {
+                  stroke: 'red',
+                },
+              },
+              title: 'Changing stroke (color)',
+              description: '`strokeWidth` is set to `10`',
+              props: {
+                strokeWidth: 10,
+              },
+            },
+          ],
+        },
+        {
+          title: 'strokeWidth',
+          examples: [
+            {
+              keyframes: {
+                to: {
+                  strokeWidth: 20,
+                },
+              },
+              title: 'Absolute value',
+            },
+            {
+              keyframes: {
+                from: {
+                  strokeWidth: '10%',
+                },
+                to: {
+                  strokeWidth: '20%',
+                },
+              },
+              title: 'Relative value',
+              description:
+                'The default `strokeWidth` is 1 and it is not smoothly animated to `20%`. To get a smooth animation, we need to specify a % value in all keyframes',
+            },
+          ],
+        },
+        {
+          title: 'strokeOpacity',
+          examples: [
+            {
+              keyframes: {
+                to: {
+                  strokeOpacity: 0,
+                },
+              },
+              props: {
+                strokeWidth: 10,
+              },
+              title: 'Absolute value',
+            },
+          ],
+        },
         {
           title: 'strokeDasharray',
           examples: [
@@ -106,7 +104,35 @@ export default function StrokeExample() {
                   strokeDasharray: 10,
                 },
               },
-              title: 'Absolute value',
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'Single value',
+            },
+            {
+              keyframes: {
+                to: {
+                  strokeDasharray: [10, 20, 30],
+                },
+              },
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'Array value',
+            },
+            {
+              keyframes: {
+                from: {
+                  strokeDasharray: [10, 20],
+                },
+                to: {
+                  strokeDasharray: [50, 30, 10],
+                },
+              },
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'Array value with different number of elements',
             },
           ],
         },
