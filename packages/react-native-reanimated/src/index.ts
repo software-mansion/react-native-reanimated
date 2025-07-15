@@ -2,6 +2,9 @@
 
 import './publicGlobals';
 
+import type { WorkletRuntime as WorkletRuntimeFromWorklets } from 'react-native-worklets';
+import { isWorkletFunction as isWorkletFunctionFromWorklets } from 'react-native-worklets';
+
 import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
@@ -299,5 +302,17 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export type { WorkletRuntime } from 'react-native-worklets';
-export { isWorkletFunction } from 'react-native-worklets';
+
+/**
+ * @deprecated This type is deprecated and will be removed in the next major
+ *   Please import `WorkletRuntime` directly from `react-native-worklets`
+ *   instead of `react-native-reanimated`.
+ */
+export type WorkletRuntime = WorkletRuntimeFromWorklets;
+
+/**
+ * @deprecated This function is deprecated and will be removed in the next major
+ *   Please import `isWorkletFunction` directly from `react-native-worklets`
+ *   instead of `react-native-reanimated`.
+ */
+export const isWorkletFunction = isWorkletFunctionFromWorklets;
