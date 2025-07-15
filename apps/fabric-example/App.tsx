@@ -1,70 +1,37 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import type {
-  GestureStateManager,
-  GestureTouchEvent,
-  GestureUpdateEvent,
-  PanGestureChangeEventPayload,
-} from 'react-native-gesture-handler';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
+  useAnimatedProps,
   useSharedValue,
-  withSpring,
+  withRepeat,
+  withTiming,
 } from 'react-native-reanimated';
+import { Circle, Svg } from 'react-native-svg';
 
-function Ball() {
-  const isPressed = useSharedValue(false);
-  const offset = useSharedValue({ x: 0, y: 0 });
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-  const animatedStyles = useAnimatedStyle(() => {
+export default function App() {
+  const sv = useSharedValue(0);
+
+  sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+
+  const animatedProps = useAnimatedProps(() => {
     return {
-      transform: [
-        { translateX: offset.value.x },
-        { translateY: offset.value.y },
-        { scale: withSpring(isPressed.value ? 1.2 : 1) },
-      ],
-      backgroundColor: isPressed.value ? 'blue' : 'navy',
+      r: `${1 + sv.value * 49}%`,
     };
   });
 
-  const gesture = Gesture.Pan()
-    .manualActivation(true)
-    .onBegin(() => {
-      'worklet';
-      isPressed.value = true;
-    })
-    .onChange((e: GestureUpdateEvent<PanGestureChangeEventPayload>) => {
-      'worklet';
-      offset.value = {
-        x: e.changeX + offset.value.x,
-        y: e.changeY + offset.value.y,
-      };
-    })
-    .onFinalize(() => {
-      'worklet';
-      isPressed.value = false;
-    })
-    .onTouchesMove((e: GestureTouchEvent, state: GestureStateManager) => {
-      state.activate();
-    });
-
   return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.ball, animatedStyles]} />
-    </GestureDetector>
-  );
-}
-
-export default function App() {
-  return (
-    <GestureHandlerRootView style={styles.container}>
-      <Ball />
-    </GestureHandlerRootView>
+    <View style={styles.container}>
+      <Svg height="200" width="200">
+        <AnimatedCircle
+          cx="50%"
+          cy="50%"
+          fill="lime"
+          animatedProps={animatedProps}
+        />
+      </Svg>
+    </View>
   );
 }
 
@@ -73,12 +40,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  ball: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
-    backgroundColor: 'blue',
-    alignSelf: 'center',
   },
 });
