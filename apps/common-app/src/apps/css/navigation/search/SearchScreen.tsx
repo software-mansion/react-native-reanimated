@@ -20,7 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stagger } from '@/apps/css/components';
 import { spacing } from '@/theme';
 
-import { BOTTOM_BAR_HEIGHT, INITIAL_ROUTE_NAME } from '../constants';
+import { BOTTOM_BAR_HEIGHT } from '../constants';
+import { INITIAL_ROUTE_NAME } from '../routes';
 import { searchRoutes } from './fuse';
 import PullToSearchIndicator from './PullToSearchIndicator';
 import SearchBar from './SearchBar';

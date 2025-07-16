@@ -156,6 +156,50 @@ export default function StrokeExample() {
             },
           ],
         },
+        {
+          title: 'strokeDashoffset',
+          examples: [
+            {
+              keyframes: {
+                to: {
+                  strokeDashoffset: 100,
+                },
+              },
+              props: {
+                strokeWidth: 5,
+                strokeDasharray: 10,
+              },
+              title: 'Absolute value',
+              description:
+                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
+            },
+          ],
+        },
+        {
+          title: 'strokeLinecap',
+          examples: [
+            {
+              keyframes: {
+                from: {
+                  strokeLinecap: 'butt',
+                },
+                '50%': {
+                  strokeLinecap: 'round',
+                },
+                to: {
+                  strokeLinecap: 'square',
+                },
+              },
+              props: {
+                strokeWidth: 15,
+                strokeDasharray: 20,
+              },
+              title: 'Changing `strokeLinecap`',
+              description:
+                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
+            },
+          ],
+        },
       ]}
     />
   );
