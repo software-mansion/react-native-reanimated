@@ -171,7 +171,8 @@ class ValueInterpolator : public PropertyInterpolator {
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
   std::optional<ValueType> reversingAdjustedStartValue_;
 
-  ValueType getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  ValueType getFallbackValue(
+      const std::shared_ptr<const ShadowNode> &shadowNode) const {
     const auto styleValue = getStyleValue(shadowNode);
     return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }

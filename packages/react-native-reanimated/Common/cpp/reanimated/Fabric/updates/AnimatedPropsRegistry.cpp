@@ -8,7 +8,8 @@ namespace reanimated {
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
-  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
+  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
+      rt, shadowNodeWrapper);
 }
 #endif
 
