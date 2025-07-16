@@ -74,6 +74,7 @@ const stokeProps: StyleBuilderConfig<StrokeProps> = {
   },
 };
 
+// TODO
 const clipProps: StyleBuilderConfig<ClipProps> = {
   clipRule: true,
   clipPath: true, // TODO - maybe preprocess this?
