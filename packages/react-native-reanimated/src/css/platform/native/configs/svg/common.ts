@@ -51,13 +51,28 @@ const stokeProps: StyleBuilderConfig<StrokeProps> = {
   strokeLinecap: {
     process: convertStringToNumber({
       butt: 0,
-      round: 1,
       square: 2,
+      round: 1,
     }),
   },
-  strokeLinejoin: true,
+  strokeLinejoin: {
+    process: convertStringToNumber({
+      miter: 0,
+      bevel: 2,
+      round: 1,
+    }),
+  },
   strokeMiterlimit: true,
-  vectorEffect: true,
+  vectorEffect: {
+    process: convertStringToNumber({
+      none: 0,
+      default: 0,
+      nonScalingStroke: 1,
+      'non-scaling-stroke': 1,
+      inherit: 2,
+      uri: 3,
+    }),
+  },
 };
 
 const clipProps: StyleBuilderConfig<ClipProps> = {
