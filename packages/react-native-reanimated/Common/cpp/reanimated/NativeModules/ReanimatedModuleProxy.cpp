@@ -133,7 +133,7 @@ void ReanimatedModuleProxy::init(
         strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
-  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double d) {
+  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
