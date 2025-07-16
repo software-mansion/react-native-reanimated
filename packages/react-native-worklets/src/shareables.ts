@@ -6,7 +6,7 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
-import { getJsVersion } from './utils/jsVersion';
+import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -371,7 +371,6 @@ function cloneWorklet<T extends WorkletFunction>(
 ): ShareableRef<T> {
   if (__DEV__) {
     const babelVersion = (value as WorkletFunction).__initData.version;
-    const jsVersion = getJsVersion();
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
       throw new WorkletsError(
         `[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).
