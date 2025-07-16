@@ -14,7 +14,6 @@ import type {
   StrokeProps,
   TouchableProps,
   TransformProps,
-  VectorEffectProps,
 } from 'react-native-svg';
 
 import type { StyleBuilderConfig } from '../../style';
@@ -99,10 +98,6 @@ const transformProps: StyleBuilderConfig<TransformProps> = {
   transform: true, // TODO - add preprocessor
 };
 
-const vectorEffectProps: StyleBuilderConfig<VectorEffectProps> = {
-  vectorEffect: true,
-};
-
 const responderProps: StyleBuilderConfig<
   Omit<ResponderProps, keyof GestureResponderHandlers>
 > = {
@@ -142,7 +137,6 @@ export const commonSvgProps = {
   ...stokeProps,
   ...clipProps,
   ...transformProps,
-  ...vectorEffectProps,
   ...responderProps,
   ...commonMarkerProps,
   ...commonMaskProps,
