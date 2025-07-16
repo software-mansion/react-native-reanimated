@@ -1,37 +1,54 @@
-import type { CSSAnimationKeyframes } from 'react-native-reanimated';
+import type {
+  CSSAnimationKeyframes,
+  CSSAnimationProperties,
+} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { Circle, type CircleProps, Svg } from 'react-native-svg';
+import type { StrokeProps } from 'react-native-svg';
+import { Circle, Path, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 import { colors } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 export default function StrokeExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<CircleProps>; props?: CircleProps },
-      CircleProps
+      {
+        keyframes: CSSAnimationKeyframes<StrokeProps>;
+        animationProps?: Omit<CSSAnimationProperties, 'animationName'>;
+        props?: StrokeProps;
+        render?: (
+          props: StrokeProps & {
+            animatedProps: CSSAnimationProperties<StrokeProps>;
+          }
+        ) => JSX.Element;
+      },
+      StrokeProps
     >
-      buildAnimation={({ keyframes }) => ({
+      buildAnimation={({ keyframes, animationProps }) => ({
         animationName: keyframes,
         animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationTimingFunction: 'linear',
+        ...animationProps,
       })}
-      renderExample={({ animation, props }) => (
-        <Svg height={100} viewBox="0 0 100 100" width={100}>
-          <AnimatedCircle
-            animatedProps={animation}
-            cx={50}
-            cy={50}
-            fill={colors.primary}
-            r={20}
-            stroke={colors.primaryDark}
-            {...props}
-          />
-        </Svg>
-      )}
+      renderExample={({ animation, props, render }) =>
+        render?.({ ...props, animatedProps: animation }) ?? (
+          <Svg height={100} viewBox="0 0 100 100" width={100}>
+            <AnimatedCircle
+              animatedProps={animation}
+              cx={50}
+              cy={50}
+              fill={colors.primary}
+              r={20}
+              stroke={colors.primaryDark}
+              {...props}
+            />
+          </Svg>
+        )
+      }
       sections={[
         {
           title: 'Stroke',
@@ -197,6 +214,35 @@ export default function StrokeExample() {
               title: 'Changing `strokeLinecap`',
               description:
                 '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
+            },
+          ],
+        },
+        {
+          title: 'strokeLinejoin',
+          examples: [
+            {
+              keyframes: {
+                from: {
+                  strokeLinejoin: 'miter',
+                },
+                '50%': {
+                  strokeLinejoin: 'round',
+                },
+                to: {
+                  strokeLinejoin: 'bevel',
+                },
+              },
+              render: (props) => (
+                <Svg height={100} viewBox="0 0 6 6" width={100}>
+                  <AnimatedPath
+                    d="M1,5 a2,2 0,0,0 2,-3 a3,3 0 0 1 2,3.5"
+                    fill="none"
+                    stroke="red"
+                    {...props}
+                  />
+                </Svg>
+              ),
+              title: 'Changing `strokeLinejoin`',
             },
           ],
         },
