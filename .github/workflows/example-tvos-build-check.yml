@@ -37,7 +37,7 @@ on:
 jobs:
   example-tvos-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       WORKING_DIRECTORY: apps/tvos-example
       REANIMATED_DIR: packages/react-native-reanimated
