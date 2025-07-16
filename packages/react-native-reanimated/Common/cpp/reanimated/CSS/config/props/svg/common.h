@@ -16,7 +16,6 @@
 
 namespace reanimated::css {
 
-// TODO - check if default values are correct
 const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
     {"color", value<CSSColor>(BLACK)},
 };
@@ -48,10 +47,10 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"translateY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
-    {"originX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"originY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
+    {"translateX", value<CSSDimension>(0)},
+    {"translateY", value<CSSDimension>(0)},
+    {"originX", value<CSSDimension>(0)},
+    {"originY", value<CSSDimension>(0)},
     {"scaleX", value<CSSDouble>(1)},
     {"scaleY", value<CSSDouble>(1)},
     {"skewX", value<CSSAngle>(0)},
@@ -62,6 +61,8 @@ const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators(
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
-    SVG_STROKE_INTERPOLATORS);
+    SVG_STROKE_INTERPOLATORS,
+    SVG_CLIP_INTERPOLATORS,
+    SVG_TRANSFORM_INTERPOLATORS);
 
 } // namespace reanimated::css

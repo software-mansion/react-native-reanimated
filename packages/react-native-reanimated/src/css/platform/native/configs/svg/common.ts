@@ -15,6 +15,7 @@ import type {
   TouchableProps,
   TransformProps,
 } from 'react-native-svg';
+import extractOpacity from 'react-native-svg/src/lib/extract/extractOpacity';
 
 import type { StyleBuilderConfig } from '../../style';
 import {
@@ -22,6 +23,7 @@ import {
   convertStringToNumber,
   processColorSVG,
   processStrokeDashArray,
+  splitIntoSeparateProps,
 } from '../../style';
 
 const colorAttributes = { process: processColorSVG };
@@ -32,7 +34,7 @@ const colorProps: StyleBuilderConfig<ColorProps> = {
 
 const fillProps: StyleBuilderConfig<FillProps> = {
   fill: colorAttributes,
-  fillOpacity: true,
+  fillOpacity: { process: extractOpacity },
   fillRule: {
     process: convertStringToNumber({
       evenodd: 0,
@@ -81,16 +83,16 @@ const clipProps: StyleBuilderConfig<ClipProps> = {
 };
 
 const transformProps: StyleBuilderConfig<TransformProps> = {
-  translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
+  translate: { process: splitIntoSeparateProps(['translateX', 'translateY']) },
   translateX: true,
   translateY: true,
-  origin: true, // TODO - add preprocessor (NumberArray) and split to originX and originY
+  origin: { process: splitIntoSeparateProps(['originX', 'originY']) },
   originX: true,
   originY: true,
-  scale: true, // TODO - add preprocessor (NumberArray) and split to scaleX and scaleY
+  scale: { process: splitIntoSeparateProps(['scaleX', 'scaleY']) },
   scaleX: true,
   scaleY: true,
-  skew: true, // TODO - add preprocessor (NumberArray) and split to skewX and skewY
+  skew: { process: splitIntoSeparateProps(['skewX', 'skewY']) },
   skewX: true,
   skewY: true,
   rotation: true,
