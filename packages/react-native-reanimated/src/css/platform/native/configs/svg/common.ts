@@ -19,10 +19,11 @@ import type {
 
 import {
   processOpacity,
+  processColorSVG,
   processStrokeDashArray,
   type StyleBuilderConfig,
+  convertStringToNumber,
 } from '../../style';
-import { processColorSVG, processFillRule } from '../../style';
 
 const colorAttributes = { process: processColorSVG };
 
@@ -33,7 +34,12 @@ const colorProps: StyleBuilderConfig<ColorProps> = {
 const fillProps: StyleBuilderConfig<FillProps> = {
   fill: colorAttributes,
   fillOpacity: { process: processOpacity },
-  fillRule: { process: processFillRule },
+  fillRule: {
+    process: convertStringToNumber({
+      evenodd: 0,
+      nonzero: 1,
+    }),
+  },
 };
 
 const stokeProps: StyleBuilderConfig<StrokeProps> = {
@@ -42,7 +48,13 @@ const stokeProps: StyleBuilderConfig<StrokeProps> = {
   strokeOpacity: { process: processOpacity },
   strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
-  strokeLinecap: true,
+  strokeLinecap: {
+    process: convertStringToNumber({
+      butt: 0,
+      round: 1,
+      square: 2,
+    }),
+  },
   strokeLinejoin: true,
   strokeMiterlimit: true,
   vectorEffect: true,

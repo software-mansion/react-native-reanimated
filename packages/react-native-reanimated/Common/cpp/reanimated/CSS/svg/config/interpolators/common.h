@@ -33,6 +33,8 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
      value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
     {"strokeDashoffset", value<CSSDouble>(0)},
     {"strokeLinecap", value<CSSKeyword>("butt")},
+    {"strokeDashoffset", value<CSSDimension>(0)},
+    {"strokeLinecap", value<CSSInteger>(0)},
     {"strokeLinejoin", value<CSSKeyword>("miter")},
     {"strokeMiterlimit", value<CSSDouble>(4)},
     {"vectorEffect", value<CSSKeyword>("none")},
