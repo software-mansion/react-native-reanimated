@@ -9995,7 +9995,7 @@ __metadata:
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.81.0-rc.1"
+    react-native: "patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch"
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch"
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
@@ -12943,7 +12943,7 @@ __metadata:
   dependencies:
     common-app: "workspace:*"
     prettier: "npm:^3.3.3"
-    react-native: "npm:0.81.0-rc.1"
+    react-native: "patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch"
   languageName: unknown
   linkType: soft
 
@@ -20698,7 +20698,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.81.0-rc.1"
+    react-native: "patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch"
     react-native-is-edge-to-edge: "npm:^1.2.1"
@@ -20828,7 +20828,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.1.0"
-    react-native: "npm:0.81.0-rc.1"
+    react-native: "patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
     typescript: "npm:^5.8.3"
   peerDependencies:
@@ -21039,6 +21039,56 @@ __metadata:
   bin:
     react-native: cli.js
   checksum: 10/529c6163f731eadb24bc73ed5b8430736ae06f348dfe39f9f90baa7caf96fba732a861fc5197c3374345a3181e63b1f2d69c6ef0e938c564ceed6b85c916ddb7
+  languageName: node
+  linkType: hard
+
+"react-native@patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch":
+  version: 0.81.0-rc.1
+  resolution: "react-native@patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch::version=0.81.0-rc.1&hash=a0b449"
+  dependencies:
+    "@jest/create-cache-key-function": "npm:^29.7.0"
+    "@react-native/assets-registry": "npm:0.81.0-rc.1"
+    "@react-native/codegen": "npm:0.81.0-rc.1"
+    "@react-native/community-cli-plugin": "npm:0.81.0-rc.1"
+    "@react-native/gradle-plugin": "npm:0.81.0-rc.1"
+    "@react-native/js-polyfills": "npm:0.81.0-rc.1"
+    "@react-native/normalize-colors": "npm:0.81.0-rc.1"
+    "@react-native/virtualized-lists": "npm:0.81.0-rc.1"
+    abort-controller: "npm:^3.0.0"
+    anser: "npm:^1.4.9"
+    ansi-regex: "npm:^5.0.0"
+    babel-jest: "npm:^29.7.0"
+    babel-plugin-syntax-hermes-parser: "npm:0.29.1"
+    base64-js: "npm:^1.5.1"
+    commander: "npm:^12.0.0"
+    flow-enums-runtime: "npm:^0.0.6"
+    glob: "npm:^7.1.1"
+    invariant: "npm:^2.2.4"
+    jest-environment-node: "npm:^29.7.0"
+    memoize-one: "npm:^5.0.0"
+    metro-runtime: "npm:^0.83.0"
+    metro-source-map: "npm:^0.83.0"
+    nullthrows: "npm:^1.1.1"
+    pretty-format: "npm:^29.7.0"
+    promise: "npm:^8.3.0"
+    react-devtools-core: "npm:^6.1.5"
+    react-refresh: "npm:^0.14.0"
+    regenerator-runtime: "npm:^0.13.2"
+    scheduler: "npm:0.26.0"
+    semver: "npm:^7.1.3"
+    stacktrace-parser: "npm:^0.1.10"
+    whatwg-fetch: "npm:^3.0.0"
+    ws: "npm:^6.2.3"
+    yargs: "npm:^17.6.2"
+  peerDependencies:
+    "@types/react": ^19.1.0
+    react: ^19.1.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  bin:
+    react-native: cli.js
+  checksum: 10/de0a6d4629cff41dbf0e613ec7f445596265b0673410b15292132ea2f1f8310a764d8e8341b999a659d76b62d1ea8532c518b81f7d3161ec0768f1f8744423c6
   languageName: node
   linkType: hard
 

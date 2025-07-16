@@ -67,7 +67,7 @@
     "madge": "^5.0.1",
     "patch-package": "^8.0.0",
     "prettier": "^3.3.3",
-    "react-native": "0.81.0-rc.1",
+    "react-native": "patch:react-native@npm%3A0.81.0-rc.1#~/.yarn/patches/react-native-npm-0.81.0-rc.1-4c261caf65.patch",
     "react-native-monorepo-tools": "^1.2.1",
     "react-test-renderer": "19.1.0",
     "typescript": "^5.8.3",
