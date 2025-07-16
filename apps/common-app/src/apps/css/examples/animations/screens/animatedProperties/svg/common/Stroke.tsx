@@ -237,12 +237,75 @@ export default function StrokeExample() {
                   <AnimatedPath
                     d="M1,5 a2,2 0,0,0 2,-3 a3,3 0 0 1 2,3.5"
                     fill="none"
-                    stroke="red"
+                    stroke={colors.primaryDark}
                     {...props}
                   />
                 </Svg>
               ),
               title: 'Changing `strokeLinejoin`',
+            },
+          ],
+        },
+        // TODO - this prop doesn't work in RN SVG so the example is commented
+        // out for now
+        // {
+        //   title: 'strokeMiterlimit',
+        //   examples: [
+        //     {
+        //       CardComponent: VerticalExampleCard,
+        //       keyframes: {
+        //         from: {
+        //           strokeMiterlimit: 1,
+        //         },
+        //         to: {
+        //           strokeMiterlimit: 8,
+        //         },
+        //       },
+        //       render: (props) => (
+        //         <Svg height={150} viewBox="0 0 38 30" width={200}>
+        //           <AnimatedPath
+        //             fill="none"
+        //             stroke={colors.primaryDark}
+        //             strokeLinejoin="miter"
+        //             strokeMiterlimit={10}
+        //             d="M1,19 l7   ,-3 l7   ,3
+        //                m2, 0 l3.5 ,-3 l3.5 ,3
+        //                m2, 0 l2   ,-3 l2   ,3
+        //                m2, 0 l0.75,-3 l0.75,3
+        //                m2, 0 l0.5 ,-3 l0.5 ,3"
+        //             {...props}
+        //           />
+        //         </Svg>
+        //       ),
+        //       title: 'Changing `strokeMiterlimit`',
+        //     },
+        //   ],
+        // },
+        {
+          title: 'vectorEffect',
+          examples: [
+            {
+              keyframes: {
+                from: {
+                  vectorEffect: 'none',
+                },
+                to: {
+                  vectorEffect: 'nonScalingStroke',
+                },
+              },
+              render: (props) => (
+                <Svg height={150} viewBox="0 0 400 240" width={200}>
+                  <AnimatedPath
+                    d="M10,20 L40,100 L39,200 z"
+                    fill="none"
+                    stroke={colors.primaryDark}
+                    strokeWidth={5}
+                    transform="translate(100,0) scale(4,1)"
+                    {...props}
+                  />
+                </Svg>
+              ),
+              title: 'Changing `strokeMiterlimit`',
             },
           ],
         },
