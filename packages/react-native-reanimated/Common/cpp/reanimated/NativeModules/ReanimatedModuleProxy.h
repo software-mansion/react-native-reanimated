@@ -16,6 +16,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
