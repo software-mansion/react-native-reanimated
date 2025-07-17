@@ -20,7 +20,12 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 
 void ReanimatedMountHook::shadowTreeDidMount(
     const RootShadowNode::Shared &rootShadowNode,
-    HighResTimeStamp) noexcept {
+#if REACT_NATIVE_MINOR_VERSION >= 81
+    HighResTimeStamp
+#else
+    double
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+    ) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
   auto reaShadowNode =
