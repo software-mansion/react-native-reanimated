@@ -239,10 +239,13 @@ export default class AnimatedComponent
     }
 
     this._animatedStyles.forEach((style) => {
-      style.viewDescriptors.add({
-        tag: viewTag,
-        shadowNodeWrapper,
-      });
+      style.viewDescriptors.add(
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
+        style.forceUpdateContainer
+      );
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
@@ -266,10 +269,13 @@ export default class AnimatedComponent
 
     // attach animatedProps property
     if (this.props.animatedProps?.viewDescriptors) {
-      this.props.animatedProps.viewDescriptors.add({
-        tag: viewTag as number,
-        shadowNodeWrapper: shadowNodeWrapper!,
-      });
+      this.props.animatedProps.viewDescriptors.add(
+        {
+          tag: viewTag as number,
+          shadowNodeWrapper: shadowNodeWrapper!,
+        },
+        this.props.animatedProps.forceUpdateContainer
+      );
     }
   }
 
