@@ -35,14 +35,18 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
   if (std::regex_match(version1, pattern) &&
       std::regex_match(version2, pattern)) {
     auto majorPattern = std::regex("^\\d+");
-    auto major1 = std::regex_search(version1, majorPattern);
-    auto major2 = std::regex_search(version2, majorPattern);
+    std::smatch major1;
+    std::smatch major2;
+    std::regex_search(version1, major1, majorPattern);
+    std::regex_search(version2, major2, majorPattern);
     if (major1 != major2) {
       return false;
     }
     auto minorPattern = std::regex("\\.\\d+\\.");
-    auto minor1 = std::regex_search(version1, minorPattern);
-    auto minor2 = std::regex_search(version2, minorPattern);
+    std::smatch minor1;
+    std::smatch minor2;
+    std::regex_search(version1, minor1, minorPattern);
+    std::regex_search(version2, minor2, minorPattern);
     if (minor1 != minor2) {
       return false;
     }
