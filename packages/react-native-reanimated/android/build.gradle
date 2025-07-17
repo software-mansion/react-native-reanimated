@@ -332,8 +332,8 @@ task prepareKotlinBuildScriptModel {
 // like a header-only library. During build, config files are not regenerated
 // because the cache key does not change and AGP thinks that they are up-to-date.
 afterEvaluate {
-  prepareKotlinBuildScriptModel.dependsOn(":react-native-reanimated:prefabDebugPackage")
-  prepareKotlinBuildScriptModel.dependsOn(":react-native-reanimated:prefabReleasePackage")
+  prepareKotlinBuildScriptModel.dependsOn(":react-native-worklets:prefabDebugPackage")
+  prepareKotlinBuildScriptModel.dependsOn(":react-native-worklets:prefabReleasePackage")
 }
 
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
