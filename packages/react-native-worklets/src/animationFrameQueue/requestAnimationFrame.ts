@@ -17,16 +17,12 @@ export function setupRequestAnimationFrame() {
   let flushRequested = false;
 
   globalThis.__flushAnimationFrame = (timestamp: number) => {
-    globalThis.__frameTimestamp = timestamp;
-
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
 
     flushedCallbacksBegin = queuedCallbacksBegin;
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
-
-    flushRequested = false;
 
     for (const callback of flushedCallbacks) {
       callback(timestamp);
@@ -35,8 +31,6 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
-
-    globalThis.__frameTimestamp = undefined;
   };
 
   globalThis.requestAnimationFrame = (
@@ -48,7 +42,12 @@ export function setupRequestAnimationFrame() {
     if (!flushRequested) {
       flushRequested = true;
 
-      nativeRequestAnimationFrame(globalThis.__flushAnimationFrame);
+      nativeRequestAnimationFrame((timestamp) => {
+        flushRequested = false;
+        globalThis.__frameTimestamp = timestamp;
+        globalThis.__flushAnimationFrame(timestamp);
+        globalThis.__frameTimestamp = undefined;
+      });
     }
     return handle;
   };
