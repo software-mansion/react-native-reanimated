@@ -118,11 +118,11 @@ std::string PropValueProcessor::intColorToHex(const int val) {
 }
 
 bool PropValueProcessor::isLayoutProp(const std::string &propName) {
-  return layoutProps.find(propName) != layoutProps.end();
+  return layoutProps.contains(propName);
 }
 
 bool PropValueProcessor::isStyleProp(const std::string &propName) {
-  return styleProps.find(propName) != styleProps.end();
+  return styleProps.contains(propName);
 }
 
 } // namespace reanimated
