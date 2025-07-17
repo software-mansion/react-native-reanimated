@@ -30,7 +30,7 @@ TransitionStyleInterpolator::getReversedPropertyNames(
 }
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider) const {
   return mapInterpolators(
       transitionProgressProvider,

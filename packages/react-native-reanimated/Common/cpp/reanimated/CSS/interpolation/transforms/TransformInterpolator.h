@@ -15,7 +15,7 @@ class TransformInterpolator {
       std::shared_ptr<TransformInterpolator>>;
 
   struct UpdateContext {
-    const ShadowNode::Shared &node;
+    const std::shared_ptr<const ShadowNode> &node;
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
     const std::shared_ptr<Interpolators> &interpolators;
   };

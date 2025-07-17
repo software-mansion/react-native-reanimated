@@ -168,3 +168,41 @@ index 0c5b76b68f589e95365176d6201b71de4948ffec..78ad762b9bc68fb2bcba8c6edb6038fa
 +  return RNSScreenStackHeaderConfig.class;
 +}
 +#endif
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.cpp b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.cpp
+index 855e04e66f3c392560ad4d16ac86991828a509e6..64da8f25acbea6391db1240699809801cc3875cd 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.cpp
++++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.cpp
+@@ -15,9 +15,9 @@ Point RNSScreenShadowNode::getContentOriginOffset(
+   return {contentOffset.x, contentOffset.y};
+ }
+ 
+-std::optional<std::reference_wrapper<const ShadowNode::Shared>>
++std::optional<std::reference_wrapper<const std::shared_ptr<const ShadowNode>>>
+ findHeaderConfigChild(const YogaLayoutableShadowNode &screenShadowNode) {
+-  for (const ShadowNode::Shared &child : screenShadowNode.getChildren()) {
++  for (const std::shared_ptr<const ShadowNode> &child : screenShadowNode.getChildren()) {
+     if (std::strcmp(child->getComponentName(), "RNSScreenStackHeaderConfig") ==
+         0) {
+       return {std::cref(child)};
+@@ -82,7 +82,7 @@ std::optional<float> findHeaderHeight(
+ }
+ #endif // ANDROID
+ 
+-void RNSScreenShadowNode::appendChild(const ShadowNode::Shared &child) {
++void RNSScreenShadowNode::appendChild(const std::shared_ptr<const ShadowNode> &child) {
+   YogaLayoutableShadowNode::appendChild(child);
+ #ifdef ANDROID
+   const auto &stateData = getStateData();
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
+index 6b4b72ec0e69162582e077b4ec5f5215898310f4..3379f89f24f8a6c176cde2583775ed04445fe04b 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
++++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
+@@ -28,7 +28,7 @@ class JSI_EXPORT RNSScreenShadowNode final : public ConcreteViewShadowNode<
+ 
+   Point getContentOriginOffset(bool includeTransform) const override;
+ 
+-  void appendChild(const ShadowNode::Shared &child) override;
++  void appendChild(const std::shared_ptr<const ShadowNode> &child) override;
+ 
+   void layout(LayoutContext layoutContext) override;
+ 

@@ -15,14 +15,14 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const override;
+      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const override;
+      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
       const override;
 

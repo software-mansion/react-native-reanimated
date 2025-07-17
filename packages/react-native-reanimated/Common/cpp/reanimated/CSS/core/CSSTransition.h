@@ -15,12 +15,12 @@ namespace reanimated::css {
 class CSSTransition {
  public:
   CSSTransition(
-      ShadowNode::Shared shadowNode,
+      std::shared_ptr<const ShadowNode> shadowNode,
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   Tag getViewTag() const;
-  ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   folly::dynamic getCurrentInterpolationStyle() const;
@@ -37,7 +37,7 @@ class CSSTransition {
   folly::dynamic update(double timestamp);
 
  private:
-  const ShadowNode::Shared shadowNode_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;

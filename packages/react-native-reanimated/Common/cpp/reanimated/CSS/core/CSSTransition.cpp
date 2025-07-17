@@ -3,7 +3,7 @@
 namespace reanimated::css {
 
 CSSTransition::CSSTransition(
-    ShadowNode::Shared shadowNode,
+    std::shared_ptr<const ShadowNode> shadowNode,
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
@@ -17,7 +17,7 @@ Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
 }
 
-ShadowNode::Shared CSSTransition::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
   return shadowNode_;
 }
 

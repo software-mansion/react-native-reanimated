@@ -21,7 +21,7 @@ class TransitionStyleInterpolator {
       const folly::dynamic &newPropertyValues) const;
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const TransitionProgressProvider &transitionProgressProvider) const;
 
   void discardFinishedInterpolators(
