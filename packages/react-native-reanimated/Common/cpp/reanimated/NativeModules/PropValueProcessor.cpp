@@ -4,14 +4,15 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace reanimated {
-const std::array<std::string, 4> PropValueProcessor::layoutProps = {
+const std::unordered_set<std::string> PropValueProcessor::layoutProps = {
     "width",
     "height",
     "top",
     "left"};
-const std::array<std::string, 4> PropValueProcessor::styleProps = {
+const std::unordered_set<std::string> PropValueProcessor::styleProps = {
     "opacity",
     "zIndex",
     "backgroundColor",
@@ -117,13 +118,11 @@ std::string PropValueProcessor::intColorToHex(const int val) {
 }
 
 bool PropValueProcessor::isLayoutProp(const std::string &propName) {
-  return std::find(layoutProps.begin(), layoutProps.end(), propName) !=
-      layoutProps.end();
+  return layoutProps.find(propName) != layoutProps.end();
 }
 
 bool PropValueProcessor::isStyleProp(const std::string &propName) {
-  return std::find(styleProps.begin(), styleProps.end(), propName) !=
-      styleProps.end();
+  return styleProps.find(propName) != styleProps.end();
 }
 
 } // namespace reanimated

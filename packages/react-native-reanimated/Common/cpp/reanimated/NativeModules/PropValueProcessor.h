@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace reanimated {
 
@@ -14,8 +15,8 @@ using namespace react;
 
 class PropValueProcessor {
  public:
-  static const std::array<std::string, 4> layoutProps;
-  static const std::array<std::string, 4> styleProps;
+  static const std::unordered_set<std::string> layoutProps;
+  static const std::unordered_set<std::string> styleProps;
 
   static std::string processPropValue(
       const std::string &propName,
