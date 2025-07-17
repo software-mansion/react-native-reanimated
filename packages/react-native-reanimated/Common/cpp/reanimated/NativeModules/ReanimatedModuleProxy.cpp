@@ -713,20 +713,21 @@ void ReanimatedModuleProxy::updateProps(
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  if (operationsInBatch_.empty() && tagsToRemove_.empty() &&
-      layoutAnimationFlushRequests_.empty()) {
-    // nothing to do
-    return;
-  }
-
   ReanimatedSystraceSection s("performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-  for (const auto surfaceId : flushRequestsCopy) {
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [](const ShadowTree &shadowTree) {
-          shadowTree.notifyDelegatesOfUpdates();
-        });
+  if (!layoutAnimationFlushRequests_.empty()) {
+    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+    for (const auto surfaceId : flushRequestsCopy) {
+      uiManager_->getShadowTreeRegistry().visit(
+          surfaceId, [](const ShadowTree &shadowTree) {
+            shadowTree.notifyDelegatesOfUpdates();
+          });
+    }
+  }
+
+  if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
+    // nothing to do
+    return;
   }
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
