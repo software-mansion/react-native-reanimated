@@ -44,6 +44,7 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+  mutable std::vector<Tag> finishedAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
