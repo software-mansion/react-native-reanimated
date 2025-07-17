@@ -323,8 +323,10 @@ dependencies {
     }
 }
 
-task prepareKotlinBuildScriptModel {
-  // This task is run during Gradle Sync in Android Studio.
+if (tasks.findByName("prepareKotlinBuildScriptModel") == null) {
+  task prepareKotlinBuildScriptModel {
+    // This task is run during Gradle Sync in Android Studio.
+  }
 }
 
 // This fixes linking errors due to undefined symbols from libworklets.so.
