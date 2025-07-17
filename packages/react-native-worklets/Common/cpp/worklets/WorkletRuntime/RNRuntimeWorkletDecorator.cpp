@@ -1,6 +1,7 @@
 #include <worklets/Tools/WorkletsVersion.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#include <memory>
 
 #include <utility>
 
