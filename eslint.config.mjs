@@ -90,7 +90,7 @@ const nodeRules = {
   'n/no-unpublished-require': 'warn',
   'n/no-extraneous-import': 'off',
   'n/no-extraneous-require': 'off',
-  'n/no-unsupported-features/node-builtins': 'warn',
+  'n/no-unsupported-features/node-builtins': ['warn', { version: '>=18.0.0' }],
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
