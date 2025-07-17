@@ -1,10 +1,10 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsVersion.h>
 
+#include <iostream>
 #include <memory>
 #include <regex>
 #include <string>
-#include <iostream>
 
 #ifdef WORKLETS_VERSION
 #define STRINGIZE(x) #x
@@ -55,8 +55,9 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
   }
 }
 
-void checkJSVersion(jsi::Runtime &rnRuntime,
-                    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
+void checkJSVersion(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getWorkletsCppVersion();
 
   auto maybeJSVersion =
