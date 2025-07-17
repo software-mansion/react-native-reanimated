@@ -49,13 +49,14 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
-      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
-          rnRuntime,
-          workletsModuleProxy->getJSQueue(),
-          workletsModuleProxy->getJSScheduler(),
-          "Reanimated UI runtime",
-          true /* supportsLocking */,
-          valueUnpackerCode_)),
+      uiWorkletRuntime_(
+          std::make_shared<WorkletRuntime>(
+              rnRuntime,
+              workletsModuleProxy->getJSQueue(),
+              workletsModuleProxy->getJSScheduler(),
+              "Reanimated UI runtime",
+              true /* supportsLocking */,
+              valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -161,14 +162,20 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
+  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimationRenderRequested_ = false;
+  };
+
   EndLayoutAnimationFunction endLayoutAnimation =
-      [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+      [weakThis = weak_from_this(), requestLayoutAnimationRender](
+          int tag, bool shouldRemove) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -176,14 +183,19 @@ void ReanimatedModuleProxy::init(
 
         auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
             tag, shouldRemove);
+
+        if (!strongThis->layoutAnimationRenderRequested_) {
+          strongThis->layoutAnimationRenderRequested_ = true;
+          // if an animation has duration 0, performOperations would not get
+          // called for it so we call requestRender to have it called in the
+          // next frame
+          strongThis->requestRender_(requestLayoutAnimationRender);
+        }
+
         if (!surfaceId) {
           return;
         }
-
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
   auto obtainProp = [weakThis = weak_from_this()](
@@ -390,9 +402,10 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -700,12 +713,21 @@ void ReanimatedModuleProxy::updateProps(
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
+  if (operationsInBatch_.empty() && tagsToRemove_.empty() &&
+      layoutAnimationFlushRequests_.empty()) {
     // nothing to do
     return;
   }
 
   ReanimatedSystraceSection s("performOperations");
+
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+  }
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();

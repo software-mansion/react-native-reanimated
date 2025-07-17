@@ -23,6 +23,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -233,6 +234,8 @@ class ReanimatedModuleProxy
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::set<SurfaceId> layoutAnimationFlushRequests_;
+  bool layoutAnimationRenderRequested_;
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
