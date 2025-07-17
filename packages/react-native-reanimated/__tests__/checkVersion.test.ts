@@ -17,7 +17,7 @@ describe('checkCppVersion', () => {
   it('checks version successfully', () => {
     jest.spyOn(logger, 'warn').mockImplementation();
     checkCppVersion();
-    expect(logger['warn']).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
     jest.clearAllMocks();
   });
 
@@ -25,7 +25,7 @@ describe('checkCppVersion', () => {
     jest.spyOn(logger, 'warn').mockImplementation();
     delete global._REANIMATED_VERSION_CPP;
     checkCppVersion();
-    expect(logger['warn']).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalled();
     jest.clearAllMocks();
   });
 });

@@ -373,8 +373,8 @@ function cloneWorklet<T extends WorkletFunction>(
     const babelVersion = (value as WorkletFunction).__initData.version;
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
       throw new WorkletsError(
-        `[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).
-    See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
+        `Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
+    See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
     Offending code was: \`${getWorkletCode(value)}\``
       );
     }
