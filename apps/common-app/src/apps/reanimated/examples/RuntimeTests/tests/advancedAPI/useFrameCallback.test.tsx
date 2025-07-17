@@ -64,7 +64,7 @@ describe('Test *****useFrameCallback*****', () => {
         await render(<InvalidFrameCallback />);
         await wait(200);
       }).toThrow(
-        'WorkletsError: [Worklets] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details., js engine: Worklets',
+        'Error: [Worklets] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details., js engine: Worklets',
       );
     });
   });

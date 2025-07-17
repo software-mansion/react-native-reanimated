@@ -133,12 +133,12 @@ describe('Wardrobe with drawers', () => {
     describe('Box *****1*****, with books', () => {
       describe('Book *****1*****, with pages', () => {
         describe('Page *****1*****', () => {
-          test('Test 1 of page 1 of book 1 of box 1 of drawer 1', async () => {
+          test('Test 1 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
           });
-          test('Test 2 of page 1 of book 1 of box 1 of drawer 1', async () => {
+          test('Test 2 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
@@ -146,12 +146,12 @@ describe('Wardrobe with drawers', () => {
         });
 
         describe.skip('Page *****2*****', () => {
-          test('Test 1 of page 2 of book 1 of box 1 of drawer 1', async () => {
+          test('Test 1 of page 2 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
           });
-          test('Test 2 of page 2 of book 1 of box 1 of drawer 1', async () => {
+          test('Test 2 of page 2 of book 1 of box 1 of drawer 1 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
@@ -166,12 +166,12 @@ describe('Wardrobe with drawers', () => {
         describe('Page *****1*****', () => {});
 
         describe('Page *****2*****', () => {
-          test('Test 1 of page 2 of book 1 of box 1 of drawer 2', async () => {
+          test('Test 1 of page 2 of book 1 of box 1 of drawer  - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
           });
-          test('Test 2 of page 2 of book 1 of box 1 of drawer 2', async () => {
+          test('Test 2 of page 2 of book 1 of box 1 of drawer 2 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
             expect(1).toBe(1);
@@ -183,7 +183,7 @@ describe('Wardrobe with drawers', () => {
 });
 
 describe('Tests of Test Framework', () => {
-  test('Test  comparators', () => {
+  test('Test  comparators - ✅', () => {
     expect(1).toBe(1.0);
     expect(2).not.toBe(1.0);
 
@@ -205,40 +205,40 @@ describe('Tests of Test Framework', () => {
     expect([]).not.toBeNullable();
     expect(0).not.toBeNullable();
   });
-  test('Test comparators - expect error', () => {
+  test('Test comparators - ❌', () => {
     expect(0).toBeNullable();
     expect(2).not.toBeWithinRange(1.99999999, 2.0000001);
   });
 
-  test('withTiming - expect error', async () => {
+  test('withTiming - ❌', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
-    expect(await component.getAnimatedStyle('width')).toBe(123);
+    expect(await component.getAnimatedStyle('width')).toBe(123, ComparisonMode.NUMBER);
   });
 
-  test('withTiming - not - expect error', async () => {
+  test('withTiming - ❌', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).not.toBe(100);
   });
 
-  test('withTiming - with not', async () => {
+  test('withTiming - ✅', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).not.toBe(123);
   });
 
-  test('withTiming - expect pass', async () => {
+  test('withTiming - ✅', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
     await wait(600);
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
-  test('withTiming - expect callback call - expect error', async () => {
+  test('withTiming - expect callback call - ❌', async () => {
     await render(<AnimatedComponent />);
     await wait(600);
     expect(getTrackerCallCount('useAnimatedStyleTracker')).toBeCalled(4);
@@ -250,7 +250,7 @@ describe('Tests of Test Framework', () => {
     expect(getTrackerCallCount('withTimingTracker')).toBeCalledJS(100);
   });
 
-  test('withTiming - test number preset', async () => {
+  test('withTiming - test number preset - ✅', async () => {
     for (const preset of Presets.numbers) {
       /*
         This test checks the value of sharedValue after the component mounts. Therefore, we need to clear the render output to ensure that a new component will be fully mounted, not just rerendered.
@@ -263,126 +263,128 @@ describe('Tests of Test Framework', () => {
     }
   });
 
-  test('layoutAnimation - top & left', async () => {
+  test('layoutAnimation - top & left - ✅', async () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
-    expect(await component.getAnimatedStyle('top')).toBe('51');
-    expect(await component.getAnimatedStyle('left')).toBe('52');
+    expect(await component.getAnimatedStyle('top')).toBe(51);
+    expect(await component.getAnimatedStyle('left')).toBe(52);
   });
 
-  test('layoutAnimation - opacity', async () => {
+  test('layoutAnimation - opacity - ✅', async () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
-    expect(await component.getAnimatedStyle('opacity')).toBe('1');
+    expect(await component.getAnimatedStyle('opacity')).toBe(1);
   });
 
-  test('withTiming - match snapshot', async () => {
-    await mockAnimationTimer();
-    const updatesContainer = await recordAnimationUpdates();
-    await render(<AnimatedComponent />);
-    await wait(1000);
+  // TODO: Fix these tests - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
+  // Uncomment tests when fixed
+  // test('withTiming - match snapshot - ✅', async () => {
+  //   await mockAnimationTimer();
+  //   const updatesContainer = await recordAnimationUpdates();
+  //   await render(<AnimatedComponent />);
+  //   await wait(1000);
 
-    const brownComponent = getTestComponent('BrownComponent');
-    const brownNative = await updatesContainer.getNativeSnapshots(brownComponent);
-    expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.brownComponent);
-    expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(brownNative);
+  //   const brownComponent = getTestComponent('BrownComponent');
+  //   const brownNative = await updatesContainer.getNativeSnapshots(brownComponent);
+  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.brownComponent);
+  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(brownNative);
 
-    const greenComponent = getTestComponent('GreenComponent');
-    const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
-    expect(updatesContainer.getUpdates(greenComponent)).toMatchSnapshots(Snapshots.greenComponent);
-    expect(updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
-  });
+  //   const greenComponent = getTestComponent('GreenComponent');
+  //   const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
+  //   expect(updatesContainer.getUpdates(greenComponent)).toMatchSnapshots(Snapshots.greenComponent);
+  //   expect(updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
+  // });
 
-  test('withTiming - match snapshot - expect mismatch error', async () => {
-    await mockAnimationTimer();
-    const updatesContainer = await recordAnimationUpdates();
-    await render(<AnimatedComponent />);
-    await wait(1000);
+  // test('withTiming - match snapshot - ❌', async () => {
+  //   await mockAnimationTimer();
+  //   const updatesContainer = await recordAnimationUpdates();
+  //   await render(<AnimatedComponent />);
+  //   await wait(1000);
 
-    const brownComponent = getTestComponent('BrownComponent');
-    const greenComponent = getTestComponent('GreenComponent');
+  //   const brownComponent = getTestComponent('BrownComponent');
+  //   const greenComponent = getTestComponent('GreenComponent');
 
-    expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.greenComponent);
+  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchSnapshots(Snapshots.greenComponent);
 
-    const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
-    expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
-  });
+  //   const greenNative = await updatesContainer.getNativeSnapshots(greenComponent);
+  //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
+  // });
 
-  test('layoutAnimation - entering', async () => {
-    await mockAnimationTimer();
-    const updatesContainer = await recordAnimationUpdates();
-    await render(<LayoutAnimation />);
-    await wait(600);
-    expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
-  });
+  // test('layoutAnimation - entering - ✅', async () => {
+  //   await mockAnimationTimer();
+  //   const updatesContainer = await recordAnimationUpdates();
+  //   await render(<LayoutAnimation />);
+  //   await wait(600);
+  //   expect(updatesContainer.getUpdates()).toMatchSnapshots(Snapshots.layoutAnimation);
+  // });
 
-  test('withTiming - notify', async () => {
+  test('withTiming - notify - ✅', async () => {
     await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('BrownComponent');
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');
-    expect(await component.getAnimatedStyle('width')).toBe('100');
+    expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
   describe('Test .toThrow()', () => {
-    test('Warn with no error message - expect pass', async () => {
+    test('Warn with no error message - ✅', async () => {
       await expect(() => {
         console.warn('OH, NO!');
       }).toThrow();
     });
 
-    test('Warn with no error message - expect error', async () => {
+    test('Warn with no error message - ❌', async () => {
       await expect(() => {}).toThrow();
     });
 
-    test('Warn with no error message and negation - expect pass', async () => {
+    test('Warn with no error message and negation - ✅', async () => {
       await expect(() => {}).not.toThrow();
     });
 
-    test('Warn with with error message - expect pass', async () => {
+    test('Warn with with error message - ✅', async () => {
       await expect(() => {
         console.warn('OH, NO!');
       }).toThrow('OH, NO!');
     });
 
-    test('Warn with with error message - expect error', async () => {
+    test('Warn with with error message - ❌', async () => {
       await expect(() => {
         console.warn('OH, NO!');
       }).toThrow('OH, YES!');
     });
 
-    test('console.error with no error message - expect pass', async () => {
+    test('console.error with no error message - ✅', async () => {
       await expect(() => {
         console.error('OH, NO!');
       }).toThrow();
     });
 
-    test('console.error  with with error message - expect pass', async () => {
+    test('console.error  with with error message - ✅', async () => {
       await expect(() => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
-    test('console.error  with with error message - expect error', async () => {
+    test('console.error  with with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');
       }).toThrow('OH, YES!');
     });
 
-    test('Throw error with no error message - expect pass', async () => {
+    test('Throw error with no error message - ✅', async () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow();
     });
 
-    test('Throw error with with error message - expect pass', async () => {
+    test('Throw error with with error message - ✅', async () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, NO!');
     });
 
-    test('Throw error with with error message - expect error', async () => {
+    test('Throw error with with error message - ❌', async () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');

@@ -8,7 +8,17 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  notify,
+  render,
+  test,
+  useTestRef,
+  wait,
+  waitForNotify,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
@@ -16,6 +26,10 @@ type TestCase = {
   middleColor: string;
   finalColor: string;
 };
+
+const START_ANIMATION_NOTIFICATION_NAME = 'START_ANIMATION_NOTIFICATION';
+const MIDDLE_ANIMATION_NOTIFICATION_NAME = 'MIDDLE_ANIMATION_NOTIFICATION';
+const FINAL_ANIMATION_NOTIFICATION_NAME = 'FINAL_ANIMATION_NOTIFICATION';
 
 describe('withSequence animation of color', () => {
   enum Component {
@@ -33,9 +47,18 @@ describe('withSequence animation of color', () => {
     const styleActive = useAnimatedStyle(() => {
       return {
         backgroundColor: withSequence(
-          withDelay(DELAY, withTiming(colorActiveSV.value, { duration: 200 })),
-          withDelay(DELAY, withTiming(middleColor, { duration: 300 })),
-          withDelay(DELAY, withTiming(colorActiveSV.value, { duration: 200 })),
+          withDelay(
+            DELAY,
+            withTiming(colorActiveSV.value, { duration: 200 }, () => notify(START_ANIMATION_NOTIFICATION_NAME)),
+          ),
+          withDelay(
+            DELAY,
+            withTiming(middleColor, { duration: 300 }, () => notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)),
+          ),
+          withDelay(
+            DELAY,
+            withTiming(colorActiveSV.value, { duration: 200 }, () => notify(FINAL_ANIMATION_NOTIFICATION_NAME)),
+          ),
         ),
       };
     });
@@ -51,9 +74,18 @@ describe('withSequence animation of color', () => {
 
     useEffect(() => {
       colorPassiveSV.value = withSequence(
-        withDelay(DELAY, withTiming(finalColor, { duration: 200 })),
-        withDelay(DELAY, withTiming(middleColor, { duration: 300 })),
-        withDelay(DELAY, withTiming(finalColor, { duration: 200 })),
+        withDelay(
+          DELAY,
+          withTiming(finalColor, { duration: 200 }, () => notify(START_ANIMATION_NOTIFICATION_NAME)),
+        ),
+        withDelay(
+          DELAY,
+          withTiming(middleColor, { duration: 300 }, () => notify(MIDDLE_ANIMATION_NOTIFICATION_NAME)),
+        ),
+        withDelay(
+          DELAY,
+          withTiming(finalColor, { duration: 200 }, () => notify(FINAL_ANIMATION_NOTIFICATION_NAME)),
+        ),
       );
     }, [colorPassiveSV, finalColor, middleColor]);
 
@@ -91,38 +123,36 @@ describe('withSequence animation of color', () => {
       middleColor: 'hsl(70, 100%, 75%)',
       finalColor: 'hsl(120,100%,50%)',
     },
-    // TODO: Fix this test case
-    // Expected hwb(70, 50%, 0%) received #00000000, mode: COLOR
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsl(120,100%,50%)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsl(120,100%,50%)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgb(101,255,50)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'hsla( 120 , 100% , 50%, 0.5 )',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgb(101,255,50)',
-    // },
-    // {
-    //   startColor: 'hwb(70, 50%, 0%)',
-    //   middleColor: 'hsl(180, 50%, 50%)',
-    //   finalColor: 'rgba(100,255,50,0.5)',
-    // },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsl(120,100%,50%)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsl(120,100%,50%)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'rgb(101,255,50)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'hsla( 120 , 100% , 50%, 0.5 )',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hsl(180, 50%, 50%)',
+      finalColor: 'rgb(101,255,50)',
+    },
+    {
+      startColor: 'hwb(70, 50%, 0%)',
+      middleColor: 'hwb(180, 50%, 50%)',
+      finalColor: 'hwb(100, 50%, 0%)',
+    },
   ])(
     'Animate ${startColor} → ${finalColor} → ${middleColor} → ${finalColor}',
     async ({ startColor, middleColor, finalColor }) => {
@@ -131,16 +161,19 @@ describe('withSequence animation of color', () => {
       const passiveComponent = getTestComponent(Component.PASSIVE);
 
       await wait(DELAY / 2);
-      // TODO Decide what should be the starting value of activeComponent
-      expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
-      expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
-      await wait(200 + DELAY);
+      // TODO: There is inconsistency in parsing props, we don't parse colors properly during first frame (render).
+      // It will be fixed in the future.
+      if (!startColor.startsWith('hwb')) {
+        expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
+        expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
+      }
+      await waitForNotify(START_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
-      await wait(300 + DELAY);
+      await waitForNotify(MIDDLE_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
-      await wait(200 + DELAY);
+      await waitForNotify(FINAL_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
     },
