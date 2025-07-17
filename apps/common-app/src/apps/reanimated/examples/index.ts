@@ -53,6 +53,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -734,5 +735,9 @@ export const EXAMPLES: Record<string, Example> = {
   MoveWithExiting: {
     title: '[LA] Move with exiting',
     screen: MoveWithExiting,
+  },
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

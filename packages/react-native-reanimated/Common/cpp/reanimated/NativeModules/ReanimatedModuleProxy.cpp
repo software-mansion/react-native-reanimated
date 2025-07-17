@@ -130,14 +130,20 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
+  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimationRenderRequested_ = false;
+  };
+
   EndLayoutAnimationFunction endLayoutAnimation =
-      [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+      [weakThis = weak_from_this(), requestLayoutAnimationRender](
+          int tag, bool shouldRemove) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -145,14 +151,19 @@ void ReanimatedModuleProxy::init(
 
         auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
             tag, shouldRemove);
+
+        if (!strongThis->layoutAnimationRenderRequested_) {
+          strongThis->layoutAnimationRenderRequested_ = true;
+          // if an animation has duration 0, performOperations would not get
+          // called for it so we call requestRender to have it called in the
+          // next frame
+          strongThis->requestRender_(requestLayoutAnimationRender);
+        }
+
         if (!surfaceId) {
           return;
         }
-
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
   auto obtainProp = [weakThis = weak_from_this()](
@@ -649,6 +660,14 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+  }
 
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
