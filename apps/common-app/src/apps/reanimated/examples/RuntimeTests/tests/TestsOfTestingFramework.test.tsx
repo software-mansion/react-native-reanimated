@@ -267,15 +267,15 @@ describe('Tests of Test Framework', () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
-    expect(await component.getAnimatedStyle('top')).toBe('51', ComparisonMode.FLOAT);
-    expect(await component.getAnimatedStyle('left')).toBe('52', ComparisonMode.FLOAT);
+    expect(await component.getAnimatedStyle('top')).toBe(51);
+    expect(await component.getAnimatedStyle('left')).toBe(52);
   });
 
   test('layoutAnimation - opacity - ✅', async () => {
     await render(<LayoutAnimation />);
     const component = getTestComponent('LayoutAnimation');
     await wait(600);
-    expect(await component.getAnimatedStyle('opacity')).toBe('1', ComparisonMode.FLOAT);
+    expect(await component.getAnimatedStyle('opacity')).toBe(1);
   });
 
   // TODO: Fix these tests - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
@@ -325,7 +325,7 @@ describe('Tests of Test Framework', () => {
     const component = getTestComponent('BrownComponent');
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');
-    expect(await component.getAnimatedStyle('width')).toBe('100', ComparisonMode.FLOAT);
+    expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
   describe('Test .toThrow()', () => {
