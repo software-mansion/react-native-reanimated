@@ -22,7 +22,7 @@ class NativeWorklets implements IWorkletsModule {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
-    global._WORKLETS_VERSION_JS = jsVersion;
+    globalThis._WORKLETS_VERSION_JS = jsVersion;
     if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
