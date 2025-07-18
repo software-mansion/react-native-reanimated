@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -20,8 +21,12 @@ export default function OpacityTransformExample() {
   }, [sv]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: sv.value,
-    transform: [{ scale: sv.value }, { rotate: `${sv.value * 90}deg` }],
+    opacity: 0.5 + sv.value / 2,
+    transform: [
+      { scale: 0.5 + sv.value / 2 },
+      { rotate: `${sv.value * 90}deg` },
+    ],
+    backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
   }));
 
   return (

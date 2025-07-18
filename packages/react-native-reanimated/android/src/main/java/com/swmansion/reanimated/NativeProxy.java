@@ -188,6 +188,7 @@ public class NativeProxy {
   private static final int CMD_OPACITY = 1;
   private static final int CMD_TRANSFORM_SCALE = 21;
   private static final int CMD_TRANSFORM_ROTATE = 22;
+  private static final int CMD_BACKGROUND_COLOR = 3;
 
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, float[] floatBuffer) {
@@ -206,6 +207,11 @@ public class NativeProxy {
 
         case CMD_OPACITY:
           props.putDouble("opacity", floatBuffer[f++]);
+          break;
+
+        case CMD_BACKGROUND_COLOR:
+          i++;
+          props.putInt("backgroundColor", intBuffer[i]);
           break;
 
         case CMD_START_OF_TRANSFORM:

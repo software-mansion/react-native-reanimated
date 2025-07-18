@@ -665,7 +665,7 @@ void ReanimatedModuleProxy::performOperations() {
       bool hasAnyLayoutProp = false;
       for (const auto &key : props.keys()) {
         const auto keyStr = key.asString();
-        if (keyStr != "opacity" && keyStr != "transform") {
+        if (keyStr != "opacity" && keyStr != "transform" && keyStr != "backgroundColor") {
           hasAnyLayoutProp = true;
           break;
         }
@@ -686,6 +686,7 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_OPACITY = 1;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
+    static constexpr auto CMD_BACKGROUND_COLOR = 3;
 
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
@@ -720,6 +721,9 @@ void ReanimatedModuleProxy::performOperations() {
                 }
               }
               intBuffer.push_back(CMD_END_OF_TRANSFORM);
+            } else if (keyStr == "backgroundColor") {
+              intBuffer.push_back(CMD_BACKGROUND_COLOR);
+              intBuffer.push_back(value.asInt());
             } else {
               throw std::runtime_error("Unsupported style: " + keyStr);
             }
