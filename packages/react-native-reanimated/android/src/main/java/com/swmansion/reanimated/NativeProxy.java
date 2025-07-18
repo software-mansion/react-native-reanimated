@@ -6,8 +6,11 @@ import android.provider.Settings;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.JavaOnlyArray;
+import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
@@ -39,6 +42,7 @@ public class NativeProxy {
 
   protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
+  protected final FabricUIManager mFabricUIManager;
   protected final WeakReference<ReactApplicationContext> mContext;
   private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
@@ -81,7 +85,7 @@ public class NativeProxy {
     gestureHandlerStateManager = tempHandlerStateManager;
     mNodesManager = nodesManager;
 
-    FabricUIManager fabricUIManager =
+    mFabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
     CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
@@ -90,7 +94,7 @@ public class NativeProxy {
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
-            fabricUIManager);
+            mFabricUIManager);
     if (BuildConfig.DEBUG) {
       checkCppVersion(); // injectCppVersion should be called during initHybrid above
     }
@@ -172,6 +176,66 @@ public class NativeProxy {
               + cppVersion
               + " respectively). See "
               + "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
+    }
+  }
+
+  private static final int CMD_START_OF_BUFFER = -1;
+  private static final int CMD_START_OF_VIEW = -2;
+  private static final int CMD_START_OF_TRANSFORM = -3;
+  private static final int CMD_END_OF_TRANSFORM = -4;
+  private static final int CMD_END_OF_VIEW = -5;
+  private static final int CMD_END_OF_BUFFER = -6;
+  private static final int CMD_OPACITY = 1;
+  private static final int CMD_TRANSFORM_SCALE = 21;
+  private static final int CMD_TRANSFORM_ROTATE = 22;
+  private static final int CMD_BACKGROUND_COLOR = 3;
+
+  @DoNotStrip
+  public void synchronouslyUpdateUIProps(int[] intBuffer, float[] floatBuffer) {
+    assert intBuffer[0] == CMD_START_OF_BUFFER;
+    assert intBuffer[intBuffer.length - 1] == CMD_END_OF_BUFFER;
+    int viewTag = -1;
+    JavaOnlyMap props = new JavaOnlyMap();
+    int f = 0;
+    for (int i = 1; i < intBuffer.length - 1; ) {
+      switch (intBuffer[i]) {
+        case CMD_START_OF_VIEW:
+          i++;
+          viewTag = intBuffer[i];
+          props = new JavaOnlyMap();
+          break;
+
+        case CMD_OPACITY:
+          props.putDouble("opacity", floatBuffer[f++]);
+          break;
+
+        case CMD_BACKGROUND_COLOR:
+          i++;
+          props.putInt("backgroundColor", intBuffer[i]);
+          break;
+
+        case CMD_START_OF_TRANSFORM:
+          i++;
+          JavaOnlyArray transform = new JavaOnlyArray();
+          while (intBuffer[i] != CMD_END_OF_TRANSFORM) {
+            switch (intBuffer[i]) {
+              case CMD_TRANSFORM_SCALE -> transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
+              case CMD_TRANSFORM_ROTATE -> transform.pushMap(JavaOnlyMap.of("rotate", floatBuffer[f++] + "deg"));
+              default -> throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
+            }
+            i++;
+          }
+          props.putArray("transform", transform);
+          break;
+
+        case CMD_END_OF_VIEW:
+          mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props);
+          break;
+
+        default:
+          throw new RuntimeException("Unexcepted command: " + intBuffer[i]);
+      }
+      i++;
     }
   }
 

@@ -174,6 +174,19 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
+void NativeProxy::synchronouslyUpdateUIProps(
+    const std::vector<int> &intBuffer,
+    const std::vector<float> &floatBuffer) {
+  static const auto method =
+      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayFloat>)>(
+          "synchronouslyUpdateUIProps");
+  auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
+  auto jArrayFloat = jni::JArrayFloat::newArray(floatBuffer.size());
+  jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
+  jArrayFloat->setRegion(0, floatBuffer.size(), floatBuffer.data());
+  method(javaPart_.get(), jArrayInt, jArrayFloat);
+}
+
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
@@ -268,6 +281,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
+  auto synchronouslyUpdateUIPropsFunction =
+      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
+
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
 
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
@@ -285,6 +301,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   return {
       requestRender,
+      synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

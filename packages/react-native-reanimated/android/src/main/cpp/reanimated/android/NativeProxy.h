@@ -52,6 +52,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
+  void synchronouslyUpdateUIProps(
+      const std::vector<int> &intBuffer,
+      const std::vector<float> &floatBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
