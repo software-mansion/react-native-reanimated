@@ -14,7 +14,7 @@ using namespace react;
 namespace reanimated {
 
 using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(Tag tag, const folly::dynamic &props)>;
+    std::function<void(const std::vector<int> &, const std::vector<float> &)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ObtainPropFunction = std::function<jsi::Value(

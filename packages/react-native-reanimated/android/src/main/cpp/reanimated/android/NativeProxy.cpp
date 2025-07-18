@@ -174,20 +174,17 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
-inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
-    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
-  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
-}
-
 void NativeProxy::synchronouslyUpdateUIProps(
-    Tag tag,
-    const folly::dynamic &props) {
+    const std::vector<int> &intBuffer,
+    const std::vector<float> &floatBuffer) {
   static const auto method =
-      getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayFloat>)>(
           "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps =
-      castReadableMap(ReadableNativeMap::newObjectCxxArgs(props));
-  method(javaPart_.get(), tag, uiProps);
+  auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
+  auto jArrayFloat = jni::JArrayFloat::newArray(floatBuffer.size());
+  jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
+  jArrayFloat->setRegion(0, floatBuffer.size(), floatBuffer.data());
+  method(javaPart_.get(), jArrayInt, jArrayFloat);
 }
 
 int NativeProxy::registerSensor(

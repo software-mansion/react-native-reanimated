@@ -632,6 +632,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   UpdatesBatch updatesBatch;
   UpdatesBatch filteredUpdatesBatch;
+  UpdatesBatch synchronousUpdatesBatch;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -672,8 +673,61 @@ void ReanimatedModuleProxy::performOperations() {
       if (hasAnyLayoutProp) {
         filteredUpdatesBatch.emplace_back(shadowNode, props);
       } else {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+        synchronousUpdatesBatch.emplace_back(shadowNode, props);
       }
+    }
+
+    static constexpr auto CMD_START_OF_BUFFER = -1;
+    static constexpr auto CMD_START_OF_VIEW = -2;
+    static constexpr auto CMD_START_OF_TRANSFORM = -3;
+    static constexpr auto CMD_END_OF_TRANSFORM = -4;
+    static constexpr auto CMD_END_OF_VIEW = -5;
+    static constexpr auto CMD_END_OF_BUFFER = -6;
+    static constexpr auto CMD_OPACITY = 1;
+    static constexpr auto CMD_TRANSFORM_SCALE = 21;
+    static constexpr auto CMD_TRANSFORM_ROTATE = 22;
+
+    if (!synchronousUpdatesBatch.empty()) {
+        std::vector<int> intBuffer;
+        std::vector<float> floatBuffer;
+        intBuffer.push_back(CMD_START_OF_BUFFER);
+        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+          intBuffer.push_back(CMD_START_OF_VIEW);
+          intBuffer.push_back(shadowNode->getTag());
+          for (const auto &[key, value] : props.items()) {
+            const auto keyStr = key.getString();
+            if (keyStr == "opacity") {
+              intBuffer.push_back(CMD_OPACITY);
+              floatBuffer.push_back(value.asDouble());
+            } else if (keyStr == "transform") {
+              intBuffer.push_back(CMD_START_OF_TRANSFORM);
+              for (const auto &item : value) {
+                const auto &transformKeyStr = item.keys().begin()->getString();
+                const auto &transformValue = *item.values().begin();
+                if (transformKeyStr == "scale") {
+                  intBuffer.push_back(CMD_TRANSFORM_SCALE);
+                  floatBuffer.push_back(transformValue.asDouble());
+                } else if (transformKeyStr == "rotate") {
+                  const auto &transformValueStr = transformValue.getString();
+                  if (transformValueStr.ends_with("deg")) {
+                    intBuffer.push_back(CMD_TRANSFORM_ROTATE);
+                    floatBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                  } else {
+                    throw std::runtime_error("Unsupported rotate unit: " + transformValueStr);
+                  }
+                } else {
+                  throw std::runtime_error("Unsupported transform type: " + transformKeyStr);
+                }
+              }
+              intBuffer.push_back(CMD_END_OF_TRANSFORM);
+            } else {
+              throw std::runtime_error("Unsupported style: " + keyStr);
+            }
+          }
+          intBuffer.push_back(CMD_END_OF_VIEW);
+        }
+        intBuffer.push_back(CMD_END_OF_BUFFER);
+        synchronouslyUpdateUIPropsFunction_(intBuffer, floatBuffer);
     }
 
     if ((filteredUpdatesBatch.size() > 0) &&
