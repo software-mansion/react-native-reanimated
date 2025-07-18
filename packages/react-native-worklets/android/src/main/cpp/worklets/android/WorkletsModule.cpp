@@ -38,7 +38,9 @@ WorkletsModule::WorkletsModule(
       std::static_pointer_cast<jsi::HostObject>(
           std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy));
+      *rnRuntime_,
+      std::move(optimizedJsiWorkletsModuleProxy),
+      workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(

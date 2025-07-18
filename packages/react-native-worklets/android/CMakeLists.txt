@@ -11,8 +11,11 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(APPEND CMAKE_CXX_FLAGS
-       " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
+string(
+  APPEND
+  CMAKE_CXX_FLAGS
+  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
+         -DWORKLETS_VERSION=${WORKLETS_VERSION}\
          -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
@@ -20,11 +23,8 @@ if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
     "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
   target_compile_reactnative_options(reanimated PUBLIC)
 else()
-  string(
-    APPEND
-    CMAKE_CXX_FLAGS
-    " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror"
-  )
+  string(APPEND CMAKE_CXX_FLAGS
+         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 endif()
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")

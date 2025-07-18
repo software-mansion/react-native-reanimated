@@ -90,7 +90,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy));
+  RNRuntimeWorkletDecorator::decorate(
+      rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
 
   return @YES;
 }

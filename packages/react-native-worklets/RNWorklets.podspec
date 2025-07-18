@@ -11,6 +11,7 @@ worklets_assert_new_architecture_enabled($new_arch_enabled)
 ios_min_version = '13.4'
 
 feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
+version_flags = "-DWORKLETS_VERSION=#{package['version']}"
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
@@ -68,7 +69,7 @@ Pod::Spec.new do |s|
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags} #{bundle_mode_flag}",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{bundle_mode_flag}",
-    "OTHER_CFLAGS" => "$(inherited) #{feature_flags}",
+    "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags}",
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [

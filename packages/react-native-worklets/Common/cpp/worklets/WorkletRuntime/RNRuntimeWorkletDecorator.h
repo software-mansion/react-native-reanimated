@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/JSLogger.h>
 #include <memory>
 
 using namespace facebook;
@@ -13,7 +14,8 @@ class RNRuntimeWorkletDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
-      jsi::Object &&jsiWorkletsModuleProxy);
+      jsi::Object &&jsiWorkletsModuleProxy,
+      const std::shared_ptr<JSLogger> &jsLogger);
 };
 
 } // namespace worklets
