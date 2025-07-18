@@ -174,6 +174,22 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
+inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
+    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
+  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+}
+
+void NativeProxy::synchronouslyUpdateUIProps(
+    Tag tag,
+    const folly::dynamic &props) {
+  static const auto method =
+      getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
+          "synchronouslyUpdateUIProps");
+  jni::local_ref<ReadableMap::javaobject> uiProps =
+      castReadableMap(ReadableNativeMap::newObjectCxxArgs(props));
+  method(javaPart_.get(), tag, uiProps);
+}
+
 int NativeProxy::registerSensor(
     int sensorType,
     int interval,
@@ -268,6 +284,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
+  auto synchronouslyUpdateUIPropsFunction =
+      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
+
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
 
   auto unregisterSensorFunction = bindThis(&NativeProxy::unregisterSensor);
@@ -285,6 +304,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   return {
       requestRender,
+      synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

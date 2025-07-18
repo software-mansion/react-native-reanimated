@@ -8,6 +8,7 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
@@ -39,6 +40,7 @@ public class NativeProxy {
 
   protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
+  protected final FabricUIManager mFabricUIManager;
   protected final WeakReference<ReactApplicationContext> mContext;
   private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
@@ -81,7 +83,7 @@ public class NativeProxy {
     gestureHandlerStateManager = tempHandlerStateManager;
     mNodesManager = nodesManager;
 
-    FabricUIManager fabricUIManager =
+    mFabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
     CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
@@ -90,7 +92,7 @@ public class NativeProxy {
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
-            fabricUIManager);
+            mFabricUIManager);
     if (BuildConfig.DEBUG) {
       checkCppVersion(); // injectCppVersion should be called during initHybrid above
     }
@@ -173,6 +175,11 @@ public class NativeProxy {
               + " respectively). See "
               + "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
     }
+  }
+
+  @DoNotStrip
+  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
+    mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
   }
 
   @DoNotStrip

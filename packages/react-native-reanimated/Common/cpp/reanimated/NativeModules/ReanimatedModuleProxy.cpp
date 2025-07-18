@@ -56,6 +56,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
+      synchronouslyUpdateUIPropsFunction_(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -629,6 +631,7 @@ void ReanimatedModuleProxy::performOperations() {
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
+  UpdatesBatch filteredUpdatesBatch;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -657,7 +660,23 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-    if ((updatesBatch.size() > 0) &&
+    for (const auto &[shadowNode, props] : updatesBatch) {
+      bool hasAnyLayoutProp = false;
+      for (const auto &key : props.keys()) {
+        const auto keyStr = key.asString();
+        if (keyStr != "opacity" && keyStr != "transform") {
+          hasAnyLayoutProp = true;
+          break;
+        }
+      }
+      if (hasAnyLayoutProp) {
+        filteredUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      }
+    }
+
+    if ((filteredUpdatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
@@ -672,7 +691,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, updatesBatch);
+  commitUpdates(rt, filteredUpdatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated

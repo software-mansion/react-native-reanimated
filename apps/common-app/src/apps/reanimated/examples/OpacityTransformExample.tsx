@@ -17,7 +17,7 @@ export default function OpacityTransformExample() {
   useEffect(() => {
     sv.value = 0;
     sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
-  }, []);
+  }, [sv]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: sv.value,
