@@ -42,7 +42,7 @@ Props::Shared mergeProps(
   return newProps;
 }
 
-ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
+std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     const ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
     const PropsMap &propsMap) {
@@ -59,7 +59,8 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
   return shadowNode.clone(
       {mergeProps(shadowNode, propsMap, *family),
-       std::make_shared<ShadowNode::ListOfShared>(children),
+       std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(
+           children),
        shadowNode.getState()});
 }
 
