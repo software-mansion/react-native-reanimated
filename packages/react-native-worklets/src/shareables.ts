@@ -371,7 +371,11 @@ function cloneWorklet<T extends WorkletFunction>(
 ): ShareableRef<T> {
   if (__DEV__) {
     const babelVersion = (value as WorkletFunction).__initData.version;
-    if (babelVersion !== undefined && babelVersion !== jsVersion) {
+    if (
+      !globalThis._WORKLETS_BUNDLE_MODE &&
+      babelVersion !== undefined &&
+      babelVersion !== jsVersion
+    ) {
       throw new WorkletsError(
         `Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
     See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
