@@ -387,6 +387,7 @@ var require_globals = __commonJS({
       "setImmediate",
       "arguments",
       "require",
+      "fetch",
       "HermesInternal",
       "_WORKLET"
     ];

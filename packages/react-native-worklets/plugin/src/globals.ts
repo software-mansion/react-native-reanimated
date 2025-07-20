@@ -113,6 +113,7 @@ const notCapturedIdentifiers = [
   'setImmediate',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
+  'fetch',
 
   // Hermes
   'HermesInternal',

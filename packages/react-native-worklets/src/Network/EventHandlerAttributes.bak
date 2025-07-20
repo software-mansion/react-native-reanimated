@@ -1,0 +1,89 @@
+// @ts-nocheck
+import type EventTarget from './EventTarget';
+import type { EventCallback } from './EventTarget';
+
+type EventHandler = $ReadOnly<{
+  handleEvent: EventCallback;
+}>;
+type EventHandlerAttributeMap = Map<string, EventHandler | null>;
+
+const EVENT_HANDLER_CONTENT_ATTRIBUTE_MAP_KEY = Symbol(
+  'eventHandlerAttributeMap'
+);
+
+function getEventHandlerAttributeMap(
+  target: EventTarget
+): ?EventHandlerAttributeMap {
+  // $FlowExpectedError[prop-missing]
+  return target[EVENT_HANDLER_CONTENT_ATTRIBUTE_MAP_KEY];
+}
+
+function setEventHandlerAttributeMap(
+  target: EventTarget,
+  map: ?EventHandlerAttributeMap
+) {
+  // $FlowExpectedError[prop-missing]
+  target[EVENT_HANDLER_CONTENT_ATTRIBUTE_MAP_KEY] = map;
+}
+
+/**
+ * Returns the event listener registered as an event handler IDL attribute for
+ * the given target and type.
+ *
+ * Should be used to get the current value for `target.on{type}`.
+ */
+export function getEventHandlerAttribute(
+  target: EventTarget,
+  type: string
+): EventCallback | null {
+  const listener = getEventHandlerAttributeMap(target)?.get(type);
+  return listener != null ? listener.handleEvent : null;
+}
+
+/**
+ * Sets the event listener registered as an event handler IDL attribute for the
+ * given target and type.
+ *
+ * Should be used to set a value for `target.on{type}`.
+ */
+export function setEventHandlerAttribute(
+  target: EventTarget,
+  type: string,
+  callback: ?EventCallback
+): void {
+  let map = getEventHandlerAttributeMap(target);
+  if (map != null) {
+    const currentListener = map.get(type);
+    if (currentListener) {
+      target.removeEventListener(type, currentListener);
+      map.delete(type);
+    }
+  }
+
+  if (
+    callback != null &&
+    (typeof callback === 'function' || typeof callback === 'object')
+  ) {
+    // Register the listener as a different object in the target so it
+    // occupies its own slot and cannot be removed via `removeEventListener`.
+    const listener = {
+      handleEvent: callback,
+    };
+
+    try {
+      target.addEventListener(type, listener);
+      // If adding the listener fails, we don't store the value
+      if (map == null) {
+        map = new Map();
+        setEventHandlerAttributeMap(target, map);
+      }
+      map.set(type, listener);
+    } catch (e) {
+      // Assigning incorrect listener does not throw in setters.
+    }
+  }
+
+  if (map != null && map.size === 0) {
+    setEventHandlerAttributeMap(target, null);
+  }
+}

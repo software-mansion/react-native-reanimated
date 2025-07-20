@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use strict';
 
 import { init } from './initializers';
@@ -82,6 +84,88 @@ export function bundleModeInit() {
 
       // @ts-expect-error type not exposed by Metro
       globalThis.__r.Refresh = Refresh;
+
+      const PolyfillFunctionsId = require.resolveWeak(
+        'react-native/Libraries/Utilities/PolyfillFunctions'
+      );
+
+      const polyfillFactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports.polyfillGlobal = (
+          name: string,
+          getValue: () => unknown
+        ) => {
+          globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+          globalThis[name] = getValue();
+        };
+      };
+
+      const polyfillMod = {
+        dependencyMap: [],
+        factory: polyfillFactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(PolyfillFunctionsId, polyfillMod);
+
+      const TurboModuleRegistryId = require.resolveWeak(
+        'react-native/Libraries/TurboModule/TurboModuleRegistry'
+      );
+
+      const TurboModules = new Map<string, unknown>();
+
+      // globalThis.TurboModules = new Map<string, unknown>();
+      globalThis.TurboModules = TurboModules;
+
+      TurboModules.set('Networking', {});
+
+      const faactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        function get(name: string) {
+          globalThis._log('TurboModuleRegistry get ' + name);
+          return globalThis.TurboModules.get(name);
+        }
+        function getEnforcing(name: string) {
+          globalThis._log('TurboModuleRegistry getEnforcing ' + name);
+          return globalThis.TurboModules.get(name);
+        }
+        module.exports.get = get;
+        module.exports.getEnforcing = getEnforcing;
+      };
+
+      const mood = {
+        dependencyMap: [],
+        factory: faactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(TurboModuleRegistryId, mood);
     }
 
     throw new WorkletsError('Worklets initialized successfully');

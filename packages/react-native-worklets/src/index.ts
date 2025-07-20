@@ -5,6 +5,7 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
+export { initializeNetworking } from './Network';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {

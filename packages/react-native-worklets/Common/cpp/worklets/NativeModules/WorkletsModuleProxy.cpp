@@ -28,6 +28,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     std::function<bool()> &&isJavaScriptThread,
     std::function<void(std::function<void(const double)>)>
         &&forwardedRequestAnimationFrame,
+    worklets::forwardedFetch &&forwardedFetch,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
@@ -37,6 +38,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsCallInvoker,
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
+      forwardedFetch_(forwardedFetch),
       script_(script),
       sourceUrl_(sourceUrl),
       runtimeManager_(std::make_shared<RuntimeManager>()) {
@@ -54,7 +56,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
-      animationFrameBatchinator_->getJsiRequestAnimationFrame());
+      animationFrameBatchinator_->getJsiRequestAnimationFrame(),
+      forwardedFetch_);
 }
 
 std::shared_ptr<JSIWorkletsModuleProxy>
