@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - packages/docs-reanimated/**
+      - packages/docs-worklets/**
   workflow_dispatch:
 
 jobs:

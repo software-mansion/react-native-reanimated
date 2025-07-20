@@ -63,6 +63,28 @@ def toPlatformFileString(String path) {
     return path
 }
 
+def getStaticFeatureFlags() {
+    def featureFlags = new HashMap<String, String>()
+
+    def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.json")
+    if (!staticFeatureFlagsFile.exists()) {
+        throw new GradleException("[Worklets] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
+    }
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
+        featureFlags[key] = value.toString()
+    }
+
+    def packageJsonFile = file(rootDir.path + "/../package.json")
+    if (packageJsonFile.exists()) {
+        def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
+        packageJson.worklets?.staticFeatureFlags?.each { key, value ->
+            featureFlags[key] = value.toString()
+        }
+    }
+
+    return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+}
+
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
@@ -73,6 +95,7 @@ def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -165,7 +188,8 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
-                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
             }

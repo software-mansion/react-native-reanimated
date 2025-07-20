@@ -1,6 +1,8 @@
 #include <jsi/jsi.h>
+#include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
@@ -129,14 +131,20 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
+  auto requestLayoutAnimationRender = [weakThis = weak_from_this()](double) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimationRenderRequested_ = false;
+  };
+
   EndLayoutAnimationFunction endLayoutAnimation =
-      [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+      [weakThis = weak_from_this(), requestLayoutAnimationRender](
+          int tag, bool shouldRemove) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -144,14 +152,19 @@ void ReanimatedModuleProxy::init(
 
         auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
             tag, shouldRemove);
+
+        if (!strongThis->layoutAnimationRenderRequested_) {
+          strongThis->layoutAnimationRenderRequested_ = true;
+          // if an animation has duration 0, performOperations would not get
+          // called for it so we call requestRender to have it called in the
+          // next frame
+          strongThis->requestRender_(requestLayoutAnimationRender);
+        }
+
         if (!surfaceId) {
           return;
         }
-
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
       };
 
   auto obtainProp = [weakThis = weak_from_this()](
@@ -233,34 +246,6 @@ void ReanimatedModuleProxy::unregisterEventHandler(
       });
 }
 
-static inline std::string intColorToHex(const int val) {
-  std::stringstream
-      invertedHexColorStream; // By default transparency is first, color second
-  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
-                         << val;
-
-  auto invertedHexColor = invertedHexColorStream.str();
-  auto hexColor =
-      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
-
-  return hexColor;
-}
-
-static inline std::string boxShadowToJsonString(const BoxShadow boxShadow) {
-  std::stringstream boxShadowStream;
-  boxShadowStream << "{";
-  boxShadowStream << "\"color\": \"" << intColorToHex(*boxShadow.color)
-                  << "\",";
-  boxShadowStream << "\"blurRadius\": " << boxShadow.blurRadius << ",";
-  boxShadowStream << "\"offsetX\": " << boxShadow.offsetX << ",";
-  boxShadowStream << "\"offsetY\": " << boxShadow.offsetY << ",";
-  boxShadowStream << "\"spreadDistance\": " << boxShadow.spreadDistance << ",";
-  boxShadowStream << "\"inset\": " << (boxShadow.inset ? "true" : "false");
-
-  boxShadowStream << "}";
-  return boxShadowStream.str();
-}
-
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
@@ -268,51 +253,8 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
-  if (propName == "width" || propName == "height" || propName == "top" ||
-      propName == "left") {
-    // These props are calculated from frame
-    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(
-        newestCloneOfShadowNode.get());
-    const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
-
-    if (propName == "width") {
-      return std::to_string(frame.size.width);
-    } else if (propName == "height") {
-      return std::to_string(frame.size.height);
-    } else if (propName == "top") {
-      return std::to_string(frame.origin.y);
-    } else if (propName == "left") {
-      return std::to_string(frame.origin.x);
-    }
-  } else {
-    // These props are calculated from viewProps
-    auto props = newestCloneOfShadowNode->getProps();
-    auto viewProps = std::static_pointer_cast<const ViewProps>(props);
-    if (propName == "opacity") {
-      return std::to_string(viewProps->opacity);
-    } else if (propName == "zIndex") {
-      if (viewProps->zIndex.has_value()) {
-        return std::to_string(*viewProps->zIndex);
-      }
-    } else if (propName == "backgroundColor") {
-      return intColorToHex(*viewProps->backgroundColor);
-    } else if (propName == "boxShadow") {
-      if (viewProps->boxShadow.empty()) {
-        return "[]";
-      }
-      std::stringstream boxShadowStream;
-      boxShadowStream << "[";
-      for (const auto &shadow : viewProps->boxShadow) {
-        boxShadowStream << boxShadowToJsonString(shadow);
-      }
-      boxShadowStream << "]";
-      return boxShadowStream.str();
-    }
-  }
-
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  return PropValueProcessor::processPropValue(
+      propName, newestCloneOfShadowNode, rt);
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -343,6 +285,14 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
               funPtr->call(rnRuntime, resultValue);
             });
       });
+  return jsi::Value::undefined();
+}
+
+jsi::Value ReanimatedModuleProxy::setDynamicFeatureFlag(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &value) {
+  DynamicFeatureFlags::setFlag(name.asString(rt).utf8(rt), value.asBool());
   return jsi::Value::undefined();
 }
 
@@ -666,6 +616,14 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+  }
 
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();

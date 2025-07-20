@@ -53,6 +53,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -61,6 +62,7 @@ import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation'
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedTest from './LayoutAnimations/Nested';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
@@ -68,6 +70,7 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
@@ -107,6 +110,7 @@ import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
@@ -466,6 +470,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pendulum example',
     screen: PendulumExample,
   },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
+  },
   SpringClampExample: {
     icon: '🗜',
     title: 'Spring with Clamp',
@@ -715,8 +724,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
   },
+  ReparentingExample: {
+    title: '[LA] Reparenting',
+    screen: ReparentingExample,
+  },
   ModalExitingExample: {
     title: '[LA] Modal exiting example',
     screen: ModalExitingExample,
+  },
+  MoveWithExiting: {
+    title: '[LA] Move with exiting',
+    screen: MoveWithExiting,
+  },
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

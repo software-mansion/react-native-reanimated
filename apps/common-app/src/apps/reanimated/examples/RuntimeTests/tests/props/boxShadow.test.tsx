@@ -43,7 +43,7 @@ describe('animation of BoxShadow', () => {
           withSpring(
             boxShadowActiveSV.value as unknown as AnimatableValue,
             {
-              duration: 2000,
+              duration: 600,
             },
             () => {
               notify(NOTIFICATION_NAME);

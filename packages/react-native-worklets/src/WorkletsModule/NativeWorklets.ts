@@ -173,4 +173,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       jsEngine
     );
   }
+
+  setDynamicFeatureFlag(name: string, value: boolean) {
+    this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
+  }
 }
