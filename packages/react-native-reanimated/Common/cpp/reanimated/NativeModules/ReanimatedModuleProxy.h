@@ -29,6 +29,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -75,6 +76,10 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value setDynamicFeatureFlag(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &value) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -235,6 +240,8 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::set<SurfaceId> layoutAnimationFlushRequests_;
+  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

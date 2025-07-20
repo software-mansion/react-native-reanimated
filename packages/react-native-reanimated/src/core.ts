@@ -4,7 +4,6 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareableCloneRecursive } from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -18,18 +17,10 @@ import type {
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
+import { makeShareableCloneRecursive } from './workletFunctions';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-export {
-  createWorkletRuntime,
-  executeOnUIRuntimeSync,
-  makeShareable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
-} from 'react-native-worklets';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 
@@ -97,6 +88,7 @@ export function registerEventHandler<T>(
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
     global.__flushAnimationFrame(eventTimestamp);
@@ -123,6 +115,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     const now = global._getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);

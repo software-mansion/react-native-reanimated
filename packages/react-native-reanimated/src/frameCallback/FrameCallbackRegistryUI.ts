@@ -106,8 +106,10 @@ export const prepareUIRegistry = runOnUI(() => {
         return;
       }
       if (state) {
-        this.activeFrameCallbacks.add(callbackId);
-        this.runCallbacks(this.nextCallId);
+        if (!this.activeFrameCallbacks.has(callbackId)) {
+          this.activeFrameCallbacks.add(callbackId);
+          this.runCallbacks(this.nextCallId);
+        }
       } else {
         const callback = this.frameCallbackRegistry.get(callbackId)!;
         callback.startTime = null;

@@ -4,6 +4,7 @@ import InteractiveExample from '@site/src/components/InteractiveExample';
 import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
 import { Yes, No, Version, Spacer } from '@site/src/components/Compatibility';
 import Indent from '@site/src/components/Indent';
+import DeprecatedBanner from '@site/src/components/DeprecatedBanner';
 
 export default {
   // Re-use the default mapping
@@ -17,4 +18,5 @@ export default {
   Version,
   Spacer,
   Indent,
+  DeprecatedBanner,
 };

@@ -22,10 +22,10 @@ import type {
  *   to 1 if `duration` is provided.
  * @param velocity - Initial velocity applied to the spring equation. Defaults
  *   to 0.
- * @param overshootClamping - Whether a spring shouldn't bounce over the
- *   `toValue`. Defaults to false.
- * @param energyCutoff - Relative energy threshold below which the spring will
- *   snap to `toValue` without further oscillations. Defaults to 2e-8.
+ * @param overshootClamping - Whether a spring can bounce over the `toValue`.
+ *   Defaults to false.
+ * @param energyThreshold - Relative energy threshold below which the spring
+ *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
  * @param reduceMotion - Determines how the animation responds to the device's
  *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
  * @param restDisplacementThreshold - Deprecated, use `energyCutoff` parameter
@@ -39,6 +39,7 @@ import type {
 export type SpringConfig = {
   stiffness?: number;
   overshootClamping?: boolean;
+  energyThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
@@ -109,14 +110,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   'worklet';
   let errorMessage = '';
   (
-    [
-      'stiffness',
-      'damping',
-      'dampingRatio',
-      'restDisplacementThreshold',
-      'restSpeedThreshold',
-      'mass',
-    ] as const
+    ['stiffness', 'damping', 'dampingRatio', 'mass', 'energyThreshold'] as const
   ).forEach((prop) => {
     const value = config[prop];
     if (value <= 0) {
@@ -143,7 +137,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-export function bisectRoot({
+function bisectRoot({
   min,
   max,
   func,
@@ -160,7 +154,6 @@ export function bisectRoot({
   const direction = func(max) >= func(min) ? 1 : -1;
   let idx = maxIterations;
   let current = (max + min) / 2;
-
   while (Math.abs(func(current)) > precision && idx > 0) {
     idx -= 1;
 
@@ -224,14 +217,12 @@ export function scaleZetaToMatchClamps(
   const { zeta, toValue, startValue } = animation;
   const toValueNum = Number(toValue);
 
-  if (toValueNum === startValue) {
+  if (startValue === 0) {
     return zeta;
   }
 
   const [firstBound, secondBound] =
-    toValueNum - startValue > 0
-      ? [clamp.min, clamp.max]
-      : [clamp.max, clamp.min];
+    startValue <= 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
 
   /**
    * The extrema we get from equation below are relative (we obtain a ratio), To
@@ -246,12 +237,12 @@ export function scaleZetaToMatchClamps(
 
   const relativeExtremum1 =
     secondBound !== undefined
-      ? Math.abs((secondBound - toValueNum) / (toValueNum - startValue))
+      ? Math.abs((secondBound - toValueNum) / startValue)
       : undefined;
 
   const relativeExtremum2 =
     firstBound !== undefined
-      ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
+      ? Math.abs((firstBound - toValueNum) / startValue)
       : undefined;
 
   /**
@@ -315,20 +306,10 @@ export function calculateNewStiffnessToMatchDuration(
    *             ⎜-⎜──⎟ ⋅ duration⎟
    *             ⎝ ⎝2m⎠           ⎠
    *        A ⋅ e                   = threshold
-   *
-   *
-   *       Amplitude calculated using "Conservation of energy"
-   *                        _________________
-   *                       ╱      2         2
-   *                      ╱ m ⋅ v0  + k ⋅ x0
-   *       amplitude =   ╱  ─────────────────
-   *                   ╲╱           k
-   *
-   *       And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)
    */
   const {
     dampingRatio: zeta,
-    energyCutoff: threshold,
+    energyThreshold: threshold,
     mass: m,
     duration: targetDuration,
   } = config;
@@ -361,18 +342,16 @@ export function calculateNewStiffnessToMatchDuration(
     return energyFraction - threshold;
   };
 
+  const precision = config.energyThreshold * 1e-3; // Experimentally seems to be good enough.
+
   // Bisection turns out to be much faster than Newton's method in our case
-  const res = bisectRoot({
+  return bisectRoot({
     min: Number.EPSILON,
     max: 8e3 /* Stiffness for 8ms animation doesn't exceed 2e3, we add some safety margin on top of that. */,
     func: energyDiffForStiffness,
-    precision: config.energyCutoff * 1e-3,
+    precision,
     maxIterations: 100,
   });
-
-  console.log('Calculated stiffness:', res);
-
-  return res;
 }
 
 export function criticallyDampedSpringCalculations(
@@ -453,22 +432,15 @@ export function isAnimationTerminatingCalculation(
       return true;
     }
   }
-  if (config.useManualThresholds) {
-    return (
-      Math.abs(velocity) < config.restSpeedThreshold &&
-      Math.abs(toValue - current) < config.restDisplacementThreshold
-    );
-  } else {
-    const currentEnergy = getEnergy(
-      toValue - current,
-      velocity,
-      config.stiffness,
-      config.mass
-    );
+  const currentEnergy = getEnergy(
+    toValue - current,
+    velocity,
+    config.stiffness,
+    config.mass
+  );
 
-    return (
-      initialEnergy === 0 ||
-      currentEnergy / initialEnergy <= config.energyCutoff
-    );
-  }
+  return (
+    initialEnergy === 0 ||
+    currentEnergy / initialEnergy <= config.energyThreshold
+  );
 }

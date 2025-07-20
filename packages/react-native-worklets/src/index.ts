@@ -7,8 +7,10 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
+export type { MakeShareableClone } from './shareables';
 export {
   makeShareable,
   makeShareableCloneOnUIRecursive,

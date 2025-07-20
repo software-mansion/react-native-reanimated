@@ -57,9 +57,7 @@ export const withSpring = ((
     const defaultConfig: DefaultSpringConfig = {
       ...GentleSpringConfig,
       overshootClamping: false,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 2,
-      energyCutoff: 6e-9,
+      energyThreshold: 6e-9,
       velocity: 0,
       duration: 550,
       dampingRatio: 1,
