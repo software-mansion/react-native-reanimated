@@ -1,19 +1,19 @@
 'use strict';
-import { logger } from '../../common';
+import { logger } from '../common';
 import type {
   AnimatableValue,
   Animation,
   ReduceMotion,
   Timestamp,
-} from '../../commonTypes';
+} from '../commonTypes';
 
 /**
  * Spring animation configuration.
  *
- * @param damping - How quickly a spring slows down. Higher damping means the
- *   spring will come to rest faster. Defaults to 120.
  * @param mass - The weight of the spring. Reducing this value makes the
  *   animation faster. Defaults to 4.
+ * @param damping - How quickly a spring slows down. Higher damping means the
+ *   spring will come to rest faster. Defaults to 120.
  * @param stiffness - How bouncy the spring is. Defaults to 900.
  * @param duration - Length of the animation (in milliseconds). Defaults to
  *   840ms if `dampingRatio` is provided.
@@ -28,12 +28,7 @@ import type {
  *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
  * @param reduceMotion - Determines how the animation responds to the device's
  *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
- * @param restDisplacementThreshold - Deprecated, use `energyCutoff` parameter
- *   instead. The displacement below which the spring will snap to toValue
- *   without further oscillations. Defaults to 0.01.
- * @param restSpeedThreshold - Deprecated, use `energyCutoff` parameter instead.
- *   The speed in pixels per second from which the spring will snap to toValue
- *   without further oscillations. Defaults to 2. {@link ReduceMotion}.
+ *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
 export type SpringConfig = {
@@ -57,21 +52,7 @@ export type SpringConfig = {
       dampingRatio?: number;
       clamp?: { min?: number; max?: number };
     }
-) &
-  (
-    | {
-        /** @deprecated Use `energyCutoff` instead. */
-        restDisplacementThreshold?: number;
-        /** @deprecated Use `energyCutoff` instead. */
-        restSpeedThreshold?: number;
-        energyCutoff?: never;
-      }
-    | {
-        restDisplacementThreshold?: never;
-        restSpeedThreshold?: never;
-        energyCutoff?: number;
-      }
-  );
+);
 
 // This type contains all the properties from SpringConfig, which are changed to be required,
 // except for optional 'reduceMotion' and 'clamp'
@@ -84,7 +65,6 @@ export type WithSpringConfig = SpringConfig;
 
 export interface SpringConfigInner {
   useDuration: boolean;
-  useManualThresholds: boolean;
   skipAnimation: boolean;
 }
 

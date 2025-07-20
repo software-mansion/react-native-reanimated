@@ -4,8 +4,7 @@ import type {
   Animation,
   AnimationCallback,
   Timestamp,
-} from '../../commonTypes';
-import { defineAnimation, getReduceMotionForAnimation } from '../util';
+} from '../commonTypes';
 import { GentleSpringConfig } from './springConfigs';
 import type {
   DefaultSpringConfig,
@@ -24,6 +23,7 @@ import {
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(
@@ -37,7 +37,11 @@ type withSpringType = <T extends AnimatableValue>(
  *
  * @param toValue - The value at which the animation will come to rest -
  *   {@link AnimatableValue}
- * @param config - The spring animation configuration - {@link SpringConfig}
+ * @param config - The spring animation configuration - {@link SpringConfig}.
+ *   Defaults to {@link GentleSpringConfig}. You can use other predefined spring
+ *   configurations, such as {@link WigglySpringConfig},
+ *   {@link SnappySpringConfig}, {@link Reanimated3DefaultSpringConfig} or create
+ *   your own.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}
  * @returns An [animation
@@ -69,9 +73,6 @@ export const withSpring = ((
       ...defaultConfig,
       ...userConfig,
       useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
-      useManualThresholds: !!(
-        userConfig?.restDisplacementThreshold || userConfig?.restSpeedThreshold
-      ),
       skipAnimation: false,
     };
 
