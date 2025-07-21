@@ -20,7 +20,7 @@ const std::unordered_set<std::string> PropValueProcessor::styleProps = {
 
 std::string PropValueProcessor::processPropValue(
     const std::string &propName,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     jsi::Runtime &rt) {
   if (isLayoutProp(propName)) {
     auto layoutableShadowNode =
@@ -38,9 +38,10 @@ std::string PropValueProcessor::processPropValue(
     return processStyleProp(propName, viewProps, rt);
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string(
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 std::string PropValueProcessor::processLayoutProp(
