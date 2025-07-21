@@ -11,15 +11,16 @@ import type {
  * Spring animation configuration.
  *
  * @param mass - The weight of the spring. Reducing this value makes the
- *   animation faster. Defaults to 1.
+ *   animation faster. Defaults to 4.
  * @param damping - How quickly a spring slows down. Higher damping means the
- *   spring will come to rest faster. Defaults to 10.
- * @param duration - Length of the animation (in milliseconds). Defaults to
- *   2000.
+ *   spring will come to rest faster. Defaults to 120.
+ * @param stiffness - How bouncy the spring is. Defaults to 900.
+ * @param duration - Perceptual duration of the animation in milliseconds.
+ *   Actual duration is 1.5 times higher. Defaults to 550ms if `dampingRatio` is
+ *   provided.
  * @param dampingRatio - How damped the spring is. Value 1 means the spring is
  *   critically damped, and value `>`1 means the spring is overdamped. Defaults
- *   to 0.5.
- * @param stiffness - How bouncy the spring is. Defaults to 100.
+ *   to 1 if `duration` is provided.
  * @param velocity - Initial velocity applied to the spring equation. Defaults
  *   to 0.
  * @param overshootClamping - Whether a spring can bounce over the `toValue`.
