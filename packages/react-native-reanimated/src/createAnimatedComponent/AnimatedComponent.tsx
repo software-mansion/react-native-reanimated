@@ -88,10 +88,12 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    this._configureTransition(
-      LayoutAnimationType.ENTERING,
-      skipEntering ? this.props.entering : undefined
-    );
+    if (!skipEntering) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
+    }
   }
 
   componentDidMount() {
@@ -108,8 +110,14 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
-    this._configureTransition(LayoutAnimationType.LAYOUT, this.props.layout);
-    this._configureTransition(LayoutAnimationType.EXITING, this.props.exiting);
+    this._configureLayoutAnimation(
+      LayoutAnimationType.LAYOUT,
+      this.props.layout
+    );
+    this._configureLayoutAnimation(
+      LayoutAnimationType.EXITING,
+      this.props.exiting
+    );
 
     if (IS_WEB) {
       if (this.props.exiting && this._componentDOMRef) {
@@ -270,12 +278,12 @@ export default class AnimatedComponent
     _prevState: Readonly<unknown>,
     snapshot: DOMRect | null
   ) {
-    this._configureTransition(
+    this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
       this.props.layout,
       prevProps.layout
     );
-    this._configureTransition(
+    this._configureLayoutAnimation(
       LayoutAnimationType.EXITING,
       this.props.exiting,
       prevProps.exiting
@@ -310,7 +318,7 @@ export default class AnimatedComponent
     this._cssStyle = filtered.cssStyle;
   }
 
-  _configureTransition(
+  _configureLayoutAnimation(
     type: LayoutAnimationType,
     currentConfig: LayoutAnimationOrBuilder | undefined,
     previousConfig?: LayoutAnimationOrBuilder
@@ -320,11 +328,10 @@ export default class AnimatedComponent
     }
 
     if (this._isReducedMotion(currentConfig)) {
-      if (previousConfig) {
-        currentConfig = undefined;
-      } else {
+      if (!previousConfig) {
         return;
       }
+      currentConfig = undefined;
     }
 
     updateLayoutAnimations(
