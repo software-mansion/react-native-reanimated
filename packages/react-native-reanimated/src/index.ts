@@ -5,7 +5,6 @@ import './publicGlobals';
 import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
-// import { calculateNewStiffnessToMatchDuration } from './animation/spring/springUtils';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
