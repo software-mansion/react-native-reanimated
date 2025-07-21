@@ -35,8 +35,8 @@ This parameter is relative to the animation, unlike absolute `restDisplacementTh
 The default parameters of the animation changed as well. They proved to be of little use in real-world applications. If you depended on them, you can still import them with the following import statement:
 
 ```js
-import { Reanimated3DefaultSpringConfig } from 'react-native-worklets'; // For physics based defaults.
-import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-worklets'; // For duration based defaults.
+import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For physics based defaults.
+import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
 You can explore the changes in the default parameters in [withSpring reference](/docs/next/animation/withSpring).
