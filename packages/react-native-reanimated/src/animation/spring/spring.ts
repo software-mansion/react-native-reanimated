@@ -4,7 +4,9 @@ import type {
   Animation,
   AnimationCallback,
   Timestamp,
-} from '../commonTypes';
+} from '../../commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import type { SpringConfig } from './springConfigs';
 import {
   GentleSpringConfig,
   GentleSpringConfigWithDuration,
@@ -13,7 +15,6 @@ import type {
   DefaultSpringConfig,
   InnerSpringAnimation,
   SpringAnimation,
-  SpringConfig,
   SpringConfigInner,
 } from './springUtils';
 import {
@@ -26,7 +27,6 @@ import {
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(

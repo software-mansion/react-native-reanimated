@@ -11,7 +11,7 @@ export { withDecay } from './decay';
 export { withDelay } from './delay';
 export { withRepeat } from './repeat';
 export { withSequence } from './sequence';
-export { withSpring } from './spring';
+export type { SpringAnimation, WithSpringConfig } from './spring';
 export {
   GentleSpringConfig,
   GentleSpringConfigWithDuration,
@@ -21,8 +21,8 @@ export {
   SnappySpringConfigWithDuration,
   WigglySpringConfig,
   WigglySpringConfigWithDuration,
-} from './springConfigs';
-export type { SpringAnimation, WithSpringConfig } from './springUtils';
+  withSpring,
+} from './spring';
 export { withStyleAnimation } from './styleAnimation';
 export type { TimingAnimation, WithTimingConfig } from './timing';
 export { withTiming } from './timing';
