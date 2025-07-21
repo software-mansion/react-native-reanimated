@@ -15,8 +15,9 @@ import type {
  * @param damping - How quickly a spring slows down. Higher damping means the
  *   spring will come to rest faster. Defaults to 120.
  * @param stiffness - How bouncy the spring is. Defaults to 900.
- * @param duration - Length of the animation (in milliseconds). Defaults to
- *   840ms if `dampingRatio` is provided.
+ * @param duration - Perceptual duration of the animation in milliseconds.
+ *   Actual duration is 1.5 times higher. Defaults to 550ms if `dampingRatio` is
+ *   provided.
  * @param dampingRatio - How damped the spring is. Value 1 means the spring is
  *   critically damped, and value `>`1 means the spring is overdamped. Defaults
  *   to 1 if `duration` is provided.
