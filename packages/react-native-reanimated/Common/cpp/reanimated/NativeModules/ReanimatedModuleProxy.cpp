@@ -768,7 +768,7 @@ void ReanimatedModuleProxy::dispatchCommand(
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
     const jsi::Value &argsValue) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
   const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());

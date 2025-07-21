@@ -13,8 +13,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <utility>
-
 using namespace facebook;
 
 namespace worklets {
@@ -61,29 +59,15 @@ inline jsi::Value executeOnUIRuntimeSync(
 }
 
 inline jsi::Value createWorkletRuntime(
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl,
+    jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
-  auto workletRuntime = runtimeManager->createWorkletRuntime(
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
-      jsScheduler,
-      isDevBundle,
-      true /* supportsLocking */,
-      script,
-      sourceUrl,
-      rt,
-      name,
-      initializer);
-
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+    const std::string &name,
+    std::shared_ptr<ShareableWorklet> &initializer) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+  return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
 inline jsi::Value reportFatalErrorOnJS(
@@ -110,7 +94,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -448,34 +432,26 @@ jsi::Value JSIWorkletsModuleProxy::get(
   }
 
   if (name == "createWorkletRuntime") {
-    auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         2,
-        [jsQueue = jsQueue_,
-         jsScheduler = jsScheduler_,
-         isDevBundle = isDevBundle_,
-         script = script_,
-         sourceUrl = sourceUrl_,
-         runtimeManager = runtimeManager_,
-         clone](
+        [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          auto name = args[0].asString(rt).utf8(rt);
+          auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
+              rt, args[1], "[Worklets] Initializer must be a worklet.");
+
           return createWorkletRuntime(
-              std::move(clone),
-              jsQueue,
-              jsScheduler,
-              isDevBundle,
-              script,
-              sourceUrl,
-              runtimeManager,
               rt,
-              args[0],
-              args[1]);
-          return jsi::Value::undefined();
+              clone->getRuntimeManager(),
+              clone->getJSQueue(),
+              clone,
+              name,
+              shareableInitializer);
         });
   }
 

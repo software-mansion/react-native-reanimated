@@ -18,19 +18,21 @@ using namespace react;
 
 namespace worklets {
 
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
+class JSIWorkletsModuleProxy;
+
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
       uint64_t runtimeId,
-      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
-      const bool supportsLocking,
-      const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl);
+      const bool supportsLocking);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;

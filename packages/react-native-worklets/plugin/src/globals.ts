@@ -106,14 +106,22 @@ const notCapturedIdentifiers = [
   'global',
   'window',
   'globalThis',
+  'self',
   'console',
   'performance',
+  'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+  'require',
+
+  // Run loop
   'queueMicrotask',
   'requestAnimationFrame',
   'cancelAnimationFrame',
+  'setTimeout',
+  'clearTimeout',
   'setImmediate',
-  'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
-  'require',
+  'clearImmediate',
+  'setInterval',
+  'clearInterval',
 
   // Hermes
   'HermesInternal',
