@@ -1,10 +1,8 @@
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   clamp,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -18,27 +16,21 @@ function ChatHeads({
 }: React.PropsWithChildren<Record<never, never>>) {
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
+  const startPosition = useSharedValue({ x: 0, y: 0 });
 
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
-  };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = transX.value;
-      ctx.startY = transY.value;
-    },
-    onActive: (event, ctx) => {
-      transX.value = ctx.startX + event.translationX;
-      transY.value = ctx.startY + event.translationY;
-    },
-    onEnd: (event) => {
-      const width = windowWidth - 100 - 40; // minus margins & width
-      const height = windowHeight - 100 - 40 - 128; // minus margins & height & header height
+  const gesture = Gesture.Pan()
+    .onStart(() => {
+      startPosition.value = { x: transX.value, y: transY.value };
+    })
+    .onUpdate((event) => {
+      transX.value = startPosition.value.x + event.translationX;
+      transY.value = startPosition.value.y + event.translationY;
+    })
+    .onEnd((event) => {
+      const width = windowWidth - 100 - 40;
+      const height = windowHeight - 100 - 40 - 128;
       const toss = 0.2;
+
       const targetX = clamp(transX.value + toss * event.velocityX, 0, width);
       const targetY = clamp(transY.value + toss * event.velocityY, 0, height);
 
@@ -63,25 +55,14 @@ function ChatHeads({
           snapX = width;
           break;
       }
-      transX.value = withSpring(snapX, {
-        velocity: event.velocityX,
-      });
-      transY.value = withSpring(snapY, {
-        velocity: event.velocityY,
-      });
-    },
-  });
+
+      transX.value = withSpring(snapX, { velocity: event.velocityX });
+      transY.value = withSpring(snapY, { velocity: event.velocityY });
+    });
 
   const stylez = useAnimatedStyle(() => {
     return {
-      transform: [
-        {
-          translateX: transX.value,
-        },
-        {
-          translateY: transY.value,
-        },
-      ],
+      transform: [{ translateX: transX.value }, { translateY: transY.value }],
     };
   });
 
@@ -94,11 +75,11 @@ function ChatHeads({
           {childrenArray.slice(1)}
         </Followers>
       )}
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.headContainer, stylez]}>
           {childrenArray[0]}
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </>
   );
 }
@@ -107,6 +88,7 @@ type FollowersProps = {
   readonly transX: Animated.SharedValue<number>;
   readonly transY: Animated.SharedValue<number>;
 };
+
 function Followers({
   transX,
   transY,
@@ -122,12 +104,8 @@ function Followers({
   const stylez = useAnimatedStyle(() => {
     return {
       transform: [
-        {
-          translateX: myTransX.value,
-        },
-        {
-          translateY: myTransY.value,
-        },
+        { translateX: myTransX.value },
+        { translateY: myTransY.value },
       ],
     };
   });
