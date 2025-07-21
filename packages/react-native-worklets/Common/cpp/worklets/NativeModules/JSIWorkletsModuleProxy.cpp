@@ -441,6 +441,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          auto name = args[0].asString(rt).utf8(rt);
           auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
               rt, args[1], "[Worklets] Initializer must be a worklet.");
 
@@ -449,7 +450,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone->getRuntimeManager(),
               clone->getJSQueue(),
               clone,
-              args[0].asString(rt).utf8(rt),
+              name,
               shareableInitializer);
         });
   }
