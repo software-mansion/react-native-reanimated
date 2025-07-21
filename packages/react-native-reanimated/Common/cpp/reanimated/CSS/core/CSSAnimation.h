@@ -16,14 +16,14 @@ class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
+      std::shared_ptr<const ShadowNode> shadowNode,
       std::string name,
       const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 
   const std::string &getName() const;
-  ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<const ShadowNode> getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState(double timestamp) const;
@@ -44,7 +44,7 @@ class CSSAnimation {
 
  private:
   const std::string name_;
-  const ShadowNode::Shared shadowNode_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
