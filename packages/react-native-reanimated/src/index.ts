@@ -29,9 +29,13 @@ export {
   cancelAnimation,
   defineAnimation,
   GentleSpringConfig,
+  GentleSpringConfigWithDuration,
   Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
   SnappySpringConfig,
+  SnappySpringConfigWithDuration,
   WigglySpringConfig,
+  WigglySpringConfigWithDuration,
   withClamp,
   withDecay,
   withDelay,
@@ -298,66 +302,6 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-// export type { WorkletRuntime } from 'react-native-worklets';
-// export { isWorkletFunction } from 'react-native-worklets';
-
-// const config = {
-//   mass: 1,
-//   stiffness: 100,
-//   energyCutoff: 9e-9,
-//   dampingRatio: 1,
-// };
-
-// const x0 = 100;
-
-// const v0 = 10;
-
-// for (let i = 1; i <= 10; i++) {
-//   calculateNewStiffnessToMatchDuration(
-//     x0,
-//     {
-//       ...config,
-//       duration: 200 * i,
-//     },
-//     1000
-//   );
-// }
-
-// calculateNewStiffnessToMatchDuration(
-//   100,
-//   {
-//     mass: 1,
-//     stiffness: 100,
-//     dampingRatio: 1,
-//     duration: 200,
-//     energyCutoff: 2e-8,
-//   },
-//   0
-// );
-
-// calculateNewStiffnessToMatchDuration(
-//   100,
-//   {
-//     mass: 1,
-//     stiffness: 100,
-//     dampingRatio: 1,
-//     duration: 400,
-//     energyCutoff: 2e-8,
-//   },
-//   0
-// );
-
-// calculateNewStiffnessToMatchDuration(
-//   100,
-//   {
-//     mass: 1,
-//     stiffness: 100,
-//     dampingRatio: 1,
-//     duration: 600,
-//     energyCutoff: 2e-8,
-//   },
-//   0
-// );
 export type { WorkletRuntime } from './workletFunctions';
 export {
   createWorkletRuntime,
