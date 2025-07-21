@@ -161,7 +161,7 @@ function CircularSlider(props: CircularSliderProps) {
   );
 }
 
-export default function JSPropsExample() {
+export default function CircularSliderExample() {
   return (
     <View style={styles.container}>
       <CircularSlider

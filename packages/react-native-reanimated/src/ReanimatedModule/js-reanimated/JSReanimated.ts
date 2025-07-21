@@ -25,6 +25,7 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/platform/native';
+import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -42,6 +43,12 @@ class JSReanimated implements IReanimatedModule {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
+
+  constructor() {
+    if (__DEV__) {
+      assertWorkletsVersion();
+    }
+  }
 
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
@@ -253,6 +260,10 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
+  setDynamicFeatureFlag(_name: string, _value: boolean): void {
+    // noop
+  }
+
   setViewStyle(_viewTag: number, _style: StyleProps): void {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
@@ -326,7 +337,7 @@ class JSReanimated implements IReanimatedModule {
 
 // Lack of this export breaks TypeScript generation since
 // an enum transpiles into JavaScript code.
-// ts-prune-ignore-next
+/** @knipIgnore */
 export enum Platform {
   WEB_IOS = 'web iOS',
   WEB_ANDROID = 'web Android',

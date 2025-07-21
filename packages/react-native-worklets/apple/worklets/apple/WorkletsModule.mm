@@ -1,3 +1,4 @@
+#import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -158,8 +159,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       script,
       sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy =
-  worklets::jsi_utils::optimizedFromHostObject(rnRuntime,std::dynamic_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
+  auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
+      rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, std::move(optimizedJsiWorkletsModuleProxy));
 
   return @YES;

@@ -48,6 +48,19 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'run loop',
+          importTest: () => {
+            require('./tests/runLoop/requestAnimationFrame.test');
+            require('./tests/runLoop/cancelAnimationFrame.test');
+            require('./tests/runLoop/setTimeoutPolyfill.test');
+            require('./tests/runLoop/clearTimeoutPolyfill.test');
+            require('./tests/runLoop/setImmediatePolyfill.test');
+            require('./tests/runLoop/clearImmediatePolyfill.test');
+            require('./tests/runLoop/setIntervalPolyfill.test');
+            require('./tests/runLoop/clearIntervalPolyfill.test');
+          },
+        },
+        {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/cancelAnimation.test');
@@ -72,9 +85,6 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/props/boxShadow.test');
           },
-          // TODO: Fix this test
-          disabled: true,
-          skipByDefault: true,
         },
         {
           testSuiteName: 'utilities',

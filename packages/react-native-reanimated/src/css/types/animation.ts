@@ -3,13 +3,6 @@ import type { CSSTimingFunction } from '../easings';
 import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
 
-export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];
-
-export interface CSSKeyframeRule<S extends PlainStyle = PlainStyle> {
-  readonly keyText: string;
-  readonly style: S;
-}
-
 export interface CSSKeyframesRule {
   readonly cssRules: CSSAnimationKeyframes;
   readonly cssText: string;

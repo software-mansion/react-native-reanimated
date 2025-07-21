@@ -1,7 +1,7 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
 import { IS_JEST } from '../PlatformChecker';
+import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -70,6 +70,18 @@ class JSWorklets implements IWorkletsModule {
   makeShareableObject<T extends object>(): ShareableRef<T> {
     throw new WorkletsError(
       'makeShareableObject should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableMap(): never {
+    throw new WorkletsError(
+      'makeShareableMap should never be called in JSWorklets.'
+    );
+  }
+
+  makeShareableSet(): never {
+    throw new WorkletsError(
+      'makeShareableSet should never be called in JSWorklets.'
     );
   }
 
@@ -144,5 +156,9 @@ class JSWorklets implements IWorkletsModule {
     throw new WorkletsError(
       'reportFatalErrorOnJS should never be called in JSWorklets.'
     );
+  }
+
+  setDynamicFeatureFlag(_name: string, _value: boolean) {
+    // noop
   }
 }

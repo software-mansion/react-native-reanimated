@@ -5,14 +5,13 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
-
-#include <utility>
 
 using namespace facebook;
 
@@ -60,34 +59,15 @@ inline jsi::Value executeOnUIRuntimeSync(
 }
 
 inline jsi::Value createWorkletRuntime(
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+    jsi::Runtime &originRuntime,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl,
-    const std::weak_ptr<RuntimeManager> &runtimeManager,
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
-  auto manager = runtimeManager.lock();
-  if (!manager) {
-    return jsi::Value::undefined();
-  }
-
-  auto workletRuntime = manager->createWorkletRuntime(
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
-      jsScheduler,
-      isDevBundle,
-      true /* supportsLocking */,
-      script,
-      sourceUrl,
-      rt,
-      name,
-      initializer);
-
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+    const std::string &name,
+    std::shared_ptr<ShareableWorklet> &initializer) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+  return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
 #ifdef WORKLETS_BUNDLE_MODE
@@ -95,11 +75,15 @@ inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::string &code,
     const std::string &sourceUrl) {
-  runtimeManager->forEachRuntime([code, sourceUrl](jsi::Runtime &rt) {
-    const auto buffer = std::make_shared<jsi::StringBuffer>(code);
-    rt.evaluateJavaScript(buffer, sourceUrl);
-    return jsi::Value::undefined();
-  });
+  const auto runtimes = runtimeManager->getAllRuntimes();
+
+  for (auto runtime : runtimes) {
+    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+      rt.evaluateJavaScript(buffer, sourceUrl);
+      return jsi::Value::undefined();
+    });
+  }
   return jsi::Value::undefined();
 }
 #endif // WORKLETS_BUNDLE_MODE
@@ -127,8 +111,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::shared_ptr<RuntimeManager> runtimeManager,
-    std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -185,6 +169,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "makeShareableTurboModuleLike"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableObject"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableMap"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableSet"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
 
@@ -197,6 +183,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -339,6 +327,35 @@ jsi::Value JSIWorkletsModuleProxy::get(
         });
   }
 
+  if (name == "makeShareableMap") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableMap(
+              rt,
+              args[0].asObject(rt).asArray(rt),
+              args[1].asObject(rt).asArray(rt));
+        });
+  }
+
+  if (name == "makeShareableSet") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeShareableSet(rt, args[0].asObject(rt).asArray(rt));
+        });
+  }
+
   if (name == "makeShareableHostObject") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -438,34 +455,26 @@ jsi::Value JSIWorkletsModuleProxy::get(
   }
 
   if (name == "createWorkletRuntime") {
-    auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         2,
-        [jsQueue = jsQueue_,
-         jsScheduler = jsScheduler_,
-         isDevBundle = isDevBundle_,
-         script = script_,
-         sourceUrl = sourceUrl_,
-         runtimeManager = runtimeManager_,
-         clone](
+        [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          auto name = args[0].asString(rt).utf8(rt);
+          auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
+              rt, args[1], "[Worklets] Initializer must be a worklet.");
+
           return createWorkletRuntime(
-              std::move(clone),
-              jsQueue,
-              jsScheduler,
-              isDevBundle,
-              script,
-              sourceUrl,
-              runtimeManager,
               rt,
-              args[0],
-              args[1]);
-          return jsi::Value::undefined();
+              clone->getRuntimeManager(),
+              clone->getJSQueue(),
+              clone,
+              name,
+              shareableInitializer);
         });
   }
 
@@ -515,11 +524,27 @@ jsi::Value JSIWorkletsModuleProxy::get(
             size_t count) {
           return propagateModuleUpdate(
               runtimeManager,
-              args[0].asString(rt).utf8(rt),
-              args[1].asString(rt).utf8(rt));
+              /* code */ args[0].asString(rt).utf8(rt),
+              /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
   }
 #endif // WORKLETS_BUNDLE_MODE
+
+  if (name == "setDynamicFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          DynamicFeatureFlags::setFlag(
+              /* name */ args[0].asString(rt).utf8(rt),
+              /* value */ args[1].asBool());
+          return jsi::Value::undefined();
+        });
+  }
 
   return jsi::Value::undefined();
 }
