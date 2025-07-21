@@ -5,7 +5,10 @@ import type {
   AnimationCallback,
   Timestamp,
 } from '../commonTypes';
-import { GentleSpringConfig } from './springConfigs';
+import {
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+} from './springConfigs';
 import type {
   DefaultSpringConfig,
   InnerSpringAnimation,
@@ -60,11 +63,10 @@ export const withSpring = ((
     'worklet';
     const defaultConfig: DefaultSpringConfig = {
       ...GentleSpringConfig,
+      ...GentleSpringConfigWithDuration,
       overshootClamping: false,
       energyThreshold: 6e-9,
       velocity: 0,
-      duration: 550,
-      dampingRatio: 1,
       reduceMotion: undefined,
       clamp: undefined,
     } as const;
