@@ -49,9 +49,9 @@ function getWorklet(
       worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
     } catch (_e) {
       logger.error(
-        'Unable to resolve worklet with hash' +
+        'Unable to resolve worklet with hash ' +
           workletHash +
-          'try to reload the app.'
+          '. Try reloading the app.'
       );
     }
   } else {
