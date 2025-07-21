@@ -112,11 +112,20 @@ export function makeWorkletFactory(
 
   const { workletName, reactName } = makeWorkletName(fun, state);
 
+  let mutatedClosureVariables;
+  if (state.opts.bundleMode) {
+    mutatedClosureVariables = closureVariables.map((variable) =>
+      cloneNode(variable, true)
+    );
+  } else {
+    mutatedClosureVariables = closureVariables;
+  }
+
   // eslint-disable-next-line prefer-const
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    closureVariables,
+    mutatedClosureVariables,
     workletName,
     transformed.map
   );

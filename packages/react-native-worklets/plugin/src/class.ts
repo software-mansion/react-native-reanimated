@@ -44,7 +44,10 @@ export function processIfWorkletClass(
   classPath: NodePath<ClassDeclaration>,
   state: ReanimatedPluginPass
 ): boolean {
-  if (!isWorkletizableClass(classPath, state)) {
+  if (
+    !isWorkletizableClass(classPath, state) ||
+    state.opts.bundleMode /* temporary */
+  ) {
     return false;
   }
 
