@@ -79,7 +79,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   PropsParserContext propsParserContext{
       layoutAnimation.finalView->surfaceId, *contextContainer_};
-#ifdef ANDROID
+#ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
       layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
