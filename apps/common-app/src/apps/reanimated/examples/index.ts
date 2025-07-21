@@ -53,6 +53,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -109,6 +110,8 @@ import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
+import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
@@ -468,6 +471,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pendulum example',
     screen: PendulumExample,
   },
+  SpringPresetsExample: {
+    icon: '🛠',
+    title: 'Spring presets',
+    screen: SpringPresetsExample,
+  },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
+  },
   SpringClampExample: {
     icon: '🗜',
     title: 'Spring with Clamp',
@@ -728,5 +741,9 @@ export const EXAMPLES: Record<string, Example> = {
   MoveWithExiting: {
     title: '[LA] Move with exiting',
     screen: MoveWithExiting,
+  },
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

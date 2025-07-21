@@ -94,10 +94,6 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
-#ifdef WORKLETS_BUNDLE_MODE
-  auto script = jsiWorkletsModuleProxy->getScript();
-  const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
@@ -110,6 +106,9 @@ void WorkletRuntime::init(
       std::move(optimizedJsiWorkletsModuleProxy));
 
 #ifdef WORKLETS_BUNDLE_MODE
+  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+
   if (!script) {
     throw std::runtime_error(
         "[Worklets] Expected to receive the bundle, but got nullptr instead.");

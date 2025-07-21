@@ -157,4 +157,8 @@ class JSWorklets implements IWorkletsModule {
       'reportFatalErrorOnJS should never be called in JSWorklets.'
     );
   }
+
+  setDynamicFeatureFlag(_name: string, _value: boolean) {
+    // noop
+  }
 }

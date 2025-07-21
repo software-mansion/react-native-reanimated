@@ -42,7 +42,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiWorkletRuntime_(
           runtimeManager_->createUninitializedUIRuntime(jsQueue_)) {
   /**
-   * We must call `init` in the body of the constructor, because
+   * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
    */
   uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
@@ -59,7 +59,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 std::shared_ptr<JSIWorkletsModuleProxy>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   assert(
-      uiWorkletRuntime_ != nullptr &&
+      uiWorkletRuntime_ &&
       "UI Worklet Runtime must be initialized before creating JSI proxy.");
   return std::make_shared<JSIWorkletsModuleProxy>(
       isDevBundle_,

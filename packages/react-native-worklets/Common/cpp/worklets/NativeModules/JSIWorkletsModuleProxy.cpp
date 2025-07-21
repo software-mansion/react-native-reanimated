@@ -5,6 +5,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -182,6 +183,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -461,6 +464,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          auto name = args[0].asString(rt).utf8(rt);
           auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
               rt, args[1], "[Worklets] Initializer must be a worklet.");
 
@@ -469,7 +473,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone->getRuntimeManager(),
               clone->getJSQueue(),
               clone,
-              args[0].asString(rt).utf8(rt),
+              name,
               shareableInitializer);
         });
   }
@@ -520,13 +524,28 @@ jsi::Value JSIWorkletsModuleProxy::get(
             size_t count) {
           return propagateModuleUpdate(
               runtimeManager,
-              args[0].asString(rt).utf8(rt),
-              args[1].asString(rt).utf8(rt));
+              /* code */ args[0].asString(rt).utf8(rt),
+              /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
-  }
 #endif // WORKLETS_BUNDLE_MODE
 
-  return jsi::Value::undefined();
-}
+    if (name == "setDynamicFeatureFlag") {
+      return jsi::Function::createFromHostFunction(
+          rt,
+          propName,
+          2,
+          [](jsi::Runtime &rt,
+             const jsi::Value &thisValue,
+             const jsi::Value *args,
+             size_t count) {
+            DynamicFeatureFlags::setFlag(
+                /* name */ args[0].asString(rt).utf8(rt),
+                /* value */ args[1].asBool());
+            return jsi::Value::undefined();
+          });
+    }
+
+    return jsi::Value::undefined();
+  }
 
 } // namespace worklets

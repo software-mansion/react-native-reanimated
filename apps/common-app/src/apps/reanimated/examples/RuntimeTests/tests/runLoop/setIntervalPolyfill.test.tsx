@@ -45,13 +45,10 @@ describe('Test setInterval', () => {
           let iter = 1;
           const handle = setInterval(() => {
             if (iter == 1) {
-              console.log('1');
               notify(notification1);
             } else if (iter == 2) {
-              console.log('2');
               notify(notification2);
             } else {
-              console.log('3');
               notify(notification3);
               clearInterval(handle);
             }
