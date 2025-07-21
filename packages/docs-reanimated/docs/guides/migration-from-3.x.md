@@ -22,7 +22,7 @@ In Reanimated 4, we finally decided to move [worklets](/docs/next/fundamentals/g
 
 ### Renamed `react-native-reanimated/plugin`
 
-You will also need to update `babel.config.js` in your apps and change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'`.
+Change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'` in `babel.config.js`.
 
 ### Changed the default behavior of `withSpring`
 
