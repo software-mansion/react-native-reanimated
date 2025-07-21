@@ -39,7 +39,7 @@ import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For
 import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
-You can explore the changes in the default parameters in [withSpring reference](/docs/next/animation/withSpring).
+You can explore the changes in the default parameters in [withSpring reference](/docs/next/animations/withSpring).
 
 ### Removed `useWorkletCallback`
 
