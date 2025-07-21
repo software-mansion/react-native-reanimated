@@ -2,7 +2,9 @@ import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
+  ExpressionStatement,
   File as BabelFile,
+  FunctionDeclaration,
   Identifier,
   VariableDeclaration,
 } from '@babel/types';
@@ -46,9 +48,11 @@ export function buildWorkletString(
 ): Array<string | null | undefined> {
   restoreRecursiveCalls(fun, workletName);
 
-  const draftExpression =
-    fun.program.body.find((obj) => isFunctionDeclaration(obj)) ||
-    fun.program.body.find((obj) => isExpressionStatement(obj));
+  const draftExpression = (fun.program.body.find((obj) =>
+    isFunctionDeclaration(obj)
+  ) ||
+    fun.program.body.find((obj) => isExpressionStatement(obj)) ||
+    undefined) as FunctionDeclaration | ExpressionStatement | undefined;
 
   assert(draftExpression, '[Reanimated] `draftExpression` is undefined.');
 
