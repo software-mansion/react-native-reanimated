@@ -8,7 +8,6 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
-#import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>

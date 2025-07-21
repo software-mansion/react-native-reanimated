@@ -128,11 +128,10 @@ function initializeWorkletRuntime() {
     setupCallGuard();
 
     if (__DEV__) {
-      /**
+      /*
        * Temporary workaround for Metro bundler. We must implement a dummy
        * Refresh module to prevent Metro from throwing irrelevant errors.
        */
-
       const Refresh = new Proxy(
         {},
         {
