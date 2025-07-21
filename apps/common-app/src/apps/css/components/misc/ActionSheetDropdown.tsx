@@ -2,12 +2,14 @@ import { Portal } from '@gorhom/portal';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-  Gesture,
-  GestureDetector,
+  Dimensions,
   Pressable,
-} from 'react-native-gesture-handler';
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
@@ -68,7 +70,6 @@ type ActionSheetDropdownStyleOptions = {
   offsetY?: number;
   dropdownMaxHeight?: number;
   dropdownZIndex?: number;
-  fitInScreen?: boolean;
 };
 
 type ActionSheetDropdownProps = PropsWithChildren<{
@@ -77,6 +78,7 @@ type ActionSheetDropdownProps = PropsWithChildren<{
     backdropOpacity?: number;
     dropdownStyle?: StyleProp<ViewStyle>;
   } & ActionSheetDropdownStyleOptions;
+  fitInScreen?: boolean;
   hitSlop?: number;
   onOpen?: () => void;
   onClose?: () => void;
@@ -145,7 +147,7 @@ export default function ActionSheetDropdown({
                 {...contentProps}
                 alignment={styleOptions?.alignment}
                 dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
-                fitInScreen={styleOptions?.fitInScreen}
+                fitInScreen={contentProps.fitInScreen}
                 handleClose={closeDropdown}
                 offsetX={styleOptions?.offsetX}
                 offsetY={styleOptions?.offsetY}

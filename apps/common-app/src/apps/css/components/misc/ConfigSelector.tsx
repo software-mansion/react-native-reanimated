@@ -447,9 +447,9 @@ const OptionSelector = typedMemo(function OptionSelector<T>({
       options={mappedOptions}
       styleOptions={{
         dropdownStyle: [styles.dropdownStyle, dropdownStyle],
-        fitInScreen: true,
         offsetY: spacing.xs,
       }}
+      fitInScreen
       onClose={() => (isExpanded.value = false)}
       onOpen={() => (isExpanded.value = true)}>
       <View style={styles.selectableOption}>
