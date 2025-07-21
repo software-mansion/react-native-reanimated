@@ -1,58 +1,7 @@
 'use strict';
-import { logger } from '../common';
-import type {
-  AnimatableValue,
-  Animation,
-  ReduceMotion,
-  Timestamp,
-} from '../commonTypes';
-
-/**
- * Spring animation configuration.
- *
- * @param mass - The weight of the spring. Reducing this value makes the
- *   animation faster. Defaults to 1.
- * @param damping - How quickly a spring slows down. Higher damping means the
- *   spring will come to rest faster. Defaults to 10.
- * @param duration - Length of the animation (in milliseconds). Defaults to
- *   2000.
- * @param dampingRatio - How damped the spring is. Value 1 means the spring is
- *   critically damped, and value `>`1 means the spring is overdamped. Defaults
- *   to 0.5.
- * @param stiffness - How bouncy the spring is. Defaults to 100.
- * @param velocity - Initial velocity applied to the spring equation. Defaults
- *   to 0.
- * @param overshootClamping - Whether a spring can bounce over the `toValue`.
- *   Defaults to false.
- * @param energyThreshold - Relative energy threshold below which the spring
- *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
- * @param reduceMotion - Determines how the animation responds to the device's
- *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
- *   {@link ReduceMotion}.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
- */
-export type SpringConfig = {
-  stiffness?: number;
-  overshootClamping?: boolean;
-  energyThreshold?: number;
-  velocity?: number;
-  reduceMotion?: ReduceMotion;
-} & (
-  | {
-      mass?: number;
-      damping?: number;
-      duration?: never;
-      dampingRatio?: never;
-      clamp?: never;
-    }
-  | {
-      mass?: never;
-      damping?: never;
-      duration?: number;
-      dampingRatio?: number;
-      clamp?: { min?: number; max?: number };
-    }
-);
+import { logger } from '../../common';
+import type { AnimatableValue, Animation, Timestamp } from '../../commonTypes';
+import type { SpringConfig } from './springConfigs';
 
 // This type contains all the properties from SpringConfig, which are changed to be required,
 // except for optional 'reduceMotion' and 'clamp'
