@@ -527,26 +527,26 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* code */ args[0].asString(rt).utf8(rt),
               /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
+  }
 #endif // WORKLETS_BUNDLE_MODE
 
-    if (name == "setDynamicFeatureFlag") {
-      return jsi::Function::createFromHostFunction(
-          rt,
-          propName,
-          2,
-          [](jsi::Runtime &rt,
-             const jsi::Value &thisValue,
-             const jsi::Value *args,
-             size_t count) {
-            DynamicFeatureFlags::setFlag(
-                /* name */ args[0].asString(rt).utf8(rt),
-                /* value */ args[1].asBool());
-            return jsi::Value::undefined();
-          });
-    }
-
-    return jsi::Value::undefined();
+  if (name == "setDynamicFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          DynamicFeatureFlags::setFlag(
+              /* name */ args[0].asString(rt).utf8(rt),
+              /* value */ args[1].asBool());
+          return jsi::Value::undefined();
+        });
   }
+
+  return jsi::Value::undefined();
 }
 
 } // namespace worklets
