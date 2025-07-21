@@ -38,10 +38,9 @@ std::string PropValueProcessor::processPropValue(
     return processStyleProp(propName, viewProps, rt);
   }
 
-  throw std::runtime_error(
-      std::string(
-          "Getting property `" + propName +
-          "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 std::string PropValueProcessor::processLayoutProp(
