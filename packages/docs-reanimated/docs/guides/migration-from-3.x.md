@@ -45,7 +45,7 @@ You can explore the changes in the default parameters in [withSpring reference](
 
 `useWorkletCallback` was marked as deprecated in Reanimated 3 and removed in Reanimated 4.
 
-You will need to manually update all its usages in the following way:
+To migrate from `useWorkletCallback`:
 
 1. Add `'worklet';` directive inside the function
 2. Add dependency array according to the rules of hooks
