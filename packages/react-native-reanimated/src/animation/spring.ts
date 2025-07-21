@@ -99,7 +99,6 @@ export const withSpring = ((
       const { lastTimestamp, velocity } = animation;
 
       const deltaTime = Math.min(now - lastTimestamp, 64);
-
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
