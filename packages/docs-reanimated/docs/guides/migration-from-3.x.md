@@ -84,9 +84,9 @@ If you are affected by this change, please to leave a comment under the [related
 
 In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the sake of backwards compatibility, we decided to keep `useScrollViewOffset` for now but it is marked as deprecated and planned to be removed in a future release of Reanimated. You will need to update all `useScrollViewOffset` usages to `useScrollOffset`.
 
-### Deprecated `useAnimatedGestureHandler`
+### Removed `useAnimatedGestureHandler`
 
-`useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and will be removed in a future release of Reanimated 4. You will need to upgrade all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
+`useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and removed in Reanimated 4. You need to refactor all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
 
 <!-- TODO -->
 
