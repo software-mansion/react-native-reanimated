@@ -79,9 +79,6 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/props/boxShadow.test');
           },
-          // TODO: Fix this test
-          disabled: true,
-          skipByDefault: true,
         },
         {
           testSuiteName: 'utilities',

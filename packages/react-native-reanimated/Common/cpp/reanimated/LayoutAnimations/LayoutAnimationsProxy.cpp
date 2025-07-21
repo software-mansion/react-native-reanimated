@@ -262,6 +262,7 @@ void LayoutAnimationsProxy::handleRemovals(
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
             node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
+        node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
         LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
@@ -466,6 +467,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     nodeForTag_.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     maybeCancelAnimation(node->tag);
+    node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
