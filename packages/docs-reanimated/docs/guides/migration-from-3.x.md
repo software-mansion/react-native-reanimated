@@ -14,7 +14,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ## Changes in the public API
 
-On the API surface level, Reanimated 4.x introduces only some minor renames and other breaking changes between 3.x and 4.x as listed below. All the animation logic you've written in Reanimated v2 or v3 API works in 4.x without little to no changes. Animations based on shared values will work the same way as before, simultaneously and interchangeably with CSS animations and transitions. This means you can adopt CSS animations and transitions in your codebase incrementally at your own pace.
+On the API surface level, Reanimated 4.x introduces only some minor renames and other breaking changes between 3.x and 4.x as listed below. All the animation logic you've written in Reanimated v2 or v3 API works in 4.x with little to no changes. Animations based on shared values will work the same way as before, simultaneously and interchangeably with CSS animations and transitions. This means you can adopt CSS animations and transitions in your codebase incrementally at your own pace.
 
 ### Added dependency on `react-native-worklets`
 
