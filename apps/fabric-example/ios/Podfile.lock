@@ -2366,7 +2366,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNCClipboard (1.16.1):
+  - RNCClipboard (1.16.3):
     - boost
     - DoubleConversion
     - fast_float
@@ -3137,7 +3137,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 0949385fa4cc4ad03dc5bfe516db5d256bfa1503
   ReactCommon: 9c0b5f78d34ee283d93cfd59fe0271ba629b2045
   RNCAsyncStorage: 6757c835a7c3368c3506dd50606d21f34ec28d7c
-  RNCClipboard: 889577746cd7ba699bd497e61a7668e6c0790e7f
+  RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNFlashList: 111b418801ce1b2ae616edbf96d6ef594305e053
   RNGestureHandler: 6922ca28d7a014e0019893c32b422b0d5d5ba8b8

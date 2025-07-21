@@ -18,7 +18,7 @@ export default function LogExample() {
     runOnUI(() => {
       'worklet';
       // @ts-ignore _log function is registered for UI runtime
-      _log('==============================================');
+      global._log('==============================================');
 
       test(42, '42');
       test(3.14, '3.14');

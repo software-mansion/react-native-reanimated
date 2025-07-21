@@ -18,7 +18,7 @@
     "@fortawesome/react-native-fontawesome": "^0.3.2",
     "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "2.1.0",
-    "@react-native-clipboard/clipboard": "patch:@react-native-clipboard/clipboard@npm%3A1.16.1#~/.yarn/patches/@react-native-clipboard-clipboard-npm-1.16.1-f5284115c3.patch",
+    "@react-native-clipboard/clipboard": "1.16.3",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/drawer": "^7.1.1",
