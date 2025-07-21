@@ -26,7 +26,7 @@ const Comp = () => {
   });
 
   return (
-    <View ref={aref}>
+    <View ref={animatedRef}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[styles.box]} />
       </PanGestureHandler>

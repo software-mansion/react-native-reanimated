@@ -45,6 +45,13 @@ export interface WorkletsModuleProxy {
     shouldRetainRemote: boolean
   ): ShareableRef<unknown[]>;
 
+  makeShareableMap<TKey, TValue>(
+    keys: TKey[],
+    values: TValue[]
+  ): ShareableRef<Map<TKey, TValue>>;
+
+  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>>;
+
   makeShareableInitializer(obj: object): ShareableRef<object>;
 
   makeShareableFunction<TArgs extends unknown[], TReturn>(
@@ -78,6 +85,8 @@ export interface WorkletsModuleProxy {
     name: string,
     jsEngine: string
   ): void;
+
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;

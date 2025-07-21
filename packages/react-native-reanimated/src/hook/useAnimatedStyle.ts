@@ -2,15 +2,10 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import {
-  IS_JEST,
-  processBoxShadow,
-  ReanimatedError,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -21,7 +16,7 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
+import { makeMutable, startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -221,13 +216,6 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
-      /* TODO: Improve this config structure in the future
-       * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-       * containing only properties that require processing and their associated processors
-       * */
-      if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
-        newValues[key] = processBoxShadow(value);
-      }
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
