@@ -18,7 +18,7 @@ On the API surface level, Reanimated 4.x introduces only some minor renames and 
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/next/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You will need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+In Reanimated 4, [worklets](/docs/next/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
 
 ### Renamed `react-native-reanimated/plugin`
 
@@ -30,7 +30,7 @@ Change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'` in
 
 This parameter is relative to the animation, unlike absolute `restDisplacementThreshold` and `restSpeedThreshold`. This means that removing all usage of `restDisplacementThreshold` and `restSpeedThreshold` should be enough and you don't need to override `energyThreshold` in your codebase.
 
-`duration` parameter was changed that so it's now the perceptual duration of the animation, not the actual time it takes to complete. The actual time to complete is 1.5 times the perceptual duration. If you were using the `duration` parameter and want to achieve the same effect as before, you will need to divide the `duration` parameter by 1.5 in your codebase.
+`duration` parameter was changed that so it's now the perceptual duration of the animation, not the actual time it takes to complete. The actual time to complete is 1.5 times the perceptual duration. If you were using the `duration` parameter and want to achieve the same effect as before, you need to divide the `duration` parameter by 1.5 in your codebase.
 
 The default parameters of the animation changed as well. They proved to be of little use in real-world applications. If you depended on them, you can still import them with the following import statement:
 
@@ -82,7 +82,7 @@ If you are affected by this change, please to leave a comment under the [related
 
 ### Renamed `useScrollViewOffset` to `useScrollOffset`
 
-In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the sake of backwards compatibility, we decided to keep `useScrollViewOffset` for now but it is marked as deprecated and planned to be removed in a future release of Reanimated. You will need to update all `useScrollViewOffset` usages to `useScrollOffset`.
+In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the sake of backwards compatibility, we decided to keep `useScrollViewOffset` for now but it is marked as deprecated and planned to be removed in a future release of Reanimated. You need to update all `useScrollViewOffset` usages to `useScrollOffset`.
 
 ### Removed `useAnimatedGestureHandler`
 
