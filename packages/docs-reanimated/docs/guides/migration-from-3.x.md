@@ -26,7 +26,20 @@ You will also need to update `babel.config.js` in your apps and change `'react-n
 
 ### Changed the default behavior of `withSpring`
 
-<!-- TODO -->
+`withSpring` animation no longer uses `restDisplacementThreshold` and `restSpeedThreshold` parameters, they were replaced with a single `energyThreshold` parameter.
+
+This parameter is relative to the animation, unlike absolute `restDisplacementThreshold` and `restSpeedThreshold`. This means that removing all usage of `restDisplacementThreshold` and `restSpeedThreshold` should be enough and you don't need to override `energyThreshold` in your codebase.
+
+`duration` parameter was changed that so it's now the perceptual duration of the animation, not the actual time it takes to complete. The actual time to complete is 1.5 times the perceptual duration. If you were using the `duration` parameter and want to achieve the same effect as before, you will need to divide the `duration` parameter by 1.5 in your codebase.
+
+The default parameters of the animation changed as well. They proved to be of little use in real-world applications. If you depended on them, you can still import them with the following import statement:
+
+```js
+import { Reanimated3DefaultSpringConfig } from 'react-native-worklets'; // For physics based defaults.
+import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-worklets'; // For duration based defaults.
+```
+
+You can explore the changes in the default parameters in [withSpring reference](/docs/next/animation/withSpring).
 
 ### Removed `useWorkletCallback`
 
