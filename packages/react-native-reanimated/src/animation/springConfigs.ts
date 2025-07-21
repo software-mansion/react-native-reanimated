@@ -14,14 +14,14 @@ export const Reanimated3DefaultSpringConfigWithDuration = {
 } as const satisfies SpringConfig;
 
 export const WigglySpringConfig = {
-  damping: 100,
+  damping: 90,
   mass: 4,
   stiffness: 900,
 } as const satisfies SpringConfig;
 
 export const WigglySpringConfigWithDuration = {
   duration: 550,
-  dampingRatio: 0.83,
+  dampingRatio: 0.75,
 } as const satisfies SpringConfig;
 
 export const GentleSpringConfig = {
