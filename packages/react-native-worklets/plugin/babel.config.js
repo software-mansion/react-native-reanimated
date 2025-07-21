@@ -8,7 +8,8 @@ module.exports = {
     [
       workletsPlugin,
       {
-        // bundleMode: true,
+        bundleMode: true,
+        workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
       },
     ],
   ],

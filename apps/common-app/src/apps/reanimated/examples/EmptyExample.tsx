@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TurboModuleRegistry, View } from 'react-native';
 import { initializeNetworking, runOnUI } from 'react-native-worklets';
+import axios from 'axios';
 
 export default function EmptyExample() {
   // console.log('BlobModule', TurboModuleRegistry.get('BlobModule'));
@@ -42,14 +43,14 @@ export default function EmptyExample() {
     'worklet';
     // globalThis._log('hello');
     console.log('Hello from worklet!');
-    globalThis.setImmediate = globalThis.requestAnimationFrame;
+    // globalThis.setImmediate = globalThis.requestAnimationFrame;
     console.log('fetching');
     console.log('globalThis.fetch', globalThis.fetch.toString());
     // globalThis._log('fetching');
-    globalThis.setTimeout = (callback: () => void, delay: number) => {
-      console.log('setTimeout called with delay:', delay);
-      globalThis.requestAnimationFrame(callback);
-    };
+    // globalThis.setTimeout = (callback: () => void, delay: number) => {
+    //   console.log('setTimeout called with delay:', delay);
+    //   globalThis.requestAnimationFrame(callback);
+    // };
     try {
       fetch('https://jsonplaceholder.typicode.com/posts/1')
         .then((response) => {
@@ -60,6 +61,30 @@ export default function EmptyExample() {
         })
         .catch((error) => {
           console.error('Error fetching data:', error);
+        });
+      axios({
+        method: 'post',
+        url: 'https://jsonplaceholder.typicode.com/posts',
+        data: {
+          title: 'foo',
+          body: 'bar',
+          userId: 1,
+        },
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+          'X-Custom-Header': 'CustomValue',
+        },
+        timeout: 5000,
+        params: {
+          debug: true,
+        },
+        responseType: 'json',
+      })
+        .then((response) => {
+          console.log('Advanced Axios response:', response.data);
+        })
+        .catch((error) => {
+          console.error('Advanced Axios error:', error);
         });
     } catch (e) {
       console.error('Error in worklet fetch:', e);

@@ -503,7 +503,7 @@ var require_closure = __commonJS({
     }
     exports2.getClosure = getClosure;
     function isImport(binding) {
-      return binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration();
+      return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
     }
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
@@ -534,7 +534,7 @@ var require_generate = __commonJS({
     var types_2 = require_types();
     function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a;
-      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
         const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
