@@ -43,7 +43,7 @@ You can explore the changes in the default parameters in [withSpring reference](
 
 ### Removed `useWorkletCallback`
 
-`useWorkletCallback` was marked as deprecated in Reanimated 3 and removed in Reanimated 4.
+`useWorkletCallback` was marked as deprecated in Reanimated 3 and has been removed in Reanimated 4.
 
 To migrate from `useWorkletCallback`:
 
@@ -68,7 +68,7 @@ Reanimated 4 removes the concept of native and UI props. `addWhitelistedNativePr
 
 ### Removed `combineTransition`
 
-`combineTransition` was deprecated in Reanimated 3 and removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](/docs/layout-animations/layout-transitions/#entryexit-transition).
+`combineTransition` was deprecated in Reanimated 3 and has been removed in Reanimated 4. You can achieve the same effect using the syntax below. For more details, check out [Entry/Exit Transition](/docs/layout-animations/layout-transitions/#entryexit-transition).
 
 ```js
 EntryExitTransition.entering(entering).exiting(exiting);
@@ -86,7 +86,7 @@ In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the 
 
 ### Removed `useAnimatedGestureHandler`
 
-`useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and removed in Reanimated 4. You need to refactor all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
+`useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and has been removed in Reanimated 4. You need to refactor all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
 
 <!-- TODO -->
 
