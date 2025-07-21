@@ -72,25 +72,34 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
-  auto rawProps =
-      std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  auto frame = Frame(uiRuntime_, newStyle);
 
-  PropsParserContext propsParserContext{
-      layoutAnimation.finalView->surfaceId, *contextContainer_};
+  auto updateValues = UpdateValues(nullptr, frame);
+
+  // has props that require cloning
+  if (newStyle.getPropertyNames(uiRuntime_).size(uiRuntime_) - frame.count >
+      0) {
+    auto rawProps = std::make_shared<RawProps>(
+        uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+
+    PropsParserContext propsParserContext{
+        layoutAnimation.finalView->surfaceId, *contextContainer_};
 #ifdef ANDROID
-  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
-      layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
+    rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
+        layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
-  auto newProps =
-      getComponentDescriptorForShadowView(*layoutAnimation.finalView)
-          .cloneProps(
-              propsParserContext,
-              layoutAnimation.finalView->props,
-              std::move(*rawProps));
+    auto newProps =
+        getComponentDescriptorForShadowView(*layoutAnimation.finalView)
+            .cloneProps(
+                propsParserContext,
+                layoutAnimation.finalView->props,
+                std::move(*rawProps));
+    updateValues.newProps = newProps;
+  }
+
   auto &updateMap =
       surfaceManager.getUpdateMap(layoutAnimation.finalView->surfaceId);
-  updateMap.insert_or_assign(
-      tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
+  updateMap.insert_or_assign(tag, updateValues);
 
   return layoutAnimation.finalView->surfaceId;
 }
@@ -411,7 +420,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     auto &layoutAnimation = layoutAnimationIt->second;
 
     auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
-    newView->props = updateValues.newProps;
+    if (updateValues.newProps) {
+      newView->props = updateValues.newProps;
+    }
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
     mutations.push_back(ShadowViewMutation::UpdateMutation(
