@@ -23,7 +23,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
@@ -36,6 +35,15 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
+
+#if REACT_NATIVE_MINOR_VERSION >= 81
+static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper) {
+  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
+      rt, shadowNodeWrapper);
+}
+#endif
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -367,7 +375,7 @@ static inline std::string intColorToHex(const int val) {
 std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
-    const ShadowNode::Shared &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
@@ -832,7 +840,7 @@ void ReanimatedModuleProxy::dispatchCommand(
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
     const jsi::Value &argsValue) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
   std::string commandName = stringFromValue(rt, commandNameValue);
   folly::dynamic args = commandArgsFromValue(rt, argsValue);
   const auto &scheduler = static_cast<Scheduler *>(uiManager_->getDelegate());
