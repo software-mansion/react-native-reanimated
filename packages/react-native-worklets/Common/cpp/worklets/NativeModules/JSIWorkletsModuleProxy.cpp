@@ -547,5 +547,6 @@ jsi::Value JSIWorkletsModuleProxy::get(
 
     return jsi::Value::undefined();
   }
+}
 
 } // namespace worklets
