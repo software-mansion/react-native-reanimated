@@ -6,62 +6,61 @@ export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  let animationFrameCallbacks: ((timestamp: number) => void)[] = [];
-  let callbacksBegin = 0;
-  let callbacksEnd = 0;
+  let queuedCallbacks: ((timestamp: number) => void)[] = [];
+  let queuedCallbacksBegin = 0;
+  let queuedCallbacksEnd = 0;
 
-  let flushedCallbacks = animationFrameCallbacks;
+  let flushedCallbacks = queuedCallbacks;
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
 
   let flushRequested = false;
 
   globalThis.__flushAnimationFrame = (timestamp: number) => {
-    globalThis.__frameTimestamp = timestamp;
+    flushedCallbacks = queuedCallbacks;
+    queuedCallbacks = [];
 
-    flushedCallbacks = animationFrameCallbacks;
-    animationFrameCallbacks = [];
-
-    flushedCallbacksBegin = callbacksBegin;
-    flushedCallbacksEnd = callbacksEnd;
-    callbacksBegin = callbacksEnd;
-
-    flushRequested = false;
+    flushedCallbacksBegin = queuedCallbacksBegin;
+    flushedCallbacksEnd = queuedCallbacksEnd;
+    queuedCallbacksBegin = queuedCallbacksEnd;
 
     for (const callback of flushedCallbacks) {
       callback(timestamp);
     }
 
-    flushedCallbacksBegin = callbacksEnd;
+    flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
-
-    globalThis.__frameTimestamp = undefined;
   };
 
   globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
-    const handle = callbacksEnd++;
+    const handle = queuedCallbacksEnd++;
 
-    animationFrameCallbacks.push(callback);
+    queuedCallbacks.push(callback);
     if (!flushRequested) {
       flushRequested = true;
 
-      nativeRequestAnimationFrame(globalThis.__flushAnimationFrame);
+      nativeRequestAnimationFrame((timestamp) => {
+        flushRequested = false;
+        globalThis.__frameTimestamp = timestamp;
+        globalThis.__flushAnimationFrame(timestamp);
+        globalThis.__frameTimestamp = undefined;
+      });
     }
     return handle;
   };
 
   globalThis.cancelAnimationFrame = (handle: number) => {
-    if (handle < flushedCallbacksBegin || handle >= callbacksEnd) {
+    if (handle < flushedCallbacksBegin || handle >= queuedCallbacksEnd) {
       return;
     }
 
     if (handle < flushedCallbacksEnd) {
       flushedCallbacks[handle - flushedCallbacksBegin] = () => {};
     } else {
-      animationFrameCallbacks[handle - callbacksBegin] = () => {};
+      queuedCallbacks[handle - queuedCallbacksBegin] = () => {};
     }
   };
 }

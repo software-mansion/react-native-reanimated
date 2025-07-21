@@ -31,6 +31,12 @@ def find_config()
     raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
+  validate_worklets_script = File.expand_path(File.join(__dir__, 'validate-worklets-build.js'))
+  unless system("node \"#{validate_worklets_script}\"")
+    abort("[Reanimated] Failed to validate worklets version")
+  end
+
+
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
   result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
@@ -69,4 +75,30 @@ def assert_new_architecture_enabled(new_arch_enabled)
   if !new_arch_enabled
     raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
+end
+
+def get_static_feature_flags()
+  feature_flags = {}
+
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
+  if !File.exist?(static_feature_flags_path)
+    raise "[Reanimated] Feature flags file not found at #{static_feature_flags_path}."
+  end
+  static_feature_flags_json = JSON.parse(File.read(static_feature_flags_path))
+  static_feature_flags_json.each do |key, value|
+    feature_flags[key] = value.to_s
+  end
+
+  package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
+  if File.exist?(package_json_path)
+    package_json = JSON.parse(File.read(package_json_path))
+    if package_json['reanimated'] && package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json = package_json['reanimated']['staticFeatureFlags']
+      feature_flags_json.each do |key, value|
+        feature_flags[key] = value.to_s
+      end
+    end
+  end
+
+  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end
