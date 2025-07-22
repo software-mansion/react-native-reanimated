@@ -14,10 +14,6 @@ export default function DragAndSnapExample() {
     x: useSharedValue(0),
     y: useSharedValue(0),
   };
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
-  };
   const gesture = Gesture.Pan()
     .onChange((event) => {
       translation.x.value += event.changeX;
