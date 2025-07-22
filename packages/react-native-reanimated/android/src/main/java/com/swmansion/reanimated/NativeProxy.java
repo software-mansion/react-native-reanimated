@@ -275,11 +275,13 @@ public class NativeProxy {
 
               case CMD_TRANSFORM_SCALE:
               case CMD_TRANSFORM_SCALE_X:
-              case CMD_TRANSFORM_SCALE_Y: {
+              case CMD_TRANSFORM_SCALE_Y:
+              case CMD_TRANSFORM_PERSPECTIVE: {
                 String name = switch (transformCommand) {
                   case CMD_TRANSFORM_SCALE -> "scale";
                   case CMD_TRANSFORM_SCALE_X -> "scaleX";
                   case CMD_TRANSFORM_SCALE_Y -> "scaleY";
+                  case CMD_TRANSFORM_PERSPECTIVE -> "perspective";
                   default -> throw new RuntimeException("Unknown scale type: " + transformCommand);
                 };
                 double value = doubleIterator.nextDouble();
@@ -309,10 +311,6 @@ public class NativeProxy {
                   default -> throw new RuntimeException("Unknown unit command");
                 };
                 transform.pushMap(JavaOnlyMap.of(name, angle + unit));
-                break;
-
-              case CMD_TRANSFORM_PERSPECTIVE:
-                transform.pushMap(JavaOnlyMap.of("perspective", doubleIterator.nextDouble()));
                 break;
 
               case CMD_TRANSFORM_MATRIX:
