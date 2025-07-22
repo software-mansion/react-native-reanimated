@@ -199,6 +199,8 @@ public class NativeProxy {
   private static final int CMD_TRANSFORM_ROTATE_X = 25;
   private static final int CMD_TRANSFORM_ROTATE_Y = 24;
   private static final int CMD_TRANSFORM_ROTATE_Z = 26;
+  private static final int CMD_TRANSFORM_SKEW_X = 31;
+  private static final int CMD_TRANSFORM_SKEW_Y = 32;
   private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
   private static final int CMD_BACKGROUND_COLOR = 3;
   private static final int CMD_BORDER_COLOR = 5;
@@ -281,12 +283,16 @@ public class NativeProxy {
               case CMD_TRANSFORM_ROTATE_X:
               case CMD_TRANSFORM_ROTATE_Y:
               case CMD_TRANSFORM_ROTATE_Z:
+              case CMD_TRANSFORM_SKEW_X:
+              case CMD_TRANSFORM_SKEW_Y:
                 String name = switch (transformCommand) {
                   case CMD_TRANSFORM_ROTATE -> "rotate";
                   case CMD_TRANSFORM_ROTATE_X -> "rotateX";
                   case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
                   case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
-                  default -> throw new RuntimeException("Unknown rotation type: " + transformCommand);
+                  case CMD_TRANSFORM_SKEW_X -> "skewX";
+                  case CMD_TRANSFORM_SKEW_Y -> "skewY";
+                  default -> throw new RuntimeException("Unknown rotation or skew type: " + transformCommand);
                 };
                 double angle = doubleIterator.nextDouble();
                 String unit = switch (intIterator.nextInt()) {

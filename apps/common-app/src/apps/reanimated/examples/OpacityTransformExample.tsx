@@ -45,10 +45,10 @@ export default function OpacityTransformExample() {
     // transform: [{ translateX: sv.value * 100 }],
     // transform: [{ translateX: `${sv.value * 100}%` }],
     // transform: [{ translateY: sv.value * 100 }],
-    transform: [{ translateY: `${sv.value * 100}%` }],
+    // transform: [{ translateY: `${sv.value * 100}%` }],
     // transform: [{ skewX: `${sv.value * 45}deg` }],
     // transform: [{ skewX: `${(sv.value * Math.PI) / 4}rad` }],
-    // transform: [{ skewY: `${sv.value * 45}deg` }],
+    transform: [{ skewY: `${sv.value * 45}deg` }],
     // transform: [{ skewY: `${(sv.value * Math.PI) / 4}rad` }],
     // transform: [
     //   { matrix: [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1] },
