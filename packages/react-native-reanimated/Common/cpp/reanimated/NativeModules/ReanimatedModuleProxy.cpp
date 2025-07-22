@@ -662,10 +662,10 @@ void ReanimatedModuleProxy::performOperations() {
 
 #ifdef ANDROID
     static const std::unordered_set<std::string> synchronousProps = {
-        "opacity",
         "transform",
-        "backgroundColor",
+        "opacity",
         "borderRadius",
+        "backgroundColor",
         "borderColor",
         // "color", // TODO: fix animating color of Animated.Text
     };
