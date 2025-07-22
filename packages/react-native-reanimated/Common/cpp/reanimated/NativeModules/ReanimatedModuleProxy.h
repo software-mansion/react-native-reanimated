@@ -228,7 +228,8 @@ class ReanimatedModuleProxy
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
+  std::vector<
+      std::pair<std::shared_ptr<const ShadowNode>, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::shared_ptr<PropsRegistry> propsRegistry_;

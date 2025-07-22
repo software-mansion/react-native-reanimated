@@ -17,11 +17,14 @@ class PropsRegistry {
   std::lock_guard<std::mutex> createLock() const;
   // returns a lock you need to hold when calling any of the methods below
 
-  void update(const ShadowNode::Shared &shadowNode, folly::dynamic &&props);
+  void update(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      folly::dynamic &&props);
 
-  void for_each(std::function<void(
-                    const ShadowNodeFamily &family,
-                    const folly::dynamic &props)> callback) const;
+  void for_each(
+      std::function<
+          void(const ShadowNodeFamily &family, const folly::dynamic &props)>
+          callback) const;
 
   void remove(const Tag tag);
 
@@ -49,13 +52,17 @@ class PropsRegistry {
     return map_.empty();
   }
 
-  void markNodeAsRemovable(const ShadowNode::Shared &shadowNode);
+  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
 
  private:
-  std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
-  std::unordered_map<Tag, ShadowNode::Shared> removableShadowNodes_;
+  std::unordered_map<
+      Tag,
+      std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>
+      map_;
+  std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>
+      removableShadowNodes_;
 
   mutable std::mutex mutex_; // Protects `map_`.
 
