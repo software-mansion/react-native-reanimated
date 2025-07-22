@@ -1,13 +1,11 @@
 import React from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Extrapolation,
   interpolate,
   scrollTo,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -73,30 +71,21 @@ export default function IPodExample() {
     },
   });
 
-  type Vector2D = {
-    x: number;
-    y: number;
-  };
-  type AnimatedGHContext = {
-    start: Vector2D;
-    last: Vector2D;
-  };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (e, ctx) => {
-      ctx.start = { x: e.x, y: e.y };
-      ctx.last = ctx.start;
-    },
-    onActive: (e, ctx) => {
+  const start = useSharedValue({ x: 0, y: 0 });
+  const last = useSharedValue({ x: 0, y: 0 });
+
+  const gesture = Gesture.Pan()
+    .onBegin((e) => {
+      start.value = { x: e.x, y: e.y };
+      last.value = { x: e.x, y: e.y };
+    })
+    .onUpdate((e) => {
       const currentPoz = { x: e.x, y: e.y };
-      const lastPoz = ctx.last;
-      ctx.last = currentPoz;
-      if (currentPoz.x === lastPoz.x && lastPoz.y === currentPoz.y) {
-        // no change so far
-        return;
-      }
+      const lastPoz = last.value;
+      last.value = currentPoz;
+
+      if (currentPoz.x === lastPoz.x && currentPoz.y === lastPoz.y) return;
+
       const changeVector = {
         x: currentPoz.x - lastPoz.x,
         y: currentPoz.y - lastPoz.y,
@@ -107,12 +96,11 @@ export default function IPodExample() {
       };
       const crossProd =
         changeVector.x * toCenterV.y - changeVector.y * toCenterV.x;
-      if (crossProd === 0) {
-        return;
-      }
+      if (crossProd === 0) return;
+
       const dist = Math.hypot(changeVector.x, changeVector.y);
-      // up or down
       const sign = crossProd < 0 ? -1 : 1;
+
       const arr = [0, itemTotalSize * (data.length - 1)];
       position.value = interpolate(
         position.value + sign * dist * 5,
@@ -121,11 +109,10 @@ export default function IPodExample() {
         Extrapolation.CLAMP
       );
       scrollTo(animatedRef, position.value, 0, false);
-    },
-    onEnd: (_e, _ctx) => {
+    })
+    .onEnd(() => {
       scrollToNearestItem(position.value);
-    },
-  });
+    });
 
   return (
     <View style={styles.ipod}>
@@ -150,11 +137,11 @@ export default function IPodExample() {
         })}
       </Animated.ScrollView>
 
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={styles.ballWrapper}>
           <View style={styles.innerBall} />
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
