@@ -631,9 +631,7 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
-  UpdatesBatch updatesBatch;
-  UpdatesBatch filteredUpdatesBatch;
-  UpdatesBatch synchronousUpdatesBatch;
+  UpdatesBatch updatesBatch, synchronousUpdatesBatch, shadowTreeUpdatesBatch;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -662,7 +660,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-    static const std::unordered_set<std::string> nonLayoutProps = {
+    static const std::unordered_set<std::string> synchronousProps = {
       "opacity",
       "transform",
       "backgroundColor",
@@ -672,19 +670,19 @@ void ReanimatedModuleProxy::performOperations() {
     };
 
     for (const auto &[shadowNode, props] : updatesBatch) {
-      bool hasAnyLayoutProp = false;
+      bool hasOnlySynchronousProps = true;
       for (const auto &key : props.keys()) {
         const auto keyStr = key.asString();
-        if (!nonLayoutProps.contains(keyStr)) {
-          hasAnyLayoutProp = true;
+        if (!synchronousProps.contains(keyStr)) {
+          hasOnlySynchronousProps = false;
           break;
         }
       }
-      if (hasAnyLayoutProp) {
-        // TODO: uncomment this
-        // filteredUpdatesBatch.emplace_back(shadowNode, props);
-      } else {
+      if (hasOnlySynchronousProps) {
         synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        // TODO: uncomment this
+        // shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
       }
     }
 
@@ -717,6 +715,33 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_UNIT_PX = 102;
     static constexpr auto CMD_UNIT_PERCENT = 103;
 
+    const auto propNameToCommand = [](const std::string &name) {
+      if (name == "opacity") return CMD_OPACITY;
+      if (name == "borderRadius") return CMD_BORDER_RADIUS;
+      if (name == "backgroundColor") return CMD_BACKGROUND_COLOR;
+      if (name == "borderColor") return CMD_BORDER_COLOR;
+      if (name == "color") return CMD_COLOR;
+      if (name == "transform") return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
+      throw std::runtime_error("Unsupported style: " + name);
+    };
+
+    const auto transformNameToCommand = [](const std::string &name) {
+      if (name == "translateX") return CMD_TRANSFORM_TRANSLATE_X;
+      if (name == "translateY") return CMD_TRANSFORM_TRANSLATE_Y;
+      if (name == "scale") return CMD_TRANSFORM_SCALE;
+      if (name == "scaleX") return CMD_TRANSFORM_SCALE_X;
+      if (name == "scaleY") return CMD_TRANSFORM_SCALE_Y;
+      if (name == "rotate") return CMD_TRANSFORM_ROTATE;
+      if (name == "rotateX") return CMD_TRANSFORM_ROTATE_X;
+      if (name == "rotateY") return CMD_TRANSFORM_ROTATE_Y;
+      if (name == "rotateZ") return CMD_TRANSFORM_ROTATE_Z;
+      if (name == "skewX") return CMD_TRANSFORM_SKEW_X;
+      if (name == "skewY") return CMD_TRANSFORM_SKEW_Y;
+      if (name == "matrix") return CMD_TRANSFORM_MATRIX;
+      if (name == "perspective") return CMD_TRANSFORM_PERSPECTIVE;
+      throw std::runtime_error("Unsupported transform: " + name);
+    };
+
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
         std::vector<double> doubleBuffer;
@@ -725,32 +750,23 @@ void ReanimatedModuleProxy::performOperations() {
           intBuffer.push_back(CMD_START_OF_VIEW);
           intBuffer.push_back(shadowNode->getTag());
           for (const auto &[key, value] : props.items()) {
-            const auto keyStr = key.getString();
-            if (keyStr == "opacity" || keyStr == "borderRadius") {
-              const auto cmd = keyStr == "opacity" ? CMD_OPACITY : CMD_BORDER_RADIUS;
-              intBuffer.push_back(cmd);
+            const auto command = propNameToCommand(key.getString());
+            if (command == CMD_OPACITY || command == CMD_BORDER_RADIUS) {
+              intBuffer.push_back(command);
               doubleBuffer.push_back(value.asDouble());
-            } else if (keyStr == "backgroundColor" || keyStr == "borderColor" || keyStr == "color") {
-              const auto cmd = keyStr == "backgroundColor" ? CMD_BACKGROUND_COLOR : keyStr == "borderColor" ? CMD_BORDER_COLOR : CMD_COLOR;
-              intBuffer.push_back(cmd);
+            } else if (command == CMD_BACKGROUND_COLOR || command == CMD_BORDER_COLOR || command == CMD_COLOR) {
+              intBuffer.push_back(command);
               intBuffer.push_back(value.asInt());
-            } else if (keyStr == "transform") {
-              intBuffer.push_back(CMD_START_OF_TRANSFORM);
+            } else if (command == CMD_START_OF_TRANSFORM) {
+              intBuffer.push_back(command);
               for (const auto &item : value) {
-                const auto &transformKeyStr = item.keys().begin()->getString();
+                const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
                 const auto &transformValue = *item.values().begin();
-                if (transformKeyStr == "scale" || transformKeyStr == "scaleX" || transformKeyStr == "scaleY") {
-                  const auto cmd =
-                    transformKeyStr == "scaleX"
-                      ? CMD_TRANSFORM_SCALE_X
-                      : transformKeyStr == "scaleY"
-                      ? CMD_TRANSFORM_SCALE_Y
-                      : CMD_TRANSFORM_SCALE;
-                  intBuffer.push_back(cmd);
+                if (transformCommand == CMD_TRANSFORM_SCALE || transformCommand == CMD_TRANSFORM_SCALE_X || transformCommand == CMD_TRANSFORM_SCALE_Y) {
+                  intBuffer.push_back(transformCommand);
                   doubleBuffer.push_back(transformValue.asDouble());
-                } else if (transformKeyStr == "translateX" || transformKeyStr == "translateY") {
-                  const auto cmd = transformKeyStr == "translateX" ? CMD_TRANSFORM_TRANSLATE_X : CMD_TRANSFORM_TRANSLATE_Y;
-                  intBuffer.push_back(cmd);
+                } else if (transformCommand == CMD_TRANSFORM_TRANSLATE_X || transformCommand == CMD_TRANSFORM_TRANSLATE_Y) {
+                  intBuffer.push_back(transformCommand);
                   if (transformValue.isDouble()) {
                     intBuffer.push_back(CMD_UNIT_PX);
                     doubleBuffer.push_back(transformValue.asDouble());
@@ -764,26 +780,13 @@ void ReanimatedModuleProxy::performOperations() {
                   } else {
                     throw std::runtime_error("Translate value must be a number or a string");
                   }
-                } else if (transformKeyStr == "perspective") {
-                  intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);
+                } else if (transformCommand == CMD_TRANSFORM_PERSPECTIVE) {
+                  // TODO: merge to scale branch
+                  intBuffer.push_back(transformCommand);
                   doubleBuffer.push_back(transformValue.asDouble());
-                } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateX" || transformKeyStr == "rotateY" || transformKeyStr == "rotateZ" || transformKeyStr == "skewX" || transformKeyStr == "skewY") {
+                } else if (transformCommand == CMD_TRANSFORM_ROTATE || transformCommand == CMD_TRANSFORM_ROTATE_X || transformCommand == CMD_TRANSFORM_ROTATE_Y || transformCommand == CMD_TRANSFORM_ROTATE_Z || transformCommand == CMD_TRANSFORM_SKEW_X || transformCommand == CMD_TRANSFORM_SKEW_Y) {
                   const auto &transformValueStr = transformValue.getString();
-                  const auto cmd =
-                    transformKeyStr == "rotateX"
-                      ? CMD_TRANSFORM_ROTATE_X
-                      : transformKeyStr == "rotateY"
-                      ? CMD_TRANSFORM_ROTATE_Y
-                      : transformKeyStr == "rotateZ"
-                      ? CMD_TRANSFORM_ROTATE_Z
-                      : transformKeyStr == "rotate"
-                      ? CMD_TRANSFORM_ROTATE
-                      : transformKeyStr == "skewX"
-                      ? CMD_TRANSFORM_SKEW_X
-                      : transformKeyStr == "skewY"
-                      ? CMD_TRANSFORM_SKEW_Y
-                      : -1;
-                  intBuffer.push_back(cmd);
+                  intBuffer.push_back(transformCommand);
                   if (transformValueStr.ends_with("deg")) {
                     intBuffer.push_back(CMD_UNIT_DEG);
                   } else if (transformValueStr.ends_with("rad")) {
@@ -792,20 +795,16 @@ void ReanimatedModuleProxy::performOperations() {
                     throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
                   }
                   doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
-                } else if (transformKeyStr == "matrix") {
-                  intBuffer.push_back(CMD_TRANSFORM_MATRIX);
+                } else if (transformCommand == CMD_TRANSFORM_MATRIX) {
+                  intBuffer.push_back(transformCommand);
                   int size = transformValue.size();
                   intBuffer.push_back(transformValue.size());
                   for (int i = 0; i < size; i++) {
                     doubleBuffer.push_back(transformValue[i].asDouble());
                   }
-                } else {
-                  throw std::runtime_error("Unsupported transform type: " + transformKeyStr);
                 }
               }
               intBuffer.push_back(CMD_END_OF_TRANSFORM);
-            } else {
-              throw std::runtime_error("Unsupported style: " + keyStr);
             }
           }
           intBuffer.push_back(CMD_END_OF_VIEW);
@@ -814,7 +813,7 @@ void ReanimatedModuleProxy::performOperations() {
         synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
     }
 
-    if ((filteredUpdatesBatch.size() > 0) &&
+    if ((shadowTreeUpdatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
@@ -829,7 +828,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, filteredUpdatesBatch);
+  commitUpdates(rt, shadowTreeUpdatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
