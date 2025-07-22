@@ -264,9 +264,4 @@ const styles = StyleSheet.create({
     height: 500,
     backgroundColor: 'cyan',
   },
-  goldBox: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'gold',
-  },
 });
