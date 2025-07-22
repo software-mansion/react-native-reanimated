@@ -47,7 +47,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool supportsLocking,
     const std::string &name,
-    std::shared_ptr<ShareableWorklet> initializer) {
+    std::shared_ptr<SerializableWorklet> initializer) {
   const auto runtimeId = getNextRuntimeId();
   const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
