@@ -10,7 +10,8 @@
  * assigning any data to those objects will throw an error.
  */
 export type ShareableRef<T = unknown> = {
-  __hostObjectShareableJSRef: T;
+  __shareableRef: true;
+  __nativeStateShareableJSRef: T;
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.

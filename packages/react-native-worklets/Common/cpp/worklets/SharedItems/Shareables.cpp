@@ -104,37 +104,37 @@ jsi::Value makeShareableClone(
     throw std::runtime_error(
         "[Worklets] Attempted to convert an unsupported value type.");
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableString(jsi::Runtime &rt, const jsi::String &string) {
   const auto shareable = std::make_shared<ShareableString>(string.utf8(rt));
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableNumber(jsi::Runtime &rt, double number) {
   const auto shareable = std::make_shared<ShareableScalar>(number);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableBoolean(jsi::Runtime &rt, bool boolean) {
   const auto shareable = std::make_shared<ShareableScalar>(boolean);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
   const auto shareable = std::make_shared<ShareableBigInt>(rt, bigint);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableUndefined(jsi::Runtime &rt) {
   const auto shareable = std::make_shared<ShareableScalar>();
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableNull(jsi::Runtime &rt) {
   const auto shareable = std::make_shared<ShareableScalar>(nullptr);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableWorklet(
@@ -148,7 +148,7 @@ jsi::Value makeShareableWorklet(
   } else {
     shareable = std::make_shared<ShareableWorklet>(rt, object);
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableInitializer(
@@ -156,7 +156,7 @@ jsi::Value makeShareableInitializer(
     const jsi::Object &initializerObject) {
   const auto shareable =
       std::make_shared<ShareableInitializer>(rt, initializerObject);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function) {
@@ -168,7 +168,7 @@ jsi::Value makeShareableFunction(jsi::Runtime &rt, jsi::Function function) {
     shareable =
         std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableArray(
@@ -181,7 +181,7 @@ jsi::Value makeShareableArray(
   } else {
     shareable = std::make_shared<ShareableArray>(rt, array);
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableMap(
@@ -189,19 +189,19 @@ jsi::Value makeShareableMap(
     const jsi::Array &keys,
     const jsi::Array &values) {
   auto shareable = std::make_shared<ShareableMap>(rt, keys, values);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableSet(jsi::Runtime &rt, const jsi::Array &values) {
   auto shareable = std::make_shared<ShareableSet>(rt, values);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableHostObject(
     jsi::Runtime &rt,
     const std::shared_ptr<jsi::HostObject> &value) {
   const auto shareable = std::make_shared<ShareableHostObject>(rt, value);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableTurboModuleLike(
@@ -210,7 +210,7 @@ jsi::Value makeShareableTurboModuleLike(
     const std::shared_ptr<jsi::HostObject> &proto) {
   const auto shareable =
       std::make_shared<ShareableTurboModuleLike>(rt, object, proto);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableImport(
@@ -218,7 +218,7 @@ jsi::Value makeShareableImport(
     const double source,
     const jsi::String &imported) {
   auto shareable = std::make_shared<ShareableImport>(rt, source, imported);
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 jsi::Value makeShareableObject(
@@ -234,7 +234,7 @@ jsi::Value makeShareableObject(
     shareable =
         std::make_shared<ShareableObject>(rt, object, nativeStateSource);
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableJSRef::newNativeStateObject(rt, shareable);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
@@ -243,8 +243,9 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
-    if (object.isHostObject<ShareableJSRef>(rt)) {
-      return object.getHostObject<ShareableJSRef>(rt)->value();
+    if (object.hasNativeState(rt)) {
+      auto nativeState = object.getNativeState(rt);
+      return std::dynamic_pointer_cast<ShareableJSRef>(nativeState)->value();
     }
     throw std::runtime_error(
         "[Worklets] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
@@ -456,7 +457,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(
         rt,
-        ShareableJSRef::newHostObject(rt, shared_from_this()),
+        ShareableJSRef::newNativeStateObject(rt, shared_from_this()),
         jsi::String::createFromAscii(rt, "RemoteFunction"),
         jsi::String::createFromUtf8(rt, name_));
 #else
