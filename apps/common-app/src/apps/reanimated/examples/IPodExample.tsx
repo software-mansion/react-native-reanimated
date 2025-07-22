@@ -84,7 +84,10 @@ export default function IPodExample() {
       const lastPoz = last.value;
       last.value = currentPoz;
 
-      if (currentPoz.x === lastPoz.x && currentPoz.y === lastPoz.y) return;
+      if (currentPoz.x === lastPoz.x && currentPoz.y === lastPoz.y) {
+        // no change so far
+        return;
+      }
 
       const changeVector = {
         x: currentPoz.x - lastPoz.x,
@@ -96,7 +99,9 @@ export default function IPodExample() {
       };
       const crossProd =
         changeVector.x * toCenterV.y - changeVector.y * toCenterV.x;
-      if (crossProd === 0) return;
+      if (crossProd === 0) {
+        return;
+      }
 
       const dist = Math.hypot(changeVector.x, changeVector.y);
       const sign = crossProd < 0 ? -1 : 1;

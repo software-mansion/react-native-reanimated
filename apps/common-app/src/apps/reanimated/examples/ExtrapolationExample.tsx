@@ -16,7 +16,7 @@ export default function ExtrapolationExample() {
     .onChange((event) => {
       transY.value += event.changeY;
     })
-    .onEnd((_) => {
+    .onEnd(() => {
       transY.value = withTiming(0);
     });
 
