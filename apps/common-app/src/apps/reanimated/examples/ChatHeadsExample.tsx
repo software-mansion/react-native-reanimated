@@ -18,9 +18,9 @@ function ChatHeads({
   const transY = useSharedValue(0);
 
   const gesture = Gesture.Pan()
-    .onUpdate((event) => {
-      transX.value = startPosition.value.x + event.translationX;
-      transY.value = startPosition.value.y + event.translationY;
+    .onChange((event) => {
+      transX.value += event.changeX;
+      transY.value += event.changeY;
     })
     .onEnd((event) => {
       const width = windowWidth - 100 - 40;
