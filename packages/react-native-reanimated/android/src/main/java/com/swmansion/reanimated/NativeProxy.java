@@ -236,13 +236,32 @@ public class NativeProxy {
           JavaOnlyArray transform = new JavaOnlyArray();
           while (intBuffer[i] != CMD_END_OF_TRANSFORM) {
             switch (intBuffer[i]) {
-              case CMD_TRANSFORM_SCALE -> transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
-              case CMD_TRANSFORM_ROTATE -> transform.pushMap(JavaOnlyMap.of("rotate", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
-              case CMD_TRANSFORM_ROTATE_X -> transform.pushMap(JavaOnlyMap.of("rotateX", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
-              case CMD_TRANSFORM_ROTATE_Y -> transform.pushMap(JavaOnlyMap.of("rotateY", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
-              case CMD_TRANSFORM_ROTATE_Z -> transform.pushMap(JavaOnlyMap.of("rotateZ", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
-              case CMD_TRANSFORM_PERSPECTIVE -> transform.pushMap(JavaOnlyMap.of("perspective", floatBuffer[f++]));
-              default -> throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
+              case CMD_TRANSFORM_SCALE:
+                transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
+                break;
+
+              case CMD_TRANSFORM_ROTATE:
+              case CMD_TRANSFORM_ROTATE_X:
+              case CMD_TRANSFORM_ROTATE_Y:
+              case CMD_TRANSFORM_ROTATE_Z:
+                String name = switch (intBuffer[i]) {
+                  case CMD_TRANSFORM_ROTATE -> "rotate";
+                  case CMD_TRANSFORM_ROTATE_X -> "rotateX";
+                  case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
+                  case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
+                  default -> throw new RuntimeException("Unknown rotation type: " + intBuffer[i]);
+                };
+                float angle = floatBuffer[f++];
+                String unit = unitCommandToString(intBuffer[++i]);
+                transform.pushMap(JavaOnlyMap.of(name, angle + unit));
+                break;
+
+              case CMD_TRANSFORM_PERSPECTIVE:
+                transform.pushMap(JavaOnlyMap.of("perspective", floatBuffer[f++]));
+                break;
+
+              default:
+                throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
             }
             i++;
           }
