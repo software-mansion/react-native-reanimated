@@ -210,6 +210,36 @@ public class NativeProxy {
   private static final int CMD_UNIT_PX = 202;
   private static final int CMD_UNIT_PERCENT = 203;
 
+  private static String commandToString(int command) {
+    return switch (command) {
+      case CMD_OPACITY -> "opacity";
+      case CMD_BORDER_RADIUS -> "borderRadius";
+      case CMD_BACKGROUND_COLOR -> "backgroundColor";
+      case CMD_BORDER_COLOR -> "borderColor";
+      case CMD_COLOR -> "color";
+      default -> throw new RuntimeException("Unknown command: " + command);
+    };
+  }
+
+  private static String transformCommandToString(int transformCommand) {
+    return switch (transformCommand) {
+      case CMD_TRANSFORM_TRANSLATE_X -> "translateX";
+      case CMD_TRANSFORM_TRANSLATE_Y -> "translateY";
+      case CMD_TRANSFORM_SCALE -> "scale";
+      case CMD_TRANSFORM_SCALE_X -> "scaleX";
+      case CMD_TRANSFORM_SCALE_Y -> "scaleY";
+      case CMD_TRANSFORM_ROTATE -> "rotate";
+      case CMD_TRANSFORM_ROTATE_X -> "rotateX";
+      case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
+      case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
+      case CMD_TRANSFORM_SKEW_X -> "skewX";
+      case CMD_TRANSFORM_SKEW_Y -> "skewY";
+      case CMD_TRANSFORM_MATRIX -> "matrix";
+      case CMD_TRANSFORM_PERSPECTIVE -> "perspective";
+      default -> throw new RuntimeException("Unknown transform command: " + transformCommand);
+    };
+  }
+
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
     PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
@@ -227,11 +257,7 @@ public class NativeProxy {
 
         case CMD_OPACITY:
         case CMD_BORDER_RADIUS: {
-          String name = switch (command) {
-            case CMD_OPACITY -> "opacity";
-            case CMD_BORDER_RADIUS -> "borderRadius";
-            default -> throw new RuntimeException("Unknown command type: " + command);
-          };
+          String name = commandToString(command);
           props.putDouble(name, doubleIterator.nextDouble());
           break;
         }
@@ -239,12 +265,7 @@ public class NativeProxy {
         case CMD_BACKGROUND_COLOR:
         case CMD_BORDER_COLOR:
         case CMD_COLOR: {
-          String name = switch (command) {
-            case CMD_BACKGROUND_COLOR -> "backgroundColor";
-            case CMD_BORDER_COLOR -> "borderColor";
-            case CMD_COLOR -> "color";
-            default -> throw new RuntimeException("Unknown command type: " + command);
-          };
+          String name = commandToString(command);
           props.putInt(name, intIterator.nextInt());
           break;
         }
@@ -257,14 +278,10 @@ public class NativeProxy {
               props.putArray("transform", transform);
               break;
             }
+            String name = transformCommandToString(transformCommand);
             switch (transformCommand) {
               case CMD_TRANSFORM_TRANSLATE_X:
               case CMD_TRANSFORM_TRANSLATE_Y: {
-                String name = switch (transformCommand) {
-                  case CMD_TRANSFORM_TRANSLATE_X -> "translateX";
-                  case CMD_TRANSFORM_TRANSLATE_Y -> "translateY";
-                  default -> throw new RuntimeException("Unknown translate type: " + transformCommand);
-                };
                 double value = doubleIterator.nextDouble();
                 switch (intIterator.nextInt()) {
                   case CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value));
@@ -278,13 +295,6 @@ public class NativeProxy {
               case CMD_TRANSFORM_SCALE_X:
               case CMD_TRANSFORM_SCALE_Y:
               case CMD_TRANSFORM_PERSPECTIVE: {
-                String name = switch (transformCommand) {
-                  case CMD_TRANSFORM_SCALE -> "scale";
-                  case CMD_TRANSFORM_SCALE_X -> "scaleX";
-                  case CMD_TRANSFORM_SCALE_Y -> "scaleY";
-                  case CMD_TRANSFORM_PERSPECTIVE -> "perspective";
-                  default -> throw new RuntimeException("Unknown scale type: " + transformCommand);
-                };
                 double value = doubleIterator.nextDouble();
                 transform.pushMap(JavaOnlyMap.of(name, value));
                 break;
@@ -296,15 +306,6 @@ public class NativeProxy {
               case CMD_TRANSFORM_ROTATE_Z:
               case CMD_TRANSFORM_SKEW_X:
               case CMD_TRANSFORM_SKEW_Y:
-                String name = switch (transformCommand) {
-                  case CMD_TRANSFORM_ROTATE -> "rotate";
-                  case CMD_TRANSFORM_ROTATE_X -> "rotateX";
-                  case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
-                  case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
-                  case CMD_TRANSFORM_SKEW_X -> "skewX";
-                  case CMD_TRANSFORM_SKEW_Y -> "skewY";
-                  default -> throw new RuntimeException("Unknown rotation or skew type: " + transformCommand);
-                };
                 double angle = doubleIterator.nextDouble();
                 String unit = switch (intIterator.nextInt()) {
                   case CMD_UNIT_DEG -> "deg";
@@ -320,7 +321,7 @@ public class NativeProxy {
                 for (int i = 0; i < length; i++) {
                   matrix.pushDouble(doubleIterator.nextDouble());
                 }
-                transform.pushMap(JavaOnlyMap.of("matrix", matrix));
+                transform.pushMap(JavaOnlyMap.of(name, matrix));
                 break;
 
               default:
