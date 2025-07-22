@@ -4,6 +4,7 @@
 #include <react/renderer/components/root/RootShadowNode.h>
 #include <react/renderer/core/ShadowNode.h>
 
+#include <memory>
 #include <unordered_map>
 #include <utility>
 
