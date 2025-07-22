@@ -5,18 +5,17 @@ import type { RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
-  PanGestureHandler,
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
   interpolate,
   runOnJS,
   runOnUI,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -139,8 +138,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const onPan = useAnimatedGestureHandler({
-    onActive: (event) => {
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
       translateX.value = event.translationX;
       translateY.value = event.translationY;
 
@@ -157,9 +156,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
         [0, 1, 0],
         Extrapolation.CLAMP
       );
-    },
-
-    onEnd: () => {
+    })
+    .onEnd(() => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -180,8 +178,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
       }
 
       scale.value = withTiming(1, timingConfig);
-    },
-  });
+    });
 
   const imageStyles = useAnimatedStyle(() => {
     const interpolateProgress = (range: [number, number]) =>
@@ -223,11 +220,11 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
     <View style={StyleSheet.absoluteFillObject}>
       <Animated.View style={[styles.backdrop, backdropStyles]} />
 
-      <PanGestureHandler onGestureEvent={onPan}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={StyleSheet.absoluteFillObject}>
           <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
