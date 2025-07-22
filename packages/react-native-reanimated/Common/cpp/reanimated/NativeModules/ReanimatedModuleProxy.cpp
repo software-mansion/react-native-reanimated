@@ -787,6 +787,7 @@ void ReanimatedModuleProxy::performOperations() {
 
             case CMD_START_OF_TRANSFORM:
               intBuffer.push_back(command);
+              react_native_assert(value.isArray() && "Transform value must be an array");
               for (const auto &item : value) {
                 const auto transformCommand =
                     transformNameToCommand(item.keys().begin()->getString());
