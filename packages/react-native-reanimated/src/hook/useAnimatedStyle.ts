@@ -442,7 +442,6 @@ function checkSharedValueUsage(
  *   property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
-// You cannot pass Shared Values to `useAnimatedStyle` directly.
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
