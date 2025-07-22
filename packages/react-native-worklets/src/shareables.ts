@@ -6,6 +6,7 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -369,13 +370,14 @@ function cloneWorklet<T extends WorkletFunction>(
   depth: number
 ): ShareableRef<T> {
   if (__DEV__) {
-    // TODO: Restore this once we reimplement JS version checking
-    // const babelVersion = (value as WorkletFunctionDev).__initData.version;
-    //     if (babelVersion !== undefined && babelVersion !== jsVersion) {
-    //       throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).
-    // See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
-    // Offending code was: \`${getWorkletCode(value)}\``);
-    //     }
+    const babelVersion = (value as WorkletFunction).__pluginVersion;
+    if (babelVersion !== undefined && babelVersion !== jsVersion) {
+      throw new WorkletsError(
+        `Mismatch between JavaScript code version and Worklets Babel plugin version (${jsVersion} vs. ${babelVersion}).
+    See \`https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version\` for more details.
+    Offending code was: \`${getWorkletCode(value)}\``
+      );
+    }
     registerWorkletStackDetails(
       value.__workletHash,
       (value as WorkletFunction).__stackDetails!

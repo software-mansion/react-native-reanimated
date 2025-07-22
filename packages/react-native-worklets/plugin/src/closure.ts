@@ -125,7 +125,8 @@ function isImport(binding: Binding): boolean {
   return (
     binding.kind === 'module' &&
     binding.constant &&
-    binding.path.isImportSpecifier() &&
+    (binding.path.isImportSpecifier() ||
+      binding.path.isImportDefaultSpecifier()) &&
     binding.path.parentPath.isImportDeclaration()
   );
 }

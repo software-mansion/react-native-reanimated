@@ -144,7 +144,6 @@ function initializeWorkletRuntime() {
       globalThis.__r.Refresh = Refresh;
 
       /* Gracefully handle unwanted imports from React Native. */
-
       // @ts-expect-error type not exposed by Metro
       const modules = require.getModules();
       // @ts-expect-error type not exposed by Metro

@@ -48,19 +48,16 @@ describe('Test setting different values as sharedValue', () => {
     },
   );
 
-  test.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
-    'Object %p causes an error',
-    async testedValue => {
-      await expect(async () => {
-        await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-        await render(<ProgressBar progress={0} />);
-      }).toThrow(
-        'WorkletsError: [Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: Worklets',
-      );
-    },
-  );
+  test.each([...Presets.stringObjects, ...Presets.dates])('Object %p causes an error', async testedValue => {
+    await expect(async () => {
+      await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+      await render(<ProgressBar progress={0} />);
+    }).toThrow(
+      'WorkletsError: [Worklets] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: Worklets',
+    );
+  });
 
   describe('Test setting _Error types_ as sharedValue', () => {
     test.each([

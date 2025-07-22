@@ -23,7 +23,6 @@ export function bundleModeInit() {
      * module before React Native has configured the RN Runtime.
      */
     init();
-
     throw new WorkletsError('Worklets initialized successfully');
   }
 }

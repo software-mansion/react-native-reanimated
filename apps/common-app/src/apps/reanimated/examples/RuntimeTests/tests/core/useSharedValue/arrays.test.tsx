@@ -6,10 +6,12 @@ import {
   describe,
   expect,
   getRegisteredValue,
+  notify,
   Presets,
   registerValue,
   render,
   test,
+  waitForNotify,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
@@ -22,6 +24,8 @@ type ArrayComponentProps = {
   progress: number;
 };
 
+const ARRAY_OPERATION_NOTIFICATION_NAME = 'ARRAY_OPERATION_NOTIFICATION_NAME';
+
 describe(`_Array operations_ on sharedValue`, () => {
   const AppendToArrayOriginalAPI = ({ initialArray, appendedArray, progress }: ArrayComponentProps) => {
     const sharedValue = useSharedValue(initialArray);
@@ -29,6 +33,7 @@ describe(`_Array operations_ on sharedValue`, () => {
 
     useEffect(() => {
       sharedValue.value = [...sharedValue.value, ...appendedArray];
+      notify(ARRAY_OPERATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -39,6 +44,7 @@ describe(`_Array operations_ on sharedValue`, () => {
 
     useEffect(() => {
       sharedValue.set(value => [...value, ...appendedArray]);
+      notify(ARRAY_OPERATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -53,6 +59,7 @@ describe(`_Array operations_ on sharedValue`, () => {
     await render(<ComponentToRender initialArray={initialArray} appendedArray={appendedArray} progress={progress} />);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = [...initialArray, ...appendedArray];
+    await waitForNotify(ARRAY_OPERATION_NOTIFICATION_NAME);
     expect(sharedValue.onJS).toBe(expected, ComparisonMode.ARRAY);
     expect(sharedValue.onUI).toBe(expected, ComparisonMode.ARRAY);
     await render(<ProgressBar progress={progress} />);
