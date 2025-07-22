@@ -2,12 +2,11 @@
 import type { Component } from 'react';
 import { useRef, useState } from 'react';
 import type { FlatList, ScrollView } from 'react-native';
-import { Platform } from 'react-native';
 
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
-import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { isFabric, isIOS, isMacOS, shouldBeUseWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import { shareableMappingCache } from '../shareableMappingCache';
 import { makeShareableCloneRecursive } from '../shareables';
@@ -95,14 +94,14 @@ function useAnimatedRefBase<TComponent extends Component>(
   return ref.current;
 }
 
+const IS_APPLE = isIOS() || isMacOS();
+
 function useAnimatedRefNative<
   TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const [viewName] = useState(() =>
-    // viewName is required only on iOS with Paper
-    Platform.OS === 'ios' && !isFabric()
-      ? makeMutable<string | null>(null)
-      : null
+    // viewName is required only on iOS/MacOS with Paper
+    !isFabric() && IS_APPLE ? makeMutable<string | null>(null) : null
   );
   const [tagOrWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | number | null>(null)

@@ -49,8 +49,8 @@ export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
   /**
    * @remarks
-   *   `viewName` is required only on iOS with Paper and is undefined on other
-   *   platforms
+   *   `viewName` is required only on iOS/MacOS with Paper and is undefined on
+   *   other platforms
    */
   viewName?: SharedValue<string | null>;
 };
