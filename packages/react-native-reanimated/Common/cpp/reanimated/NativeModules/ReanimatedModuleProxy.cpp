@@ -717,12 +717,14 @@ void ReanimatedModuleProxy::performOperations() {
           intBuffer.push_back(shadowNode->getTag());
           for (const auto &[key, value] : props.items()) {
             const auto keyStr = key.getString();
-            if (keyStr == "opacity") {
-              intBuffer.push_back(CMD_OPACITY);
+            if (keyStr == "opacity" || keyStr == "borderRadius") {
+              const auto cmd = keyStr == "opacity" ? CMD_OPACITY : CMD_BORDER_RADIUS;
+              intBuffer.push_back(cmd);
               doubleBuffer.push_back(value.asDouble());
-            } else if (keyStr == "borderRadius") {
-              intBuffer.push_back(CMD_BORDER_RADIUS);
-              doubleBuffer.push_back(value.asDouble());
+            } else if (keyStr == "backgroundColor" || keyStr == "borderColor") {
+              const auto cmd = keyStr == "backgroundColor" ? CMD_BACKGROUND_COLOR : CMD_BORDER_COLOR;
+              intBuffer.push_back(cmd);
+              intBuffer.push_back(value.asInt());
             } else if (keyStr == "transform") {
               intBuffer.push_back(CMD_START_OF_TRANSFORM);
               for (const auto &item : value) {
@@ -764,12 +766,6 @@ void ReanimatedModuleProxy::performOperations() {
                 }
               }
               intBuffer.push_back(CMD_END_OF_TRANSFORM);
-            } else if (keyStr == "backgroundColor") {
-              intBuffer.push_back(CMD_BACKGROUND_COLOR);
-              intBuffer.push_back(value.asInt());
-            } else if (keyStr == "borderColor") {
-              intBuffer.push_back(CMD_BORDER_COLOR);
-              intBuffer.push_back(value.asInt());
             } else {
               throw std::runtime_error("Unsupported style: " + keyStr);
             }
