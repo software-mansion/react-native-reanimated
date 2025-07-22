@@ -23,6 +23,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace reanimated {
@@ -661,11 +662,18 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+    static const std::unordered_set<std::string> nonLayoutProps = {
+      "opacity",
+      "transform",
+      "backgroundColor",
+      "borderRadius",
+    };
+
     for (const auto &[shadowNode, props] : updatesBatch) {
       bool hasAnyLayoutProp = false;
       for (const auto &key : props.keys()) {
         const auto keyStr = key.asString();
-        if (keyStr != "opacity" && keyStr != "transform" && keyStr != "backgroundColor" && keyStr != "borderRadius") {
+        if (!nonLayoutProps.contains(keyStr)) {
           hasAnyLayoutProp = true;
           break;
         }
