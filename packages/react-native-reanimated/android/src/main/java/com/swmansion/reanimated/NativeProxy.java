@@ -181,12 +181,10 @@ public class NativeProxy {
   }
 
   // NOTE: Keep in sync with ReanimatedModuleProxy::performOperations
-  private static final int CMD_START_OF_BUFFER = 1;
   private static final int CMD_START_OF_VIEW = 2;
   private static final int CMD_START_OF_TRANSFORM = 3;
   private static final int CMD_END_OF_TRANSFORM = 4;
   private static final int CMD_END_OF_VIEW = 5;
-  private static final int CMD_END_OF_BUFFER = 6;
   private static final int CMD_OPACITY = 10;
   private static final int CMD_BORDER_RADIUS = 11;
   private static final int CMD_BACKGROUND_COLOR = 12;
@@ -244,7 +242,6 @@ public class NativeProxy {
   public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
     PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
     PrimitiveIterator.OfDouble doubleIterator = Arrays.stream(doubleBuffer).iterator();
-    assert intIterator.nextInt() == CMD_START_OF_BUFFER;
     int viewTag = -1;
     JavaOnlyMap props = new JavaOnlyMap();
     while (intIterator.hasNext()) {
@@ -337,10 +334,6 @@ public class NativeProxy {
 
         case CMD_END_OF_VIEW:
           mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props);
-          break;
-
-        case CMD_END_OF_BUFFER:
-          assert !intIterator.hasNext();
           break;
 
         default:

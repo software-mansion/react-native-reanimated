@@ -687,12 +687,10 @@ void ReanimatedModuleProxy::performOperations() {
     }
 
     // NOTE: Keep in sync with NativeProxy.java
-    static constexpr auto CMD_START_OF_BUFFER = 1;
     static constexpr auto CMD_START_OF_VIEW = 2;
     static constexpr auto CMD_START_OF_TRANSFORM = 3;
     static constexpr auto CMD_END_OF_TRANSFORM = 4;
     static constexpr auto CMD_END_OF_VIEW = 5;
-    static constexpr auto CMD_END_OF_BUFFER = 6;
     static constexpr auto CMD_OPACITY = 10;
     static constexpr auto CMD_BORDER_RADIUS = 11;
     static constexpr auto CMD_BACKGROUND_COLOR = 12;
@@ -768,7 +766,6 @@ void ReanimatedModuleProxy::performOperations() {
       intBuffer.reserve(1024);
       doubleBuffer.reserve(1024);
 
-      intBuffer.push_back(CMD_START_OF_BUFFER);
       for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
         intBuffer.push_back(CMD_START_OF_VIEW);
         intBuffer.push_back(shadowNode->getTag());
@@ -866,7 +863,6 @@ void ReanimatedModuleProxy::performOperations() {
         }
         intBuffer.push_back(CMD_END_OF_VIEW);
       }
-      intBuffer.push_back(CMD_END_OF_BUFFER);
       synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
     }
 
