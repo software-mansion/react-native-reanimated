@@ -4,13 +4,13 @@ title: Migrating from Reanimated 3.x to 4.x
 sidebar_label: Migration from 3.x
 ---
 
-## New Architecture only
-
-Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/architecture/landing-page) and drops support for the Legacy Architecture along with the legacy renderer (commonly known as Paper) entirely. If your app still runs on the Legacy Architecture, please consider adopting the New Architecture or stay with latest 3.x release.
-
 ## Breaking changes
 
 On the API surface level, Reanimated 4.x introduces only some minor renames and other breaking changes between 3.x and 4.x as listed below. All the animation logic you've written in Reanimated v2 or v3 API works in 4.x with little to no changes. Animations based on shared values will work the same way as before, simultaneously and interchangeably with CSS animations and transitions. This means you can adopt CSS animations and transitions in your codebase incrementally at your own pace.
+
+### New Architecture only
+
+Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/architecture/landing-page) and drops support for the Legacy Architecture along with the legacy renderer (commonly known as Paper) entirely. If your app still runs on the Legacy Architecture, please consider adopting the New Architecture or stay with latest 3.x release.
 
 ### Added dependency on `react-native-worklets`
 
