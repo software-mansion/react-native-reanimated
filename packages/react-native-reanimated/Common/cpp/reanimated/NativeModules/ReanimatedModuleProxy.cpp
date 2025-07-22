@@ -708,7 +708,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
-        std::vector<float> floatBuffer;
+        std::vector<double> doubleBuffer;
         intBuffer.push_back(CMD_START_OF_BUFFER);
         for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
           intBuffer.push_back(CMD_START_OF_VIEW);
@@ -717,10 +717,10 @@ void ReanimatedModuleProxy::performOperations() {
             const auto keyStr = key.getString();
             if (keyStr == "opacity") {
               intBuffer.push_back(CMD_OPACITY);
-              floatBuffer.push_back(value.asDouble());
+              doubleBuffer.push_back(value.asDouble());
             } else if (keyStr == "borderRadius") {
               intBuffer.push_back(CMD_BORDER_RADIUS);
-              floatBuffer.push_back(value.asDouble());
+              doubleBuffer.push_back(value.asDouble());
             } else if (keyStr == "transform") {
               intBuffer.push_back(CMD_START_OF_TRANSFORM);
               for (const auto &item : value) {
@@ -728,10 +728,10 @@ void ReanimatedModuleProxy::performOperations() {
                 const auto &transformValue = *item.values().begin();
                 if (transformKeyStr == "scale") {
                   intBuffer.push_back(CMD_TRANSFORM_SCALE);
-                  floatBuffer.push_back(transformValue.asDouble());
+                  doubleBuffer.push_back(transformValue.asDouble());
                 } else if (transformKeyStr == "perspective") {
                   intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);
-                  floatBuffer.push_back(transformValue.asDouble());
+                  doubleBuffer.push_back(transformValue.asDouble());
                 } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateX" || transformKeyStr == "rotateY" || transformKeyStr == "rotateZ") {
                   const auto &transformValueStr = transformValue.getString();
                   const auto cmd =
@@ -750,7 +750,7 @@ void ReanimatedModuleProxy::performOperations() {
                   } else {
                     throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
                   }
-                  floatBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                  doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
                 } else {
                   throw std::runtime_error("Unsupported transform type: " + transformKeyStr);
                 }
@@ -769,7 +769,7 @@ void ReanimatedModuleProxy::performOperations() {
           intBuffer.push_back(CMD_END_OF_VIEW);
         }
         intBuffer.push_back(CMD_END_OF_BUFFER);
-        synchronouslyUpdateUIPropsFunction_(intBuffer, floatBuffer);
+        synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
     }
 
     if ((filteredUpdatesBatch.size() > 0) &&

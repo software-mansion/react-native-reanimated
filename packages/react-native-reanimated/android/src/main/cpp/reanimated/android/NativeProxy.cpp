@@ -176,15 +176,15 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
-    const std::vector<float> &floatBuffer) {
+    const std::vector<double> &doubleBuffer) {
   static const auto method =
-      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayFloat>)>(
+      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
           "synchronouslyUpdateUIProps");
   auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
-  auto jArrayFloat = jni::JArrayFloat::newArray(floatBuffer.size());
+  auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
   jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
-  jArrayFloat->setRegion(0, floatBuffer.size(), floatBuffer.data());
-  method(javaPart_.get(), jArrayInt, jArrayFloat);
+  jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
+  method(javaPart_.get(), jArrayInt, jArrayDouble);
 }
 
 int NativeProxy::registerSensor(

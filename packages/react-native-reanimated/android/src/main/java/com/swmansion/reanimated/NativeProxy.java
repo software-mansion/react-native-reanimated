@@ -202,12 +202,12 @@ public class NativeProxy {
   private static final int CMD_UNIT_RAD = 101;
 
   @DoNotStrip
-  public void synchronouslyUpdateUIProps(int[] intBuffer, float[] floatBuffer) {
+  public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
     PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
+    PrimitiveIterator.OfDouble doubleIterator = Arrays.stream(doubleBuffer).iterator();
     assert intIterator.nextInt() == CMD_START_OF_BUFFER;
     int viewTag = -1;
     JavaOnlyMap props = new JavaOnlyMap();
-    int f = 0;
     while (intIterator.hasNext()) {
       int command = intIterator.nextInt();
       switch (command) {
@@ -217,11 +217,11 @@ public class NativeProxy {
           break;
 
         case CMD_OPACITY:
-          props.putDouble("opacity", floatBuffer[f++]);
+          props.putDouble("opacity", doubleIterator.nextDouble());
           break;
 
         case CMD_BORDER_RADIUS:
-          props.putDouble("borderRadius", floatBuffer[f++]);
+          props.putDouble("borderRadius", doubleIterator.nextDouble());
           break;
 
         case CMD_BACKGROUND_COLOR:
@@ -242,7 +242,7 @@ public class NativeProxy {
             }
             switch (transformCommand) {
               case CMD_TRANSFORM_SCALE:
-                transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
+                transform.pushMap(JavaOnlyMap.of("scale", doubleIterator.nextDouble()));
                 break;
 
               case CMD_TRANSFORM_ROTATE:
@@ -256,13 +256,13 @@ public class NativeProxy {
                   case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
                   default -> throw new RuntimeException("Unknown rotation type: " + transformCommand);
                 };
-                float angle = floatBuffer[f++];
+                double angle = doubleIterator.nextDouble();
                 String unit = unitCommandToString(intIterator.nextInt());
                 transform.pushMap(JavaOnlyMap.of(name, angle + unit));
                 break;
 
               case CMD_TRANSFORM_PERSPECTIVE:
-                transform.pushMap(JavaOnlyMap.of("perspective", floatBuffer[f++]));
+                transform.pushMap(JavaOnlyMap.of("perspective", doubleIterator.nextDouble()));
                 break;
 
               default:

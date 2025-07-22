@@ -54,7 +54,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   void installJSIBindings();
   void synchronouslyUpdateUIProps(
       const std::vector<int> &intBuffer,
-      const std::vector<float> &floatBuffer);
+      const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
