@@ -60,9 +60,7 @@ export default function OpacityTransformExample() {
       {[...new Array(ROWS)].map((_, i) => (
         <View key={i} style={styles.row}>
           {[...new Array(COLS)].map((_, j) => (
-            <Animated.Text key={j} style={[styles.box, animatedStyle]}>
-              foo
-            </Animated.Text>
+            <Animated.View key={j} style={[styles.box, animatedStyle]} />
           ))}
         </View>
       ))}
