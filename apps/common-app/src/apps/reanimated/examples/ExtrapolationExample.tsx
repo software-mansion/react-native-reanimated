@@ -10,56 +10,56 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function ExtrapolationExample() {
-  const transY = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   const gesture = Gesture.Pan()
     .onChange((event) => {
-      transY.value += event.changeY;
+      translateY.value += event.changeY;
     })
     .onEnd(() => {
-      transY.value = withTiming(0);
+      translateY.value = withTiming(0);
     });
 
   const button1Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(transY.value, [0, -75], [0, -75], {
+      interpolate(translateY.value, [0, -75], [0, -75], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateX }, { translateY: transY.value }],
+      transform: [{ translateX }, { translateY: translateY.value }],
     };
   });
   const button2Style = useAnimatedStyle(() => {
-    const translateY = Math.round(
-      interpolate(transY.value, [0, -75], [0, -150], {
+    const transY = Math.round(
+      interpolate(translateY.value, [0, -75], [0, -150], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateY }],
+      transform: [{ translateY: transY }],
     };
   });
 
   const button3Style = useAnimatedStyle(() => {
     const translateX = Math.round(
-      interpolate(transY.value, [0, -75], [0, 75], {
+      interpolate(translateY.value, [0, -75], [0, 75], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.EXTEND,
       })
     );
 
     return {
-      transform: [{ translateX }, { translateY: transY.value }],
+      transform: [{ translateX }, { translateY: translateY.value }],
     };
   });
 
   const stylez = useAnimatedStyle(() => ({
-    transform: [{ translateY: transY.value }],
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (
