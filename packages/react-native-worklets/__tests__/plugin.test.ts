@@ -721,38 +721,10 @@ describe('babel plugin', () => {
   });
 
   describe('for object hooks', () => {
-    it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: (event) => {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: (event) => {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function (event) {
             console.log(event);
           },
         });
@@ -777,20 +749,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
@@ -805,23 +763,9 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
       const input = html`<script>
-        useAnimatedGestureHandler({
+        useAnimatedScrollHandler({
           onScroll(event) {
             console.log(event);
           },
@@ -833,16 +777,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports empty object in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('supports empty object in useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler({});
@@ -850,20 +784,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms each object property in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: () => {},
-          onUpdate: () => {},
-          onEnd: () => {},
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
 
@@ -880,36 +800,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(5);
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(() => {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function () {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function foo() {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
 
@@ -1103,7 +993,7 @@ describe('babel plugin', () => {
     it('supports SequenceExpression, with objectHook', () => {
       const input = html`<script>
         function App() {
-          (0, useAnimatedGestureHandler)({ onStart() {} }, []);
+          (0, useAnimatedScrollHandler)({ onScroll() {} }, []);
         }
       </script>`;
 
@@ -1312,8 +1202,8 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input6)).toBe(true);
 
       const input7 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
             return useAnimatedStyle(() => {
               return 1;
             });
@@ -1323,10 +1213,10 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input7)).toBe(true);
 
       const input8 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
-            return useAnimatedGestureHandler({
-              onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
+            return useAnimatedScrollHandler({
+              onScroll: () => {
                 return 1;
               },
             });

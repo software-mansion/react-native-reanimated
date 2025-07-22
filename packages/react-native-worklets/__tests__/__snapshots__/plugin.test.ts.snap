@@ -2512,14 +2512,6 @@ function App() {
 }"
 `;
 
-exports[`babel plugin for object hooks doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
-
-exports[`babel plugin for object hooks doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function foo() {});"`;
-
-exports[`babel plugin for object hooks doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler(function () {});"`;
-
-exports[`babel plugin for object hooks supports empty object in useAnimatedGestureHandler 1`] = `"useAnimatedGestureHandler({});"`;
-
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
 
 exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
@@ -2543,65 +2535,6 @@ useAnimatedScrollHandler(function null1Factory(_ref) {
 }({
   _worklet_6572201563503_init_data: _worklet_6572201563503_init_data
 }));"
-`;
-
-exports[`babel plugin for object hooks transforms each object property in useAnimatedGestureHandler 1`] = `
-"var _worklet_17107900483944_init_data = {
-  code: "function null1(){}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-var _worklet_15612771346699_init_data = {
-  code: "function null2(){}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-var _worklet_3001796818986_init_data = {
-  code: "function null3(){}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedGestureHandler({
-  onStart: function null1Factory(_ref) {
-    var _worklet_17107900483944_init_data = _ref._worklet_17107900483944_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var null1 = function null1() {};
-    null1.__closure = {};
-    null1.__workletHash = 17107900483944;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_17107900483944_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_17107900483944_init_data: _worklet_17107900483944_init_data
-  }),
-  onUpdate: function null2Factory(_ref2) {
-    var _worklet_15612771346699_init_data = _ref2._worklet_15612771346699_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var null2 = function null2() {};
-    null2.__closure = {};
-    null2.__workletHash = 15612771346699;
-    null2.__pluginVersion = "x.y.z";
-    null2.__initData = _worklet_15612771346699_init_data;
-    null2.__stackDetails = _e;
-    return null2;
-  }({
-    _worklet_15612771346699_init_data: _worklet_15612771346699_init_data
-  }),
-  onEnd: function null3Factory(_ref3) {
-    var _worklet_3001796818986_init_data = _ref3._worklet_3001796818986_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var null3 = function null3() {};
-    null3.__closure = {};
-    null3.__workletHash = 3001796818986;
-    null3.__pluginVersion = "x.y.z";
-    null3.__initData = _worklet_3001796818986_init_data;
-    null3.__stackDetails = _e;
-    return null3;
-  }({
-    _worklet_3001796818986_init_data: _worklet_3001796818986_init_data
-  })
-});"
 `;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
@@ -2745,106 +2678,6 @@ useAnimatedScrollHandler(function null1Factory(_ref) {
 }));"
 `;
 
-exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_6572201563503_init_data = {
-  code: "function null1(event){console.log(event);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedGestureHandler({
-  onStart: function null1Factory(_ref) {
-    var _worklet_6572201563503_init_data = _ref._worklet_6572201563503_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var null1 = function null1(event) {
-      console.log(event);
-    };
-    null1.__closure = {};
-    null1.__workletHash = 6572201563503;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_6572201563503_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_6572201563503_init_data: _worklet_6572201563503_init_data
-  })
-});"
-`;
-
-exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
-"var _worklet_6368412250705_init_data = {
-  code: "function onStart_null1(event){console.log(event);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedGestureHandler({
-  onStart: function onStart_null1Factory(_ref) {
-    var _worklet_6368412250705_init_data = _ref._worklet_6368412250705_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var onStart = function onStart(event) {
-      console.log(event);
-    };
-    onStart.__closure = {};
-    onStart.__workletHash = 6368412250705;
-    onStart.__pluginVersion = "x.y.z";
-    onStart.__initData = _worklet_6368412250705_init_data;
-    onStart.__stackDetails = _e;
-    return onStart;
-  }({
-    _worklet_6368412250705_init_data: _worklet_6368412250705_init_data
-  })
-});"
-`;
-
-exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_6368412250705_init_data = {
-  code: "function onStart_null1(event){console.log(event);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedGestureHandler({
-  onStart: function onStart_null1Factory(_ref) {
-    var _worklet_6368412250705_init_data = _ref._worklet_6368412250705_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var onStart = function onStart(event) {
-      console.log(event);
-    };
-    onStart.__closure = {};
-    onStart.__workletHash = 6368412250705;
-    onStart.__pluginVersion = "x.y.z";
-    onStart.__initData = _worklet_6368412250705_init_data;
-    onStart.__stackDetails = _e;
-    return onStart;
-  }({
-    _worklet_6368412250705_init_data: _worklet_6368412250705_init_data
-  })
-});"
-`;
-
-exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_6572201563503_init_data = {
-  code: "function null1(event){console.log(event);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\""
-};
-useAnimatedGestureHandler({
-  onStart: function null1Factory(_ref) {
-    var _worklet_6572201563503_init_data = _ref._worklet_6572201563503_init_data;
-    var _e = [new global.Error(), 1, -27];
-    var null1 = function null1(event) {
-      console.log(event);
-    };
-    null1.__closure = {};
-    null1.__workletHash = 6572201563503;
-    null1.__pluginVersion = "x.y.z";
-    null1.__initData = _worklet_6572201563503_init_data;
-    null1.__stackDetails = _e;
-    return null1;
-  }({
-    _worklet_6572201563503_init_data: _worklet_6572201563503_init_data
-  })
-});"
-`;
-
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_6572201563503_init_data = {
   code: "function null1(event){console.log(event);}",
@@ -2876,7 +2709,7 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-useAnimatedGestureHandler({
+useAnimatedScrollHandler({
   onScroll: function onScroll_null1Factory(_ref) {
     var _worklet_11162089192476_init_data = _ref._worklet_11162089192476_init_data;
     var _e = [new global.Error(), 1, -27];
@@ -3660,25 +3493,25 @@ function App() {
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
-"var _worklet_8764176270806_init_data = {
-  code: "function onStart_null1(){}",
+"var _worklet_10431207809979_init_data = {
+  code: "function onScroll_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
 function App() {
-  (0, useAnimatedGestureHandler)({
-    onStart: function onStart_null1Factory(_ref) {
-      var _worklet_8764176270806_init_data = _ref._worklet_8764176270806_init_data;
+  (0, useAnimatedScrollHandler)({
+    onScroll: function onScroll_null1Factory(_ref) {
+      var _worklet_10431207809979_init_data = _ref._worklet_10431207809979_init_data;
       var _e = [new global.Error(), 1, -27];
-      var onStart = function onStart() {};
-      onStart.__closure = {};
-      onStart.__workletHash = 8764176270806;
-      onStart.__pluginVersion = "x.y.z";
-      onStart.__initData = _worklet_8764176270806_init_data;
-      onStart.__stackDetails = _e;
-      return onStart;
+      var onScroll = function onScroll() {};
+      onScroll.__closure = {};
+      onScroll.__workletHash = 10431207809979;
+      onScroll.__pluginVersion = "x.y.z";
+      onScroll.__initData = _worklet_10431207809979_init_data;
+      onScroll.__stackDetails = _e;
+      return onScroll;
     }({
-      _worklet_8764176270806_init_data: _worklet_8764176270806_init_data
+      _worklet_10431207809979_init_data: _worklet_10431207809979_init_data
     })
   }, []);
 }"
