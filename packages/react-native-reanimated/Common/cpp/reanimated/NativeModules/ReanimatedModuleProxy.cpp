@@ -751,60 +751,69 @@ void ReanimatedModuleProxy::performOperations() {
           intBuffer.push_back(shadowNode->getTag());
           for (const auto &[key, value] : props.items()) {
             const auto command = propNameToCommand(key.getString());
-            if (command == CMD_OPACITY || command == CMD_BORDER_RADIUS) {
-              intBuffer.push_back(command);
-              doubleBuffer.push_back(value.asDouble());
-            } else if (command == CMD_BACKGROUND_COLOR || command == CMD_BORDER_COLOR || command == CMD_COLOR) {
-              intBuffer.push_back(command);
-              intBuffer.push_back(value.asInt());
-            } else if (command == CMD_START_OF_TRANSFORM) {
-              intBuffer.push_back(command);
-              for (const auto &item : value) {
-                const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
-                const auto &transformValue = *item.values().begin();
-                if (transformCommand == CMD_TRANSFORM_SCALE || transformCommand == CMD_TRANSFORM_SCALE_X || transformCommand == CMD_TRANSFORM_SCALE_Y) {
-                  intBuffer.push_back(transformCommand);
-                  doubleBuffer.push_back(transformValue.asDouble());
-                } else if (transformCommand == CMD_TRANSFORM_TRANSLATE_X || transformCommand == CMD_TRANSFORM_TRANSLATE_Y) {
-                  intBuffer.push_back(transformCommand);
-                  if (transformValue.isDouble()) {
-                    intBuffer.push_back(CMD_UNIT_PX);
+            switch (command) {
+              case CMD_OPACITY:
+              case CMD_BORDER_RADIUS:
+                intBuffer.push_back(command);
+                doubleBuffer.push_back(value.asDouble());
+                break;
+
+              case CMD_BACKGROUND_COLOR:
+              case CMD_BORDER_COLOR:
+              case CMD_COLOR:
+                intBuffer.push_back(command);
+                intBuffer.push_back(value.asInt());
+                break;
+
+              case CMD_START_OF_TRANSFORM:
+                intBuffer.push_back(command);
+                for (const auto &item : value) {
+                  const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
+                  const auto &transformValue = *item.values().begin();
+                  if (transformCommand == CMD_TRANSFORM_SCALE || transformCommand == CMD_TRANSFORM_SCALE_X || transformCommand == CMD_TRANSFORM_SCALE_Y) {
+                    intBuffer.push_back(transformCommand);
                     doubleBuffer.push_back(transformValue.asDouble());
-                  } else if (transformValue.isString()) {
-                    const auto &transformValueStr = transformValue.getString();
-                    if (!transformValueStr.ends_with("%")) {
-                      throw std::runtime_error("String translate must be a percentage");
+                  } else if (transformCommand == CMD_TRANSFORM_TRANSLATE_X || transformCommand == CMD_TRANSFORM_TRANSLATE_Y) {
+                    intBuffer.push_back(transformCommand);
+                    if (transformValue.isDouble()) {
+                      intBuffer.push_back(CMD_UNIT_PX);
+                      doubleBuffer.push_back(transformValue.asDouble());
+                    } else if (transformValue.isString()) {
+                      const auto &transformValueStr = transformValue.getString();
+                      if (!transformValueStr.ends_with("%")) {
+                        throw std::runtime_error("String translate must be a percentage");
+                      }
+                      intBuffer.push_back(CMD_UNIT_PERCENT);
+                      doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
+                    } else {
+                      throw std::runtime_error("Translate value must be a number or a string");
                     }
-                    intBuffer.push_back(CMD_UNIT_PERCENT);
-                    doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
-                  } else {
-                    throw std::runtime_error("Translate value must be a number or a string");
-                  }
-                } else if (transformCommand == CMD_TRANSFORM_PERSPECTIVE) {
-                  // TODO: merge to scale branch
-                  intBuffer.push_back(transformCommand);
-                  doubleBuffer.push_back(transformValue.asDouble());
-                } else if (transformCommand == CMD_TRANSFORM_ROTATE || transformCommand == CMD_TRANSFORM_ROTATE_X || transformCommand == CMD_TRANSFORM_ROTATE_Y || transformCommand == CMD_TRANSFORM_ROTATE_Z || transformCommand == CMD_TRANSFORM_SKEW_X || transformCommand == CMD_TRANSFORM_SKEW_Y) {
-                  const auto &transformValueStr = transformValue.getString();
-                  intBuffer.push_back(transformCommand);
-                  if (transformValueStr.ends_with("deg")) {
-                    intBuffer.push_back(CMD_UNIT_DEG);
-                  } else if (transformValueStr.ends_with("rad")) {
-                    intBuffer.push_back(CMD_UNIT_RAD);
-                  } else {
-                    throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
-                  }
-                  doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
-                } else if (transformCommand == CMD_TRANSFORM_MATRIX) {
-                  intBuffer.push_back(transformCommand);
-                  int size = transformValue.size();
-                  intBuffer.push_back(transformValue.size());
-                  for (int i = 0; i < size; i++) {
-                    doubleBuffer.push_back(transformValue[i].asDouble());
+                  } else if (transformCommand == CMD_TRANSFORM_PERSPECTIVE) {
+                    // TODO: merge to scale branch
+                    intBuffer.push_back(transformCommand);
+                    doubleBuffer.push_back(transformValue.asDouble());
+                  } else if (transformCommand == CMD_TRANSFORM_ROTATE || transformCommand == CMD_TRANSFORM_ROTATE_X || transformCommand == CMD_TRANSFORM_ROTATE_Y || transformCommand == CMD_TRANSFORM_ROTATE_Z || transformCommand == CMD_TRANSFORM_SKEW_X || transformCommand == CMD_TRANSFORM_SKEW_Y) {
+                    const auto &transformValueStr = transformValue.getString();
+                    intBuffer.push_back(transformCommand);
+                    if (transformValueStr.ends_with("deg")) {
+                      intBuffer.push_back(CMD_UNIT_DEG);
+                    } else if (transformValueStr.ends_with("rad")) {
+                      intBuffer.push_back(CMD_UNIT_RAD);
+                    } else {
+                      throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
+                    }
+                    doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                  } else if (transformCommand == CMD_TRANSFORM_MATRIX) {
+                    intBuffer.push_back(transformCommand);
+                    int size = transformValue.size();
+                    intBuffer.push_back(transformValue.size());
+                    for (int i = 0; i < size; i++) {
+                      doubleBuffer.push_back(transformValue[i].asDouble());
+                    }
                   }
                 }
-              }
-              intBuffer.push_back(CMD_END_OF_TRANSFORM);
+                intBuffer.push_back(CMD_END_OF_TRANSFORM);
+                break;
             }
           }
           intBuffer.push_back(CMD_END_OF_VIEW);
