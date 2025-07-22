@@ -46,7 +46,7 @@ function useAnimatedRefBase<TComponent extends Component>(
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
   ).current;
-  const tagOrWrapperRef = useRef<ShadowNodeWrapper | number | null>(null);
+  const tagOrWrapperRef = useRef<ShadowNodeWrapper | number | null>(-1);
 
   const ref = useRef<AnimatedRef<TComponent> | null>(null);
 
