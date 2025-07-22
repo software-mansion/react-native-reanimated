@@ -16,7 +16,6 @@ function ChatHeads({
 }: React.PropsWithChildren<Record<never, never>>) {
   const transX = useSharedValue(0);
   const transY = useSharedValue(0);
-  const startPosition = useSharedValue({ x: 0, y: 0 });
 
   const gesture = Gesture.Pan()
     .onStart(() => {
