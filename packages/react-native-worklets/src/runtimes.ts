@@ -32,8 +32,14 @@ export function createWorkletRuntime(
 
 export function createWorkletRuntime(
   name: string,
-  initializer?: WorkletFunction<[], void>
+  initializer?: WorkletFunction<[], void>,
+  asyncQueue?: object
 ): WorkletRuntime {
+  if (initializer !== undefined && !isWorkletFunction(initializer)) {
+    throw new WorkletsError(
+      'The initializer passed to `createWorkletRuntime` is not a worklet.'
+    );
+  }
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
   return WorkletsModule.createWorkletRuntime(
     name,
@@ -43,7 +49,8 @@ export function createWorkletRuntime(
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
       initializer?.();
-    })
+    }),
+    asyncQueue
   );
 }
 

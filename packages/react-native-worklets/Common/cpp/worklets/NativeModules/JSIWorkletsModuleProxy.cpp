@@ -8,6 +8,7 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
+#include <memory>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -64,9 +65,14 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
-    std::shared_ptr<ShareableWorklet> &initializer) {
+    std::shared_ptr<ShareableWorklet> &initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+      jsiWorkletsModuleProxy,
+      true /* supportsLocking */,
+      name,
+      initializer,
+      queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -102,6 +108,24 @@ inline jsi::Value reportFatalErrorOnJS(
           .name = name,
           .jsEngine = jsEngine});
   return jsi::Value::undefined();
+}
+
+inline std::shared_ptr<AsyncQueue> extractAsyncQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (!value.isObject()) {
+    return nullptr;
+  }
+  auto object = value.asObject(rt);
+
+  if (!object.hasNativeState(rt)) {
+    return nullptr;
+  }
+
+  const auto &nativeState = object.getNativeState(rt);
+  auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
+
+  return asyncQueue;
 }
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -458,7 +482,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
+        3,
         [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -467,6 +491,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
           auto name = args[0].asString(rt).utf8(rt);
           auto shareableInitializer = extractShareableOrThrow<ShareableWorklet>(
               rt, args[1], "[Worklets] Initializer must be a worklet.");
+          auto asyncQueue = extractAsyncQueue(rt, args[2]);
 
           return createWorkletRuntime(
               rt,
@@ -474,7 +499,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone->getJSQueue(),
               clone,
               name,
-              shareableInitializer);
+              shareableInitializer,
+              asyncQueue);
         });
   }
 

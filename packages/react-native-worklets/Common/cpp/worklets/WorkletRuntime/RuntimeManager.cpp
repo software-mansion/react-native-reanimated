@@ -5,8 +5,6 @@
 
 namespace worklets {
 
-const std::string uiRuntimeName{"UI"};
-
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
@@ -47,13 +45,13 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const bool supportsLocking,
     const std::string &name,
-    std::shared_ptr<ShareableWorklet> initializer) {
+    std::shared_ptr<ShareableWorklet> initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto runtimeId = getNextRuntimeId();
   const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
   auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId, jsQueue, name, true /* supportsLocking */
-  );
+      runtimeId, jsQueue, name, true /* supportsLocking */, queue);
 
   workletRuntime->init(std::move(jsiWorkletsModuleProxy));
 

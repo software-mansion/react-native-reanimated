@@ -7,7 +7,9 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <cassert>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,7 +32,8 @@ class WorkletRuntime : public jsi::HostObject,
       uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
-      const bool supportsLocking);
+      const bool supportsLocking,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
@@ -49,8 +52,15 @@ class WorkletRuntime : public jsi::HostObject,
 
   void runAsyncGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
+    assert(
+        runtimeId_ != rnRuntimeId &&
+        "[Worklets] Can't use `runAsyncGuarded` on RN Runtime.");
+    assert(
+        runtimeId_ != uiRuntimeId &&
+        "[Worklets] Can't use `runAsyncGuarded` on UI Runtime.");
+
     if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueue>(name_);
+      queue_ = std::make_shared<AsyncQueueImpl>(name_);
     }
     queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();

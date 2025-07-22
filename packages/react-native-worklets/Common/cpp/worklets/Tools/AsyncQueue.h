@@ -20,13 +20,20 @@ struct AsyncQueueState {
   std::queue<std::function<void()>> queue;
 };
 
-class AsyncQueue {
+class AsyncQueue : public facebook::jsi::NativeState {
  public:
-  explicit AsyncQueue(std::string name);
+  virtual ~AsyncQueue() = default;
 
-  ~AsyncQueue();
+  virtual void push(std::function<void()> &&job) = 0;
+};
 
-  void push(std::function<void()> &&job);
+class AsyncQueueImpl : public AsyncQueue {
+ public:
+  explicit AsyncQueueImpl(std::string name);
+
+  ~AsyncQueueImpl() override;
+
+  void push(std::function<void()> &&job) override;
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;

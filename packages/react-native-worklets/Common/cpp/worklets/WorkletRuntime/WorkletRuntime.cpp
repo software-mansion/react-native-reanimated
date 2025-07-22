@@ -77,14 +77,16 @@ WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking)
+    const bool supportsLocking,
+    const std::shared_ptr<AsyncQueue> &queue)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
 #endif // NDEBUG
-      name_(name) {
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
