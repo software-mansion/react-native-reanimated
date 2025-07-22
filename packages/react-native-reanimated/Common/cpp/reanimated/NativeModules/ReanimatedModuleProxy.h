@@ -151,7 +151,7 @@ class ReanimatedModuleProxy
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
   std::function<std::string()> createRegistriesLeakCheck();
