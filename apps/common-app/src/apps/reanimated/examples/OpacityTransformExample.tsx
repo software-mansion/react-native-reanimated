@@ -8,9 +8,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const ROWS = 25;
-const COLS = 15;
-const SIZE = 25;
+const ROWS = 5;
+const COLS = 5;
+const SIZE = 50;
 
 export default function OpacityTransformExample() {
   const sv = useSharedValue(0);
@@ -21,10 +21,10 @@ export default function OpacityTransformExample() {
   }, [sv]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    // opacity: 0.5 + sv.value / 2,
-    // borderRadius: sv.value * 25,
-    // backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
-    // borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    opacity: 0.5 + sv.value / 2,
+    borderRadius: sv.value * 25,
+    backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // color: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // transform: [],
     // transform: [

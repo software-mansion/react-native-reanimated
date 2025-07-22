@@ -29,8 +29,11 @@ import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.PrimitiveIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -200,16 +203,16 @@ public class NativeProxy {
 
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, float[] floatBuffer) {
-    assert intBuffer[0] == CMD_START_OF_BUFFER;
-    assert intBuffer[intBuffer.length - 1] == CMD_END_OF_BUFFER;
+    PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
+    assert intIterator.nextInt() == CMD_START_OF_BUFFER;
     int viewTag = -1;
     JavaOnlyMap props = new JavaOnlyMap();
     int f = 0;
-    for (int i = 1; i < intBuffer.length - 1; ) {
-      switch (intBuffer[i]) {
+    while (intIterator.hasNext()) {
+      int command = intIterator.nextInt();
+      switch (command) {
         case CMD_START_OF_VIEW:
-          i++;
-          viewTag = intBuffer[i];
+          viewTag = intIterator.nextInt();
           props = new JavaOnlyMap();
           break;
 
@@ -222,20 +225,22 @@ public class NativeProxy {
           break;
 
         case CMD_BACKGROUND_COLOR:
-          i++;
-          props.putInt("backgroundColor", intBuffer[i]);
+          props.putInt("backgroundColor", intIterator.nextInt());
           break;
 
         case CMD_BORDER_COLOR:
-          i++;
-          props.putInt("borderColor", intBuffer[i]);
+          props.putInt("borderColor", intIterator.nextInt());
           break;
 
         case CMD_START_OF_TRANSFORM:
-          i++;
           JavaOnlyArray transform = new JavaOnlyArray();
-          while (intBuffer[i] != CMD_END_OF_TRANSFORM) {
-            switch (intBuffer[i]) {
+          while (true) {
+            int transformCommand = intIterator.nextInt();
+            if (transformCommand == CMD_END_OF_TRANSFORM) {
+              props.putArray("transform", transform);
+              break;
+            }
+            switch (transformCommand) {
               case CMD_TRANSFORM_SCALE:
                 transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
                 break;
@@ -244,15 +249,15 @@ public class NativeProxy {
               case CMD_TRANSFORM_ROTATE_X:
               case CMD_TRANSFORM_ROTATE_Y:
               case CMD_TRANSFORM_ROTATE_Z:
-                String name = switch (intBuffer[i]) {
+                String name = switch (transformCommand) {
                   case CMD_TRANSFORM_ROTATE -> "rotate";
                   case CMD_TRANSFORM_ROTATE_X -> "rotateX";
                   case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
                   case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
-                  default -> throw new RuntimeException("Unknown rotation type: " + intBuffer[i]);
+                  default -> throw new RuntimeException("Unknown rotation type: " + transformCommand);
                 };
                 float angle = floatBuffer[f++];
-                String unit = unitCommandToString(intBuffer[++i]);
+                String unit = unitCommandToString(intIterator.nextInt());
                 transform.pushMap(JavaOnlyMap.of(name, angle + unit));
                 break;
 
@@ -261,21 +266,22 @@ public class NativeProxy {
                 break;
 
               default:
-                throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
+                throw new RuntimeException("Unknown transform type: " + transformCommand);
             }
-            i++;
           }
-          props.putArray("transform", transform);
           break;
 
         case CMD_END_OF_VIEW:
           mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props);
           break;
 
+        case CMD_END_OF_BUFFER:
+          assert !intIterator.hasNext();
+          break;
+
         default:
-          throw new RuntimeException("Unexcepted command: " + intBuffer[i]);
+          throw new RuntimeException("Unexcepted command: " + command);
       }
-      i++;
     }
   }
 
