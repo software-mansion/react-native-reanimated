@@ -63,7 +63,9 @@ function ScrollableView({
 
   const gesture = Gesture.Pan()
     .onBegin(() => {
-      startY.value = translateY.value;
+      const currentTranslateY = translateY.value;
+      startY.value = currentTranslateY;
+      translateY.value = currentTranslateY; // for stop animation (assigning to a shared value stops running animation)
     })
     .onUpdate((event) => {
       const nextTranslate = startY.value + event.translationY;
