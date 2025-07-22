@@ -686,34 +686,35 @@ void ReanimatedModuleProxy::performOperations() {
       }
     }
 
-    static constexpr auto CMD_START_OF_BUFFER = -1;
-    static constexpr auto CMD_START_OF_VIEW = -2;
-    static constexpr auto CMD_START_OF_TRANSFORM = -3;
-    static constexpr auto CMD_END_OF_TRANSFORM = -4;
-    static constexpr auto CMD_END_OF_VIEW = -5;
-    static constexpr auto CMD_END_OF_BUFFER = -6;
-    static constexpr auto CMD_OPACITY = 1;
-    static constexpr auto CMD_BORDER_RADIUS = 4;
-    static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 29;
-    static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 30;
-    static constexpr auto CMD_TRANSFORM_SCALE = 21;
-    static constexpr auto CMD_TRANSFORM_SCALE_X = 27;
-    static constexpr auto CMD_TRANSFORM_SCALE_Y = 28;
-    static constexpr auto CMD_TRANSFORM_ROTATE = 22;
-    static constexpr auto CMD_TRANSFORM_ROTATE_X = 25;
-    static constexpr auto CMD_TRANSFORM_ROTATE_Y = 24;
-    static constexpr auto CMD_TRANSFORM_ROTATE_Z = 26;
-    static constexpr auto CMD_TRANSFORM_SKEW_X = 31;
-    static constexpr auto CMD_TRANSFORM_SKEW_Y = 32;
-    static constexpr auto CMD_TRANSFORM_MATRIX = 33;
-    static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
-    static constexpr auto CMD_BACKGROUND_COLOR = 3;
-    static constexpr auto CMD_BORDER_COLOR = 5;
-    static constexpr auto CMD_COLOR = 34;
-    static constexpr auto CMD_UNIT_DEG = 100;
-    static constexpr auto CMD_UNIT_RAD = 101;
-    static constexpr auto CMD_UNIT_PX = 102;
-    static constexpr auto CMD_UNIT_PERCENT = 103;
+    // NOTE: Keep in sync with NativeProxy.java
+    static constexpr auto CMD_START_OF_BUFFER = 1;
+    static constexpr auto CMD_START_OF_VIEW = 2;
+    static constexpr auto CMD_START_OF_TRANSFORM = 3;
+    static constexpr auto CMD_END_OF_TRANSFORM = 4;
+    static constexpr auto CMD_END_OF_VIEW = 5;
+    static constexpr auto CMD_END_OF_BUFFER = 6;
+    static constexpr auto CMD_OPACITY = 10;
+    static constexpr auto CMD_BORDER_RADIUS = 11;
+    static constexpr auto CMD_BACKGROUND_COLOR = 12;
+    static constexpr auto CMD_BORDER_COLOR = 13;
+    static constexpr auto CMD_COLOR = 14;
+    static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 100;
+    static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 101;
+    static constexpr auto CMD_TRANSFORM_SCALE = 102;
+    static constexpr auto CMD_TRANSFORM_SCALE_X = 103;
+    static constexpr auto CMD_TRANSFORM_SCALE_Y = 104;
+    static constexpr auto CMD_TRANSFORM_ROTATE = 105;
+    static constexpr auto CMD_TRANSFORM_ROTATE_X = 106;
+    static constexpr auto CMD_TRANSFORM_ROTATE_Y = 107;
+    static constexpr auto CMD_TRANSFORM_ROTATE_Z = 108;
+    static constexpr auto CMD_TRANSFORM_SKEW_X = 109;
+    static constexpr auto CMD_TRANSFORM_SKEW_Y = 110;
+    static constexpr auto CMD_TRANSFORM_MATRIX = 111;
+    static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 112;
+    static constexpr auto CMD_UNIT_DEG = 200;
+    static constexpr auto CMD_UNIT_RAD = 201;
+    static constexpr auto CMD_UNIT_PX = 202;
+    static constexpr auto CMD_UNIT_PERCENT = 203;
 
     const auto propNameToCommand = [](const std::string &name) {
       if (name == "opacity") return CMD_OPACITY;

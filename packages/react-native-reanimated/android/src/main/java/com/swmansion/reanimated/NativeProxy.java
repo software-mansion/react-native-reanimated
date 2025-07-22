@@ -180,34 +180,35 @@ public class NativeProxy {
     }
   }
 
-  private static final int CMD_START_OF_BUFFER = -1;
-  private static final int CMD_START_OF_VIEW = -2;
-  private static final int CMD_START_OF_TRANSFORM = -3;
-  private static final int CMD_END_OF_TRANSFORM = -4;
-  private static final int CMD_END_OF_VIEW = -5;
-  private static final int CMD_END_OF_BUFFER = -6;
-  private static final int CMD_OPACITY = 1;
-  private static final int CMD_BORDER_RADIUS = 4;
-  private static final int CMD_TRANSFORM_TRANSLATE_X = 29;
-  private static final int CMD_TRANSFORM_TRANSLATE_Y = 30;
-  private static final int CMD_TRANSFORM_SCALE = 21;
-  private static final int CMD_TRANSFORM_SCALE_X = 27;
-  private static final int CMD_TRANSFORM_SCALE_Y = 28;
-  private static final int CMD_TRANSFORM_ROTATE = 22;
-  private static final int CMD_TRANSFORM_ROTATE_X = 25;
-  private static final int CMD_TRANSFORM_ROTATE_Y = 24;
-  private static final int CMD_TRANSFORM_ROTATE_Z = 26;
-  private static final int CMD_TRANSFORM_SKEW_X = 31;
-  private static final int CMD_TRANSFORM_SKEW_Y = 32;
-  private static final int CMD_TRANSFORM_MATRIX = 33;
-  private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
-  private static final int CMD_BACKGROUND_COLOR = 3;
-  private static final int CMD_BORDER_COLOR = 5;
-  private static final int CMD_COLOR = 34;
-  private static final int CMD_UNIT_DEG = 100;
-  private static final int CMD_UNIT_RAD = 101;
-  private static final int CMD_UNIT_PX = 102;
-  private static final int CMD_UNIT_PERCENT = 103;
+  // NOTE: Keep in sync with ReanimatedModuleProxy::performOperations
+  private static final int CMD_START_OF_BUFFER = 1;
+  private static final int CMD_START_OF_VIEW = 2;
+  private static final int CMD_START_OF_TRANSFORM = 3;
+  private static final int CMD_END_OF_TRANSFORM = 4;
+  private static final int CMD_END_OF_VIEW = 5;
+  private static final int CMD_END_OF_BUFFER = 6;
+  private static final int CMD_OPACITY = 10;
+  private static final int CMD_BORDER_RADIUS = 11;
+  private static final int CMD_BACKGROUND_COLOR = 12;
+  private static final int CMD_BORDER_COLOR = 13;
+  private static final int CMD_COLOR = 14;
+  private static final int CMD_TRANSFORM_TRANSLATE_X = 100;
+  private static final int CMD_TRANSFORM_TRANSLATE_Y = 101;
+  private static final int CMD_TRANSFORM_SCALE = 102;
+  private static final int CMD_TRANSFORM_SCALE_X = 103;
+  private static final int CMD_TRANSFORM_SCALE_Y = 104;
+  private static final int CMD_TRANSFORM_ROTATE = 105;
+  private static final int CMD_TRANSFORM_ROTATE_X = 106;
+  private static final int CMD_TRANSFORM_ROTATE_Y = 107;
+  private static final int CMD_TRANSFORM_ROTATE_Z = 108;
+  private static final int CMD_TRANSFORM_SKEW_X = 109;
+  private static final int CMD_TRANSFORM_SKEW_Y = 110;
+  private static final int CMD_TRANSFORM_MATRIX = 111;
+  private static final int CMD_TRANSFORM_PERSPECTIVE = 112;
+  private static final int CMD_UNIT_DEG = 200;
+  private static final int CMD_UNIT_RAD = 201;
+  private static final int CMD_UNIT_PX = 202;
+  private static final int CMD_UNIT_PERCENT = 203;
 
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
