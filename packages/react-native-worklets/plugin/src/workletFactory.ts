@@ -180,16 +180,6 @@ export function makeWorkletFactory(
     );
   }
 
-  const shouldInjectVersion = !isRelease();
-  if (shouldInjectVersion) {
-    initDataObjectExpression.properties.push(
-      objectProperty(
-        identifier('version'),
-        stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
-      )
-    );
-  }
-
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
   if (shouldIncludeInitData && !state.opts.bundleMode) {
@@ -257,6 +247,22 @@ export function makeWorkletFactory(
       )
     ),
   ];
+
+  const shouldInjectVersion = !isRelease();
+  if (shouldInjectVersion) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(
+            identifier(reactName),
+            identifier('__pluginVersion')
+          ),
+          stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
+        )
+      )
+    );
+  }
 
   if (shouldIncludeInitData && !state.opts.bundleMode) {
     statements.push(
