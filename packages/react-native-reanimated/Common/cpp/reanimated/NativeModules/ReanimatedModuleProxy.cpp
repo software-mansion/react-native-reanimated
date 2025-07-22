@@ -665,13 +665,14 @@ void ReanimatedModuleProxy::performOperations() {
       bool hasAnyLayoutProp = false;
       for (const auto &key : props.keys()) {
         const auto keyStr = key.asString();
-        if (keyStr != "opacity" && keyStr != "transform" && keyStr != "backgroundColor") {
+        if (keyStr != "opacity" && keyStr != "transform" && keyStr != "backgroundColor" && keyStr != "borderRadius") {
           hasAnyLayoutProp = true;
           break;
         }
       }
       if (hasAnyLayoutProp) {
-        filteredUpdatesBatch.emplace_back(shadowNode, props);
+        // TODO: uncomment this
+        // filteredUpdatesBatch.emplace_back(shadowNode, props);
       } else {
         synchronousUpdatesBatch.emplace_back(shadowNode, props);
       }
@@ -684,6 +685,7 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_END_OF_VIEW = -5;
     static constexpr auto CMD_END_OF_BUFFER = -6;
     static constexpr auto CMD_OPACITY = 1;
+    static constexpr auto CMD_BORDER_RADIUS = 4;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
@@ -699,6 +701,9 @@ void ReanimatedModuleProxy::performOperations() {
             const auto keyStr = key.getString();
             if (keyStr == "opacity") {
               intBuffer.push_back(CMD_OPACITY);
+              floatBuffer.push_back(value.asDouble());
+            } else if (keyStr == "borderRadius") {
+              intBuffer.push_back(CMD_BORDER_RADIUS);
               floatBuffer.push_back(value.asDouble());
             } else if (keyStr == "transform") {
               intBuffer.push_back(CMD_START_OF_TRANSFORM);

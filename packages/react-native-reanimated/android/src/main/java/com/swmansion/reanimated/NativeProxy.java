@@ -186,6 +186,7 @@ public class NativeProxy {
   private static final int CMD_END_OF_VIEW = -5;
   private static final int CMD_END_OF_BUFFER = -6;
   private static final int CMD_OPACITY = 1;
+  private static final int CMD_BORDER_RADIUS = 4;
   private static final int CMD_TRANSFORM_SCALE = 21;
   private static final int CMD_TRANSFORM_ROTATE = 22;
   private static final int CMD_BACKGROUND_COLOR = 3;
@@ -207,6 +208,10 @@ public class NativeProxy {
 
         case CMD_OPACITY:
           props.putDouble("opacity", floatBuffer[f++]);
+          break;
+
+        case CMD_BORDER_RADIUS:
+          props.putDouble("borderRadius", floatBuffer[f++]);
           break;
 
         case CMD_BACKGROUND_COLOR:
