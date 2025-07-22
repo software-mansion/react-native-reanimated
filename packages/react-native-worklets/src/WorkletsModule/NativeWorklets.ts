@@ -1,6 +1,8 @@
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
+import { checkCppVersion } from '../utils/checkCppVersion';
+import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type {
@@ -20,14 +22,18 @@ class NativeWorklets implements IWorkletsModule {
   #shareableFalse: ShareableRef<boolean>;
 
   constructor() {
+    globalThis._WORKLETS_VERSION_JS = jsVersion;
     if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
         `Native part of Worklets doesn't seem to be initialized.
-See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
+    }
+    if (__DEV__) {
+      checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();

@@ -38,6 +38,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
       forwardedFetch_(forwardedFetch),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       script_(script),
       sourceUrl_(sourceUrl),
       runtimeManager_(std::make_shared<RuntimeManager>()),

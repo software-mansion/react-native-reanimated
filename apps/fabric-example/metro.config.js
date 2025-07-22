@@ -34,7 +34,7 @@ let config = {
 config = mergeConfig(getDefaultConfig(__dirname), config);
 
 // Uncomment the following to enable bundle mode.
-config = mergeConfig(config, bundleModeMetroConfig);
+// config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(getDefaultConfig(__dirname), config)

@@ -1,17 +1,14 @@
 import { version as packageVersion } from '../package.json';
-import { logger } from '../src/common';
-import {
-  checkCppVersion,
-  matchVersion,
-} from '../src/platform-specific/checkCppVersion';
+import { logger } from '../src/logger';
+import { checkCppVersion, matchVersion } from '../src/utils/checkCppVersion';
 
 describe('checkCppVersion', () => {
   beforeEach(() => {
-    global._REANIMATED_VERSION_CPP = packageVersion;
+    globalThis._WORKLETS_VERSION_CPP = packageVersion;
   });
 
   afterEach(() => {
-    delete global._REANIMATED_VERSION_CPP;
+    delete globalThis._WORKLETS_VERSION_CPP;
   });
 
   it('checks version successfully', () => {
@@ -21,9 +18,9 @@ describe('checkCppVersion', () => {
     jest.clearAllMocks();
   });
 
-  it('logs warning when version is undefined', () => {
+  it('throws error when version is undefined', () => {
     jest.spyOn(logger, 'warn').mockImplementation();
-    delete global._REANIMATED_VERSION_CPP;
+    delete globalThis._WORKLETS_VERSION_CPP;
     checkCppVersion();
     expect(logger.warn).toHaveBeenCalled();
     jest.clearAllMocks();

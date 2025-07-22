@@ -46,7 +46,7 @@ export function processIfWorkletClass(
 ): boolean {
   if (
     !isWorkletizableClass(classPath, state) ||
-    state.opts.bundleMode /*temporary*/
+    state.opts.bundleMode /* temporary */
   ) {
     return false;
   }
