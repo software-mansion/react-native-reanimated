@@ -789,6 +789,8 @@ void ReanimatedModuleProxy::performOperations() {
               intBuffer.push_back(command);
               react_native_assert(value.isArray() && "Transform value must be an array");
               for (const auto &item : value) {
+                react_native_assert(item.isObject() && "Transform array item must be an object");
+                react_native_assert(item.size() == 1 && "Transform array item must have exactly one key-value pair");
                 const auto transformCommand =
                     transformNameToCommand(item.keys().begin()->getString());
                 const auto &transformValue = *item.values().begin();
@@ -848,6 +850,7 @@ void ReanimatedModuleProxy::performOperations() {
 
                   case CMD_TRANSFORM_MATRIX: {
                     intBuffer.push_back(transformCommand);
+                    react_native_assert(transformValue.isArray() && "Matrix must be an array");
                     int size = transformValue.size();
                     intBuffer.push_back(size);
                     for (int i = 0; i < size; i++) {
