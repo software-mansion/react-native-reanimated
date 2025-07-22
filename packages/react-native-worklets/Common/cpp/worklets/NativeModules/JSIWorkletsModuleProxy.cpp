@@ -70,6 +70,24 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
+#ifdef WORKLETS_BUNDLE_MODE
+inline jsi::Value propagateModuleUpdate(
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  const auto runtimes = runtimeManager->getAllRuntimes();
+
+  for (auto runtime : runtimes) {
+    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+      rt.evaluateJavaScript(buffer, sourceUrl);
+      return jsi::Value::undefined();
+    });
+  }
+  return jsi::Value::undefined();
+}
+#endif // WORKLETS_BUNDLE_MODE
+
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &message,
@@ -167,6 +185,11 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+#ifdef WORKLETS_BUNDLE_MODE
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
+#endif // WORKLETS_BUNDLE_MODE
 
   return propertyNames;
 }
@@ -487,6 +510,25 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* jsEngine */ args[3].asString(rt).utf8(rt));
         });
   }
+
+#ifdef WORKLETS_BUNDLE_MODE
+  if (name == "propagateModuleUpdate") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return propagateModuleUpdate(
+              runtimeManager,
+              /* code */ args[0].asString(rt).utf8(rt),
+              /* sourceURL */ args[1].asString(rt).utf8(rt));
+        });
+  }
+#endif // WORKLETS_BUNDLE_MODE
 
   if (name == "setDynamicFeatureFlag") {
     return jsi::Function::createFromHostFunction(

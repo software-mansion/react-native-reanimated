@@ -83,7 +83,7 @@ WorkletRuntime::WorkletRuntime(
       runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
-#endif
+#endif // NDEBUG
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
@@ -94,6 +94,10 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+#ifdef WORKLETS_BUNDLE_MODE
+  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+#endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
@@ -152,6 +156,20 @@ jsi::Value WorkletRuntime::executeSync(
   auto shareableResult = extractShareableOrThrow(uiRuntime, result);
   lock.unlock();
   return shareableResult->toJSValue(rt);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
 }
 
 jsi::Value WorkletRuntime::get(
