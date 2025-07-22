@@ -701,6 +701,8 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
     static constexpr auto CMD_BORDER_COLOR = 5;
+    static constexpr auto CMD_UNIT_DEG = 100;
+    static constexpr auto CMD_UNIT_RAD = 101;
 
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
@@ -730,12 +732,15 @@ void ReanimatedModuleProxy::performOperations() {
                   floatBuffer.push_back(transformValue.asDouble());
                 } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateY") {
                   const auto &transformValueStr = transformValue.getString();
+                  intBuffer.push_back(transformKeyStr == "rotate" ? CMD_TRANSFORM_ROTATE : CMD_TRANSFORM_ROTATE_Y);
                   if (transformValueStr.ends_with("deg")) {
-                    intBuffer.push_back(transformKeyStr == "rotate" ? CMD_TRANSFORM_ROTATE : CMD_TRANSFORM_ROTATE_Y);
-                    floatBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                    intBuffer.push_back(CMD_UNIT_DEG);
+                  } else if (transformValueStr.ends_with("rad")) {
+                    intBuffer.push_back(CMD_UNIT_RAD);
                   } else {
-                    throw std::runtime_error("Unsupported rotate unit: " + transformValueStr);
+                    throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
                   }
+                  floatBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
                 } else {
                   throw std::runtime_error("Unsupported transform type: " + transformKeyStr);
                 }

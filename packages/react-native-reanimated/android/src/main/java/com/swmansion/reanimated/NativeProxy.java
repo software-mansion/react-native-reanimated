@@ -193,6 +193,8 @@ public class NativeProxy {
   private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
   private static final int CMD_BACKGROUND_COLOR = 3;
   private static final int CMD_BORDER_COLOR = 5;
+  private static final int CMD_UNIT_DEG = 100;
+  private static final int CMD_UNIT_RAD = 101;
 
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, float[] floatBuffer) {
@@ -233,8 +235,8 @@ public class NativeProxy {
           while (intBuffer[i] != CMD_END_OF_TRANSFORM) {
             switch (intBuffer[i]) {
               case CMD_TRANSFORM_SCALE -> transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
-              case CMD_TRANSFORM_ROTATE -> transform.pushMap(JavaOnlyMap.of("rotate", floatBuffer[f++] + "deg"));
-              case CMD_TRANSFORM_ROTATE_Y -> transform.pushMap(JavaOnlyMap.of("rotateY", floatBuffer[f++] + "deg"));
+              case CMD_TRANSFORM_ROTATE -> transform.pushMap(JavaOnlyMap.of("rotate", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
+              case CMD_TRANSFORM_ROTATE_Y -> transform.pushMap(JavaOnlyMap.of("rotateY", floatBuffer[f++] + unitCommandToString(intBuffer[++i])));
               case CMD_TRANSFORM_PERSPECTIVE -> transform.pushMap(JavaOnlyMap.of("perspective", floatBuffer[f++]));
               default -> throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
             }
@@ -252,6 +254,14 @@ public class NativeProxy {
       }
       i++;
     }
+  }
+
+  private static String unitCommandToString(int cmd) {
+    return switch (cmd) {
+      case CMD_UNIT_DEG -> "deg";
+      case CMD_UNIT_RAD -> "rad";
+      default -> throw new RuntimeException("Unknown unit command");
+    };
   }
 
   @DoNotStrip
