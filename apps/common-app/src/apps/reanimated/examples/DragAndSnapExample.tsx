@@ -10,35 +10,34 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function DragAndSnapExample() {
-  const translation = {
-    x: useSharedValue(0),
-    y: useSharedValue(0),
-  };
+  const translationX = useSharedValue(0);
+  const translationY = useSharedValue(0);
+
   const gesture = Gesture.Pan()
     .onChange((event) => {
-      translation.x.value += event.changeX;
-      translation.y.value += event.changeY;
+      translationX.value += event.changeX;
+      translationY.value += event.changeY;
     })
-    .onEnd((event) => {
-      translation.x.value = withSpring(0);
-      translation.y.value = withSpring(0);
+    .onEnd(() => {
+      translationX.value = withSpring(0);
+      translationY.value = withSpring(0);
     });
 
   const stylez = useAnimatedStyle(() => {
     const H = Math.round(
-      interpolate(translation.x.value, [0, 300], [0, 360], Extrapolation.CLAMP)
+      interpolate(translationX.value, [0, 300], [0, 360], Extrapolation.CLAMP)
     );
     const S = Math.round(
-      interpolate(translation.y.value, [0, 500], [100, 50], Extrapolation.CLAMP)
+      interpolate(translationY.value, [0, 500], [100, 50], Extrapolation.CLAMP)
     );
     const backgroundColor = `hsl(${H},${S}%,50%)`;
     return {
       transform: [
         {
-          translateX: translation.x.value,
+          translateX: translationX.value,
         },
         {
-          translateY: translation.y.value,
+          translateY: translationY.value,
         },
       ],
       backgroundColor,
