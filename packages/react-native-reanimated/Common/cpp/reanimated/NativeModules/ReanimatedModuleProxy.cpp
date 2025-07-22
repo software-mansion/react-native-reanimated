@@ -663,7 +663,8 @@ void ReanimatedModuleProxy::performOperations() {
     shouldUpdateCssAnimations_ = false;
 
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (StaticFeatureFlags::getFlag(
+                      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "transform",
           "opacity",
@@ -792,10 +793,15 @@ void ReanimatedModuleProxy::performOperations() {
 
               case CMD_START_OF_TRANSFORM:
                 intBuffer.push_back(command);
-                react_native_assert(value.isArray() && "Transform value must be an array");
+                react_native_assert(
+                    value.isArray() && "Transform value must be an array");
                 for (const auto &item : value) {
-                  react_native_assert(item.isObject() && "Transform array item must be an object");
-                  react_native_assert(item.size() == 1 && "Transform array item must have exactly one key-value pair");
+                  react_native_assert(
+                      item.isObject() &&
+                      "Transform array item must be an object");
+                  react_native_assert(
+                      item.size() == 1 &&
+                      "Transform array item must have exactly one key-value pair");
                   const auto transformCommand =
                       transformNameToCommand(item.keys().begin()->getString());
                   const auto &transformValue = *item.values().begin();
@@ -838,7 +844,8 @@ void ReanimatedModuleProxy::performOperations() {
                     case CMD_TRANSFORM_ROTATE_Z:
                     case CMD_TRANSFORM_SKEW_X:
                     case CMD_TRANSFORM_SKEW_Y: {
-                      const auto &transformValueStr = transformValue.getString();
+                      const auto &transformValueStr =
+                          transformValue.getString();
                       intBuffer.push_back(transformCommand);
                       if (transformValueStr.ends_with("deg")) {
                         intBuffer.push_back(CMD_UNIT_DEG);
@@ -855,7 +862,9 @@ void ReanimatedModuleProxy::performOperations() {
 
                     case CMD_TRANSFORM_MATRIX: {
                       intBuffer.push_back(transformCommand);
-                      react_native_assert(transformValue.isArray() && "Matrix must be an array");
+                      react_native_assert(
+                          transformValue.isArray() &&
+                          "Matrix must be an array");
                       int size = transformValue.size();
                       intBuffer.push_back(size);
                       for (int i = 0; i < size; i++) {
