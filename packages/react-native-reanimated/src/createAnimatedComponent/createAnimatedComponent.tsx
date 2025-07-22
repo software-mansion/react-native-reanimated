@@ -272,15 +272,7 @@ export function createAnimatedComponent(
             ? getReduceMotionFromConfig(exiting.getReduceMotion())
             : getReduceMotionFromConfig();
         if (!reduceMotionInExiting) {
-          updateLayoutAnimations(
-            this.getComponentViewTag(),
-            LayoutAnimationType.EXITING,
-            maybeBuild(
-              exiting,
-              this.props?.style,
-              AnimatedComponent.displayName
-            )
-          );
+          this._configureLayoutAnimation(LayoutAnimationType.EXITING, exiting);
         }
       }
 
