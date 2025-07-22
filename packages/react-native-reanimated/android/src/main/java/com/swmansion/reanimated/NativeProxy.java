@@ -10,7 +10,6 @@ import com.facebook.react.bridge.JavaOnlyArray;
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
@@ -33,7 +32,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.PrimitiveIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.IntStream;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -201,6 +199,7 @@ public class NativeProxy {
   private static final int CMD_TRANSFORM_ROTATE_Z = 26;
   private static final int CMD_TRANSFORM_SKEW_X = 31;
   private static final int CMD_TRANSFORM_SKEW_Y = 32;
+  private static final int CMD_TRANSFORM_MATRIX = 33;
   private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
   private static final int CMD_BACKGROUND_COLOR = 3;
   private static final int CMD_BORDER_COLOR = 5;
@@ -305,6 +304,15 @@ public class NativeProxy {
 
               case CMD_TRANSFORM_PERSPECTIVE:
                 transform.pushMap(JavaOnlyMap.of("perspective", doubleIterator.nextDouble()));
+                break;
+
+              case CMD_TRANSFORM_MATRIX:
+                int length = intIterator.nextInt();
+                JavaOnlyArray matrix = new JavaOnlyArray();
+                for (int i = 0; i < length; i++) {
+                  matrix.pushDouble(doubleIterator.nextDouble());
+                }
+                transform.pushMap(JavaOnlyMap.of("matrix", matrix));
                 break;
 
               default:

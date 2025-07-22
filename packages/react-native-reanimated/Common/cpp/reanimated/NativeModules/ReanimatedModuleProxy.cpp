@@ -706,6 +706,7 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_TRANSFORM_ROTATE_Z = 26;
     static constexpr auto CMD_TRANSFORM_SKEW_X = 31;
     static constexpr auto CMD_TRANSFORM_SKEW_Y = 32;
+    static constexpr auto CMD_TRANSFORM_MATRIX = 33;
     static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
     static constexpr auto CMD_BORDER_COLOR = 5;
@@ -789,6 +790,13 @@ void ReanimatedModuleProxy::performOperations() {
                     throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
                   }
                   doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                } else if (transformKeyStr == "matrix") {
+                  intBuffer.push_back(CMD_TRANSFORM_MATRIX);
+                  int size = transformValue.size();
+                  intBuffer.push_back(transformValue.size());
+                  for (int i = 0; i < size; i++) {
+                    doubleBuffer.push_back(transformValue[i].asDouble());
+                  }
                 } else {
                   throw std::runtime_error("Unsupported transform type: " + transformKeyStr);
                 }
