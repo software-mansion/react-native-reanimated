@@ -39,23 +39,6 @@ All of them are supposed to work correctly only within the same minor version. T
    - Web
 3. If you are using Reanimated in a brownfield app, make sure to initialize the native library manually.
 
-### Unknown version of Reanimated Babel plugin
-
-**Problem:** This happens when JavaScript side of Reanimated fails to get Reanimated Babel plugin version.
-
-**Solution:**
-
-1. Part of your code might be transpiled with an outdated version of Reanimated Babel plugin. See [Mismatch between JavaScript code version and Reanimated Babel plugin version](#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version).
-2. You use release bundle with debug build of the app. This is not supported. See [Using dev bundle in release app build is not supported](#using-dev-bundle-in-a-release-app-build-is-not-supported) for more information.
-
-### Mismatch between JavaScript code version and Reanimated Babel plugin version
-
-**Problem:** This can happen when you use code that was transpiled with an outdated version of Reanimated Babel plugin.
-
-**Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
-
-If this didn't help, you probably have a dependency that contains already transformed worklets bundled with an outdated version of the Reanimated Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
-
 ### Using dev bundle in a release app build is not supported
 
 **Problem:** This happens when you use a release build of your app with a development JavaScript bundle.
@@ -76,7 +59,7 @@ If this didn't help, you probably have a dependency that contains already transf
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated) and [Unknown version of Reanimated Babel plugin](#unknown-version-of-reanimated-babel-plugin).
+See [Couldn't determine the version of the native part of Reanimated](#couldnt-determine-the-version-of-the-native-part-of-reanimated).
 
 ### Mismatch between C++ code version and JavaScript code version
 
@@ -156,128 +139,6 @@ LogBox.ignoreLogs([
 ```
 
 See [the accessibility overview](accessibility) to learn more about Reduced Motion.
-
-### Tried to modify key of an object which has been converted to a shareable.
-
-**Problem:** This warning is displayed to inform the user that a shared value should be used or an object used in a worklet should be accessed more granularly.
-
-#### 1. Not using shared values.
-
-You might get this warning when you do something along the lines of:
-
-```js
-const obj = { prop: 1 };
-
-function worklet() {
-  'worklet';
-  console.log(obj.prop);
-}
-
-runOnUI(worklet)();
-obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-runOnUI(worklet)();
-```
-
-and expect the results to be `1` and `2`. However, the results will be `1` and `1` because `obj` is not a shared value and is only copied to UI runtime once. Therefore, in development builds, we make the object immutable and add this warning after copying it to signal that it's not a valid use of Reanimated. To fix this, you should use a shared value instead:
-
-**Solution:**
-
-```diff
--const obj = { prop: 1 };
-+const sv = useSharedValue({ prop: 1 });
-
- function worklet() {
-   'worklet';
--  console.log(obj.prop);
-+  console.log(sv.value.prop);
- }
-
- runOnUI(worklet)();
--obj.prop = 2; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-+sv.value = { prop: 2 }; // Everything is fine here.
-+// Keep in mind that you cannot modify the property directly with `sv.value.prop = 2` unless you use the `modify` method.
- runOnUI(worklet)();
-```
-
-#### 2. Not accessing object properties granularly.
-
-When you access an object property in a worklet, you might do something like this:
-
-```js
-const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
-
-function worklet() {
-  'worklet';
-  console.log(obj.propAccessedInWorklet);
-}
-
-runOnUI(worklet)();
-obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-```
-
-The warning is displayed due to the mechanism explained in the previous case. Since we copy the whole object `obj` instead its accessed properties, it's immutable.
-
-**Solution:**
-
-Assign accessed properties to variables beforehand and use those in the worklet:
-
-```diff
- const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
-
-+const propAccessedInWorklet = obj.propAccessedInWorklet;
-+
- function worklet() {
-   'worklet';
--  console.log(obj.propAccessedInWorklet);
-+  console.log(propAccessedInWorklet);
- }
-
- runOnUI(worklet)();
--obj.propNotAccessedInWorklet = 3; // Warning: Tried to modify key `prop` of an object which has been already passed to a worklet.
-+obj.propNotAccessedInWorklet = 3; // Everything is fine here.
-```
-
-## Threading issues
-
-### Tried to synchronously call a non-worklet function on the UI thread
-
-**Problem:** This can happen when you try to call a function that is not marked as a worklet from a worklet. E.g.:
-
-```typescript
-function callee() {
-  console.log('hello');
-}
-function caller() {
-  'worklet';
-  callee(); // <- this will throw in `runOnUI`
-}
-runOnUI(caller)();
-```
-
-In this example, `callee` cannot be called from a worklet ran on UI thread because there is no corresponding UI function for `callee`.
-
-**Solution:**
-
-1. If you want to synchronously execute this method, mark it as a worklet using `worklet` directive:
-
-```diff
- function callee() {
-+  'worklet';
-   console.log("hello");
- }
-```
-
-2. If you want to execute this function on the JS thread, wrap it using `runOnJS`:
-
-```diff
- function caller() {
-   'worklet';
--  callee();
-+  runOnJS(callee)();
- }
-```
-
-Check [this page](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet) to learn more about Reanimated and its worklets.
 
 ## Dependency issues
 

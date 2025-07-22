@@ -2,11 +2,23 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { runOnUI, useSharedValue } from 'react-native-reanimated';
 
-import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getRegisteredValue,
+  notify,
+  registerValue,
+  render,
+  test,
+  wait,
+  waitForNotify,
+} from '../../ReJest/RuntimeTestsApi';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
 type Result = 'ok' | 'not_ok' | 'error';
+
+const DONE_NOTIFICATION_NAME = 'DONE_NOTIFICATION_NAME';
 
 const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean }) => {
   const sharedResult = useSharedValue<Result>('not_ok');
@@ -26,6 +38,7 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
     } catch (error) {
       sharedResult.value = 'error';
     }
+    notify(DONE_NOTIFICATION_NAME);
   });
 
   return <View />;
@@ -46,7 +59,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedResult = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -68,7 +81,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -112,7 +125,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -134,7 +147,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -156,7 +169,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -178,7 +191,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -206,7 +219,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -315,7 +328,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -344,7 +357,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -399,7 +412,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -421,7 +434,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -497,7 +510,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -522,7 +535,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -549,7 +562,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -607,7 +620,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -633,7 +646,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -685,7 +698,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -707,7 +720,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -729,7 +742,7 @@ describe('Test makeShareableClone', () => {
         }}
       />,
     );
-    await wait(100);
+    await waitForNotify(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);

@@ -83,7 +83,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain(`version: "${packageVersion}"`);
+      expect(code).toContain(`__pluginVersion = "${packageVersion}"`);
     });
 
     it('injects source maps', () => {
