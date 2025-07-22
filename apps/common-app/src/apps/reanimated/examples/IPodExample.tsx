@@ -80,22 +80,22 @@ export default function IPodExample() {
       last.value = { x: e.x, y: e.y };
     })
     .onUpdate((e) => {
-      const currentPoz = { x: e.x, y: e.y };
-      const lastPoz = last.value;
-      last.value = currentPoz;
+      const currentPos = { x: e.x, y: e.y };
+      const lastPos = last.value;
+      last.value = currentPos;
 
-      if (currentPoz.x === lastPoz.x && currentPoz.y === lastPoz.y) {
+      if (currentPos.x === lastPos.x && currentPos.y === lastPos.y) {
         // no change so far
         return;
       }
 
       const changeVector = {
-        x: currentPoz.x - lastPoz.x,
-        y: currentPoz.y - lastPoz.y,
+        x: currentPos.x - lastPos.x,
+        y: currentPos.y - lastPos.y,
       };
       const toCenterV = {
-        x: BIG_BALL_SIZE / 2 - lastPoz.x,
-        y: BIG_BALL_SIZE / 2 - lastPoz.y,
+        x: BIG_BALL_SIZE / 2 - lastPos.x,
+        y: BIG_BALL_SIZE / 2 - lastPos.y,
       };
       const crossProd =
         changeVector.x * toCenterV.y - changeVector.y * toCenterV.x;
