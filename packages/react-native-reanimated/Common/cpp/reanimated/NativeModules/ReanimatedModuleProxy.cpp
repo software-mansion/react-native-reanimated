@@ -667,6 +667,7 @@ void ReanimatedModuleProxy::performOperations() {
       "transform",
       "backgroundColor",
       "borderRadius",
+      "borderColor",
     };
 
     for (const auto &[shadowNode, props] : updatesBatch) {
@@ -697,6 +698,7 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
+    static constexpr auto CMD_BORDER_COLOR = 5;
 
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
@@ -736,6 +738,9 @@ void ReanimatedModuleProxy::performOperations() {
               intBuffer.push_back(CMD_END_OF_TRANSFORM);
             } else if (keyStr == "backgroundColor") {
               intBuffer.push_back(CMD_BACKGROUND_COLOR);
+              intBuffer.push_back(value.asInt());
+            } else if (keyStr == "borderColor") {
+              intBuffer.push_back(CMD_BORDER_COLOR);
               intBuffer.push_back(value.asInt());
             } else {
               throw std::runtime_error("Unsupported style: " + keyStr);
