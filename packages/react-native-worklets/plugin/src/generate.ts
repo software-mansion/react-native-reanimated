@@ -29,7 +29,8 @@ export function generateWorkletFile(
   const libraryImports = Array.from(libraryBindingsToImport)
     .filter(
       (binding) =>
-        binding.path.isImportSpecifier() &&
+        (binding.path.isImportSpecifier() ||
+          binding.path.isImportDefaultSpecifier()) &&
         binding.path.parentPath.isImportDeclaration()
     )
     .map((binding) =>
