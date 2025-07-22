@@ -697,7 +697,9 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_BORDER_RADIUS = 4;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
+    static constexpr auto CMD_TRANSFORM_ROTATE_X = 25;
     static constexpr auto CMD_TRANSFORM_ROTATE_Y = 24;
+    static constexpr auto CMD_TRANSFORM_ROTATE_Z = 26;
     static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
     static constexpr auto CMD_BORDER_COLOR = 5;
@@ -730,9 +732,17 @@ void ReanimatedModuleProxy::performOperations() {
                 } else if (transformKeyStr == "perspective") {
                   intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);
                   floatBuffer.push_back(transformValue.asDouble());
-                } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateY") {
+                } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateX" || transformKeyStr == "rotateY" || transformKeyStr == "rotateZ") {
                   const auto &transformValueStr = transformValue.getString();
-                  intBuffer.push_back(transformKeyStr == "rotate" ? CMD_TRANSFORM_ROTATE : CMD_TRANSFORM_ROTATE_Y);
+                  const auto cmd =
+                    transformKeyStr == "rotateX"
+                      ? CMD_TRANSFORM_ROTATE_X
+                      : transformKeyStr == "rotateY"
+                      ? CMD_TRANSFORM_ROTATE_Y
+                      : transformKeyStr == "rotateZ"
+                      ? CMD_TRANSFORM_ROTATE_Z
+                      : CMD_TRANSFORM_ROTATE;
+                  intBuffer.push_back(cmd);
                   if (transformValueStr.ends_with("deg")) {
                     intBuffer.push_back(CMD_UNIT_DEG);
                   } else if (transformValueStr.ends_with("rad")) {
