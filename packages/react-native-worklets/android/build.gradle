@@ -292,7 +292,7 @@ task assertMinimalReactNativeVersionTask {
     def minimalReactNativeVersion = 75
     onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Worklets] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
+        throw new GradleException("[Worklets] Unsupported React Native version. Please use React Native 0.$minimalReactNativeVersion or newer.")
     }
 }
 

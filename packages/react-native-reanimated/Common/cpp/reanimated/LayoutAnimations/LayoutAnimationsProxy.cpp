@@ -33,6 +33,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
 
+  addOngoingAnimations(surfaceId, filteredMutations);
+
+  for (const auto tag : finishedAnimationTags_) {
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+  }
+  finishedAnimationTags_.clear();
+
   parseRemoveMutations(movedViews, mutations, roots);
 
   handleRemovals(filteredMutations, roots);
@@ -68,7 +77,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   PropsParserContext propsParserContext{
       layoutAnimation.finalView->surfaceId, *contextContainer_};
-#ifdef ANDROID
+#ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
       layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
@@ -110,11 +119,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     layoutAnimation.count--;
     return {};
   }
-
+  finishedAnimationTags_.push_back(tag);
   auto surfaceId = layoutAnimation.finalView->surfaceId;
-  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  layoutAnimations_.erase(tag);
-  updateMap.erase(tag);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return {};
@@ -256,6 +262,7 @@ void LayoutAnimationsProxy::handleRemovals(
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
             node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
+        node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
         LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
@@ -460,6 +467,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     nodeForTag_.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     maybeCancelAnimation(node->tag);
+    node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "delete " << node->tag << std::endl;
 #endif

@@ -4,12 +4,17 @@ import type {
   Animation,
   AnimationCallback,
   Timestamp,
-} from '../commonTypes';
+} from '../../commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import type { SpringConfig } from './springConfigs';
+import {
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+} from './springConfigs';
 import type {
   DefaultSpringConfig,
   InnerSpringAnimation,
   SpringAnimation,
-  SpringConfig,
   SpringConfigInner,
 } from './springUtils';
 import {
@@ -22,7 +27,6 @@ import {
   scaleZetaToMatchClamps,
   underDampedSpringCalculations,
 } from './springUtils';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(
@@ -36,7 +40,11 @@ type withSpringType = <T extends AnimatableValue>(
  *
  * @param toValue - The value at which the animation will come to rest -
  *   {@link AnimatableValue}
- * @param config - The spring animation configuration - {@link SpringConfig}
+ * @param config - The spring animation configuration - {@link SpringConfig}.
+ *   Defaults to {@link GentleSpringConfig}. You can use other predefined spring
+ *   configurations, such as {@link WigglySpringConfig},
+ *   {@link SnappySpringConfig}, {@link Reanimated3DefaultSpringConfig} or create
+ *   your own.
  * @param callback - A function called on animation complete -
  *   {@link AnimationCallback}
  * @returns An [animation
@@ -54,14 +62,11 @@ export const withSpring = ((
   return defineAnimation<SpringAnimation>(toValue, () => {
     'worklet';
     const defaultConfig: DefaultSpringConfig = {
-      damping: 10,
-      mass: 1,
-      stiffness: 100,
+      ...GentleSpringConfig,
+      ...GentleSpringConfigWithDuration,
       overshootClamping: false,
       energyThreshold: 6e-9,
       velocity: 0,
-      duration: 2000,
-      dampingRatio: 0.5,
       reduceMotion: undefined,
       clamp: undefined,
     } as const;

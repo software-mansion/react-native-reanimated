@@ -188,6 +188,7 @@ function SectionHeader({
   let onActiveImpl;
   if (Platform.OS === 'web') {
     onActiveImpl = async () => {
+      'worklet';
       try {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
