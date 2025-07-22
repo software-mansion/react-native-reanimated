@@ -57,8 +57,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
+#ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+#endif // ANDROID
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(

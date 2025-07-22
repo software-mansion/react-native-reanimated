@@ -13,8 +13,6 @@ using namespace react;
 
 namespace reanimated {
 
-using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(const std::vector<int> &, const std::vector<double> &)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ObtainPropFunction = std::function<jsi::Value(
@@ -31,6 +29,8 @@ using MeasureFunction = std::function<
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
+using SynchronouslyUpdateUIPropsFunction =
+    std::function<void(const std::vector<int> &, const std::vector<double> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -48,7 +48,9 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
+#ifdef ANDROID
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+#endif // ANDROID
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
