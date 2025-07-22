@@ -188,6 +188,7 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())
