@@ -142,6 +142,53 @@ function initializeWorkletRuntime() {
       );
 
       globalThis.__r.Refresh = Refresh;
+
+      /* Gracefully handle unwanted imports from React Native. */
+
+      // @ts-expect-error type not exposed by Metro
+      const modules = require.getModules();
+      // @ts-expect-error type not exposed by Metro
+      const ReactNativeModuleId = require.resolveWeak('react-native');
+
+      const factory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports = new Proxy(
+          {},
+          {
+            get: function get(_target, prop) {
+              globalThis.console.warn(
+                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
+              );
+              return {
+                get() {
+                  return undefined;
+                },
+              };
+            },
+          }
+        );
+      };
+
+      const mod = {
+        dependencyMap: [],
+        factory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(ReactNativeModuleId, mod);
     }
   }
 }
