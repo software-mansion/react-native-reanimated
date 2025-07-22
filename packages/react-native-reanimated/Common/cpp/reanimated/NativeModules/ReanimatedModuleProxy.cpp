@@ -670,24 +670,6 @@ void ReanimatedModuleProxy::performOperations() {
         // "color", // TODO: fix animating color of Animated.Text
     };
 
-    UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      bool hasOnlySynchronousProps = true;
-      for (const auto &key : props.keys()) {
-        const auto keyStr = key.asString();
-        if (!synchronousProps.contains(keyStr)) {
-          hasOnlySynchronousProps = false;
-          break;
-        }
-      }
-      if (hasOnlySynchronousProps) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, props);
-      } else {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-      }
-    }
-
     // NOTE: Keep in sync with NativeProxy.java
     static constexpr auto CMD_START_OF_VIEW = 2;
     static constexpr auto CMD_START_OF_TRANSFORM = 3;
@@ -761,6 +743,24 @@ void ReanimatedModuleProxy::performOperations() {
         return CMD_TRANSFORM_PERSPECTIVE;
       throw std::runtime_error("Unsupported transform: " + name);
     };
+
+    UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
+
+    for (const auto &[shadowNode, props] : updatesBatch) {
+      bool hasOnlySynchronousProps = true;
+      for (const auto &key : props.keys()) {
+        const auto keyStr = key.asString();
+        if (!synchronousProps.contains(keyStr)) {
+          hasOnlySynchronousProps = false;
+          break;
+        }
+      }
+      if (hasOnlySynchronousProps) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      }
+    }
 
     if (!synchronousUpdatesBatch.empty()) {
       std::vector<int> intBuffer;
