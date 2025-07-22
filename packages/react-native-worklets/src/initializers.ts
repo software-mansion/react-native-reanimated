@@ -3,6 +3,7 @@
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
+import { initializeNetworking } from './Network';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
@@ -332,4 +333,8 @@ function installRNBindingsOnUIRuntime() {
     setupSetImmediate();
     setupSetInterval();
   })();
+
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    executeOnUIRuntimeSync(initializeNetworking)();
+  }
 }

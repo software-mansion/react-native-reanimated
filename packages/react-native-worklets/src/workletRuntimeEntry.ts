@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 'use strict';
 
 import { init } from './initializers';
