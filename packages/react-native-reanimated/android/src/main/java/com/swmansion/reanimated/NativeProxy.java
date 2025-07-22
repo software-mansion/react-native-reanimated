@@ -203,6 +203,7 @@ public class NativeProxy {
   private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
   private static final int CMD_BACKGROUND_COLOR = 3;
   private static final int CMD_BORDER_COLOR = 5;
+  private static final int CMD_COLOR = 34;
   private static final int CMD_UNIT_DEG = 100;
   private static final int CMD_UNIT_RAD = 101;
   private static final int CMD_UNIT_PX = 102;
@@ -237,6 +238,10 @@ public class NativeProxy {
 
         case CMD_BORDER_COLOR:
           props.putInt("borderColor", intIterator.nextInt());
+          break;
+
+        case CMD_COLOR:
+          props.putInt("color", intIterator.nextInt());
           break;
 
         case CMD_START_OF_TRANSFORM:

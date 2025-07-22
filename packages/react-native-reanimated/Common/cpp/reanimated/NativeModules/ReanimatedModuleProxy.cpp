@@ -668,6 +668,7 @@ void ReanimatedModuleProxy::performOperations() {
       "backgroundColor",
       "borderRadius",
       "borderColor",
+      // "color", // TODO: fix animating color of Animated.Text
     };
 
     for (const auto &[shadowNode, props] : updatesBatch) {
@@ -710,6 +711,7 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
     static constexpr auto CMD_BORDER_COLOR = 5;
+    static constexpr auto CMD_COLOR = 34;
     static constexpr auto CMD_UNIT_DEG = 100;
     static constexpr auto CMD_UNIT_RAD = 101;
     static constexpr auto CMD_UNIT_PX = 102;
@@ -728,8 +730,8 @@ void ReanimatedModuleProxy::performOperations() {
               const auto cmd = keyStr == "opacity" ? CMD_OPACITY : CMD_BORDER_RADIUS;
               intBuffer.push_back(cmd);
               doubleBuffer.push_back(value.asDouble());
-            } else if (keyStr == "backgroundColor" || keyStr == "borderColor") {
-              const auto cmd = keyStr == "backgroundColor" ? CMD_BACKGROUND_COLOR : CMD_BORDER_COLOR;
+            } else if (keyStr == "backgroundColor" || keyStr == "borderColor" || keyStr == "color") {
+              const auto cmd = keyStr == "backgroundColor" ? CMD_BACKGROUND_COLOR : keyStr == "borderColor" ? CMD_BORDER_COLOR : CMD_COLOR;
               intBuffer.push_back(cmd);
               intBuffer.push_back(value.asInt());
             } else if (keyStr == "transform") {

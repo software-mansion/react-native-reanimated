@@ -24,8 +24,8 @@ export default function OpacityTransformExample() {
     // opacity: 0.5 + sv.value / 2,
     // borderRadius: sv.value * 25,
     // backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
-    // borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
-    // color: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    color: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // transform: [],
     // transform: [
     //   { perspective: Math.pow(2, sv.value * 3 + 4.5) },
@@ -50,9 +50,9 @@ export default function OpacityTransformExample() {
     // transform: [{ skewX: `${(sv.value * Math.PI) / 4}rad` }],
     // transform: [{ skewY: `${sv.value * 45}deg` }],
     // transform: [{ skewY: `${(sv.value * Math.PI) / 4}rad` }],
-    transform: [
-      { matrix: [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1] },
-    ],
+    // transform: [
+    //   { matrix: [sv.value * 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 1] },
+    // ],
   }));
 
   return (
@@ -60,7 +60,9 @@ export default function OpacityTransformExample() {
       {[...new Array(ROWS)].map((_, i) => (
         <View key={i} style={styles.row}>
           {[...new Array(COLS)].map((_, j) => (
-            <Animated.View key={j} style={[styles.box, animatedStyle]} />
+            <Animated.Text key={j} style={[styles.box, animatedStyle]}>
+              foo
+            </Animated.Text>
           ))}
         </View>
       ))}
