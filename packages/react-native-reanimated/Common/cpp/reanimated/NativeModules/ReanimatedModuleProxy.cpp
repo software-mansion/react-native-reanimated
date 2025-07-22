@@ -765,6 +765,9 @@ void ReanimatedModuleProxy::performOperations() {
     if (!synchronousUpdatesBatch.empty()) {
       std::vector<int> intBuffer;
       std::vector<double> doubleBuffer;
+      intBuffer.reserve(1024);
+      doubleBuffer.reserve(1024);
+
       intBuffer.push_back(CMD_START_OF_BUFFER);
       for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
         intBuffer.push_back(CMD_START_OF_VIEW);
