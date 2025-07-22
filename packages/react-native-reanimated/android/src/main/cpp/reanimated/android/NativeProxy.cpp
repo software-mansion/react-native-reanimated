@@ -177,9 +177,9 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
-  static const auto method =
-      getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
-          "synchronouslyUpdateUIProps");
+  static const auto method = getJniMethod<void(
+      jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
+      "synchronouslyUpdateUIProps");
   auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
   auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
   jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());

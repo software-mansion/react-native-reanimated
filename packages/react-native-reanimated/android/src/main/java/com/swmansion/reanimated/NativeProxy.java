@@ -256,19 +256,21 @@ public class NativeProxy {
           break;
 
         case CMD_OPACITY:
-        case CMD_BORDER_RADIUS: {
-          String name = commandToString(command);
-          props.putDouble(name, doubleIterator.nextDouble());
-          break;
-        }
+        case CMD_BORDER_RADIUS:
+          {
+            String name = commandToString(command);
+            props.putDouble(name, doubleIterator.nextDouble());
+            break;
+          }
 
         case CMD_BACKGROUND_COLOR:
         case CMD_BORDER_COLOR:
-        case CMD_COLOR: {
-          String name = commandToString(command);
-          props.putInt(name, intIterator.nextInt());
-          break;
-        }
+        case CMD_COLOR:
+          {
+            String name = commandToString(command);
+            props.putInt(name, intIterator.nextInt());
+            break;
+          }
 
         case CMD_START_OF_TRANSFORM:
           JavaOnlyArray transform = new JavaOnlyArray();
@@ -281,24 +283,26 @@ public class NativeProxy {
             String name = transformCommandToString(transformCommand);
             switch (transformCommand) {
               case CMD_TRANSFORM_TRANSLATE_X:
-              case CMD_TRANSFORM_TRANSLATE_Y: {
-                double value = doubleIterator.nextDouble();
-                switch (intIterator.nextInt()) {
-                  case CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value));
-                  case CMD_UNIT_PERCENT -> transform.pushMap(JavaOnlyMap.of(name, value + "%"));
-                  default -> throw new RuntimeException("Unknown unit command");
-                };
-                break;
-              }
+              case CMD_TRANSFORM_TRANSLATE_Y:
+                {
+                  double value = doubleIterator.nextDouble();
+                  switch (intIterator.nextInt()) {
+                    case CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value));
+                    case CMD_UNIT_PERCENT -> transform.pushMap(JavaOnlyMap.of(name, value + "%"));
+                    default -> throw new RuntimeException("Unknown unit command");
+                  }
+                  break;
+                }
 
               case CMD_TRANSFORM_SCALE:
               case CMD_TRANSFORM_SCALE_X:
               case CMD_TRANSFORM_SCALE_Y:
-              case CMD_TRANSFORM_PERSPECTIVE: {
-                double value = doubleIterator.nextDouble();
-                transform.pushMap(JavaOnlyMap.of(name, value));
-                break;
-              }
+              case CMD_TRANSFORM_PERSPECTIVE:
+                {
+                  double value = doubleIterator.nextDouble();
+                  transform.pushMap(JavaOnlyMap.of(name, value));
+                  break;
+                }
 
               case CMD_TRANSFORM_ROTATE:
               case CMD_TRANSFORM_ROTATE_X:
@@ -307,11 +311,12 @@ public class NativeProxy {
               case CMD_TRANSFORM_SKEW_X:
               case CMD_TRANSFORM_SKEW_Y:
                 double angle = doubleIterator.nextDouble();
-                String unit = switch (intIterator.nextInt()) {
-                  case CMD_UNIT_DEG -> "deg";
-                  case CMD_UNIT_RAD -> "rad";
-                  default -> throw new RuntimeException("Unknown unit command");
-                };
+                String unit =
+                    switch (intIterator.nextInt()) {
+                      case CMD_UNIT_DEG -> "deg";
+                      case CMD_UNIT_RAD -> "rad";
+                      default -> throw new RuntimeException("Unknown unit command");
+                    };
                 transform.pushMap(JavaOnlyMap.of(name, angle + unit));
                 break;
 

@@ -661,12 +661,12 @@ void ReanimatedModuleProxy::performOperations() {
     shouldUpdateCssAnimations_ = false;
 
     static const std::unordered_set<std::string> synchronousProps = {
-      "opacity",
-      "transform",
-      "backgroundColor",
-      "borderRadius",
-      "borderColor",
-      // "color", // TODO: fix animating color of Animated.Text
+        "opacity",
+        "transform",
+        "backgroundColor",
+        "borderRadius",
+        "borderColor",
+        // "color", // TODO: fix animating color of Animated.Text
     };
 
     for (const auto &[shadowNode, props] : updatesBatch) {
@@ -717,127 +717,153 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_UNIT_PERCENT = 203;
 
     const auto propNameToCommand = [](const std::string &name) {
-      if (name == "opacity") return CMD_OPACITY;
-      if (name == "borderRadius") return CMD_BORDER_RADIUS;
-      if (name == "backgroundColor") return CMD_BACKGROUND_COLOR;
-      if (name == "borderColor") return CMD_BORDER_COLOR;
-      if (name == "color") return CMD_COLOR;
-      if (name == "transform") return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
+      if (name == "opacity")
+        return CMD_OPACITY;
+      if (name == "borderRadius")
+        return CMD_BORDER_RADIUS;
+      if (name == "backgroundColor")
+        return CMD_BACKGROUND_COLOR;
+      if (name == "borderColor")
+        return CMD_BORDER_COLOR;
+      if (name == "color")
+        return CMD_COLOR;
+      if (name == "transform")
+        return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
       throw std::runtime_error("Unsupported style: " + name);
     };
 
     const auto transformNameToCommand = [](const std::string &name) {
-      if (name == "translateX") return CMD_TRANSFORM_TRANSLATE_X;
-      if (name == "translateY") return CMD_TRANSFORM_TRANSLATE_Y;
-      if (name == "scale") return CMD_TRANSFORM_SCALE;
-      if (name == "scaleX") return CMD_TRANSFORM_SCALE_X;
-      if (name == "scaleY") return CMD_TRANSFORM_SCALE_Y;
-      if (name == "rotate") return CMD_TRANSFORM_ROTATE;
-      if (name == "rotateX") return CMD_TRANSFORM_ROTATE_X;
-      if (name == "rotateY") return CMD_TRANSFORM_ROTATE_Y;
-      if (name == "rotateZ") return CMD_TRANSFORM_ROTATE_Z;
-      if (name == "skewX") return CMD_TRANSFORM_SKEW_X;
-      if (name == "skewY") return CMD_TRANSFORM_SKEW_Y;
-      if (name == "matrix") return CMD_TRANSFORM_MATRIX;
-      if (name == "perspective") return CMD_TRANSFORM_PERSPECTIVE;
+      if (name == "translateX")
+        return CMD_TRANSFORM_TRANSLATE_X;
+      if (name == "translateY")
+        return CMD_TRANSFORM_TRANSLATE_Y;
+      if (name == "scale")
+        return CMD_TRANSFORM_SCALE;
+      if (name == "scaleX")
+        return CMD_TRANSFORM_SCALE_X;
+      if (name == "scaleY")
+        return CMD_TRANSFORM_SCALE_Y;
+      if (name == "rotate")
+        return CMD_TRANSFORM_ROTATE;
+      if (name == "rotateX")
+        return CMD_TRANSFORM_ROTATE_X;
+      if (name == "rotateY")
+        return CMD_TRANSFORM_ROTATE_Y;
+      if (name == "rotateZ")
+        return CMD_TRANSFORM_ROTATE_Z;
+      if (name == "skewX")
+        return CMD_TRANSFORM_SKEW_X;
+      if (name == "skewY")
+        return CMD_TRANSFORM_SKEW_Y;
+      if (name == "matrix")
+        return CMD_TRANSFORM_MATRIX;
+      if (name == "perspective")
+        return CMD_TRANSFORM_PERSPECTIVE;
       throw std::runtime_error("Unsupported transform: " + name);
     };
 
     if (!synchronousUpdatesBatch.empty()) {
-        std::vector<int> intBuffer;
-        std::vector<double> doubleBuffer;
-        intBuffer.push_back(CMD_START_OF_BUFFER);
-        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-          intBuffer.push_back(CMD_START_OF_VIEW);
-          intBuffer.push_back(shadowNode->getTag());
-          for (const auto &[key, value] : props.items()) {
-            const auto command = propNameToCommand(key.getString());
-            switch (command) {
-              case CMD_OPACITY:
-              case CMD_BORDER_RADIUS:
-                intBuffer.push_back(command);
-                doubleBuffer.push_back(value.asDouble());
-                break;
+      std::vector<int> intBuffer;
+      std::vector<double> doubleBuffer;
+      intBuffer.push_back(CMD_START_OF_BUFFER);
+      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+        intBuffer.push_back(CMD_START_OF_VIEW);
+        intBuffer.push_back(shadowNode->getTag());
+        for (const auto &[key, value] : props.items()) {
+          const auto command = propNameToCommand(key.getString());
+          switch (command) {
+            case CMD_OPACITY:
+            case CMD_BORDER_RADIUS:
+              intBuffer.push_back(command);
+              doubleBuffer.push_back(value.asDouble());
+              break;
 
-              case CMD_BACKGROUND_COLOR:
-              case CMD_BORDER_COLOR:
-              case CMD_COLOR:
-                intBuffer.push_back(command);
-                intBuffer.push_back(value.asInt());
-                break;
+            case CMD_BACKGROUND_COLOR:
+            case CMD_BORDER_COLOR:
+            case CMD_COLOR:
+              intBuffer.push_back(command);
+              intBuffer.push_back(value.asInt());
+              break;
 
-              case CMD_START_OF_TRANSFORM:
-                intBuffer.push_back(command);
-                for (const auto &item : value) {
-                  const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
-                  const auto &transformValue = *item.values().begin();
-                  switch (transformCommand) {
-                    case CMD_TRANSFORM_SCALE:
-                    case CMD_TRANSFORM_SCALE_X:
-                    case CMD_TRANSFORM_SCALE_Y:
-                    case CMD_TRANSFORM_PERSPECTIVE: {
-                      intBuffer.push_back(transformCommand);
+            case CMD_START_OF_TRANSFORM:
+              intBuffer.push_back(command);
+              for (const auto &item : value) {
+                const auto transformCommand =
+                    transformNameToCommand(item.keys().begin()->getString());
+                const auto &transformValue = *item.values().begin();
+                switch (transformCommand) {
+                  case CMD_TRANSFORM_SCALE:
+                  case CMD_TRANSFORM_SCALE_X:
+                  case CMD_TRANSFORM_SCALE_Y:
+                  case CMD_TRANSFORM_PERSPECTIVE: {
+                    intBuffer.push_back(transformCommand);
+                    doubleBuffer.push_back(transformValue.asDouble());
+                    break;
+                  }
+
+                  case CMD_TRANSFORM_TRANSLATE_X:
+                  case CMD_TRANSFORM_TRANSLATE_Y: {
+                    intBuffer.push_back(transformCommand);
+                    if (transformValue.isDouble()) {
+                      intBuffer.push_back(CMD_UNIT_PX);
                       doubleBuffer.push_back(transformValue.asDouble());
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_TRANSLATE_X:
-                    case CMD_TRANSFORM_TRANSLATE_Y: {
-                      intBuffer.push_back(transformCommand);
-                      if (transformValue.isDouble()) {
-                        intBuffer.push_back(CMD_UNIT_PX);
-                        doubleBuffer.push_back(transformValue.asDouble());
-                      } else if (transformValue.isString()) {
-                        const auto &transformValueStr = transformValue.getString();
-                        if (!transformValueStr.ends_with("%")) {
-                          throw std::runtime_error("String translate must be a percentage");
-                        }
-                        intBuffer.push_back(CMD_UNIT_PERCENT);
-                        doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
-                      } else {
-                        throw std::runtime_error("Translate value must be a number or a string");
+                    } else if (transformValue.isString()) {
+                      const auto &transformValueStr =
+                          transformValue.getString();
+                      if (!transformValueStr.ends_with("%")) {
+                        throw std::runtime_error(
+                            "String translate must be a percentage");
                       }
-                      break;
+                      intBuffer.push_back(CMD_UNIT_PERCENT);
+                      doubleBuffer.push_back(
+                          std::stof(transformValueStr.substr(0, -1)));
+                    } else {
+                      throw std::runtime_error(
+                          "Translate value must be a number or a string");
                     }
+                    break;
+                  }
 
-                    case CMD_TRANSFORM_ROTATE:
-                    case CMD_TRANSFORM_ROTATE_X:
-                    case CMD_TRANSFORM_ROTATE_Y:
-                    case CMD_TRANSFORM_ROTATE_Z:
-                    case CMD_TRANSFORM_SKEW_X:
-                    case CMD_TRANSFORM_SKEW_Y: {
-                      const auto &transformValueStr = transformValue.getString();
-                      intBuffer.push_back(transformCommand);
-                      if (transformValueStr.ends_with("deg")) {
-                        intBuffer.push_back(CMD_UNIT_DEG);
-                      } else if (transformValueStr.ends_with("rad")) {
-                        intBuffer.push_back(CMD_UNIT_RAD);
-                      } else {
-                        throw std::runtime_error("Unsupported rotation unit: " + transformValueStr);
-                      }
-                      doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
-                      break;
+                  case CMD_TRANSFORM_ROTATE:
+                  case CMD_TRANSFORM_ROTATE_X:
+                  case CMD_TRANSFORM_ROTATE_Y:
+                  case CMD_TRANSFORM_ROTATE_Z:
+                  case CMD_TRANSFORM_SKEW_X:
+                  case CMD_TRANSFORM_SKEW_Y: {
+                    const auto &transformValueStr = transformValue.getString();
+                    intBuffer.push_back(transformCommand);
+                    if (transformValueStr.ends_with("deg")) {
+                      intBuffer.push_back(CMD_UNIT_DEG);
+                    } else if (transformValueStr.ends_with("rad")) {
+                      intBuffer.push_back(CMD_UNIT_RAD);
+                    } else {
+                      throw std::runtime_error(
+                          "Unsupported rotation unit: " + transformValueStr);
                     }
+                    doubleBuffer.push_back(
+                        std::stof(transformValueStr.substr(0, -3)));
+                    break;
+                  }
 
-                    case CMD_TRANSFORM_MATRIX: {
-                      intBuffer.push_back(transformCommand);
-                      int size = transformValue.size();
-                      intBuffer.push_back(transformValue.size());
-                      for (int i = 0; i < size; i++) {
-                        doubleBuffer.push_back(transformValue[i].asDouble());
-                      }
-                      break;
+                  case CMD_TRANSFORM_MATRIX: {
+                    intBuffer.push_back(transformCommand);
+                    int size = transformValue.size();
+                    intBuffer.push_back(transformValue.size());
+                    for (int i = 0; i < size; i++) {
+                      doubleBuffer.push_back(transformValue[i].asDouble());
                     }
+                    break;
                   }
                 }
-                intBuffer.push_back(CMD_END_OF_TRANSFORM);
-                break;
-            }
+              }
+              intBuffer.push_back(CMD_END_OF_TRANSFORM);
+              break;
           }
-          intBuffer.push_back(CMD_END_OF_VIEW);
         }
-        intBuffer.push_back(CMD_END_OF_BUFFER);
-        synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
+        intBuffer.push_back(CMD_END_OF_VIEW);
+      }
+      intBuffer.push_back(CMD_END_OF_BUFFER);
+      synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
     }
 
     if ((shadowTreeUpdatesBatch.size() > 0) &&
