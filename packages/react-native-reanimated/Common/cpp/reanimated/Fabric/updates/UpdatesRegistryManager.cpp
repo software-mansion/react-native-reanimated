@@ -1,4 +1,5 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 namespace reanimated {
 
@@ -19,7 +20,10 @@ void UpdatesRegistryManager::addRegistry(
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
-  isPaused_ = true;
+  if constexpr (!StaticFeatureFlags::getFlag(
+                    "DISABLE_COMMIT_PAUSING_MECHANISM")) {
+    isPaused_ = true;
+  }
 }
 
 bool UpdatesRegistryManager::shouldReanimatedSkipCommit() {
