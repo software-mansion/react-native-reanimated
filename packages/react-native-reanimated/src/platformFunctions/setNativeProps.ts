@@ -60,7 +60,7 @@ function setNativePropsPaper(
     return;
   }
   const tag = animatedRef() as number;
-  const name = (animatedRef as AnimatedRefOnUI).viewName.value;
+  const name = (animatedRef as AnimatedRefOnUI).viewName?.value ?? null;
   processColorsInProps(updates);
   global._updatePropsPaper!([{ tag, name, updates }]);
 }
