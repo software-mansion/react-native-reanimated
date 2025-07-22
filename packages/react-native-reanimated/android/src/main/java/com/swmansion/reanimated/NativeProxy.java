@@ -257,7 +257,11 @@ public class NativeProxy {
                   default -> throw new RuntimeException("Unknown rotation type: " + transformCommand);
                 };
                 double angle = doubleIterator.nextDouble();
-                String unit = unitCommandToString(intIterator.nextInt());
+                String unit = switch (intIterator.nextInt()) {
+                  case CMD_UNIT_DEG -> "deg";
+                  case CMD_UNIT_RAD -> "rad";
+                  default -> throw new RuntimeException("Unknown unit command");
+                };
                 transform.pushMap(JavaOnlyMap.of(name, angle + unit));
                 break;
 
@@ -283,14 +287,6 @@ public class NativeProxy {
           throw new RuntimeException("Unexcepted command: " + command);
       }
     }
-  }
-
-  private static String unitCommandToString(int cmd) {
-    return switch (cmd) {
-      case CMD_UNIT_DEG -> "deg";
-      case CMD_UNIT_RAD -> "rad";
-      default -> throw new RuntimeException("Unknown unit command");
-    };
   }
 
   @DoNotStrip
