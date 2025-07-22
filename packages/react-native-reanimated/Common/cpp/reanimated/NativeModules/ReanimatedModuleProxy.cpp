@@ -770,7 +770,7 @@ void ReanimatedModuleProxy::performOperations() {
                 for (const auto &item : value) {
                   const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
                   const auto &transformValue = *item.values().begin();
-                  if (transformCommand == CMD_TRANSFORM_SCALE || transformCommand == CMD_TRANSFORM_SCALE_X || transformCommand == CMD_TRANSFORM_SCALE_Y) {
+                  if (transformCommand == CMD_TRANSFORM_SCALE || transformCommand == CMD_TRANSFORM_SCALE_X || transformCommand == CMD_TRANSFORM_SCALE_Y || transformCommand == CMD_TRANSFORM_PERSPECTIVE) {
                     intBuffer.push_back(transformCommand);
                     doubleBuffer.push_back(transformValue.asDouble());
                   } else if (transformCommand == CMD_TRANSFORM_TRANSLATE_X || transformCommand == CMD_TRANSFORM_TRANSLATE_Y) {
@@ -788,10 +788,6 @@ void ReanimatedModuleProxy::performOperations() {
                     } else {
                       throw std::runtime_error("Translate value must be a number or a string");
                     }
-                  } else if (transformCommand == CMD_TRANSFORM_PERSPECTIVE) {
-                    // TODO: merge to scale branch
-                    intBuffer.push_back(transformCommand);
-                    doubleBuffer.push_back(transformValue.asDouble());
                   } else if (transformCommand == CMD_TRANSFORM_ROTATE || transformCommand == CMD_TRANSFORM_ROTATE_X || transformCommand == CMD_TRANSFORM_ROTATE_Y || transformCommand == CMD_TRANSFORM_ROTATE_Z || transformCommand == CMD_TRANSFORM_SKEW_X || transformCommand == CMD_TRANSFORM_SKEW_Y) {
                     const auto &transformValueStr = transformValue.getString();
                     intBuffer.push_back(transformCommand);
