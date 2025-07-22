@@ -696,6 +696,8 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_OPACITY = 1;
     static constexpr auto CMD_BORDER_RADIUS = 4;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
+    static constexpr auto CMD_TRANSFORM_SCALE_X = 27;
+    static constexpr auto CMD_TRANSFORM_SCALE_Y = 28;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
     static constexpr auto CMD_TRANSFORM_ROTATE_X = 25;
     static constexpr auto CMD_TRANSFORM_ROTATE_Y = 24;
@@ -726,8 +728,14 @@ void ReanimatedModuleProxy::performOperations() {
               for (const auto &item : value) {
                 const auto &transformKeyStr = item.keys().begin()->getString();
                 const auto &transformValue = *item.values().begin();
-                if (transformKeyStr == "scale") {
-                  intBuffer.push_back(CMD_TRANSFORM_SCALE);
+                if (transformKeyStr == "scale" || transformKeyStr == "scaleX" || transformKeyStr == "scaleY") {
+                  const auto cmd =
+                    transformKeyStr == "scaleX"
+                      ? CMD_TRANSFORM_SCALE_X
+                      : transformKeyStr == "scaleY"
+                      ? CMD_TRANSFORM_SCALE_Y
+                      : CMD_TRANSFORM_SCALE;
+                  intBuffer.push_back(cmd);
                   doubleBuffer.push_back(transformValue.asDouble());
                 } else if (transformKeyStr == "perspective") {
                   intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);

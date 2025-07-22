@@ -191,6 +191,8 @@ public class NativeProxy {
   private static final int CMD_OPACITY = 1;
   private static final int CMD_BORDER_RADIUS = 4;
   private static final int CMD_TRANSFORM_SCALE = 21;
+  private static final int CMD_TRANSFORM_SCALE_X = 27;
+  private static final int CMD_TRANSFORM_SCALE_Y = 28;
   private static final int CMD_TRANSFORM_ROTATE = 22;
   private static final int CMD_TRANSFORM_ROTATE_X = 25;
   private static final int CMD_TRANSFORM_ROTATE_Y = 24;
@@ -242,8 +244,18 @@ public class NativeProxy {
             }
             switch (transformCommand) {
               case CMD_TRANSFORM_SCALE:
-                transform.pushMap(JavaOnlyMap.of("scale", doubleIterator.nextDouble()));
+              case CMD_TRANSFORM_SCALE_X:
+              case CMD_TRANSFORM_SCALE_Y: {
+                String name = switch (transformCommand) {
+                  case CMD_TRANSFORM_SCALE -> "scale";
+                  case CMD_TRANSFORM_SCALE_X -> "scaleX";
+                  case CMD_TRANSFORM_SCALE_Y -> "scaleY";
+                  default -> throw new RuntimeException("Unknown scale type: " + transformCommand);
+                };
+                double value = doubleIterator.nextDouble();
+                transform.pushMap(JavaOnlyMap.of(name, value));
                 break;
+              }
 
               case CMD_TRANSFORM_ROTATE:
               case CMD_TRANSFORM_ROTATE_X:
