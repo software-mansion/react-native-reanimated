@@ -31,7 +31,6 @@ using MeasureFunction = std::function<
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
-
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
