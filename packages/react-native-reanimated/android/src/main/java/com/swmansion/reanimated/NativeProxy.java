@@ -181,10 +181,10 @@ public class NativeProxy {
   }
 
   // NOTE: Keep in sync with ReanimatedModuleProxy::performOperations
-  private static final int CMD_START_OF_VIEW = 2;
-  private static final int CMD_START_OF_TRANSFORM = 3;
-  private static final int CMD_END_OF_TRANSFORM = 4;
-  private static final int CMD_END_OF_VIEW = 5;
+  private static final int CMD_START_OF_VIEW = 1;
+  private static final int CMD_START_OF_TRANSFORM = 2;
+  private static final int CMD_END_OF_TRANSFORM = 3;
+  private static final int CMD_END_OF_VIEW = 4;
   private static final int CMD_OPACITY = 10;
   private static final int CMD_BORDER_RADIUS = 11;
   private static final int CMD_BACKGROUND_COLOR = 12;
