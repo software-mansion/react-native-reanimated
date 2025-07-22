@@ -1,11 +1,9 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -20,23 +18,15 @@ export default function DragAndSnapExample() {
     startX: number;
     startY: number;
   };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = translation.x.value;
-      ctx.startY = translation.y.value;
-    },
-    onActive: (event, ctx) => {
-      translation.x.value = ctx.startX + event.translationX;
-      translation.y.value = ctx.startY + event.translationY;
-    },
-    onEnd: (_) => {
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
+      translation.x.value += event.changeX;
+      translation.y.value += event.changeY;
+    })
+    .onEnd((event) => {
       translation.x.value = withSpring(0);
       translation.y.value = withSpring(0);
-    },
-  });
+    });
 
   const stylez = useAnimatedStyle(() => {
     const H = Math.round(
@@ -61,9 +51,9 @@ export default function DragAndSnapExample() {
 
   return (
     <View style={styles.container}>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.box, stylez]} />
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
