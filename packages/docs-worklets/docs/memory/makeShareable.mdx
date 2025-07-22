@@ -1,0 +1,42 @@
+---
+sidebar_position: 1
+---
+
+# makeShareable
+
+<DeprecatedBanner />
+
+`makeShareable` lets you create a `Shareable` object from a given value on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+Any modifications made to this shared object on the UI thread will be automatically visible to all worklets on the UI thread.
+
+
+## Reference
+
+```javascript
+import { makeShareable, executeOnUIRuntimeSync } from 'react-native-worklets';
+
+const shareable = makeShareable({
+    count: 0,
+});
+
+executeOnUIRuntimeSync(() => {
+    console.log(shareable.count); // 0
+})();
+
+executeOnUIRuntimeSync(() => {
+    shareable.count = 1;
+})();
+
+executeOnUIRuntimeSync(() => {
+    console.log(shareable.count); // 1
+})();
+```
+
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function makeShareable<T extends object>(value: T): T
+```
+</details>

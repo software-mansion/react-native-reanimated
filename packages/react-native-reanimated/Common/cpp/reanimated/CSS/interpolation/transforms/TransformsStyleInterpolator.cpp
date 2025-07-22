@@ -13,13 +13,13 @@ TransformsStyleInterpolator::TransformsStyleInterpolator(
       interpolators_(interpolators) {}
 
 folly::dynamic TransformsStyleInterpolator::getStyleValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
       shadowNode->getTag(), propertyPath_);
 }
 
 folly::dynamic TransformsStyleInterpolator::getResetStyle(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
   if (!styleValue.isArray()) {
@@ -68,7 +68,7 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
 }
 
 folly::dynamic TransformsStyleInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 
@@ -98,21 +98,20 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
 }
 
 void TransformsStyleInterpolator::updateKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &keyframes) {
+    const folly::dynamic &keyframes) {
   // Step 1: Parse keyframes
-  const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
+  const auto parsedKeyframes = parseDynamicKeyframes(keyframes);
 
   // Step 2: Convert keyframes to TransformOperations
   std::vector<std::pair<double, std::optional<TransformOperations>>> operations;
   operations.reserve(parsedKeyframes.size());
   for (const auto &[offset, value] : parsedKeyframes) {
-    operations.emplace_back(offset, parseTransformOperations(rt, value));
+    operations.emplace_back(offset, parseTransformOperations(value));
   }
 
   // Step 3: Prepare keyframe interpolation pairs (convert keyframe values in
   // both keyframes to the same type)
-  // There will be one less keyframe than the number of keyframes in the jsi
+  // There will be one less keyframe than the number of keyframes in the
   // array as we create interpolation pairs
   const auto keyframesCount = operations.size() - 1;
   keyframes_.clear();
@@ -147,28 +146,6 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       1,
       parseTransformOperations(prevStyleValue).value_or(TransformOperations{}),
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
-}
-
-std::optional<TransformOperations>
-TransformsStyleInterpolator::parseTransformOperations(
-    jsi::Runtime &rt,
-    const jsi::Value &values) {
-  if (values.isUndefined()) {
-    return std::nullopt;
-  }
-
-  const auto transformsArray = values.asObject(rt).asArray(rt);
-  const auto transformsCount = transformsArray.size(rt);
-
-  TransformOperations transformOperations;
-  transformOperations.reserve(transformsCount);
-
-  for (size_t i = 0; i < transformsCount; ++i) {
-    const auto transform = transformsArray.getValueAtIndex(rt, i);
-    transformOperations.emplace_back(
-        TransformOperation::fromJSIValue(rt, transform));
-  }
-  return transformOperations;
 }
 
 std::optional<TransformOperations>
@@ -358,7 +335,7 @@ size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   const auto &styleValue = getStyleValue(shadowNode);
   return parseTransformOperations(styleValue).value_or(TransformOperations{});
 }
@@ -370,7 +347,7 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
 }
 
 TransformOperations TransformsStyleInterpolator::interpolateOperations(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const double keyframeProgress,
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations) const {

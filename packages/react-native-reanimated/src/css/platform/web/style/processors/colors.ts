@@ -9,7 +9,7 @@ export const processColor: ValueProcessor<ColorValue> = (value) => {
   }
 
   if (value.startsWith('hwb')) {
-    return value.replace(/,/g, '');
+    return value.replace(/\s*,\s*/g, ' ');
   }
 
   return value;

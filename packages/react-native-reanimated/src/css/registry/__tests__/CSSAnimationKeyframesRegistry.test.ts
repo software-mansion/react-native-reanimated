@@ -4,14 +4,14 @@ import {
   registerCSSKeyframes,
   unregisterCSSKeyframes,
 } from '../../platform/native';
-import CSSKeyframesRegistry from '../CSSKeyframesRegistry';
+import cssKeyframesRegistry from '../CSSKeyframesRegistry';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSKeyframes: jest.fn(),
   unregisterCSSKeyframes: jest.fn(),
 }));
 
-describe(CSSKeyframesRegistry, () => {
+describe('CSSKeyframesRegistry', () => {
   // each call to CSSKeyframesRuleImpl creates a new animation, thus,
   // even though the keyframes are the same, the animation name is different
   // and animations are treated as different animations
@@ -24,16 +24,15 @@ describe(CSSKeyframesRegistry, () => {
   const viewTag1 = 1;
   const viewTag2 = 2;
   const viewTag3 = 3;
-  let registry: CSSKeyframesRegistry;
 
   beforeEach(() => {
-    registry = new CSSKeyframesRegistry();
+    cssKeyframesRegistry.clear();
     jest.clearAllMocks();
   });
 
   describe('add', () => {
     it('calls registerCSSKeyframes when adding a new animation', () => {
-      registry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
@@ -44,8 +43,8 @@ describe(CSSKeyframesRegistry, () => {
     });
 
     it('does not call registerCSSKeyframes when adding an existing animation', () => {
-      registry.add(keyframesRule1, viewTag1);
-      registry.add(keyframesRule1, viewTag2); // animation won't be registered again, even though the viewTag is different
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag2); // animation won't be registered again, even though the viewTag is different
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
@@ -56,8 +55,8 @@ describe(CSSKeyframesRegistry, () => {
     });
 
     it('calls registerCSSKeyframes for the new animation added', () => {
-      registry.add(keyframesRule1, viewTag1);
-      registry.add(keyframesRule2, viewTag1); // viewTag can be the same, animations aren't added separately for different views
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule2, viewTag1); // viewTag can be the same, animations aren't added separately for different views
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
       expect(registerCSSKeyframes).toHaveBeenNthCalledWith(
@@ -76,34 +75,34 @@ describe(CSSKeyframesRegistry, () => {
 
   describe('remove', () => {
     it('calls unregisterCSSKeyframes when removed animation is used only by a single view', () => {
-      registry.add(keyframesRule1, viewTag1);
-      registry.remove(keyframesRule1.name, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.remove(keyframesRule1.name, viewTag1);
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(unregisterCSSKeyframes).toHaveBeenCalledWith(keyframesRule1.name);
     });
 
     it('does not call unregisterCSSKeyframes when viewTag is not found', () => {
-      registry.add(keyframesRule1, viewTag1);
-      registry.remove(keyframesRule1.name, viewTag2); // even though the animation is used only by a single view, it's not removed
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.remove(keyframesRule1.name, viewTag2); // even though the animation is used only by a single view, it's not removed
 
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
     it('does not call unregisterCSSKeyframes until removed for the last view that uses it', () => {
-      registry.add(keyframesRule1, viewTag1);
-      registry.add(keyframesRule1, viewTag2);
-      registry.add(keyframesRule1, viewTag3);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag1);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag2);
+      cssKeyframesRegistry.add(keyframesRule1, viewTag3);
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      registry.remove(keyframesRule1.name, viewTag1);
+      cssKeyframesRegistry.remove(keyframesRule1.name, viewTag1);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      registry.remove(keyframesRule1.name, viewTag2);
+      cssKeyframesRegistry.remove(keyframesRule1.name, viewTag2);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
-      registry.remove(keyframesRule1.name, viewTag3);
+      cssKeyframesRegistry.remove(keyframesRule1.name, viewTag3);
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1); // Finally, the animation is removed
     });
   });

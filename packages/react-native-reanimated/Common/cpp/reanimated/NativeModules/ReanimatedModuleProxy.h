@@ -16,6 +16,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -29,6 +30,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -40,7 +42,8 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch =
+    std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
@@ -75,6 +78,10 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value setDynamicFeatureFlag(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &value) override;
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
@@ -165,7 +172,7 @@ class ReanimatedModuleProxy
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -235,6 +242,8 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::set<SurfaceId> layoutAnimationFlushRequests_;
+  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

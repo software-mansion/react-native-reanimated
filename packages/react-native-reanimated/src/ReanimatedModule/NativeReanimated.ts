@@ -163,6 +163,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  setDynamicFeatureFlag(name: string, value: boolean) {
+    this.#reanimatedModuleProxy.setDynamicFeatureFlag(name, value);
+  }
+
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
@@ -244,6 +248,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
+  setDynamicFeatureFlag(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;
   }
