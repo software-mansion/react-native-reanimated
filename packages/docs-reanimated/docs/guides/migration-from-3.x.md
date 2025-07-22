@@ -4,10 +4,6 @@ title: Migrating from Reanimated 3.x to 4.x
 sidebar_label: Migration from 3.x
 ---
 
-:::note
-Reanimated 4.x is currently in beta period and there hasn't been a stable release yet. Migration steps are yet to be confirmed.
-:::
-
 ## New Architecture only
 
 Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/architecture/landing-page) and drops support for the Legacy Architecture along with the legacy renderer (commonly known as Paper) entirely. If your app still runs on the Legacy Architecture, please consider adopting the New Architecture or stay with latest 3.x release.
