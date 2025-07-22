@@ -225,24 +225,28 @@ public class NativeProxy {
           break;
 
         case CMD_OPACITY:
-          props.putDouble("opacity", doubleIterator.nextDouble());
+        case CMD_BORDER_RADIUS: {
+          String name = switch (command) {
+            case CMD_OPACITY -> "opacity";
+            case CMD_BORDER_RADIUS -> "borderRadius";
+            default -> throw new RuntimeException("Unknown command type: " + command);
+          };
+          props.putDouble(name, doubleIterator.nextDouble());
           break;
-
-        case CMD_BORDER_RADIUS:
-          props.putDouble("borderRadius", doubleIterator.nextDouble());
-          break;
+        }
 
         case CMD_BACKGROUND_COLOR:
-          props.putInt("backgroundColor", intIterator.nextInt());
-          break;
-
         case CMD_BORDER_COLOR:
-          props.putInt("borderColor", intIterator.nextInt());
+        case CMD_COLOR: {
+          String name = switch (command) {
+            case CMD_BACKGROUND_COLOR -> "backgroundColor";
+            case CMD_BORDER_COLOR -> "borderColor";
+            case CMD_COLOR -> "color";
+            default -> throw new RuntimeException("Unknown command type: " + command);
+          };
+          props.putInt(name, intIterator.nextInt());
           break;
-
-        case CMD_COLOR:
-          props.putInt("color", intIterator.nextInt());
-          break;
+        }
 
         case CMD_START_OF_TRANSFORM:
           JavaOnlyArray transform = new JavaOnlyArray();
