@@ -631,7 +631,7 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
-  UpdatesBatch updatesBatch, synchronousUpdatesBatch, shadowTreeUpdatesBatch;
+  UpdatesBatch updatesBatch;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -660,6 +660,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+#ifdef ANDROID
     static const std::unordered_set<std::string> synchronousProps = {
         "opacity",
         "transform",
@@ -668,6 +669,8 @@ void ReanimatedModuleProxy::performOperations() {
         "borderColor",
         // "color", // TODO: fix animating color of Animated.Text
     };
+
+    UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
     for (const auto &[shadowNode, props] : updatesBatch) {
       bool hasOnlySynchronousProps = true;
@@ -681,8 +684,7 @@ void ReanimatedModuleProxy::performOperations() {
       if (hasOnlySynchronousProps) {
         synchronousUpdatesBatch.emplace_back(shadowNode, props);
       } else {
-        // TODO: uncomment this
-        // shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
       }
     }
 
@@ -869,7 +871,10 @@ void ReanimatedModuleProxy::performOperations() {
       synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
     }
 
-    if ((shadowTreeUpdatesBatch.size() > 0) &&
+    updatesBatch = std::move(shadowTreeUpdatesBatch);
+#endif // ANDROID
+
+    if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
@@ -884,7 +889,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, shadowTreeUpdatesBatch);
+  commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
