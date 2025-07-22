@@ -309,9 +309,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
   ): boolean => {
     const res: Array<number> = [];
     let finished = true;
+    // We must restore nonscale current to ever end the animation.
+    animation.current = animation.nonscaledCurrent;
     tab.forEach((i) => {
-      // We must restore nonscale current to ever end the animation.
-      animation.current = animation.nonscaledCurrent;
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
       finished = finished && result;
