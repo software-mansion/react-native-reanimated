@@ -189,6 +189,8 @@ public class NativeProxy {
   private static final int CMD_BORDER_RADIUS = 4;
   private static final int CMD_TRANSFORM_SCALE = 21;
   private static final int CMD_TRANSFORM_ROTATE = 22;
+  private static final int CMD_TRANSFORM_ROTATE_Y = 24;
+  private static final int CMD_TRANSFORM_PERSPECTIVE = 23;
   private static final int CMD_BACKGROUND_COLOR = 3;
   private static final int CMD_BORDER_COLOR = 5;
 
@@ -232,6 +234,8 @@ public class NativeProxy {
             switch (intBuffer[i]) {
               case CMD_TRANSFORM_SCALE -> transform.pushMap(JavaOnlyMap.of("scale", floatBuffer[f++]));
               case CMD_TRANSFORM_ROTATE -> transform.pushMap(JavaOnlyMap.of("rotate", floatBuffer[f++] + "deg"));
+              case CMD_TRANSFORM_ROTATE_Y -> transform.pushMap(JavaOnlyMap.of("rotateY", floatBuffer[f++] + "deg"));
+              case CMD_TRANSFORM_PERSPECTIVE -> transform.pushMap(JavaOnlyMap.of("perspective", floatBuffer[f++]));
               default -> throw new RuntimeException("Unknown transform type: " + intBuffer[i]);
             }
             i++;

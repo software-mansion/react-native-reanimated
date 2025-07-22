@@ -697,6 +697,8 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_BORDER_RADIUS = 4;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_ROTATE = 22;
+    static constexpr auto CMD_TRANSFORM_ROTATE_Y = 24;
+    static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 23;
     static constexpr auto CMD_BACKGROUND_COLOR = 3;
     static constexpr auto CMD_BORDER_COLOR = 5;
 
@@ -723,10 +725,13 @@ void ReanimatedModuleProxy::performOperations() {
                 if (transformKeyStr == "scale") {
                   intBuffer.push_back(CMD_TRANSFORM_SCALE);
                   floatBuffer.push_back(transformValue.asDouble());
-                } else if (transformKeyStr == "rotate") {
+                } else if (transformKeyStr == "perspective") {
+                  intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);
+                  floatBuffer.push_back(transformValue.asDouble());
+                } else if (transformKeyStr == "rotate" || transformKeyStr == "rotateY") {
                   const auto &transformValueStr = transformValue.getString();
                   if (transformValueStr.ends_with("deg")) {
-                    intBuffer.push_back(CMD_TRANSFORM_ROTATE);
+                    intBuffer.push_back(transformKeyStr == "rotate" ? CMD_TRANSFORM_ROTATE : CMD_TRANSFORM_ROTATE_Y);
                     floatBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
                   } else {
                     throw std::runtime_error("Unsupported rotate unit: " + transformValueStr);

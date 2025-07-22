@@ -24,13 +24,13 @@ export default function OpacityTransformExample() {
     // opacity: 0.5 + sv.value / 2,
     // borderRadius: sv.value * 25,
     // backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
-    borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    // borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // color: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // transform: [],
-    // transform: [
-    //   { perspective: Math.pow(2, sv.value * 3 + 4.5) },
-    //   { rotateY: '45deg' },
-    // ],
+    transform: [
+      { perspective: Math.pow(2, sv.value * 3 + 4.5) },
+      { rotateY: '45deg' },
+    ],
     // transform: [{ rotate: `${sv.value * 90}deg` }],
     // transform: [{ rotate: `${(sv.value * Math.PI) / 2}rad` }],
     // transform: [{ rotateX: `${sv.value * 90}deg` }],
