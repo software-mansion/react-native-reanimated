@@ -848,7 +848,7 @@ void ReanimatedModuleProxy::performOperations() {
                   case CMD_TRANSFORM_MATRIX: {
                     intBuffer.push_back(transformCommand);
                     int size = transformValue.size();
-                    intBuffer.push_back(transformValue.size());
+                    intBuffer.push_back(size);
                     for (int i = 0; i < size; i++) {
                       doubleBuffer.push_back(transformValue[i].asDouble());
                     }
