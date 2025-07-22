@@ -190,6 +190,8 @@ public class NativeProxy {
   private static final int CMD_END_OF_BUFFER = -6;
   private static final int CMD_OPACITY = 1;
   private static final int CMD_BORDER_RADIUS = 4;
+  private static final int CMD_TRANSFORM_TRANSLATE_X = 29;
+  private static final int CMD_TRANSFORM_TRANSLATE_Y = 30;
   private static final int CMD_TRANSFORM_SCALE = 21;
   private static final int CMD_TRANSFORM_SCALE_X = 27;
   private static final int CMD_TRANSFORM_SCALE_Y = 28;
@@ -202,6 +204,8 @@ public class NativeProxy {
   private static final int CMD_BORDER_COLOR = 5;
   private static final int CMD_UNIT_DEG = 100;
   private static final int CMD_UNIT_RAD = 101;
+  private static final int CMD_UNIT_PX = 102;
+  private static final int CMD_UNIT_PERCENT = 103;
 
   @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
@@ -243,6 +247,22 @@ public class NativeProxy {
               break;
             }
             switch (transformCommand) {
+              case CMD_TRANSFORM_TRANSLATE_X:
+              case CMD_TRANSFORM_TRANSLATE_Y: {
+                String name = switch (transformCommand) {
+                  case CMD_TRANSFORM_TRANSLATE_X -> "translateX";
+                  case CMD_TRANSFORM_TRANSLATE_Y -> "translateY";
+                  default -> throw new RuntimeException("Unknown translate type: " + transformCommand);
+                };
+                double value = doubleIterator.nextDouble();
+                switch (intIterator.nextInt()) {
+                  case CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value));
+                  case CMD_UNIT_PERCENT -> transform.pushMap(JavaOnlyMap.of(name, value + "%"));
+                  default -> throw new RuntimeException("Unknown unit command");
+                };
+                break;
+              }
+
               case CMD_TRANSFORM_SCALE:
               case CMD_TRANSFORM_SCALE_X:
               case CMD_TRANSFORM_SCALE_Y: {

@@ -695,6 +695,8 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_END_OF_BUFFER = -6;
     static constexpr auto CMD_OPACITY = 1;
     static constexpr auto CMD_BORDER_RADIUS = 4;
+    static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 29;
+    static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 30;
     static constexpr auto CMD_TRANSFORM_SCALE = 21;
     static constexpr auto CMD_TRANSFORM_SCALE_X = 27;
     static constexpr auto CMD_TRANSFORM_SCALE_Y = 28;
@@ -707,6 +709,8 @@ void ReanimatedModuleProxy::performOperations() {
     static constexpr auto CMD_BORDER_COLOR = 5;
     static constexpr auto CMD_UNIT_DEG = 100;
     static constexpr auto CMD_UNIT_RAD = 101;
+    static constexpr auto CMD_UNIT_PX = 102;
+    static constexpr auto CMD_UNIT_PERCENT = 103;
 
     if (!synchronousUpdatesBatch.empty()) {
         std::vector<int> intBuffer;
@@ -739,6 +743,22 @@ void ReanimatedModuleProxy::performOperations() {
                       : CMD_TRANSFORM_SCALE;
                   intBuffer.push_back(cmd);
                   doubleBuffer.push_back(transformValue.asDouble());
+                } else if (transformKeyStr == "translateX" || transformKeyStr == "translateY") {
+                  const auto cmd = transformKeyStr == "translateX" ? CMD_TRANSFORM_TRANSLATE_X : CMD_TRANSFORM_TRANSLATE_Y;
+                  intBuffer.push_back(cmd);
+                  if (transformValue.isDouble()) {
+                    intBuffer.push_back(CMD_UNIT_PX);
+                    doubleBuffer.push_back(transformValue.asDouble());
+                  } else if (transformValue.isString()) {
+                    const auto &transformValueStr = transformValue.getString();
+                    if (!transformValueStr.ends_with("%")) {
+                      throw std::runtime_error("String translate must be a percentage");
+                    }
+                    intBuffer.push_back(CMD_UNIT_PERCENT);
+                    doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
+                  } else {
+                    throw std::runtime_error("Translate value must be a number or a string");
+                  }
                 } else if (transformKeyStr == "perspective") {
                   intBuffer.push_back(CMD_TRANSFORM_PERSPECTIVE);
                   doubleBuffer.push_back(transformValue.asDouble());

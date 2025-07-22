@@ -21,10 +21,10 @@ export default function OpacityTransformExample() {
   }, [sv]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.5 + sv.value / 2,
-    borderRadius: sv.value * 25,
-    backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
-    borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    // opacity: 0.5 + sv.value / 2,
+    // borderRadius: sv.value * 25,
+    // backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+    // borderColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // color: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
     // transform: [],
     // transform: [
@@ -45,7 +45,7 @@ export default function OpacityTransformExample() {
     // transform: [{ translateX: sv.value * 100 }],
     // transform: [{ translateX: `${sv.value * 100}%` }],
     // transform: [{ translateY: sv.value * 100 }],
-    // transform: [{ translateY: `${sv.value * 100}%` }],
+    transform: [{ translateY: `${sv.value * 100}%` }],
     // transform: [{ skewX: `${sv.value * 45}deg` }],
     // transform: [{ skewX: `${(sv.value * Math.PI) / 4}rad` }],
     // transform: [{ skewY: `${sv.value * 45}deg` }],
