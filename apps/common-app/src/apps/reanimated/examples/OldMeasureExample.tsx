@@ -3,13 +3,11 @@ import '../types';
 import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import type { TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { TapGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { AnimatedRef } from 'react-native-reanimated';
 import Animated, {
   Easing,
   measure,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
@@ -202,20 +200,18 @@ function SectionHeader({
     };
   }
 
-  const handler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
-    onActive: onActiveImpl,
-  });
+  const gesture = Gesture.Tap().onBegin(onActiveImpl);
 
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.header}>
         <Text>{title}</Text>
         {show && (
-          <TapGestureHandler onHandlerStateChange={handler}>
+          <GestureDetector gesture={gesture}>
             <Animated.View style={styles.triggerText}>
               <Text style={styles.white}>trigger</Text>
             </Animated.View>
-          </TapGestureHandler>
+          </GestureDetector>
         )}
       </View>
     </View>
