@@ -26,30 +26,34 @@ declare global {
   var _WORKLETS_BUNDLE_MODE: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
-  var _makeShareableClone: <T>(
+  var _createSerializable: <T>(
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
-  var _makeShareableString: (value: string) => FlatShareableRef<string>;
-  var _makeShareableNumber: (value: number) => FlatShareableRef<number>;
-  var _makeShareableBoolean: (value: boolean) => FlatShareableRef<boolean>;
-  var _makeShareableBigInt: (value: bigint) => FlatShareableRef<bigint>;
-  var _makeShareableUndefined: () => FlatShareableRef<undefined>;
-  var _makeShareableNull: () => FlatShareableRef<null>;
-  var _makeShareableObject: <T extends object>(
+  var _createSerializableString: (value: string) => FlatShareableRef<string>;
+  var _createSerializableNumber: (value: number) => FlatShareableRef<number>;
+  var _createSerializableBoolean: (value: boolean) => FlatShareableRef<boolean>;
+  var _createSerializableBigInt: (value: bigint) => FlatShareableRef<bigint>;
+  var _createSerializableUndefined: () => FlatShareableRef<undefined>;
+  var _createSerializableNull: () => FlatShareableRef<null>;
+  var _createSerializableObject: <T extends object>(
     value: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
-  var _makeShareableHostObject: <T extends object>(
+  var _createSerializableHostObject: <T extends object>(
     value: T
   ) => FlatShareableRef<T>;
-  var _makeShareableWorklet: (
+  var _createSerializableWorklet: (
     value: object,
     shouldPersistRemote: boolean
   ) => FlatShareableRef<object>;
-  var _makeShareableArray: (value: unknown[]) => FlatShareableRef<unknown[]>;
-  var _makeShareableInitializer: (value: object) => FlatShareableRef<object>;
+  var _createSerializableArray: (
+    value: unknown[]
+  ) => FlatShareableRef<unknown[]>;
+  var _createSerializableInitializer: (
+    value: object
+  ) => FlatShareableRef<object>;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;

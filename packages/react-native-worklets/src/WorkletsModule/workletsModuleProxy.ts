@@ -4,61 +4,64 @@ import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  makeShareableClone<TValue>(
+  createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 
-  makeShareableImport<TValue>(
+  createSerializableImport<TValue>(
     source: string,
     imported: string
   ): ShareableRef<TValue>;
 
-  makeShareableString(str: string): ShareableRef<string>;
+  createSerializableString(str: string): ShareableRef<string>;
 
-  makeShareableNumber(num: number): ShareableRef<number>;
+  createSerializableNumber(num: number): ShareableRef<number>;
 
-  makeShareableBoolean(bool: boolean): ShareableRef<boolean>;
+  createSerializableBoolean(bool: boolean): ShareableRef<boolean>;
 
-  makeShareableBigInt(bigInt: bigint): ShareableRef<bigint>;
+  createSerializableBigInt(bigInt: bigint): ShareableRef<bigint>;
 
-  makeShareableUndefined(): ShareableRef<undefined>;
+  createSerializableUndefined(): ShareableRef<undefined>;
 
-  makeShareableNull(): ShareableRef<null>;
+  createSerializableNull(): ShareableRef<null>;
 
-  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
+  createSerializableTurboModuleLike<
+    TProps extends object,
+    TProto extends object,
+  >(
     props: TProps,
     proto: TProto
   ): ShareableRef<TProps>;
 
-  makeShareableObject<T extends object>(
+  createSerializableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
   ): ShareableRef<T>;
 
-  makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
+  createSerializableHostObject<T extends object>(obj: T): ShareableRef<T>;
 
-  makeShareableArray(
+  createSerializableArray(
     array: unknown[],
     shouldRetainRemote: boolean
   ): ShareableRef<unknown[]>;
 
-  makeShareableMap<TKey, TValue>(
+  createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
   ): ShareableRef<Map<TKey, TValue>>;
 
-  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>>;
+  createSerializableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>>;
 
-  makeShareableInitializer(obj: object): ShareableRef<object>;
+  createSerializableInitializer(obj: object): ShareableRef<object>;
 
-  makeShareableFunction<TArgs extends unknown[], TReturn>(
+  createSerializableFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
   ): ShareableRef<TReturn>;
 
-  makeShareableWorklet(
+  createSerializableWorklet(
     worklet: object,
     shouldPersistRemote: boolean
   ): ShareableRef<object>;

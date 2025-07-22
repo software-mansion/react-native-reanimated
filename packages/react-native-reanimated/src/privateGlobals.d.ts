@@ -99,7 +99,7 @@ declare global {
    * @deprecated Internals of `react-native-worklets`, abstain from using in the
    *   future.
    */
-  var _makeShareableClone: <T>(
+  var _createSerializable: <T>(
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
