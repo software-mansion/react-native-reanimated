@@ -23,8 +23,8 @@ function ChatHeads({
       transY.value += event.changeY;
     })
     .onEnd((event) => {
-      const width = windowWidth - 100 - 40;
-      const height = windowHeight - 100 - 40 - 128;
+      const width = windowWidth - 100 - 40; // minus margins & width
+      const height = windowHeight - 100 - 40 - 128; // minus margins & height & header height
       const toss = 0.2;
 
       const targetX = clamp(transX.value + toss * event.velocityX, 0, width);
