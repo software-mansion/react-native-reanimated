@@ -229,6 +229,7 @@ function Navigator() {
 const styles = StyleSheet.create({
   content: {
     ...flex.fill,
+    overflow: 'hidden',
     backgroundColor: colors.background3,
   },
   listBullet: {
