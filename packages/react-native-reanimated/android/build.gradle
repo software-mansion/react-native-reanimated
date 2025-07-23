@@ -349,9 +349,11 @@ dependencies {
 
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
-evaluationDependsOn(":react-native-worklets")
+if (project != rootProject) {
+    evaluationDependsOn(":react-native-worklets")
 
-afterEvaluate {
-    tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
-    tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
+    afterEvaluate {
+        tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
+        tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
+    }
 }
