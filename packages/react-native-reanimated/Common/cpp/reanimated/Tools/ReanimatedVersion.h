@@ -1,6 +1,7 @@
 #pragma once
 
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/VersionUtils.h>
 
 #include <jsi/jsi.h>
 
@@ -13,7 +14,6 @@ namespace reanimated {
 
 std::string getReanimatedCppVersion();
 void injectReanimatedCppVersion(jsi::Runtime &);
-bool matchVersion(const std::string &, const std::string &);
 void checkJSVersion(
     jsi::Runtime &,
     const std::shared_ptr<worklets::JSLogger> &);
