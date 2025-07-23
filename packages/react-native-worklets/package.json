@@ -47,7 +47,7 @@
   "bugs": {
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://docs.swmansion.com/react-native-reanimated",
+  "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
     "react": "*",
