@@ -9,10 +9,8 @@ import { processColor } from '../processors';
 
 type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;
 
-const processShadowOffset: ValueProcessor<
-  ShadowOffset,
-  Record<string, string> | string
-> = (value) => `${value.width}px ${value.height}px`;
+const processShadowOffset: ValueProcessor<ShadowOffset, string> = (value) =>
+  `${value.width}px ${value.height}px`;
 
 type BoxShadowProps = Pick<
   ViewStyle,
