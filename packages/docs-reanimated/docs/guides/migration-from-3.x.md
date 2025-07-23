@@ -74,7 +74,7 @@ EntryExitTransition.entering(entering).exiting(exiting);
 
 Reanimated 4 removes support for [react-native-v8](https://github.com/Kudo/react-native-v8) engine. We no longer actively support V8 and the project itself seems to be abandoned as there hasn't been any new commits since August 2024.
 
-If you are affected by this change, please to leave a comment under the [related PR](https://github.com/software-mansion/react-native-reanimated/pull/7650) and explain your motivation to use V8 engine with Reanimated. We might consider restoring support for V8 engine at some point in the future.
+If you are affected by this change, please leave a comment under the [related PR](https://github.com/software-mansion/react-native-reanimated/pull/7650) and explain your motivation to use V8 engine with Reanimated. We might consider restoring support for V8 engine at some point in the future.
 
 ### Renamed `useScrollViewOffset` to `useScrollOffset`
 
