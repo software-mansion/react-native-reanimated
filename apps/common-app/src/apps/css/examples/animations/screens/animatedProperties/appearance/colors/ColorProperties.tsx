@@ -317,6 +317,7 @@ function OtherColors() {
           }}
         />
         <ImageExample
+          description="**IMPORTANT**: This prop **must be present** in the **style object** on iOS when the Image component **is mounted** for CSS animations and transitions to work"
           labelTypes={['iOS', 'Android']}
           source={splashImage}
           title="tintColor"
@@ -332,7 +333,7 @@ function OtherColors() {
             ...sharedConfig,
           }}
           style={{
-            overlayColor: colors.primary,
+            tintColor: undefined, // Can be even undefined, but must be explicitly listed in the style object
           }}
         />
       </Section>

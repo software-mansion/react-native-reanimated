@@ -1,5 +1,3 @@
-/* eslint-disable perfectionist/sort-objects */
-
 import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 
 import routeCards from './routeCards';
