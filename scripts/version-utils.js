@@ -3,6 +3,7 @@ const path = require('path');
 
 /**
  * Updates the package.json version and jsVersion file
+ *
  * @param {string} packageJsonPath - Path to package.json
  * @param {string} jsVersionPath - Path to jsVersion.ts file
  * @param {string} newVersion - New version to set
@@ -27,19 +28,20 @@ function updateVersion(packageJsonPath, jsVersionPath, newVersion) {
 
 /**
  * Updates peer dependencies in package.json
+ *
  * @param {string} packageJsonPath - Path to package.json
  * @param {string} dependencyName - Name of the dependency
  * @param {string} newVersion - New version to set
  */
 function updatePeerDependency(packageJsonPath, dependencyName, newVersion) {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-  
+
   if (!packageJson.peerDependencies) {
     packageJson.peerDependencies = {};
   }
-  
+
   packageJson.peerDependencies[dependencyName] = newVersion;
-  
+
   const newPackageJson = JSON.stringify(packageJson, null, 2) + '\n';
   fs.writeFileSync(packageJsonPath, newPackageJson, 'utf-8');
 }
@@ -47,4 +49,4 @@ function updatePeerDependency(packageJsonPath, dependencyName, newVersion) {
 module.exports = {
   updateVersion,
   updatePeerDependency,
-}; 
+};
