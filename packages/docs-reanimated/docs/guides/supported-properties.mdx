@@ -257,3 +257,7 @@ and the shadow styles aren't inherited from the style object provided to the ele
 Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
 
 We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
+
+### Animating image tint color
+
+To animate the `tintColor` property on iOS, you must ensure that `tintColor` is included in the style object when the `Image` component is first rendered (mounted). If `tintColor` is not set initially, this property won't be updated via CSS animations or transitions.
