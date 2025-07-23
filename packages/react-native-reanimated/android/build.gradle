@@ -348,3 +348,10 @@ dependencies {
 }
 
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
+
+evaluationDependsOn(":react-native-worklets")
+
+afterEvaluate {
+    tasks.getByName("configureCMakeDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("configureCMakeDebug"))
+    tasks.getByName("configureCMakeRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("configureCMakeRelease"))
+}
