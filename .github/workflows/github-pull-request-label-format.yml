@@ -11,4 +11,9 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v5
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Label PR
+        uses: actions/labeler@v5
+        with:
+          configuration-path: '.github/labeler.yml'
