@@ -6,7 +6,7 @@ namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
+    std::shared_ptr<const ShadowNode> shadowNode,
     std::string name,
     const CSSKeyframesConfig &keyframesConfig,
     const CSSAnimationSettings &settings,
@@ -32,7 +32,7 @@ const std::string &CSSAnimation::getName() const {
   return name_;
 }
 
-ShadowNode::Shared CSSAnimation::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSAnimation::getShadowNode() const {
   return shadowNode_;
 }
 

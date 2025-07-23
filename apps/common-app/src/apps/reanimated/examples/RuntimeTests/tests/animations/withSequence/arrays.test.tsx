@@ -10,7 +10,17 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  getTestComponent,
+  notify,
+  render,
+  test,
+  useTestRef,
+  wait,
+  waitForNotify,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
@@ -19,6 +29,10 @@ type TestCase = {
   finalValues: [number, number, number];
   animationNumber: number;
 };
+
+const START_NOTIFICATION_NAME = 'START_NOTIFICATION';
+const MIDDLE_NOTIFICATION_NAME = 'MIDDLE_NOTIFICATION';
+const FINAL_NOTIFICATION_NAME = 'FINAL_NOTIFICATION';
 
 describe('withSequence animation of array', () => {
   const COMPONENT_REF = {
@@ -40,21 +54,41 @@ describe('withSequence animation of array', () => {
       switch (animationNumber) {
         case 0:
           return withSequence(
-            withTiming(finalValues, { duration: 200 }),
-            withDelay(DELAY, withTiming(middleValues, { duration: 300, easing: Easing.exp })),
-            withDelay(DELAY, withTiming(finalValuesPlus20, { duration: 200 })),
+            withTiming(finalValues, { duration: 200 }, () => notify(START_NOTIFICATION_NAME)),
+            withDelay(
+              DELAY,
+              withTiming(middleValues, { duration: 300, easing: Easing.exp }, () => notify(MIDDLE_NOTIFICATION_NAME)),
+            ),
+            withDelay(
+              DELAY,
+              withTiming(finalValuesPlus20, { duration: 200 }, () => notify(FINAL_NOTIFICATION_NAME)),
+            ),
           );
         case 1:
           return withSequence(
-            withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
-            withDelay(DELAY, withSpring(middleValues, { duration: 300, dampingRatio: 1.5 })),
-            withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 0.9 })),
+            withSpring(finalValues, { duration: 200, dampingRatio: 1 }, () => notify(START_NOTIFICATION_NAME)),
+            withDelay(
+              DELAY,
+              withSpring(middleValues, { duration: 300, dampingRatio: 1.5 }, () => notify(MIDDLE_NOTIFICATION_NAME)),
+            ),
+            withDelay(
+              DELAY,
+              withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 0.9 }, () =>
+                notify(FINAL_NOTIFICATION_NAME),
+              ),
+            ),
           );
         case 2:
           return withSequence(
-            withSpring(finalValues, { duration: 200, dampingRatio: 1 }),
-            withDelay(DELAY, withTiming(middleValues, { duration: 300 })),
-            withDelay(DELAY, withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 1 })),
+            withSpring(finalValues, { duration: 200, dampingRatio: 1 }, () => notify(START_NOTIFICATION_NAME)),
+            withDelay(
+              DELAY,
+              withTiming(middleValues, { duration: 300 }, () => notify(MIDDLE_NOTIFICATION_NAME)),
+            ),
+            withDelay(
+              DELAY,
+              withSpring(finalValuesPlus20, { duration: 200, dampingRatio: 1 }, () => notify(FINAL_NOTIFICATION_NAME)),
+            ),
           );
       }
       return [0, 0, 0];
@@ -105,15 +139,15 @@ describe('withSequence animation of array', () => {
       const componentThree = getTestComponent(COMPONENT_REF.third);
       const margin = 30;
 
-      await wait(200 + DELAY / 2);
+      await waitForNotify(START_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.PIXEL);
-      await wait(300 + DELAY / 2);
+      await waitForNotify(MIDDLE_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.PIXEL);
-      await wait(200 + DELAY);
+      await waitForNotify(FINAL_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.PIXEL);

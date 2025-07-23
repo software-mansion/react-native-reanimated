@@ -18,19 +18,21 @@ using namespace react;
 
 namespace worklets {
 
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
+class JSIWorkletsModuleProxy;
+
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
       uint64_t runtimeId,
-      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
-      const bool supportsLocking,
-      const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl);
+      const bool supportsLocking);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
@@ -61,6 +63,13 @@ class WorkletRuntime : public jsi::HostObject,
   }
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
+#ifdef WORKLETS_BUNDLE_MODE
+  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
+
+  jsi::Value executeSync(
+      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+#endif // WORKLETS_BUNDLE_MODE
 
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";

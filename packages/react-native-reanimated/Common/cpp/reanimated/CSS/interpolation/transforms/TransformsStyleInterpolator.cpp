@@ -13,13 +13,13 @@ TransformsStyleInterpolator::TransformsStyleInterpolator(
       interpolators_(interpolators) {}
 
 folly::dynamic TransformsStyleInterpolator::getStyleValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
       shadowNode->getTag(), propertyPath_);
 }
 
 folly::dynamic TransformsStyleInterpolator::getResetStyle(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
   if (!styleValue.isArray()) {
@@ -68,7 +68,7 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
 }
 
 folly::dynamic TransformsStyleInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 
@@ -335,7 +335,7 @@ size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   const auto &styleValue = getStyleValue(shadowNode);
   return parseTransformOperations(styleValue).value_or(TransformOperations{});
 }
@@ -347,7 +347,7 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
 }
 
 TransformOperations TransformsStyleInterpolator::interpolateOperations(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const double keyframeProgress,
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations) const {
