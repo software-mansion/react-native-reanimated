@@ -6,6 +6,7 @@ const darkCodeTheme = require('./src/theme/CodeBlock/highlighting-dark.js');
 
 const webpack = require('webpack');
 const path = require('path');
+console.log('ala ma kota')
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
