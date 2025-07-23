@@ -8,7 +8,7 @@ While the library is in transitional period where we hone the API, all its featu
 
 ## Documentation
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-worklets/)
+Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-worklets/](https://docs.swmansion.com/react-native-worklets/)
 
 ## License
 
