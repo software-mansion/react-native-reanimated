@@ -2,7 +2,9 @@ name: GitHub Pull Request label format
 on:
   pull_request:
     types:
+      - edited
       - opened
+      - synchronize
 
 jobs:
   format-pull-request-label:
@@ -17,3 +19,5 @@ jobs:
         uses: actions/labeler@v5
         with:
           configuration-path: '.github/labeler.yml'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sync-labels: true
