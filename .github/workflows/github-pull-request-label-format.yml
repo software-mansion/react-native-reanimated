@@ -1,0 +1,16 @@
+name: GitHub Pull Request label format
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  format-pull-request-label:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          configuration-path: '.github/workflows/label-formatter-config.yml'

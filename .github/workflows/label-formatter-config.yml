@@ -1,0 +1,15 @@
+Reanimated:
+  - changed-files:
+      - any-glob-to-any-file: packages/react-native-reanimated/**
+
+Worklets:
+  - changed-files:
+      - any-glob-to-any-file: packages/react-native-worklets/**
+
+Renimated Docs:
+  - changed-files:
+      - any-glob-to-any-file: packages/docs-reanimated/**
+
+Worklets Docs:
+  - changed-files:
+      - any-glob-to-any-file: packages/docs-worklets/**
