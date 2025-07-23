@@ -1,7 +1,7 @@
-Reanimated:
+'lib: Reanimated':
   - changed-files:
-      - any-glob-to-any-file: 'packages/react-native-reanimated/**'
+      - any-glob-to-any-file: ['packages/react-native-reanimated/**', 'packages/docs-reanimated/**']
 
-Worklets:
+'lib: Worklets':
   - changed-files:
-      - any-glob-to-any-file: 'packages/react-native-worklets/**'
+      - any-glob-to-any-file: ['packages/react-native-worklets/**', 'packages/docs-worklets/**']
