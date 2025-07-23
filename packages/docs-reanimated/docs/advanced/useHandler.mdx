@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/next/scroll/useAnimatedScrollHandler/).
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -85,7 +85,7 @@ Each of the event worklets will receive the following parameters when called:
 
 An optional array of dependencies.
 
-Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/next/guides/web-support/#web-without-the-babel-plugin)
+Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -98,7 +98,7 @@ import useHandlerSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExampl
 
 <InteractiveExample src={useHandlerSrc} component={useHandler} />
 
-This example can be more easily implemented using [`useScrollViewOffset`](/docs/next/scroll/useScrollViewOffset/).
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
 
 ## Platform compatibility
 

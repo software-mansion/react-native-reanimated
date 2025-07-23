@@ -14,7 +14,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/next/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
 
 ### Renamed `react-native-reanimated/plugin`
 
@@ -35,7 +35,7 @@ import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For
 import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
-You can explore the changes in the default parameters in [withSpring reference](/docs/next/animations/withSpring).
+You can explore the changes in the default parameters in [withSpring reference](/docs/animations/withSpring).
 
 ### Removed `useWorkletCallback`
 
