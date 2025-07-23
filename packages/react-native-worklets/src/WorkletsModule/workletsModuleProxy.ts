@@ -1,6 +1,6 @@
 'use strict';
 
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, WorkletRuntime } from '../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
@@ -8,24 +8,24 @@ export interface WorkletsModuleProxy {
     value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<TValue>;
+  ): SerializableRef<TValue>;
 
   createSerializableImport<TValue>(
     source: string,
     imported: string
-  ): ShareableRef<TValue>;
+  ): SerializableRef<TValue>;
 
-  createSerializableString(str: string): ShareableRef<string>;
+  createSerializableString(str: string): SerializableRef<string>;
 
-  createSerializableNumber(num: number): ShareableRef<number>;
+  createSerializableNumber(num: number): SerializableRef<number>;
 
-  createSerializableBoolean(bool: boolean): ShareableRef<boolean>;
+  createSerializableBoolean(bool: boolean): SerializableRef<boolean>;
 
-  createSerializableBigInt(bigInt: bigint): ShareableRef<bigint>;
+  createSerializableBigInt(bigInt: bigint): SerializableRef<bigint>;
 
-  createSerializableUndefined(): ShareableRef<undefined>;
+  createSerializableUndefined(): SerializableRef<undefined>;
 
-  createSerializableNull(): ShareableRef<null>;
+  createSerializableNull(): SerializableRef<null>;
 
   createSerializableTurboModuleLike<
     TProps extends object,
@@ -33,53 +33,53 @@ export interface WorkletsModuleProxy {
   >(
     props: TProps,
     proto: TProto
-  ): ShareableRef<TProps>;
+  ): SerializableRef<TProps>;
 
   createSerializableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<T>;
+  ): SerializableRef<T>;
 
-  createSerializableHostObject<T extends object>(obj: T): ShareableRef<T>;
+  createSerializableHostObject<T extends object>(obj: T): SerializableRef<T>;
 
   createSerializableArray(
     array: unknown[],
     shouldRetainRemote: boolean
-  ): ShareableRef<unknown[]>;
+  ): SerializableRef<unknown[]>;
 
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
-  ): ShareableRef<Map<TKey, TValue>>;
+  ): SerializableRef<Map<TKey, TValue>>;
 
-  createSerializableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>>;
+  createSerializableSet<TValues>(values: TValues[]): SerializableRef<Set<TValues>>;
 
-  createSerializableInitializer(obj: object): ShareableRef<object>;
+  createSerializableInitializer(obj: object): SerializableRef<object>;
 
   createSerializableFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
-  ): ShareableRef<TReturn>;
+  ): SerializableRef<TReturn>;
 
   createSerializableWorklet(
     worklet: object,
     shouldPersistRemote: boolean
-  ): ShareableRef<object>;
+  ): SerializableRef<object>;
 
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
+  scheduleOnUI<TValue>(shareable: SerializableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: ShareableRef<TValue>
+    shareable: SerializableRef<TValue>
   ): TReturn;
 
   createWorkletRuntime(
     name: string,
-    initializer: ShareableRef<() => void>
+    initializer: SerializableRef<() => void>
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    worklet: ShareableRef<TValue>
+    worklet: SerializableRef<TValue>
   ): void;
 
   reportFatalErrorOnJS(

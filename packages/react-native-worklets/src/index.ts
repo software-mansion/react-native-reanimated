@@ -7,6 +7,7 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
+export type { ShareableRef } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
@@ -27,7 +28,7 @@ export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,

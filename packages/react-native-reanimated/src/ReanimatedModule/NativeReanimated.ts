@@ -3,7 +3,7 @@
 import type React from 'react';
 import type {
   IWorkletsModule,
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
 import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
@@ -102,7 +102,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) {
     return this.#reanimatedModuleProxy.registerSensor(
       sensorType,
@@ -117,7 +117,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   registerEventHandler<T>(
-    eventHandler: ShareableRef<T>,
+    eventHandler: SerializableRef<T>,
     eventName: string,
     emitterReactTag: number
   ) {
@@ -168,7 +168,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<WorkletFunction>,
+    handler: SerializableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ) {

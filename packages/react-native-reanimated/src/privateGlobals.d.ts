@@ -88,7 +88,7 @@ declare global {
    */
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
-    worklet: ShareableRef<() => void>
+    worklet: SerializableRef<() => void>
   ) => void;
   /**
    * @deprecated Internals of `react-native-worklets`, abstain from using in the
@@ -102,6 +102,6 @@ declare global {
   var _createSerializable: <T>(
     value: T,
     nativeStateSource?: object
-  ) => FlatShareableRef<T>;
+  ) => FlatSerializableRef<T>;
   var ReanimatedError: IReanimatedErrorConstructor;
 }

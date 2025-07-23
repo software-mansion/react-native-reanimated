@@ -4,7 +4,7 @@ import { WorkletsTurboModule } from '../specs';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, WorkletRuntime } from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -16,10 +16,10 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
-  #shareableUndefined: ShareableRef<undefined>;
-  #shareableNull: ShareableRef<null>;
-  #shareableTrue: ShareableRef<boolean>;
-  #shareableFalse: ShareableRef<boolean>;
+  #shareableUndefined: SerializableRef<undefined>;
+  #shareableNull: SerializableRef<null>;
+  #shareableTrue: SerializableRef<boolean>;
+  #shareableFalse: SerializableRef<boolean>;
 
   constructor() {
     globalThis._WORKLETS_VERSION_JS = jsVersion;
@@ -60,7 +60,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   createSerializableImport<TValue>(
     from: string,
     to: string
-  ): ShareableRef<TValue> {
+  ): SerializableRef<TValue> {
     return this.#workletsModuleProxy.createSerializableImport(from, to);
   }
 
@@ -91,7 +91,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   createSerializableTurboModuleLike<
     TProps extends object,
     TProto extends object,
-  >(props: TProps, proto: TProto): ShareableRef<TProps> {
+  >(props: TProps, proto: TProto): SerializableRef<TProps> {
     return this.#workletsModuleProxy.createSerializableTurboModuleLike(
       props,
       proto
@@ -102,7 +102,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     obj: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<T> {
+  ): SerializableRef<T> {
     return this.#workletsModuleProxy.createSerializableObject(
       obj,
       shouldRetainRemote,
@@ -124,13 +124,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
-  ): ShareableRef<Map<TKey, TValue>> {
+  ): SerializableRef<Map<TKey, TValue>> {
     return this.#workletsModuleProxy.createSerializableMap(keys, values);
   }
 
   createSerializableSet<TValues>(
     values: TValues[]
-  ): ShareableRef<Set<TValues>> {
+  ): SerializableRef<Set<TValues>> {
     return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
@@ -151,23 +151,23 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
+  scheduleOnUI<TValue>(shareable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: ShareableRef<TValue>
+    shareable: SerializableRef<TValue>
   ): TReturn {
     return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
   }
 
-  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+  createWorkletRuntime(name: string, initializer: SerializableRef<() => void>) {
     return this.#workletsModuleProxy.createWorkletRuntime(name, initializer);
   }
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<T>
+    shareableWorklet: SerializableRef<T>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,

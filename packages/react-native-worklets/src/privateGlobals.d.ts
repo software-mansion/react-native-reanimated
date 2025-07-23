@@ -29,31 +29,33 @@ declare global {
   var _createSerializable: <T>(
     value: T,
     nativeStateSource?: object
-  ) => FlatShareableRef<T>;
-  var _createSerializableString: (value: string) => FlatShareableRef<string>;
-  var _createSerializableNumber: (value: number) => FlatShareableRef<number>;
-  var _createSerializableBoolean: (value: boolean) => FlatShareableRef<boolean>;
-  var _createSerializableBigInt: (value: bigint) => FlatShareableRef<bigint>;
-  var _createSerializableUndefined: () => FlatShareableRef<undefined>;
-  var _createSerializableNull: () => FlatShareableRef<null>;
+  ) => FlatSerializableRef<T>;
+  var _createSerializableString: (value: string) => FlatSerializableRef<string>;
+  var _createSerializableNumber: (value: number) => FlatSerializableRef<number>;
+  var _createSerializableBoolean: (
+    value: boolean
+  ) => FlatSerializableRef<boolean>;
+  var _createSerializableBigInt: (value: bigint) => FlatSerializableRef<bigint>;
+  var _createSerializableUndefined: () => FlatSerializableRef<undefined>;
+  var _createSerializableNull: () => FlatSerializableRef<null>;
   var _createSerializableObject: <T extends object>(
     value: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
-  ) => FlatShareableRef<T>;
+  ) => FlatSerializableRef<T>;
   var _createSerializableHostObject: <T extends object>(
     value: T
-  ) => FlatShareableRef<T>;
+  ) => FlatSerializableRef<T>;
   var _createSerializableWorklet: (
     value: object,
     shouldPersistRemote: boolean
-  ) => FlatShareableRef<object>;
+  ) => FlatSerializableRef<object>;
   var _createSerializableArray: (
     value: unknown[]
-  ) => FlatShareableRef<unknown[]>;
+  ) => FlatSerializableRef<unknown[]>;
   var _createSerializableInitializer: (
     value: object
-  ) => FlatShareableRef<object>;
+  ) => FlatSerializableRef<object>;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
@@ -67,7 +69,7 @@ declare global {
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
-    worklet: ShareableRef<() => void>
+    worklet: SerializableRef<() => void>
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
   var WorkletsError: IWorkletsErrorConstructor;
