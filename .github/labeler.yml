@@ -6,14 +6,3 @@ Worklets:
   - changed-files:
       - any-glob-to-any-file: 'packages/react-native-worklets/**'
 
-Renimated Docs:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/docs-reanimated/**'
-
-Worklets Docs:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/docs-worklets/**'
-
-Test:
-  - changed-files:
-      - any-glob-to-any-file: '*'
