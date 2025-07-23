@@ -68,6 +68,8 @@ target_include_directories(
           "${REACT_NATIVE_WORKLETS_DIR}/android/src/main/cpp"
 )
 
+set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
+
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
   set(BUILD_TYPE "debug")
 else()
