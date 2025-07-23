@@ -12,10 +12,7 @@ type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;
 const processShadowOffset: ValueProcessor<
   ShadowOffset,
   Record<string, string> | string
-> = (value) => ({
-  width: `${value.width}px`,
-  height: `${value.height}px`,
-});
+> = (value) => `${value.width}px ${value.height}px`;
 
 type BoxShadowProps = Pick<
   ViewStyle,
