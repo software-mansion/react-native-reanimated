@@ -5,4 +5,3 @@ Reanimated:
 Worklets:
   - changed-files:
       - any-glob-to-any-file: 'packages/react-native-worklets/**'
-
