@@ -333,7 +333,7 @@ function OtherColors() {
             ...sharedConfig,
           }}
           style={{
-            tintColor: undefined, // Can be even undefined, but must be explicitly listed in the style object
+            tintColor: 'transparent', // Must be explicitly listed in the style object
           }}
         />
       </Section>
