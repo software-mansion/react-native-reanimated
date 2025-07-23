@@ -53,12 +53,10 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
-      - name: Strip prerelease tags for nightly builds
-        if: ${{ inputs.option == '--nightly' }}
+      - name: Strip monorepo pre-release tag
         run: echo "WORKLETS_VERSION=$(jq -r '.version' ${{ env.WORKLETS_DIR }}/package.json | sed 's/-.*//')" >> $GITHUB_ENV
 
-      - name: Set version for nightly builds
-        if: ${{ inputs.option == '--nightly' }}
+      - name: Set stripped version
         working-directory: ${{ env.WORKLETS_DIR }}
         run: node ./scripts/set-worklets-version.js ${{ env.WORKLETS_VERSION }}
 
