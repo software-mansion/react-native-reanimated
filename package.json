@@ -18,7 +18,9 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
+    "build": "husky && yarn build-packages",
+    "build-packages": "yarn workspace react-native-reanimated build",
+    "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "prettier --cache --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
