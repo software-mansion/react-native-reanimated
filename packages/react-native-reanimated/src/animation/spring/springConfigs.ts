@@ -57,7 +57,7 @@ export const SnappySpringConfigWithDuration = {
  *   spring will come to rest faster. Defaults to 120.
  * @param stiffness - How bouncy the spring is. Defaults to 900.
  * @param duration - Perceptual duration of the animation in milliseconds.
- *   Actual duration is 1.5 times higher. Defaults to 550ms if `dampingRatio` is
+ *   Actual duration is 1.5 times the value of perceptual duration. Defaults to 550ms if `dampingRatio` is
  *   provided.
  * @param dampingRatio - How damped the spring is. Value `1` means the spring is
  *   critically damped, value `<1` means the spring is underdamped and value
