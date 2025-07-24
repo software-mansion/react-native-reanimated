@@ -1,7 +1,7 @@
 'use strict';
 import type {
   IWorkletsModule,
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
 import { WorkletsModule } from 'react-native-worklets';
@@ -51,7 +51,7 @@ class JSReanimated implements IReanimatedModule {
   }
 
   registerEventHandler<T>(
-    _eventHandler: ShareableRef<T>,
+    _eventHandler: SerializableRef<T>,
     _eventName: string,
     _emitterReactTag: number
   ): number {
@@ -78,7 +78,7 @@ class JSReanimated implements IReanimatedModule {
     sensorType: SensorType,
     interval: number,
     _iosReferenceFrame: number,
-    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     if (!IS_WINDOW_AVAILABLE) {
       // the window object is unavailable when building the server portion of a site that uses SSG
@@ -122,7 +122,7 @@ class JSReanimated implements IReanimatedModule {
   getSensorCallback = (
     sensor: WebSensor,
     sensorType: SensorType,
-    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) => {
     switch (sensorType) {
       case SensorType.ACCELEROMETER:
@@ -134,14 +134,14 @@ class JSReanimated implements IReanimatedModule {
           if (this.platform === Platform.WEB_ANDROID) {
             [x, y, z] = [-x, -y, -z];
           }
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.GYROSCOPE:
       case SensorType.MAGNETIC_FIELD:
         return () => {
           const { x, y, z } = sensor;
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.ROTATION:
@@ -164,7 +164,7 @@ class JSReanimated implements IReanimatedModule {
             2.0 * (qx * qy + qw * qz),
             qw * qw + qx * qx - qy * qy - qz * qz
           );
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({
             qw,
             qx,
@@ -187,7 +187,7 @@ class JSReanimated implements IReanimatedModule {
     }
   }
 
-  subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
+  subscribeForKeyboardEvents(_: SerializableRef<WorkletFunction>): number {
     if (IS_WEB) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (IS_JEST) {

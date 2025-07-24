@@ -224,8 +224,10 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "[Reanimated] Event handler must be a worklet.");
+  auto handlerSerializable = extractSerializableOrThrow<SerializableWorklet>(
+      rt,
+      worklet,
+      "[Reanimated] Event handler must be a serializable worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
@@ -238,7 +240,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
             newRegistrationId,
             eventNameStr,
             emitterReactTagInt,
-            handlerShareable);
+            handlerSerializable);
         strongThis->eventHandlerRegistry_->registerEventHandler(
             std::move(handler));
       });
@@ -326,7 +328,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
-      batchItem.config = extractShareableOrThrow<ShareableObject>(
+      batchItem.config = extractSerializableOrThrow<SerializableObject>(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
@@ -1161,7 +1163,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent,
     const jsi::Value &isNavigationBarTranslucent) {
-  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
@@ -1172,7 +1174,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
           return;
         }
         strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
-            shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
+            serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());

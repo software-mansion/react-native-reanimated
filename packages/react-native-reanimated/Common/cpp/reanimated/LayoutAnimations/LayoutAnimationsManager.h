@@ -23,7 +23,7 @@ using namespace worklets;
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<Serializable> config;
 };
 
 class LayoutAnimationsManager {
@@ -45,16 +45,16 @@ class LayoutAnimationsManager {
   void transferConfigFromNativeID(const int nativeId, const int tag);
 
  private:
-  std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
+  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(
       const LayoutAnimationType type);
 
   std::shared_ptr<JSLogger> jsLogger_;
 
-  std::unordered_map<int, std::shared_ptr<Shareable>>
+  std::unordered_map<int, std::shared_ptr<Serializable>>
       enteringAnimationsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
   mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,

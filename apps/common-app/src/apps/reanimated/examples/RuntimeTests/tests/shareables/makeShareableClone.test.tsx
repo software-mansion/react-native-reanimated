@@ -579,7 +579,7 @@ describe('Test makeShareableClone', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          // make shareable boolean returns a ShareableRef<boolean> which is a host object
+          // make shareable boolean returns a SerializableRef<boolean> which is a host object
           const shareableBoolean = hostFunction(true);
           const checks = [typeof hostFunction === 'function', 'magicKey' in shareableBoolean];
           return checks.every(Boolean);
