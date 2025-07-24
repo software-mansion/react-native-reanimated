@@ -14,10 +14,7 @@ packageJson.version = newVersion;
 const newPackageJson = JSON.stringify(packageJson, null, 2) + '\n';
 fs.writeFileSync(packageJsonPath, newPackageJson, 'utf-8');
 
-const jsVersionPath = path.resolve(
-  __dirname,
-  '../src/utils/jsVersion.ts'
-);
+const jsVersionPath = path.resolve(__dirname, '../src/utils/jsVersion.ts');
 const before = fs.readFileSync(jsVersionPath, 'utf-8');
 const after = before.replace(
   /jsVersion = '(.*)';/g,
