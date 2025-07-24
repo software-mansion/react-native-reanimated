@@ -1,11 +1,12 @@
 'use strict';
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
 import {
   DEFAULT_LOGGER_CONFIG,
   IS_WEB,
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
 } from './common';
-import { executeOnUIRuntimeSync } from './core';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(

@@ -1,3 +1,4 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -74,30 +75,36 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
-    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl)
+    const bool supportsLocking)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
-#endif
+#endif // NDEBUG
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+}
+
+void WorkletRuntime::init(
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+  jsi::Runtime &rt = *runtime_;
+  const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+#ifdef WORKLETS_BUNDLE_MODE
+  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+#endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt,
-      name,
+      name_,
       jsScheduler,
       isDevBundle,
       std::move(optimizedJsiWorkletsModuleProxy));
@@ -139,17 +146,33 @@ jsi::Value WorkletRuntime::executeSync(
       supportsLocking_ &&
       ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(shareableWorklet);
-  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  auto result = runGuarded(serializableWorklet);
+  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
   lock.unlock();
-  return shareableResult->toJSValue(rt);
+  return serializableResult->toJSValue(rt);
 }
+
+#ifdef WORKLETS_BUNDLE_MODE
+jsi::Value WorkletRuntime::executeSync(
+    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
+}
+#endif // WORKLETS_BUNDLE_MODE
 
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,
@@ -194,13 +217,13 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
+    const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
-      shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
-  workletRuntime->runAsyncGuarded(shareableWorklet);
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
 } // namespace worklets

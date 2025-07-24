@@ -1,7 +1,6 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
-#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
@@ -37,16 +36,17 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsCallInvoker,
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
+      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       script_(script),
       sourceUrl_(sourceUrl),
-      runtimeManager_(std::make_shared<RuntimeManager>()) {
-  uiWorkletRuntime_ = runtimeManager_->createUIRuntime(
-      createJSIWorkletsModuleProxy(),
-      jsQueue_,
-      jsScheduler_,
-      isDevBundle_,
-      script_,
-      sourceUrl_);
+      runtimeManager_(std::make_shared<RuntimeManager>()),
+      uiWorkletRuntime_(
+          runtimeManager_->createUninitializedUIRuntime(jsQueue_)) {
+  /**
+   * We call additional `init` method here because
+   * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
+   */
+  uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
 
   animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
       uiWorkletRuntime_->getJSIRuntime(),
@@ -59,6 +59,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 
 std::shared_ptr<JSIWorkletsModuleProxy>
 WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
+  assert(
+      uiWorkletRuntime_ &&
+      "UI Worklet Runtime must be initialized before creating JSI proxy.");
   return std::make_shared<JSIWorkletsModuleProxy>(
       isDevBundle_,
       script_,

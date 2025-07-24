@@ -1,7 +1,7 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
 import { IS_JEST } from '../PlatformChecker';
+import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -156,5 +156,9 @@ class JSWorklets implements IWorkletsModule {
     throw new WorkletsError(
       'reportFatalErrorOnJS should never be called in JSWorklets.'
     );
+  }
+
+  setDynamicFeatureFlag(_name: string, _value: boolean) {
+    // noop
   }
 }

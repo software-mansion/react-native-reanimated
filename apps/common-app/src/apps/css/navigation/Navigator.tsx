@@ -230,6 +230,7 @@ const styles = StyleSheet.create({
   content: {
     ...flex.fill,
     backgroundColor: colors.background3,
+    overflow: 'hidden',
   },
   listBullet: {
     backgroundColor: colors.foreground1,

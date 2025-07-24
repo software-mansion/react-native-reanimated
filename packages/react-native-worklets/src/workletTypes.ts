@@ -29,7 +29,7 @@ export type WorkletStackDetails = [
   columnOffset: number,
 ];
 
-type WorkletClosure = Record<string, unknown>;
+export type WorkletClosure = Record<string, unknown>;
 
 interface WorkletInitData {
   code: string;
@@ -37,18 +37,19 @@ interface WorkletInitData {
   location?: string;
   /** Only in dev builds. */
   sourceMap?: string;
-  /** Only in dev builds. */
-  version?: string;
 }
 
 interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  __initData: WorkletInitData;
+  /** Only in Legacy Bundling. */
+  __initData?: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
 }
 
 export type WorkletFunction<
@@ -59,12 +60,9 @@ export type WorkletFunction<
 export interface WorkletFactory<
   TArgs extends unknown[] = unknown[],
   TReturn = unknown,
-  TClosureVariables extends unknown[] = unknown[],
+  TClosureVariables extends Record<string, unknown> = Record<string, unknown>,
 > {
-  (
-    initData: WorkletInitData,
-    ...closureVariables: TClosureVariables
-  ): WorkletFunction<TArgs, TReturn>;
+  (closureVariables: TClosureVariables): WorkletFunction<TArgs, TReturn>;
 }
 
 export type ValueUnpacker = WorkletFunction<

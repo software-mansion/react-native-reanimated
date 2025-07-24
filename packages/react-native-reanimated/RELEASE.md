@@ -41,7 +41,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
 
-   If releasing v4, just run `yarn build` in the root directory.
+   If releasing v4, run `yarn build-all` in the root directory.
 
 8. When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
 

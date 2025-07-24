@@ -1,4 +1,5 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 namespace reanimated {
 
@@ -19,7 +20,10 @@ void UpdatesRegistryManager::addRegistry(
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
-  isPaused_ = true;
+  if constexpr (!StaticFeatureFlags::getFlag(
+                    "DISABLE_COMMIT_PAUSING_MECHANISM")) {
+    isPaused_ = true;
+  }
 }
 
 bool UpdatesRegistryManager::shouldReanimatedSkipCommit() {
@@ -43,7 +47,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(
-    const ShadowNode::Shared &shadowNode) {
+    const std::shared_ptr<const ShadowNode> &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
@@ -95,7 +99,7 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   auto &family = shadowNode->getFamily();
   auto it = propsMap.find(&family);
@@ -126,12 +130,18 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(
         continue;
       }
 
-      const auto &it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
-      if (it != PROPERTY_INTERPOLATORS_CONFIG.end()) {
-        filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
-      } else {
-        filteredStyle[propName] = nullptr;
+      const auto &componentName = shadowNode->getComponentName();
+      if (hasInterpolators(componentName)) {
+        const auto &interpolators = getInterpolators(componentName);
+        const auto &it = interpolators.find(propName);
+
+        if (it != interpolators.end()) {
+          filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
+          continue;
+        }
       }
+
+      filteredStyle[propName] = nullptr;
     }
 
     const auto &surfaceId = shadowNode->getSurfaceId();
