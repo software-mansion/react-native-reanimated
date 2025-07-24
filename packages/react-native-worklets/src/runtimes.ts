@@ -33,7 +33,8 @@ export function createWorkletRuntime(
 export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>,
-  asyncQueue?: object
+  useDefaultQueue?: boolean,
+  customQueue?: object
 ): WorkletRuntime {
   if (initializer !== undefined && !isWorkletFunction(initializer)) {
     throw new WorkletsError(
@@ -50,7 +51,9 @@ export function createWorkletRuntime(
       setupConsole(runtimeBoundCapturableConsole);
       initializer?.();
     }),
-    asyncQueue
+
+    useDefaultQueue,
+    customQueue
   );
 }
 

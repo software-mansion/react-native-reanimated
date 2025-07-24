@@ -155,12 +155,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   createWorkletRuntime(
     name: string,
     initializer: ShareableRef<() => void>,
-    asyncQueue?: object
+    useDefaultQueue?: boolean,
+    customQueue?: object
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
       initializer,
-      asyncQueue
+      useDefaultQueue,
+      customQueue
     );
   }
 
