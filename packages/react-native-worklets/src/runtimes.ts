@@ -2,11 +2,13 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { logger } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
+import type { WorkletRuntimeConfig } from './types/runtimes.types';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -16,6 +18,22 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * Lets you create a new JS runtime which can be used to run worklets possibly
  * on different threads than JS or UI thread.
  *
+ * @param config - Configuration object containing runtime name and optional
+ *   initializer
+ * @returns WorkletRuntime which is a
+ *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ */
+export function createWorkletRuntime(
+  config: WorkletRuntimeConfig
+): WorkletRuntime;
+
+/**
+ * @deprecated Please use the new config object signature instead:
+ *   `createWorkletRuntime({ name, initializer })`
+ *
+ *   Lets you create a new JS runtime which can be used to run worklets possibly
+ *   on different threads than JS or UI thread.
  * @param name - A name used to identify the runtime which will appear in
  *   devices list in Chrome DevTools.
  * @param initializer - An optional worklet that will be run synchronously on
@@ -31,18 +49,36 @@ export function createWorkletRuntime(
 ): WorkletRuntime;
 
 export function createWorkletRuntime(
-  name: string,
+  nameOrConfig: string | WorkletRuntimeConfig,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+
+  if (typeof nameOrConfig === 'string') {
+    logger.warn(
+      'createWorkletRuntime(name, initializer) is deprecated. Use createWorkletRuntime({ name, initializer }) instead.'
+    );
+
+    return WorkletsModule.createWorkletRuntime(
+      nameOrConfig,
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        setupCallGuard();
+        registerWorkletsError();
+        setupConsole(runtimeBoundCapturableConsole);
+        initializer?.();
+      })
+    );
+  }
+
   return WorkletsModule.createWorkletRuntime(
-    name,
+    nameOrConfig.name,
     makeShareableCloneRecursive(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      initializer?.();
+      nameOrConfig.initializer?.();
     })
   );
 }
