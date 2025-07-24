@@ -251,11 +251,12 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const std::string &errorMessage) {
   if (maybeSerializableValue.isObject()) {
     auto object = maybeSerializableValue.asObject(rt);
-    if (object.isHostObject<SerializableJSRef>(rt)) {
-      return object.getHostObject<SerializableJSRef>(rt)->value();
+    if (object.hasNativeState(rt)) {
+      auto nativeState = object.getNativeState(rt);
+      return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
     }
     throw std::runtime_error(
-        "[Worklets] Attempted to extract from a HostObject that wasn't converted to a Serializable.");
+        "[Worklets] Attempted to extract from a Object that wasn't converted to a Serializable.");
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }
