@@ -26,6 +26,7 @@
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
 
@@ -129,9 +130,12 @@ class ReanimatedModuleProxy
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
+      const jsi::Value &viewName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
-      override;
+  void unregisterCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &viewName) override;
 
   void applyCSSAnimations(
       jsi::Runtime &rt,

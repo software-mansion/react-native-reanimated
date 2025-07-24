@@ -1,22 +1,18 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 
-#include <utility>
-
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     std::shared_ptr<const ShadowNode> shadowNode,
     std::string animationName,
-    const std::shared_ptr<CSSKeyframesRegistry> &cssKeyframesRegistry,
+    const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
     : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
-      styleInterpolator_(cssKeyframesRegistry->getOrCreateInterpolator(
-          name_,
-          shadowNode_->getComponentName())),
+      styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
           settings.duration,
@@ -24,7 +20,7 @@ CSSAnimation::CSSAnimation(
           settings.iterationCount,
           settings.direction,
           settings.easingFunction,
-          cssKeyframesRegistry->getKeyframeEasingFunctions(name_))) {
+          cssKeyframesConfig.keyframeEasingFunctions)) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }

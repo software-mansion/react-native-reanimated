@@ -1,8 +1,8 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
+#include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
-#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <memory>
 #include <string>
@@ -17,7 +17,7 @@ class CSSAnimation {
       jsi::Runtime &rt,
       std::shared_ptr<const ShadowNode> shadowNode,
       std::string animationName,
-      const std::shared_ptr<CSSKeyframesRegistry> &cssKeyframesRegistry,
+      const CSSKeyframesConfig &cssKeyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 

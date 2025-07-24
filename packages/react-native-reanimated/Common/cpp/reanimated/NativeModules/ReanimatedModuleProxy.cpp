@@ -422,16 +422,25 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
+    const jsi::Value &viewName,
     const jsi::Value &keyframesConfig) {
+  // Convert react view name to Fabric component name
+  const auto componentName =
+      componentNameByReactViewName(viewName.asString(rt).utf8(rt));
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig));
+      componentName,
+      parseCSSAnimationKeyframesConfig(
+          rt, keyframesConfig, componentName, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &animationName) {
-  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+    const jsi::Value &animationName,
+    const jsi::Value &viewName) {
+  cssAnimationKeyframesRegistry_->remove(
+      animationName.asString(rt).utf8(rt),
+      componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
@@ -455,13 +464,17 @@ void ReanimatedModuleProxy::applyCSSAnimations(
             "[Reanimated] index is out of bounds of animationNames");
       }
 
+      const auto &animationName = animationNames[index];
+      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(
+          animationName, shadowNode->getComponentName());
+
       newAnimations.emplace(
           index,
           std::make_shared<CSSAnimation>(
               rt,
               shadowNode,
-              animationNames[index],
-              cssAnimationKeyframesRegistry_,
+              animationName,
+              keyframesConfig,
               settings,
               timestamp));
     }
