@@ -38,7 +38,7 @@ class RuntimeManager {
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
       const bool supportsLocking,
       const std::string &name,
-      std::shared_ptr<ShareableWorklet> initializer = nullptr);
+      std::shared_ptr<SerializableWorklet> initializer = nullptr);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
       const std::shared_ptr<MessageQueueThread> &jsQueue);
