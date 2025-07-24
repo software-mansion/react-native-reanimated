@@ -40,15 +40,15 @@ class WorkletRuntime : public jsi::HostObject,
 
   template <typename... Args>
   inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+        rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
   void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
     if (queue_ == nullptr) {
       queue_ = std::make_shared<AsyncQueue>(name_);
     }
@@ -58,11 +58,18 @@ class WorkletRuntime : public jsi::HostObject,
         return;
       }
 
-      strongThis->runGuarded(shareableWorklet);
+      strongThis->runGuarded(serializableWorklet);
     });
   }
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
+#ifdef WORKLETS_BUNDLE_MODE
+  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
+
+  jsi::Value executeSync(
+      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+#endif // WORKLETS_BUNDLE_MODE
 
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";

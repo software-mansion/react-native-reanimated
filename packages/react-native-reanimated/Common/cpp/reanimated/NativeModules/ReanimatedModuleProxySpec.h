@@ -90,10 +90,12 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
+      const jsi::Value &viewName,
       const jsi::Value &keyframesConfig) = 0;
   virtual void unregisterCSSKeyframes(
       jsi::Runtime &rt,
-      const jsi::Value &animationName) = 0;
+      const jsi::Value &animationName,
+      const jsi::Value &viewName) = 0;
 
   // CSS animations
   virtual void applyCSSAnimations(
