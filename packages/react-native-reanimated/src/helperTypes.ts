@@ -16,7 +16,7 @@ import type {
   SharedValue,
   TransformArrayItem,
 } from './commonTypes';
-import type { AddArrayPropertyType, CSSStyle } from './css/types';
+import type { AddArrayPropertyType } from './css/types';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 
