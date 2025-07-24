@@ -8,10 +8,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import ReducedMotionWarning from '../ReducedMotionWarning';
 
 import useClampPlayground from './useClampPlayground';
-import {
-  useReanimated3SpringPlayground,
-  useReanimated4SpringPlayground,
-} from './useSpringPlayground';
+import { useSpringPlayground } from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
 import useEnteringExitingPlayground from './useEnteringExitingAnimationPlayground';
 import useRepeatPlayground from './useRepeatPlayground';
@@ -33,8 +30,7 @@ import {
 
 export {
   useClampPlayground,
-  useReanimated3SpringPlayground,
-  useReanimated4SpringPlayground,
+  useSpringPlayground,
   useTimingPlayground,
   useRepeatPlayground,
   useEnteringExitingPlayground,

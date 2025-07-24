@@ -4,208 +4,7 @@ import Example from './Example';
 import { Range, CheckboxOption, SelectOption, formatReduceMotion } from '..';
 import { ReduceMotion, WithSpringConfig } from 'react-native-reanimated';
 
-const reanimated3DefaultConfig = {
-  damping: 10,
-  mass: 1,
-  stiffness: 100,
-  overshootClamping: false,
-  restDisplacementThreshold: 0.01,
-  restSpeedThreshold: 2,
-  // velocity: 0,
-  duration: 2000,
-  dampingRatio: 0.5,
-  reduceMotion: ReduceMotion.System,
-};
-
-export function useReanimated3SpringPlayground() {
-  const [isPhysicsBased, setPhysicsBased] = useState(true);
-
-  const [damping, setDamping] = useState(reanimated3DefaultConfig.damping);
-  const [mass, setMass] = useState(reanimated3DefaultConfig.mass);
-  const [stiffness, setStiffness] = useState(
-    reanimated3DefaultConfig.stiffness
-  );
-  // const [velocity, setVelocity] = useState(0);
-  const [overshootClamping, setOvershootClamping] = useState(
-    reanimated3DefaultConfig.overshootClamping
-  );
-  const [restDisplacementThreshold, setRestDisplacementThreshold] = useState(
-    reanimated3DefaultConfig.restDisplacementThreshold
-  );
-  const [restSpeedThreshold, setRestSpeedThreshold] = useState(
-    reanimated3DefaultConfig.restSpeedThreshold
-  );
-  const [duration, setDuration] = useState(reanimated3DefaultConfig.duration);
-  const [dampingRatio, setDampingRatio] = useState(
-    reanimated3DefaultConfig.dampingRatio
-  );
-  const [reduceMotion, setReduceMotion] = useState(
-    reanimated3DefaultConfig.reduceMotion
-  );
-
-  const resetOptions = () => {
-    setDamping(() => reanimated3DefaultConfig.damping);
-    setMass(() => reanimated3DefaultConfig.mass);
-
-    setDuration(() => reanimated3DefaultConfig.duration);
-    setDampingRatio(() => reanimated3DefaultConfig.dampingRatio);
-
-    setStiffness(() => reanimated3DefaultConfig.stiffness);
-    setOvershootClamping(() => reanimated3DefaultConfig.overshootClamping);
-    setRestDisplacementThreshold(
-      () => reanimated3DefaultConfig.restDisplacementThreshold
-    );
-    setRestSpeedThreshold(() => reanimated3DefaultConfig.restSpeedThreshold);
-  };
-
-  const code = `
-    withSpring(sv.value, {
-      ${
-        isPhysicsBased
-          ? `mass: ${mass},
-      damping: ${damping},`
-          : `duration: ${duration},
-      dampingRatio: ${dampingRatio},`
-      }
-      stiffness: ${stiffness},
-      overshootClamping: ${overshootClamping},
-      restDisplacementThreshold: ${restDisplacementThreshold},
-      restSpeedThreshold: ${restSpeedThreshold},
-      reduceMotion: ${formatReduceMotion(reduceMotion)},
-    })
-  `;
-
-  const controls = (
-    <>
-      {/* Needed state-controlled Tabs and `TabItem` components from "@theme/Tabs" so I hacked them around with classes ;) */}
-      <ul role="tablist">
-        <li
-          role="tab"
-          className={`tabs__item tabItem_node_modules-@docusaurus-theme-classic-lib-theme-Tabs-styles-module ${
-            isPhysicsBased && 'tabs__item--active'
-          }`}
-          onClick={() => setPhysicsBased(true)}>
-          Physics-based
-        </li>
-        <li
-          className={`tabs__item tabItem_node_modules-@docusaurus-theme-classic-lib-theme-Tabs-styles-module ${
-            !isPhysicsBased && 'tabs__item--active'
-          }`}
-          role="tab"
-          onClick={() => setPhysicsBased(false)}>
-          Duration-based
-        </li>
-      </ul>
-      {isPhysicsBased ? (
-        <>
-          <Range
-            label="Mass"
-            min={1}
-            max={20}
-            step={0.1}
-            value={mass}
-            onChange={setMass}
-          />
-          <Range
-            label="Damping"
-            min={1}
-            max={100}
-            value={damping}
-            onChange={setDamping}
-          />
-        </>
-      ) : (
-        <>
-          <Range
-            label="Duration"
-            min={1}
-            max={5000}
-            step={50}
-            value={duration}
-            onChange={setDuration}
-          />
-          <Range
-            label="Damping ratio"
-            min={0.1}
-            max={3}
-            step={0.1}
-            value={dampingRatio}
-            onChange={setDampingRatio}
-          />
-        </>
-      )}
-      <Range
-        label="Stiffness"
-        min={1}
-        max={500}
-        value={stiffness}
-        onChange={setStiffness}
-      />
-      {/* <Range
-        label="Velocity"
-        min={-50}
-        max={50}
-        value={velocity}
-        onChange={setVelocity}
-      /> */}
-      <CheckboxOption
-        label="Clamp"
-        value={overshootClamping}
-        onChange={setOvershootClamping}
-      />
-      <Range
-        label="Displacement threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={restDisplacementThreshold}
-        onChange={setRestDisplacementThreshold}
-      />
-      <Range
-        label="Speed threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={restSpeedThreshold}
-        onChange={setRestSpeedThreshold}
-      />
-      <SelectOption
-        label="Reduce motion"
-        value={reduceMotion}
-        onChange={(option) => setReduceMotion(option as ReduceMotion)}
-        options={[ReduceMotion.System, ReduceMotion.Always, ReduceMotion.Never]}
-      />
-    </>
-  );
-
-  const options: WithSpringConfig = isPhysicsBased
-    ? { mass, damping }
-    : { duration, dampingRatio };
-  const restOptions = {
-    stiffness,
-    // velocity,
-    overshootClamping,
-    restDisplacementThreshold,
-    restSpeedThreshold,
-    reduceMotion,
-  };
-
-  return {
-    example: Example,
-    props: {
-      options: {
-        ...options,
-        ...restOptions,
-      },
-    },
-    controls,
-    code,
-    resetOptions,
-    additionalComponents: {},
-  };
-}
-
-const reanimated4DefaultConfig = {
+const defaultConfig = {
   damping: 120,
   mass: 4,
   stiffness: 900,
@@ -217,40 +16,34 @@ const reanimated4DefaultConfig = {
   reduceMotion: ReduceMotion.System,
 };
 
-export function useReanimated4SpringPlayground() {
+export function useSpringPlayground() {
   const [isPhysicsBased, setPhysicsBased] = useState(true);
 
-  const [damping, setDamping] = useState(reanimated4DefaultConfig.damping);
-  const [mass, setMass] = useState(reanimated4DefaultConfig.mass);
-  const [stiffness, setStiffness] = useState(
-    reanimated4DefaultConfig.stiffness
-  );
+  const [damping, setDamping] = useState(defaultConfig.damping);
+  const [mass, setMass] = useState(defaultConfig.mass);
+  const [stiffness, setStiffness] = useState(defaultConfig.stiffness);
   const [velocity, setVelocity] = useState(0);
   const [overshootClamping, setOvershootClamping] = useState(
-    reanimated4DefaultConfig.overshootClamping
+    defaultConfig.overshootClamping
   );
   const [energyThreshold, setEnergyThreshold] = useState(
-    reanimated4DefaultConfig.energyThreshold
+    defaultConfig.energyThreshold
   );
-  const [duration, setDuration] = useState(reanimated4DefaultConfig.duration);
-  const [dampingRatio, setDampingRatio] = useState(
-    reanimated4DefaultConfig.dampingRatio
-  );
-  const [reduceMotion, setReduceMotion] = useState(
-    reanimated4DefaultConfig.reduceMotion
-  );
+  const [duration, setDuration] = useState(defaultConfig.duration);
+  const [dampingRatio, setDampingRatio] = useState(defaultConfig.dampingRatio);
+  const [reduceMotion, setReduceMotion] = useState(defaultConfig.reduceMotion);
 
   const resetOptions = () => {
-    setDamping(() => reanimated4DefaultConfig.damping);
-    setMass(() => reanimated4DefaultConfig.mass);
+    setDamping(() => defaultConfig.damping);
+    setMass(() => defaultConfig.mass);
 
-    setDuration(() => reanimated4DefaultConfig.duration);
-    setDampingRatio(() => reanimated4DefaultConfig.dampingRatio);
+    setDuration(() => defaultConfig.duration);
+    setDampingRatio(() => defaultConfig.dampingRatio);
 
-    setStiffness(() => reanimated4DefaultConfig.stiffness);
-    setOvershootClamping(() => reanimated4DefaultConfig.overshootClamping);
-    setEnergyThreshold(() => reanimated4DefaultConfig.energyThreshold);
-    setVelocity(() => reanimated4DefaultConfig.velocity);
+    setStiffness(() => defaultConfig.stiffness);
+    setOvershootClamping(() => defaultConfig.overshootClamping);
+    setEnergyThreshold(() => defaultConfig.energyThreshold);
+    setVelocity(() => defaultConfig.velocity);
   };
 
   const code = `
@@ -330,13 +123,6 @@ export function useReanimated4SpringPlayground() {
         </>
       )}
       <Range label="Mass" min={1} max={100} value={mass} onChange={setMass} />
-      {/* <Range
-        label="Velocity"
-        min={-50}
-        max={50}
-        value={velocity}
-        onChange={setVelocity}
-      /> */}
       <CheckboxOption
         label="Clamp"
         value={overshootClamping}
