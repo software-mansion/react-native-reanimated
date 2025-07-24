@@ -4,8 +4,9 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 
+#include <worklets/Public/AsyncQueue.h>
 #include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 

@@ -1,5 +1,6 @@
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 
+#include <thread>
 #include <utility>
 
 namespace worklets {
