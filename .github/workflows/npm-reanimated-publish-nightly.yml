@@ -22,5 +22,5 @@ jobs:
       option: --nightly
       publish_on_npm: true
       # Remember to update the branch on new minor releases.
-      ref: 3.18-stable
+      ref: 3.19-stable
     secrets: inherit

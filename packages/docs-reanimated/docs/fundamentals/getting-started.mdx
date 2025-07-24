@@ -1,6 +1,5 @@
 ---
 sidebar_position: 1
-slug: /
 ---
 
 import Tabs from '@theme/Tabs';
@@ -14,7 +13,7 @@ The goal of the _Fundamentals_ section is to help you gain a strong foundation o
 
 React Native Reanimated is a powerful animation library built by [Software Mansion](https://swmansion.com/).
 
-With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/next/fundamentals/glossary#ui-thread).
+With Reanimated, you can easily create smooth animations and interactions that run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
 ## Prerequisites
 
@@ -53,14 +52,10 @@ This library requires an installation of the `react-native-worklets` dependency.
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
     {/* TODO - add information about the necessity to specify a proper version of the library compatible with reanimated */}
-    ```bash
-    npm install react-native-worklets
-    ```
+    ```bash npm install react-native-worklets ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add react-native-worklets
-    ```
+    ```bash yarn add react-native-worklets ```
   </TabItem>
 </Tabs>
 
@@ -70,14 +65,10 @@ Run prebuild to update the native code in the `ios` and `android` directories.
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npx expo prebuild
-    ```
+    ```bash npx expo prebuild ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn expo prebuild
-    ```
+    ```bash yarn expo prebuild ```
   </TabItem>
 </Tabs>
 
@@ -108,11 +99,11 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 <details>
 <summary>Why do I need this?</summary>
 
-In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/next/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
 Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Reanimated babel plugin by default.
 
-To learn more about the plugin head onto to [Reanimated babel plugin](/docs/next/fundamentals/glossary#reanimated-babel-plugin) section.
+To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#reanimated-babel-plugin) section.
 
 </details>
 
@@ -120,14 +111,10 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/next
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm start -- --reset-cache
-    ```
+    ```bash npm start -- --reset-cache ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn start --reset-cache
-    ```
+    ```bash yarn start --reset-cache ```
   </TabItem>
 </Tabs>
 
@@ -151,14 +138,10 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm install @babel/plugin-proposal-export-namespace-from
-    ```
+    ```bash npm install @babel/plugin-proposal-export-namespace-from ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add @babel/plugin-proposal-export-namespace-from
-    ```
+    ```bash yarn add @babel/plugin-proposal-export-namespace-from ```
   </TabItem>
 </Tabs>
 
@@ -177,4 +160,4 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 Make sure to list `react-native-worklets/plugin` last.
 
-More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/next/guides/web-support) guide.
+More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.
