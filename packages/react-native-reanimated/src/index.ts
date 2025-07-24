@@ -125,7 +125,6 @@ export type {
   EventHandler,
   EventHandlerProcessed,
   FrameCallback,
-  GestureHandlers,
   ReanimatedEvent,
   ScrollEvent,
   ScrollHandler,
@@ -134,7 +133,6 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
-  useAnimatedGestureHandler,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,

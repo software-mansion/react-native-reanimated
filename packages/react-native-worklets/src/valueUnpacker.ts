@@ -25,9 +25,9 @@ function __valueUnpacker(
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(
-          '(' + initData.code + '\n)',
-          initData.location!,
-          initData.sourceMap!
+          '(' + initData!.code + '\n)',
+          initData!.location!,
+          initData!.sourceMap!
         );
       } else if (global.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
@@ -35,13 +35,13 @@ function __valueUnpacker(
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
         workletFun = global.evalWithSourceUrl(
-          '(' + initData.code + '\n)',
+          '(' + initData!.code + '\n)',
           `worklet_${workletHash}`
         );
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + initData.code + '\n)');
+        workletFun = eval('(' + initData!.code + '\n)');
       }
       workletsCache.set(workletHash, workletFun!);
     }

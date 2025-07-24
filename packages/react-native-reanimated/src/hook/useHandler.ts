@@ -86,7 +86,7 @@ export function useHandler<
   for (const handlerName in handlers) {
     if (!isWorkletFunction(handlers[handlerName])) {
       throw new ReanimatedError(
-        'Passed a function is not a worklet. Please provide a worklet function.'
+        'Passed a function that is not a worklet. Please provide a worklet function.'
       );
     }
   }

@@ -20,6 +20,7 @@
     "@babel/plugin-proposal-class-properties": "7.18.6",
     "@babel/plugin-proposal-export-namespace-from": "7.18.9",
     "@babel/preset-env": "7.24.4",
+    "@babel/preset-react": "7.27.1",
     "@docusaurus/core": "3.7.0",
     "@docusaurus/plugin-debug": "3.7.0",
     "@docusaurus/preset-classic": "3.7.0",
@@ -31,6 +32,7 @@
     "@shopify/flash-list": "1.6.3",
     "@swmansion/t-rex-ui": "1.0.0",
     "@vercel/og": "0.6.2",
+    "babel-loader": "10.0.0",
     "babel-polyfill": "6.26.0",
     "babel-preset-expo": "9.2.2",
     "babel-preset-react-native": "4.0.1",
@@ -45,10 +47,10 @@
     "react-draggable": "4.4.5",
     "react-native": "0.71.4",
     "react-native-gesture-handler": "2.24.0",
-    "react-native-reanimated": "file:./react-native-reanimated-4.0.0-beta.5-20250721110550.tgz",
+    "react-native-reanimated": "4.0.0",
     "react-native-svg": "15.12.0",
     "react-native-web": "0.18.12",
-    "react-native-worklets": "0.1.0",
+    "react-native-worklets": "0.4.0",
     "source-map": "0.7.4",
     "source-map-loader": "4.0.1",
     "usehooks-ts": "2.9.1"
@@ -62,7 +64,7 @@
     "esbuild-register": "3.5.0",
     "eslint-plugin-mdx": "2.2.0",
     "prettier": "2.8.4",
-    "typescript": "~5.2.2",
+    "typescript": "5.8.3",
     "webpack-cli": "5.0.1"
   },
   "browserslist": {

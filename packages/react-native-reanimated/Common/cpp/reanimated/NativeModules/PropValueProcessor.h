@@ -20,7 +20,7 @@ class PropValueProcessor {
 
   static std::string processPropValue(
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       jsi::Runtime &rt);
 
  private:
