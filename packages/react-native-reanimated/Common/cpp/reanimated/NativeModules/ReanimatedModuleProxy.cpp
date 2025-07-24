@@ -442,7 +442,6 @@ void ReanimatedModuleProxy::unregisterCSSKeyframes(
     const jsi::Value &viewName) {
   cssAnimationKeyframesRegistry_->remove(
       animationName.asString(rt).utf8(rt),
-      // Convert react view name to Fabric component name
       componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
 }
 
