@@ -203,7 +203,7 @@ export default class AnimatedComponent
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
     newStyles: StyleProps[],
-    jestAnimatedStyle: { value: StyleProps }
+    jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
 
@@ -239,8 +239,8 @@ export default class AnimatedComponent
          * because TestObject contains a copy of props - look at render
          * function: const props = this._filterNonAnimatedProps(this.props);
          */
-        Object.assign(jestAnimatedStyle.value, style.initial.value);
-        style.jestAnimatedValues.current = jestAnimatedStyle;
+        Object.assign(jestAnimatedStyleOrProps.value, style.initial.value);
+        style.jestAnimatedValues.current = jestAnimatedStyleOrProps;
       }
     });
   }
@@ -297,10 +297,17 @@ export default class AnimatedComponent
   }
 
   _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void {
-    const filtered = filterStyles(flattenArray(props.style ?? []));
+    const filteredStyles = filterStyles(flattenArray(props.style ?? []));
     this._prevAnimatedStyles = this._animatedStyles;
-    this._animatedStyles = filtered.animatedStyles;
-    this._cssStyle = filtered.cssStyle;
+    this._animatedStyles = filteredStyles.animatedStyles;
+
+    const filteredAnimatedProps = filterStyles(
+      flattenArray(props.animatedProps ?? [])
+    );
+    this._prevAnimatedProps = this._animatedProps;
+    this._animatedProps = filteredAnimatedProps.animatedStyles;
+
+    this._cssStyle = filteredStyles.cssStyle;
   }
 
   _configureLayoutAnimation(

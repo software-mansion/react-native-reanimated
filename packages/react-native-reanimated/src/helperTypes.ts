@@ -100,9 +100,7 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: AddArrayPropertyType<
-      Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
-    >;
+    animatedProps?: AddArrayPropertyType<Partial<AnimatedPropsProp<Props>>>;
   };
 
 // THE LAND OF THE DEPRECATED
