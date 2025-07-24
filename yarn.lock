@@ -9867,6 +9867,7 @@ __metadata:
     eslint: "npm:^9.29.0"
     eslint-import-resolver-typescript: "npm:^4.4.3"
     eslint-plugin-import: "npm:^2.31.0"
+    eslint-plugin-jest: "npm:^28.14.0"
     eslint-plugin-no-relative-import-paths: "npm:^1.6.1"
     eslint-plugin-perfectionist: "npm:^4.15.0"
     eslint-plugin-prettier: "npm:^5.5.0"
