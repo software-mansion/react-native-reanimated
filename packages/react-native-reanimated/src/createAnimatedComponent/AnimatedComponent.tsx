@@ -60,7 +60,8 @@ export default class AnimatedComponent
   _displayName: string;
   _animatedStyles: StyleProps[] = [];
   _prevAnimatedStyles: StyleProps[] = [];
-  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
+  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
@@ -103,7 +104,7 @@ export default class AnimatedComponent
       this._NativeEventsManager = new NativeEventsManager(this, this._options);
     }
     this._NativeEventsManager?.attachEvents();
-    this._attachAnimatedStyles();
+    this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
     if (this._options?.jsProps?.length) {
@@ -199,27 +200,25 @@ export default class AnimatedComponent
     }
   }
 
-  _attachAnimatedStyles() {
-    const animatedProps = this.props.animatedProps;
-    const prevAnimatedProps = this._animatedProps;
-    this._animatedProps = animatedProps;
-
+  _handleAnimatedStylesUpdate(
+    prevStyles: StyleProps[],
+    newStyles: StyleProps[],
+    jestAnimatedStyle: { value: StyleProps }
+  ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
 
     // remove old styles
-    if (this._prevAnimatedStyles) {
+    if (prevStyles) {
       // in most of the cases, views have only a single animated style and it remains unchanged
       const hasOneSameStyle =
-        this._animatedStyles.length === 1 &&
-        this._prevAnimatedStyles.length === 1 &&
-        this._animatedStyles[0] === this._prevAnimatedStyles[0];
+        newStyles.length === 1 &&
+        prevStyles.length === 1 &&
+        newStyles[0] === prevStyles[0];
 
       if (!hasOneSameStyle) {
         // otherwise, remove each style that is not present in new styles
-        for (const prevStyle of this._prevAnimatedStyles) {
-          const isPresent = this._animatedStyles.some(
-            (style) => style === prevStyle
-          );
+        for (const prevStyle of prevStyles) {
+          const isPresent = newStyles.some((style) => style === prevStyle);
           if (!isPresent) {
             prevStyle.viewDescriptors.remove(viewTag);
           }
@@ -227,18 +226,7 @@ export default class AnimatedComponent
       }
     }
 
-    if (animatedProps && IS_JEST) {
-      this.jestAnimatedProps.value = {
-        ...this.jestAnimatedProps.value,
-        ...animatedProps?.initial?.value,
-      };
-
-      if (animatedProps?.jestAnimatedValues) {
-        animatedProps.jestAnimatedValues.current = this.jestAnimatedProps;
-      }
-    }
-
-    this._animatedStyles.forEach((style) => {
+    newStyles.forEach((style) => {
       style.viewDescriptors.add({
         tag: viewTag,
         shadowNodeWrapper,
@@ -251,26 +239,23 @@ export default class AnimatedComponent
          * because TestObject contains a copy of props - look at render
          * function: const props = this._filterNonAnimatedProps(this.props);
          */
-        this.jestAnimatedStyle.value = {
-          ...this.jestAnimatedStyle.value,
-          ...style.initial.value,
-        };
-        style.jestAnimatedValues.current = this.jestAnimatedStyle;
+        Object.assign(jestAnimatedStyle.value, style.initial.value);
+        style.jestAnimatedValues.current = jestAnimatedStyle;
       }
     });
+  }
 
-    // detach old animatedProps
-    if (prevAnimatedProps && prevAnimatedProps !== this.props.animatedProps) {
-      prevAnimatedProps.viewDescriptors!.remove(viewTag as number);
-    }
-
-    // attach animatedProps property
-    if (this.props.animatedProps?.viewDescriptors) {
-      this.props.animatedProps.viewDescriptors.add({
-        tag: viewTag as number,
-        shadowNodeWrapper: shadowNodeWrapper!,
-      });
-    }
+  _updateAnimatedStylesAndProps() {
+    this._handleAnimatedStylesUpdate(
+      this._prevAnimatedStyles,
+      this._animatedStyles,
+      this.jestAnimatedStyle
+    );
+    this._handleAnimatedStylesUpdate(
+      this._prevAnimatedProps,
+      this._animatedProps,
+      this.jestAnimatedProps
+    );
   }
 
   componentDidUpdate(
@@ -290,7 +275,7 @@ export default class AnimatedComponent
     );
 
     this._NativeEventsManager?.updateEvents(prevProps);
-    this._attachAnimatedStyles();
+    this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
     if (IS_WEB && this.props.exiting && this._componentDOMRef) {
