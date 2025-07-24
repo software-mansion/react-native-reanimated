@@ -1,8 +1,7 @@
 name: GitHub Pull Request label format
 on:
-  pull_request:
+  pull_request_target:
     types:
-      - edited
       - opened
       - synchronize
 
