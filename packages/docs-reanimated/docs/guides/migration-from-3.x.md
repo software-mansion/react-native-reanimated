@@ -56,7 +56,7 @@ useCallback(() => {
 }, [...dependencies]);
 ```
 
-If you're using [gorhom/react-native-bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet), please update to latest version.
+If you're using [gorhom/react-native-bottom-sheet](https://github.com/gorhom/react-native-bottom-sheet), you need to apply the changes from the [pull request #2356](https://github.com/gorhom/react-native-bottom-sheet/pull/2356) using [patch-package](https://www.npmjs.com/package/patch-package) or [yarn patch](https://yarnpkg.com/cli/patch).
 
 ### Removed `addWhitelistedNativeProps` and `addWhitelistedUIProps`
 
