@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_worklets=self.webpackChunkdocs_worklets||[]).push([[583],{6727:(e,s,t)=>{t.r(s),t.d(s,{default:()=>o});var r=t(2820),c=t(7671);function o(){return(0,c.jsx)(r.rd,{to:"/react-native-worklets/docs/"})}}}]);
