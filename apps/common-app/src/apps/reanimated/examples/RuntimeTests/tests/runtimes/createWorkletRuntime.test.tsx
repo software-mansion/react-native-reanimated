@@ -10,7 +10,9 @@ describe('createWorkletRuntime', () => {
 
   test('should create a worklet runtime by passing name and initializer', () => {
     //  TODO: Check if initializer is called
-    const initializer = () => {};
+    const initializer = () => {
+      'worklet';
+    };
     const runtime = createWorkletRuntime('test', initializer);
     expect(runtime.name).toBe('test');
     expect(runtime.toString()).toBe('[WorkletRuntime "test"]');
@@ -26,9 +28,12 @@ describe('createWorkletRuntime', () => {
 
   test('should create a worklet runtime by passing config with name and initializer', () => {
     //  TODO: Check if initializer is called
+    const initializer = () => {
+      'worklet';
+    };
     const runtime = createWorkletRuntime({
       name: 'test',
-      initializer: () => {},
+      initializer,
     });
     expect(runtime.name).toBe('test');
     expect(runtime.toString()).toBe('[WorkletRuntime "test"]');
