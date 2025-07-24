@@ -461,7 +461,7 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
         jsi::String::createFromAscii(rt, "RemoteFunction"),
         jsi::String::createFromUtf8(rt, name_));
 #else
-    return ShareableJSRef::newHostObject(rt, shared_from_this());
+    return ShareableJSRef::newNativeStateObject(rt, shared_from_this());
 #endif
   }
 }
