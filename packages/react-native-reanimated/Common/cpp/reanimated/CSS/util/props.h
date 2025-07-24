@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
+#include <reanimated/CSS/config/interpolators/registry.h>
 
 #include <memory>
 #include <string>
@@ -17,7 +17,9 @@ struct ChangedProps {
   const PropertyNames changedPropertyNames;
 };
 
-bool isDiscreteProperty(const std::string &propName);
+bool isDiscreteProperty(
+    const std::string &propName,
+    const std::string &componentName);
 
 // We need to specify it here because there are 2 methods referencing
 // each other in the recursion and areArraysDifferentRecursive must be
