@@ -57,14 +57,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
+      cssAnimationKeyframesRegistry_(
+          std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -422,10 +423,9 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
-  cssAnimationKeyframesRegistry_->add(
+  cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, viewStylesRepository_));
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
@@ -455,16 +455,15 @@ void ReanimatedModuleProxy::applyCSSAnimations(
             "[Reanimated] index is out of bounds of animationNames");
       }
 
-      const auto &name = animationNames[index];
-      const auto animation = std::make_shared<CSSAnimation>(
-          rt,
-          shadowNode,
-          name,
-          cssAnimationKeyframesRegistry_->get(name),
-          settings,
-          timestamp);
-
-      newAnimations.emplace(index, animation);
+      newAnimations.emplace(
+          index,
+          std::make_shared<CSSAnimation>(
+              rt,
+              shadowNode,
+              animationNames[index],
+              cssAnimationKeyframesRegistry_,
+              settings,
+              timestamp));
     }
   }
 
