@@ -2315,6 +2315,18 @@
     "@babel/types" "^7.4.4"
     esutils "^2.0.2"
 
+"@babel/preset-react@7.27.1", "@babel/preset-react@^7.25.9":
+  version "7.27.1"
+  resolved "https://registry.yarnpkg.com/@babel/preset-react/-/preset-react-7.27.1.tgz#86ea0a5ca3984663f744be2fd26cb6747c3fd0ec"
+  integrity sha512-oJHWh2gLhU9dW9HHr42q0cI0/iHHXTLGe39qvpAZZzagHy0MzYLCnCVV0symeRvzmjHyVU7mw2K06E6u/JwbhA==
+  dependencies:
+    "@babel/helper-plugin-utils" "^7.27.1"
+    "@babel/helper-validator-option" "^7.27.1"
+    "@babel/plugin-transform-react-display-name" "^7.27.1"
+    "@babel/plugin-transform-react-jsx" "^7.27.1"
+    "@babel/plugin-transform-react-jsx-development" "^7.27.1"
+    "@babel/plugin-transform-react-pure-annotations" "^7.27.1"
+
 "@babel/preset-react@^7.18.6":
   version "7.18.6"
   resolved "https://registry.yarnpkg.com/@babel/preset-react/-/preset-react-7.18.6.tgz#979f76d6277048dc19094c217b507f3ad517dd2d"
@@ -2326,18 +2338,6 @@
     "@babel/plugin-transform-react-jsx" "^7.18.6"
     "@babel/plugin-transform-react-jsx-development" "^7.18.6"
     "@babel/plugin-transform-react-pure-annotations" "^7.18.6"
-
-"@babel/preset-react@^7.25.9":
-  version "7.27.1"
-  resolved "https://registry.yarnpkg.com/@babel/preset-react/-/preset-react-7.27.1.tgz#86ea0a5ca3984663f744be2fd26cb6747c3fd0ec"
-  integrity sha512-oJHWh2gLhU9dW9HHr42q0cI0/iHHXTLGe39qvpAZZzagHy0MzYLCnCVV0symeRvzmjHyVU7mw2K06E6u/JwbhA==
-  dependencies:
-    "@babel/helper-plugin-utils" "^7.27.1"
-    "@babel/helper-validator-option" "^7.27.1"
-    "@babel/plugin-transform-react-display-name" "^7.27.1"
-    "@babel/plugin-transform-react-jsx" "^7.27.1"
-    "@babel/plugin-transform-react-jsx-development" "^7.27.1"
-    "@babel/plugin-transform-react-pure-annotations" "^7.27.1"
 
 "@babel/preset-typescript@^7.13.0":
   version "7.21.0"
@@ -13512,10 +13512,10 @@ react-native-is-edge-to-edge@^1.2.1:
   resolved "https://registry.yarnpkg.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.2.1.tgz#64e10851abd9d176cbf2b40562f751622bde3358"
   integrity sha512-FLbPWl/MyYQWz+KwqOZsSyj2JmLKglHatd3xLZWskXOpRaio4LfEDEz8E/A6uD8QoTHW6Aobw1jbEwK7KMgR7Q==
 
-react-native-reanimated@4.0.0-nightly-20250722-bfd9c5883:
-  version "4.0.0-nightly-20250722-bfd9c5883"
-  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0-nightly-20250722-bfd9c5883.tgz#747848712c1df32f370a02f601aa5ed85294d07b"
-  integrity sha512-UrwM1RuQrOrhi8g5RgR2z8kcAqR6Gnr0A7vHAcQ0su8PEONd5WVLEGWfpiNqMC7L86zf85dsR599cUdEnYwH2g==
+react-native-reanimated@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-4.0.0.tgz#f842fe911a297751c2d37f813642ddf6d580d272"
+  integrity sha512-gcLvbfJBQSmSHnPjlURWN/EJjWDhVpWqe+ilshcEmK/gS46AY42oVGYA0FFoLBiQj2BH+I24Tox/7GrBCBFbwg==
   dependencies:
     react-native-is-edge-to-edge "^1.2.1"
     semver "7.7.2"
@@ -13542,10 +13542,10 @@ react-native-web@0.18.12:
     postcss-value-parser "^4.2.0"
     styleq "^0.1.2"
 
-react-native-worklets@0.4.0-nightly-20250722-bfd9c5883:
-  version "0.4.0-nightly-20250722-bfd9c5883"
-  resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.4.0-nightly-20250722-bfd9c5883.tgz#13bb30a2eef4b0df9402470a1d322fb59801f400"
-  integrity sha512-73jUaiOXpjZ41BdXZV4TU2iSvgI19Fzm7GAARL5OyWSnX1OBToln7kTGw/iM9z4WtnR0/yGLn7YcYc/zJ6O7Bw==
+react-native-worklets@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-worklets/-/react-native-worklets-0.4.0.tgz#45babca8e35c1fba864ebb6675e82c894280376d"
+  integrity sha512-q4AKd9RH6JSX17dSbXw1ppr7WbGYleQT2GqlpE9LLKLRAi2UeSHD3Q3br4MBGobQfQDyfDyfkiO5DvhXSa/8Xg==
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"
@@ -15337,10 +15337,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
-typescript@~5.2.2:
-  version "5.2.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.2.2.tgz#5ebb5e5a5b75f085f22bc3f8460fba308310fa78"
-  integrity sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==
+typescript@5.8.3:
+  version "5.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.8.3.tgz#92f8a3e5e3cf497356f4178c34cd65a7f5e8440e"
+  integrity sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==
 
 ua-parser-js@^1.0.35:
   version "1.0.40"

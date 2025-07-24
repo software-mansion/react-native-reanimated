@@ -14,7 +14,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/next/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
 
 ### Renamed `react-native-reanimated/plugin`
 
@@ -35,7 +35,7 @@ import { Reanimated3DefaultSpringConfig } from 'react-native-reanimated'; // For
 import { Reanimated3DefaultSpringConfigWithDuration } from 'react-native-reanimated'; // For duration based defaults.
 ```
 
-You can explore the changes in the default parameters in [withSpring reference](/docs/next/animations/withSpring).
+You can explore the changes in the default parameters in [withSpring reference](/docs/animations/withSpring).
 
 ### Removed `useWorkletCallback`
 
@@ -74,7 +74,7 @@ EntryExitTransition.entering(entering).exiting(exiting);
 
 Reanimated 4 removes support for [react-native-v8](https://github.com/Kudo/react-native-v8) engine. We no longer actively support V8 and the project itself seems to be abandoned as there hasn't been any new commits since August 2024.
 
-If you are affected by this change, please to leave a comment under the [related PR](https://github.com/software-mansion/react-native-reanimated/pull/7650) and explain your motivation to use V8 engine with Reanimated. We might consider restoring support for V8 engine at some point in the future.
+If you are affected by this change, please leave a comment under the [related PR](https://github.com/software-mansion/react-native-reanimated/pull/7650) and explain your motivation to use V8 engine with Reanimated. We might consider restoring support for V8 engine at some point in the future.
 
 ### Renamed `useScrollViewOffset` to `useScrollOffset`
 

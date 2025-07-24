@@ -57,14 +57,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
+      cssAnimationKeyframesRegistry_(
+          std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -421,17 +422,25 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
+    const jsi::Value &viewName,
     const jsi::Value &keyframesConfig) {
-  cssAnimationKeyframesRegistry_->add(
+  // Convert react view name to Fabric component name
+  const auto componentName =
+      componentNameByReactViewName(viewName.asString(rt).utf8(rt));
+  cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
+      componentName,
       parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, viewStylesRepository_));
+          rt, keyframesConfig, componentName, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &animationName) {
-  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+    const jsi::Value &animationName,
+    const jsi::Value &viewName) {
+  cssAnimationKeyframesRegistry_->remove(
+      animationName.asString(rt).utf8(rt),
+      componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
@@ -455,16 +464,19 @@ void ReanimatedModuleProxy::applyCSSAnimations(
             "[Reanimated] index is out of bounds of animationNames");
       }
 
-      const auto &name = animationNames[index];
-      const auto animation = std::make_shared<CSSAnimation>(
-          rt,
-          shadowNode,
-          name,
-          cssAnimationKeyframesRegistry_->get(name),
-          settings,
-          timestamp);
+      const auto &animationName = animationNames[index];
+      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(
+          animationName, shadowNode->getComponentName());
 
-      newAnimations.emplace(index, animation);
+      newAnimations.emplace(
+          index,
+          std::make_shared<CSSAnimation>(
+              rt,
+              shadowNode,
+              animationName,
+              keyframesConfig,
+              settings,
+              timestamp));
     }
   }
 
