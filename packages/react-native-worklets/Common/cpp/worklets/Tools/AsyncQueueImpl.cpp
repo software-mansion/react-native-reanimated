@@ -1,10 +1,11 @@
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 
+#include <thread>
 #include <utility>
 
 namespace worklets {
 
-AsyncQueue::AsyncQueue(std::string name)
+AsyncQueueImpl::AsyncQueueImpl(std::string name)
     : state_(std::make_shared<AsyncQueueState>()) {
   auto thread = std::thread([name, state = state_] {
 #if __APPLE__
@@ -32,7 +33,7 @@ AsyncQueue::AsyncQueue(std::string name)
   thread.detach();
 }
 
-AsyncQueue::~AsyncQueue() {
+AsyncQueueImpl::~AsyncQueueImpl() {
   {
     std::unique_lock<std::mutex> lock(state_->mutex);
     state_->running = false;
@@ -41,7 +42,7 @@ AsyncQueue::~AsyncQueue() {
   state_->cv.notify_all();
 }
 
-void AsyncQueue::push(std::function<void()> &&job) {
+void AsyncQueueImpl::push(std::function<void()> &&job) {
   {
     std::unique_lock<std::mutex> lock(state_->mutex);
     state_->queue.emplace(job);
