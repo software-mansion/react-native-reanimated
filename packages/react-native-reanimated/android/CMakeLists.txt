@@ -75,16 +75,13 @@ else()
   set(BUILD_TYPE "release")
 endif()
 
-find_library(
-  LIBWORKLETS worklets
-  PATHS
-    "${REACT_NATIVE_WORKLETS_DIR}/android/build/intermediates/cmake/${BUILD_TYPE}/obj/${ANDROID_ABI}"
-  NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+add_library(worklets SHARED IMPORTED)
+
+set_target_properties(worklets PROPERTIES IMPORTED_LOCATION "${REACT_NATIVE_WORKLETS_DIR}/android/build/intermediates/cmake/${BUILD_TYPE}/obj/${ANDROID_ABI}/libworklets.so")
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android
-                      ${LIBWORKLETS})
+target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android worklets)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
   target_link_libraries(reanimated ReactAndroid::reactnative)
