@@ -1,4 +1,4 @@
-import { createWorkletRuntime } from '../../src/runtimes';
+import { createWorkletRuntime } from '..';
 
 export function createWorkletRuntimeTypeTests() {
   const initializer = () => {
