@@ -1,7 +1,6 @@
 #pragma once
 
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/VersionUtils.h>
 
 #include <jsi/jsi.h>
 

@@ -32,13 +32,13 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getWorkletsCppVersion();
-  const auto jsVersionValue =
+  auto jsVersionValue =
       rnRuntime.global().getProperty(rnRuntime, "_WORKLETS_VERSION_JS");
   worklets::checkJSVersion(
       rnRuntime,
+      jsVersionValue,
       jsLogger,
       cppVersion,
-      jsVersionValue,
       "Worklets",
       "https://docs.swmansion.com/react-native-worklets/docs");
 }

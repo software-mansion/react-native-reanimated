@@ -32,13 +32,13 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getReanimatedCppVersion();
-  const auto jsVersionValue =
+  auto jsVersionValue =
       rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   worklets::checkJSVersion(
       rnRuntime,
+      jsVersionValue,
       jsLogger,
       cppVersion,
-      jsVersionValue,
       "Reanimated",
       "https://docs.swmansion.com/react-native-reanimated/docs");
 }

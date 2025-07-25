@@ -14,10 +14,10 @@ namespace worklets {
 bool matchVersion(const std::string &version1, const std::string &version2);
 
 void checkJSVersion(
-    jsi::Runtime &rnRuntime,
+    jsi::Runtime &runtime,
+    jsi::Value &jsVersionValue,
     const std::shared_ptr<worklets::JSLogger> &jsLogger,
     const std::string &cppVersion,
-    const jsi::Value &jsVersionValue,
     const std::string &libraryName,
     const std::string &docsBaseUrl);
 

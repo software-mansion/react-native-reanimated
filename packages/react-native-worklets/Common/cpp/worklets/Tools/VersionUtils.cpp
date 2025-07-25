@@ -34,10 +34,10 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 }
 
 void checkJSVersion(
-    jsi::Runtime &rnRuntime,
+    jsi::Runtime &runtime,
+    jsi::Value &jsVersionValue,
     const std::shared_ptr<worklets::JSLogger> &jsLogger,
     const std::string &cppVersion,
-    const jsi::Value &jsVersionValue,
     const std::string &libraryName,
     const std::string &docsBaseUrl) {
   const auto libraryPrefix = std::string("[" + libraryName + "] ");
@@ -55,7 +55,7 @@ void checkJSVersion(
     return;
   }
 
-  const auto jsVersion = jsVersionValue.asString(rnRuntime).utf8(rnRuntime);
+  const auto jsVersion = jsVersionValue.asString(runtime).utf8(runtime);
 
   if (!matchVersion(cppVersion, jsVersion)) {
     jsLogger->warnOnJS(
