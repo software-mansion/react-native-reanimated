@@ -14,10 +14,8 @@ const jsVersionPath = path.resolve(
 const { argv } = process;
 const { currentVersion, newVersion } = getVersion(argv, packageJsonPath);
 
-// Update version using common utility
 updateVersion(packageJsonPath, jsVersionPath, newVersion);
 
-// Handle nightly builds - update peer dependency
 if (getFlags(argv).flags.nightly) {
   const workletsPackageJsonPath = path.resolve(
     __dirname,

@@ -37,17 +37,16 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger,
     const std::string &cppVersion,
-    const std::string &jsVersionProperty,
+    const jsi::Value &jsVersionValue,
     const std::string &libraryName,
     const std::string &docsBaseUrl) {
-  auto maybeJSVersion =
-      rnRuntime.global().getProperty(rnRuntime, jsVersionProperty.c_str());
+  const auto libraryPrefix = std::string("[" + libraryName + "] ");
 
-  if (maybeJSVersion.isUndefined()) {
+  if (jsVersionValue.isUndefined()) {
     jsLogger->warnOnJS(
         std::string(
-            "[" + libraryName +
-            "] C++ side failed to resolve JavaScript code "
+            libraryPrefix +
+            "C++ side failed to resolve JavaScript code "
             "version\n") +
         "See " + docsBaseUrl +
         "/guides/"
@@ -56,13 +55,13 @@ void checkJSVersion(
     return;
   }
 
-  auto jsVersion = maybeJSVersion.asString(rnRuntime).utf8(rnRuntime);
+  const auto jsVersion = jsVersionValue.asString(rnRuntime).utf8(rnRuntime);
 
   if (!matchVersion(cppVersion, jsVersion)) {
     jsLogger->warnOnJS(
         std::string(
-            "[" + libraryName +
-            "] Mismatch between C++ code version and "
+            libraryPrefix +
+            "Mismatch between C++ code version and "
             "JavaScript code version (") +
         cppVersion + " vs. " + jsVersion + " respectively).\n" + "See " +
         docsBaseUrl +

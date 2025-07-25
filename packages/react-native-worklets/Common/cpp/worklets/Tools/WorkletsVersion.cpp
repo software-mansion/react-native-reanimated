@@ -9,8 +9,6 @@
 #define STRINGIZE(x) #x
 #define STRINGIZE2(x) STRINGIZE(x)
 #define WORKLETS_VERSION_STRING STRINGIZE2(WORKLETS_VERSION)
-#else
-#define WORKLETS_VERSION_STRING "unknown"
 #endif // WORKLETS_VERSION
 
 using namespace facebook;
@@ -34,11 +32,13 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getWorkletsCppVersion();
+  const auto jsVersionValue =
+      rnRuntime.global().getProperty(rnRuntime, "_WORKLETS_VERSION_JS");
   worklets::checkJSVersion(
       rnRuntime,
       jsLogger,
       cppVersion,
-      "_WORKLETS_VERSION_JS",
+      jsVersionValue,
       "Worklets",
       "https://docs.swmansion.com/react-native-worklets/docs");
 }

@@ -9,8 +9,6 @@
 #define STRINGIZE(x) #x
 #define STRINGIZE2(x) STRINGIZE(x)
 #define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
-#else
-#define REANIMATED_VERSION_STRING "unknown"
 #endif // REANIMATED_VERSION
 
 using namespace facebook;
@@ -34,11 +32,13 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getReanimatedCppVersion();
+  const auto jsVersionValue =
+      rnRuntime.global().getProperty(rnRuntime, "_REANIMATED_VERSION_JS");
   worklets::checkJSVersion(
       rnRuntime,
       jsLogger,
       cppVersion,
-      "_REANIMATED_VERSION_JS",
+      jsVersionValue,
       "Reanimated",
       "https://docs.swmansion.com/react-native-reanimated/docs");
 }

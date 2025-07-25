@@ -17,7 +17,7 @@ void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<worklets::JSLogger> &jsLogger,
     const std::string &cppVersion,
-    const std::string &jsVersionProperty,
+    const jsi::Value &jsVersionValue,
     const std::string &libraryName,
     const std::string &docsBaseUrl);
 

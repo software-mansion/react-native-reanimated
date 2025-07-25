@@ -10,7 +10,6 @@ const { currentVersion, newVersion } = getVersion(
   packageJsonPath
 );
 
-// Update version using common utility
 updateVersion(packageJsonPath, jsVersionPath, newVersion);
 
 // Log the current version so it can be restored if needed.
