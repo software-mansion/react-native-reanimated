@@ -35,7 +35,8 @@ class RuntimeManager {
       const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
-      const std::shared_ptr<MessageQueueThread> &jsQueue);
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      std::shared_ptr<AsyncQueue> uiAsyncQueue);
 
  private:
   uint64_t getNextRuntimeId();
