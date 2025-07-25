@@ -63,13 +63,16 @@ export default function SpringExample() {
   const [damping, setDamping] = useState('1');
 
   const config = {
-    stiffness: Number.parseFloat(stiffness),
+    mass: Number.parseFloat(mass),
     ...(useConfigWithDuration
       ? {
           duration: Number.parseFloat(duration),
           dampingRatio: Number.parseFloat(dampingRatio),
         }
-      : { mass: Number.parseFloat(mass), damping: Number.parseFloat(damping) }),
+      : {
+          stiffness: Number.parseFloat(stiffness),
+          damping: Number.parseFloat(damping),
+        }),
   } as const;
 
   const style = useAnimatedStyle(() => {
