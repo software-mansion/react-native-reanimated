@@ -137,10 +137,7 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  createWorkletRuntime(
-    _name: string,
-    _initializer: ShareableRef<() => void>
-  ): WorkletRuntime {
+  createWorkletRuntime(): never {
     throw new WorkletsError(
       'createWorkletRuntime is not available in JSWorklets.'
     );

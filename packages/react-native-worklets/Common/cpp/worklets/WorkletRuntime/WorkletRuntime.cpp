@@ -71,11 +71,13 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name)
+    const std::string &name,
+    const std::shared_ptr<AsyncQueue> &queue)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
-      name_(name) {
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
