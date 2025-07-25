@@ -8,6 +8,7 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
 #include <string>

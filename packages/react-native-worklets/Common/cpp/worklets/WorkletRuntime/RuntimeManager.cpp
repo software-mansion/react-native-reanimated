@@ -5,8 +5,6 @@
 
 namespace worklets {
 
-const std::string uiRuntimeName{"UI"};
-
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
