@@ -4,8 +4,9 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 
+#include <worklets/Public/AsyncQueue.h>
 #include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/JSScheduler.h>
 
 #include <memory>
@@ -50,7 +51,7 @@ class WorkletRuntime : public jsi::HostObject,
   void runAsyncGuarded(
       const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
     if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueue>(name_);
+      queue_ = std::make_shared<AsyncQueueImpl>(name_);
     }
     queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();

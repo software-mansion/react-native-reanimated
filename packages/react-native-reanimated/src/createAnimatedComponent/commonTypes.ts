@@ -125,7 +125,8 @@ export interface IAnimatedComponentInternal {
   ChildComponent: AnyComponent;
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
-  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
