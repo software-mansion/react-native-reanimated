@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
-import Example from './Example';
+import type { WithSpringConfig } from 'react-native-reanimated';
+import {
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+  Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
+  ReduceMotion,
+  SnappySpringConfig,
+  SnappySpringConfigWithDuration,
+  WigglySpringConfig,
+  WigglySpringConfigWithDuration,
+} from 'react-native-reanimated';
 
-import { Range, CheckboxOption, SelectOption, formatReduceMotion } from '..';
-import { ReduceMotion, WithSpringConfig } from 'react-native-reanimated';
+import { CheckboxOption, formatReduceMotion, Range, SelectOption } from '..';
+import Example from './Example';
 
 const defaultConfig = {
   damping: 120,
@@ -16,8 +27,27 @@ const defaultConfig = {
   reduceMotion: ReduceMotion.System,
 };
 
-export function useSpringPlayground() {
+const physicsPresets = {
+  GentleSpringConfig,
+  WigglySpringConfig,
+  SnappySpringConfig,
+  Reanimated3DefaultSpringConfig,
+} as const;
+
+const durationPresets = {
+  GentleSpringConfigWithDuration,
+  WigglySpringConfigWithDuration,
+  SnappySpringConfigWithDuration,
+  Reanimated3DefaultSpringConfigWithDuration,
+} as const;
+
+export default function useSpringPlayground() {
   const [isPhysicsBased, setPhysicsBased] = useState(true);
+  const [physicsPresetName, setPhysicsPresetName] =
+    useState<keyof typeof physicsPresets>('GentleSpringConfig');
+  const [durationPresetName, setDurationPresetName] = useState<
+    keyof typeof durationPresets
+  >('GentleSpringConfigWithDuration');
 
   const [damping, setDamping] = useState(defaultConfig.damping);
   const [mass, setMass] = useState(defaultConfig.mass);
@@ -50,12 +80,12 @@ export function useSpringPlayground() {
     withSpring(sv.value, {
       ${
         isPhysicsBased
-          ? `mass: ${mass},
+          ? `stifness: ${stiffness},
       damping: ${damping},`
           : `duration: ${duration},
       dampingRatio: ${dampingRatio},`
       }
-      stiffness: ${stiffness},
+      mass: ${mass},
       overshootClamping: ${overshootClamping},
       energyThreshold: ${energyThreshold},
       reduceMotion: ${formatReduceMotion(reduceMotion)},
@@ -85,6 +115,19 @@ export function useSpringPlayground() {
       </ul>
       {isPhysicsBased ? (
         <>
+          <SelectOption
+            label="Preset"
+            value={physicsPresetName}
+            onChange={(option: keyof typeof physicsPresets) => {
+              setPhysicsPresetName(option);
+              setStiffness(physicsPresets[option].stiffness);
+              setDamping(physicsPresets[option].damping);
+              setOvershootClamping(
+                (physicsPresets[option] as WithSpringConfig).overshootClamping
+              );
+            }}
+            options={Object.keys(physicsPresets)}
+          />
           <Range
             label="Stiffness"
             min={10}
@@ -104,6 +147,19 @@ export function useSpringPlayground() {
         </>
       ) : (
         <>
+          <SelectOption
+            label="Preset"
+            value={durationPresetName}
+            onChange={(option: keyof typeof durationPresets) => {
+              setDurationPresetName(option);
+              setDuration(durationPresets[option].duration);
+              setDampingRatio(durationPresets[option].dampingRatio);
+              setOvershootClamping(
+                (durationPresets[option] as WithSpringConfig).overshootClamping
+              );
+            }}
+            options={Object.keys(durationPresets)}
+          />
           <Range
             label="Duration"
             min={1}
@@ -130,9 +186,9 @@ export function useSpringPlayground() {
       />
       <Range
         label="Energy threshold"
-        min={1}
-        max={1e-12}
-        // step={0.01}
+        min={1e-12}
+        max={1e-1}
+        step={1e-12}
         value={energyThreshold}
         onChange={setEnergyThreshold}
       />

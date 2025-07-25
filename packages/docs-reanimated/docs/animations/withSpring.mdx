@@ -17,7 +17,7 @@ import SpringBasicSrc from '!!raw-loader!@site/src/examples/SpringBasic';
 import { withSpring } from 'react-native-reanimated';
 
 function App() {
-  sv.value = withSpring(100);
+  sv.value = withSpring(0);
   // ...
 }
 ```
@@ -29,21 +29,21 @@ function App() {
 type AnimatableValue = number | string | number[];
 
 export type SpringConfig = {
-  stiffness?: number;
+  mass?: number;
   overshootClamping?: boolean;
   energyThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
   | {
-      mass?: number;
+      stiffness?: number;
       damping?: number;
       duration?: never;
       dampingRatio?: never;
       clamp?: never;
     }
   | {
-      mass?: never;
+      stiffness?: never;
       damping?: never;
       duration?: number;
       dampingRatio?: number;
@@ -105,11 +105,11 @@ When used together `duration` and `dampingRatio` overrides `stiffness` and `damp
 Available for every spring animation:
 
 | Name                           | Type               | Default               | Description                                                                                                                                   |
-| ------------------------------ | ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ------------------------------ | ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | mass <Optional />              | `number`           | 4                     | The weight of the spring. Reducing this value makes the animation faster.                                                                     |
 | velocity <Optional />          | `number`           | 0                     | Initial velocity applied to the spring equation.                                                                                              |
 | overshootClamping <Optional /> | `boolean`          | false                 | Whether a spring can bounce over the `toValue`.                                                                                               |
-| energyThreshold <Optional />   | `number`           | 6e-9                  | Relative energy threshold below which the sprin will snap without further oscillations.                                                       |     |
+| energyThreshold <Optional />   | `number`           | 6e-9                  | Relative energy threshold below which the spring will snap without further oscillations.                                                      |
 | reduceMotion <Optional />      | `ReduceMotion`     | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.                                  |
 | clamp <Optional />             | `[number, number]` | `undefined`           | Limit of the scope of movement. If your spring would exceed this limit, then `dampingRatio` will be reduced (to make the spring less bouncy). |
 
