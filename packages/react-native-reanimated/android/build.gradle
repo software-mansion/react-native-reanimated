@@ -42,6 +42,28 @@ def resolveReactNativeDirectory() {
     )
 }
 
+def resolveReactNativeWorkletsDirectory() {
+    def reactNativeWorkletsLocation = safeAppExtGet("REACT_NATIVE_WORKLETS_NODE_MODULES_DIR", null)
+    if (reactNativeWorkletsLocation != null) {
+        return file(reactNativeWorkletsLocation)
+    }
+
+    // Fallback to node resolver for custom directory structures like monorepos.
+    def reactNativeWorkletsPackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native-worklets/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
+    if (reactNativeWorkletsPackage.exists()) {
+        return reactNativeWorkletsPackage.parentFile
+    }
+
+    throw new GradleException(
+        "[Reanimated] Unable to resolve react-native-worklets location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_WORKLETS_NODE_MODULES_DIR` with the path to react-native-worklets in node_modules."
+    )
+}
+
 def getReactNativeMinorVersion() {
     def reactNativeRootDir = resolveReactNativeDirectory()
     def reactProperties = new Properties()
@@ -102,6 +124,7 @@ if (isNewArchitectureEnabled()) {
 }
 
 def reactNativeRootDir = resolveReactNativeDirectory()
+def reactNativeWorkletsRootDir = resolveReactNativeWorkletsDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
@@ -181,6 +204,7 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
+                        "-DREACT_NATIVE_WORKLETS_DIR=${toPlatformFileString(reactNativeWorkletsRootDir.path)}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
@@ -324,3 +348,12 @@ dependencies {
 }
 
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
+
+if (project != rootProject) {
+    evaluationDependsOn(":react-native-worklets")
+
+    afterEvaluate {
+        tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
+        tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
+    }
+}
