@@ -12,7 +12,6 @@ import com.facebook.react.module.annotations.ReactModuleList;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.view.ReanimatedViewManager;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +29,6 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
       case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
       default -> null;
     };
-  }
-
-  @Override
-  public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-    return List.of(new ReanimatedViewManager());
   }
 
   @Override
