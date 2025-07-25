@@ -1,21 +1,16 @@
 #include <reanimated/CSS/config/interpolators/registry.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 namespace reanimated::css {
 
 namespace {
 
-ComponentInterpolatorsMap registry_ = [] {
-  ComponentInterpolatorsMap result = {
-      {"View", VIEW_INTERPOLATORS},
-      {"Paragraph", TEXT_INTERPOLATORS},
-      {"Image", IMAGE_INTERPOLATORS},
-  };
-  if constexpr (StaticFeatureFlags::getFlag("UNFINISHED_SVG_CSS_SUPPORT")) {
-    result["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
-  }
-  return result;
-}();
+ComponentInterpolatorsMap registry_ = {
+    // react-native
+    {"View", VIEW_INTERPOLATORS},
+    {"Paragraph", TEXT_INTERPOLATORS},
+    {"Image", IMAGE_INTERPOLATORS},
+    {"RNSVGCircle", SVG_CIRCLE_INTERPOLATORS},
+};
 
 } // namespace
 
