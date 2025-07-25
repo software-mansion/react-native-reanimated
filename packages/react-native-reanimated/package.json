@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.0.0-beta.5",
+  "version": "4.1.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -26,10 +26,10 @@
     "format:android:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/format-cmake.sh",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "find-unused-code:js": "knip",
-    "type:check": "yarn type:check:src && yarn type:check:app && ./scripts/test-ts.sh __typetests__/common",
+    "type:check": "yarn type:check:src && yarn type:check:app && yarn type:check:tests:common",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
-    "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
+    "type:check:tests:common": "../../scripts/test-ts.sh __typetests__/common",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "use-strict-check": "node ../../scripts/validate-use-strict.js",
@@ -166,15 +166,10 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "all",
+    "type": "modules",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
-    },
-    "ios": {
-      "componentProvider": {
-        "ReanimatedView": "ReanimatedView"
-      }
     }
   },
   "sideEffects": [
