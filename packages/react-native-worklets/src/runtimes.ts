@@ -8,7 +8,6 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import type { WorkletRuntimeConfig } from './types/runtimes.types';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -54,31 +53,27 @@ export function createWorkletRuntime(
 ): WorkletRuntime {
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
+  let name;
+  let initializerFn;
   if (typeof nameOrConfig === 'string') {
     logger.warn(
       'createWorkletRuntime(name, initializer) is deprecated. Use createWorkletRuntime({ name, initializer }) instead.'
     );
-
-    return WorkletsModule.createWorkletRuntime(
-      nameOrConfig,
-      makeShareableCloneRecursive(() => {
-        'worklet';
-        setupCallGuard();
-        registerWorkletsError();
-        setupConsole(runtimeBoundCapturableConsole);
-        initializer?.();
-      })
-    );
+    name = nameOrConfig;
+    initializerFn = initializer;
+  } else {
+    name = nameOrConfig.name;
+    initializerFn = nameOrConfig.initializer;
   }
 
   return WorkletsModule.createWorkletRuntime(
-    nameOrConfig.name,
+    name,
     makeShareableCloneRecursive(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      nameOrConfig.initializer?.();
+      initializerFn?.();
     })
   );
 }
@@ -118,3 +113,8 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       })
     );
 }
+
+export type WorkletRuntimeConfig = {
+  name: string;
+  initializer?: () => void;
+};
