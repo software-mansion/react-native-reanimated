@@ -1,3 +1,4 @@
+#include "WorkletRuntime.h"
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
@@ -87,6 +88,15 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+  const auto weakUIRuntime = weak_from_this();
+
+  auto workletRuntimeRef = jsi::Object(rt);
+  workletRuntimeRef.setNativeState(
+      rt, std::make_shared<WeakRuntimeNativeState>(weakUIRuntime));
+
+  rt.global().setProperty(
+      rt, "_WORKLET_RUNTIME_REF", std::move(workletRuntimeRef));
+
 #ifdef WORKLETS_BUNDLE_MODE
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
@@ -151,7 +161,7 @@ void WorkletRuntime::runAsyncGuarded(
 }
 
 jsi::Value WorkletRuntime::executeSync(
-    jsi::Runtime &rt,
+    jsi::Runtime &callerRuntime,
     const jsi::Value &worklet) const {
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
@@ -213,6 +223,25 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
   return result;
+}
+
+UIWorkletRuntime::UIWorkletRuntime(
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
+    : WorkletRuntime(1, jsQueue, "UIWorkletRuntime", true) {}
+
+void UIWorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
+  queue_->push([weakThis = weak_from_this(), shareableWorklet]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto lock =
+        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    strongThis->runGuarded(shareableWorklet);
+  });
 }
 
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
