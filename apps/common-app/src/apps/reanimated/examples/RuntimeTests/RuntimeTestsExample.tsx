@@ -46,6 +46,13 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/shareables/makeShareableClone.test');
             require('./tests/shareables/makeShareableCloneOnUI.test');
+            require('./tests/shareables/isShareableRef.test');
+          },
+        },
+        {
+          testSuiteName: 'runtimes',
+          importTest: () => {
+            require('./tests/runtimes/createWorkletRuntime.test');
           },
         },
         {

@@ -44,22 +44,22 @@ class WorkletRuntime : public jsi::HostObject,
 
   template <typename... Args>
   inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+        rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
   void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
     queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
         return;
       }
 
-      strongThis->runGuarded(shareableWorklet);
+      strongThis->runGuarded(serializableWorklet);
     });
   }
 

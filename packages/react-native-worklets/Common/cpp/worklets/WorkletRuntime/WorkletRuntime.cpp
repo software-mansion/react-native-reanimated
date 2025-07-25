@@ -148,16 +148,16 @@ jsi::Value WorkletRuntime::executeSync(
       supportsLocking_ &&
       ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
           .c_str());
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(shareableWorklet);
-  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  auto result = runGuarded(serializableWorklet);
+  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
   lock.unlock();
-  return shareableResult->toJSValue(rt);
+  return serializableResult->toJSValue(rt);
 }
 
 #ifdef WORKLETS_BUNDLE_MODE
@@ -219,13 +219,13 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
+    const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
-      shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
-  workletRuntime->runAsyncGuarded(shareableWorklet);
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
 } // namespace worklets
