@@ -18,7 +18,9 @@
   },
   "private": true,
   "scripts": {
-    "build": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
+    "build": "husky && yarn build-packages",
+    "build-packages": "yarn workspace react-native-reanimated build",
+    "build-all": "husky && yarn workspaces foreach --all --parallel --topological-dev run build",
     "format": "yarn format:root && yarn format:workspaces",
     "format:root": "prettier --cache --write --list-different --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
@@ -49,6 +51,20 @@
     "typescript": "^5.8.3"
   },
   "resolutions": {
-    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch"
+    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch",
+    "metro@npm:^0.82.0": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:^0.82.2": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:0.82.4": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:0.80.12": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:0.82.1": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:0.82.3": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro@npm:^0.80.3": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
+    "metro-runtime@npm:^0.80.3": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:0.80.12": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:0.82.1": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:0.82.3": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:^0.82.0": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:^0.82.2": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
+    "metro-runtime@npm:0.82.4": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch"
   }
 }

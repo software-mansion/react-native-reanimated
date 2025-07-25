@@ -68,10 +68,6 @@ export type EventPayload<Event extends object> = Event extends {
   ? NativeEvent
   : Omit<Event, 'eventName'>;
 
-export type NativeEventWrapper<Event extends object> = {
-  nativeEvent: Event;
-};
-
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 
 export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;

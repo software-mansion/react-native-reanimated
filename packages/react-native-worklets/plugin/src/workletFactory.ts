@@ -112,11 +112,20 @@ export function makeWorkletFactory(
 
   const { workletName, reactName } = makeWorkletName(fun, state);
 
+  let mutatedClosureVariables;
+  if (state.opts.bundleMode) {
+    mutatedClosureVariables = closureVariables.map((variable) =>
+      cloneNode(variable, true)
+    );
+  } else {
+    mutatedClosureVariables = closureVariables;
+  }
+
   // eslint-disable-next-line prefer-const
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    closureVariables,
+    mutatedClosureVariables,
     workletName,
     transformed.map
   );
@@ -177,16 +186,6 @@ export function makeWorkletFactory(
   if (sourceMapString) {
     initDataObjectExpression.properties.push(
       objectProperty(identifier('sourceMap'), stringLiteral(sourceMapString))
-    );
-  }
-
-  const shouldInjectVersion = !isRelease();
-  if (shouldInjectVersion) {
-    initDataObjectExpression.properties.push(
-      objectProperty(
-        identifier('version'),
-        stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
-      )
     );
   }
 
@@ -257,6 +256,22 @@ export function makeWorkletFactory(
       )
     ),
   ];
+
+  const shouldInjectVersion = !isRelease();
+  if (shouldInjectVersion) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(
+            identifier(reactName),
+            identifier('__pluginVersion')
+          ),
+          stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
+        )
+      )
+    );
+  }
 
   if (shouldIncludeInitData && !state.opts.bundleMode) {
     statements.push(

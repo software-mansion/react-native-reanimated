@@ -34,7 +34,7 @@ function App() {
 
 Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
-You can use [`runOnUI`](/docs/threading/runOnUI) to manually schedule worklet execution on the UI thread:
+You can use [`runOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI) to manually schedule worklet execution on the UI thread:
 
 ```javascript
 function myWorklet() {
@@ -128,7 +128,7 @@ function App() {
 }
 ```
 
-You can run functions on the JS thread from the UI thread with [`runOnJS`](/docs/threading/runOnJS). Most frequently used to call functions that aren't marked with a `'worklet';` directive (i.e. most third-party libraries) or to update the React state.
+You can run functions on the JS thread from the UI thread with [`runOnJS`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS). Most frequently used to call functions that aren't marked with a `'worklet';` directive (i.e. most third-party libraries) or to update the React state.
 
 ```javascript
 import { router } from 'expo-router';
@@ -157,4 +157,4 @@ function App() {
 
 Worklets can run in other runtimes than the one provided by Reanimated. For example [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) and [LiveMarkdown](https://github.com/Expensify/react-native-live-markdown) create their own worklet runtimes.
 
-You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
+You can create your own worklet runtimes with [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime) function.
