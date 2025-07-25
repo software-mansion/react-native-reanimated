@@ -53,8 +53,8 @@ export function createWorkletRuntime(
 ): WorkletRuntime {
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
-  let name;
-  let initializerFn;
+  let name: string;
+  let initializerFn: (() => void) | undefined;
   if (typeof nameOrConfig === 'string') {
     logger.warn(
       'createWorkletRuntime(name, initializer) is deprecated. Use createWorkletRuntime({ name, initializer }) instead.'
