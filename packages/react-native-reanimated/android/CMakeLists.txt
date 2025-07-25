@@ -77,11 +77,17 @@ endif()
 
 add_library(worklets SHARED IMPORTED)
 
-set_target_properties(worklets PROPERTIES IMPORTED_LOCATION "${REACT_NATIVE_WORKLETS_DIR}/android/build/intermediates/cmake/${BUILD_TYPE}/obj/${ANDROID_ABI}/libworklets.so")
+set_target_properties(
+  worklets
+  PROPERTIES
+    IMPORTED_LOCATION
+    "${REACT_NATIVE_WORKLETS_DIR}/android/build/intermediates/cmake/${BUILD_TYPE}/obj/${ANDROID_ABI}/libworklets.so"
+)
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android worklets)
+target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android
+                      worklets)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
   target_link_libraries(reanimated ReactAndroid::reactnative)
