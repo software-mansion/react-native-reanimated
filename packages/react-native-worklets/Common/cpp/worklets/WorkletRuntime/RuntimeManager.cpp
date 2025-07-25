@@ -22,7 +22,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
   return nullptr;
 }
 
-// #ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
     jsi::Runtime *runtime) {
   std::shared_lock lock(weakRuntimesMutex_);
@@ -31,7 +31,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
   }
   return nullptr;
 }
-// #endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE
 
 std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
   std::shared_lock lock(weakRuntimesMutex_);
@@ -96,7 +96,9 @@ void RuntimeManager::registerRuntime(
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
   nameToRuntimeId_[name] = runtimeId;
+#ifdef WORKLETS_BUNDLE_MODE
   runtimeAddressToRuntimeId_[&workletRuntime->getJSIRuntime()] = runtimeId;
+#endif // WORKLETS_BUNDLE_MODE
 };
 
 } // namespace worklets
