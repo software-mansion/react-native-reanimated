@@ -21,10 +21,7 @@ import {
 } from './types';
 import { processWorklet } from './workletSubstitution';
 
-const reanimatedObjectHooks = new Set([
-  'useAnimatedGestureHandler',
-  'useAnimatedScrollHandler',
-]);
+const reanimatedObjectHooks = new Set(['useAnimatedScrollHandler']);
 
 const reanimatedFunctionHooks = new Set([
   'useFrameCallback',
@@ -45,7 +42,6 @@ const reanimatedFunctionHooks = new Set([
 ]);
 
 const reanimatedFunctionArgsToWorkletize = new Map([
-  ['useAnimatedGestureHandler', [0]],
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],

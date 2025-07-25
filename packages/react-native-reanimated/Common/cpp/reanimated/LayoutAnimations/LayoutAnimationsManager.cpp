@@ -59,7 +59,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     if (!getConfigsForType(type).contains(tag)) {
@@ -107,7 +107,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
   enteringAnimationsForNativeID_.erase(nativeId);
 }
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
+std::unordered_map<int, std::shared_ptr<Serializable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
