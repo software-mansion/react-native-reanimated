@@ -15,15 +15,8 @@ import type {
   ShadowNodeWrapper,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export type DependencyList = Array<unknown> | undefined;
-
-export interface Descriptor {
-  tag: number | ReanimatedHTMLElement;
-  shadowNodeWrapper: ShadowNodeWrapper;
-}
 
 export type MaybeObserverCleanup = (() => void) | undefined;
 
@@ -81,16 +74,6 @@ export interface IWorkletEventHandler<Event extends object> {
   ) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
   unregisterFromEvents: (viewTag: number) => void;
-}
-
-export interface AnimatedStyleHandle<
-  Style extends DefaultStyle | AnimatedProps = DefaultStyle,
-> {
-  viewDescriptors: ViewDescriptorsSet;
-  initial: {
-    value: AnimatedStyle<Style>;
-    updater: () => AnimatedStyle<Style>;
-  };
 }
 
 export interface JestAnimatedStyleHandle<

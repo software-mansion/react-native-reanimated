@@ -30,6 +30,7 @@ export { WorkletsModule } from './WorkletsModule';
 export type {
   ShareableRef,
   WorkletFunction,
+  MaybeWorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';

@@ -58,6 +58,11 @@ export type WorkletFunction<
   TReturn = unknown,
 > = ((...args: TArgs) => TReturn) & WorkletProps;
 
+export type MaybeWorkletFunction<
+  TArgs extends unknown[] = unknown[],
+  TReturn = unknown,
+> = ((...args: TArgs) => TReturn) & Partial<WorkletProps>;
+
 export interface WorkletFactory<
   TArgs extends unknown[] = unknown[],
   TReturn = unknown,

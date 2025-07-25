@@ -10,7 +10,6 @@ This will not be easy though!
 import type { StyleProp } from 'react-native';
 
 import type {
-  AnimatedStyle,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
@@ -40,15 +39,15 @@ type PickStyleProps<Props> = Pick<
   }[keyof Props]
 >;
 
+export type OmitStyleProps<Props> = Omit<Props, keyof PickStyleProps<Props>>;
+
 type AnimatedStyleProps<Props extends object> = {
   [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
 /** Component props that are not specially handled by us. */
 type RestProps<Props extends object> = {
-  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
-    | Props[K]
-    | SharedValue<Props[K]>;
+  [K in keyof OmitStyleProps<Props>]: Props[K] | SharedValue<Props[K]>;
 };
 
 type LayoutProps = {
