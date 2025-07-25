@@ -151,9 +151,9 @@ function initializeWorkletRuntime() {
 
       const factory = function (
         _global: unknown,
-        _$$_REQUIRE: unknown,
-        _$$_IMPORT_DEFAULT: unknown,
-        _$$_IMPORT_ALL: unknown,
+        _require: unknown,
+        _importDefault: unknown,
+        _importAll: unknown,
         module: Record<string, unknown>,
         _exports: unknown,
         _dependencyMap: unknown
