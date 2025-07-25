@@ -50,6 +50,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'runtimes',
+          importTest: () => {
+            require('./tests/runtimes/createWorkletRuntime.test');
+          },
+        },
+        {
           testSuiteName: 'run loop',
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
