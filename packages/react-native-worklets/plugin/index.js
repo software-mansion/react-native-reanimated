@@ -1147,10 +1147,7 @@ var require_autoworkletization = __commonJS({
     var referencedWorklets_1 = require_referencedWorklets();
     var types_2 = require_types();
     var workletSubstitution_12 = require_workletSubstitution();
-    var reanimatedObjectHooks = /* @__PURE__ */ new Set([
-      "useAnimatedGestureHandler",
-      "useAnimatedScrollHandler"
-    ]);
+    var reanimatedObjectHooks = /* @__PURE__ */ new Set(["useAnimatedScrollHandler"]);
     var reanimatedFunctionHooks = /* @__PURE__ */ new Set([
       "useFrameCallback",
       "useAnimatedStyle",
@@ -1167,7 +1164,6 @@ var require_autoworkletization = __commonJS({
       "executeOnUIRuntimeSync"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
-      ["useAnimatedGestureHandler", [0]],
       ["useFrameCallback", [0]],
       ["useAnimatedStyle", [0]],
       ["useAnimatedProps", [0]],

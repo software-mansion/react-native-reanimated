@@ -3,6 +3,7 @@
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -42,8 +43,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       script_(script),
       sourceUrl_(sourceUrl),
       runtimeManager_(std::make_shared<RuntimeManager>()),
-      uiWorkletRuntime_(
-          runtimeManager_->createUninitializedUIRuntime(jsQueue_)) {
+      uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(
+          jsQueue_,
+          std::make_shared<AsyncQueueUI>(uiScheduler_))) {
   /**
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.

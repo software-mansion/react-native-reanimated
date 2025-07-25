@@ -13,6 +13,7 @@ export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export type { MakeShareableClone } from './shareables';
 export {
+  isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,

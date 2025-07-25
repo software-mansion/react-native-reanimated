@@ -184,6 +184,10 @@ const config = {
                   test: /\.tsx?$/,
                   use: 'babel-loader',
                 },
+                {
+                  test: /\.js$/,
+                  use: 'babel-loader',
+                },
               ],
             },
             resolve: {

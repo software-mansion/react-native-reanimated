@@ -33,6 +33,12 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
+export function isShareableRef(value: unknown): value is ShareableRef {
+  return (
+    typeof value === 'object' && value !== null && '__shareableRef' in value
+  );
+}
+
 function isPlainJSObject(object: object): object is Record<string, unknown> {
   'worklet';
   return Object.getPrototypeOf(object) === Object.prototype;
@@ -602,7 +608,6 @@ function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
 
 const WORKLET_CODE_THRESHOLD = 255;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getWorkletCode(value: WorkletFunction) {
   const code = value?.__initData?.code;
   if (!code) {

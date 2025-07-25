@@ -3,10 +3,13 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
+#include <react/debug/react_native_assert.h>
 
+#include <worklets/Public/AsyncQueue.h>
 #include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
 #include <string>
@@ -30,7 +33,7 @@ class WorkletRuntime : public jsi::HostObject,
       uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
-      const bool supportsLocking);
+      const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
@@ -40,27 +43,15 @@ class WorkletRuntime : public jsi::HostObject,
 
   template <typename... Args>
   inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+        rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
   void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
-    if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueue>(name_);
-    }
-    queue_->push([=, weakThis = weak_from_this()] {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-
-      strongThis->runGuarded(shareableWorklet);
-    });
-  }
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet);
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
@@ -91,9 +82,6 @@ class WorkletRuntime : public jsi::HostObject,
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
-#ifndef NDEBUG
-  const bool supportsLocking_;
-#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
 };

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <memory>
@@ -17,8 +16,8 @@ class CSSAnimation {
   CSSAnimation(
       jsi::Runtime &rt,
       std::shared_ptr<const ShadowNode> shadowNode,
-      std::string name,
-      const CSSKeyframesConfig &keyframesConfig,
+      std::string animationName,
+      const CSSKeyframesConfig &cssKeyframesConfig,
       const CSSAnimationSettings &settings,
       double timestamp);
 
@@ -47,8 +46,8 @@ class CSSAnimation {
   const std::shared_ptr<const ShadowNode> shadowNode_;
   AnimationFillMode fillMode_;
 
-  std::shared_ptr<AnimationProgressProvider> progressProvider_;
-  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
 };
 
 } // namespace reanimated::css

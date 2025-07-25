@@ -134,4 +134,14 @@ function UseAnimatedPropsTest() {
       </>
     );
   }
+
+  function UseAnimatedPropsTestMultiple1() {
+    const animatedProps1 = useAnimatedProps(() => ({
+      pointerEvents: 'none' as const,
+    }));
+    const animatedProps2 = useAnimatedProps(() => ({
+      pointerEvents: 'auto' as const,
+    }));
+    return <Animated.View animatedProps={[animatedProps1, animatedProps2]} />;
+  }
 }

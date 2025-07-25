@@ -55,7 +55,6 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
@@ -66,25 +65,19 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
-  if (supportsLocking) {
-    return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
-  } else {
-    return jsiRuntime;
-  }
+  return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking)
+    const std::shared_ptr<AsyncQueue> &queue)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
-#ifndef NDEBUG
-      supportsLocking_(supportsLocking),
-#endif // NDEBUG
-      name_(name) {
+      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
@@ -139,23 +132,37 @@ void WorkletRuntime::init(
 #endif // WORKLETS_BUNDLE_MODE
 }
 
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
+  std::string errorMessage =
+      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime \"" +
+      name_ +
+      "\" but the async queue is not set. Recreate the runtime with a valid async queue.";
+  react_native_assert(queue_ != nullptr && errorMessage.c_str());
+
+  queue_->push([=, weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runGuarded(serializableWorklet);
+  });
+}
+
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  react_native_assert(
-      supportsLocking_ &&
-      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
-          .c_str());
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(shareableWorklet);
-  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  auto result = runGuarded(serializableWorklet);
+  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
   lock.unlock();
-  return shareableResult->toJSValue(rt);
+  return serializableResult->toJSValue(rt);
 }
 
 #ifdef WORKLETS_BUNDLE_MODE
@@ -217,13 +224,13 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
+    const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
-      shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
-  workletRuntime->runAsyncGuarded(shareableWorklet);
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
 } // namespace worklets
