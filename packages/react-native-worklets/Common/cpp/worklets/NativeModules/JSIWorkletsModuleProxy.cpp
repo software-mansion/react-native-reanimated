@@ -8,11 +8,12 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-#include <memory>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
+
+#include <memory>
 
 using namespace facebook;
 
@@ -112,7 +113,7 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(
   if (!value.isObject()) {
     return nullptr;
   }
-  auto object = value.asObject(rt);
+  const auto object = value.asObject(rt);
 
   if (!object.hasNativeState(rt)) {
     return nullptr;

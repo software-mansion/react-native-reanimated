@@ -3,6 +3,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
+#include <react/debug/react_native_assert.h>
 
 #include <worklets/Public/AsyncQueue.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -10,7 +11,6 @@
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
-#include <cassert>
 #include <memory>
 #include <string>
 #include <utility>
@@ -52,6 +52,9 @@ class WorkletRuntime : public jsi::HostObject,
 
   void runAsyncGuarded(
       const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
+    react_native_assert(
+        queue_ != nullptr &&
+        "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but the async queue is not set. Recreate the runtime with a valid async queue.");
     queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
