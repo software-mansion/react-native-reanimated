@@ -50,4 +50,11 @@ void AsyncQueueImpl::push(std::function<void()> &&job) {
   state_->cv.notify_one();
 }
 
+AsyncQueueUI::AsyncQueueUI(std::shared_ptr<UIScheduler> uiScheduler)
+    : uiScheduler_(std::move(uiScheduler)) {}
+
+void AsyncQueueUI::push(std::function<void()> &&job) {
+  uiScheduler_->scheduleOnUI(std::move(job));
+}
+
 } // namespace worklets
