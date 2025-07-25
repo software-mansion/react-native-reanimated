@@ -3,6 +3,7 @@
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
+import { initializeNetworking } from './Network';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
@@ -188,6 +189,88 @@ function initializeWorkletRuntime() {
       };
 
       modules.set(ReactNativeModuleId, mod);
+
+      const PolyfillFunctionsId = require.resolveWeak(
+        'react-native/Libraries/Utilities/PolyfillFunctions'
+      );
+
+      const polyfillFactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports.polyfillGlobal = (
+          name: string,
+          getValue: () => unknown
+        ) => {
+          globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+          globalThis[name] = getValue();
+        };
+      };
+
+      const polyfillMod = {
+        dependencyMap: [],
+        factory: polyfillFactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(PolyfillFunctionsId, polyfillMod);
+
+      const TurboModuleRegistryId = require.resolveWeak(
+        'react-native/Libraries/TurboModule/TurboModuleRegistry'
+      );
+
+      const TurboModules = new Map<string, unknown>();
+
+      // globalThis.TurboModules = new Map<string, unknown>();
+      globalThis.TurboModules = TurboModules;
+
+      TurboModules.set('Networking', {});
+
+      const faactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        function get(name: string) {
+          globalThis._log('TurboModuleRegistry get ' + name);
+          return globalThis.TurboModules.get(name);
+        }
+        function getEnforcing(name: string) {
+          globalThis._log('TurboModuleRegistry getEnforcing ' + name);
+          return globalThis.TurboModules.get(name);
+        }
+        module.exports.get = get;
+        module.exports.getEnforcing = getEnforcing;
+      };
+
+      const mood = {
+        dependencyMap: [],
+        factory: faactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(TurboModuleRegistryId, mood);
     }
   }
 }
@@ -250,4 +333,8 @@ function installRNBindingsOnUIRuntime() {
     setupSetImmediate();
     setupSetInterval();
   })();
+
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    executeOnUIRuntimeSync(initializeNetworking)();
+  }
 }

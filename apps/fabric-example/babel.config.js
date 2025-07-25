@@ -20,3 +20,5 @@ module.exports = {
     ],
   ],
 };
+
+// workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],

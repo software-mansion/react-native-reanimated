@@ -11,6 +11,7 @@
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/Tools/Types.h>
 
 #include <memory>
 #include <string>
@@ -28,6 +29,7 @@ class WorkletsModuleProxy
       std::function<bool()> &&isJavaScriptQueue,
       std::function<void(std::function<void(const double)>)>
           &&forwardedRequestAnimationFrame,
+       worklets::forwardedFetch &&forwardedFetch,
       const std::shared_ptr<const BigStringBuffer> &script,
       const std::string &sourceUrl);
 
@@ -72,6 +74,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
+  std::function<void(jsi::Runtime &rt, const jsi::Value &request, const jsi::Value &callback)> forwardedFetch_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
