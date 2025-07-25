@@ -1,35 +1,39 @@
 'use strict';
 import { SHOULD_BE_USE_WEB } from '../common';
-import type { AnimatedPropsAdapterFunction } from '../commonTypes';
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedStyleHandle,
+} from '../commonTypes';
+import type { AnyRecord } from '../css/types';
+import type { OmitStyleProps } from '../helperTypes';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
 
-// TODO: we should make sure that when useAP is used we are not assigning styles
+type AnimatedPropsHandle<Props extends AnyRecord> = AnimatedStyleHandle<
+  OmitStyleProps<Props>
+>;
 
-type UseAnimatedProps = <Props extends object>(
-  updater: () => Partial<Props>,
+type UseAnimatedProps = <Props extends AnyRecord>(
+  updater: () => Partial<OmitStyleProps<Props>>,
   dependencies?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
     | null,
   isAnimatedProps?: boolean
-) => Partial<Props>;
+) => AnimatedPropsHandle<Props>;
 
-function useAnimatedPropsJS<Props extends object>(
-  updater: () => Props,
+function useAnimatedPropsJS<Props extends AnyRecord>(
+  updater: () => Partial<OmitStyleProps<Props>>,
   deps?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
     | null
 ) {
-  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
-    updater,
-    deps,
-    adapters,
-    true
-  );
+  return (
+    useAnimatedStyle as UseAnimatedStyleInternal<Partial<OmitStyleProps<Props>>>
+  )(updater, deps, adapters, true);
 }
 
 const useAnimatedPropsNative = useAnimatedStyle;
@@ -49,5 +53,5 @@ const useAnimatedPropsNative = useAnimatedStyle;
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */
 export const useAnimatedProps: UseAnimatedProps = SHOULD_BE_USE_WEB
-  ? (useAnimatedPropsJS as UseAnimatedProps)
-  : useAnimatedPropsNative;
+  ? useAnimatedPropsJS
+  : (useAnimatedPropsNative as UseAnimatedProps);
