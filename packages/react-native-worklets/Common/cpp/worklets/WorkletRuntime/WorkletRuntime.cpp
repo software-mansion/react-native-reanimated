@@ -132,6 +132,24 @@ void WorkletRuntime::init(
 #endif // WORKLETS_BUNDLE_MODE
 }
 
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
+  std::string errorMessage =
+      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime \"" +
+      name_ +
+      "\" but the async queue is not set. Recreate the runtime with a valid async queue.";
+  react_native_assert(queue_ != nullptr && errorMessage.c_str());
+
+  queue_->push([=, weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runGuarded(serializableWorklet);
+  });
+}
+
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
