@@ -2,7 +2,6 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
-import { logger } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
@@ -56,9 +55,6 @@ export function createWorkletRuntime(
   let name: string;
   let initializerFn: (() => void) | undefined;
   if (typeof nameOrConfig === 'string') {
-    logger.warn(
-      'createWorkletRuntime(name, initializer) is deprecated. Use createWorkletRuntime({ name, initializer }) instead.'
-    );
     name = nameOrConfig;
     initializerFn = initializer;
   } else {
