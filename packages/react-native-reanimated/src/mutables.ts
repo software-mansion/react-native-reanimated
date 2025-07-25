@@ -1,7 +1,9 @@
 'use strict';
+import type { SynchronizableRef } from 'react-native-worklets';
 import {
   executeOnUIRuntimeSync,
   makeShareableCloneRecursive,
+  makeSynchronizable,
   runOnUI,
   shareableMappingCache,
 } from 'react-native-worklets';
@@ -94,10 +96,14 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   });
 }
 
-export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
+export function makeMutableUI<Value>(
+  initial: Value,
+  isDirtySynchronizable?: SynchronizableRef<number>
+): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
+  let isDirty = false;
 
   const mutable: PartialMutable<Value> = {
     get value() {
@@ -114,6 +120,10 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
       listeners.forEach((listener) => {
         listener(newValue);
       });
+      if (isDirtySynchronizable && !isDirty && value !== initial) {
+        isDirty = true;
+        isDirtySynchronizable.setBlocking(1);
+      }
     },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
@@ -140,20 +150,26 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
+  const isDirtySynchronizable = makeSynchronizable(0);
+
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial);
+      return makeMutableUI(initial, isDirtySynchronizable);
     },
   });
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
-      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        return sv.value;
-      });
-      return uiValueGetter(mutable as Mutable<Value>);
+      if (isDirtySynchronizable.getBlocking()) {
+        const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+          return sv.value;
+        });
+        return uiValueGetter(mutable as Mutable<Value>);
+      } else {
+        return initial;
+      }
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
