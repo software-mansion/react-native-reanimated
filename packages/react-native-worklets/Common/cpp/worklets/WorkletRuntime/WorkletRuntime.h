@@ -33,7 +33,6 @@ class WorkletRuntime : public jsi::HostObject,
       uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
-      const bool supportsLocking,
       const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
@@ -92,9 +91,6 @@ class WorkletRuntime : public jsi::HostObject,
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
-#ifndef NDEBUG
-  const bool supportsLocking_;
-#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
 };
