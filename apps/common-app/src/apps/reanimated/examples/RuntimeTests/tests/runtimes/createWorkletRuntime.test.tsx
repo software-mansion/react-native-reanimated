@@ -32,9 +32,9 @@ describe('createWorkletRuntime', () => {
       name: 'test',
       initializer,
     });
+    await waitForNotify(INITIALIZER_CALLED_NOTIFICATION);
 
     // Assert
-    await waitForNotify(INITIALIZER_CALLED_NOTIFICATION);
     expect(initializerCalled).toBe(true);
     expect(runtime.name).toBe('test');
     expect(runtime.toString()).toBe('[WorkletRuntime "test"]');
