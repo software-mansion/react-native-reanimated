@@ -13,8 +13,6 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <memory>
-
 using namespace facebook;
 
 namespace worklets {
