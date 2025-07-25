@@ -26,7 +26,7 @@
     "prettier": "^3.3.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.13.0"
   },
   "installConfig": {
     "hoistingLimits": "workspaces",
