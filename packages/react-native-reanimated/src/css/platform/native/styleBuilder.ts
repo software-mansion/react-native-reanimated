@@ -1,5 +1,5 @@
 'use strict';
-import { UNFINISHED_SVG_CSS_SUPPORT } from '../../../featureFlags/staticFlags.json';
+import { UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS } from '../../../featureFlags/staticFlags.json';
 import { BASE_PROPERTIES_CONFIG } from './configs';
 import { SVG_CIRCLE_PROPERTIES_CONFIG } from './configs/svg';
 import { createStyleBuilder } from './style';
@@ -9,7 +9,7 @@ const STYLE_BUILDERS = {
   base: createStyleBuilder(BASE_PROPERTIES_CONFIG, {
     separatelyInterpolatedArrayProperties: ['transformOrigin', 'boxShadow'],
   }),
-  ...(UNFINISHED_SVG_CSS_SUPPORT && {
+  ...(UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS && {
     // react-native-svg
     RNSVGCircle: createStyleBuilder(SVG_CIRCLE_PROPERTIES_CONFIG),
   }),

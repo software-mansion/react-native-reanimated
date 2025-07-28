@@ -11,7 +11,8 @@ ComponentInterpolatorsMap registry_ = [] {
       {"Paragraph", TEXT_INTERPOLATORS},
       {"Image", IMAGE_INTERPOLATORS},
   };
-  if constexpr (StaticFeatureFlags::getFlag("UNFINISHED_SVG_CSS_SUPPORT")) {
+  if constexpr (StaticFeatureFlags::getFlag(
+                    "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     result["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
   }
   return result;
