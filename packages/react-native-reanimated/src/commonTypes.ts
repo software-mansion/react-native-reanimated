@@ -1,15 +1,12 @@
 'use strict';
 
-import type {
-  ImageStyle,
-  TextStyle,
-  TransformsStyle,
-  ViewStyle,
-} from 'react-native';
+import type { TextStyle, TransformsStyle, ViewStyle } from 'react-native';
 import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { CSSStyle } from './css';
+import type { AnyRecord, PlainStyle } from './css/types';
 import type { EasingFunctionFactory } from './Easing';
+import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -430,22 +427,30 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
+export type Descriptor = {
+  tag: number | ReanimatedHTMLElement;
+  shadowNodeWrapper: ShadowNodeWrapper;
+};
 
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>;
+export type ViewDescriptorsSet = {
+  shareableViewDescriptors: SharedValue<Descriptor[]>;
+  add: (item: Descriptor) => void;
+  remove: (viewTag: number) => void;
+};
+
+export type AnimatedStyleHandle<Style extends AnyRecord = PlainStyle> = {
+  viewDescriptors: ViewDescriptorsSet;
+  initial: {
+    value: Style;
+    updater: () => Style;
+  };
+};
+
+export type AnimatedComponentStyle<Style extends AnyRecord = PlainStyle> =
+  | CSSStyle<Style> // static js style
+  | MaybeSharedValueRecursive<Style> // inline style (with inlined shared values)
+  | AnimatedStyleHandle<Style>; // animated style (created with useAnimatedStyle)
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
-
-/** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
-
-/** @deprecated This type is no longer relevant. */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;
