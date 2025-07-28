@@ -3,6 +3,7 @@ import { Dimensions, Text } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
@@ -10,8 +11,8 @@ const { width } = Dimensions.get('window');
 const size = 50;
 
 type ButtonProps = {
-  progress: Animated.SharedValue<number>;
-  y: Animated.SharedValue<number>;
+  progress: SharedValue<number>;
+  y: SharedValue<number>;
 };
 
 export default function LiquidButton({ progress, y }: ButtonProps) {

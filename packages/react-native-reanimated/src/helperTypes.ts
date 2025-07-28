@@ -7,14 +7,13 @@ until time comes to refactor the code and get necessary types right.
 This will not be easy though! 
 */
 
-import type { RegisteredStyle, StyleProp } from 'react-native';
+import type { StyleProp } from 'react-native';
 
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
-  TransformArrayItem,
 } from './commonTypes';
 import type { AddArrayPropertyType } from './css/types';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
@@ -104,25 +103,3 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
   };
 
 // THE LAND OF THE DEPRECATED
-
-/** @deprecated This type is no longer relevant. */
-export type Adaptable<T> =
-  | T
-  | ReadonlyArray<T | ReadonlyArray<T>>
-  | SharedValue<T>;
-
-/** @deprecated This type is no longer relevant. */
-export type AdaptTransforms<T> = {
-  [P in keyof T]: Adaptable<T[P]>;
-};
-
-/** @deprecated Please use {@link TransformArrayItem} type instead. */
-export type TransformStyleTypes = TransformArrayItem;
-
-/** @deprecated This type is no longer relevant. */
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
-/** @deprecated Please use {@link AnimatedProps} type instead. */
-export type AnimateProps<Props extends object> = AnimatedProps<Props>;
