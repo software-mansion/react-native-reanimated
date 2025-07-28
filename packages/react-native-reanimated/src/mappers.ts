@@ -1,15 +1,13 @@
 'use strict';
 import { runOnUI } from 'react-native-worklets';
 
+import { IS_JEST } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
   SharedValue,
 } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
-import { isJest } from './PlatformChecker';
-
-const IS_JEST = isJest();
 
 type MapperExtractedInputs = SharedValue[];
 
@@ -144,7 +142,9 @@ function createMapperRegistry() {
   ): MapperExtractedInputs {
     if (Array.isArray(inputs)) {
       for (const input of inputs) {
-        input && extractInputs(input, resultArray);
+        if (input) {
+          extractInputs(input, resultArray);
+        }
       }
     } else if (isSharedValue(inputs)) {
       resultArray.push(inputs);
@@ -153,7 +153,9 @@ function createMapperRegistry() {
       // is of a derivative class (e.g. HostObject on web, or Map) we don't scan
       // it recursively
       for (const element of Object.values(inputs as Record<string, unknown>)) {
-        element && extractInputs(element, resultArray);
+        if (element) {
+          extractInputs(element, resultArray);
+        }
       }
     }
     return resultArray;

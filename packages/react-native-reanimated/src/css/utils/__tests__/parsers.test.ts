@@ -1,5 +1,5 @@
 'use strict';
-import { parseBoxShadowString } from '../parsers';
+import { parseBoxShadowString } from '../../../common';
 
 describe(parseBoxShadowString, () => {
   describe('correct number of shadows', () => {

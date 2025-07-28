@@ -18,7 +18,7 @@ export type ScrollProps = {
 export default function Scroll({
   children,
   contentContainerStyle,
-  fill = true,
+  fill = false,
   horizontal,
   noPadding = false,
   style,

@@ -20,7 +20,7 @@ With Reanimated, you can easily create smooth animations and interactions that r
 Reanimated 4.x works only with [the React Native New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page).
 If your app still uses the old architecture, you can use Reanimated in version 3 which is still actively maintained.
 
-Alternatively, you can dive into [our examples](https://github.com/software-mansion/react-native-reanimated/tree/3.14.0/apps/common-app/src/examples) on GitHub.
+Alternatively, you can dive into [our examples](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/common-app/src/apps) on GitHub.
 
 ## Installation
 
@@ -28,18 +28,38 @@ It takes two steps to add Reanimated 4 to an Expo project:
 
 ### Step 1: Install the package
 
-Install `react-native-reanimated@next` package from npm:
+Install `react-native-reanimated` and `react-native-worklets` packages from npm:
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-
-    npm install react-native-reanimated@next
+    ```bash
+    npm install react-native-reanimated
+    ```
 
   </TabItem>
   <TabItem value="yarn" label="YARN">
+    ```bash
+    yarn add react-native-reanimated
+    ```
 
-    yarn add react-native-reanimated@next
+  </TabItem>
+</Tabs>
 
+#### Dependencies
+
+This library requires an installation of the `react-native-worklets` dependency. It was separated from `react-native-reanimated` for better modularity and must be installed separately.
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+    {/* TODO - add information about the necessity to specify a proper version of the library compatible with reanimated */}
+    ```bash
+    npm install react-native-worklets
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+    ```bash
+    yarn add react-native-worklets
+    ```
   </TabItem>
 </Tabs>
 
@@ -49,14 +69,14 @@ Run prebuild to update the native code in the `ios` and `android` directories.
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-
+    ```bash
     npx expo prebuild
-
+    ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-
+    ```bash
     yarn expo prebuild
-
+    ```
   </TabItem>
 </Tabs>
 
@@ -64,7 +84,7 @@ And that's it! Reanimated 4 is now configured in your Expo project.
 
 ### React Native Community CLI
 
-When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-reanimated/plugin` plugin to your `babel.config.js`.
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
   module.exports = {
@@ -73,14 +93,14 @@ When using [React Native Community CLI](https://github.com/react-native-communit
     ],
     plugins: [
       ...
-      'react-native-reanimated/plugin',
+      'react-native-worklets/plugin',
     ],
   };
 ```
 
 :::caution
 
-`react-native-reanimated/plugin` has to be listed last.
+`react-native-worklets/plugin` has to be listed last.
 
 :::
 
@@ -99,14 +119,14 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fund
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-
+    ```bash
     npm start -- --reset-cache
-
+    ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-
+    ```bash
     yarn start --reset-cache
-
+    ```
   </TabItem>
 </Tabs>
 
@@ -130,14 +150,14 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-
+    ```bash
     npm install @babel/plugin-proposal-export-namespace-from
-
+    ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-
+    ```bash
     yarn add @babel/plugin-proposal-export-namespace-from
-
+    ```
   </TabItem>
 </Tabs>
 
@@ -149,11 +169,11 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          'react-native-reanimated/plugin',
+          'react-native-worklets/plugin',
       ],
   };
 ```
 
-Make sure to list `react-native-reanimated/plugin` last.
+Make sure to list `react-native-worklets/plugin` last.
 
 More advanced use cases such as running Reanimated with `webpack` or with `Next.js` are explained in a separate [Web Support](/docs/guides/web-support) guide.

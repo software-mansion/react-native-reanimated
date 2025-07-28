@@ -441,11 +441,3 @@ export type AnimatedStyle<Style = DefaultStyle> =
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
-
-/** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
-
-/** @deprecated This type is no longer relevant. */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;

@@ -184,5 +184,8 @@ describe('colors interpolation', () => {
 
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+
+    const rendered = render(<TestComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

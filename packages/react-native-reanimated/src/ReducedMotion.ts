@@ -1,12 +1,12 @@
 'use strict';
+import { IS_WEB, IS_WINDOW_AVAILABLE } from './common';
 import { makeMutable } from './mutables';
-import { isWeb, isWindowAvailable } from './PlatformChecker';
 
 type localGlobal = typeof global & Record<string, unknown>;
 
 export function isReducedMotionEnabledInSystem() {
-  return isWeb()
-    ? isWindowAvailable()
+  return IS_WEB
+    ? IS_WINDOW_AVAILABLE
       ? // @ts-ignore Fallback if `window` is undefined.
         window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false

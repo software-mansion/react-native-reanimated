@@ -73,6 +73,8 @@ describe('Tests of animations', () => {
     jest.advanceTimersByTime(600);
     style.width = 100;
     expect(view).toHaveAnimatedStyle(style);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, get animated style', () => {
@@ -83,6 +85,8 @@ describe('Tests of animations', () => {
     jest.advanceTimersByTime(600);
     const style = getAnimatedStyle(view);
     expect(style.width).toBe(100);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, width in a middle of animation', () => {
@@ -100,6 +104,8 @@ describe('Tests of animations', () => {
 
     style.width = 50; // value of component width after 150ms of animation
     expect(view).toHaveAnimatedStyle(style);
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, compare all styles', () => {
@@ -113,6 +119,8 @@ describe('Tests of animations', () => {
     jest.advanceTimersByTime(250);
     style.width = 50; // value of component width after 250ms of animation
     expect(view).toHaveAnimatedStyle(style, { shouldMatchAllProps: true });
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, define shared value outside component', () => {
@@ -130,6 +138,11 @@ describe('Tests of animations', () => {
     fireEvent.press(button);
     jest.advanceTimersByTime(600);
     expect(view).toHaveAnimatedStyle({ width: 100 });
+    const rendered = render(
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
+      <AnimatedSharedValueComponent sharedValue={sharedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('withTiming animation, change shared value outside component', () => {
@@ -146,5 +159,10 @@ describe('Tests of animations', () => {
     sharedValue.value = 50;
     jest.advanceTimersByTime(600);
     expect(view).toHaveAnimatedStyle({ width: 50 });
+    const rendered = render(
+      // @ts-expect-error TypeScript doesn't understand that renderHook defined sharedValue;
+      <AnimatedSharedValueComponent sharedValue={sharedValue} />
+    ).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

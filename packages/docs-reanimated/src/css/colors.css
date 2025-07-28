@@ -291,6 +291,11 @@
   --swm-compatibility-supported-background: var(--swm-green-light-80);
   --swm-compatibility-not-supported-background: var(--swm-red-light-80);
   --swm-compatibility-text-color: var(--swm-white);
+
+  /* App.js 2025 */
+  --swm-appjs-2025-primary: #484dfc;
+  --swm-appjs-2025-primary-hover: #7189ff;
+  --swm-appjs-2025-background: #f7eded;
 }
 
 :root[data-theme='dark'] {

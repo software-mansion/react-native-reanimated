@@ -5,6 +5,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <utility>
 #include <vector>
 
 namespace worklets {
@@ -22,12 +23,12 @@ static inline double performanceNow() {
 
 static inline std::vector<jsi::Value> parseArgs(
     jsi::Runtime &rt,
-    std::shared_ptr<ShareableArray> shareableArgs) {
-  if (shareableArgs == nullptr) {
+    std::shared_ptr<SerializableArray> serializableArgs) {
+  if (serializableArgs == nullptr) {
     return {};
   }
 
-  auto argsArray = shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
+  auto argsArray = serializableArgs->toJSValue(rt).asObject(rt).asArray(rt);
   auto argsSize = argsArray.size(rt);
   std::vector<jsi::Value> result(argsSize);
   for (size_t i = 0; i < argsSize; i++) {
@@ -39,7 +40,9 @@ static inline std::vector<jsi::Value> parseArgs(
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
-    const std::shared_ptr<JSScheduler> &jsScheduler) {
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const bool isDevBundle,
+    jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -50,6 +53,11 @@ void WorkletRuntimeDecorator::decorate(
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
   rt.global().setProperty(rt, "_IS_FABRIC", true);
+
+  rt.global().setProperty(rt, "__DEV__", isDevBundle);
+
+  rt.global().setProperty(
+      rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
@@ -91,8 +99,93 @@ void WorkletRuntimeDecorator::decorate(
          const jsi::Value &value,
          const jsi::Value &nativeStateSource) {
         auto shouldRetainRemote = jsi::Value::undefined();
-        return makeShareableClone(
+        return makeSerializableClone(
             rt, value, shouldRetainRemote, nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableHostObject",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableHostObject(
+            rt, value.asObject(rt).asHostObject(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableString",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableString(rt, value.asString(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableNumber",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableNumber(rt, value.asNumber());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBoolean",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableBoolean(rt, value.asBool());
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableBigInt",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableBigInt(rt, value.asBigInt(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableUndefined", [](jsi::Runtime &rt) {
+        return makeSerializableUndefined(rt);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableArray(rt, value.asObject(rt).asArray(rt), false);
+      });
+
+  jsi_utils::installJsiFunction(rt, "_makeShareableNull", [](jsi::Runtime &rt) {
+    return makeSerializableNull(rt);
+  });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableObject",
+      [](jsi::Runtime &rt,
+         const jsi::Value &value,
+         const jsi::Value &shouldRetainRemote,
+         const jsi::Value &nativeStateSource) {
+        return makeSerializableObject(
+            rt,
+            value.getObject(rt),
+            shouldRetainRemote.getBool(),
+            nativeStateSource);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableWorklet",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableWorklet(rt, value.asObject(rt), false);
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableInitializer",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableInitializer(rt, value.asObject(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_makeShareableFunction",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
       });
 
   jsi_utils::installJsiFunction(
@@ -102,25 +195,25 @@ void WorkletRuntimeDecorator::decorate(
           jsi::Runtime &rt,
           const jsi::Value &funValue,
           const jsi::Value &argsValue) {
-        auto shareableRemoteFun = extractShareableOrThrow<
-            ShareableRemoteFunction>(
+        auto serializableRemoteFun = extractSerializableOrThrow<
+            SerializableRemoteFunction>(
             rt,
             funValue,
             "[Worklets] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
 
-        auto shareableArgs = argsValue.isUndefined()
+        auto serializableArgs = argsValue.isUndefined()
             ? nullptr
-            : extractShareableOrThrow<ShareableArray>(
+            : extractSerializableOrThrow<SerializableArray>(
                   rt, argsValue, "[Worklets] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
           auto fun =
-              shareableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
-          if (shareableArgs == nullptr) {
+              serializableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
+          if (serializableArgs == nullptr) {
             // fast path for remote function w/o arguments
             fun.call(rt);
           } else {
-            auto args = parseArgs(rt, shareableArgs);
+            auto args = parseArgs(rt, serializableArgs);
             fun.call(
                 rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
@@ -137,13 +230,13 @@ void WorkletRuntimeDecorator::decorate(
         auto hostFun =
             hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
 
-        auto shareableArgs = argsValue.isUndefined()
+        auto serializableArgs = argsValue.isUndefined()
             ? nullptr
-            : extractShareableOrThrow<ShareableArray>(
+            : extractSerializableOrThrow<SerializableArray>(
                   rt, argsValue, "[Worklets] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto args = parseArgs(rt, shareableArgs);
+          auto args = parseArgs(rt, serializableArgs);
           hostFun(
               rt,
               jsi::Value::undefined(),
@@ -157,8 +250,8 @@ void WorkletRuntimeDecorator::decorate(
       "_scheduleOnRuntime",
       [](jsi::Runtime &rt,
          const jsi::Value &workletRuntimeValue,
-         const jsi::Value &shareableWorkletValue) {
-        scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
+         const jsi::Value &serializableWorkletValue) {
+        scheduleOnRuntime(rt, workletRuntimeValue, serializableWorkletValue);
       });
 
   jsi::Object performance(rt);

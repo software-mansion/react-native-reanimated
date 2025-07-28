@@ -1,13 +1,34 @@
 'use strict';
 
-import { createCustomError, registerCustomError } from './errors';
+function WorkletsErrorConstructor(message?: string): WorkletsError {
+  'worklet';
+  const prefix = '[Worklets]';
 
-export const WorkletsError = createCustomError('Worklets');
+  // eslint-disable-next-line reanimated/use-worklets-error
+  const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
+  errorInstance.name = `WorkletsError`;
+  return errorInstance as WorkletsError;
+}
 
-// To capture it in a the registering worklet's closure.
-const WorkletsErrorConstructor = WorkletsError;
-
+/**
+ * Registers WorkletsError in the global scope. Register only for Worklet
+ * runtimes.
+ */
 export function registerWorkletsError() {
   'worklet';
-  registerCustomError(WorkletsErrorConstructor, 'Worklets');
+  if (globalThis._WORKLET) {
+    globalThis.WorkletsError =
+      WorkletsErrorConstructor as IWorkletsErrorConstructor;
+  }
+}
+
+export const WorkletsError =
+  WorkletsErrorConstructor as IWorkletsErrorConstructor;
+
+export type WorkletsError = Error & { name: 'Worklets' }; // signed type
+
+export interface IWorkletsErrorConstructor extends Error {
+  new (message?: string): WorkletsError;
+  (message?: string): WorkletsError;
+  readonly prototype: WorkletsError;
 }

@@ -1,6 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
+import { logger } from '../../../common';
 import type { Percentage } from '../../types';
 import { ERROR_MESSAGES, LinearEasing, WARN_MESSAGES } from '../linear';
 import type { ControlPoint } from '../types';
@@ -114,6 +113,34 @@ describe(LinearEasing, () => {
           2,
           WARN_MESSAGES.inputProgressLessThanPrecedingPoint(0.7, 0.9)
         );
+      });
+
+      it('spaces points evenly on the x axis between 2 known points', () => {
+        const easing = new LinearEasing([
+          0,
+          [0.5, '20%'],
+          0.4,
+          0.6,
+          0.2,
+          [0.1, '80%'],
+          1,
+        ]);
+
+        // These floating point numbers with many zeros are the result of
+        // the precision loss during calculations.
+        expect(easing.normalize().points).toEqual([
+          { x: 0, y: 0 },
+          { x: 0.2, y: 0.5 },
+          // x +0.15
+          { x: 0.35000000000000003, y: 0.4 },
+          // x +0.15
+          { x: 0.5, y: 0.6 },
+          // x +0.15
+          { x: 0.6500000000000001, y: 0.2 },
+          // x +0.15
+          { x: 0.8, y: 0.1 },
+          { x: 1, y: 1 },
+        ]);
       });
     });
   });

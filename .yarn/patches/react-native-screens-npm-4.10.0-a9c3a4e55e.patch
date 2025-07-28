@@ -1,0 +1,170 @@
+diff --git a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
+index 4772f7c59a8ed0a47208264392f0b79e2877bdae..d974788f05fcfd61d610cd8cd31fb3635d919529 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
+@@ -3,11 +3,11 @@ package com.swmansion.rnscreens
+ import android.annotation.SuppressLint
+ import android.content.Context
+ import android.os.Build
++import android.view.Choreographer
+ import android.view.WindowInsets
+ import android.view.WindowManager
+ import androidx.appcompat.widget.Toolbar
+ import androidx.core.view.WindowInsetsCompat
+-import com.facebook.react.modules.core.ChoreographerCompat
+ import com.facebook.react.modules.core.ReactChoreographer
+ import com.facebook.react.uimanager.ThemedReactContext
+ import com.swmansion.rnscreens.utils.InsetsCompat
+@@ -38,18 +38,16 @@ open class CustomToolbar(
+     private var isForceShadowStateUpdateOnLayoutRequested = false
+ 
+     private var isLayoutEnqueued = false
+-    private val layoutCallback: ChoreographerCompat.FrameCallback =
+-        object : ChoreographerCompat.FrameCallback() {
+-            override fun doFrame(frameTimeNanos: Long) {
+-                isLayoutEnqueued = false
+-                // The following measure specs are selected to work only with Android APIs <= 29.
+-                // See https://github.com/software-mansion/react-native-screens/pull/2439
+-                measure(
+-                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
+-                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
+-                )
+-                layout(left, top, right, bottom)
+-            }
++    private val layoutCallback: Choreographer.FrameCallback =
++        Choreographer.FrameCallback {
++            isLayoutEnqueued = false
++            // The following measure specs are selected to work only with Android APIs <= 29.
++            // See https://github.com/software-mansion/react-native-screens/pull/2439
++            measure(
++                MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
++                MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
++            )
++            layout(left, top, right, bottom)
+         }
+ 
+     override fun requestLayout() {
+diff --git a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+index a275bc9b45c4d4a615d83f4a18d14c7e6d8a3784..efbe5fb1d3a89eba8f3ca1a25eb1e3295844cd9f 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+@@ -2,6 +2,7 @@ package com.swmansion.rnscreens
+ 
+ import android.content.Context
+ import android.content.ContextWrapper
++import android.view.Choreographer
+ import android.view.View
+ import android.view.ViewGroup
+ import android.view.ViewParent
+@@ -12,7 +13,6 @@ import androidx.fragment.app.FragmentManager
+ import androidx.fragment.app.FragmentTransaction
+ import com.facebook.react.ReactRootView
+ import com.facebook.react.bridge.ReactContext
+-import com.facebook.react.modules.core.ChoreographerCompat
+ import com.facebook.react.modules.core.ReactChoreographer
+ import com.facebook.react.uimanager.ThemedReactContext
+ import com.facebook.react.uimanager.UIManagerHelper
+@@ -30,16 +30,14 @@ open class ScreenContainer(
+     private var isAttached = false
+     private var needsUpdate = false
+     private var isLayoutEnqueued = false
+-    private val layoutCallback: ChoreographerCompat.FrameCallback =
+-        object : ChoreographerCompat.FrameCallback() {
+-            override fun doFrame(frameTimeNanos: Long) {
+-                isLayoutEnqueued = false
+-                measure(
+-                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+-                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
+-                )
+-                layout(left, top, right, bottom)
+-            }
++    private val layoutCallback: Choreographer.FrameCallback =
++        Choreographer.FrameCallback {
++            isLayoutEnqueued = false
++            measure(
++                MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
++                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
++            )
++            layout(left, top, right, bottom)
+         }
+     private var parentScreenWrapper: ScreenFragmentWrapper? = null
+ 
+diff --git a/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt b/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
+index 3889c2f362cf6198822570662c2e18f0f7be82b2..dbaabf7335da5db5c511dc004e820cc042dfa702 100644
+--- a/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
++++ b/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
+@@ -71,16 +71,6 @@ open class ScreenViewManager :
+         super.removeViewAt(parent, index)
+     }
+ 
+-    override fun removeView(
+-        parent: Screen,
+-        view: View,
+-    ) {
+-        super.removeView(parent, view)
+-        if (view is ScreenFooter) {
+-            parent.footer = null
+-        }
+-    }
+-
+     override fun updateState(
+         view: Screen,
+         props: ReactStylesDiffMap?,
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 8481d2125f37e81e65f1e94b9b10a210813fdecd..daf768ff46b4bc32cc903978ec96c1df92f7e22b 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -1364,13 +1364,6 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenCls(void)
+-{
+-  return RNSScreenView.class;
+-}
+-#endif
+-
+ #pragma mark - RNSScreen
+ 
+ @implementation RNSScreen {
+@@ -2136,3 +2129,10 @@ RCT_ENUM_CONVERTER(
+ #endif
+ 
+ @end
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenCls(void)
++{
++  return RNSScreenView.class;
++}
++#endif
+diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
+index 0c5b76b68f589e95365176d6201b71de4948ffec..78ad762b9bc68fb2bcba8c6edb6038fa6f43102a 100644
+--- a/ios/RNSScreenStackHeaderConfig.mm
++++ b/ios/RNSScreenStackHeaderConfig.mm
+@@ -1138,13 +1138,6 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
+ #endif
+ @end
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
+-{
+-  return RNSScreenStackHeaderConfig.class;
+-}
+-#endif
+-
+ @implementation RNSScreenStackHeaderConfigManager
+ 
+ RCT_EXPORT_MODULE()
+@@ -1299,3 +1292,10 @@ RCT_ENUM_CONVERTER(
+ RCT_ENUM_CONVERTER(RNSBlurEffectStyle, ([self blurEffectsForIOSVersion]), RNSBlurEffectStyleNone, integerValue)
+ 
+ @end
++
++#ifdef RCT_NEW_ARCH_ENABLED
++Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
++{
++  return RNSScreenStackHeaderConfig.class;
++}
++#endif

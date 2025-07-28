@@ -15,7 +15,7 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 
 void CSSAnimationsRegistry::apply(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::optional<std::vector<std::string>> &animationNames,
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
@@ -83,7 +83,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
 
 CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::optional<std::vector<std::string>> &animationNames,
     const std::optional<CSSAnimationsMap> &newAnimations) const {
   const auto registryIt = registry_.find(shadowNode->getTag());
@@ -173,7 +173,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const double timestamp,
     const bool addToBatch) {
   folly::dynamic result = folly::dynamic::object;
-  ShadowNode::Shared shadowNode = nullptr;
+  std::shared_ptr<const ShadowNode> shadowNode = nullptr;
   bool hasUpdates = false;
 
   for (const auto animationIndex : animationIndices) {
@@ -267,22 +267,23 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
   }
 
   folly::dynamic updatedStyle = folly::dynamic::object;
-  ShadowNode::Shared shadowNode = nullptr;
+  std::shared_ptr<const ShadowNode> shadowNode = nullptr;
 
   for (const auto &animation : it->second.animationsVector) {
     const auto startTimestamp = animation->getStartTimestamp(timestamp);
 
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
-    if (currentState == AnimationProgressState::Finished) {
-      if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardsFillStyle();
-      }
-    } else if (
-        startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+    if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
       style = animation->getBackwardsFillStyle();
-    } else if (currentState != AnimationProgressState::Pending) {
+    } else if (
+        currentState == AnimationProgressState::Running ||
+        // Animation is paused after start (was running before)
+        (currentState == AnimationProgressState::Paused &&
+         timestamp >= animation->getStartTimestamp(timestamp)) ||
+        // Animation is finished and has fill forwards fill mode
+        (currentState == AnimationProgressState::Finished &&
+         animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();
     }
 

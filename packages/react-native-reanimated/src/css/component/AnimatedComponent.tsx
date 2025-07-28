@@ -1,27 +1,22 @@
 'use strict';
-import type { ComponentProps, MutableRefObject, Ref } from 'react';
-import React, { Component } from 'react';
+import type { ComponentProps, Ref } from 'react';
+import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_JEST = isJest();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -66,8 +61,8 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
     let DOMElement: HTMLElement | null = null;
+    let viewName: string | undefined;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
@@ -75,8 +70,6 @@ export default class AnimatedComponent<
       // TODO - implement a valid solution later on - this is a temporary fix
       viewTag = this._componentRef;
       DOMElement = this._componentDOMRef;
-      shadowNodeWrapper = null;
-      viewConfig = null;
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
@@ -91,11 +84,11 @@ export default class AnimatedComponent<
       }
 
       const viewInfo = getViewInfo(hostInstance);
-      viewTag = viewInfo.viewTag;
-      viewConfig = viewInfo.viewConfig;
+      viewTag = viewInfo.viewTag ?? -1;
+      viewName = viewInfo.viewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
+    this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }
@@ -103,24 +96,28 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  _setComponentRef = setAndForwardRef<Component | HTMLElement>({
-    getForwardedRef: () =>
-      this.props.forwardedRef as MutableRefObject<
-        Component<Record<string, unknown>, Record<string, unknown>, unknown>
-      >,
-    setLocalRef: (ref) => {
-      if (!ref) {
-        // component has been unmounted
-        return;
-      }
-      if (ref !== this._componentRef) {
-        this._componentRef = this._resolveComponentRef(ref);
-        // if ref is changed, reset viewInfo
-        this._viewInfo = undefined;
-      }
-      this._onSetLocalRef();
-    },
-  });
+  _setComponentRef = (ref: Component | HTMLElement) => {
+    const forwardedRef = this.props.forwardedRef;
+    // Forward to user ref prop (if one has been specified)
+    if (typeof forwardedRef === 'function') {
+      // Handle function-based refs. String-based refs are handled as functions.
+      forwardedRef(ref);
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
+      // Handle createRef-based refs
+      forwardedRef.current = ref;
+    }
+
+    if (!ref) {
+      // component has been unmounted
+      return;
+    }
+    if (ref !== this._componentRef) {
+      this._componentRef = this._resolveComponentRef(ref);
+      // if ref is changed, reset viewInfo
+      this._viewInfo = undefined;
+    }
+    this._onSetLocalRef();
+  };
 
   _resolveComponentRef = (ref: Component | HTMLElement | null) => {
     const componentRef = ref as AnimatedComponentRef;
@@ -176,6 +173,7 @@ export default class AnimatedComponent<
       // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
       // animations/transitions/props while handling cases where the node might be
       // remounted (e.g., when frozen) after componentWillUnmount is called.
+
       markNodeAsRemovable(wrapper);
     }
 

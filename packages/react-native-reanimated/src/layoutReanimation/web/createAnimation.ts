@@ -24,7 +24,7 @@ type TransformType = NonNullable<TransformsStyle['transform']>;
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 //
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function addPxToTransform(transform: TransformType) {
   type RNTransformProp = (typeof transform)[number];
 
@@ -83,9 +83,9 @@ export function createAnimationWithInitialValues(
   const firstAnimationStep = animationStyle['0'];
 
   const { transform, ...rest } = initialValues;
+  const transformWithPx = addPxToTransform(transform as TransformType);
 
   if (transform) {
-    const transformWithPx = addPxToTransform(transform as TransformType);
     // If there was no predefined transform, we can simply assign transform from `initialValues`.
     if (!firstAnimationStep.transform) {
       firstAnimationStep.transform = transformWithPx;

@@ -4,15 +4,14 @@ import {
   green,
   hsvToColor,
   opacity,
-  processColor,
   red,
   rgbaColor,
   RGBtoHSV,
 } from './Colors';
+import { processColor, ReanimatedError } from './common';
 import type { SharedValue } from './commonTypes';
 import { makeMutable } from './core';
 import culori from './culori';
-import { ReanimatedError } from './errors';
 import { useSharedValue } from './hook/useSharedValue';
 import { Extrapolation, interpolate } from './interpolation';
 
@@ -248,7 +247,7 @@ const getInterpolateHSV = (
   };
 };
 
-export interface InterpolateLAB {
+interface InterpolateLAB {
   l: number[];
   a: number[];
   b: number[];

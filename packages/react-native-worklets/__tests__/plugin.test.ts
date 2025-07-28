@@ -83,7 +83,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain(`version: "${packageVersion}"`);
+      expect(code).toContain(`__pluginVersion = "${packageVersion}"`);
     });
 
     it('injects source maps', () => {
@@ -385,7 +385,52 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('captures locally bound variables named like globals', () => {
+      const input = html`<script>
+        const console = {
+          log: () => 42,
+        };
+
+        function f() {
+          'worklet';
+          console.log(console);
+        }
+      </script>`;
+
+      const { code, ast } = runPlugin(input, { ast: true });
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toContain('console: console');
+      expect(code).toMatchSnapshot();
+    });
+
     it("doesn't capture custom globals", () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          console.log(foo);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, undefined, { globals: ['foo'] });
+      expect(code).toContain('f.__closure = {}');
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't capture locally bound variables named like custom globals", () => {
       const input = html`<script>
         const foo = 42;
 
@@ -396,7 +441,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toContain('f.__closure = {}');
+      expect(code).toContain('foo: foo');
       expect(code).toMatchSnapshot();
     });
 
@@ -537,6 +582,7 @@ describe('babel plugin', () => {
 
     it('workletizes getter', () => {
       const input = html`<script>
+        const x = 5;
         class Foo {
           get bar() {
             'worklet';
@@ -675,38 +721,10 @@ describe('babel plugin', () => {
   });
 
   describe('for object hooks', () => {
-    it('workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: (event) => {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
           onScroll: (event) => {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function (event) {
             console.log(event);
           },
         });
@@ -731,20 +749,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: function onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
@@ -759,23 +763,9 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart(event) {
-            console.log(event);
-          },
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically', () => {
       const input = html`<script>
-        useAnimatedGestureHandler({
+        useAnimatedScrollHandler({
           onScroll(event) {
             console.log(event);
           },
@@ -787,16 +777,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('supports empty object in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
     it('supports empty object in useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler({});
@@ -804,20 +784,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transforms each object property in useAnimatedGestureHandler', () => {
-      const input = html`<script>
-        useAnimatedGestureHandler({
-          onStart: () => {},
-          onUpdate: () => {},
-          onEnd: () => {},
-        });
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
     });
 
@@ -834,36 +800,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(5);
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform ArrowFunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(() => {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform unnamed FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function () {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
-      expect(code).toMatchSnapshot();
-    });
-
-    it("doesn't transform named FunctionExpression as argument of useAnimatedGestureHandler", () => {
-      const input = html`<script>
-        useAnimatedGestureHandler(function foo() {});
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).not.toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
 
@@ -1057,7 +993,7 @@ describe('babel plugin', () => {
     it('supports SequenceExpression, with objectHook', () => {
       const input = html`<script>
         function App() {
-          (0, useAnimatedGestureHandler)({ onStart() {} }, []);
+          (0, useAnimatedScrollHandler)({ onScroll() {} }, []);
         }
       </script>`;
 
@@ -1266,8 +1202,8 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input6)).toBe(true);
 
       const input7 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
             return useAnimatedStyle(() => {
               return 1;
             });
@@ -1277,10 +1213,10 @@ describe('babel plugin', () => {
       expect(resultIsIdempotent(input7)).toBe(true);
 
       const input8 = html`<script>
-        const x = useAnimatedGestureHandler({
-          onStart: () => {
-            return useAnimatedGestureHandler({
-              onStart: () => {
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
+            return useAnimatedScrollHandler({
+              onScroll: () => {
                 return 1;
               },
             });
@@ -1608,30 +1544,12 @@ describe('babel plugin', () => {
         });
       </script>`;
 
-      expect(() => runPlugin(input)).toThrow('[Reanimated]');
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 
   describe('for worklet nesting', () => {
-    it("doesn't process nested worklets when disabled", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          function bar(x) {
-            'worklet';
-            return x + 2;
-          }
-          return bar(x) + 1;
-        }
-      </script>`;
-
-      const { code } = runPlugin(input);
-      expect(code).toHaveWorkletData(2);
-      expect(code).toContain("'worklet';");
-      expect(code).toMatchSnapshot();
-    });
-
-    it('transpiles nested worklets when enabled', () => {
+    it('transpiles nested worklets', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1643,12 +1561,12 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
     });
 
-    it('transpiles nested worklets when enabled with depth 3', () => {
+    it('transpiles nested worklets with depth 3', () => {
       const input = html`<script>
         const foo = () => {
           'worklet';
@@ -1663,7 +1581,7 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1679,7 +1597,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(2);
       expect(code).toMatchSnapshot();
@@ -1698,7 +1616,7 @@ describe('babel plugin', () => {
           })();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -1719,7 +1637,7 @@ describe('babel plugin', () => {
           runOnJS(func)();
         })();
       </script>`;
-      const { code } = runPlugin(input, {}, { processNestedWorklets: true });
+      const { code } = runPlugin(input, {});
 
       expect(code).toHaveWorkletData(3);
       expect(code).toMatchSnapshot();
@@ -2101,6 +2019,20 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes recursion', () => {
+      const input = html`<script>
+        function recursiveWorklet() {
+          if (!globalThis._WORKLET) {
+            runOnUI(recursiveWorklet)();
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for file workletization', () => {
@@ -2355,7 +2287,9 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'
@@ -2375,7 +2309,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'
@@ -2395,7 +2331,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.default = function ()');
-      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toContain(
+        'var Clazz__classFactory = function Clazz__classFactory_null6Factory'
+      );
       expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain(
         'Clazz.Clazz__classFactory = _Clazz__classFactory'

@@ -549,7 +549,7 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 folly::dynamic MatrixOperation::valueToDynamic() const {
   if (!std::holds_alternative<TransformMatrix>(value)) {
     throw std::invalid_argument(
-        "[Reanimated] Cannot convert unprocessed transform operations to the JSI value.");
+        "[Reanimated] Cannot convert unprocessed transform operations to the dynamic value.");
   }
   return std::get<TransformMatrix>(value).toDynamic();
 }

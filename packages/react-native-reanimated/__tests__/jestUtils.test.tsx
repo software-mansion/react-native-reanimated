@@ -54,5 +54,8 @@ describe('jestUtils', () => {
       { flex: 1, backgroundColor: 'black', width: 100 },
       { shouldMatchAllProps: false }
     );
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

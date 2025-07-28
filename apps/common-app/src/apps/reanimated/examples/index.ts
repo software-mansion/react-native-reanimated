@@ -18,11 +18,13 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -39,7 +41,6 @@ import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -52,6 +53,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -60,6 +62,7 @@ import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation'
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedTest from './LayoutAnimations/Nested';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
@@ -67,6 +70,7 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
@@ -78,11 +82,13 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
@@ -91,6 +97,7 @@ import PlanetsExample from './PlanetsExample';
 import RainbowExample from './RainbowExample';
 import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
+import RunOnUIAsyncExample from './RunOnUIAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
@@ -102,16 +109,18 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
+import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import SynchronizableExample from './SynchronizableExample';
+import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
+import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -134,6 +143,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  ThirdPartyComponentsExample: {
+    icon: '3️⃣',
+    title: 'Third party components',
+    screen: ThirdPartyComponentsExample,
+  },
   RuntimeTests: {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
@@ -149,25 +163,25 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'React freeze',
     screen: FreezeExample,
   },
+  RunOnUIAsyncExample: {
+    icon: '👷‍♂️',
+    title: 'runOnUIAsync',
+    screen: RunOnUIAsyncExample,
+  },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
-  },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
   },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',
@@ -183,6 +197,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔒',
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
+  },
+
+  CopyShareablesPerformanceTest: {
+    icon: '🔄',
+    title: 'Copy shareables performance test',
+    screen: CopyShareablesPerformanceTest,
   },
 
   // About
@@ -204,6 +224,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🫧',
     title: 'Bubbles',
     screen: BubblesExample,
+  },
+  OpacityTransformExample: {
+    icon: '🌀',
+    title: 'opacity & transform',
+    screen: OpacityTransformExample,
   },
   IPodExample: {
     icon: '🎧',
@@ -257,7 +282,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -360,7 +384,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
-    title: 'useScrollViewOffset',
+    title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
   },
   StickyHeaderExample: {
@@ -405,7 +429,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RefExample: {
     icon: '🦑',
-    title: 'forwardRef & useImperativeHandle',
+    title: 'Ref & useImperativeHandle',
     screen: RefExample,
   },
   ChessExample: {
@@ -443,11 +467,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
   },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
-  },
   MatrixExample: {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',
@@ -457,6 +476,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🕰',
     title: 'Pendulum example',
     screen: PendulumExample,
+  },
+  SpringPresetsExample: {
+    icon: '🛠',
+    title: 'Spring presets',
+    screen: SpringPresetsExample,
+  },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
   },
   SpringClampExample: {
     icon: '🗜',
@@ -521,7 +550,6 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -586,9 +614,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pager example',
     screen: PagerExample,
   },
+  TransformOriginExample: {
+    title: 'Transform origin example',
+    screen: TransformOriginExample,
+  },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
@@ -704,5 +735,21 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  ReparentingExample: {
+    title: '[LA] Reparenting',
+    screen: ReparentingExample,
+  },
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
+  },
+  MoveWithExiting: {
+    title: '[LA] Move with exiting',
+    screen: MoveWithExiting,
+  },
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

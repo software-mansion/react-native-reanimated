@@ -21,10 +21,7 @@ import {
 } from './types';
 import { processWorklet } from './workletSubstitution';
 
-const reanimatedObjectHooks = new Set([
-  'useAnimatedGestureHandler',
-  'useAnimatedScrollHandler',
-]);
+const reanimatedObjectHooks = new Set(['useAnimatedScrollHandler']);
 
 const reanimatedFunctionHooks = new Set([
   'useFrameCallback',
@@ -34,7 +31,6 @@ const reanimatedFunctionHooks = new Set([
   'useDerivedValue',
   'useAnimatedScrollHandler',
   'useAnimatedReaction',
-  'useWorkletCallback',
   // animations' callbacks
   'withTiming',
   'withSpring',
@@ -46,7 +42,6 @@ const reanimatedFunctionHooks = new Set([
 ]);
 
 const reanimatedFunctionArgsToWorkletize = new Map([
-  ['useAnimatedGestureHandler', [0]],
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
@@ -54,7 +49,6 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
-  ['useWorkletCallback', [0]],
   ['withTiming', [2]],
   ['withSpring', [2]],
   ['withDecay', [1]],
@@ -126,7 +120,9 @@ function processArgs(
       acceptWorkletizableFunction,
       acceptObject
     );
-    if (!maybeWorklet) {
+    // @ts-expect-error There's no need to workletize
+    // inside an already workletized function.
+    if (!maybeWorklet || maybeWorklet.getFunctionParent()?.node.workletized) {
       return;
     }
     if (isWorkletizableFunctionPath(maybeWorklet)) {

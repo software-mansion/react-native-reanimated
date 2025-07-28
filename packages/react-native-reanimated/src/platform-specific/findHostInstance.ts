@@ -1,21 +1,14 @@
 /* eslint-disable camelcase */
 'use strict';
 
+import { ReanimatedError } from '../common';
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
-import { ReanimatedError } from '../errors';
 
-type HostInstanceFabric = {
+export type HostInstance = {
   __internalInstanceHandle?: Record<string, unknown>;
   __nativeTag?: number;
   _viewConfig?: Record<string, unknown>;
 };
-
-type HostInstancePaper = {
-  _nativeTag?: number;
-  viewConfig?: Record<string, unknown>;
-};
-
-export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (!maybeNativeRef) {
@@ -26,11 +19,6 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
     maybeNativeRef.__nativeTag &&
     maybeNativeRef._viewConfig
   ) {
-    // This is a native ref to a Fabric component
-    return maybeNativeRef;
-  }
-  if (maybeNativeRef._nativeTag && maybeNativeRef.viewConfig) {
-    // This is a native ref to a Paper component
     return maybeNativeRef;
   }
   // That means it’s a ref to a non-native component, and it’s necessary
@@ -43,13 +31,14 @@ function resolveFindHostInstance_DEPRECATED() {
     return;
   }
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
     // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
     // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
       ReactFabric?.default?.findHostInstance_DEPRECATED ??
       ReactFabric?.findHostInstance_DEPRECATED;
-  } catch (e) {
+  } catch (_e) {
     throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }

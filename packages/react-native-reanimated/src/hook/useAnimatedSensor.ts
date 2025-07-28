@@ -117,6 +117,7 @@ export function useAnimatedSensor(
       iosReferenceFrame: IOSReferenceFrame.Auto,
       ...userConfigRef.current,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [userConfigRef.current]
   );
 

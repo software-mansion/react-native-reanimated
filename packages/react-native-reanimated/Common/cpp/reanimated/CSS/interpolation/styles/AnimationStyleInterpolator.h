@@ -1,9 +1,10 @@
 #pragma once
 
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
+#include <reanimated/CSS/config/interpolators/registry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
@@ -13,11 +14,16 @@ namespace reanimated::css {
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
   explicit AnimationStyleInterpolator(
+      jsi::Runtime &rt,
+      const jsi::Value &keyframes,
+      const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
-            PROPERTY_INTERPOLATORS_CONFIG,
+            getInterpolators(componentName),
             {},
-            viewStylesRepository) {}
+            viewStylesRepository) {
+    updateKeyframes(rt, keyframes);
+  }
 };
 
 } // namespace reanimated::css

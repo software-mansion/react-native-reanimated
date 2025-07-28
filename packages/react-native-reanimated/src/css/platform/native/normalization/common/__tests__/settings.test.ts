@@ -1,11 +1,11 @@
 'use strict';
+import { ReanimatedError } from '../../../../../../common';
 import { VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../../../constants';
 import type {
   CSSTimingFunction,
   PredefinedTimingFunction,
 } from '../../../../../easings';
 import { cubicBezier, linear, steps } from '../../../../../easings';
-import { ReanimatedError } from '../../../../../errors';
 import type { TimeUnit } from '../../../../../types';
 import {
   ERROR_MESSAGES,

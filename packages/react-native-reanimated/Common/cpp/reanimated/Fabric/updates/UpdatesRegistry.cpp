@@ -20,16 +20,12 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   return it->second.second;
 }
 
-void UpdatesRegistry::flushUpdates(
-    UpdatesBatch &updatesBatch,
-    const bool merge) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
-  flushUpdatesToRegistry(copiedUpdatesBatch, merge);
+  flushUpdatesToRegistry(copiedUpdatesBatch);
   // Flush the updates to the updatesBatch used to apply current changes
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
     updatesBatch.emplace_back(shadowNode, std::move(props));
@@ -56,13 +52,13 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNode, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
 #ifdef ANDROID
@@ -86,14 +82,12 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
   updatesRegistry_.erase(tag);
 }
 
-void UpdatesRegistry::flushUpdatesToRegistry(
-    const UpdatesBatch &updatesBatch,
-    const bool merge) {
+void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();
     auto it = updatesRegistry_.find(tag);
 
-    if (it == updatesRegistry_.cend() || !merge) {
+    if (it == updatesRegistry_.cend()) {
       updatesRegistry_[tag] = std::make_pair(shadowNode, props);
     } else {
       it->second.second.update(props);

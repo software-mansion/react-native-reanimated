@@ -27,7 +27,12 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    def reactNativePackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
@@ -58,6 +63,28 @@ def toPlatformFileString(String path) {
     return path
 }
 
+def getStaticFeatureFlags() {
+    def featureFlags = new HashMap<String, String>()
+
+    def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.json")
+    if (!staticFeatureFlagsFile.exists()) {
+        throw new GradleException("[Worklets] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
+    }
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
+        featureFlags[key] = value.toString()
+    }
+
+    def packageJsonFile = file(rootDir.path + "/../package.json")
+    if (packageJsonFile.exists()) {
+        def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
+        packageJson.worklets?.staticFeatureFlags?.each { key, value ->
+            featureFlags[key] = value.toString()
+        }
+    }
+
+    return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+}
+
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
@@ -67,6 +94,8 @@ def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
+def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -79,12 +108,6 @@ def JS_RUNTIME = {
         return System.getenv("JS_RUNTIME")
     }
 
-    // Enable V8 runtime if react-native-v8 is installed
-    def v8Project = rootProject.getSubprojects().find { project -> project.name == "react-native-v8" }
-    if (v8Project != null) {
-        return "v8"
-    }
-
     // Check if Hermes is enabled in app setup
     def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
     if (appProject?.hermesEnabled?.toBoolean() || appProject?.ext?.react?.enableHermes?.toBoolean()) {
@@ -93,16 +116,6 @@ def JS_RUNTIME = {
 
     // Use JavaScriptCore (JSC) by default
     return "jsc"
-}.call()
-
-def jsRuntimeDir = {
-    if (JS_RUNTIME == "hermes") {
-        return Paths.get(reactNativeRootDir.path, "sdks", "hermes")
-    } else if (JS_RUNTIME == "v8") {
-        return findProject(":react-native-v8").getProjectDir().getParent()
-    } else {
-        return Paths.get(reactNativeRootDir.path, "ReactCommon", "jsi")
-    }
 }.call()
 
 def reactNativeArchitectures() {
@@ -164,7 +177,7 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "BUNDLE_MODE", BUNDLE_MODE.toString())
 
         externalNativeBuild {
             cmake {
@@ -173,10 +186,11 @@ android {
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
-                        "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
-                        "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
-                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                        "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
             }
@@ -195,21 +209,18 @@ android {
             externalNativeBuild {
                 cmake {
                     if (JS_RUNTIME == "hermes") {
+                        //  React Native doesn't expose these flags, but not having them
+                        //  can lead to runtime errors due to ABI mismatches.
+                        //  There's also
+                        //    HERMESVM_PROFILER_OPCODE
+                        //    HERMESVM_PROFILER_BB
+                        //  which shouldn't be defined in standard setups.
                         arguments "-DHERMES_ENABLE_DEBUGGER=1"
-                    } else {
-                        arguments "-DHERMES_ENABLE_DEBUGGER=0"
                     }
                 }
             }
             packagingOptions {
                 doNotStrip "**/**/*.so"
-            }
-        }
-        release {
-            externalNativeBuild {
-                cmake {
-                    arguments "-DHERMES_ENABLE_DEBUGGER=0"
-                }
             }
         }
     }
@@ -241,7 +252,6 @@ android {
                 "**/libreact_render*.so",
                 "**/librrc_root.so",
                 "**/libjscexecutor.so",
-                "**/libv8executor.so",
         ]
     }
     compileOptions {
@@ -251,8 +261,10 @@ android {
     sourceSets {
         main {
             java {
-                if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/worklets/paper"
+                if (BUNDLE_MODE) {
+                    srcDirs += "src/experimentalBundling"
+                } else {
+                    srcDirs += "src/legacyBundling"
                 }
             }
         }
@@ -280,11 +292,20 @@ task assertMinimalReactNativeVersionTask {
     def minimalReactNativeVersion = 75
     onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Worklets] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
+        throw new GradleException("[Worklets] Unsupported React Native version. Please use React Native 0.$minimalReactNativeVersion or newer.")
     }
 }
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
+
+task assertNewArchitectureEnabledTask {
+    onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
+    doFirst {
+        throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
+    }
+}
+
+preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
@@ -317,14 +338,3 @@ dependencies {
 }
 
 preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
-
-afterEvaluate {
-    if (JS_RUNTIME == "v8") {
-        def buildTasks = tasks.findAll({ task ->
-            !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })
-        buildTasks.forEach { task ->
-            def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
-            task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
-        }
-    }
-}

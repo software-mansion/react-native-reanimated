@@ -1,0 +1,18 @@
+diff --git a/babel-preset.js b/babel-preset.js
+index 44820fabc6eeaceffbf17277238b58f45e091fc7..a8272b8a2a0eeb8a36dac001486b1cf698bca433 100644
+--- a/babel-preset.js
++++ b/babel-preset.js
+@@ -35,13 +35,6 @@ module.exports = function (api, options, cwd) {
+           modules: cjs ? 'commonjs' : false,
+         },
+       ],
+-      [
+-        require.resolve('@babel/preset-react'),
+-        {
+-          runtime:
+-            options.jsxRuntime !== undefined ? options.jsxRuntime : 'automatic',
+-        },
+-      ],
+       require.resolve('@babel/preset-typescript'),
+       require.resolve('@babel/preset-flow'),
+     ],

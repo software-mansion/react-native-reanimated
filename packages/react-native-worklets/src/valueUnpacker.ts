@@ -1,15 +1,12 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
-import { isWorkletFunction } from './workletFunction';
 import type { WorkletFunction } from './workletTypes';
 
-function valueUnpacker(
+function __valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
   remoteFunctionName?: string
 ): unknown {
-  'worklet';
+  'use strict';
   let workletsCache = global.__workletsCache;
   let handleCache = global.__handleCache;
   if (workletsCache === undefined) {
@@ -28,9 +25,9 @@ function valueUnpacker(
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(
-          '(' + initData.code + '\n)',
-          initData.location!,
-          initData.sourceMap!
+          '(' + initData!.code + '\n)',
+          initData!.location!,
+          initData!.sourceMap!
         );
       } else if (global.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
@@ -38,13 +35,13 @@ function valueUnpacker(
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
         workletFun = global.evalWithSourceUrl(
-          '(' + initData.code + '\n)',
+          '(' + initData!.code + '\n)',
           `worklet_${workletHash}`
         );
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + initData.code + '\n)');
+        workletFun = eval('(' + initData!.code + '\n)');
       }
       workletsCache.set(workletHash, workletFun!);
     }
@@ -63,14 +60,16 @@ function valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
+      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error(
-      `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+      `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
         objectToUnpack
       )}".`
     );
@@ -79,34 +78,4 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
 interface ObjectToUnpack extends WorkletFunction {
   _recur: unknown;
-}
-
-type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: unknown, category?: string],
-  unknown
->;
-
-if (__DEV__ && !shouldBeUseWeb()) {
-  const testWorklet = (() => {
-    'worklet';
-  }) as WorkletFunction<[], void>;
-  if (!isWorkletFunction(testWorklet)) {
-    throw new Error(
-      `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
-    );
-  }
-  if (!isWorkletFunction(valueUnpacker)) {
-    throw new Error('[Worklets] `valueUnpacker` is not a worklet');
-  }
-  const closure = (valueUnpacker as ValueUnpacker).__closure;
-  if (closure === undefined) {
-    throw new Error('[Worklets] `valueUnpacker` closure is undefined');
-  }
-  if (Object.keys(closure).length !== 0) {
-    throw new Error('[Worklets] `valueUnpacker` must have empty closure');
-  }
-}
-
-export function getValueUnpackerCode() {
-  return (valueUnpacker as ValueUnpacker).__initData.code;
 }

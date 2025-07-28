@@ -3,10 +3,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Ref } from 'react';
-import React, { forwardRef, useRef } from 'react';
+import React, { useRef } from 'react';
 import type { ImageProps, ViewProps } from 'react-native';
 import { FlatList, Image, ScrollView, Text, View } from 'react-native';
 
+import type { AnimatedRef } from '../..';
 import Animated, { useAnimatedRef } from '../..';
 
 function UseAnimatedRefTest() {
@@ -36,14 +37,13 @@ function UseAnimatedRefTest() {
     );
   }
 
-  function UseAnimatedRefTestForwardRefComponent() {
-    const ForwardRefComponent = forwardRef((props: ViewProps) => {
+  function UseAnimatedRefTestComponent() {
+    const Component = (props: ViewProps & { ref: AnimatedRef<View> }) => {
       return <View {...props} />;
-    });
-    const AnimatedForwardRefComponent =
-      Animated.createAnimatedComponent(ForwardRefComponent);
-    const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-    return <AnimatedForwardRefComponent ref={animatedRef} />;
+    };
+    const AnimatedRefComponent = Animated.createAnimatedComponent(Component);
+    const animatedRef = useAnimatedRef<View>();
+    return <AnimatedRefComponent ref={animatedRef} />;
   }
 
   function UseAnimatedRefTestView() {

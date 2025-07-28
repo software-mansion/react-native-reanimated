@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import { isWorkletFunction, logger, runOnUI } from 'react-native-worklets';
+import {
+  isWorkletFunction,
+  makeShareableCloneRecursive,
+  runOnUI,
+  shareableMappingCache,
+} from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
 import {
@@ -11,6 +16,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
+import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
   AnimatableValueObject,
@@ -22,8 +28,6 @@ import type {
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
-import { ReanimatedError } from '../errors';
-import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
@@ -41,19 +45,26 @@ import {
   subtractMatrices,
 } from './transformationMatrix/matrixUtils';
 
-let IN_STYLE_UPDATER = false;
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+/**
+ * This variable has to be an object, because it can't be changed for the
+ * worklets if it's a primitive value. We also have to bind it to a separate
+ * object to prevent from freezing it in development.
+ */
+const IN_STYLE_UPDATER = { current: false };
+const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
+shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
   originY: true,
   width: true,
-  heigth: true,
+  height: true,
   borderRadius: true,
   globalOriginX: true,
   globalOriginY: true,
   opacity: true,
   transform: true,
+  backgroundColor: true,
 };
 
 type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
@@ -73,7 +84,7 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
     // but its bound copy, which is not a worklet. We don't want to throw any error then.
     return;
@@ -95,9 +106,9 @@ export function assertEasingIsWorklet(
 }
 
 export function initialUpdaterRun<T>(updater: () => T) {
-  IN_STYLE_UPDATER = true;
+  IN_STYLE_UPDATER.current = true;
   const result = updater();
-  IN_STYLE_UPDATER = false;
+  IN_STYLE_UPDATER.current = false;
   return result;
 }
 
@@ -233,7 +244,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       previousAnimation.current =
         (previousAnimation.__prefix ?? '') +
         // FIXME
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-base-to-string
         previousAnimation.current +
         (previousAnimation.__suffix ?? '');
     }
@@ -283,6 +294,8 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    animation.unroundedCurrent = res;
+
     // We need to clamp the res values to make sure they are in the correct RGBA range
     clampRGBA(res as ParsedColorArray);
 
@@ -295,11 +308,11 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
-    const RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
     const res: Array<number> = [];
     let finished = true;
-    tab.forEach((i, index) => {
-      animation[i].current = RGBACurrent[index];
+    // We must restore nonscale current to ever end the animation.
+    animation.current = animation.nonscaledCurrent;
+    tab.forEach((i) => {
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
       finished = finished && result;
@@ -308,7 +321,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
     // We need to clamp the res values to make sure they are in the correct RGBA range
     clampRGBA(res as ParsedColorArray);
-
+    animation.nonscaledCurrent = res;
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -540,7 +553,7 @@ export function defineAnimation<
   U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
-  if (IN_STYLE_UPDATER) {
+  if (!globalThis._WORKLET && IN_STYLE_UPDATER.current) {
     return starting as unknown as T;
   }
   const create = () => {
@@ -550,7 +563,7 @@ export function defineAnimation<
     return animation;
   };
 
-  if (_WORKLET || SHOULD_BE_USE_WEB) {
+  if (globalThis._WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
   create.__isAnimationDefinition = true;
@@ -562,7 +575,7 @@ export function defineAnimation<
 function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
     runOnUI(() => {

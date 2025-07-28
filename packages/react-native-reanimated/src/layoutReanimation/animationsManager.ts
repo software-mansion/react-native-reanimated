@@ -1,7 +1,7 @@
 'use strict';
 import { runOnUI } from 'react-native-worklets';
 
-import { withStyleAnimation } from '../animation/styleAnimation';
+import { withStyleAnimation } from '../animation';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
@@ -82,8 +82,9 @@ function createLayoutAnimationManager(): {
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, shouldRemoveView);
         }
-        style.callback &&
+        if (style.callback) {
           style.callback(finished === undefined ? false : finished);
+        }
       };
 
       startObservingProgress(tag, value);

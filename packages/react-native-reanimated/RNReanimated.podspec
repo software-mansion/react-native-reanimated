@@ -7,20 +7,18 @@ assert_minimal_react_native_version($config)
 
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] != '0'
 assert_new_architecture_enabled($new_arch_enabled)
-is_release = ENV['PRODUCTION'] == '1'
 
-folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32"
 boost_compiler_flags = '-Wno-documentation'
-fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flags = "-DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_version]} -DREANIMATED_VERSION=#{reanimated_package_json['version']}"
-debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
+
+feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
 
 Pod::Spec.new do |s|
 
@@ -50,11 +48,6 @@ Pod::Spec.new do |s|
     end
   end
 
-  gcc_debug_definitions = "$(inherited)"
-  if !is_release
-    gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
-  end
-
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -70,11 +63,11 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => gcc_debug_definitions,
-    "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => '$(inherited) NDEBUG=1',
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
   }
-  s.compiler_flags = "#{folly_flags} #{boost_compiler_flags}"
+  s.compiler_flags = boost_compiler_flags
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',
@@ -85,10 +78,13 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
-      "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",
+      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/apple\"",
+      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/Common/cpp\"",
+      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/Common/NativeView\"",
+      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
+      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{debug_flag} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags}",
   }
   s.requires_arc = true
 

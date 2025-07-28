@@ -1,8 +1,8 @@
 'use strict';
 
-import { setupCallGuard, setupConsole } from './initializers';
-import { registerLoggerConfig } from './logger';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { setupCallGuard } from './callGuard';
+import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -12,12 +12,26 @@ import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction, WorkletRuntime } from './workletTypes';
 
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
  * on different threads than JS or UI thread.
  *
+ * @param config - Configuration object containing runtime name and optional
+ *   initializer
+ * @returns WorkletRuntime which is a
+ *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ */
+export function createWorkletRuntime(
+  config: WorkletRuntimeConfig
+): WorkletRuntime;
+
+/**
+ * @deprecated Please use the new config object signature instead:
+ *   `createWorkletRuntime({ name, initializer })`
+ *
+ *   Lets you create a new JS runtime which can be used to run worklets possibly
+ *   on different threads than JS or UI thread.
  * @param name - A name used to identify the runtime which will appear in
  *   devices list in Chrome DevTools.
  * @param initializer - An optional worklet that will be run synchronously on
@@ -33,21 +47,29 @@ export function createWorkletRuntime(
 ): WorkletRuntime;
 
 export function createWorkletRuntime(
-  name: string,
+  nameOrConfig: string | WorkletRuntimeConfig,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  // Assign to a different variable as __workletsLoggerConfig is not a captured
-  // identifier in the Worklet runtime.
-  const config = __workletsLoggerConfig;
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+
+  let name: string;
+  let initializerFn: (() => void) | undefined;
+  if (typeof nameOrConfig === 'string') {
+    name = nameOrConfig;
+    initializerFn = initializer;
+  } else {
+    name = nameOrConfig.name;
+    initializerFn = nameOrConfig.initializer;
+  }
+
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
-      registerWorkletsError();
-      registerLoggerConfig(config);
       setupCallGuard();
-      setupConsole();
-      initializer?.();
+      registerWorkletsError();
+      setupConsole(runtimeBoundCapturableConsole);
+      initializerFn?.();
     })
   );
 }
@@ -65,13 +87,10 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.' +
-        (_WORKLET
-          ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'
-          : '')
+      'The function passed to `runOnRuntime` is not a worklet.'
     );
   }
-  if (_WORKLET) {
+  if (globalThis._WORKLET) {
     return (...args) =>
       global._scheduleOnRuntime(
         workletRuntime,
@@ -90,3 +109,8 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       })
     );
 }
+
+export type WorkletRuntimeConfig = {
+  name: string;
+  initializer?: () => void;
+};

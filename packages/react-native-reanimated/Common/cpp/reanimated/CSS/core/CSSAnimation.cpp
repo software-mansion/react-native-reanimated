@@ -1,19 +1,18 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 
-#include <utility>
-
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
-    std::string name,
-    const CSSKeyframesConfig &keyframesConfig,
+    std::shared_ptr<const ShadowNode> shadowNode,
+    std::string animationName,
+    const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
-    : name_(std::move(name)),
+    : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
+      styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
           settings.duration,
@@ -21,8 +20,7 @@ CSSAnimation::CSSAnimation(
           settings.iterationCount,
           settings.direction,
           settings.easingFunction,
-          keyframesConfig.keyframeEasingFunctions)),
-      styleInterpolator_(keyframesConfig.styleInterpolator) {
+          cssKeyframesConfig.keyframeEasingFunctions)) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
@@ -32,7 +30,7 @@ const std::string &CSSAnimation::getName() const {
   return name_;
 }
 
-ShadowNode::Shared CSSAnimation::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSAnimation::getShadowNode() const {
   return shadowNode_;
 }
 
@@ -69,11 +67,6 @@ folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
                       : styleInterpolator_->getFirstKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getForwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
-                      : styleInterpolator_->getLastKeyframeValue();
-}
-
 folly::dynamic CSSAnimation::getResetStyle() const {
   return styleInterpolator_->getResetStyle(shadowNode_);
 }
@@ -104,6 +97,8 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
 void CSSAnimation::updateSettings(
     const PartialCSSAnimationSettings &updatedSettings,
     const double timestamp) {
+  progressProvider_->resetProgress();
+
   if (updatedSettings.duration.has_value()) {
     progressProvider_->setDuration(updatedSettings.duration.value());
   }
@@ -131,6 +126,8 @@ void CSSAnimation::updateSettings(
       progressProvider_->play(timestamp);
     }
   }
+
+  progressProvider_->update(timestamp);
 }
 
 } // namespace reanimated::css

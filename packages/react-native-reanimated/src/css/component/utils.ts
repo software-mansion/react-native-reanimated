@@ -1,22 +1,16 @@
 'use strict';
-import type {
-  Falsy,
-  RecursiveArray,
-  RegisteredStyle,
-  StyleProp,
-} from 'react-native';
+import type { StyleProp } from 'react-native';
 
 import type { AnyRecord, CSSStyle } from '../types';
 import { isCSSStyleProp } from '../utils/guards';
 
-type BaseStyle = CSSStyle | Falsy | RegisteredStyle<CSSStyle>;
-type StyleProps = BaseStyle | RecursiveArray<BaseStyle> | readonly BaseStyle[];
-
 function filterNonCSSStylePropsRecursive(
-  props: StyleProps
+  props: StyleProp<CSSStyle>
 ): StyleProp<CSSStyle> {
   if (Array.isArray(props)) {
-    return props.map(filterNonCSSStylePropsRecursive);
+    return props.map((prop) =>
+      filterNonCSSStylePropsRecursive(prop as StyleProp<CSSStyle>)
+    );
   }
 
   if (!props) {

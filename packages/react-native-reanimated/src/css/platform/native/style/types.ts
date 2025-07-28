@@ -1,13 +1,15 @@
 'use strict';
-import type { AnyRecord, ConfigPropertyAlias, Maybe } from '../../../types';
+import type { Maybe } from '../../../../common';
+import type { AnyRecord, ConfigPropertyAlias } from '../../../types';
 
 export type ValueProcessor<V, R = V> = (
   value: V
 ) => Maybe<R> | Record<string, R>;
 
-export type BuildHandler<P extends AnyRecord> = (props: P) => P;
+export type StyleBuildMiddleware<P extends AnyRecord> = (props: P) => P;
 
 export type StyleBuilder<P extends AnyRecord> = {
+  isSeparatelyInterpolatedArrayProperty(property: keyof P): boolean;
   add(property: keyof P, value: P[keyof P]): void;
   buildFrom(props: P): P | null;
 };

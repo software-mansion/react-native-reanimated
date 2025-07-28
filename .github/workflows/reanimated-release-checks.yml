@@ -85,11 +85,6 @@ jobs:
     name: Static framework Reanimated build check [Nightly]
     uses: ./.github/workflows/static-framework-reanimated-build-check-nightly.yml
 
-  V8_reanimated_build_check_nightly:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: V8 Reanimated build check [Nightly]
-    uses: ./.github/workflows/V8-reanimated-build-check-nightly.yml
-
   windows_hosted_app_reanimated_build_check_nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Windows hosted app Reanimated build check [Nightly]

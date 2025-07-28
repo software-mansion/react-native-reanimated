@@ -31,8 +31,6 @@ export interface ReanimatedModuleProxy {
     callback?: (result: T) => void
   ): Promise<T>;
 
-  enableLayoutAnimations(flag: boolean): void;
-
   registerSensor(
     sensorType: number,
     interval: number,
@@ -42,7 +40,7 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
-  configureProps(uiProps: string[], nativeProps: string[]): void;
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<WorkletFunction>,
@@ -65,10 +63,11 @@ export interface ReanimatedModuleProxy {
 
   registerCSSKeyframes(
     animationName: string,
+    viewName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
-  unregisterCSSKeyframes(animationName: string): void;
+  unregisterCSSKeyframes(animationName: string, viewName: string): void;
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,

@@ -1,46 +1,7 @@
 'use strict';
 
+import { WorkletsError } from './WorkletsError';
 import type { WorkletStackDetails } from './workletTypes';
-
-export type CustomError<TName extends string> = Error & { name: TName }; // signed type
-
-export interface CustomErrorConstructor<TName extends string> extends Error {
-  new (message?: string): CustomError<TName>;
-  (message?: string): CustomError<TName>;
-  readonly prototype: CustomError<TName>;
-}
-
-export function createCustomError<TName extends string>(
-  name: TName
-): CustomErrorConstructor<TName> {
-  const constructor = function CustomError(message?: string) {
-    'worklet';
-    const prefix = `[${name}]`;
-    // eslint-disable-next-line reanimated/use-worklets-error
-    const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
-    errorInstance.name = `${name}Error`;
-    return errorInstance;
-  };
-
-  Object.defineProperty(constructor, 'name', { value: `${name}Error` });
-
-  return constructor as CustomErrorConstructor<TName>;
-}
-
-/** Registers custom errors in global scope. Use it only for Worklet runtimes. */
-export function registerCustomError<TName extends string>(
-  constructor: CustomErrorConstructor<TName>,
-  name: TName
-) {
-  'worklet';
-  if (!_WORKLET) {
-    // eslint-disable-next-line reanimated/use-worklets-error
-    throw new Error(
-      '[Worklets] registerCustomError() must be called on a Worklet runtime'
-    );
-  }
-  (global as Record<string, unknown>)[`${name}Error`] = constructor;
-}
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
@@ -63,7 +24,10 @@ function getBundleOffset(error: Error): [string, number, number] {
   return ['unknown', 0, 0];
 }
 
-function processStack(stack: string): string {
+function processStack(stack?: string): string | undefined {
+  if (stack === '' || stack === undefined) {
+    return undefined;
+  }
   const workletStackEntries = stack.match(/worklet_(\d+):(\d+):(\d+)/g);
   let result = stack;
   workletStackEntries?.forEach((match) => {
@@ -82,22 +46,35 @@ function processStack(stack: string): string {
   return result;
 }
 
-export function reportFatalErrorOnJS({
-  message,
-  stack,
-  moduleName,
-}: {
-  message: string;
-  stack?: string;
-  moduleName: string;
-}) {
-  // eslint-disable-next-line reanimated/use-worklets-error
-  const error = new Error();
+export interface RNError extends Error {
+  jsEngine: string;
+}
+
+/**
+ * Remote error is an error coming from a Worklet Runtime that we bubble up to
+ * the RN Runtime.
+ */
+export function reportFatalRemoteError(
+  { message, stack, name, jsEngine }: RNError,
+  force: boolean
+): void {
+  const error = new WorkletsError() as RNError;
   error.message = message;
-  error.stack = stack ? processStack(stack) : undefined;
-  error.name = `${moduleName}Error`;
-  // @ts-ignore React Native's ErrorUtils implementation extends the Error type with jsEngine field
-  error.jsEngine = moduleName;
-  // @ts-ignore the reportFatalError method is an internal method of ErrorUtils not exposed in the type definitions
-  global.ErrorUtils.reportFatalError(error);
+  error.stack = processStack(stack);
+  error.name = name;
+  error.jsEngine = jsEngine;
+  if (force) {
+    throw error;
+  } else {
+    // @ts-expect-error React Native's `ErrorUtils` are hidden from the global scope.
+    globalThis.ErrorUtils.reportFatalError(error);
+  }
+}
+
+/**
+ * Registers `reportFatalRemoteError` function in global scope to allow to
+ * invoke it from C++.
+ */
+export function registerReportFatalRemoteError() {
+  globalThis.__reportFatalRemoteError = reportFatalRemoteError;
 }

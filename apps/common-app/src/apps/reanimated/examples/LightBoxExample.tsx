@@ -1,21 +1,21 @@
 import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
-import type { Component } from 'react';
+import type { RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
-  PanGestureHandler,
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
   interpolate,
   runOnJS,
   runOnUI,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -45,13 +45,13 @@ type ActiveExampleImage = {
   y: number;
   targetHeight: number;
   targetWidth: number;
-  sv: Animated.SharedValue<number>;
+  sv: SharedValue<number>;
 };
 
 type onItemPressFn = (
-  imageRef: React.MutableRefObject<Component>,
+  imageRef: RefObject<Image | null>,
   item: ExampleImage,
-  sv: Animated.SharedValue<number>
+  sv: SharedValue<number>
 ) => void;
 
 type ImageListProps = {
@@ -74,9 +74,9 @@ type ListItemProps = {
   index: number;
   onPress: onItemPressFn;
 };
+
 function ListItem({ item, index, onPress }: ListItemProps) {
-  // @ts-ignore FIXME)TS) createAnimatedComponent type
-  const ref = useRef<AnimatedImage>();
+  const ref = useRef<Image>(null);
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -138,8 +138,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const onPan = useAnimatedGestureHandler({
-    onActive: (event) => {
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
       translateX.value = event.translationX;
       translateY.value = event.translationY;
 
@@ -156,9 +156,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
         [0, 1, 0],
         Extrapolation.CLAMP
       );
-    },
-
-    onEnd: () => {
+    })
+    .onEnd(() => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -179,8 +178,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
       }
 
       scale.value = withTiming(1, timingConfig);
-    },
-  });
+    });
 
   const imageStyles = useAnimatedStyle(() => {
     const interpolateProgress = (range: [number, number]) =>
@@ -222,11 +220,11 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
     <View style={StyleSheet.absoluteFillObject}>
       <Animated.View style={[styles.backdrop, backdropStyles]} />
 
-      <PanGestureHandler onGestureEvent={onPan}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={StyleSheet.absoluteFillObject}>
           <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
@@ -245,9 +243,9 @@ export default function LightBoxExample() {
   );
 
   function onItemPress(
-    imageRef: React.MutableRefObject<Component>,
+    imageRef: RefObject<Image | null>,
     item: ExampleImage,
-    sv: Animated.SharedValue<number>
+    sv: SharedValue<number>
   ) {
     imageRef.current?.measure?.((_x, _y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {

@@ -21,17 +21,20 @@ import { WorkletizableFunction } from './types';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
-module.exports = function (): PluginItem {
+module.exports = function WorkletsBabelPlugin(): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Reanimated] Babel plugin exception: ${e as string}`);
+      const error = e as Error;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = 'WorkletsBabelPluginError';
+      throw error;
     }
   }
 
   return {
-    name: 'reanimated',
+    name: 'worklets',
 
     pre(this: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {
@@ -54,10 +57,11 @@ module.exports = function (): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
-          runWithTaggedExceptions(() => {
-            processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state);
-          });
+          runWithTaggedExceptions(
+            () =>
+              processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state)
+          );
         },
       },
       ObjectExpression: {

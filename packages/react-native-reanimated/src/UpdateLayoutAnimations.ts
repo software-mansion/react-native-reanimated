@@ -1,14 +1,13 @@
 'use strict';
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
+import { SHOULD_BE_USE_WEB } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
-import {
-  configureLayoutAnimationBatch,
-  makeShareableCloneRecursive,
-} from './core';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { configureLayoutAnimationBatch } from './core';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -59,7 +58,7 @@ export let updateLayoutAnimations: (
   isUnmounting?: boolean
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op
   };

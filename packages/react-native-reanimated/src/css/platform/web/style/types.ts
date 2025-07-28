@@ -1,11 +1,12 @@
 'use strict';
-import type { AnyRecord, Maybe } from '../../../types';
+import type { Maybe } from '../../../../common';
+import type { AnyRecord } from '../../../types';
 
 export type ValueProcessor<V> = (
   value: V
 ) => Maybe<string> | Record<string, string>;
 
-export type ProcessedProps<P extends AnyRecord> = {
+type ProcessedProps<P extends AnyRecord> = {
   [K in keyof P]: string;
 };
 
@@ -35,7 +36,7 @@ export type RuleBuilder<P extends AnyRecord> = BuilderBase<
   Record<string, string>
 >;
 
-export type PropertyAlias<P extends AnyRecord> = {
+type PropertyAlias<P extends AnyRecord> = {
   as: keyof P;
 };
 

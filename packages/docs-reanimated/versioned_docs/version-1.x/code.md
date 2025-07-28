@@ -43,7 +43,7 @@ Animated.useCode(
 )
 ```
 
-It's passed as 1st parameter a factory function that should return an optional animated node, or array of nodes (which will be then placed in a `block` node), and as 2nd parameter, an array of dependencies. It will update that node, both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (<0.59).
+It's passed as 1st parameter a factory function that should return an optional animated node, or array of nodes (which will be then placed in a `block` node), and as 2nd parameter, an array of dependencies. It will update that node, both when the component mounts and every time a value in that array changes. It does nothing on versions of React Native that don't support hooks (&lt;0.59).
 
 ```js
 const [animated, setAnimated] = React.useState(false);

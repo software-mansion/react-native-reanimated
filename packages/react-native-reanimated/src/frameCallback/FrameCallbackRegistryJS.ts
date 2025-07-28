@@ -1,5 +1,6 @@
 'use strict';
-import { runOnUI } from '../core';
+import { runOnUI } from 'react-native-worklets';
+
 import type { FrameInfo } from './FrameCallbackRegistryUI';
 import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 

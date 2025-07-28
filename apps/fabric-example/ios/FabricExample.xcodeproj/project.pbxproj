@@ -9,13 +9,13 @@
 /* Begin PBXBuildFile section */
 		03C802BE2D28A91E00625950 /* UFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 03C802BC2D28A91E00625950 /* UFL.txt */; };
 		03C802BF2D28A91F00625950 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03C802BD2D28A91E00625950 /* UbuntuMono-Regular.ttf */; };
-		0C80B921A6F3F58F76C31292 /* libPods-FabricExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-FabricExample.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		1C6897ED63B54A0EA3142771 /* Poppins-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B0F6A560FF814A07A5056D5C /* Poppins-Medium.ttf */; };
 		3118F5EAAC1849B3A846F878 /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */; };
 		36CFC86374C74A93AFC6F37B /* Poppins-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */; };
 		3ED29A9583024AB287A348E3 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		7672FDCE44F245480142DDD7 /* libPods-FabricExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 28C28DD379A4F63159381776 /* libPods-FabricExample.a */; };
 		7E23737D7AB942FC9F2DB5BC /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		BD279FF3747F4A548A65D128 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */; };
@@ -33,10 +33,10 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = FabricExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FabricExample/Info.plist; sourceTree = "<group>"; };
 		192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
+		28C28DD379A4F63159381776 /* libPods-FabricExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FabricExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E32E1E9D61FF701E74576F1 /* Pods-FabricExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.release.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.release.xcconfig"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-FabricExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.debug.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.debug.xcconfig"; sourceTree = "<group>"; };
 		40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLight.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraLight.ttf"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-FabricExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FabricExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../assets/fonts/Poppins/Poppins-Light.ttf"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FabricExample/AppDelegate.swift; sourceTree = "<group>"; };
 		7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../assets/fonts/Poppins/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-FabricExample.a in Frameworks */,
+				7672FDCE44F245480142DDD7 /* libPods-FabricExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,7 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-FabricExample.a */,
+				28C28DD379A4F63159381776 /* libPods-FabricExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -426,6 +426,17 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";
 				LDPLUSPLUS = "";
@@ -503,6 +514,17 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon/ReactCommon.framework/Headers/react/nativemodule/core",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/ReactCommon-Samples/ReactCommon_Samples.framework/Headers/platform/ios",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-Fabric/React_Fabric.framework/Headers/react/renderer/components/view/platform/cxx",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
+					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";
 				LDPLUSPLUS = "";

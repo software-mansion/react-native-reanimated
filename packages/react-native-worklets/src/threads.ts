@@ -1,5 +1,6 @@
 'use strict';
-import { isJest, shouldBeUseWeb } from './PlatformChecker';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { shareableMappingCache } from './shareableMappingCache';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -7,13 +8,15 @@ import {
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction, WorkletImport } from './workletTypes';
 
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args,
+  resolve?: (value: ReturnValue) => void,
+];
 
-/** An array of [worklet, args] pairs. */
-let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
+let runOnUIQueue: UIJob[] = [];
 
 export function setupMicrotasks() {
   'worklet';
@@ -82,13 +85,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new WorkletsError(
-      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (
+    __DEV__ &&
+    !SHOULD_BE_USE_WEB &&
+    !isWorkletFunction(worklet) &&
+    !(worklet as unknown as WorkletImport).__bundleData
+  ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
@@ -119,24 +121,21 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(worklet);
       makeShareableCloneRecursive(args);
     }
-    _runOnUIQueue.push([worklet as WorkletFunction, args]);
-    if (_runOnUIQueue.length === 1) {
-      queueMicrotask(() => {
-        const queue = _runOnUIQueue;
-        _runOnUIQueue = [];
-        WorkletsModule.scheduleOnUI(
-          makeShareableCloneRecursive(() => {
-            'worklet';
-            // eslint-disable-next-line @typescript-eslint/no-shadow
-            queue.forEach(([worklet, args]) => {
-              worklet(...args);
-            });
-            callMicrotasks();
-          })
-        );
-      });
-    }
+
+    enqueueUI(worklet, args);
   };
+}
+
+if (__DEV__) {
+  function runOnUIWorklet(): void {
+    'worklet';
+    throw new WorkletsError(
+      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
+
+  const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
+  shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
@@ -200,7 +199,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (SHOULD_BE_USE_WEB || !_WORKLET) {
+  if (SHOULD_BE_USE_WEB || !globalThis._WORKLET) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
       queueMicrotask(
@@ -237,10 +236,111 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0
-        ? // TODO TYPESCRIPT this cast is terrible but will be fixed
-          (makeShareableCloneOnUIRecursive(args) as unknown as unknown[])
-        : undefined
+      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
+}
+
+/**
+ * Lets you asynchronously run
+ * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
+ * functions on the [UI
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *
+ * This method does not schedule the work immediately but instead waits for
+ * other worklets to be scheduled within the same JS loop. It uses
+ * queueMicrotask to schedule all the worklets at once making sure they will run
+ * within the same frame boundaries on the UI thread.
+ *
+ * @param fun - A reference to a function you want to execute on the [UI
+ *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   from the [JavaScript
+ *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * @returns A promise that resolves to the return value of the function passed
+ *   as the first argument.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUIAsync
+ */
+export function runOnUIAsync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => Promise<ReturnValue> {
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+    throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
+  }
+  return (...args: Args) => {
+    return new Promise<ReturnValue>((resolve) => {
+      if (IS_JEST) {
+        // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
+        // callbacks run on the same queue and can be interleaved. There is no way
+        // to flush particular queue in Jest and the only control over mocked timers
+        // is by using jest.advanceTimersByTime() method which advances all types
+        // of timers including immediate and animation callbacks. Ideally we'd like
+        // to have some way here to schedule work along with React updates, but
+        // that's not possible, and hence in Jest environment instead of using scheduling
+        // mechanism we just schedule the work ommiting the queue. This is ok for the
+        // uses that we currently have but may not be ok for future tests that we write.
+        WorkletsModule.scheduleOnUI(
+          makeShareableCloneRecursive(() => {
+            'worklet';
+            worklet(...args);
+          })
+        );
+        return;
+      }
+      if (__DEV__) {
+        // in DEV mode we call shareable conversion here because in case the object
+        // can't be converted, we will get a meaningful stack-trace as opposed to the
+        // situation when conversion is only done via microtask queue. This does not
+        // make the app particularily less efficient as converted objects are cached
+        // and for a given worklet the conversion only happens once.
+        makeShareableCloneRecursive(worklet);
+        makeShareableCloneRecursive(args);
+      }
+
+      enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
+    });
+  };
+}
+
+if (__DEV__) {
+  function runOnUIAsyncWorklet(): void {
+    'worklet';
+    throw new WorkletsError(
+      '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    );
+  }
+
+  const shareableRunOnUIAsyncWorklet =
+    makeShareableCloneRecursive(runOnUIAsyncWorklet);
+  shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+}
+
+function enqueueUI<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args,
+  resolve?: (value: ReturnValue) => void
+): void {
+  const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
+  runOnUIQueue.push(job as unknown as UIJob);
+  if (runOnUIQueue.length === 1) {
+    flushUIQueue();
+  }
+}
+
+function flushUIQueue(): void {
+  queueMicrotask(() => {
+    const queue = runOnUIQueue;
+    runOnUIQueue = [];
+    WorkletsModule.scheduleOnUI(
+      makeShareableCloneRecursive(() => {
+        'worklet';
+        queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
+          const result = workletFunction(...workletArgs);
+          if (jobResolve) {
+            runOnJS(jobResolve)(result);
+          }
+        });
+        callMicrotasks();
+      })
+    );
+  });
 }
