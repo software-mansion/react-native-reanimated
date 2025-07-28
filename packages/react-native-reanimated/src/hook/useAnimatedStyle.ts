@@ -2,10 +2,7 @@
 
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
-import type {
-  MaybeWorkletFunction,
-  WorkletFunction,
-} from 'react-native-worklets';
+import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
@@ -456,13 +453,13 @@ export function useAnimatedStyle<Style extends PlainStyle>(
 ): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends AnyRecord>(
-  updater: MaybeWorkletFunction<[], Style>,
+  updater: WorkletFunction<[], Style> | (() => Style),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
 ): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData<Style> | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
+  let inputs = Object.values((updater as WorkletFunction).__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel plugin
@@ -493,8 +490,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   // build dependencies
   if (!dependencies) {
-    dependencies = [...inputs, updater.__workletHash];
-  } else {
+    dependencies = [...inputs];
+  }
+  if (isWorkletFunction(updater)) {
     dependencies.push(updater.__workletHash);
   }
   if (adaptersHash) {
