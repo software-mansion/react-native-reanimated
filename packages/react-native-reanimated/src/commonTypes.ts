@@ -3,8 +3,6 @@
 import type { TextStyle, TransformsStyle, ViewStyle } from 'react-native';
 import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { CSSStyle } from './css';
-import type { AnyRecord, PlainStyle } from './css/types';
 import type { EasingFunctionFactory } from './Easing';
 import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 
@@ -413,19 +411,20 @@ type MaybeSharedValue<Value> =
       ? SharedValueDisableContravariance<Value>
       : never);
 
-type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
-  ?
-      | SharedValueDisableContravariance<Item[]>
-      | (MaybeSharedValueRecursive<Item> | Item)[]
-  : Value extends object
+export type MaybeSharedValueRecursive<Value> =
+  Value extends readonly (infer Item)[]
     ?
-        | SharedValueDisableContravariance<Value>
-        | {
-            [Key in keyof Value]:
-              | MaybeSharedValueRecursive<Value[Key]>
-              | Value[Key];
-          }
-    : MaybeSharedValue<Value>;
+        | SharedValueDisableContravariance<Item[]>
+        | (MaybeSharedValueRecursive<Item> | Item)[]
+    : Value extends object
+      ?
+          | SharedValueDisableContravariance<Value>
+          | {
+              [Key in keyof Value]:
+                | MaybeSharedValueRecursive<Value[Key]>
+                | Value[Key];
+            }
+      : MaybeSharedValue<Value>;
 
 export type Descriptor = {
   tag: number | ReanimatedHTMLElement;
@@ -437,19 +436,6 @@ export type ViewDescriptorsSet = {
   add: (item: Descriptor) => void;
   remove: (viewTag: number) => void;
 };
-
-export type AnimatedStyleHandle<Style extends AnyRecord = PlainStyle> = {
-  viewDescriptors: ViewDescriptorsSet;
-  initial: {
-    value: Style;
-    updater: () => Style;
-  };
-};
-
-export type AnimatedComponentStyle<Style extends AnyRecord = PlainStyle> =
-  | CSSStyle<Style> // static js style
-  | MaybeSharedValueRecursive<Style> // inline style (with inlined shared values)
-  | AnimatedStyleHandle<Style>; // animated style (created with useAnimatedStyle)
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']

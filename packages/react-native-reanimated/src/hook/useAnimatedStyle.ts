@@ -10,13 +10,13 @@ import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
-  AnimatedStyleHandle,
   AnimationObject,
   Descriptor,
   NestedObjectValues,
   SharedValue,
   StyleProps,
   Timestamp,
+  ViewDescriptorsSet,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
@@ -31,6 +31,14 @@ import {
   shallowEqual,
   validateAnimatedStyles,
 } from './utils';
+
+export type AnimatedStyleHandle<Style extends AnyRecord = PlainStyle> = {
+  viewDescriptors: ViewDescriptorsSet;
+  initial: {
+    value: Style;
+    updater: () => Style;
+  };
+};
 
 type RecursiveAnimations =
   | AnimationObject
@@ -595,9 +603,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : { viewDescriptors, initial };
   }
 
-  return animatedStyleHandle.current as NonNullable<
-    typeof animatedStyleHandle.current
-  >;
+  return animatedStyleHandle.current;
 }
 
 function animatedStyleHandleToJSON(): string {

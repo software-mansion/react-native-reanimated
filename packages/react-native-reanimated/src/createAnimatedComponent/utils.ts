@@ -1,7 +1,9 @@
 'use strict';
-import type { StyleProps } from '../commonTypes';
+import type { MaybeSharedValueRecursive, StyleProps } from '../commonTypes';
 import type { CSSStyle } from '../css';
-import type { NestedArray } from './commonTypes';
+import type { AnyRecord } from '../css/types';
+import type { AnimatedStyleHandle } from '../hook/useAnimatedStyle';
+import type { AnimatedComponentStyle, NestedArray } from './commonTypes';
 
 export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
@@ -36,9 +38,9 @@ export const has = <K extends string>(
   return false;
 };
 
-export function filterStyles(styles: StyleProps[] | undefined): {
+export function filterStyles(styles: AnimatedComponentStyle[] | undefined): {
   cssStyle: CSSStyle;
-  animatedStyles: StyleProps[];
+  animatedStyles: AnimatedStyleHandle[] | MaybeSharedValueRecursive<AnyRecord>;
 } {
   if (!styles) {
     return { animatedStyles: [], cssStyle: {} };

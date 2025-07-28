@@ -2,21 +2,17 @@
 import type { Component, MutableRefObject, Ref } from 'react';
 
 import type {
-  AnimatedStyle,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  MaybeSharedValueRecursive,
   ShadowNodeWrapper,
-  SharedValue,
   StyleProps,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import type { AnyRecord, CSSStyle, PlainStyle } from '../css/types';
+import type { AnimatedPropsHandle } from '../hook/useAnimatedProps';
+import type { AnimatedStyleHandle } from '../hook/useAnimatedStyle';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-
-export interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  initial?: SharedValue<StyleProps>;
-}
 
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
@@ -40,9 +36,6 @@ export interface IInlinePropManager {
 
 export type AnimatedComponentType = React.Component<unknown, unknown> &
   IAnimatedComponentInternal;
-
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {
   filterNonAnimatedProps: (
@@ -123,14 +116,14 @@ export interface AnimatedComponentRef extends Component {
 
 export interface IAnimatedComponentInternal {
   ChildComponent: AnyComponent;
-  _animatedStyles: StyleProps[];
-  _prevAnimatedStyles: StyleProps[];
-  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
-  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _animatedStyles: AnimatedStyleHandle[];
+  _prevAnimatedStyles: AnimatedStyleHandle[];
+  _animatedProps: AnimatedPropsHandle[];
+  _prevAnimatedProps: AnimatedPropsHandle[];
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
-  jestAnimatedProps: { value: AnimatedProps };
+  jestAnimatedProps: { value: AnyRecord };
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _hasAnimatedRef: boolean;
   _InlinePropManager: IInlinePropManager;
@@ -161,3 +154,8 @@ export type ManagedAnimatedComponent = React.Component<
   AnimatedComponentProps<InitialComponentProps>
 > &
   IAnimatedComponentInternal;
+
+export type AnimatedComponentStyle<Style extends AnyRecord = PlainStyle> =
+  | CSSStyle<Style> // static js style
+  | MaybeSharedValueRecursive<Style> // inline style (with inlined shared values)
+  | AnimatedStyleHandle<Style>; // animated style (created with useAnimatedStyle)

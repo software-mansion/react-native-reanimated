@@ -1,17 +1,14 @@
 'use strict';
 import { SHOULD_BE_USE_WEB } from '../common';
-import type {
-  AnimatedPropsAdapterFunction,
-  AnimatedStyleHandle,
-} from '../commonTypes';
+import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 import type { AnyRecord } from '../css/types';
 import type { OmitStyleProps } from '../helperTypes';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
+import type { AnimatedStyleHandle } from './useAnimatedStyle';
 import { useAnimatedStyle } from './useAnimatedStyle';
 
-type AnimatedPropsHandle<Props extends AnyRecord> = AnimatedStyleHandle<
-  OmitStyleProps<Props>
->;
+export type AnimatedPropsHandle<Props extends AnyRecord = AnyRecord> =
+  AnimatedStyleHandle<OmitStyleProps<Props>>;
 
 type UseAnimatedProps = <Props extends AnyRecord>(
   updater: () => Partial<OmitStyleProps<Props>>,
