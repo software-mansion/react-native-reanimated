@@ -307,7 +307,7 @@ export default class AnimatedComponent
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
 
-    if (filteredStyles.cssStyle && filteredAnimatedProps.cssStyle) {
+    if (__DEV__ && filteredStyles.cssStyle && filteredAnimatedProps.cssStyle) {
       logger.warn(
         'AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from animatedProps.'
       );
