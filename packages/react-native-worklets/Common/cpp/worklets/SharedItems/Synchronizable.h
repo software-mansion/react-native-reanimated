@@ -187,7 +187,7 @@ class Synchronizable
   }
 
   explicit Synchronizable(TValue &&value)
-      : value_{std::move(value)}, Serializable(SynchronizableType) {};
+      : Serializable(SynchronizableType), value_{std::move(value)} {}
 
   virtual ~Synchronizable() = default;
 
