@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
@@ -17,13 +18,6 @@ namespace worklets {
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
-
-/**
- * Unused, but kept for possible future use.
- */
-constexpr uint64_t rnRuntimeId{0};
-constexpr uint64_t uiRuntimeId{1};
-extern const std::string uiRuntimeName;
 
 class RuntimeManager {
  public:
