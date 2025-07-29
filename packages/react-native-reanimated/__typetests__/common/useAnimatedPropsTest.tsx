@@ -4,6 +4,7 @@ import React from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList } from 'react-native';
 
+import type { CSSStyle } from '../..';
 import Animated, { useAnimatedProps } from '../..';
 
 function UseAnimatedPropsTest() {
@@ -43,6 +44,18 @@ function UseAnimatedPropsTest() {
       () => ({ pointerEvents: 'none' }) as const
     );
     return <Animated.View animatedProps={animatedProps} />;
+  }
+
+  function UseAnimatedPropsTestView2() {
+    const cssProps: CSSStyle = {
+      animationName: { from: { backgroundColor: 'red' } },
+    };
+    return <Animated.View animatedProps={cssProps} />;
+  }
+
+  function UseAnimatedPropsTestView3() {
+    // @ts-expect-error Fails because of the invalid `animationName` type
+    return <Animated.View animatedProps={{ animationName: 'name' }} />;
   }
 
   function UseAnimatedPropsTestPartial1() {
@@ -143,5 +156,25 @@ function UseAnimatedPropsTest() {
       pointerEvents: 'auto' as const,
     }));
     return <Animated.View animatedProps={[animatedProps1, animatedProps2]} />;
+  }
+
+  function UseAnimatedPropsMultiple2() {
+    const cssProps1: CSSStyle = {
+      animationName: { from: { backgroundColor: 'red' } },
+    };
+    const cssProps2: CSSStyle = {
+      animationName: { to: { backgroundColor: 'blue' } },
+    };
+    return <Animated.View animatedProps={[cssProps1, cssProps2]} />;
+  }
+
+  function UseAnimatedPropsMultiple3() {
+    const animatedProps = useAnimatedProps(() => ({
+      pointerEvents: 'none' as const,
+    }));
+    const cssProps: CSSStyle = {
+      animationName: { to: { backgroundColor: 'blue' } },
+    };
+    return <Animated.View animatedProps={[animatedProps, cssProps]} />;
   }
 }
