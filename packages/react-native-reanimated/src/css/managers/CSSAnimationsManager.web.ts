@@ -91,7 +91,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    // noop
+    setTimeout(this.detach.bind(this));
   }
 
   private detach() {
