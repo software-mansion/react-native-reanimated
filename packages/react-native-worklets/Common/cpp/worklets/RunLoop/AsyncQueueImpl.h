@@ -17,6 +17,7 @@ struct AsyncQueueState {
   std::mutex mutex;
   std::condition_variable cv;
   std::queue<std::function<void()>> queue;
+  std::queue<std::function<void()>> priorityQueue;
 };
 
 class AsyncQueueImpl : public AsyncQueue {
@@ -26,6 +27,7 @@ class AsyncQueueImpl : public AsyncQueue {
   ~AsyncQueueImpl() override;
 
   void push(std::function<void()> &&job) override;
+  void pushPriority(std::function<void()> &&job) override;
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;
