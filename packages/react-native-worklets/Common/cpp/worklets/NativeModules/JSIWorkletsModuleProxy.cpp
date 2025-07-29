@@ -66,7 +66,7 @@ inline jsi::Value createWorkletRuntime(
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+      jsiWorkletsModuleProxy, name, initializer);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
