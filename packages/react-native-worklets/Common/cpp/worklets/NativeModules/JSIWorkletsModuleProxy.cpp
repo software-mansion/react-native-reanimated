@@ -70,6 +70,18 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
+inline jsi::Value makeSynchronizable(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (value.isNumber()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<double>>(value.asNumber());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  }
+  jsLogger_->warnOnJS("Couldn't make a synchronizable from the given value.");
+  return jsi::Value::undefined();
+}
+
 #ifdef WORKLETS_BUNDLE_MODE
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
@@ -185,6 +197,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -511,6 +526,18 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* name */ args[2].asString(rt).utf8(rt),
               /* jsEngine */ args[3].asString(rt).utf8(rt));
         });
+  }
+
+  if (name == "makeSynchronizable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [jsQueue = jsQueue_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) { return makeSynchronizable(rt, args[0], jsQueue); });
   }
 
 #ifdef WORKLETS_BUNDLE_MODE
