@@ -4,29 +4,22 @@
  */
 
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { createAnimatedComponent, css } from 'react-native-reanimated';
-
-import { Screen } from '@/apps/css/components';
-import { flex } from '@/theme';
 
 const AnimatedView = createAnimatedComponent(View);
 
 export default function Playground() {
   return (
-    <Screen style={flex.center}>
-      <Text>Hello world!</Text>
-      <AnimatedView style={styles.parent}>
-        <View style={styles.row}>
-          <View style={[flex.grow, { backgroundColor: 'blue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'lightblue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'skyblue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'powderblue' }]} />
-        </View>
-
-        <AnimatedView style={styles.child} />
-      </AnimatedView>
-    </Screen>
+    <View
+      style={[
+        {
+          flex: 1,
+          experimental_backgroundImage:
+            'linear-gradient(20rad, red,orange,yellow,green,blue,indigo,violet)',
+        },
+      ]}
+    />
   );
 }
 
