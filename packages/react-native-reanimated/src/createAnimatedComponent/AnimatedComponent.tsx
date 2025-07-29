@@ -10,7 +10,9 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import type { AnyRecord } from '../css/types';
+import type { AnimatedPropsHandle } from '../hook/useAnimatedProps';
+import type { AnimatedStyleHandle } from '../hook/useAnimatedStyle';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -25,7 +27,6 @@ import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
   AnimatedComponentRef,
-  AnimatedProps,
   AnyComponent,
   IAnimatedComponentInternal,
   INativeEventsManager,
@@ -58,14 +59,14 @@ export default class AnimatedComponent
 {
   _options?: Options<InitialComponentProps>;
   _displayName: string;
-  _animatedStyles: StyleProps[] = [];
-  _prevAnimatedStyles: StyleProps[] = [];
-  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
-  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
+  _animatedStyles: AnimatedStyleHandle[] = [];
+  _prevAnimatedStyles: AnimatedStyleHandle[] = [];
+  _animatedProps: AnimatedPropsHandle[] = [];
+  _prevAnimatedProps: AnimatedPropsHandle[] = [];
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
-  jestAnimatedProps: { value: AnimatedProps } = { value: {} };
+  jestAnimatedProps: { value: AnyRecord } = { value: {} };
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;

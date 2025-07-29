@@ -1,6 +1,6 @@
 'use strict';
 
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
@@ -10,25 +10,20 @@ import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
-  AnimatedStyle,
   AnimationObject,
+  Descriptor,
   NestedObjectValues,
   SharedValue,
   StyleProps,
   Timestamp,
+  ViewDescriptorsSet,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type { AnyRecord, PlainStyle } from '../css/types';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type {
-  AnimatedStyleHandle,
-  DefaultStyle,
-  DependencyList,
-  Descriptor,
-  JestAnimatedStyleHandle,
-} from './commonTypes';
+import type { DependencyList, JestAnimatedStyleHandle } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -37,27 +32,43 @@ import {
   validateAnimatedStyles,
 } from './utils';
 
-interface AnimatedState {
-  last: AnimatedStyle<any>;
-  animations: AnimatedStyle<any>;
+export type AnimatedStyleHandle<Style extends AnyRecord = PlainStyle> = {
+  viewDescriptors: ViewDescriptorsSet;
+  initial: {
+    value: Style;
+    updater: () => Style;
+  };
+};
+
+type RecursiveAnimations =
+  | AnimationObject
+  | { [key: string]: RecursiveAnimations }
+  | RecursiveAnimations[];
+
+type AnimatedState<Style extends AnyRecord> = {
+  last: Style;
+  animations: Record<string, RecursiveAnimations>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
-}
+};
 
-interface AnimatedUpdaterData {
-  initial: {
-    value: AnimatedStyle<any>;
-    updater: () => AnimatedStyle<any>;
+type AnimatedUpdaterData<Style extends AnyRecord> =
+  AnimatedStyleHandle<Style> & {
+    remoteState: AnimatedState<Style>;
   };
-  remoteState: AnimatedState;
-  viewDescriptors: ViewDescriptorsSet;
-}
 
-function prepareAnimation(
+const isAnimationObject = (
+  animatedProp: RecursiveAnimations
+): animatedProp is AnimationObject =>
+  typeof animatedProp === 'object' &&
+  !Array.isArray(animatedProp) &&
+  !!animatedProp.onFrame;
+
+function prepareAnimation<Style extends AnyRecord>(
   frameTimestamp: number,
-  animatedProp: AnimatedStyle<any>,
-  lastAnimation: AnimatedStyle<any>,
-  lastValue: AnimatedStyle<any>
+  animatedProp: RecursiveAnimations,
+  lastAnimation: Style,
+  lastValue: Style
 ): void {
   'worklet';
   if (Array.isArray(animatedProp)) {
@@ -69,9 +80,7 @@ function prepareAnimation(
         lastValue && lastValue[index]
       );
     });
-    // return animatedProp;
-  }
-  if (typeof animatedProp === 'object' && animatedProp.onFrame) {
+  } else if (isAnimationObject(animatedProp)) {
     const animation = animatedProp;
 
     let value = animation.current;
@@ -114,10 +123,10 @@ function prepareAnimation(
 }
 
 function runAnimations(
-  animation: AnimatedStyle<any>,
+  animation: RecursiveAnimations,
   timestamp: Timestamp,
   key: number | string,
-  result: AnimatedStyle<any>,
+  result: AnyRecord,
   animationsActive: SharedValue<boolean>,
   forceCopyAnimation?: boolean
 ): boolean {
@@ -144,7 +153,7 @@ function runAnimations(
       }
     });
     return allFinished;
-  } else if (typeof animation === 'object' && animation.onFrame) {
+  } else if (isAnimationObject(animation)) {
     let finished = true;
     if (!animation.finished) {
       if (animation.callStart) {
@@ -164,7 +173,7 @@ function runAnimations(
      * in rgba format, allowing the animation to run correctly.
      */
     if (forceCopyAnimation) {
-      result[key] = { ...animation.current };
+      result[key] = { ...(animation.current as object) };
     } else {
       result[key] = animation.current;
     }
@@ -195,8 +204,8 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
-  state: AnimatedState,
+  updater: WorkletFunction<[], AnyRecord> | (() => AnyRecord),
+  state: AnimatedState<AnyRecord>,
   animationsActive: SharedValue<boolean>,
   isAnimatedProps = false
 ): void {
@@ -233,7 +242,7 @@ function styleUpdater(
         return;
       }
 
-      const updates: AnimatedStyle<any> = {};
+      const updates: AnyRecord = {};
       let allFinished = true;
       for (const propName in animations) {
         const finished = runAnimations(
@@ -291,7 +300,7 @@ function styleUpdater(
     }
   } else {
     state.isAnimationCancelled = true;
-    state.animations = [];
+    state.animations = {};
 
     if (!shallowEqual(oldValues, newValues)) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
@@ -302,14 +311,15 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
-  updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
-  state: AnimatedState,
+  updater: WorkletFunction<[], AnyRecord> | (() => AnyRecord),
+  state: AnimatedState<AnyRecord>,
   animationsActive: SharedValue<boolean>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: RefObject<AnyRecord>,
   adapters: AnimatedPropsAdapterFunction[]
 ): void {
   'worklet';
-  const animations: AnimatedStyle<any> = state.animations ?? {};
+  const animations: Record<string, RecursiveAnimations> =
+    state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
 
@@ -341,7 +351,7 @@ function jestStyleUpdater(
       return;
     }
 
-    const updates: AnimatedStyle<any> = {};
+    const updates: AnyRecord = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
       const finished = runAnimations(
@@ -384,7 +394,7 @@ function jestStyleUpdater(
     }
   } else {
     state.isAnimationCancelled = true;
-    state.animations = [];
+    state.animations = {};
   }
 
   // calculate diff
@@ -445,24 +455,19 @@ function checkSharedValueUsage(
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This overload is required by our API.
-export function useAnimatedStyle<Style extends DefaultStyle>(
+export function useAnimatedStyle<Style extends PlainStyle>(
   updater: () => Style,
   dependencies?: DependencyList | null
-): Style;
+): AnimatedStyleHandle<Style>;
 
-export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
-  updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+export function useAnimatedStyle<Style extends AnyRecord>(
+  updater: WorkletFunction<[], Style> | (() => Style),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
-):
-  | AnimatedStyleHandle<Style | AnimatedProps>
-  | JestAnimatedStyleHandle<Style | AnimatedProps> {
-  const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
-  let inputs = Object.values(updater.__closure ?? {});
+): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
+  const animatedUpdaterData = useRef<AnimatedUpdaterData<Style> | null>(null);
+  let inputs = Object.values((updater as WorkletFunction).__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel plugin
@@ -493,8 +498,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
 
   // build dependencies
   if (!dependencies) {
-    dependencies = [...inputs, updater.__workletHash];
-  } else {
+    dependencies = [...inputs];
+  }
+  if (isWorkletFunction(updater)) {
     dependencies.push(updater.__workletHash);
   }
   if (adaptersHash) {
@@ -583,9 +589,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const animatedStyleHandle = useRef<
-    | AnimatedStyleHandle<Style | AnimatedProps>
-    | JestAnimatedStyleHandle<Style | AnimatedProps>
-    | null
+    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
   >(null);
 
   if (!animatedStyleHandle.current) {

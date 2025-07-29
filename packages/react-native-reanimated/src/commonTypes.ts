@@ -1,15 +1,10 @@
 'use strict';
 
-import type {
-  ImageStyle,
-  TextStyle,
-  TransformsStyle,
-  ViewStyle,
-} from 'react-native';
+import type { TextStyle, TransformsStyle, ViewStyle } from 'react-native';
 import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
+import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -416,27 +411,31 @@ type MaybeSharedValue<Value> =
       ? SharedValueDisableContravariance<Value>
       : never);
 
-type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
-  ?
-      | SharedValueDisableContravariance<Item[]>
-      | (MaybeSharedValueRecursive<Item> | Item)[]
-  : Value extends object
+export type MaybeSharedValueRecursive<Value> =
+  Value extends readonly (infer Item)[]
     ?
-        | SharedValueDisableContravariance<Value>
-        | {
-            [Key in keyof Value]:
-              | MaybeSharedValueRecursive<Value[Key]>
-              | Value[Key];
-          }
-    : MaybeSharedValue<Value>;
+        | SharedValueDisableContravariance<Item[]>
+        | (MaybeSharedValueRecursive<Item> | Item)[]
+    : Value extends object
+      ?
+          | SharedValueDisableContravariance<Value>
+          | {
+              [Key in keyof Value]:
+                | MaybeSharedValueRecursive<Value[Key]>
+                | Value[Key];
+            }
+      : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
+export type Descriptor = {
+  tag: number | ReanimatedHTMLElement;
+  shadowNodeWrapper: ShadowNodeWrapper;
+};
 
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>;
+export type ViewDescriptorsSet = {
+  shareableViewDescriptors: SharedValue<Descriptor[]>;
+  add: (item: Descriptor) => void;
+  remove: (viewTag: number) => void;
+};
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
