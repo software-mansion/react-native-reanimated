@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/SharedItems/Shareables.h>
 #include <worklets/SharedItems/SynchronizableAccess.h>
 
 #include <memory>
@@ -14,7 +15,9 @@ namespace worklets {
 template <typename TValue>
 class SynchronizableConverter {
  public:
-  static jsi::Value jsValue(jsi::Runtime &rt, const TValue &value);
+  static jsi::Value jsValue(
+      jsi::Runtime &rt,
+      std::remove_reference_t<TValue> value);
   static TValue hostValue(jsi::Runtime &rt, const jsi::Value &value);
 };
 
@@ -23,7 +26,8 @@ template <typename TValue>
 class Synchronizable
     : public SynchronizableAccess,
       public SynchronizableConverter<TValue>,
-      public facebook::jsi::HostObject,
+      public Serializable,
+      public jsi::HostObject,
       public std::enable_shared_from_this<Synchronizable<TValue>> {
  private:
   // TODO: Find a way of taking the unmangled method names in compile
@@ -128,31 +132,39 @@ class Synchronizable
     return props;
   }
 
+  /**
+   * Can run concurrently with getDirty, setDirty, getBlocking, setBlocking.
+   */
   TValue getDirty() {
-    // Can run concurrently with getDirty, getBlocking, setDirty, setBlocking.
     return value_;
   }
 
+  /**
+   * Can run concurrently with getDirty, getBlocking.
+   * Can't run concurrently with setDirty, setBlocking.
+   */
   TValue getBlocking() {
-    // Can run concurrently with getDirty, getBlocking.
-    // Cannot run concurrently with setDirty, setBlocking.
     getBlockingBefore();
     auto value = value_;
     getBlockingAfter();
     return value;
   }
 
+  /**
+   * Can run concurrently with getDirty, getBlocking.
+   * Can't run concurrently with setDirty, setBlocking.
+   */
   void setDirty(TValue value) {
-    // Can run concurrently with getDirty, setDirty.
-    // Cannot run concurrently with getBlocking, setBlocking.
     setDirtyBefore();
     value_ = value;
     setDirtyAfter();
   }
 
+  /**
+   * Can run concurrently with getDirty.
+   * Can't run concurrently with getBlocking, setDirty, setBlocking.
+   */
   void setBlocking(TValue value) {
-    // Can run concurrently with getDirty.
-    // Cannot run concurrently with getBlocking, setDirty, setBlocking.
     setBlockingBefore();
     value_ = value;
     setBlockingAfter();
@@ -168,7 +180,14 @@ class Synchronizable
         rt, value);
   }
 
-  explicit Synchronizable(TValue &&value) : value_{std::move(value)} {};
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
+    auto synchronizableUnpacker = getSynchronizableUnpacker(rt);
+    return synchronizableUnpacker.call(
+        rt, jsi::Object::createFromHostObject(rt, this->shared_from_this()));
+  }
+
+  explicit Synchronizable(TValue &&value)
+      : value_{std::move(value)}, Serializable(SynchronizableType) {};
 
   virtual ~Synchronizable() = default;
 

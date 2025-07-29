@@ -4,10 +4,12 @@
 namespace worklets {
 
 template <>
-jsi::Value SynchronizableConverter<bool>::jsValue(jsi::Runtime &rt, bool value);
+jsi::Value SynchronizableConverter<double>::jsValue(
+    jsi::Runtime &rt,
+    double value);
 
 template <>
-bool SynchronizableConverter<bool>::hostValue(
+double SynchronizableConverter<double>::hostValue(
     jsi::Runtime &rt,
     const jsi::Value &value);
 

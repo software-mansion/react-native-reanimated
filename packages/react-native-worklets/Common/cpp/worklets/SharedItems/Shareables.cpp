@@ -11,6 +11,14 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
+jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt) {
+  auto synchronizableUnpacker =
+      rt.global().getProperty(rt, "__synchronizableUnpacker");
+  react_native_assert(
+      synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
+  return synchronizableUnpacker.asObject(rt).asFunction(rt);
+}
+
 #ifndef NDEBUG
 
 static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,

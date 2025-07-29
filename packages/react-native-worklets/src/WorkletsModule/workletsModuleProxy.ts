@@ -3,6 +3,7 @@
 import type {
   HostSynchronizableRef,
   ShareableRef,
+  Synchronizable,
   WorkletRuntime,
 } from '../workletTypes';
 
@@ -91,6 +92,14 @@ export interface WorkletsModuleProxy {
   ): void;
 
   makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue>;
+
+  makeSynchronizableBoolRef(
+    value: boolean
+  ): ShareableRef<Synchronizable<boolean>>;
+
+  makeSynchronizableNumberRef(
+    value: number
+  ): ShareableRef<Synchronizable<number>>;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }

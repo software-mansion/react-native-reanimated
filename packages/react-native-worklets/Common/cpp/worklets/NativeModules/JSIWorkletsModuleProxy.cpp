@@ -4,6 +4,9 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/SynchronizableBool.h>
+#include <worklets/SharedItems/SynchronizableNumber.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
@@ -73,12 +76,16 @@ inline jsi::Value createWorkletRuntime(
 inline jsi::Value makeSynchronizable(
     jsi::Runtime &rt,
     const jsi::Value &value) {
-  if (value.isNumber()) {
+  // TODO: Type handling.
+  if (value.isBool()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<bool>>(value.asBool());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  } else if (value.isNumber()) {
     auto synchronizable =
         std::make_shared<Synchronizable<double>>(value.asNumber());
     return jsi::Object::createFromHostObject(rt, synchronizable);
   }
-  jsLogger_->warnOnJS("Couldn't make a synchronizable from the given value.");
   return jsi::Value::undefined();
 }
 
@@ -200,6 +207,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
 
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizableBoolRef"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizableNumberRef"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -533,11 +544,42 @@ jsi::Value JSIWorkletsModuleProxy::get(
         rt,
         propName,
         1,
-        [jsQueue = jsQueue_](
-            jsi::Runtime &rt,
-            const jsi::Value &thisValue,
-            const jsi::Value *args,
-            size_t count) { return makeSynchronizable(rt, args[0], jsQueue); });
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSynchronizable(rt, /* value */ args[0]);
+        });
+  }
+
+  if (name == "makeSynchronizableBoolRef") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          const auto synchronizable =
+              args[0].asObject(rt).asHostObject<Synchronizable<bool>>(rt);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+        });
+  }
+
+  if (name == "makeSynchronizableNumberRef") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          const auto synchronizable =
+              args[0].asObject(rt).asHostObject<Synchronizable<double>>(rt);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+        });
   }
 
 #ifdef WORKLETS_BUNDLE_MODE

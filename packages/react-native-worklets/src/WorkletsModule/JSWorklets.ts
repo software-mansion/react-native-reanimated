@@ -155,6 +155,18 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  makeSynchronizableBoolRef(): never {
+    throw new WorkletsError(
+      'makeSynchronizableBoolRef should never be called in JSWorklets.'
+    );
+  }
+
+  makeSynchronizableNumberRef(): never {
+    throw new WorkletsError(
+      'makeSynchronizableNumberRef should never be called in JSWorklets.'
+    );
+  }
+
   reportFatalErrorOnJS(): never {
     throw new WorkletsError(
       'reportFatalErrorOnJS should never be called in JSWorklets.'

@@ -15,6 +15,8 @@ namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
+jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt);
+
 #ifndef NDEBUG
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
@@ -88,6 +90,7 @@ class Serializable {
     ArrayBufferType,
     TurboModuleLikeType,
     ImportType,
+    SynchronizableType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}

@@ -6,7 +6,7 @@ namespace worklets {
 template <>
 jsi::Value SynchronizableConverter<bool>::jsValue(
     jsi::Runtime &rt,
-    const bool &value) {
+    bool value) {
   return jsi::Value(value);
 }
 
