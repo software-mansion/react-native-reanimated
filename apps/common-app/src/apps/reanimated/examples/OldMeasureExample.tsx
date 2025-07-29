@@ -4,7 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import type { AnimatedRef } from 'react-native-reanimated';
+import type { AnimatedRef, SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   measure,
@@ -89,8 +89,8 @@ export default function OldMeasureExample() {
 
 type SectionProps = {
   title: string;
-  height: Animated.SharedValue<number>;
-  contentHeight: Animated.SharedValue<number>;
+  height: SharedValue<number>;
+  contentHeight: SharedValue<number>;
   z: number;
   show: boolean;
 };
@@ -156,7 +156,7 @@ function asyncMeasure(
 type SectionHeaderProps = {
   title: string;
   animatedRef: AnimatedRef<React.Component>;
-  contentHeight: Animated.SharedValue<number>;
+  contentHeight: SharedValue<number>;
   show: boolean;
 };
 

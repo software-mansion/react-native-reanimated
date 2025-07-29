@@ -53,8 +53,8 @@ class WorkletRuntime : public jsi::HostObject,
   void runAsyncGuarded(
       const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
     react_native_assert(
-        queue_ != nullptr &&
-        "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but the async queue is not set. Recreate the runtime with a valid async queue.");
+        "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
+        "the async queue is not set. Recreate the runtime with a valid async queue.");
     queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();
       if (!strongThis) {

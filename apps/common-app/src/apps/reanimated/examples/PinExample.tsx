@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import type { SharedValue } from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 import Animated, {
   scrollTo,
   useAnimatedRef,
@@ -43,7 +43,7 @@ function useDigit(number: SharedValue<number>, i: number) {
   });
 }
 
-function NumberDisplay({ number }: { number: Animated.SharedValue<number> }) {
+function NumberDisplay({ number }: { number: SharedValue<number> }) {
   return (
     <View style={styles.numberContainerOuter}>
       <View style={styles.numberContainerInner}>
@@ -90,7 +90,7 @@ function Digit({ number, index }: DigitProps) {
   );
 }
 
-function ProgressBar({ progress }: { progress: Animated.SharedValue<number> }) {
+function ProgressBar({ progress }: { progress: SharedValue<number> }) {
   const x = useSharedValue(0);
   const startX = useSharedValue(0);
   const max = useSharedValue(0);
