@@ -25,13 +25,17 @@ export interface HostSynchronizableRef<TValue = unknown> {
   unlock(): void;
 }
 
-export interface SynchronizableRef<TValue = unknown>
-  extends Omit<HostSynchronizableRef<TValue>, 'lock' | 'unlock'> {
+export interface Synchronizable<TValue = unknown> {
+  // TODO: consider removing
+  // extends Omit<HostSynchronizableRef<TValue>, 'lock' | 'unlock'>
   // TODO: TSDOC with links to documentation.
+  __synchronizableRef: true;
   getDirty(): TValue;
   getBlocking(): TValue;
   setDirty(value: TValue | ((prev: TValue) => TValue)): void;
   setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
 }
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.

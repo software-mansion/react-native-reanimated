@@ -7,18 +7,27 @@ namespace worklets {
 
 class SynchronizableAccess {
  public:
-  auto lock() -> void;
-  auto unlock() -> void;
+  /**
+   * Allows you to imperatively lock the synchronizable to perform a
+   * transaction.
+   */
+  void lock();
+
+  /**
+   * Unlocks the synchronizable after an imperative lock when the transaction is
+   * complete.
+   */
+  void unlock();
 
  protected:
-  auto getBlockingBefore() -> void;
-  auto getBlockingAfter() -> void;
+  void getBlockingBefore();
+  void getBlockingAfter();
 
-  auto setDirtyBefore() -> void;
-  auto setDirtyAfter() -> void;
+  void setDirtyBefore();
+  void setDirtyAfter();
 
-  auto setBlockingBefore() -> void;
-  auto setBlockingAfter() -> void;
+  void setBlockingBefore();
+  void setBlockingAfter();
 
  private:
   int blockingReaders_{0};

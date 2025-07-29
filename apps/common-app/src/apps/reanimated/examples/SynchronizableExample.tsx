@@ -7,17 +7,17 @@ const initialValue = 0;
 const targetValue = 200000;
 
 export default function SynchronizableExample() {
-  const [rnValue, setRnValue] = React.useState(initialValue);
-  const [rnDurationMS, setRnDurationMS] = React.useState(0);
-  const [uiValue, setUiValue] = React.useState(initialValue);
-  const [uiDurationMS, setUiDurationMS] = React.useState(0);
+  const [valueRN, setValueRN] = React.useState(initialValue);
+  const [durationRNMS, setDurationRNMS] = React.useState(0);
+  const [valueUI, setValueUI] = React.useState(initialValue);
+  const [durationUIMS, setDurationUIMS] = React.useState(0);
   const [isRunning, setIsRunning] = React.useState(false);
 
   const synchronizable = makeSynchronizable(initialValue);
 
   function setUiValueRemote(value: number, durationMS: number) {
-    setUiValue(value);
-    setUiDurationMS(durationMS);
+    setValueUI(value);
+    setDurationUIMS(durationMS);
   }
 
   function setValueAndDuration(value: number, durationMS: number) {
@@ -25,16 +25,16 @@ export default function SynchronizableExample() {
     if (globalThis._WORKLET) {
       runOnJS(setUiValueRemote)(value, durationMS);
     } else {
-      setRnValue(value);
-      setRnDurationMS(durationMS);
+      setValueRN(value);
+      setDurationRNMS(durationMS);
     }
   }
 
   function resetState() {
-    setRnValue(initialValue);
-    setRnDurationMS(0);
-    setUiValue(initialValue);
-    setUiDurationMS(0);
+    setValueRN(initialValue);
+    setDurationRNMS(0);
+    setValueUI(initialValue);
+    setDurationUIMS(0);
   }
 
   function dirtyReadDirtyWrite() {
@@ -73,11 +73,36 @@ export default function SynchronizableExample() {
     setValueAndDuration(synchronizable.getBlocking(), durationMS);
   }
 
+  function blockingReadBlockingWriteTransaction() {
+    'worklet';
+    const start = performance.now();
+    for (let i = 0; i < targetValue; i++) {
+      synchronizable.setBlocking((prev) => prev + 1);
+    }
+    const end = performance.now();
+    const durationMS = end - start;
+    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+  }
+
+  function imperativeLocking() {
+    'worklet';
+    const start = performance.now();
+    for (let i = 0; i < targetValue; i++) {
+      synchronizable.lock();
+      const value = synchronizable.getBlocking();
+      synchronizable.setBlocking(value + 1);
+      synchronizable.unlock();
+    }
+    const end = performance.now();
+    const durationMS = end - start;
+    setValueAndDuration(synchronizable.getBlocking(), durationMS);
+  }
+
   useEffect(() => {
-    if (isRunning && rnDurationMS && uiDurationMS) {
+    if (isRunning && durationRNMS && durationUIMS) {
       setIsRunning(false);
     }
-  }, [isRunning, rnDurationMS, uiDurationMS]);
+  }, [isRunning, durationRNMS, durationUIMS]);
 
   return (
     <View style={styles.container}>
@@ -93,10 +118,10 @@ export default function SynchronizableExample() {
         <View style={styles.rightColumn}>
           <Text>{initialValue}</Text>
           <Text>{targetValue * 2}</Text>
-          <Text>{rnValue}</Text>
-          <Text>{uiValue}</Text>
-          <Text>{(rnDurationMS / 1000).toFixed(2)}s</Text>
-          <Text>{(uiDurationMS / 1000).toFixed(2)}s</Text>
+          <Text>{valueRN}</Text>
+          <Text>{valueUI}</Text>
+          <Text>{(durationRNMS / 1000).toFixed(2)}s</Text>
+          <Text>{(durationUIMS / 1000).toFixed(2)}s</Text>
         </View>
       </View>
       <View style={{ opacity: isRunning ? 1 : 0 }}>
@@ -138,6 +163,30 @@ export default function SynchronizableExample() {
           }, 50);
         }}
         title=".getBlocking() & .setBlocking() on two threads"
+      />
+      <Button
+        onPress={() => {
+          resetState();
+          setIsRunning(true);
+
+          setTimeout(() => {
+            runOnUI(blockingReadBlockingWriteTransaction)();
+            queueMicrotask(blockingReadBlockingWriteTransaction);
+          }, 50);
+        }}
+        title=".setBlocking() with setter on two threads - transaction"
+      />
+      <Button
+        onPress={() => {
+          resetState();
+          setIsRunning(true);
+
+          setTimeout(() => {
+            runOnUI(imperativeLocking)();
+            queueMicrotask(imperativeLocking);
+          }, 50);
+        }}
+        title="Imperative locking"
       />
     </View>
   );

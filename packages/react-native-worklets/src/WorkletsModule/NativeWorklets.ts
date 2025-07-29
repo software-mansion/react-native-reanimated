@@ -7,6 +7,7 @@ import { WorkletsError } from '../WorkletsError';
 import type {
   HostSynchronizableRef,
   ShareableRef,
+  Synchronizable,
   WorkletRuntime,
 } from '../workletTypes';
 import type {
@@ -146,10 +147,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue> {
-    return this.#workletsModuleProxy.makeSynchronizable(value);
-  }
-
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }
@@ -172,6 +169,22 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       workletRuntime,
       shareableWorklet
     );
+  }
+
+  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.makeSynchronizable(value);
+  }
+
+  makeSynchronizableBoolRef(
+    value: boolean
+  ): ShareableRef<Synchronizable<boolean>> {
+    return this.#workletsModuleProxy.makeSynchronizableBoolRef(value);
+  }
+
+  makeSynchronizableNumberRef(
+    value: number
+  ): ShareableRef<Synchronizable<number>> {
+    return this.#workletsModuleProxy.makeSynchronizableNumberRef(value);
   }
 
   reportFatalErrorOnJS(

@@ -123,12 +123,6 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeSynchronizable(): never {
-    throw new WorkletsError(
-      'makeSynchronizable should never be called in JSWorklets.'
-    );
-  }
-
   scheduleOnUI<TValue>(worklet: ShareableRef<TValue>) {
     // TODO: `requestAnimationFrame` should be used exclusively in Reanimated
 
@@ -152,6 +146,24 @@ class JSWorklets implements IWorkletsModule {
   scheduleOnRuntime(): never {
     throw new WorkletsError(
       'scheduleOnRuntime is not available in JSWorklets.'
+    );
+  }
+
+  makeSynchronizable(): never {
+    throw new WorkletsError(
+      'makeSynchronizable should never be called in JSWorklets.'
+    );
+  }
+
+  makeSynchronizableBoolRef(): never {
+    throw new WorkletsError(
+      'makeSynchronizableBoolRef should never be called in JSWorklets.'
+    );
+  }
+
+  makeSynchronizableNumberRef(): never {
+    throw new WorkletsError(
+      'makeSynchronizableNumberRef should never be called in JSWorklets.'
     );
   }
 

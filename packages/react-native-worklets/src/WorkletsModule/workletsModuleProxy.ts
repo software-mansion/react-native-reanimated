@@ -3,6 +3,7 @@
 import type {
   HostSynchronizableRef,
   ShareableRef,
+  Synchronizable,
   WorkletRuntime,
 } from '../workletTypes';
 
@@ -78,8 +79,6 @@ export interface WorkletsModuleProxy {
     initializer: ShareableRef<() => void>
   ): WorkletRuntime;
 
-  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue>;
-
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: ShareableRef<TValue>
@@ -91,6 +90,16 @@ export interface WorkletsModuleProxy {
     name: string,
     jsEngine: string
   ): void;
+
+  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue>;
+
+  makeSynchronizableBoolRef(
+    value: boolean
+  ): ShareableRef<Synchronizable<boolean>>;
+
+  makeSynchronizableNumberRef(
+    value: number
+  ): ShareableRef<Synchronizable<number>>;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }

@@ -1,15 +1,24 @@
 'use strict';
 
-import { logger } from './logger';
+import { __synchronizableUnpacker } from './synchronizableUnpacker';
 import { WorkletsModule } from './WorkletsModule';
-import type { SynchronizableRef } from './workletTypes';
+import type { Synchronizable } from './workletTypes';
 
 export function makeSynchronizable<TValue>(
   initialValue: TValue
-): SynchronizableRef<TValue> {
-  // TODO Support other types than number.
-  if (typeof initialValue !== 'number') {
-    logger.warn("Couldn't make a synchronizable from the given value.");
-  }
-  return WorkletsModule.makeSynchronizable(initialValue);
+): Synchronizable<TValue> {
+  const hostSynchronizableRef = WorkletsModule.makeSynchronizable(initialValue);
+
+  return __synchronizableUnpacker(hostSynchronizableRef);
+}
+
+export function isSynchronizableRef<TValue>(
+  value: unknown
+): value is Synchronizable<TValue> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '__synchronizableRef' in value &&
+    value.__synchronizableRef === true
+  );
 }

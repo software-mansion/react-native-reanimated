@@ -5,6 +5,8 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/SharedItems/Synchronizable.h>
+#include <worklets/SharedItems/SynchronizableBool.h>
+#include <worklets/SharedItems/SynchronizableNumber.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
@@ -71,6 +73,22 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
+inline jsi::Value makeSynchronizable(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  // TODO: Type handling.
+  if (value.isBool()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<bool>>(value.asBool());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  } else if (value.isNumber()) {
+    auto synchronizable =
+        std::make_shared<Synchronizable<double>>(value.asNumber());
+    return jsi::Object::createFromHostObject(rt, synchronizable);
+  }
+  return jsi::Value::undefined();
+}
+
 #ifdef WORKLETS_BUNDLE_MODE
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
@@ -102,17 +120,6 @@ inline jsi::Value reportFatalErrorOnJS(
           .stack = stack,
           .name = name,
           .jsEngine = jsEngine});
-  return jsi::Value::undefined();
-}
-
-inline jsi::Value makeSynchronizable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  if (value.isNumber()) {
-    auto synchronizable =
-        std::make_shared<Synchronizable<double>>(value.asNumber());
-    return jsi::Object::createFromHostObject(rt, synchronizable);
-  }
   return jsi::Value::undefined();
 }
 
@@ -185,8 +192,6 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "makeShareableSet"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
-  propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -199,6 +204,13 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizableBoolRef"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "makeSynchronizableNumberRef"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -426,17 +438,6 @@ jsi::Value JSIWorkletsModuleProxy::get(
         });
   }
 
-  if (name == "makeSynchronizable") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        1,
-        [](jsi::Runtime &rt,
-           const jsi::Value &thisValue,
-           const jsi::Value *args,
-           size_t count) { return makeSynchronizable(rt, args[0]); });
-  }
-
   if (name == "makeShareableWorklet") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -535,6 +536,49 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* stack */ args[1].asString(rt).utf8(rt),
               /* name */ args[2].asString(rt).utf8(rt),
               /* jsEngine */ args[3].asString(rt).utf8(rt));
+        });
+  }
+
+  if (name == "makeSynchronizable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSynchronizable(rt, /* value */ args[0]);
+        });
+  }
+
+  if (name == "makeSynchronizableBoolRef") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          const auto synchronizable =
+              args[0].asObject(rt).asHostObject<Synchronizable<bool>>(rt);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+        });
+  }
+
+  if (name == "makeSynchronizableNumberRef") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          const auto synchronizable =
+              args[0].asObject(rt).asHostObject<Synchronizable<double>>(rt);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
         });
   }
 

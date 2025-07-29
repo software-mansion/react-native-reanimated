@@ -1,5 +1,5 @@
 'use strict';
-import type { SynchronizableRef } from 'react-native-worklets';
+import type { Synchronizable } from 'react-native-worklets';
 import {
   executeOnUIRuntimeSync,
   makeShareableCloneRecursive,
@@ -98,7 +98,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
 
 export function makeMutableUI<Value>(
   initial: Value,
-  isDirtySynchronizable?: SynchronizableRef<number>
+  isDirtySynchronizable?: Synchronizable<boolean>
 ): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -122,7 +122,7 @@ export function makeMutableUI<Value>(
       });
       if (isDirtySynchronizable && !isDirty && value !== initial) {
         isDirty = true;
-        isDirtySynchronizable.setBlocking(1);
+        isDirtySynchronizable.setBlocking(true);
       }
     },
     modify: (modifier, forceUpdate = true) => {
@@ -150,7 +150,7 @@ export function makeMutableUI<Value>(
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
-  const isDirtySynchronizable = makeSynchronizable(0);
+  const isDirtySynchronizable = makeSynchronizable(false);
 
   const handle = makeShareableCloneRecursive({
     __init: () => {

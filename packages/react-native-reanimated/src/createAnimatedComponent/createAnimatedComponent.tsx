@@ -8,7 +8,7 @@ import type {
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import type { AnimateProps } from '../helperTypes';
+import type { AnimatedProps } from '../helperTypes';
 import type { Options } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 import type {
@@ -33,19 +33,19 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
 export function createAnimatedComponent<P extends object>(
   component: AnimatableComponent<FunctionComponent<P>>,
   options?: Options<P>
-): FunctionComponent<AnimateProps<P>>;
+): FunctionComponent<AnimatedProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
   component: AnimatableComponent<ComponentClass<P>>,
   options?: Options<P>
-): ComponentClass<AnimateProps<P>>;
+): ComponentClass<AnimatedProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
   // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
   // since some external components (like FastImage) are typed just as ComponentType
   component: AnimatableComponent<ComponentType<P>>,
   options?: Options<P>
-): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+): FunctionComponent<AnimatedProps<P>> | ComponentClass<AnimatedProps<P>>;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
@@ -55,7 +55,7 @@ export function createAnimatedComponent<P extends object>(
 export function createAnimatedComponent(
   component: AnimatableComponent<typeof FlatList<unknown>>,
   options?: Options<typeof FlatList<unknown>>
-): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
+): ComponentClass<AnimatedProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
   Component: AnimatableComponent<ComponentType<InitialComponentProps>>,

@@ -30,7 +30,7 @@ export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
   ShareableRef,
-  SynchronizableRef,
+  Synchronizable,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,
