@@ -7,7 +7,7 @@
 namespace worklets {
 
 const char ValueUnpackerCode[] =
-    R"__UNPACKER__(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
+    R"__DELIMITER__(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
   'use strict';
 
   var workletsCache = global.__workletsCache;
@@ -50,5 +50,5 @@ const char ValueUnpackerCode[] =
   } else {
     throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(globalThis._toString(objectToUnpack), "\"."));
   }
-})__UNPACKER__";
+})__DELIMITER__";
 } // namespace worklets

@@ -7,7 +7,7 @@
 namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
-    R"__UNPACKER__(function __synchronizableUnpacker(hostSynchronizableRef) {
+    R"__DELIMITER__(function __synchronizableUnpacker(hostSynchronizableRef) {
   var synchronizableRef = {
     __synchronizableRef: true,
     getDirty: hostSynchronizableRef.getDirty.bind(hostSynchronizableRef),
@@ -37,5 +37,5 @@ const char SynchronizableUnpackerCode[] =
   };
   Object.setPrototypeOf(synchronizableRef, hostSynchronizableRef);
   return synchronizableRef;
-})__UNPACKER__";
+})__DELIMITER__";
 } // namespace worklets
