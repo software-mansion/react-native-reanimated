@@ -5,9 +5,9 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
 
-exportToCpp('ValueUnpacker.ts', 'ValueUnpacker', 'ValueUnpackerCode');
+exportToCpp('valueUnpacker.ts', 'ValueUnpacker', 'ValueUnpackerCode');
 exportToCpp(
-  'SynchronizableUnpacker.ts',
+  'synchronizableUnpacker.ts',
   'SynchronizableUnpacker',
   'SynchronizableUnpackerCode'
 );
