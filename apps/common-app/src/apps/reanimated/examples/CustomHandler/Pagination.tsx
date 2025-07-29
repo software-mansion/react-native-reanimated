@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
@@ -10,7 +11,7 @@ function PaginationElement({
   position,
   slideIndex,
 }: {
-  position: Animated.SharedValue<number>;
+  position: SharedValue<number>;
   slideIndex: number;
 }) {
   const inputRange = [slideIndex - 1, slideIndex, slideIndex + 1];
@@ -48,7 +49,7 @@ export function Pagination({
   position,
 }: {
   numberOfSlides: number;
-  position: Animated.SharedValue<number>;
+  position: SharedValue<number>;
 }) {
   return (
     <View style={styles.pagination}>

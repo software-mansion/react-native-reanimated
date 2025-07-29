@@ -54,7 +54,6 @@ export type {
   AnimatedSensor,
   AnimatedStyle,
   AnimatedTransform,
-  AnimateStyle,
   Animation,
   AnimationCallback,
   AnimationObject,
@@ -75,7 +74,6 @@ export type {
   SensorConfig,
   SharedValue,
   StyleProps,
-  StylesOrDefault,
   TransformArrayItem,
   Value3D,
   ValueRotation,
@@ -102,23 +100,11 @@ export {
   makeMutable,
 } from './core';
 export * from './css';
-export type {
-  EasingFactoryFn,
-  EasingFn,
-  EasingFunctionFactory,
-} from './Easing';
+export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export type { FrameInfo } from './frameCallback';
-export type {
-  Adaptable,
-  AdaptTransforms,
-  AnimatedProps,
-  AnimatedStyleProp,
-  AnimateProps,
-  EntryOrExitLayoutType,
-  TransformStyleTypes,
-} from './helperTypes';
+export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
   AnimatedRef,
   DerivedValue,

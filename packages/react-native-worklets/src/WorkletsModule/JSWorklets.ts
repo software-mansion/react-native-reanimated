@@ -3,7 +3,7 @@
 import { IS_JEST } from '../PlatformChecker';
 import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { ShareableRef } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
