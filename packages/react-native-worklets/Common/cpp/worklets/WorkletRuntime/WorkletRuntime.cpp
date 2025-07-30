@@ -100,6 +100,8 @@ void WorkletRuntime::init(
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
+  queue_ = std::make_shared<AsyncQueueImpl>(name_);
+
   WorkletRuntimeDecorator::decorate(
       rt,
       name_,
@@ -140,34 +142,6 @@ void WorkletRuntime::init(
       std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
-
-  // -----------------------------------------------------------------------------
-
-  queue_ = std::make_shared<AsyncQueueImpl>(name_);
-  
-  const auto requestEventLoopTick = jsi::Function::createFromHostFunction(
-    rt,
-    jsi::PropNameID::forUtf8(rt, "__requestEventLoopTick"),
-    0,
-    [queue = queue_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) -> jsi::Value {
-      bool isPriority = false;
-      if (count > 0 && args[0].isBool()) {
-        isPriority = args[0].asBool();
-      }
-      if (isPriority) {
-        queue->pushPriority([&rt](){
-          rt.global().getPropertyAsFunction(rt, "__drainTasks").call(rt);
-        });
-      } else {
-        queue->push([&rt](){
-          rt.global().getPropertyAsFunction(rt, "__drainTasks").call(rt);
-        });
-      }
-      return jsi::Value::undefined();
-    });
-  rt.global().setProperty(rt, "__requestEventLoopTick", requestEventLoopTick);
-  
-  // -----------------------------------------------------------------------------
 }
 
 void WorkletRuntime::runAsyncGuarded(
