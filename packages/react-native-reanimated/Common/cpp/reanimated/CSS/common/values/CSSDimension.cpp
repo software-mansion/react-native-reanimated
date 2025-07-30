@@ -54,8 +54,7 @@ bool CSSDimension::canConstruct(const std::string &value) {
 }
 
 bool CSSDimension::canConstruct(const char *value) {
-  auto str = std::string(value);
-  return !str.empty() && str.back() == '%';
+  return canConstruct(std::string(value));
 }
 
 bool CSSDimension::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
@@ -84,23 +83,16 @@ std::string CSSDimension::toString() const {
 
 CSSDimension CSSDimension::interpolate(
     const double progress,
-    const CSSDimension &to) const {
-  if (canInterpolateDirectly(to)) {
-    return interpolateDirectly(progress, to);
-  }
-
-  // Otherwise, we interpolate values as keywords
-  return progress < 0.5 ? *this : to;
-}
-
-CSSDimension CSSDimension::interpolate(
-    const double progress,
     const CSSDimension &to,
     const CSSResolvableValueInterpolationContext &context) const {
-  if (canInterpolateDirectly(to)) {
-    return interpolateDirectly(progress, to);
+  // If both value types are the same, we can interpolate without reading the
+  // relative value from the shadow node
+  // (also, when one of the values is 0, and the other is relative)
+  if ((isRelative == to.isRelative) || (isRelative && to.value == 0) ||
+      (to.isRelative && value == 0)) {
+    return CSSDimension(
+        value + (to.value - value) * progress, isRelative || to.isRelative);
   }
-
   // Otherwise, we need to read the relative value from the shadow node and
   // interpolate values as numbers
   const auto resolvedFrom = resolve(context);
@@ -142,26 +134,11 @@ bool CSSDimension::operator==(const CSSDimension &other) const {
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(std::ostream &os, const CSSDimension &dimension) {
-  os << "CSSDimension(" << dimension.toString() << ")";
+std::ostream &operator<<(std::ostream &os, const CSSDimension &value) {
+  os << "CSSDimension(" << value.toString() << ")";
   return os;
 }
 
 #endif // NDEBUG
-
-bool CSSDimension::canInterpolateDirectly(const CSSDimension &to) const {
-  // If both value types are the same, we can interpolate without reading the
-  // relative value from the shadow node
-  // (also, when one of the values is 0, and the other is relative)
-  return (isRelative == to.isRelative) || (isRelative && to.value == 0) ||
-      (to.isRelative && value == 0);
-}
-
-CSSDimension CSSDimension::interpolateDirectly(
-    const double progress,
-    const CSSDimension &to) const {
-  return CSSDimension(
-      value + (to.value - value) * progress, isRelative || to.isRelative);
-}
 
 } // namespace reanimated::css
