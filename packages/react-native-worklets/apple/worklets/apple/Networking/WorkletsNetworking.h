@@ -1,8 +1,12 @@
+/*
+ * This file is based on RCTNetworking.h from React Native.
+ */
+
 #import <React/RCTNetworking.h>
 
 #import <worklets/WorkletRuntime/RuntimeManager.h>
 
-@interface RCTWorkletsNetworking : NSObject
+@interface WorkletsNetworking : NSObject
 
 - (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager
        rctNetworking:(RCTNetworking *)rctNetworking;

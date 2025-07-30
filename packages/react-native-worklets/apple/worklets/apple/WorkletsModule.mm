@@ -6,7 +6,7 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
-#import <worklets/apple/Networking/RCTWorkletsNetworking.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
@@ -28,7 +28,7 @@ using worklets::WorkletsModuleProxy;
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   RCTNetworking *networkingModule_;
-  RCTWorkletsNetworking *workletsNetworking_;
+  WorkletsNetworking *workletsNetworking_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -83,7 +83,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
-  workletsNetworking_ = [[RCTWorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
 

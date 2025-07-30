@@ -1,3 +1,7 @@
+/*
+ * This file is based on RCTNetworking.mm from React Native.
+ */
+
 #import <mutex>
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
@@ -7,7 +11,7 @@
 #import <React/RCTNetworkTask.h>
 #import <React/RCTNetworking.h>
 #import <React/RCTUtils.h>
-#import <worklets/apple/Networking/RCTWorkletsNetworking.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 
 #import <React/RCTHTTPRequestHandler.h>
 #import <react/featureflags/ReactNativeFeatureFlags.h>
@@ -18,32 +22,32 @@
 #import <React-Core/React/RCTFollyConvert.h>
 #import <React-jsi/jsi/JSIDynamic.h>
 
-typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
+typedef WorkletsURLRequestCancellationBlock (^WorkletsHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
 
-@interface RCTWorkletsNetworking ()
+@interface WorkletsNetworking ()
 
-- (RCTURLRequestCancellationBlock)processDataForHTTPQuery:(NSDictionary<NSString *, id> *)data
+- (WorkletsURLRequestCancellationBlock)processDataForHTTPQuery:(NSDictionary<NSString *, id> *)data
                                            workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
-                                                 callback:(RCTHTTPQueryResult)callback;
+                                                 callback:(WorkletsHTTPQueryResult)callback;
 @end
 
 /**
  * Helper to convert FormData payloads into multipart/formdata requests.
  */
-@interface RCTWorkletsHTTPFormDataHelper : NSObject
+@interface WorkletsHTTPFormDataHelper : NSObject
 
-@property (nonatomic, weak) RCTWorkletsNetworking *networker;
+@property (nonatomic, weak) WorkletsNetworking *networker;
 
 @end
 
-@implementation RCTWorkletsHTTPFormDataHelper {
+@implementation WorkletsHTTPFormDataHelper {
   NSMutableArray<NSDictionary<NSString *, id> *> *_parts;
   NSMutableData *_multipartBody;
-  RCTHTTPQueryResult _callback;
+  WorkletsHTTPQueryResult _callback;
   NSString *_boundary;
 }
 
-static NSString *RCTGenerateFormBoundary()
+static NSString *WorkletsGenerateFormBoundary()
 {
   const size_t boundaryLength = 70;
   const char *boundaryChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.";
@@ -67,12 +71,10 @@ static NSString *RCTGenerateFormBoundary()
 
 // TODO: Document thread switching because it's a mess right now...
 
-- (RCTURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData
+- (WorkletsURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData
                            workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
-                                 callback:(RCTHTTPQueryResult)callback
+                                 callback:(WorkletsHTTPQueryResult)callback
 {
-  //  RCTAssertThread(_networker.methodQueue, @"process: must be called on request queue");
-
   if (formData.count == 0) {
     return callback(nil, nil);
   }
@@ -80,7 +82,7 @@ static NSString *RCTGenerateFormBoundary()
   _parts = [formData mutableCopy];
   _callback = callback;
   _multipartBody = [NSMutableData new];
-  _boundary = RCTGenerateFormBoundary();
+  _boundary = WorkletsGenerateFormBoundary();
 
   for (NSUInteger i = 0; i < _parts.count; i++) {
     NSString *uri = _parts[i][@"uri"];
@@ -99,7 +101,7 @@ static NSString *RCTGenerateFormBoundary()
                                     }];
 }
 
-- (RCTURLRequestCancellationBlock)handleResult:(NSDictionary<NSString *, id> *)result
+- (WorkletsURLRequestCancellationBlock)handleResult:(NSDictionary<NSString *, id> *)result
                                 workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                          error:(NSError *)error
 {
@@ -150,7 +152,7 @@ static NSString *RCTGenerateFormBoundary()
 /**
  * Bridge module that provides the JS interface to the network stack.
  */
-@implementation RCTWorkletsNetworking {
+@implementation WorkletsNetworking {
   NSMutableDictionary<NSNumber *, RCTNetworkTask *> *_tasksByRequestID;
   NSLock *_tasksLock;
   std::mutex _handlersLock;
@@ -256,7 +258,7 @@ static NSString *RCTGenerateFormBoundary()
 
 #pragma mark - internals
 
-- (RCTURLRequestCancellationBlock)buildRequest:(NSDictionary<NSString *, id> *)query
+- (WorkletsURLRequestCancellationBlock)buildRequest:(NSDictionary<NSString *, id> *)query
                                 workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                completionBlock:(void (^)(NSURLRequest *request, jsi::Runtime &rt))completionBlock
 {
@@ -291,7 +293,7 @@ static NSString *RCTGenerateFormBoundary()
                                 if (error) {
                                   RCTLogError(@"Error processing request body: %@", error);
                                   // Ideally we'd circle back to JS here and notify an error/abort on the request.
-                                  return (RCTURLRequestCancellationBlock)nil;
+                                  return (WorkletsURLRequestCancellationBlock)nil;
                                 }
                                 request.HTTPBody = result[@"body"];
                                 NSString *dataContentType = result[@"contentType"];
@@ -326,7 +328,7 @@ static NSString *RCTGenerateFormBoundary()
                                 strongWorkletRuntime->runOnQueue(
                                     [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
 
-                                return (RCTURLRequestCancellationBlock)nil;
+                                return (WorkletsURLRequestCancellationBlock)nil;
                               }];
 }
 
@@ -408,10 +410,10 @@ static NSString *RCTGenerateFormBoundary()
  * - @"contentType" (NSString): the content type header of the request
  *
  */
-- (RCTURLRequestCancellationBlock)
+- (WorkletsURLRequestCancellationBlock)
     processDataForHTTPQuery:(nullable NSDictionary<NSString *, id> *)query
              workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
-                   callback:(RCTURLRequestCancellationBlock (^)(NSError *error, NSDictionary<NSString *, id> *result))
+                   callback:(WorkletsURLRequestCancellationBlock (^)(NSError *error, NSDictionary<NSString *, id> *result))
                                 callback
 {
   if (!query) {
@@ -436,7 +438,7 @@ static NSString *RCTGenerateFormBoundary()
   }
   NSURLRequest *request = [RCTConvert NSURLRequest:query[@"uri"]];
   if (request) {
-    __block RCTURLRequestCancellationBlock cancellationBlock = nil;
+    __block WorkletsURLRequestCancellationBlock cancellationBlock = nil;
     RCTNetworkTask *task = [self->rctNetworking_
         networkTaskWithRequest:request
                completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
@@ -467,7 +469,7 @@ static NSString *RCTGenerateFormBoundary()
   NSArray<NSDictionary *> *formData = [RCTConvert NSDictionaryArray:query[@"formData"]];
   if (formData) {
     // TODO: FIX
-    RCTWorkletsHTTPFormDataHelper *formDataHelper = [RCTWorkletsHTTPFormDataHelper new];
+    WorkletsHTTPFormDataHelper *formDataHelper = [WorkletsHTTPFormDataHelper new];
     formDataHelper.networker = self;
     return [formDataHelper process:formData workletRuntime:workletRuntime callback:callback];
   }
@@ -565,7 +567,7 @@ static NSString *RCTGenerateFormBoundary()
 
     if ([responseType isEqualToString:@"text"]) {
       // No carry storage is required here because the entire data has been loaded.
-      responseData = [RCTWorkletsNetworking decodeTextData:data fromResponse:task.response withCarryData:nil];
+      responseData = [WorkletsNetworking decodeTextData:data fromResponse:task.response withCarryData:nil];
       if (!responseData) {
         RCTLogWarn(@"Received data was not a string, or was not a recognised encoding.");
         return;
@@ -633,7 +635,7 @@ static NSString *RCTGenerateFormBoundary()
       incrementalDataBlock = ^(NSData *data, int64_t progress, int64_t total) {
         NSUInteger initialCarryLength = incrementalDataCarry.length;
 
-        NSString *responseString = [RCTWorkletsNetworking decodeTextData:data
+        NSString *responseString = [WorkletsNetworking decodeTextData:data
                                                             fromResponse:task.response
                                                            withCarryData:incrementalDataCarry];
         if (!responseString) {
