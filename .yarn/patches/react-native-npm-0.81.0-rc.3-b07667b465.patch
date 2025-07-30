@@ -749,24 +749,3 @@ index 7a432b968ca..1e9cf8d7fe2 100644
 +}
 +
  @end
-diff --git a/Libraries/Components/View/View.js b/Libraries/Components/View/View.js
-index a7177fccf1595ae2f6b7c5b86efae3a4986b52a0..94ffb6fea6dda3d5547a6e050805c12bc3b693f5 100644
---- a/Libraries/Components/View/View.js
-+++ b/Libraries/Components/View/View.js
-@@ -23,7 +23,7 @@ import {use} from 'react';
-  *
-  * @see https://reactnative.dev/docs/view
-  */
--export default component View(
-+component View(
-   ref?: React.RefSetter<React.ElementRef<typeof ViewNativeComponent>>,
-   ...props: ViewProps
- ) {
-@@ -213,3 +213,7 @@ export default component View(
-   }
-   return actualView;
- }
-+
-+View.displayName = 'View';
-+
-+export default View;
