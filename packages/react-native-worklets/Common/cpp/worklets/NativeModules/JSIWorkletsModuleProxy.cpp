@@ -132,7 +132,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    forwardedFetch forwardedFetch)
+    RuntimeBindings runtimeBindings)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -142,7 +142,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime),
-      forwardedFetch_(forwardedFetch) {}
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const JSIWorkletsModuleProxy &other)
@@ -155,7 +155,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiScheduler_(other.uiScheduler_),
       runtimeManager_(other.runtimeManager_),
       uiWorkletRuntime_(other.uiWorkletRuntime_),
-      forwardedFetch_(other.forwardedFetch_) {}
+      runtimeBindings_(other.runtimeBindings_) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
@@ -577,8 +577,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
           auto workletRuntime = runtimeManager->getRuntime(&rt);
           const auto &callback = args[0];
           rt.global().setProperty(rt, "stupidCallback", callback);
-              auto callbackk = rt.global().getProperty(rt, "stupidCallback");
-              auto calptr = std::make_shared<jsi::Value>(std::move(callbackk));
+          auto callbackk = rt.global().getProperty(rt, "stupidCallback");
+          auto calptr = std::make_shared<jsi::Value>(std::move(callbackk));
           workletRuntime->runOnQueue([calptr](jsi::Runtime &rt) {
             auto performance =
                 rt.global().getPropertyAsObject(rt, "performance");

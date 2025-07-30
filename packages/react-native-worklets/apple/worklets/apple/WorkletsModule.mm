@@ -86,68 +86,27 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
   workletsNetworking_ = [[RCTWorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
-  
-  worklets::forwardedFetch forwardedSendRequest = [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value& request, const jsi::Value& responseSender){
-    auto responser = responseSender.asObject(rt).asFunction(rt);
-    [workletsNetworking JSIsendRequest:rt jquery:request responseSender:responser];
-  };
-  
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
-      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
+  
+  worklets::RuntimeBindings runtimeBindings
+    {
+      .requestAnimationFrame =      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
         [animationFrameQueue requestAnimationFrame:callback];
-      });
-
-//  worklets::forwardedFetch forwardedFetch = //std::function<void(jsi::Runtime rt, jsi::Value request, jsi::Value callback)>(
-//                                                                                                      
-//    [networkingModule = networkingModule_](jsi::Runtime &rt, const jsi::Value &requestData, const jsi::Value &callback) {
-//      
-//      auto requestDataObject = requestData.asObject(rt);
-//      
-//      auto requestDataKeys = requestDataObject.getPropertyNames(rt);
-//      
-////      NSData *HTTPBody;
-//      for(int i = 0; i<requestDataKeys.size(rt); i++) {
-//        LOG(INFO) << requestDataKeys.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-//      }
-//      
-//      auto url = requestDataObject.getProperty(rt, "url").asString(rt).utf8(rt);
-//      
-//      auto method = requestDataObject.getProperty(rt, "method").asString(rt).utf8(rt);
-//      
-//      id objCobj = facebook::react::TurboModuleConvertUtils::convertJSIValueToObjCObject(rt, requestData, nullptr);
-//      
-//      
-////
-//      NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:objCobj[@"url"]]];
-//      
-//      request.HTTPMethod = objCobj[@"method"];
-//      
-//      
-////      NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithUTF8String:url.c_str()]]];
-////      request
-////      request.HTTPBody =
-//      RCTNetworkTask *task = [networkingModule networkTaskWithRequest:request completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
-//        if (error) {
-////          callback(error.localizedDescription.UTF8String);
-//          callback.asObject(rt).asFunction(rt).call(rt, facebook::react::TurboModuleConvertUtils::convertObjCObjectToJSIValue(rt, error));
-//        } else {
-////          callback([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding].UTF8String);
-//          
-////          [RCTNetworking decode
-//          
-////          callback.asObject(rt).asFunction(rt).call(rt, facebook::react::TurboModuleConvertUtils::convertObjCObjectToJSIValue(rt, response));
-//          auto sstring = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding].UTF8String;
-//          
-//          auto stringResponse = jsi::String::createFromUtf8(rt, sstring);
-//          
-//          callback.asObject(rt).asFunction(rt).call(rt, stringResponse);
-//        }
-//      }];
-//      [task start];
-//    };
-  //);
+      },
+        .sendRequest = [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender){
+          [workletsNetworking sendRequest:rt jquery:query responseSender:(std::move(responseSender))];
+          return jsi::Value::undefined();
+        },
+        .abortRequest = [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
+          [workletsNetworking abortRequest:rt requestID:requestID.asNumber()];
+          return jsi::Value::undefined();
+        },
+        .clearCookies = [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+          [workletsNetworking clearCookies:rt responseSender:(std::move(responseSender))];
+          return jsi::Value::undefined();
+        }
+    };
     
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
@@ -156,8 +115,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       uiScheduler,
       runtimeManager,
       std::move(isJavaScriptQueue),
-      std::move(forwardedRequestAnimationFrame),
-      std::move(forwardedSendRequest),
+      runtimeBindings,
       script,
       sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();

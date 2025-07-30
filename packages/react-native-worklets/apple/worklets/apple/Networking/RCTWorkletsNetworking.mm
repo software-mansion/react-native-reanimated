@@ -1,10 +1,3 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 #import <mutex>
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
@@ -27,126 +20,6 @@
 
 typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
 
-//NSString *const RCTNetworkingPHUploadHackScheme = @"ph-upload";
-
-//@interface RCTWorkletsNetworking ()
-//
-//- (RCTURLRequestCancellationBlock)processDataForHTTPQuery:(NSDictionary<NSString *, id> *)data
-//                                                 callback:(RCTHTTPQueryResult)callback;
-//@end
-
-/**
- * Helper to convert FormData payloads into multipart/formdata requests.
- */
-//@interface RCTHTTPFormDataHelper : NSObject
-//
-//@property (nonatomic, weak) RCTWorkletsNetworking *networker;
-//
-//@end
-//
-//@implementation RCTHTTPFormDataHelper {
-//  NSMutableArray<NSDictionary<NSString *, id> *> *_parts;
-//  NSMutableData *_multipartBody;
-//  RCTHTTPQueryResult _callback;
-//  NSString *_boundary;
-//}
-//
-//static NSString *RCTGenerateFormBoundary()
-//{
-//  const size_t boundaryLength = 70;
-//  const char *boundaryChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.";
-//
-//  char *bytes = (char *)malloc(boundaryLength);
-//  if (!bytes) {
-//    // CWE - 391 : Unchecked error condition
-//    // https://www.cvedetails.com/cwe-details/391/Unchecked-Error-Condition.html
-//    // https://eli.thegreenplace.net/2009/10/30/handling-out-of-memory-conditions-in-c
-//    abort();
-//  }
-//  size_t charCount = strlen(boundaryChars);
-//  for (int i = 0; i < boundaryLength; i++) {
-//    bytes[i] = boundaryChars[arc4random_uniform((u_int32_t)charCount)];
-//  }
-//  return [[NSString alloc] initWithBytesNoCopy:bytes
-//                                        length:boundaryLength
-//                                      encoding:NSUTF8StringEncoding
-//                                  freeWhenDone:YES];
-//}
-//
-//- (RCTURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData callback:(RCTHTTPQueryResult)callback
-//{
-////  RCTAssertThread(_networker.methodQueue, @"process: must be called on request queue");
-//
-//  if (formData.count == 0) {
-//    return callback(nil, nil);
-//  }
-//
-//  _parts = [formData mutableCopy];
-//  _callback = callback;
-//  _multipartBody = [NSMutableData new];
-//  _boundary = RCTGenerateFormBoundary();
-//
-//  for (NSUInteger i = 0; i < _parts.count; i++) {
-//    NSString *uri = _parts[i][@"uri"];
-//    if (uri && [[uri substringToIndex:@"ph:".length] caseInsensitiveCompare:@"ph:"] == NSOrderedSame) {
-//      uri = [RCTNetworkingPHUploadHackScheme stringByAppendingString:[uri substringFromIndex:@"ph".length]];
-//      NSMutableDictionary *mutableDict = [_parts[i] mutableCopy];
-//      mutableDict[@"uri"] = uri;
-//      _parts[i] = mutableDict;
-//    }
-//  }
-//
-//  return [_networker processDataForHTTPQuery:_parts[0]
-//                                    callback:^(NSError *error, NSDictionary<NSString *, id> *result) {
-//                                      return [self handleResult:result error:error];
-//                                    }];
-//}
-//
-//- (RCTURLRequestCancellationBlock)handleResult:(NSDictionary<NSString *, id> *)result error:(NSError *)error
-//{
-////  RCTAssertThread(_networker.methodQueue, @"handleResult: must be called on request queue");
-//
-//  if (error) {
-//    return _callback(error, nil);
-//  }
-//
-//  // Start with boundary.
-//  [_multipartBody
-//      appendData:[[NSString stringWithFormat:@"--%@\r\n", _boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-//
-//  // Print headers.
-//  NSMutableDictionary<NSString *, NSString *> *headers = [_parts[0][@"headers"] mutableCopy];
-//  NSString *partContentType = result[@"contentType"];
-//  if (partContentType != nil && ![partContentType isEqual:[NSNull null]]) {
-//    headers[@"content-type"] = partContentType;
-//  }
-//  [headers enumerateKeysAndObjectsUsingBlock:^(NSString *parameterKey, NSString *parameterValue, BOOL *stop) {
-//    [self->_multipartBody appendData:[[NSString stringWithFormat:@"%@: %@\r\n", parameterKey, parameterValue]
-//                                         dataUsingEncoding:NSUTF8StringEncoding]];
-//  }];
-//
-//  // Add the body.
-//  [_multipartBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-//  [_multipartBody appendData:result[@"body"]];
-//  [_multipartBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-//
-//  [_parts removeObjectAtIndex:0];
-//  if (_parts.count) {
-//    return [_networker processDataForHTTPQuery:_parts[0]
-//                                      callback:^(NSError *err, NSDictionary<NSString *, id> *res) {
-//                                        return [self handleResult:res error:err];
-//                                      }];
-//  }
-//
-//  // We've processed the last item. Finish and return.
-//  [_multipartBody
-//      appendData:[[NSString stringWithFormat:@"--%@--\r\n", _boundary] dataUsingEncoding:NSUTF8StringEncoding]];
-//  NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", _boundary];
-//  return _callback(nil, @{@"body" : _multipartBody, @"contentType" : contentType});
-//}
-//
-//@end
-
 /**
  * Bridge module that provides the JS interface to the network stack.
  */
@@ -155,22 +28,105 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
   std::mutex _handlersLock;
   NSArray<id<RCTURLRequestHandler>> *_handlers;
 //  NSArray<id<RCTURLRequestHandler>> * (^_handlersProvider)(RCTModuleRegistry *);
-  NSMutableArray<id<RCTNetworkingRequestHandler>> *_requestHandlers;
-  NSMutableArray<id<RCTNetworkingResponseHandler>> *_responseHandlers;
+//  NSMutableArray<id<RCTNetworkingRequestHandler>> *_requestHandlers;
+  // NSMutableArray<id<RCTNetworkingResponseHandler>> *_responseHandlers;
   std::shared_ptr<worklets::RuntimeManager> runtimeManager_;
   RCTNetworking* rctNetworking_;
 //  dispatch_queue_t _requestQueue;
   
 }
 
-//@synthesize methodQueue = _methodQueue;
+#pragma mark - JS API
 
-//RCT_EXPORT_MODULE()
+- (void)sendRequest:(jsi::Runtime &) rt
+jquery: (const facebook::jsi::Value &)jquery
+      responseSender:(jsi::Function &&)responseSender
+{
+  auto originRuntime = runtimeManager_->getRuntime(&rt);
+  if(!originRuntime) {
+    return;
+  }
+  
+  id query = facebook::react::TurboModuleConvertUtils::convertJSIValueToObjCObject(rt, jquery, nullptr);
+  
+  NSString *method = query[@"method"];
+  NSString *url = query[@"url"];
+  id data = query[@"data"];
+  id headers = query[@"headers"];
+  NSString *queryResponseType = query[@"responseType"];
+  bool queryIncrementalUpdates = [RCTConvert BOOL:query[@"incrementalUpdates"]];
+  double timeout = [RCTConvert double:query[@"timeout"]];
+  bool withCredentials = [RCTConvert BOOL:query[@"withCredentials"]];
+  
+  auto valuee = dynamic_cast<const jsi::Object *>(&responseSender);
+  
+  jsi::Function fun = valuee->asFunction(rt);
+  
+  auto sharedSender = std::make_shared<jsi::Function>(std::move(fun));
 
-//+ (BOOL)requiresMainQueueSetup
-//{
-//  return NO;
-//}
+  originRuntime->runOnQueue([self, sharedSender, method, url, data, headers, queryResponseType,
+      queryIncrementalUpdates, timeout, withCredentials, originRuntime](jsi::Runtime &rt) {
+    NSDictionary *queryDict = @{
+      @"method" : method,
+      @"url" : url,
+      @"data" : data,
+      @"headers" : headers,
+      @"responseType" : queryResponseType,
+      @"incrementalUpdates" : @(queryIncrementalUpdates),
+      @"timeout" : @(timeout),
+      @"withCredentials" : @(withCredentials),
+    };
+
+    // TODO: buildRequest returns a cancellation block, but there's currently
+    // no way to invoke it, if, for example the request is cancelled while
+    // loading a large file to build the request body
+    [self buildRequest:queryDict
+        completionBlock:^(NSURLRequest *request) {
+          NSString *responseType = [RCTConvert NSString:queryDict[@"responseType"]];
+          BOOL incrementalUpdates = [RCTConvert BOOL:queryDict[@"incrementalUpdates"]];
+          [self sendRequest:request
+                    responseType:responseType
+              incrementalUpdates:incrementalUpdates
+           rt:rt
+                  responseSender:sharedSender];
+        } workletRuntime:originRuntime];
+  });
+}
+
+- (void)abortRequest:(double)requestID
+{
+  // TODO: RESTORE
+  // dispatch_async(_methodQueue, ^{
+//  self->uiScheduler_->scheduleOnUI([self, requestID]() {
+//    [self->_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
+//    [self->_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
+//  });
+}
+
+- (void)clearCookies:(facebook::jsi::Runtime &)rt
+      responseSender:
+(jsi::Function &&)responseSender
+{
+  // dispatch_async(_methodQueue, ^{
+  auto runtime = runtimeManager_->getRuntime(&rt);
+  runtime->runOnQueue([self, &responseSender](jsi::Runtime &rt){
+//  self->uiScheduler_->scheduleOnUI([self, &rt, &responseSender]() {
+    NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
+    if (!storage.cookies.count) {
+      // TODO: Use a queue
+      // responseSender(@[ @NO ]);
+      responseSender.call(rt, {facebook::jsi::Value(rt, false)});
+      return;
+    }
+
+    for (NSHTTPCookie *cookie in storage.cookies) {
+      [storage deleteCookie:cookie];
+    }
+    // TODO: Use a queue
+    // responseSender(@[ @YES ]);
+    responseSender.call(rt, {facebook::jsi::Value(rt, true)});
+  });
+}
 
 - (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager rctNetworking:(RCTNetworking *)rctNetworking
 {
@@ -182,19 +138,9 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
   return self;
 }
 
-//- (instancetype)initWithHandlersProvider:
-//    (NSArray<id<RCTURLRequestHandler>> * (^)(RCTModuleRegistry *moduleRegistry))getHandlers
-//{
-//  if (self = [self init]) {
-//    _handlersProvider = getHandlers;
-//  }
-//  return self;
-//}
-
+// TODO: Is it needed?
 - (void)invalidate
 {
-//  [super invalidate];
-
   std::lock_guard<std::mutex> lock(_handlersLock);
 
   for (NSNumber *requestID in _tasksByRequestID) {
@@ -206,9 +152,9 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
       [(id<RCTInvalidating>)handler invalidate];
     }
   }
-  _handlers = nil;
-  _requestHandlers = nil;
-  _responseHandlers = nil;
+//  _handlers = nil;
+//  _requestHandlers = nil;
+//  _responseHandlers = nil;
 }
 
 - (NSArray<NSString *> *)supportedEvents
@@ -222,81 +168,6 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
     @"didReceiveNetworkData"
   ];
 }
-
-//- (id<RCTURLRequestHandler>)handlerForRequest:(NSURLRequest *)request
-//{
-//  if (!request.URL) {
-//    return nil;
-//  }
-//  NSArray<id<RCTURLRequestHandler>> *handlers = [self prioritizedHandlers];
-//
-//  if (RCT_DEBUG) {
-//    // Check for handler conflicts
-//    float previousPriority = 0;
-//    id<RCTURLRequestHandler> previousHandler = nil;
-//    for (id<RCTURLRequestHandler> handler in handlers) {
-//      float priority = [handler respondsToSelector:@selector(handlerPriority)] ? [handler handlerPriority] : 0;
-//      if (previousHandler && priority < previousPriority) {
-//        return previousHandler;
-//      }
-//      if ([handler canHandleRequest:request]) {
-//        if (previousHandler) {
-//          if (priority == previousPriority) {
-//            RCTLogError(
-//                @"The RCTURLRequestHandlers %@ and %@ both reported that"
-//                 " they can handle the request %@, and have equal priority"
-//                 " (%g). This could result in non-deterministic behavior.",
-//                handler,
-//                previousHandler,
-//                request,
-//                priority);
-//          }
-//        } else {
-//          previousHandler = handler;
-//          previousPriority = priority;
-//        }
-//      }
-//    }
-//    return previousHandler;
-//  }
-//
-//  // Normal code path
-//  for (id<RCTURLRequestHandler> handler in handlers) {
-//    if ([handler canHandleRequest:request]) {
-//      return handler;
-//    }
-//  }
-//  return nil;
-//}
-
-//- (NSArray<id<RCTURLRequestHandler>> *)prioritizedHandlers
-//{
-//  std::lock_guard<std::mutex> lock(_handlersLock);
-//  if (_handlers) {
-//    return _handlers;
-//  }
-//
-//  NSArray<id<RCTURLRequestHandler>> *newHandlers = _handlersProvider
-//      ? _handlersProvider(self.moduleRegistry)
-//      : [self.bridge modulesConformingToProtocol:@protocol(RCTURLRequestHandler)];
-//
-//  // Get handlers, sorted in reverse priority order (highest priority first)
-//  newHandlers = [newHandlers
-//      sortedArrayUsingComparator:^NSComparisonResult(id<RCTURLRequestHandler> a, id<RCTURLRequestHandler> b) {
-//        float priorityA = [a respondsToSelector:@selector(handlerPriority)] ? [a handlerPriority] : 0;
-//        float priorityB = [b respondsToSelector:@selector(handlerPriority)] ? [b handlerPriority] : 0;
-//        if (priorityA > priorityB) {
-//          return NSOrderedAscending;
-//        } else if (priorityA < priorityB) {
-//          return NSOrderedDescending;
-//        } else {
-//          return NSOrderedSame;
-//        }
-//      }];
-//
-//  _handlers = newHandlers;
-//  return newHandlers;
-//}
 
 - (NSDictionary<NSString *, id> *)stripNullsInRequestHeaders:(NSDictionary<NSString *, id> *)headers
 {
@@ -387,11 +258,6 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
                               }];
 }
 
-//- (BOOL)canHandleRequest:(NSURLRequest *)request
-//{
-//  return [self handlerForRequest:request] != nil;
-//}
-
 /**
  * Process the 'data' part of an HTTP query.
  *
@@ -417,20 +283,17 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
                    callback:(RCTURLRequestCancellationBlock (^)(NSError *error, NSDictionary<NSString *, id> *result))
                                 callback
 {
-//  RCTAssertThread(_methodQueue, @"processDataForHTTPQuery: must be called on request queue");
-
   if (!query) {
     return callback(nil, nil);
   }
-  for (id<RCTNetworkingRequestHandler> handler in _requestHandlers) {
-    if ([handler canHandleNetworkingRequest:query]) {
-      // @lint-ignore FBOBJCUNTYPEDCOLLECTION1
-      NSDictionary *body = [handler handleNetworkingRequest:query];
-      if (body) {
-        return callback(nil, body);
-      }
-    }
-  }
+//  for (id<RCTNetworkingRequestHandler> handler in _requestHandlers) {
+//    if ([handler canHandleNetworkingRequest:query]) {
+//      NSDictionary *body = [handler handleNetworkingRequest:query];
+//      if (body) {
+//        return callback(nil, body);
+//      }
+//    }
+//  }
   NSData *body = [RCTConvert NSData:query[@"string"]];
   if (body) {
     return callback(nil, @{@"body" : body});
@@ -447,6 +310,7 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
         [self->rctNetworking_ networkTaskWithRequest:request
                      completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
                       //  dispatch_async(self->_methodQueue, ^{
+                      // TODO: Fix
                       dispatch_async(dispatch_get_main_queue(), ^{
                          cancellationBlock = callback(
                              error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
@@ -549,15 +413,13 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
          forTask:(RCTNetworkTask *)task
           rt:(facebook::jsi::Runtime &)rt
 {
-//  RCTAssertThread(_methodQueue, @"sendData: must be called on request queue");
-
   id responseData = nil;
-  for (id<RCTNetworkingResponseHandler> handler in _responseHandlers) {
-    if ([handler canHandleNetworkingResponse:responseType]) {
-      responseData = [handler handleNetworkingResponse:response data:data];
-      break;
-    }
-  }
+//  for (id<RCTNetworkingResponseHandler> handler in _responseHandlers) {
+//    if ([handler canHandleNetworkingResponse:responseType]) {
+//      responseData = [handler handleNetworkingResponse:response data:data];
+//      break;
+//    }
+//  }
 
   if (!responseData) {
     if (data.length == 0) {
@@ -589,7 +451,6 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
           rt:(facebook::jsi::Runtime &)rt
           responseSender:(std::shared_ptr<jsi::Function>)responseSender
 {
-//  RCTAssertThread(_methodQueue, @"sendRequest: must be called on request queue");
   __weak __typeof(self) weakSelf = self;
   __block RCTNetworkTask *task;
   RCTURLRequestProgressBlock uploadProgressBlock = ^(int64_t progress, int64_t total) {
@@ -683,7 +544,6 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
     [strongSelf->_tasksByRequestID removeObjectForKey:task.requestID];
   };
 
-//  task = [self networkTaskWithRequest:request completionBlock:completionBlock];
   task = [self->rctNetworking_ networkTaskWithRequest:request completionBlock:completionBlock];
   task.downloadProgressBlock = downloadProgressBlock;
   task.incrementalDataBlock = incrementalDataBlock;
@@ -785,161 +645,6 @@ using ArgFactory =
           rt, emitterObject, (const facebook::jsi::Value*)args.data(), args.size());
     }
   });
-}
-
-//#pragma mark - Public API
-//
-//- (void)addRequestHandler:(id<RCTNetworkingRequestHandler>)handler
-//{
-//  if (!_requestHandlers) {
-//    _requestHandlers = [NSMutableArray new];
-//  }
-//  [_requestHandlers addObject:handler];
-//}
-//
-//- (void)addResponseHandler:(id<RCTNetworkingResponseHandler>)handler
-//{
-//  if (!_responseHandlers) {
-//    _responseHandlers = [NSMutableArray new];
-//  }
-//  [_responseHandlers addObject:handler];
-//}
-//
-//- (void)removeRequestHandler:(id<RCTNetworkingRequestHandler>)handler
-//{
-//  [_requestHandlers removeObject:handler];
-//}
-//
-//- (void)removeResponseHandler:(id<RCTNetworkingResponseHandler>)handler
-//{
-//  [_responseHandlers removeObject:handler];
-//}
-//
-//- (RCTNetworkTask *)networkTaskWithRequest:(NSURLRequest *)request
-//                           completionBlock:(RCTURLRequestCompletionBlock)completionBlock
-//{
-//  id<RCTURLRequestHandler> handler = [self handlerForRequest:request];
-//  if (!handler) {
-//    RCTLogError(@"No suitable URL request handler found for %@", request.URL);
-//    return nil;
-//  }
-//
-//  RCTNetworkTask *task = [[RCTNetworkTask alloc] initWithRequest:request handler:handler callbackQueue:_methodQueue];
-//  task.completionBlock = completionBlock;
-//  return task;
-//}
-
-#pragma mark - JS API
-
-// RCT_EXPORT_METHOD(sendRequest
-//                   : (JS::NativeNetworkingIOS::SpecSendRequestQuery &)query callback
-//                   : (RCTResponseSenderBlock)responseSender)
-- (void)JSIsendRequest:(facebook::jsi::Runtime &) rt
-jquery: (const facebook::jsi::Value &)jquery
-      responseSender:(const facebook::jsi::Function &)responseSender
-{
-  id query = facebook::react::TurboModuleConvertUtils::convertJSIValueToObjCObject(rt, jquery, nullptr);
-  
-//  NSString *method = query.method();
-  NSString *method = query[@"method"];
-  // NSString *url = query.url();
-  NSString *url = query[@"url"];
-  // id<NSObject> data = query.data();
-  id data = query[@"data"];
-  // id<NSObject> headers = query.headers();
-  id headers = query[@"headers"];
-  // NSString *queryResponseType = query.responseType();
-  NSString *queryResponseType = query[@"responseType"];
-  // bool queryIncrementalUpdates = query.incrementalUpdates();
-  bool queryIncrementalUpdates = [RCTConvert BOOL:query[@"incrementalUpdates"]];
-  // double timeout = query.timeout();
-  double timeout = [RCTConvert double:query[@"timeout"]];
-  // bool withCredentials = query.withCredentials();
-  bool withCredentials = [RCTConvert BOOL:query[@"withCredentials"]];
-
-  auto originRuntime = runtimeManager_->getRuntime(&rt);
-  
-  auto valuee = dynamic_cast<const jsi::Object *>(&responseSender);
-  
-  jsi::Function fun = valuee->asFunction(rt);
-  
-  auto sharedSender = std::make_shared<jsi::Function>(std::move(fun));
-
-//  dispatch_async(_methodQueue, ^{
-//  auto strongOrigin = weakOrigin.lock();
-//  if (!strongOrigin) {
-//    return;
-//  }
-  originRuntime->runOnQueue([self, sharedSender, method, url, data, headers, queryResponseType,
-      queryIncrementalUpdates, timeout, withCredentials, originRuntime](jsi::Runtime &rt) {
-    NSDictionary *queryDict = @{
-      @"method" : method,
-      @"url" : url,
-      @"data" : data,
-      @"headers" : headers,
-      @"responseType" : queryResponseType,
-      @"incrementalUpdates" : @(queryIncrementalUpdates),
-      @"timeout" : @(timeout),
-      @"withCredentials" : @(withCredentials),
-    };
-
-    // TODO: buildRequest returns a cancellation block, but there's currently
-    // no way to invoke it, if, for example the request is cancelled while
-    // loading a large file to build the request body
-    [self buildRequest:queryDict
-        completionBlock:^(NSURLRequest *request) {
-          NSString *responseType = [RCTConvert NSString:queryDict[@"responseType"]];
-          BOOL incrementalUpdates = [RCTConvert BOOL:queryDict[@"incrementalUpdates"]];
-          [self sendRequest:request
-                    responseType:responseType
-              incrementalUpdates:incrementalUpdates
-           rt:rt
-                  responseSender:sharedSender];
-        } workletRuntime:originRuntime];
-  });
-}
-
-// RCT_EXPORT_METHOD(abortRequest : (double)requestID)
-- (void)JSIabortRequest:(double)requestID
-{
-  // TODO: RESTORE
-  // dispatch_async(_methodQueue, ^{
-//  self->uiScheduler_->scheduleOnUI([self, requestID]() {
-//    [self->_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
-//    [self->_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
-//  });
-}
-
-// RCT_EXPORT_METHOD(clearCookies : (RCTResponseSenderBlock)responseSender)
-- (void)JSIclearCookies:(facebook::jsi::Runtime &)rt
-      responseSender:
-(facebook::jsi::Function &)responseSender
-{
-  // dispatch_async(_methodQueue, ^{
-  auto runtime = runtimeManager_->getRuntime(&rt);
-  runtime->runOnQueue([self, &responseSender](jsi::Runtime &rt){
-//  self->uiScheduler_->scheduleOnUI([self, &rt, &responseSender]() {
-    NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
-    if (!storage.cookies.count) {
-      // TODO: Use a queue
-      // responseSender(@[ @NO ]);
-      responseSender.call(rt, {facebook::jsi::Value(rt, false)});
-      return;
-    }
-
-    for (NSHTTPCookie *cookie in storage.cookies) {
-      [storage deleteCookie:cookie];
-    }
-    // TODO: Use a queue
-    // responseSender(@[ @YES ]);
-    responseSender.call(rt, {facebook::jsi::Value(rt, true)});
-  });
-}
-
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-  return std::make_shared<facebook::react::NativeNetworkingIOSSpecJSI>(params);
 }
 
 @end

@@ -1,4 +1,3 @@
-#include "WorkletRuntime.h"
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Resources/ValueUnpacker.h>
 #include <worklets/Tools/Defs.h>
@@ -88,11 +87,11 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
-  auto forwardedFetch = jsiWorkletsModuleProxy->getForwardedFetch();
 
 #ifdef WORKLETS_BUNDLE_MODE
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+  auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
 #endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
@@ -125,35 +124,18 @@ void WorkletRuntime::init(
            .stack = stack,
            .name = "WorkletsError",
            .jsEngine = "Worklets"});
+      return;
     }
   }
+
+  WorkletRuntimeDecorator::postScript(rt, runtimeBindings);
+
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
-
-  auto hf = jsi::Function::createFromHostFunction(
-      rt,
-      jsi::PropNameID::forAscii(rt, "sendRequest"),
-      2,
-      [forwardedFetch](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) {
-        //        return makeShareableBigInt(rt, args[0].asBigInt(rt));
-        forwardedFetch(rt, args[0], args[1]);
-        return jsi::Value::undefined();
-      });
-
-  auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
-
-  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(
-      rt, TurboModules, "Networking");
-
-  Networking.asObject(rt).setProperty(rt, "sendRequest", hf);
 }
 
 void WorkletRuntime::runAsyncGuarded(

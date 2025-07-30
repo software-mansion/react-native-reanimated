@@ -1,6 +1,7 @@
 #pragma once
 
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <jsi/jsi.h>
 
@@ -19,6 +20,10 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy);
+
+#ifdef WORKLETS_BUNDLE_MODE
+  static void postScript(jsi::Runtime &rt, RuntimeBindings runtimeBindings);
+#endif // WORKLETS_BUNDLE_MODE
 };
 
 } // namespace worklets

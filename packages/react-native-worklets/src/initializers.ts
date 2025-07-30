@@ -165,6 +165,7 @@ function initializeWorkletRuntime() {
             get: function get(_target, prop) {
               globalThis.console.warn(
                 `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
+                // eslint-disable-next-line reanimated/use-worklets-error
                 new Error().stack
               );
               return {
@@ -191,6 +192,7 @@ function initializeWorkletRuntime() {
 
       modules.set(ReactNativeModuleId, mod);
 
+      // @ts-expect-error type not exposed by Metro
       const PolyfillFunctionsId = require.resolveWeak(
         'react-native/Libraries/Utilities/PolyfillFunctions'
       );
@@ -200,7 +202,7 @@ function initializeWorkletRuntime() {
         _$$_REQUIRE: unknown,
         _$$_IMPORT_DEFAULT: unknown,
         _$$_IMPORT_ALL: unknown,
-        module: Record<string, unknown>,
+        module: Record<string, Record<string, unknown>>,
         _exports: unknown,
         _dependencyMap: unknown
       ) {
@@ -208,8 +210,8 @@ function initializeWorkletRuntime() {
           name: string,
           getValue: () => unknown
         ) => {
-          globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
-          globalThis[name] = getValue();
+          // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+          (globalThis as Record<string, unknown>)[name] = getValue();
         };
       };
 
@@ -227,6 +229,7 @@ function initializeWorkletRuntime() {
 
       modules.set(PolyfillFunctionsId, polyfillMod);
 
+      // @ts-expect-error type not exposed by Metro
       const TurboModuleRegistryId = require.resolveWeak(
         'react-native/Libraries/TurboModule/TurboModuleRegistry'
       );
@@ -234,6 +237,7 @@ function initializeWorkletRuntime() {
       const TurboModules = new Map<string, unknown>();
 
       // globalThis.TurboModules = new Map<string, unknown>();
+      // @ts-expect-error type not exposed by Metro
       globalThis.TurboModules = TurboModules;
 
       TurboModules.set('Networking', {});
@@ -249,13 +253,17 @@ function initializeWorkletRuntime() {
       ) {
         function get(name: string) {
           globalThis._log('TurboModuleRegistry get ' + name);
+          // @ts-expect-error type not exposed by Metro
           return globalThis.TurboModules.get(name);
         }
         function getEnforcing(name: string) {
           globalThis._log('TurboModuleRegistry getEnforcing ' + name);
+          // @ts-expect-error type not exposed by Metro
           return globalThis.TurboModules.get(name);
         }
+        // @ts-expect-error type not exposed by Metro
         module.exports.get = get;
+        // @ts-expect-error type not exposed by Metro
         module.exports.getEnforcing = getEnforcing;
       };
 

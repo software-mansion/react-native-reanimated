@@ -1,10 +1,4 @@
-
-
-// #import <React/RCTBridgeProxy.h>
-// #import <React/RCTEventEmitter.h>
-// #import <React/RCTNetworkTask.h>
 #import <React/RCTNetworking.h>
-// #import <React/RCTURLRequestHandler.h>
 
 #import <worklets/WorkletRuntime/RuntimeManager.h>
 
@@ -13,8 +7,14 @@
 - (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager
        rctNetworking:(RCTNetworking *)rctNetworking;
 
-- (void)JSIsendRequest:(facebook::jsi::Runtime &)rt
-                jquery:(const facebook::jsi::Value &)jquery
-        responseSender:(const facebook::jsi::Function &)responseSender;
+- (void)sendRequest:(jsi::Runtime &)rt
+                jquery:(const jsi::Value &)jquery
+        responseSender:(jsi::Function &&)responseSender;
+
+- (void)abortRequest:(jsi::Runtime &)rt requestID:(double)requestID;
+
+- (void)clearCookies:(jsi::Runtime &)rt
+      responseSender:
+(jsi::Function &&)responseSender;
 
 @end
