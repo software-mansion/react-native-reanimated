@@ -44,12 +44,13 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
-    std::shared_ptr<SerializableWorklet> initializer) {
+    std::shared_ptr<SerializableWorklet> initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto runtimeId = getNextRuntimeId();
   const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
   auto workletRuntime =
-      std::make_shared<WorkletRuntime>(runtimeId, jsQueue, name);
+      std::make_shared<WorkletRuntime>(runtimeId, jsQueue, name, queue);
 
   workletRuntime->init(std::move(jsiWorkletsModuleProxy));
 

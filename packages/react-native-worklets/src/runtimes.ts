@@ -16,14 +16,14 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * Lets you create a new JS runtime which can be used to run worklets possibly
  * on different threads than JS or UI thread.
  *
- * @param config - Configuration object containing runtime name and optional
- *   initializer
+ * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
  */
+// @ts-expect-error Public API overload.
 export function createWorkletRuntime(
-  config: WorkletRuntimeConfig
+  config?: WorkletRuntimeConfig
 ): WorkletRuntime;
 
 /**
@@ -40,26 +40,36 @@ export function createWorkletRuntime(
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
  */
-// @ts-expect-error Check `runOnUI` overload.
 export function createWorkletRuntime(
-  name: string,
+  name?: string,
   initializer?: () => void
 ): WorkletRuntime;
 
 export function createWorkletRuntime(
-  nameOrConfig: string | WorkletRuntimeConfig,
+  nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   let name: string;
   let initializerFn: (() => void) | undefined;
+  let useDefaultQueue = true;
+  let customQueue: object | undefined;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
   } else {
-    name = nameOrConfig.name;
-    initializerFn = nameOrConfig.initializer;
+    // TODO: Make anonymous name globally unique.
+    name = nameOrConfig?.name ?? 'anonymous';
+    initializerFn = nameOrConfig?.initializer;
+    useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
+    customQueue = nameOrConfig?.customQueue;
+  }
+
+  if (initializerFn && !isWorkletFunction(initializerFn)) {
+    throw new WorkletsError(
+      'The initializer passed to `createWorkletRuntime` is not a worklet.'
+    );
   }
 
   return WorkletsModule.createWorkletRuntime(
@@ -70,7 +80,9 @@ export function createWorkletRuntime(
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
       initializerFn?.();
-    })
+    }),
+    useDefaultQueue,
+    customQueue
   );
 }
 
@@ -92,7 +104,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   }
   if (globalThis._WORKLET) {
     return (...args) =>
-      global._scheduleOnRuntime(
+      globalThis._scheduleOnRuntime(
         workletRuntime,
         makeShareableCloneOnUIRecursive(() => {
           'worklet';
@@ -110,7 +122,46 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
     );
 }
 
+/** Configuration object for creating a worklet runtime. */
 export type WorkletRuntimeConfig = {
-  name: string;
+  /** The name of the worklet runtime. */
+  name?: string;
+  /**
+   * A worklet that will be run immediately after the runtime is created and
+   * before any other worklets.
+   */
   initializer?: () => void;
+} & (
+  | {
+      /**
+       * If true, the runtime will use the default queue implementation for
+       * scheduling worklets. Defaults to true.
+       */
+      useDefaultQueue?: true;
+      /**
+       * An optional custom queue to be used for scheduling worklets.
+       *
+       * The queue has to implement the C++ `AsyncQueue` interface from
+       * `<worklets/Public/AsyncQueue.h>`.
+       */
+      customQueue?: never;
+    }
+  | {
+      /**
+       * If true, the runtime will use the default queue implementation for
+       * scheduling worklets. Defaults to true.
+       */
+      useDefaultQueue: false;
+      /**
+       * An optional custom queue to be used for scheduling worklets.
+       *
+       * The queue has to implement the C++ `AsyncQueue` interface from
+       * `<worklets/Public/AsyncQueue.h>`.
+       */
+      customQueue?: object;
+    }
+);
+
+type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
+  initializer?: WorkletFunction<[], void>;
 };

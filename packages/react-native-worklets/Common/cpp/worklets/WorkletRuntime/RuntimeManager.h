@@ -31,7 +31,8 @@ class RuntimeManager {
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
       const std::string &name,
-      std::shared_ptr<SerializableWorklet> initializer = nullptr);
+      std::shared_ptr<SerializableWorklet> initializer = nullptr,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
       const std::shared_ptr<MessageQueueThread> &jsQueue);
