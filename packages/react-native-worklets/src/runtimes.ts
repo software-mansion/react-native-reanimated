@@ -1,9 +1,9 @@
 'use strict';
 
 import { setupCallGuard } from './callGuard';
-import { initializeEventLoop } from './EventLoop';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -70,7 +70,7 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      initializeEventLoop();
+      setupRunLoop();
       initializerFn?.();
     })
   );

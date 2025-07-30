@@ -2,7 +2,7 @@
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  
+
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
   let queuedCallbacksEnd = 0;
@@ -14,6 +14,7 @@ export function setupRequestAnimationFrame() {
   let flushRequested = false;
 
   function flushAnimationFrame() {
+    flushRequested = false;
     const timestamp = performance.now();
 
     flushedCallbacks = queuedCallbacks;
@@ -28,7 +29,7 @@ export function setupRequestAnimationFrame() {
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;
-  };
+  }
 
   globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void

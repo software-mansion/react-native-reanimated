@@ -1,8 +1,8 @@
 'use strict';
 
-import { Queue } from "./types";
+import { pushTask } from './taskQueue';
 
-export function setupSetTimeout(queue: Queue) {
+export function setupSetTimeout() {
   'worklet';
 
   const pendingHandlers: Set<number> = new Set();
@@ -14,25 +14,17 @@ export function setupSetTimeout(queue: Queue) {
     ...args: unknown[]
   ) => {
     const handlerId = ID++;
-    const start = performance.now();
 
     const timeoutCallback = () => {
       if (!pendingHandlers.has(handlerId)) {
         return;
       }
-      const now = performance.now();
-      if (now - start >= delay) {
-        callback(...args);
-        pendingHandlers.delete(handlerId);
-      } else {
-        queue.normal.push(timeoutCallback);
-        global.__requestEventLoopTick();
-      }
+      callback(...args);
+      pendingHandlers.delete(handlerId);
     };
 
-    queue.normal.push(timeoutCallback);
     pendingHandlers.add(handlerId);
-    global.__requestEventLoopTick();
+    pushTask(timeoutCallback, handlerId, delay);
     return handlerId;
   };
 

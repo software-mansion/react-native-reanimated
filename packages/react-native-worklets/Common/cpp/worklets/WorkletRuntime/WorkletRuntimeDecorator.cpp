@@ -42,7 +42,8 @@ void WorkletRuntimeDecorator::decorate(
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
-    jsi::Object &&jsiWorkletsModuleProxy) {
+    jsi::Object &&jsiWorkletsModuleProxy,
+    const std::shared_ptr<AsyncQueue> &queue) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -267,6 +268,40 @@ void WorkletRuntimeDecorator::decorate(
              const jsi::Value *args,
              size_t count) { return jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
+
+  enum TaskType { NORMAL = 0, PRIORITY = 1, TIMEOUT = 2 };
+  jsi_utils::installJsiFunction(
+      rt,
+      "_requestEventLoopTick",
+      [queue](
+          jsi::Runtime &rt,
+          const jsi::Value &taskJs,
+          const jsi::Value &delayJs,
+          const jsi::Value &handlerIdJs) -> jsi::Value {
+        TaskType type = static_cast<TaskType>(taskJs.asNumber());
+        const auto job = [&rt]() {
+          rt.global().getPropertyAsFunction(rt, "__runQueuedTask").call(rt);
+        };
+        switch (type) {
+          case NORMAL:
+            queue->push(job);
+            break;
+          case PRIORITY:
+            queue->pushPriority(job);
+            break;
+          case TIMEOUT:
+            const auto delay = delayJs.asNumber();
+            const auto handlerId = handlerIdJs.asNumber();
+            const auto job = [&rt, handlerId]() {
+              rt.global()
+                  .getPropertyAsFunction(rt, "__runQueuedTask")
+                  .call(rt, handlerId);
+            };
+            queue->pushTimeout(job, delay);
+            break;
+        }
+        return jsi::Value::undefined();
+      });
 }
 
 } // namespace worklets
