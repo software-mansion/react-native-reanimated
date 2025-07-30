@@ -133,18 +133,18 @@ void WorkletRuntime::init(
 }
 
 void WorkletRuntime::runAsyncGuarded(
-    const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
+    const std::shared_ptr<SerializableWorklet> &worklet) {
   react_native_assert(
       "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
       "the async queue is not set. Recreate the runtime with a valid async queue.");
 
-  queue_->push([=, weakThis = weak_from_this()] {
+  queue_->push([worklet, weakThis = weak_from_this()] {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
-    strongThis->runGuarded(serializableWorklet);
+    strongThis->runGuarded(worklet);
   });
 }
 
