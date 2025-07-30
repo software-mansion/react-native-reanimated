@@ -1,19 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { WithSpringConfig } from 'react-native-reanimated';
 import Animated, {
-  clamp,
-  measure,
+  Extrapolation,
+  interpolate,
+  scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
-  withSequence,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,12 +20,9 @@ import { spacing } from '@/theme';
 import { BOTTOM_BAR_HEIGHT } from '../constants';
 import { INITIAL_ROUTE_NAME } from '../routes';
 import { searchRoutes } from './fuse';
-import PullToSearchIndicator from './PullToSearchIndicator';
 import SearchBar from './SearchBar';
 import SearchFilters from './SearchFilters';
 import SearchResults from './SearchResults';
-
-let shouldShowPullToSearch = true;
 
 const PULL_TO_SEARCH_SHOW_DELAY = 1000;
 const PULL_TO_SEARCH_SHOW_DURATION = 2000;
@@ -54,15 +48,11 @@ export default function SearchScreen({ children }: SearchScreenProps) {
   });
 
   const scrollY = useSharedValue(0);
-  const velocityY = useSharedValue(0);
+  const searchBarContainerHeight = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const dragStartTranslateY = useSharedValue(0);
   const searchBarHeight = useSharedValue(0);
   const searchBarShowProgress = useSharedValue(0);
-  const showPullToSearch = useSharedValue(false);
-  const dragStartShowPullToSearch = useSharedValue(false);
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const contentRef = useAnimatedRef<View>();
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
 
   const [isFirstRender, setIsFirstRender] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,142 +81,133 @@ export default function SearchScreen({ children }: SearchScreenProps) {
     return result;
   }, [searchQuery, currentFilter]);
 
-  useEffect(() => {
-    if (!shouldShowPullToSearch || !isFocused) return;
-    shouldShowPullToSearch = false;
+  // useEffect(() => {
+  //   if (!shouldShowPullToSearch || !isFocused) return;
+  //   shouldShowPullToSearch = false;
 
-    setTimeout(() => {
-      if (searchBarShowProgress.value > 0) {
-        return;
-      }
+  //   setTimeout(() => {
+  //     if (searchBarShowProgress.value > 0) {
+  //       return;
+  //     }
 
-      showPullToSearch.value = true;
-      translateY.value = withSequence(
-        withSpring(100, SPRING),
-        withDelay(
-          PULL_TO_SEARCH_SHOW_DURATION,
-          withSequence(
-            withTiming(100, { duration: 0 }, () => {
-              showPullToSearch.value = false;
-            }),
-            withSpring(0, SPRING)
-          )
-        )
-      );
-    }, PULL_TO_SEARCH_SHOW_DELAY);
-  }, [translateY, showPullToSearch, isFocused, searchBarShowProgress]);
+  //     showPullToSearch.value = true;
+  //     translateY.value = withSequence(
+  //       withSpring(100, SPRING),
+  //       withDelay(
+  //         PULL_TO_SEARCH_SHOW_DURATION,
+  //         withSequence(
+  //           withTiming(100, { duration: 0 }, () => {
+  //             showPullToSearch.value = false;
+  //           }),
+  //           withSpring(0, SPRING)
+  //         )
+  //       )
+  //     );
+  //   }, PULL_TO_SEARCH_SHOW_DELAY);
+  // }, [translateY, showPullToSearch, isFocused, searchBarShowProgress]);
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
       if (!hasSearchQuery) {
         setSearchQuery('');
-        translateY.value = 0;
         searchBarShowProgress.value = 0;
       }
     });
-  }, [navigation, hasSearchQuery, translateY, searchBarShowProgress]);
+  }, [navigation, hasSearchQuery, searchBarShowProgress]);
 
-  const gesture = useMemo(() => {
-    const pan = Gesture.Pan()
-      .onStart(() => {
-        dragStartTranslateY.value = translateY.value;
-        dragStartShowPullToSearch.value = showPullToSearch.value;
-        showPullToSearch.value = false;
-      })
-      .onUpdate((e) => {
-        const scrollViewMeasurements = measure(scrollRef);
-        const contentMeasurements = measure(contentRef);
-
-        if (dragStartTranslateY.value > 0) {
-          translateY.value = dragStartTranslateY.value + e.translationY;
-        } else {
-          const shouldShowSearchBar = scrollY.value <= 0;
-          const shouldBounce =
-            contentMeasurements &&
-            scrollViewMeasurements &&
-            (shouldShowSearchBar ||
-              scrollY.value >=
-                Math.floor(
-                  contentMeasurements.height - scrollViewMeasurements.height
-                ));
-
-          if (shouldBounce) {
-            translateY.value =
-              Math.sign(e.translationY) *
-              Math.pow(Math.abs(e.translationY), POW);
-          }
-
-          if (!shouldBounce || !shouldShowSearchBar) {
-            searchBarShowProgress.value = 0;
-            return;
-          }
-        }
-
-        searchBarShowProgress.value = clamp(
-          (dragStartShowPullToSearch.value
-            ? e.translationY
-            : translateY.value) / searchBarHeight.value,
-          0,
-          1
-        );
-      })
-      .onFinalize(() => {
-        if (searchBarShowProgress.value === 1) {
-          translateY.value = withSpring(searchBarHeight.value, SPRING);
-        } else {
-          translateY.value = withSpring(0, SPRING);
-          searchBarShowProgress.value = withSpring(0, SPRING);
-        }
-      });
-
-    return Gesture.Simultaneous(pan, Gesture.Native());
-  }, [
-    contentRef,
-    scrollRef,
-    scrollY,
-    translateY,
-    dragStartTranslateY,
-    searchBarHeight,
-    showPullToSearch,
-    searchBarShowProgress,
-    dragStartShowPullToSearch,
-  ]);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (e) => {
+  const scrollHandler = useAnimatedScrollHandler<{
+    dragStartTranslateY: number;
+    isDragging: boolean;
+    shrinkStartScrollY?: number;
+    shrinkStartContainerHeight?: number;
+  }>({
+    onBeginDrag: (_, ctx) => {
+      delete ctx.shrinkStartScrollY;
+      delete ctx.shrinkStartContainerHeight;
+      ctx.dragStartTranslateY = translateY.value;
+      ctx.isDragging = true;
+    },
+    onEndDrag: (_, ctx) => {
+      ctx.isDragging = false;
+      if (searchBarShowProgress.value < 1) {
+        translateY.value = withSpring(0, SPRING);
+        searchBarShowProgress.value = withSpring(0, SPRING);
+        searchBarContainerHeight.value = withSpring(0, SPRING);
+      }
+    },
+    onScroll: (e, ctx) => {
       const y = e.contentOffset.y;
-      const dy = y - scrollY.value;
-      velocityY.value = dy * VELOCITY_FACTOR; // px/s (approx)
       scrollY.value = y;
 
-      const sv = measure(scrollRef);
-      const cv = measure(contentRef);
-      if (!sv || !cv) return;
-
-      if (y > EDGE_SLACK && y < cv.height - sv.height - EDGE_SLACK) {
-        return;
+      if (y < 0) {
+        // Opening the search bar
+        if (ctx.isDragging) {
+          // Show search bar while pulling down
+          searchBarContainerHeight.value =
+            Math.max(0, -y) +
+            (ctx.dragStartTranslateY > 0
+              ? (translateY.value / ctx.dragStartTranslateY) *
+                searchBarHeight.value
+              : 0);
+          searchBarShowProgress.value = interpolate(
+            searchBarContainerHeight.value,
+            [0, searchBarHeight.value],
+            [0, 1],
+            Extrapolation.CLAMP
+          );
+          console.log('>>> is dragging', searchBarShowProgress.value);
+        } else if (searchBarShowProgress.value === 1) {
+          // Shrink search bar container to the search bar height and translate
+          // the ScrollView content to appear below it when the search bar should
+          // stay open
+          ctx.shrinkStartScrollY ??= y;
+          ctx.shrinkStartContainerHeight ??= searchBarContainerHeight.value;
+          searchBarContainerHeight.value = interpolate(
+            y,
+            [ctx.shrinkStartScrollY, 0],
+            [ctx.shrinkStartContainerHeight, searchBarHeight.value]
+          );
+          translateY.value = interpolate(
+            y,
+            [ctx.shrinkStartScrollY, 0],
+            [ctx.dragStartTranslateY, searchBarHeight.value - spacing.xs]
+          );
+        }
+        console.log(
+          '>>> is not dragging and === 1',
+          searchBarShowProgress.value
+        );
+      } else if (y > 0 && ctx.isDragging && searchBarShowProgress.value > 0) {
+        // Closing the search bar (if open)
+        translateY.value -= y;
+        searchBarContainerHeight.value -= y;
+        searchBarShowProgress.value = interpolate(
+          translateY.value,
+          [0, ctx.dragStartTranslateY],
+          [0, 1],
+          Extrapolation.CLAMP
+        );
+        scrollTo(scrollViewRef, 0, 0, false);
+        console.log('>>> is not dragging and > 0', searchBarShowProgress.value);
       }
-
-      const v = velocityY.value;
-      const outward = -Math.sign(v) * Math.pow(Math.abs(v), POW);
-
-      translateY.value = withSequence(
-        withTiming(outward, { duration: OUT_MS }),
-        withSpring(0, SPRING)
-      );
     },
   });
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedSearchBarContainerStyle = useAnimatedStyle(() => ({
+    height: searchBarContainerHeight.value,
+  }));
+
+  const animatedScrollViewStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
 
   return (
     <>
-      {shouldShowPullToSearch && (
+      {/* {shouldShowPullToSearch && (
         <PullToSearchIndicator show={showPullToSearch} />
-      )}
-      {searchQuery ? (
+      )} */}
+
+      {searchQuery && (
         <>
           <Animated.View style={{ height: searchBarHeight }} />
           <SearchFilters
@@ -235,48 +216,48 @@ export default function SearchScreen({ children }: SearchScreenProps) {
           />
           <SearchResults searchResults={searchResults} />
         </>
-      ) : (
-        <GestureDetector gesture={gesture}>
-          <Animated.ScrollView
-            bounces={false}
-            overScrollMode="never"
-            ref={scrollRef}
-            onScroll={scrollHandler}>
-            <Animated.View
-              ref={contentRef}
-              style={[styles.scrollViewContent, animatedStyle]}>
-              <Stagger enabled={isFirstRender} interval={50}>
-                {children}
-              </Stagger>
-              <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
-            </Animated.View>
-          </Animated.ScrollView>
-        </GestureDetector>
       )}
-      <SearchBar
-        searchBarHeight={searchBarHeight}
-        showProgress={searchBarShowProgress}
-        translateY={translateY}
-        value={searchQuery}
-        onCancel={() => {
-          setCurrentFilter(null);
-          translateY.value = withSpring(0, SPRING);
-          searchBarShowProgress.value = withSpring(0, SPRING);
-        }}
-        onSearch={(query) => {
-          setSearchQuery(query);
-          setIsFirstRender(false);
-        }}
-      />
+      <Animated.View
+        style={[styles.searchBarContainer, animatedSearchBarContainerStyle]}>
+        <SearchBar
+          showProgress={searchBarShowProgress}
+          value={searchQuery}
+          onMeasureHeight={(height) => {
+            searchBarHeight.value = height;
+          }}
+          onSearch={(query) => {
+            setSearchQuery(query);
+            setIsFirstRender(false);
+          }}
+        />
+      </Animated.View>
+      {!searchQuery && (
+        <Animated.ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          ref={scrollViewRef}
+          style={animatedScrollViewStyle}
+          onScroll={scrollHandler}>
+          <Stagger enabled={isFirstRender} interval={50}>
+            {children}
+          </Stagger>
+          <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
+        </Animated.ScrollView>
+      )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    flex: 1,
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+  },
+  searchBarContainer: {
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 });
