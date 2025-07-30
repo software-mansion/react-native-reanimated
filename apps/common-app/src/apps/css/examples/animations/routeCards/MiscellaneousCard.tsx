@@ -5,6 +5,7 @@ import Animated, {
   css,
   FadeInLeft,
   FadeOutRight,
+  LayoutAnimationConfig,
 } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/apps/css/components';
@@ -102,12 +103,14 @@ function Showcase() {
           },
         ]}
       />
-      <Animated.View
-        entering={FadeInLeft}
-        exiting={FadeOutRight}
-        key={animationName}>
-        <Text variant="label3">{animationName}</Text>
-      </Animated.View>
+      <LayoutAnimationConfig skipEntering skipExiting>
+        <Animated.View
+          entering={FadeInLeft}
+          exiting={FadeOutRight}
+          key={animationName}>
+          <Text variant="label3">{animationName}</Text>
+        </Animated.View>
+      </LayoutAnimationConfig>
     </View>
   );
 }

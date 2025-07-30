@@ -29,6 +29,7 @@
     "axios": "^1.10.0",
     "d3-shape": "^3.2.0",
     "eslint-plugin-reanimated": "workspace:*",
+    "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.1.0",
     "react-native-gesture-handler": "2.26.0",
     "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch",
