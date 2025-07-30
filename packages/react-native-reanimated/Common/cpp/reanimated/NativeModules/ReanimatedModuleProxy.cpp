@@ -621,6 +621,38 @@ bool ReanimatedModuleProxy::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
+  
+  if (!strcmp(eventType.c_str(), "onTransitionProgress")){
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    const auto &eventPayload = rawEvent.eventPayload;
+    jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
+    auto progress = payload.getProperty(rt, "progress").asNumber();
+    auto closing = payload.getProperty(rt, "closing").asNumber();
+    auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
+    auto swiping = payload.getProperty(rt, "swiping").asNumber();
+    
+    auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward, swiping);
+    if (!surfaceId){
+      return false;
+    }
+    uiManager_->getShadowTreeRegistry().visit(
+        *surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+    return false;
+  } else if (!strcmp(eventType.c_str(), "onGestureCancel")){
+    
+    auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
+    if (!surfaceId){
+      return false;
+    }
+    uiManager_->getShadowTreeRegistry().visit(
+        *surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+    return false;
+  }
 
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
     return false;

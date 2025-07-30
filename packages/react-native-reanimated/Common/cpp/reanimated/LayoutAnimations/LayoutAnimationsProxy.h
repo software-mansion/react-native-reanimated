@@ -22,6 +22,14 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
+enum TransitionState {
+  NONE = 0,
+  START = 1,
+  ACTIVE = 2,
+  END = 3,
+  CANCELLED = 4
+};
+
 struct LightNode {
   using Unshared = std::shared_ptr<LightNode>;
   ShadowView previous;
@@ -32,7 +40,7 @@ struct LightNode {
 
 struct LayoutAnimation {
 #if REACT_NATIVE_MINOR_VERSION >= 78
-  std::shared_ptr<ShadowView> finalView, currentView;
+  std::shared_ptr<ShadowView> finalView, currentView, startView;
   Tag parentTag;
 #else
   std::shared_ptr<ShadowView> finalView, currentView, parentView;
@@ -51,6 +59,11 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+        mutable std::unordered_set<Tag> activeTransitions_;
+        mutable Tag transitionTag_;
+        mutable double transitionProgress_;
+        mutable TransitionState transitionState_;
+        mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
         mutable int myTag = 10001;
         mutable std::vector<Tag> sharedContainersToRemove_;
         mutable std::unordered_map<Tag, Tag> restoreMap_;
@@ -88,6 +101,18 @@ struct LayoutAnimationsProxy
       const;
   void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
             const;
+        void startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
+                  const;
+        void handleProgressTransition(ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
+        
+        void updateLightTree(const ShadowViewMutationList &mutations) const;
+        
+        void handleSharedTransitionsStart(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
+        
+        void cleanupSharedTransitions(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
+        
+        void hideTransitioningViews(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const;
+
         
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
       const;
@@ -95,6 +120,9 @@ struct LayoutAnimationsProxy
       int tag,
       const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
+        std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward, bool isSwiping);
+        std::optional<SurfaceId> onGestureCancel();
+
   void maybeCancelAnimation(const int tag) const;
         
         Tag findVisible(std::shared_ptr<LightNode> node,int& count) const;

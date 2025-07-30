@@ -19,6 +19,7 @@ struct Rect {
 
 struct Frame {
   std::optional<double> x, y, width, height;
+  Frame(double x, double y, double width, double height): x(x), y(y), width(width), height(height) {}
   Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
     if (newStyle.hasProperty(runtime, "originX")) {
       x = newStyle.getProperty(runtime, "originX").asNumber();

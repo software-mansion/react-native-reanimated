@@ -98,7 +98,7 @@ export default class AnimatedComponent
         this.reanimatedID,
         LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
         maybeBuild(
-          LinearTransition.duration(2000),
+          LinearTransition.duration(550),
           this.props?.style,
           this._displayName
         ),
