@@ -24,5 +24,9 @@ export function initializeReanimatedModule(
 
 registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
 if (!SHOULD_BE_USE_WEB) {
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+    global._tagToJSPropNamesMapping = {};
+    registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+  })();
 }
