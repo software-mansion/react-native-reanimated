@@ -15,8 +15,11 @@ void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
   UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      triggerUI();
+    // @Patch: there is a race condition bug that when the `dispatch_async` block here gets executed, the associated `IOSUIScheduler` object may have already been destroyed, that causes a dangling pointer crash.
+    dispatch_async(dispatch_get_main_queue(), [weakThis = weak_from_this()] {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->triggerUI();
+      }
     });
   }
 }
