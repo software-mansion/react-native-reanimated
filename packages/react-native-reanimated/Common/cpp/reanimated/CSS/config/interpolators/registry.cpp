@@ -4,7 +4,6 @@ namespace reanimated::css {
 
 namespace {
 
-// Private registry - only accessible via public functions
 ComponentInterpolatorsMap registry = {
     {"View", VIEW_INTERPOLATORS},
     {"Paragraph", TEXT_INTERPOLATORS},
