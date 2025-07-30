@@ -168,7 +168,7 @@ export const withSpring = ((
         ? // If animation is triggered twice we want to continue the previous animation
           // form the previous starting point
           (previousAnimation?.startValue as number)
-        : value - (animation.toValue as number);
+        : value;
 
       animation.startValue = x0;
 
