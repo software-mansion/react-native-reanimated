@@ -46,7 +46,7 @@ class AsyncQueueImpl : public AsyncQueue {
  private:
   const std::shared_ptr<AsyncQueueState> state_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
-  long long getCurrentTimeInMs();
+  int64_t getCurrentTimeInMs();
   void startMainRunLoopThread(const std::string &name);
   void startTimeoutRunLoopThread(const std::string &name);
 };
