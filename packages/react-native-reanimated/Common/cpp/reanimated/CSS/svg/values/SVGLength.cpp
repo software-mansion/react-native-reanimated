@@ -79,9 +79,8 @@ std::string SVGLength::toString() const {
 
 SVGLength SVGLength::interpolate(const double progress, const SVGLength &to)
     const {
-  // If both value types are the same, we can interpolate without reading the
-  // relative value from the shadow node
-  // (also, when one of the values is 0, and the other is relative)
+  // We can interpolate SVG length values only if both values are percentages or
+  // both are numbers. In other cases, we interpolate them as keywords.
   if ((isPercentage == to.isPercentage) || (isPercentage && to.value == 0) ||
       (to.isPercentage && value == 0)) {
     return SVGLength(
