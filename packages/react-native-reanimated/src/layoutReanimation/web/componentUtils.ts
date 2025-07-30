@@ -180,21 +180,28 @@ export function setElementAnimation(
     }
   };
 
+  let wasCallbackCalled = false;
+  const maybeCallCallback = (finished: boolean) => {
+    if (!wasCallbackCalled && animationConfig.callback) {
+      animationConfig.callback(finished);
+      wasCallbackCalled = true;
+    }
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
     maybeRemoveElement();
+    maybeCallCallback(true);
 
-    animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    animationConfig.callback?.(false);
-
     maybeRemoveElement();
+    maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -215,6 +222,7 @@ export function setElementAnimation(
       }
 
       maybeRemoveElement();
+      maybeCallCallback(false);
     });
   }
 }
