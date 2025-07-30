@@ -49,7 +49,7 @@ void AsyncQueueImpl::pushTimeout(std::function<void()> &&job, int64_t delay) {
   timeoutsQueueState_->cv.notify_one();
 }
 
-long long AsyncQueueImpl::getCurrentTimeInMs() {
+int64_t AsyncQueueImpl::getCurrentTimeInMs() {
   const auto currentTime = std::chrono::system_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
       .count();
