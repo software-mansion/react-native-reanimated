@@ -15,7 +15,7 @@ namespace worklets {
 
 struct Timeout {
   std::function<void()> callback;
-  long long targetTime;
+  int64_t targetTime;
 };
 
 struct TimeoutsQueueState {
