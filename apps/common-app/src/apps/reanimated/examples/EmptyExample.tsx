@@ -1,27 +1,58 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { runOnUI } from 'react-native-worklets';
+import { StyleSheet, View, Button } from 'react-native';
+import {
+  createWorkletRuntime,
+  runOnRuntime,
+  type WorkletRuntime,
+} from 'react-native-worklets';
 import axios from 'axios';
 
-export default function App() {
-  runOnUI(() => {
-    'worklet';
-    axios({
-      method: 'get',
-      url: 'https://tomekzaw.pl',
-    })
-      .then((response) => {
-        console.log('Received response');
-        console.log(response.data);
-      })
-      .catch((error) => {
-        console.error('Axios error:', error);
-      });
-  })();
+const mydloRuntime = createWorkletRuntime({
+  name: 'mydlo',
+});
 
+const widloRuntime = createWorkletRuntime({
+  name: 'widlo',
+});
+
+const powidloRuntime = createWorkletRuntime({
+  name: 'powidlo',
+});
+
+function callback(runtime: WorkletRuntime) {
+  'worklet';
+  axios({
+    method: 'get',
+    url: 'https://tomekzaw.pl',
+  })
+    .then((response) => {
+      console.log('Received response on', globalThis._LABEL);
+      console.log(response.data);
+    })
+    .catch((error) => {
+      console.error('Axios error:', error);
+    });
+  const nextRuntime =
+    runtime.name === mydloRuntime.name
+      ? widloRuntime
+      : runtime.name === widloRuntime.name
+        ? powidloRuntime
+        : mydloRuntime;
+
+  setTimeout(() => {
+    runOnRuntime(nextRuntime, callback)(nextRuntime);
+  }, 100);
+}
+
+export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Hello world!</Text>
+      <Button
+        title="UNLEASH THE FETCH"
+        onPress={() => {
+          runOnRuntime(mydloRuntime, callback)(mydloRuntime);
+        }}
+      />
     </View>
   );
 }

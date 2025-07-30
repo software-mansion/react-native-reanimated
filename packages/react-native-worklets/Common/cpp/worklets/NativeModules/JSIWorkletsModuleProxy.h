@@ -36,7 +36,8 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
-      const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime);
+      const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+      forwardedFetch forwardedFetch);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
 
@@ -74,6 +75,10 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeManager_;
   }
 
+  [[nodiscard]] inline forwardedFetch getForwardedFetch() const {
+    return forwardedFetch_;
+  }
+
  private:
   const bool isDevBundle_;
   const std::shared_ptr<const BigStringBuffer> script_;
@@ -83,6 +88,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
+  forwardedFetch forwardedFetch_;
 };
 
 } // namespace worklets

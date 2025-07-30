@@ -53,6 +53,10 @@ class WorkletRuntime : public jsi::HostObject,
   void runAsyncGuarded(
       const std::shared_ptr<SerializableWorklet> &serializableWorklet);
 
+  void runOnQueue(std::function<void()> &&job);
+
+  void runOnQueue(std::function<void(jsi::Runtime &)> &&job);
+
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
 #ifdef WORKLETS_BUNDLE_MODE
@@ -84,33 +88,6 @@ class WorkletRuntime : public jsi::HostObject,
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
-};
-
-class UIAsyncQueue : public AsyncQueue {
- public:
-  explicit UIAsyncQueue(const std::shared_ptr<UIScheduler> &uiScheduler)
-      : AsyncQueue("UIAsyncQueue"), uiScheduler_(uiScheduler) {}
-
-  void push(std::function<void()> &&job) override {
-    uiScheduler_->scheduleOnUI(std::move(job));
-  }
-
- private:
-  std::shared_ptr<UIScheduler> uiScheduler_;
-};
-
-class UIWorkletRuntime : public WorkletRuntime {
- public:
-  explicit UIWorkletRuntime(
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<UIScheduler> &uiScheduler);
-  ;
-
-  void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) override;
-
-  static std::shared_ptr<UIWorkletRuntime> create(
-      const std::shared_ptr<MessageQueueThread> &jsQueue);
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

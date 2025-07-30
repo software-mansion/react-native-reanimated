@@ -8,10 +8,10 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
+#include <worklets/Tools/Types.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/Tools/Types.h>
 
 #include <memory>
 #include <string>
@@ -26,10 +26,11 @@ class WorkletsModuleProxy
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<RuntimeManager> &runtimeManager,
       std::function<bool()> &&isJavaScriptQueue,
       std::function<void(std::function<void(const double)>)>
           &&forwardedRequestAnimationFrame,
-       worklets::forwardedFetch &&forwardedFetch,
+      worklets::forwardedFetch forwardedFetch,
       const std::shared_ptr<const BigStringBuffer> &script,
       const std::string &sourceUrl);
 
@@ -56,6 +57,11 @@ class WorkletsModuleProxy
     return uiWorkletRuntime_;
   }
 
+  [[nodiscard]] inline std::shared_ptr<RuntimeManager> getRuntimeManager()
+      const {
+    return runtimeManager_;
+  }
+
   [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
   createJSIWorkletsModuleProxy() const;
 
@@ -74,7 +80,7 @@ class WorkletsModuleProxy
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
-  std::function<void(jsi::Runtime &rt, const jsi::Value &request, const jsi::Value &callback)> forwardedFetch_;
+  forwardedFetch forwardedFetch_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

@@ -88,14 +88,7 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
-  const auto weakUIRuntime = weak_from_this();
-
-  auto workletRuntimeRef = jsi::Object(rt);
-  workletRuntimeRef.setNativeState(
-      rt, std::make_shared<WeakRuntimeNativeState>(weakUIRuntime));
-
-  rt.global().setProperty(
-      rt, "_WORKLET_RUNTIME_REF", std::move(workletRuntimeRef));
+  auto forwardedFetch = jsiWorkletsModuleProxy->getForwardedFetch();
 
 #ifdef WORKLETS_BUNDLE_MODE
   auto script = jsiWorkletsModuleProxy->getScript();
@@ -140,6 +133,27 @@ void WorkletRuntime::init(
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
+
+  auto hf = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "sendRequest"),
+      2,
+      [forwardedFetch](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          size_t count) {
+        //        return makeShareableBigInt(rt, args[0].asBigInt(rt));
+        forwardedFetch(rt, args[0], args[1]);
+        return jsi::Value::undefined();
+      });
+
+  auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
+
+  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(
+      rt, TurboModules, "Networking");
+
+  Networking.asObject(rt).setProperty(rt, "sendRequest", hf);
 }
 
 void WorkletRuntime::runAsyncGuarded(
@@ -160,34 +174,51 @@ void WorkletRuntime::runAsyncGuarded(
   });
 }
 
+void WorkletRuntime::runOnQueue(std::function<void()> &&job) {
+  queue_->push(std::move(job));
+}
+
+void WorkletRuntime::runOnQueue(std::function<void(jsi::Runtime &)> &&job) {
+  queue_->push([job = std::move(job), weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    auto lock =
+        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    jsi::Runtime &rt = strongThis->getJSIRuntime();
+    job(rt);
+  });
+}
+
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &callerRuntime,
     const jsi::Value &worklet) const {
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
+      callerRuntime,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
+  jsi::Runtime &targetRuntime = getJSIRuntime();
   auto result = runGuarded(serializableWorklet);
-  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
+  auto serializableResult = extractSerializableOrThrow(targetRuntime, result);
   lock.unlock();
-  return serializableResult->toJSValue(rt);
+  return serializableResult->toJSValue(callerRuntime);
 }
 
 #ifdef WORKLETS_BUNDLE_MODE
 jsi::Value WorkletRuntime::executeSync(
     std::function<jsi::Value(jsi::Runtime &)> &&job) const {
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+  jsi::Runtime &rt = getJSIRuntime();
+  return job(rt);
 }
 
 jsi::Value WorkletRuntime::executeSync(
     const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+  jsi::Runtime &rt = getJSIRuntime();
+  return job(rt);
 }
 #endif // WORKLETS_BUNDLE_MODE
 
@@ -223,25 +254,6 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
   return result;
-}
-
-UIWorkletRuntime::UIWorkletRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
-    : WorkletRuntime(1, jsQueue, "UIWorkletRuntime", true) {}
-
-void UIWorkletRuntime::runAsyncGuarded(
-    const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
-  queue_->push([weakThis = weak_from_this(), shareableWorklet]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    auto lock =
-        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
-    strongThis->runGuarded(shareableWorklet);
-  });
 }
 
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(

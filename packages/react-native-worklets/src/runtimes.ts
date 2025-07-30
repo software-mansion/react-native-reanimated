@@ -2,11 +2,17 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { initializeNetworking } from './Network';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
+import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/setIntervalPolyfill';
+import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
+import { setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -71,18 +77,35 @@ export function createWorkletRuntime(
     );
   }
 
-  return WorkletsModule.createWorkletRuntime(
+  const workletRuntime = WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      initializerFn?.();
     }),
     useDefaultQueue,
     customQueue
   );
+
+  runOnRuntime(workletRuntime, () => {
+    'worklet';
+    setupMicrotasks();
+    setupRequestAnimationFrame();
+    setupSetTimeout();
+    setupSetImmediate();
+    setupSetInterval();
+  })();
+
+  runOnRuntime(workletRuntime, initializeNetworking)();
+
+  runOnRuntime(workletRuntime, () => {
+    'worklet';
+    initializerFn?.();
+  })();
+
+  return workletRuntime;
 }
 
 // @ts-expect-error Check `runOnUI` overload.

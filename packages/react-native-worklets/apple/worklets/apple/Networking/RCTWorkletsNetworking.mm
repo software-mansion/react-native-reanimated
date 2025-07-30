@@ -157,7 +157,7 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
 //  NSArray<id<RCTURLRequestHandler>> * (^_handlersProvider)(RCTModuleRegistry *);
   NSMutableArray<id<RCTNetworkingRequestHandler>> *_requestHandlers;
   NSMutableArray<id<RCTNetworkingResponseHandler>> *_responseHandlers;
-  std::shared_ptr<worklets::IOSUIScheduler> uiScheduler_;
+  std::shared_ptr<worklets::RuntimeManager> runtimeManager_;
   RCTNetworking* rctNetworking_;
 //  dispatch_queue_t _requestQueue;
   
@@ -172,11 +172,11 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
 //  return NO;
 //}
 
-- (instancetype)init:(std::shared_ptr<worklets::IOSUIScheduler>)uiScheduler rctNetworking:(RCTNetworking *)rctNetworking
+- (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager rctNetworking:(RCTNetworking *)rctNetworking
 {
   self = [super init];
   if (self) {
-    uiScheduler_ = uiScheduler;
+    runtimeManager_ = runtimeManager;
     rctNetworking_ = rctNetworking;
   }
   return self;
@@ -313,6 +313,7 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
 
 - (RCTURLRequestCancellationBlock)buildRequest:(NSDictionary<NSString *, id> *)query
                                completionBlock:(void (^)(NSURLRequest *request))block
+                                workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
 {
 //  RCTAssertThread(_methodQueue, @"buildRequest: must be called on request queue");
 
@@ -376,7 +377,9 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
 //                                dispatch_async(self->_methodQueue, ^{
 //                                  block(request);
 //                                });
-                                self->uiScheduler_->scheduleOnUI([block, request](){
+//                                self->uiScheduler_->scheduleOnUI([block, request](){
+    auto strongWorkletRuntime = workletRuntime.lock();
+    strongWorkletRuntime->runOnQueue([block, request](jsi::Runtime &rt){
                                       block(request);
                                 });
 
@@ -584,7 +587,7 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
     incrementalUpdates:(BOOL)incrementalUpdates
 //        responseSender:(RCTResponseSenderBlock)responseSender
           rt:(facebook::jsi::Runtime &)rt
-          responseSender:(const facebook::jsi::Function &)responseSender
+          responseSender:(std::shared_ptr<jsi::Function>)responseSender
 {
 //  RCTAssertThread(_methodQueue, @"sendRequest: must be called on request queue");
   __weak __typeof(self) weakSelf = self;
@@ -694,7 +697,13 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
     _tasksByRequestID[task.requestID] = task;
     // TODO: Use a queue
     // responseSender(@[ task.requestID ]);
-    responseSender.call(rt, {facebook::jsi::Value(rt, task.requestID.doubleValue)});
+    auto workletRuntime = runtimeManager_->getRuntime(&rt);
+    auto value = task.requestID.doubleValue;
+//    auto responser = std::make_shared<jsi::
+    
+    responseSender->call(rt, facebook::jsi::Value(rt, value));
+//    workletRuntime->runOn
+
 
     if (facebook::react::ReactNativeFeatureFlags::enableNetworkEventReporting()) {
       [RCTInspectorNetworkReporter reportRequestStart:task.requestID
@@ -740,7 +749,10 @@ typedef RCTURLRequestCancellationBlock (^RCTHTTPQueryResult)(NSError *error, NSD
 //  }
 // TODO: FIX THIS
   // [self emitDeviceEvent:eventName argFactory:nil rt:rt];
+//  auto runtime = runtimeManager_->getRuntime(&rt);
+//  runtime->runOnQueue([self, eventName, body](jsi::Runtime &rt){
     [self emitDeviceEvent:eventName argFactory:body rt:rt];
+//  });
 
   }
 
@@ -751,7 +763,9 @@ using ArgFactory =
 - (void)emitDeviceEvent:(NSString *)eventName argFactory:(id)argFactory rt:(facebook::jsi::Runtime &)rt
 
 {
-  uiScheduler_->scheduleOnUI([eventName, argFactory, &rt]() {
+  auto workletRuntime = runtimeManager_->getRuntime(&rt);
+//  uiScheduler_->scheduleOnUI([eventName, argFactory, &rt]() {
+  workletRuntime->runOnQueue([eventName, argFactory](jsi::Runtime &rt){
     facebook::jsi::Value emitter = rt.global().getProperty(rt, "__rctDeviceEventEmitter");
     if (!emitter.isUndefined()) {
       facebook::jsi::Object emitterObject = emitter.asObject(rt);
@@ -843,9 +857,21 @@ jquery: (const facebook::jsi::Value &)jquery
   // bool withCredentials = query.withCredentials();
   bool withCredentials = [RCTConvert BOOL:query[@"withCredentials"]];
 
+  auto originRuntime = runtimeManager_->getRuntime(&rt);
+  
+  auto valuee = dynamic_cast<const jsi::Object *>(&responseSender);
+  
+  jsi::Function fun = valuee->asFunction(rt);
+  
+  auto sharedSender = std::make_shared<jsi::Function>(std::move(fun));
+
 //  dispatch_async(_methodQueue, ^{
-    self->uiScheduler_->scheduleOnUI([self, &rt, &responseSender, method, url, data, headers, queryResponseType,
-      queryIncrementalUpdates, timeout, withCredentials]() {
+//  auto strongOrigin = weakOrigin.lock();
+//  if (!strongOrigin) {
+//    return;
+//  }
+  originRuntime->runOnQueue([self, sharedSender, method, url, data, headers, queryResponseType,
+      queryIncrementalUpdates, timeout, withCredentials, originRuntime](jsi::Runtime &rt) {
     NSDictionary *queryDict = @{
       @"method" : method,
       @"url" : url,
@@ -868,19 +894,20 @@ jquery: (const facebook::jsi::Value &)jquery
                     responseType:responseType
               incrementalUpdates:incrementalUpdates
            rt:rt
-                  responseSender:responseSender];
-        }];
+                  responseSender:sharedSender];
+        } workletRuntime:originRuntime];
   });
 }
 
 // RCT_EXPORT_METHOD(abortRequest : (double)requestID)
 - (void)JSIabortRequest:(double)requestID
 {
+  // TODO: RESTORE
   // dispatch_async(_methodQueue, ^{
-  self->uiScheduler_->scheduleOnUI([self, requestID]() {
-    [self->_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
-    [self->_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
-  });
+//  self->uiScheduler_->scheduleOnUI([self, requestID]() {
+//    [self->_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
+//    [self->_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
+//  });
 }
 
 // RCT_EXPORT_METHOD(clearCookies : (RCTResponseSenderBlock)responseSender)
@@ -889,7 +916,9 @@ jquery: (const facebook::jsi::Value &)jquery
 (facebook::jsi::Function &)responseSender
 {
   // dispatch_async(_methodQueue, ^{
-  self->uiScheduler_->scheduleOnUI([self, &rt, &responseSender]() {
+  auto runtime = runtimeManager_->getRuntime(&rt);
+  runtime->runOnQueue([self, &responseSender](jsi::Runtime &rt){
+//  self->uiScheduler_->scheduleOnUI([self, &rt, &responseSender]() {
     NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
     if (!storage.cookies.count) {
       // TODO: Use a queue

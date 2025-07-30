@@ -17,7 +17,7 @@ export function callGuardDEV<Args extends unknown[], ReturnValue>(
         message,
         stack ?? '',
         name ?? 'WorkletsError',
-        jsEngine ?? 'Worklets'
+        jsEngine ?? 'Worklets ' + globalThis._LABEL
       );
     } else {
       throw error;

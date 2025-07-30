@@ -164,7 +164,8 @@ function initializeWorkletRuntime() {
           {
             get: function get(_target, prop) {
               globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
+                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
+                new Error().stack
               );
               return {
                 get() {

@@ -84,7 +84,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
-  workletsNetworking_ = [[RCTWorkletsNetworking alloc] init:uiScheduler rctNetworking:networkingModule_];
+  auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
+  workletsNetworking_ = [[RCTWorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
   
   worklets::forwardedFetch forwardedSendRequest = [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value& request, const jsi::Value& responseSender){
     auto responser = responseSender.asObject(rt).asFunction(rt);
@@ -153,6 +154,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       jsQueue,
       jsCallInvoker,
       uiScheduler,
+      runtimeManager,
       std::move(isJavaScriptQueue),
       std::move(forwardedRequestAnimationFrame),
       std::move(forwardedSendRequest),

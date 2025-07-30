@@ -2,7 +2,6 @@
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
 #include <utility>
-#include "WorkletRuntime.h"
 
 namespace worklets {
 
