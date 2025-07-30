@@ -66,9 +66,10 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
-    const std::shared_ptr<MessageQueueThread> &jsQueue) {
-  const auto uiRuntime =
-      std::make_shared<WorkletRuntime>(uiRuntimeId, jsQueue, uiRuntimeName);
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
+  const auto uiRuntime = std::make_shared<WorkletRuntime>(
+      uiRuntimeId, jsQueue, uiRuntimeName, uiAsyncQueue);
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[uiRuntimeId] = uiRuntime;
   return uiRuntime;
