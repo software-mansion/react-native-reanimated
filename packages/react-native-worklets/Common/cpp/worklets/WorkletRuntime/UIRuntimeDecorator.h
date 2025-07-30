@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Tools/Types.h>
 
 namespace worklets {
 

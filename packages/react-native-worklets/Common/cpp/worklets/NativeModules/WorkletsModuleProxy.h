@@ -8,7 +8,6 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
-#include <worklets/Tools/Types.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
