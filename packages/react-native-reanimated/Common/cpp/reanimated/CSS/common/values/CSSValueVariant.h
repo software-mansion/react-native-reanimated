@@ -220,7 +220,7 @@ class CSSValueVariant final : public CSSValue {
           // For construction from a non-jsi::Value, we perform a runtime
           // canConstruct check only if the type has a canConstruct method.
           // (this is needed e.g. when different CSS value types can be
-          // constructed from the same value type, like CSSDimension and
+          // constructed from the same value type, like CSSLength and
           // CSSKeyword)
           if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
             return false;
