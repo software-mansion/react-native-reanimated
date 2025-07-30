@@ -65,13 +65,14 @@ export function createWorkletRuntime(
     name = nameOrConfig;
     initializerFn = initializer;
   } else {
-    name = nameOrConfig?.name ?? 'anonymous' + performance.now().toFixed(0);
+    // TODO: Make anonymous name globally unique.
+    name = nameOrConfig?.name ?? 'anonymous';
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
   }
 
-  if (initializer && !isWorkletFunction(initializer)) {
+  if (initializerFn && !isWorkletFunction(initializerFn)) {
     throw new WorkletsError(
       'The initializer passed to `createWorkletRuntime` is not a worklet.'
     );
@@ -126,7 +127,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   }
   if (globalThis._WORKLET) {
     return (...args) =>
-      global._scheduleOnRuntime(
+      globalThis._scheduleOnRuntime(
         workletRuntime,
         makeShareableCloneOnUIRecursive(() => {
           'worklet';

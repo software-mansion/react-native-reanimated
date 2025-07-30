@@ -50,8 +50,7 @@ class WorkletRuntime : public jsi::HostObject,
         rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
-  void runAsyncGuarded(
-      const std::shared_ptr<SerializableWorklet> &serializableWorklet);
+  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
   void runOnQueue(std::function<void()> &&job);
 

@@ -76,7 +76,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    std::shared_ptr<AsyncQueue> uiAsyncQueue) {
+    const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       uiRuntimeId, jsQueue, uiRuntimeName, uiAsyncQueue);
 
@@ -99,6 +99,6 @@ void RuntimeManager::registerRuntime(
 #ifdef WORKLETS_BUNDLE_MODE
   runtimeAddressToRuntimeId_[&workletRuntime->getJSIRuntime()] = runtimeId;
 #endif // WORKLETS_BUNDLE_MODE
-};
+}
 
 } // namespace worklets

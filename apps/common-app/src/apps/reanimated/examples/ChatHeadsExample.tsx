@@ -3,6 +3,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   clamp,
+  SharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -81,8 +82,8 @@ function ChatHeads({
 }
 
 type FollowersProps = {
-  readonly transX: Animated.SharedValue<number>;
-  readonly transY: Animated.SharedValue<number>;
+  readonly transX: SharedValue<number>;
+  readonly transY: SharedValue<number>;
 };
 
 function Followers({
