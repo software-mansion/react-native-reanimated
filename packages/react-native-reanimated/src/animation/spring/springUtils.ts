@@ -146,12 +146,14 @@ export function scaleZetaToMatchClamps(
   const { zeta, toValue, startValue } = animation;
   const toValueNum = Number(toValue);
 
-  if (startValue === 0) {
+  if (toValueNum === startValue) {
     return zeta;
   }
 
+  const diffValue = toValueNum - startValue;
+
   const [firstBound, secondBound] =
-    startValue <= 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
+    diffValue > 0 ? [clamp.min, clamp.max] : [clamp.max, clamp.min];
 
   /**
    * The extrema we get from equation below are relative (we obtain a ratio), To
@@ -166,12 +168,12 @@ export function scaleZetaToMatchClamps(
 
   const relativeExtremum1 =
     secondBound !== undefined
-      ? Math.abs((secondBound - toValueNum) / startValue)
+      ? Math.abs((secondBound - toValueNum) / diffValue)
       : undefined;
 
   const relativeExtremum2 =
     firstBound !== undefined
-      ? Math.abs((firstBound - toValueNum) / startValue)
+      ? Math.abs((firstBound - toValueNum) / diffValue)
       : undefined;
 
   /**
