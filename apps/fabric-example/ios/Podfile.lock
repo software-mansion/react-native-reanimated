@@ -2478,7 +2478,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNReanimated (4.0.0-beta.5):
+  - RNReanimated (4.1.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2505,11 +2505,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.5)
+    - RNReanimated/reanimated (= 4.1.0)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.5):
+  - RNReanimated/reanimated (4.1.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2536,11 +2536,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.5)
+    - RNReanimated/reanimated/apple (= 4.1.0)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.5):
+  - RNReanimated/reanimated/apple (4.1.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -3040,7 +3040,7 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 3be3e04cd57dac8336622aa8e19f9b6c1ad97fc0
-  RCT-Folly: 59ec0ac1f2f39672a0c6e6cecdd39383b764646f
+  RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: bdc0c5e21b4efba93a67a6d5ec29fec4cabb6b1f
   RCTRequired: cd7aa8fe1456d77523aee320dfeae3f179f3032a
   RCTTypeSafety: 3ff37b465918f790b2ca97e21f2070e64a001410
@@ -3110,7 +3110,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNFlashList: 111b418801ce1b2ae616edbf96d6ef594305e053
   RNGestureHandler: 6922ca28d7a014e0019893c32b422b0d5d5ba8b8
-  RNReanimated: 3ca87fba9a795eaf4557dccdfd85f3fea581deee
+  RNReanimated: bedbdc2587402b124d504cd243b6eed208dc1a5c
   RNScreens: 59db7a81c802f0e65697c2ca0e782c76cf813074
   RNSVG: d6b2fc2f4058b36a2fcbde615ef859f2913cdee4
   RNWorklets: f928b6ff86463bbdcfbc62043a6cf411d6cf9e70

@@ -173,15 +173,19 @@ export function setElementAnimation(
     configureAnimation();
   }
 
+  const maybeRemoveElement = () => {
+    if (element.reanimatedDummy && parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
 
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
@@ -190,10 +194,7 @@ export function setElementAnimation(
   const animationCancelHandler = () => {
     animationConfig.callback?.(false);
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -212,6 +213,8 @@ export function setElementAnimation(
       if (shouldSavePosition) {
         setElementPosition(element, snapshots.get(element)!);
       }
+
+      maybeRemoveElement();
     });
   }
 }

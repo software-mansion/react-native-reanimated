@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
@@ -18,13 +19,6 @@ namespace worklets {
  */
 class JSIWorkletsModuleProxy;
 
-/**
- * Unused, but kept for possible future use.
- */
-constexpr uint64_t rnRuntimeId{0};
-constexpr uint64_t uiRuntimeId{1};
-extern const std::string uiRuntimeName;
-
 class RuntimeManager {
  public:
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
@@ -36,7 +30,6 @@ class RuntimeManager {
 
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-      const bool supportsLocking,
       const std::string &name,
       std::shared_ptr<SerializableWorklet> initializer = nullptr);
 
