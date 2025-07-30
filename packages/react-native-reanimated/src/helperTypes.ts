@@ -15,6 +15,7 @@ import type {
   LayoutAnimationFunction,
   SharedValue,
 } from './commonTypes';
+import type { CSSStyle } from './css';
 import type { AddArrayPropertyType } from './css/types';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
@@ -99,7 +100,9 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: AddArrayPropertyType<Partial<AnimatedPropsProp<Props>>>;
+    animatedProps?: AddArrayPropertyType<
+      Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
+    >;
   };
 
 // THE LAND OF THE DEPRECATED

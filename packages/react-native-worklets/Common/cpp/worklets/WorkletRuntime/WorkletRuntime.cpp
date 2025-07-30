@@ -55,7 +55,6 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
@@ -66,24 +65,16 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
-  if (supportsLocking) {
-    return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
-  } else {
-    return jsiRuntime;
-  }
+  return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name,
-    const bool supportsLocking)
+    const std::string &name)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
-#ifndef NDEBUG
-      supportsLocking_(supportsLocking),
-#endif // NDEBUG
+      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
       name_(name) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
@@ -142,10 +133,6 @@ void WorkletRuntime::init(
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  react_native_assert(
-      supportsLocking_ &&
-      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
-          .c_str());
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
