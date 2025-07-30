@@ -27,7 +27,7 @@ export default function StrokeExample() {
             cy={50}
             fill={colors.primary}
             r={20}
-            stroke="red"
+            stroke={colors.primaryDark}
             {...props}
           />
         </Svg>
