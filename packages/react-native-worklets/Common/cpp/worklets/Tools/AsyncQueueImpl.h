@@ -33,7 +33,7 @@ class AsyncQueueImpl : public AsyncQueue {
 
 class AsyncQueueUI : public AsyncQueue {
  public:
-  explicit AsyncQueueUI(std::shared_ptr<UIScheduler> uiScheduler);
+  explicit AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler);
 
   ~AsyncQueueUI() override = default;
 
