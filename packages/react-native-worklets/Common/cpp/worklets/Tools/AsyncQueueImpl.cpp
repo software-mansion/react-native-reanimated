@@ -40,7 +40,7 @@ void AsyncQueueImpl::pushPriority(std::function<void()> &&job) {
   state_->cv.notify_one();
 }
 
-void AsyncQueueImpl::pushTimeout(std::function<void()> &&job, long long delay) {
+void AsyncQueueImpl::pushTimeout(std::function<void()> &&job, int64_t delay) {
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
     const auto targetTime = getCurrentTimeInMs() + delay;

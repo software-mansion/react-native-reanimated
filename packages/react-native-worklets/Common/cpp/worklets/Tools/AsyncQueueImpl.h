@@ -9,6 +9,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 namespace worklets {
 
@@ -40,7 +41,7 @@ class AsyncQueueImpl : public AsyncQueue {
 
   void push(std::function<void()> &&job) override;
   void pushPriority(std::function<void()> &&job) override;
-  void pushTimeout(std::function<void()> &&job, long long delay) override;
+  void pushTimeout(std::function<void()> &&job, int64_t delay) override;
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;
