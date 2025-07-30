@@ -8,7 +8,6 @@ import type { PlainStyle } from '../../../types';
 import type { StyleBuilderConfig } from '../style';
 import {
   processAspectRatio,
-  processColor,
   processFontWeight,
   processGap,
   processInset,
@@ -16,8 +15,7 @@ import {
   processInsetInline,
   processTransform,
 } from '../style';
-
-const colorAttributes = { process: processColor };
+import { colorAttributes } from './common';
 
 export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */

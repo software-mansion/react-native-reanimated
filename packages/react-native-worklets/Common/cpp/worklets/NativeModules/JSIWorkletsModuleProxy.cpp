@@ -64,9 +64,10 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
-    std::shared_ptr<SerializableWorklet> &initializer) {
+    std::shared_ptr<SerializableWorklet> &initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+      jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -102,6 +103,24 @@ inline jsi::Value reportFatalErrorOnJS(
           .name = name,
           .jsEngine = jsEngine});
   return jsi::Value::undefined();
+}
+
+inline std::shared_ptr<AsyncQueue> extractAsyncQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (!value.isObject()) {
+    return nullptr;
+  }
+  const auto object = value.asObject(rt);
+
+  if (!object.hasNativeState(rt)) {
+    return nullptr;
+  }
+
+  const auto &nativeState = object.getNativeState(rt);
+  auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
+
+  return asyncQueue;
 }
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -459,16 +478,24 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
+        4,
         [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
-          auto name = args[0].asString(rt).utf8(rt);
+          const auto name = args[0].asString(rt).utf8(rt);
           auto serializableInitializer =
               extractSerializableOrThrow<SerializableWorklet>(
                   rt, args[1], "[Worklets] Initializer must be a worklet.");
+          const auto useDefaultQueue = args[2].asBool();
+
+          std::shared_ptr<AsyncQueue> asyncQueue;
+          if (useDefaultQueue) {
+            asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+          } else {
+            asyncQueue = extractAsyncQueue(rt, args[3]);
+          }
 
           return createWorkletRuntime(
               rt,
@@ -476,7 +503,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone->getJSQueue(),
               clone,
               name,
-              serializableInitializer);
+              serializableInitializer,
+              asyncQueue);
         });
   }
 

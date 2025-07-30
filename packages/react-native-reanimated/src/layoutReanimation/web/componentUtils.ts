@@ -173,27 +173,35 @@ export function setElementAnimation(
     configureAnimation();
   }
 
+  const maybeRemoveElement = () => {
+    if (element.reanimatedDummy && parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+  };
+
+  let wasCallbackCalled = false;
+  const maybeCallCallback = (finished: boolean) => {
+    if (!wasCallbackCalled && animationConfig.callback) {
+      animationConfig.callback(finished);
+      wasCallbackCalled = true;
+    }
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(true);
 
-    animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    animationConfig.callback?.(false);
-
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -212,6 +220,9 @@ export function setElementAnimation(
       if (shouldSavePosition) {
         setElementPosition(element, snapshots.get(element)!);
       }
+
+      maybeRemoveElement();
+      maybeCallCallback(false);
     });
   }
 }

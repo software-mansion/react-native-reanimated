@@ -141,4 +141,11 @@ void AsyncQueueImpl::startTimeoutRunLoopThread(const std::string &name) {
   thread.detach();
 }
 
+AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler)
+    : uiScheduler_(uiScheduler) {}
+
+void AsyncQueueUI::push(std::function<void()> &&job) {
+  uiScheduler_->scheduleOnUI(std::move(job));
+}
+
 } // namespace worklets

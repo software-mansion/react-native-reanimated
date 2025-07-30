@@ -55,7 +55,6 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
@@ -66,25 +65,19 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
-  if (supportsLocking) {
-    return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
-  } else {
-    return jsiRuntime;
-  }
+  return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking)
+    const std::shared_ptr<AsyncQueue> &queue)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
-#ifndef NDEBUG
-      supportsLocking_(supportsLocking),
-#endif // NDEBUG
-      name_(name) {
+      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
@@ -142,13 +135,25 @@ void WorkletRuntime::init(
 #endif // WORKLETS_BUNDLE_MODE
 }
 
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &worklet) {
+  react_native_assert(
+      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
+      "the async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet, weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runGuarded(worklet);
+  });
+}
+
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  react_native_assert(
-      supportsLocking_ &&
-      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
-          .c_str());
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
