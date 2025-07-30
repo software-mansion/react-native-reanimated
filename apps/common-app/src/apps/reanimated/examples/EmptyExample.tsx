@@ -5,6 +5,7 @@ export default function EmptyExample() {
   return (
     <View style={styles.container}>
       <Text>Hello world!</Text>
+      <Text>Hello world!</Text>
     </View>
   );
 }

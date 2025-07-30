@@ -1,4 +1,5 @@
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -8,19 +9,30 @@ import Text from '../core/Text';
 import ActionSheetDropdown from '../misc/ActionSheetDropdown';
 import RotatableChevron from '../misc/RotatableChevron';
 
-export type SelectListOption<T> = {
-  label: string;
-  value: T;
-};
+export type SelectListOption<T> =
+  | {
+      key: string;
+      label: ReactNode;
+      value: T;
+    }
+  | {
+      key?: string;
+      label: string;
+      value: T;
+    };
 
 type SelectListsDropdownProps<T> = {
   options: Array<SelectListOption<T>>;
   selected: T;
+  fitInScreen?: boolean;
   alignment?: 'left' | 'right';
   styleOptions?: {
     dropdownStyle?: StyleProp<ViewStyle>;
     inputStyle?: StyleProp<ViewStyle>;
+    inputTextStyle?: StyleProp<TextStyle>;
+    chevronColor?: string;
   };
+  renderInput?: (selected: T) => ReactNode;
   onSelect: (value: T) => void;
 };
 
@@ -29,7 +41,9 @@ export default function SelectListDropdown<T>({
   onSelect,
   options,
   selected,
+  fitInScreen,
   styleOptions,
+  renderInput,
 }: SelectListsDropdownProps<T>) {
   const isExpanded = useSharedValue(false);
 
@@ -37,7 +51,7 @@ export default function SelectListDropdown<T>({
     options.find((option) => option.value === selected)?.label ?? '-';
 
   const dropdownOptions = options.map((option) => ({
-    key: option.label,
+    key: (option.key ?? option.label) as string,
     onPress: () => onSelect(option.value),
     render: () => (
       <DropdownOption
@@ -47,8 +61,24 @@ export default function SelectListDropdown<T>({
     ),
   }));
 
+  const input = renderInput?.(selected) ?? (
+    <View style={[styles.input, styleOptions?.inputStyle]}>
+      <Text
+        numberOfLines={1}
+        style={[flex.shrink, styleOptions?.inputTextStyle]}
+        variant="subHeading3">
+        {selectedLabel}
+      </Text>
+      <RotatableChevron
+        color={styleOptions?.chevronColor ?? colors.foreground2}
+        open={isExpanded}
+      />
+    </View>
+  );
+
   return (
     <ActionSheetDropdown
+      fitInScreen={fitInScreen}
       options={dropdownOptions}
       styleOptions={{
         alignment,
@@ -56,18 +86,13 @@ export default function SelectListDropdown<T>({
       }}
       onClose={() => (isExpanded.value = false)}
       onOpen={() => (isExpanded.value = true)}>
-      <View style={[styles.input, styleOptions?.inputStyle]}>
-        <Text numberOfLines={1} style={flex.shrink} variant="subHeading3">
-          {selectedLabel}
-        </Text>
-        <RotatableChevron color={colors.foreground2} open={isExpanded} />
-      </View>
+      {input}
     </ActionSheetDropdown>
   );
 }
 
 type DropdownOptionProps = {
-  label: string;
+  label: ReactNode;
   selected: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -75,11 +100,15 @@ type DropdownOptionProps = {
 function DropdownOption({ label, selected, style }: DropdownOptionProps) {
   return (
     <View style={[styles.option, style]}>
-      <Text
-        style={[styles.optionText, selected && styles.selectedOptionText]}
-        variant="subHeading3">
-        {label}
-      </Text>
+      {typeof label === 'string' ? (
+        <Text
+          style={[styles.optionText, selected && styles.selectedOptionText]}
+          variant="subHeading3">
+          {label}
+        </Text>
+      ) : (
+        label
+      )}
     </View>
   );
 }
