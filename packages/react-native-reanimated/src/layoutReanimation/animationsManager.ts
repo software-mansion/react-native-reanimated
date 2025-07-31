@@ -2,6 +2,7 @@
 import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
@@ -100,10 +101,12 @@ function createLayoutAnimationManager(): {
   };
 }
 
-executeOnUIRuntimeSync(() => {
-  'worklet';
-  global.LayoutAnimationsManager = createLayoutAnimationManager();
-})();
+if (!SHOULD_BE_USE_WEB) {
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+    global.LayoutAnimationsManager = createLayoutAnimationManager();
+  })();
+}
 
 export type LayoutAnimationsManager = ReturnType<
   typeof createLayoutAnimationManager
