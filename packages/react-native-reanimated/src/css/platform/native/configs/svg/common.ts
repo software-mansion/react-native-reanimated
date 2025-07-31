@@ -17,8 +17,10 @@ import type {
   VectorEffectProps,
 } from 'react-native-svg';
 
-import type { StyleBuilderConfig } from '../../style';
-import { colorAttributes } from '../common';
+import { type StyleBuilderConfig } from '../../style';
+import { processColorSVG, processFillRule } from '../../style';
+
+const colorAttributes = { process: processColorSVG };
 
 const colorProps: StyleBuilderConfig<ColorProps> = {
   color: colorAttributes,
@@ -27,7 +29,7 @@ const colorProps: StyleBuilderConfig<ColorProps> = {
 const fillProps: StyleBuilderConfig<FillProps> = {
   fill: colorAttributes,
   fillOpacity: true,
-  fillRule: true,
+  fillRule: { process: processFillRule },
 };
 
 const stokeProps: StyleBuilderConfig<StrokeProps> = {
