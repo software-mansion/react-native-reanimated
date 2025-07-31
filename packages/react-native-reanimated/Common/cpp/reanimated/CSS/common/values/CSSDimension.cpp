@@ -54,8 +54,7 @@ bool CSSDimension::canConstruct(const std::string &value) {
 }
 
 bool CSSDimension::canConstruct(const char *value) {
-  auto str = std::string(value);
-  return !str.empty() && str.back() == '%';
+  return canConstruct(std::string(value));
 }
 
 bool CSSDimension::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
@@ -135,8 +134,8 @@ bool CSSDimension::operator==(const CSSDimension &other) const {
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(std::ostream &os, const CSSDimension &dimension) {
-  os << "CSSDimension(" << dimension.toString() << ")";
+std::ostream &operator<<(std::ostream &os, const CSSDimension &value) {
+  os << "CSSDimension(" << value.toString() << ")";
   return os;
 }
 

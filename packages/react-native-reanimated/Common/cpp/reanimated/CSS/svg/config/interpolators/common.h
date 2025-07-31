@@ -6,9 +6,9 @@
 #include <reanimated/CSS/config/interpolators/utils.h>
 
 #include <reanimated/CSS/common/values/CSSColor.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/svg/values/SVGLength.h>
 
 namespace reanimated::css {
 
@@ -43,10 +43,10 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"translateY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
-    {"originX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"originY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
+    {"translateX", value<SVGLength>(RelativeTo::Parent, "width", 0)},
+    {"translateY", value<SVGLength>(RelativeTo::Parent, "height", 0)},
+    {"originX", value<SVGLength>(RelativeTo::Parent, "width", 0)},
+    {"originY", value<SVGLength>(RelativeTo::Parent, "height", 0)},
     {"scaleX", value<CSSDouble>(1)},
     {"scaleY", value<CSSDouble>(1)},
     {"skewX", value<CSSAngle>(0)},
