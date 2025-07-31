@@ -62,12 +62,16 @@ struct LayoutAnimationsProxy
         mutable std::unordered_set<Tag> activeTransitions_;
         mutable Tag transitionTag_;
         mutable double transitionProgress_;
+        mutable bool transitionUpdated_;
         mutable TransitionState transitionState_;
         mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
         mutable int myTag = 10001;
         mutable std::vector<Tag> sharedContainersToRemove_;
         mutable std::unordered_map<Tag, Tag> restoreMap_;
         mutable std::vector<Tag> tagsToRestore_;
+        mutable TransitionMap transitionMap_;
+        mutable Transitions transitions_;
+        mutable bool synchronized_ = true;
         std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
@@ -107,11 +111,11 @@ struct LayoutAnimationsProxy
         
         void updateLightTree(const ShadowViewMutationList &mutations) const;
         
-        void handleSharedTransitionsStart(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
+        void handleSharedTransitionsStart(const LightNode::Unshared &afterTopScreen, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         
         void cleanupSharedTransitions(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         
-        void hideTransitioningViews(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const;
+        void hideTransitioningViews(int index, ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const;
 
         
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
@@ -129,7 +133,7 @@ struct LayoutAnimationsProxy
         
         LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
         
-        void findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const;
+        void findSharedElementsOnScreen(LightNode::Unshared node, int index) const;
         
         LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
 

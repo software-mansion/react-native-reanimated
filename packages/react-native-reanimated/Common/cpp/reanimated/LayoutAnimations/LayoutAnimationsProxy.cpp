@@ -21,6 +21,69 @@ namespace reanimated {
 // On android this code will be sometimes executed on the JS thread.
 // That's why we have to schedule some of animation manager function on the UI
 // thread
+//std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(SurfaceId surfaceId, MountingTransaction::Number transactionNumber, const TransactionTelemetry &telemetry, ShadowViewMutationList mutations) const {
+//#ifdef LAYOUT_ANIMATIONS_LOGS
+//  LOG(INFO) << std::endl;
+//  LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
+//            << surfaceId << std::endl;
+//#endif
+//  LOG(INFO) << "pullTransaction";
+//  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+//  ReanimatedSystraceSection d("pullTransaction");
+//  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
+//  ShadowViewMutationList filteredMutations;
+//  LightNode::Unshared beforeTopScreen, afterTopScreen;
+//  std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> afterMap;
+//  std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> beforeMap;
+//  std::vector<std::shared_ptr<MutationNode>> roots;
+//  std::unordered_map<Tag, ShadowView> movedViews;
+//  bool isInTransition = transitionState_;
+//
+//  handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
+//      
+//  if (!isInTransition){
+//    
+//    auto root = lightNodes_[surfaceId];
+//    beforeTopScreen = topScreen[surfaceId];
+//    
+//    if (beforeTopScreen){
+//      findSharedElementsOnScreen(beforeTopScreen, beforeMap);
+//    }
+//    
+//    updateLightTree(mutations);
+//    
+//    root = lightNodes_[surfaceId];
+//    afterTopScreen = findTopScreen(root);
+//    
+//    topScreen[surfaceId] = afterTopScreen;
+//    if (afterTopScreen){
+//      findSharedElementsOnScreen(afterTopScreen, afterMap);
+//    }
+//    
+//    hideTransitioningViews(afterMap, afterTopScreen, beforeMap, beforeTopScreen, filteredMutations, propsParserContext);
+//  } else {
+//    updateLightTree(mutations);
+//  }
+//  
+//  parseRemoveMutations(movedViews, mutations, roots);
+//      
+//  cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
+//
+//  handleRemovals(filteredMutations, roots);
+//
+//  handleUpdatesAndEnterings(
+//      filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
+//
+//  addOngoingAnimations(surfaceId, filteredMutations);
+//      
+//  if (!isInTransition){
+//    handleSharedTransitionsStart(afterMap, afterTopScreen, beforeMap, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
+//  }
+//  
+//  return MountingTransaction{
+//      surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+//}
+
 std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(SurfaceId surfaceId, MountingTransaction::Number transactionNumber, const TransactionTelemetry &telemetry, ShadowViewMutationList mutations) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
@@ -32,53 +95,57 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(Surfac
   ReanimatedSystraceSection d("pullTransaction");
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
-  LightNode::Unshared beforeTopScreen, afterTopScreen;
-  std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> afterMap;
-  std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> beforeMap;
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, ShadowView> movedViews;
   bool isInTransition = transitionState_;
-
-  handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
-      
-  if (!isInTransition){
-    
+  
+  if (isInTransition){
+    updateLightTree(mutations);
+    filteredMutations.insert(filteredMutations.end(), mutations.begin(), mutations.end());
+    handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
+  } else if (!synchronized_){
+    auto actualTop = topScreen[surfaceId];
+    updateLightTree(mutations);
+    auto reactTop = findTopScreen(lightNodes_[surfaceId]);
+    if (reactTop->current.tag == actualTop->current.tag){
+      synchronized_ = true;
+    }
+    filteredMutations.insert(filteredMutations.end(), mutations.begin(), mutations.end());
+  } else {
     auto root = lightNodes_[surfaceId];
-    beforeTopScreen = topScreen[surfaceId];
-    
+    auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen){
-      findSharedElementsOnScreen(beforeTopScreen, beforeMap);
+      findSharedElementsOnScreen(beforeTopScreen, 0);
     }
     
     updateLightTree(mutations);
     
     root = lightNodes_[surfaceId];
-    afterTopScreen = findTopScreen(root);
+    auto afterTopScreen = findTopScreen(root);
     
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen){
-      findSharedElementsOnScreen(afterTopScreen, afterMap);
+      findSharedElementsOnScreen(afterTopScreen, 1);
+    }
+    bool shouldTransitionStart = beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag != afterTopScreen->current.tag;
+    
+    if (shouldTransitionStart){
+      hideTransitioningViews(0, filteredMutations, propsParserContext);
+      filteredMutations.insert(filteredMutations.end(), mutations.begin(), mutations.end());
+      hideTransitioningViews(1, filteredMutations, propsParserContext);
+    } else {
+      filteredMutations.insert(filteredMutations.end(), mutations.begin(), mutations.end());
     }
     
-    hideTransitioningViews(afterMap, afterTopScreen, beforeMap, beforeTopScreen, filteredMutations, propsParserContext);
-  } else {
-    updateLightTree(mutations);
+    handleSharedTransitionsStart(afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
   }
-  
-  parseRemoveMutations(movedViews, mutations, roots);
       
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
-  handleRemovals(filteredMutations, roots);
-
-  handleUpdatesAndEnterings(
-      filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
-
   addOngoingAnimations(surfaceId, filteredMutations);
-      
-  if (!isInTransition){
-    handleSharedTransitionsStart(afterMap, afterTopScreen, beforeMap, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
-  }
+  
+  transitionMap_.clear();
+  transitions_.clear();
   
   return MountingTransaction{
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
@@ -135,14 +202,20 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(LightNode::Unshared nod
   return result;
 }
 
-void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node, std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &map) const{
+void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node, int index) const{
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)){
     ShadowView copy = node->current;
     copy.layoutMetrics = getAbsoluteMetrics(node);
-    map[sharedTransitionManager_->tagToName_[node->current.tag]] = {copy, node->parent.lock()->current.tag};
+    auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
+    auto& transition = transitionMap_[sharedTag];
+    transition.snapshot[index] = copy;
+    transition.parentTag[index] = node->parent.lock()->current.tag;
+    if (transition.parentTag[0] && transition.parentTag[1]){
+      transitions_.push_back({sharedTag, transition});
+    }
   }
   for (auto& child: node->children){
-    findSharedElementsOnScreen(child, map);
+    findSharedElementsOnScreen(child, index);
   }
 }
 
@@ -171,61 +244,60 @@ LayoutMetrics LayoutAnimationsProxy::getAbsoluteMetrics(LightNode::Unshared node
 
 void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const {
   LOG(INFO) << "Transition state: " << transitionState_;
+  if (!transitionUpdated_){
+    return;
+  }
+  transitionUpdated_ = false;
   
   if (mutations.size() == 0 && transitionState_){
     if (transitionState_ == START){
+      synchronized_ = false;
       auto root = lightNodes_[surfaceId];
       auto beforeTopScreen = topScreen[surfaceId];
       auto afterTopScreen = lightNodes_[transitionTag_];
       topScreen[surfaceId] = afterTopScreen;
       if (beforeTopScreen && afterTopScreen){
-        std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> afterMap;
-        std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> beforeMap;
+        LOG(INFO) << "start progress transition: " << beforeTopScreen->current.tag << " -> " << afterTopScreen->current.tag;
         
-        findSharedElementsOnScreen(beforeTopScreen, beforeMap);
-        findSharedElementsOnScreen(afterTopScreen, afterMap);
+        findSharedElementsOnScreen(beforeTopScreen, 0);
+        findSharedElementsOnScreen(afterTopScreen, 1);
         
         if (beforeTopScreen->current.tag != afterTopScreen->current.tag){
           
-          for (auto& [sharedTag, p]: beforeMap){
-            auto& [shadowView, beforeParentTag] = p;
-            if (afterMap.contains(sharedTag)){
-              const auto before = shadowView;
-              const auto [after, afterParentTag] = afterMap[sharedTag];
-              
-              ShadowView s = before;
-              s.tag = myTag;
-              filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, 1));
-              filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
-              auto p = lightNodes_[before.tag]->parent.lock();
-              for (int i=0; i<p->children.size(); i++){
-                auto& child = p->children[i];
-                if (child->current.tag == before.tag){
-                  filteredMutations.push_back(ShadowViewMutation::RemoveMutation(p->current.tag, before, i));
-                  p->children.erase(p->children.begin()+i);
-                  break;
-                }
-              }
-              auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
-              m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
-              filteredMutations.push_back(m);
-              auto node = std::make_shared<LightNode>();
-              node->current = s;
-              lightNodes_[myTag] = node;
-              auto& parent = lightNodes_[surfaceId];
-              parent->children.insert(parent->children.begin()+1, node);
-              layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[myTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
-              ShadowView copy = after;
-              copy.tag = myTag;
-              auto copy2 = before;
-              copy2.tag = myTag;
-              startProgressTransition(myTag, copy2, copy, surfaceId);
-              restoreMap_[myTag] = after.tag;
-              sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
-              activeTransitions_.insert(myTag);
-              myTag+=2;
-            }
+          for (auto& [sharedTag, transition]: transitions_){
+            const auto& [before, after] = transition.snapshot;
+            const auto& [beforeParentTag, afterParentTag] = transition.parentTag;
+            
+            auto& root = lightNodes_[surfaceId];
+            ShadowView s = before;
+            s.tag = myTag;
+            filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, root->children.size()));
+            filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
+            auto p = lightNodes_[before.tag]->parent.lock();
+            auto m1 = ShadowViewMutation::InsertMutation(p->current.tag, before, 8);
+            filteredMutations.push_back(ShadowViewMutation::UpdateMutation(before, *cloneViewWithoutOpacity(m1, propsParserContext), p->current.tag));
+            
+            
+            auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
+            m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
+            filteredMutations.push_back(m);
+            auto node = std::make_shared<LightNode>();
+            node->current = s;
+            lightNodes_[myTag] = node;
+            
+            root->children.push_back(node);
+            layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[myTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
+            ShadowView copy = after;
+            copy.tag = myTag;
+            auto copy2 = before;
+            copy2.tag = myTag;
+            startProgressTransition(myTag, copy2, copy, surfaceId);
+            restoreMap_[myTag] = after.tag;
+            sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
+            activeTransitions_.insert(myTag);
+            myTag+=2;
+            
           }
         }
       }
@@ -253,6 +325,7 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
         sharedContainersToRemove_.push_back(tag);
         tagsToRestore_.push_back(restoreMap_[tag]);
       }
+      sharedTransitionManager_->groups_.clear();
       activeTransitions_.clear();
       transitionState_ = NONE;
     }
@@ -306,55 +379,55 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
   }
 }
 
-void LayoutAnimationsProxy::handleSharedTransitionsStart(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const {
+void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshared &afterTopScreen, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const {
   {
     ReanimatedSystraceSection s1("moj narzut 2");
     
     if (beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag != afterTopScreen->current.tag){
       LOG(INFO) << "different tags";
+      LOG(INFO) << "start transition: " << beforeTopScreen->current.tag << " -> " << afterTopScreen->current.tag;
       
-      for (auto& [sharedTag, p]: beforeMap){
-        auto& [shadowView, beforeParentTag] = p;
-        if (afterMap.contains(sharedTag)){
-          const auto before = shadowView;
-          const auto [after, afterParentTag] = afterMap[sharedTag];
-          auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
-          auto shouldCreateContainer = (fakeTag == -1 || !layoutAnimations_.contains(fakeTag));
-          if (shouldCreateContainer){
-            ShadowView s = before;
-            s.tag = myTag;
-            filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
-            filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, 1));
-            filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
-            auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
-            m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
-            filteredMutations.push_back(m);
-            auto node = std::make_shared<LightNode>();
-            node->current = s;
-            lightNodes_[myTag] = node;
-            auto& parent = lightNodes_[surfaceId];
-            parent->children.insert(parent->children.begin()+1, node);
-            fakeTag = myTag;
-          }
-          layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[fakeTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
-          ShadowView copy = after;
-          copy.tag = fakeTag;
-          auto copy2 = before;
-          copy2.tag = fakeTag;
-          startSharedTransition(fakeTag, copy2, copy, surfaceId);
-          restoreMap_[fakeTag] = after.tag;
-          if (shouldCreateContainer){
-            sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
-            myTag+=2;
-          }
+      for (auto& [sharedTag, transition]: transitions_){
+        LOG(INFO) << "sharedTag: " << sharedTag;
+        const auto& [before, after] = transition.snapshot;
+        const auto& [beforeParentTag, afterParentTag] = transition.parentTag;
+        
+        auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
+        auto shouldCreateContainer = (fakeTag == -1 || !layoutAnimations_.contains(fakeTag));
+        if (shouldCreateContainer){
+          auto& root = lightNodes_[surfaceId];
+          ShadowView s = before;
+          s.tag = myTag;
+          filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
+          filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, root->children.size()));
+          filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
+          auto m = ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
+          m = ShadowViewMutation::UpdateMutation(after, *cloneViewWithoutOpacity(m, propsParserContext), afterParentTag);
+          filteredMutations.push_back(m);
+          auto node = std::make_shared<LightNode>();
+          node->current = s;
+          lightNodes_[myTag] = node;
+          root->children.push_back(node);
+          fakeTag = myTag;
+        }
+        layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[fakeTag] = layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
+        ShadowView copy = after;
+        copy.tag = fakeTag;
+        auto copy2 = before;
+        copy2.tag = fakeTag;
+        startSharedTransition(fakeTag, copy2, copy, surfaceId);
+        restoreMap_[fakeTag] = after.tag;
+        if (shouldCreateContainer){
+          sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
+          myTag+=2;
         }
       }
     } else if (mutations.size() && beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag == afterTopScreen->current.tag){
       LOG(INFO) << "same tag";
-      for (auto& [sharedTag, p]: afterMap){
-        auto& [shadowView, beforeParentTag] = p;
+      for (auto& [sharedTag, transition]: transitions_){
+        const auto& [_, after] = transition.snapshot;
         
-        auto copy = shadowView;
+        auto copy = after;
         auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
         copy.tag = fakeTag;
         if (!layoutAnimations_.contains(fakeTag)){
@@ -397,18 +470,13 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(ShadowViewMutationList &fil
   sharedContainersToRemove_.clear();
 }
 
-void LayoutAnimationsProxy::hideTransitioningViews(std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &afterMap, const LightNode::Unshared &afterTopScreen, const std::unordered_map<SharedTag, std::pair<ShadowView, Tag>> &beforeMap, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const {
-  if (beforeTopScreen && afterTopScreen && beforeTopScreen->current.tag != afterTopScreen->current.tag){
-    for (auto& [sharedTag, p]: beforeMap){
-      auto& [shadowView, beforeParentTag] = p;
-      if (afterMap.contains(sharedTag)){
-        const auto before = shadowView;
-        const auto [after, afterParentTag] = afterMap[sharedTag];
-        auto m = ShadowViewMutation::UpdateMutation(before, before, beforeParentTag);
-        m = ShadowViewMutation::UpdateMutation(before, *cloneViewWithoutOpacity(m, propsParserContext), beforeParentTag);
-        filteredMutations.push_back(m);
-      }
-    }
+void LayoutAnimationsProxy::hideTransitioningViews(int index, ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext) const {
+  for (auto& [sharedTag, transition]: transitions_){
+    const auto& shadowView = transition.snapshot[index];
+    const auto& parentTag = transition.parentTag[index];
+    auto m = ShadowViewMutation::UpdateMutation(shadowView, shadowView, parentTag);
+    m = ShadowViewMutation::UpdateMutation(shadowView, *cloneViewWithoutOpacity(m, propsParserContext), parentTag);
+    filteredMutations.push_back(m);
   }
 }
 
@@ -483,8 +551,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   layoutAnimations_.erase(tag);
   updateMap.erase(tag);
   
-//  auto sharedTag = sharedTransitionManager_->tagToName_[tag];
-//  auto index = sharedTransitionManager_->removeTransitionContainer(sharedTag);
+  auto sharedTag = sharedTransitionManager_->tagToName_[tag];
+  sharedTransitionManager_->groups_.erase(sharedTag);
   
   sharedContainersToRemove_.push_back(tag);
   tagsToRestore_.push_back(restoreMap_[tag]);
@@ -503,6 +571,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
 
 std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward, bool isSwiping){
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  transitionUpdated_ = true;
 //  LOG(INFO) << "notifyTransitionProgress ("<< tag <<"): " << progress << ", closing: " << isClosing << ", goingForward: " << isGoingForward << ", isSwiping: " <<isSwiping;
   
   if (isSwiping && !isClosing){

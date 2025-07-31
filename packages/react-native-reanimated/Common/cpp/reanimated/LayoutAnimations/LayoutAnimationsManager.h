@@ -31,17 +31,24 @@ struct SharedTransitionGroup {
   Tag fakeTag = -1;
 };
 
+struct Transition {
+  ShadowView snapshot[2];
+  Tag parentTag[2] = {0,0};
+};
+
 struct SharedTransitionManager{
   std::unordered_map<std::string, SharedTransitionGroup> groups_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-  std::vector<SharedTag> containers_;
   
 //  SharedTransitionGroup getGroupForTag();
 //  int createTransitionContainer(SharedTag sharedTag);
 //  int removeTransitionContainer(SharedTag sharedTag);
 //  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
 };
+
+using TransitionMap = std::unordered_map<SharedTag, Transition>;
+using Transitions = std::vector<std::pair<SharedTag, Transition>>;
 
 struct LayoutAnimationConfig {
   int tag;
