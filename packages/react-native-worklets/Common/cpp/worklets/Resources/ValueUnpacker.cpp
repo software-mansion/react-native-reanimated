@@ -1,13 +1,13 @@
 // This file was generated with
-// `packages/react-native-worklets/scripts/export-value-unpacker.js`.
+// `packages/react-native-worklets/scripts/export-unpackers.js`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/ValueUnpacker.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 
 const char ValueUnpackerCode[] =
-    R"VALUE_UNPACKER(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
+    R"DELIMITER__(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
   'use strict';
 
   var workletsCache = globalThis.__workletsCache;
@@ -46,5 +46,5 @@ const char ValueUnpackerCode[] =
   } else {
     throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(globalThis._toString(objectToUnpack), "\"."));
   }
-})VALUE_UNPACKER";
+})DELIMITER__";
 } // namespace worklets
