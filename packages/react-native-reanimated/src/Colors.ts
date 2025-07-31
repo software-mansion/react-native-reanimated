@@ -354,10 +354,6 @@ export const ColorProperties = [
   'stroke',
 ];
 
-setTimeout(() => {
-  console.log('Adding beautifulColor to ColorProperties');
-  ColorProperties.push('beautifulColor');
-}, 5000);
 
 export function normalizeColor(color: unknown): number | null {
   'worklet';
