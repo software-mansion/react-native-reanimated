@@ -143,7 +143,7 @@ void WorkletRuntime::installCaches(jsi::Runtime &rt) {
 
   const auto &weakMapConstructor = global.getPropertyAsFunction(rt, "WeakMap");
   auto handleCache = weakMapConstructor.callAsConstructor(rt);
-  global.setProperty(rt, "__workletsWeakCache", std::move(handleCache));
+  global.setProperty(rt, "__handleCache", std::move(handleCache));
 }
 
 void WorkletRuntime::runAsyncGuarded(
