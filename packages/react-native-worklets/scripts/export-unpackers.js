@@ -5,21 +5,16 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
 
-exportToCpp('valueUnpacker.ts', 'ValueUnpacker', 'ValueUnpackerCode');
-exportToCpp(
-  'synchronizableUnpacker.ts',
-  'SynchronizableUnpacker',
-  'SynchronizableUnpackerCode'
-);
+exportToCpp('valueUnpacker.ts', 'ValueUnpacker');
+exportToCpp('synchronizableUnpacker.ts', 'SynchronizableUnpacker');
 
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to
  *   transform.
- * @param {string} outputFilePath - The path where the generated C++ file should
+ * @param {string} outputFilename - The path where the generated C++ file should
  *   be written, without extension.
- * @param {string} cstrName - The name of the C++ string to be generated.
  */
-function exportToCpp(sourceFilePath, outputFilePath, cstrName) {
+function exportToCpp(sourceFilePath, outputFilename) {
   const transformed = transformFileSync(
     path.resolve(__dirname, `../src/${sourceFilePath}`),
     {
@@ -58,18 +53,19 @@ function exportToCpp(sourceFilePath, outputFilePath, cstrName) {
     compact: false,
   });
 
-  const delimiter = '__DELIMITER__';
+  const delimiter = 'DELIMITER__';
 
+  const cstrName = `${outputFilename}Code`;
   fs.writeFileSync(
     path.resolve(
       __dirname,
-      `../Common/cpp/worklets/Resources/${outputFilePath}.cpp`
+      `../Common/cpp/worklets/Resources/${outputFilename}.cpp`
     ),
     `// This file was generated with
 // \`packages/react-native-worklets/scripts/export-unpackers.js\`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/${outputFilePath}.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 

@@ -2,29 +2,25 @@
 // `packages/react-native-worklets/scripts/export-unpackers.js`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/ValueUnpacker.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 
 const char ValueUnpackerCode[] =
-    R"__DELIMITER__(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
+    R"DELIMITER__(function __valueUnpacker(objectToUnpack, category, remoteFunctionName) {
   'use strict';
 
-  var workletsCache = global.__workletsCache;
-  var handleCache = global.__handleCache;
-  if (workletsCache === undefined) {
-    workletsCache = global.__workletsCache = new Map();
-    handleCache = global.__handleCache = new WeakMap();
-  }
+  var workletsCache = globalThis.__workletsCache;
+  var handleCache = globalThis.__handleCache;
   var workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     var workletFun = workletsCache.get(workletHash);
     if (workletFun === undefined) {
       var initData = objectToUnpack.__initData;
-      if (global.evalWithSourceMap) {
-        workletFun = global.evalWithSourceMap('(' + initData.code + '\n)', initData.location, initData.sourceMap);
-      } else if (global.evalWithSourceUrl) {
-        workletFun = global.evalWithSourceUrl('(' + initData.code + '\n)', "worklet_".concat(workletHash));
+      if (globalThis.evalWithSourceMap) {
+        workletFun = globalThis.evalWithSourceMap('(' + initData.code + '\n)', initData.location, initData.sourceMap);
+      } else if (globalThis.evalWithSourceUrl) {
+        workletFun = globalThis.evalWithSourceUrl('(' + initData.code + '\n)', "worklet_".concat(workletHash));
       } else {
         workletFun = eval('(' + initData.code + '\n)');
       }
@@ -50,5 +46,5 @@ const char ValueUnpackerCode[] =
   } else {
     throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(globalThis._toString(objectToUnpack), "\"."));
   }
-})__DELIMITER__";
+})DELIMITER__";
 } // namespace worklets
