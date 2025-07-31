@@ -126,10 +126,24 @@ void WorkletRuntime::init(
   }
 #else
   // Legacy behavior
+  installCaches(rt);
+
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
+}
+
+void WorkletRuntime::installCaches(jsi::Runtime &rt) {
+  const auto &global = rt.global();
+  const auto &mapConstructor = global.getPropertyAsFunction(rt, "Map");
+
+  auto workletsCache = mapConstructor.callAsConstructor(rt);
+  global.setProperty(rt, "__workletsCache", std::move(workletsCache));
+
+  const auto &weakMapConstructor = global.getPropertyAsFunction(rt, "WeakMap");
+  auto handleCache = weakMapConstructor.callAsConstructor(rt);
+  global.setProperty(rt, "__handleCache", std::move(handleCache));
 }
 
 void WorkletRuntime::runAsyncGuarded(
