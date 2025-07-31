@@ -85,18 +85,6 @@ def toPlatformFileString(String path) {
   return path
 }
 
-def validateWorkletsVersion() {
-    def result = providers.exec {
-        workingDir(projectDir.path)
-        commandLine("node", "./../scripts/validate-worklets-build.js")
-        ignoreExitValue = true
-    }
-
-    if (result.getResult().get().exitValue != 0) {
-        throw new GradleException(result.getStandardError().getAsText().get().trim())
-    }
-}
-
 def getReanimatedStaticFeatureFlags() {
     def featureFlags = new HashMap<String, String>()
 
@@ -302,9 +290,17 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
+def validateWorkletsBuildResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-worklets-build.js")
+    ignoreExitValue = true
+}
+
 task assertWorkletsVersionTask {
     doFirst {
-        validateWorkletsVersion()
+        if (validateWorkletsBuildResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateWorkletsBuildResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 
