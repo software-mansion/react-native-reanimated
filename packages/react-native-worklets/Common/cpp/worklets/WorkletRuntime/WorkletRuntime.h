@@ -37,6 +37,8 @@ class WorkletRuntime : public jsi::HostObject,
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
+  void installCaches(jsi::Runtime &rt);
+
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
