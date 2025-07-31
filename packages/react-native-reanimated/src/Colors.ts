@@ -169,7 +169,7 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number> = makeShareable({
+const names: Record<string, number> = {
   transparent: 0x00000000,
 
   /* spell-checker: disable */
@@ -324,10 +324,10 @@ const names: Record<string, number> = makeShareable({
   yellow: 0xffff00ff,
   yellowgreen: 0x9acd32ff,
   /* spell-checker: enable */
-});
+};
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const ColorProperties = makeShareable([
+export const ColorProperties = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -353,7 +353,7 @@ export const ColorProperties = makeShareable([
   'lightingColor',
   'stopColor',
   'stroke',
-]);
+];
 
 export function normalizeColor(color: unknown): number | null {
   'worklet';
