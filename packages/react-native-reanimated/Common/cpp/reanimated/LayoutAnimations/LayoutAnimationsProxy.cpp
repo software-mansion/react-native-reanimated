@@ -406,10 +406,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
     mutations.push_back(ShadowViewMutation::UpdateMutation(
-        *layoutAnimation.currentView,
-        *newView,
-        layoutAnimation.parentTag
-        ));
+        *layoutAnimation.currentView, *newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -661,11 +658,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       strongThis->layoutAnimations_.insert_or_assign(
           tag,
-          LayoutAnimation{
-              finalView,
-              current,
-              mutation.parentTag,
-              opacity});
+          LayoutAnimation{finalView, current, mutation.parentTag, opacity});
       window = strongThis->surfaceManager.getWindow(
           mutation.newChildShadowView.surfaceId);
     }
