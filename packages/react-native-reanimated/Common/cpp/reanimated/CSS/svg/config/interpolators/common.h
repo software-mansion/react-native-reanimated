@@ -43,10 +43,10 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(RelativeTo::Parent, "width", 0)},
-    {"translateY", value<SVGLength>(RelativeTo::Parent, "height", 0)},
-    {"originX", value<SVGLength>(RelativeTo::Parent, "width", 0)},
-    {"originY", value<SVGLength>(RelativeTo::Parent, "height", 0)},
+    {"translateX", value<SVGLength>(0)},
+    {"translateY", value<SVGLength>(0)},
+    {"originX", value<SVGLength>(0)},
+    {"originY", value<SVGLength>(0)},
     {"scaleX", value<CSSDouble>(1)},
     {"scaleY", value<CSSDouble>(1)},
     {"skewX", value<CSSAngle>(0)},
