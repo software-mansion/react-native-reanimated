@@ -1,3 +1,19 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 872d44e0ff3653198085e805f4a4ea8b6d12bd0c..d9fe8da9747b7d1970ee02aaf80cd9138aaf48ec 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -57,7 +57,10 @@ def resolveReactNativeDirectory() {
+     }
+ 
+     // We're in non standard setup, e.g. monorepo - try to use node resolver to locate the react-native package.
+-    String maybeRnPackagePath = ["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()
++    String maybeRnPackagePath = providers.exec {
++        workingDir(rootDir)
++        commandLine("node", "--print", "require.resolve('react-native/package.json')")
++    }.standardOutput.asText.get().trim()
+ 
+     File nodeResolverRnDirFile = null
+     // file() constructor fails in case string is null or blank
 diff --git a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
 index 4772f7c59a8ed0a47208264392f0b79e2877bdae..d974788f05fcfd61d610cd8cd31fb3635d919529 100644
 --- a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
@@ -168,19 +184,3 @@ index 0c5b76b68f589e95365176d6201b71de4948ffec..78ad762b9bc68fb2bcba8c6edb6038fa
 +  return RNSScreenStackHeaderConfig.class;
 +}
 +#endif
-diff --git a/android/build.gradle b/android/build.gradle
-index 872d44e0ff3653198085e805f4a4ea8b6d12bd0c..d9fe8da9747b7d1970ee02aaf80cd9138aaf48ec 100644
---- a/android/build.gradle
-+++ b/android/build.gradle
-@@ -57,7 +57,10 @@ def resolveReactNativeDirectory() {
-     }
- 
-     // We're in non standard setup, e.g. monorepo - try to use node resolver to locate the react-native package.
--    String maybeRnPackagePath = ["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()
-+    String maybeRnPackagePath = providers.exec {
-+        workingDir(rootDir)
-+        commandLine("node", "--print", "require.resolve('react-native/package.json')")
-+    }.standardOutput.asText.get().trim()
- 
-     File nodeResolverRnDirFile = null
-     // file() constructor fails in case string is null or blank
