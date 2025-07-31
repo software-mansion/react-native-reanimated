@@ -1,5 +1,5 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
 import type {
@@ -100,7 +100,7 @@ function createLayoutAnimationManager(): {
   };
 }
 
-runOnUI(() => {
+executeOnUIRuntimeSync(() => {
   'worklet';
   global.LayoutAnimationsManager = createLayoutAnimationManager();
 })();
