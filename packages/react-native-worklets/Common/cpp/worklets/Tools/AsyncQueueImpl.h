@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Public/AsyncQueue.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -28,6 +29,18 @@ class AsyncQueueImpl : public AsyncQueue {
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;
+};
+
+class AsyncQueueUI : public AsyncQueue {
+ public:
+  explicit AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler);
+
+  ~AsyncQueueUI() override = default;
+
+  void push(std::function<void()> &&job) override;
+
+ private:
+  std::shared_ptr<UIScheduler> uiScheduler_;
 };
 
 } // namespace worklets

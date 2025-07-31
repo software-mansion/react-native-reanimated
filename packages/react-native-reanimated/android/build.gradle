@@ -85,18 +85,6 @@ def toPlatformFileString(String path) {
   return path
 }
 
-def validateWorkletsVersion() {
-    def result = providers.exec {
-        workingDir(projectDir.path)
-        commandLine("node", "./../scripts/validate-worklets-build.js")
-        ignoreExitValue = true
-    }
-
-    if (result.getResult().get().exitValue != 0) {
-        throw new GradleException(result.getStandardError().getAsText().get().trim())
-    }
-}
-
 def getReanimatedStaticFeatureFlags() {
     def featureFlags = new HashMap<String, String>()
 
@@ -123,6 +111,7 @@ if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
 
+def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
 def reactNativeWorkletsRootDir = resolveReactNativeWorkletsDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
@@ -270,7 +259,6 @@ android {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
-                def packageDir = new File("${project.projectDir}/..")
 
                 def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
                 def output = new File("${packageDir}/compile_commands.json")
@@ -284,7 +272,7 @@ android {
 
 task assertMinimalReactNativeVersionTask {
     // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 75
+    def minimalReactNativeVersion = 78
     onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
         throw new GradleException("[Reanimated] Unsupported React Native version. Please use React Native 0.$minimalReactNativeVersion or newer.")
@@ -302,9 +290,17 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
+def validateWorkletsBuildResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-worklets-build.js")
+    ignoreExitValue = true
+}
+
 task assertWorkletsVersionTask {
     doFirst {
-        validateWorkletsVersion()
+        if (validateWorkletsBuildResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateWorkletsBuildResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 

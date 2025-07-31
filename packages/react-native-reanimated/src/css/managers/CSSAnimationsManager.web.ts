@@ -91,7 +91,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   unmountCleanup(): void {
-    // noop
+    // We use setTimeout to ensure that the animation is removed after the
+    // component is unmounted (it puts the detach call at the end of the event loop)
+    setTimeout(this.detach.bind(this));
   }
 
   private detach() {

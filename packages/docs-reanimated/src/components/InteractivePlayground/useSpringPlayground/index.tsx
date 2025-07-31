@@ -1,37 +1,63 @@
 import React, { useState } from 'react';
+import type { WithSpringConfig } from 'react-native-reanimated';
+import {
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+  Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
+  ReduceMotion,
+  SnappySpringConfig,
+  SnappySpringConfigWithDuration,
+  WigglySpringConfig,
+  WigglySpringConfigWithDuration,
+} from 'react-native-reanimated';
+
+import { CheckboxOption, formatReduceMotion, Range, SelectOption } from '..';
 import Example from './Example';
 
-import { Range, CheckboxOption, SelectOption, formatReduceMotion } from '..';
-import { ReduceMotion, WithSpringConfig } from 'react-native-reanimated';
-
 const defaultConfig = {
-  damping: 10,
-  mass: 1,
-  stiffness: 100,
+  damping: 120,
+  mass: 4,
+  stiffness: 900,
   overshootClamping: false,
-  restDisplacementThreshold: 0.01,
-  restSpeedThreshold: 2,
-  // velocity: 0,
-  duration: 2000,
-  dampingRatio: 0.5,
+  energyThreshold: 6e-9,
+  velocity: 0,
+  duration: 550,
+  dampingRatio: 1,
   reduceMotion: ReduceMotion.System,
 };
 
+const physicsPresets = {
+  GentleSpringConfig,
+  WigglySpringConfig,
+  SnappySpringConfig,
+  Reanimated3DefaultSpringConfig,
+} as const;
+
+const durationPresets = {
+  GentleSpringConfigWithDuration,
+  WigglySpringConfigWithDuration,
+  SnappySpringConfigWithDuration,
+  Reanimated3DefaultSpringConfigWithDuration,
+} as const;
+
 export default function useSpringPlayground() {
   const [isPhysicsBased, setPhysicsBased] = useState(true);
+  const [physicsPresetName, setPhysicsPresetName] =
+    useState<keyof typeof physicsPresets>('GentleSpringConfig');
+  const [durationPresetName, setDurationPresetName] = useState<
+    keyof typeof durationPresets
+  >('GentleSpringConfigWithDuration');
 
   const [damping, setDamping] = useState(defaultConfig.damping);
   const [mass, setMass] = useState(defaultConfig.mass);
   const [stiffness, setStiffness] = useState(defaultConfig.stiffness);
-  // const [velocity, setVelocity] = useState(0);
+  const [velocity, setVelocity] = useState(0);
   const [overshootClamping, setOvershootClamping] = useState(
     defaultConfig.overshootClamping
   );
-  const [restDisplacementThreshold, setRestDisplacementThreshold] = useState(
-    defaultConfig.restDisplacementThreshold
-  );
-  const [restSpeedThreshold, setRestSpeedThreshold] = useState(
-    defaultConfig.restSpeedThreshold
+  const [energyThreshold, setEnergyThreshold] = useState(
+    defaultConfig.energyThreshold
   );
   const [duration, setDuration] = useState(defaultConfig.duration);
   const [dampingRatio, setDampingRatio] = useState(defaultConfig.dampingRatio);
@@ -46,23 +72,22 @@ export default function useSpringPlayground() {
 
     setStiffness(() => defaultConfig.stiffness);
     setOvershootClamping(() => defaultConfig.overshootClamping);
-    setRestDisplacementThreshold(() => defaultConfig.restDisplacementThreshold);
-    setRestSpeedThreshold(() => defaultConfig.restSpeedThreshold);
+    setEnergyThreshold(() => defaultConfig.energyThreshold);
+    setVelocity(() => defaultConfig.velocity);
   };
 
   const code = `
     withSpring(sv.value, {
       ${
         isPhysicsBased
-          ? `mass: ${mass},
+          ? `stifness: ${stiffness},
       damping: ${damping},`
           : `duration: ${duration},
       dampingRatio: ${dampingRatio},`
       }
-      stiffness: ${stiffness},
+      mass: ${mass},
       overshootClamping: ${overshootClamping},
-      restDisplacementThreshold: ${restDisplacementThreshold},
-      restSpeedThreshold: ${restSpeedThreshold},
+      energyThreshold: ${energyThreshold},
       reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;
@@ -90,24 +115,51 @@ export default function useSpringPlayground() {
       </ul>
       {isPhysicsBased ? (
         <>
+          <SelectOption
+            label="Preset"
+            value={physicsPresetName}
+            onChange={(option: keyof typeof physicsPresets) => {
+              setPhysicsPresetName(option);
+              setStiffness(physicsPresets[option].stiffness);
+              setDamping(physicsPresets[option].damping);
+              setOvershootClamping(
+                (physicsPresets[option] as WithSpringConfig).overshootClamping
+              );
+            }}
+            options={Object.keys(physicsPresets)}
+          />
           <Range
-            label="Mass"
-            min={1}
-            max={20}
-            step={0.1}
-            value={mass}
-            onChange={setMass}
+            label="Stiffness"
+            min={10}
+            max={2000}
+            step={10}
+            value={stiffness}
+            onChange={setStiffness}
           />
           <Range
             label="Damping"
-            min={1}
-            max={100}
+            min={10}
+            max={1000}
+            step={10}
             value={damping}
             onChange={setDamping}
           />
         </>
       ) : (
         <>
+          <SelectOption
+            label="Preset"
+            value={durationPresetName}
+            onChange={(option: keyof typeof durationPresets) => {
+              setDurationPresetName(option);
+              setDuration(durationPresets[option].duration);
+              setDampingRatio(durationPresets[option].dampingRatio);
+              setOvershootClamping(
+                (durationPresets[option] as WithSpringConfig).overshootClamping
+              );
+            }}
+            options={Object.keys(durationPresets)}
+          />
           <Range
             label="Duration"
             min={1}
@@ -119,47 +171,34 @@ export default function useSpringPlayground() {
           <Range
             label="Damping ratio"
             min={0.1}
-            max={3}
+            max={1.5}
             step={0.1}
             value={dampingRatio}
             onChange={setDampingRatio}
           />
         </>
       )}
-      <Range
-        label="Stiffness"
-        min={1}
-        max={500}
-        value={stiffness}
-        onChange={setStiffness}
-      />
-      {/* <Range
-        label="Velocity"
-        min={-50}
-        max={50}
-        value={velocity}
-        onChange={setVelocity}
-      /> */}
+      <Range label="Mass" min={1} max={100} value={mass} onChange={setMass} />
       <CheckboxOption
         label="Clamp"
         value={overshootClamping}
         onChange={setOvershootClamping}
       />
       <Range
-        label="Displacement threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={restDisplacementThreshold}
-        onChange={setRestDisplacementThreshold}
+        label="Energy threshold"
+        min={1e-12}
+        max={1e-1}
+        step={1e-12}
+        value={energyThreshold}
+        onChange={setEnergyThreshold}
       />
       <Range
-        label="Speed threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={restSpeedThreshold}
-        onChange={setRestSpeedThreshold}
+        label="Velocity"
+        min={-5000}
+        max={5000}
+        step={50}
+        value={velocity}
+        onChange={setVelocity}
       />
       <SelectOption
         label="Reduce motion"
@@ -175,10 +214,9 @@ export default function useSpringPlayground() {
     : { duration, dampingRatio };
   const restOptions = {
     stiffness,
-    // velocity,
+    velocity,
     overshootClamping,
-    restDisplacementThreshold,
-    restSpeedThreshold,
+    energyThreshold,
     reduceMotion,
   };
 

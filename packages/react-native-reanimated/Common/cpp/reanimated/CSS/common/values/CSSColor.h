@@ -5,6 +5,7 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
+#include <folly/json.h>
 #include <string>
 
 namespace reanimated::css {
@@ -14,6 +15,7 @@ using namespace worklets;
 enum class ColorType {
   Rgba,
   Transparent,
+  CurrentColor, // for SVG
 };
 
 struct CSSColor : public CSSSimpleValue<CSSColor> {
@@ -24,9 +26,13 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 
   CSSColor();
   explicit CSSColor(ColorType colorType);
+  explicit CSSColor(double numberValue);
+  explicit CSSColor(const std::string &colorString);
+
   explicit CSSColor(uint8_t r, uint8_t g, uint8_t b);
   explicit CSSColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   explicit CSSColor(const ColorChannels &colorChannels);
+
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSColor(const folly::dynamic &value);
 
@@ -44,6 +50,9 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue);
 #endif // NDEBUG
+
+ private:
+  static bool isValidColorString(const std::string &colorString);
 };
 
 inline const CSSColor CSSColor::Transparent(ColorType::Transparent);

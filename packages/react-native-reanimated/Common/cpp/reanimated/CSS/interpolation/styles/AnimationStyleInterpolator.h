@@ -19,7 +19,7 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
-            getInterpolators(componentName),
+            getComponentInterpolators(componentName),
             {},
             viewStylesRepository) {
     updateKeyframes(rt, keyframes);

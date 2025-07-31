@@ -2,13 +2,13 @@
 import {
   IS_ANDROID,
   processBoxShadowNative,
+  processColor,
   processTransformOrigin,
 } from '../../../../common';
 import type { PlainStyle } from '../../../types';
 import type { StyleBuilderConfig } from '../style';
 import {
   processAspectRatio,
-  processColor,
   processFontWeight,
   processGap,
   processInset,

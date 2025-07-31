@@ -76,7 +76,9 @@ export interface WorkletsModuleProxy {
 
   createWorkletRuntime(
     name: string,
-    initializer: ShareableRef<() => void>
+    initializer: ShareableRef<() => void>,
+    useDefaultQueue: boolean,
+    customQueue: object | undefined
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(

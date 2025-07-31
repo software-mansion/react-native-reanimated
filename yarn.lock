@@ -9875,6 +9875,7 @@ __metadata:
     eslint-plugin-reanimated: "workspace:*"
     eslint-plugin-simple-import-sort: "npm:^12.1.1"
     eslint-plugin-unused-imports: "npm:^4.1.4"
+    fuse.js: "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch"
     jest: "npm:^29.6.3"
     madge: "npm:^5.0.1"
     patch-package: "npm:^8.0.0"
@@ -13473,6 +13474,20 @@ __metadata:
   version: 1.2.3
   resolution: "functions-have-names@npm:1.2.3"
   checksum: 10/0ddfd3ed1066a55984aaecebf5419fbd9344a5c38dd120ffb0739fac4496758dcf371297440528b115e4367fc46e3abc86a2cc0ff44612181b175ae967a11a05
+  languageName: node
+  linkType: hard
+
+"fuse.js@npm:7.1.0":
+  version: 7.1.0
+  resolution: "fuse.js@npm:7.1.0"
+  checksum: 10/9f9105e54372897a46cb3e04074f0db5bd0a428320d4618276a57e6142d7502235a556f05cf87aa3c5d6d9c6fdfa06b901b78379c48aa0951672ccbc4a1bfe70
+  languageName: node
+  linkType: hard
+
+"fuse.js@patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch":
+  version: 7.1.0
+  resolution: "fuse.js@patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch::version=7.1.0&hash=7a98d4"
+  checksum: 10/01823b76155e1b9e9fb4c2744a303af55b7c3b86be013f9c3bf29d7405c7e8259b7fbeb71568b0b1b31175ee20862917deaa0d231a053f010a3a03348dc9b901
   languageName: node
   linkType: hard
 
@@ -19865,6 +19880,7 @@ __metadata:
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
     react-native-gesture-handler: "npm:2.26.0"
     react-native-is-edge-to-edge: "npm:^1.2.1"
+    react-native-svg: "npm:15.12.0"
     react-native-web: "npm:0.20.0"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.1.0"
@@ -19904,14 +19920,14 @@ __metadata:
 
 "react-native-screens@patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch":
   version: 4.10.0
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch::version=4.10.0&hash=3d1442"
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch::version=4.10.0&hash=5fc044"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/76972e8f98f5a756d0f0d4f8fd56b9edadbd7d55d109118dbc5f34dbeee1c960f2061e5df7c4d8ce543d261b609dcbb48577217fb350e2739348dad754e89fd4
+  checksum: 10/8cb7dbea3b345ed0f9fd940dabdd6993465a68a31f08d9a2e9056e6ab03bab50a108c4d2926d3f232b55475acb87b859a3049a5f6b174dff95dd79e2340ccc27
   languageName: node
   linkType: hard
 

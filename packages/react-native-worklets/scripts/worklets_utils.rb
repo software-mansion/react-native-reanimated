@@ -54,7 +54,7 @@ end
 
 def worklets_assert_minimal_react_native_version(config)
       # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 75
+  minimalReactNativeVersion = 78
   if config[:react_native_minor_version] < minimalReactNativeVersion
     raise "[Worklets] Unsupported React Native version. Please use React Native 0.#{minimalReactNativeVersion} or newer."
   end

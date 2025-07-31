@@ -17,12 +17,6 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
     AnimatedComponentType
   >();
 
-  constructor() {
-    runOnUI(() => {
-      global._tagToJSPropNamesMapping = {};
-    })();
-  }
-
   public registerComponent(
     animatedComponent: AnimatedComponentType,
     jsProps: string[]

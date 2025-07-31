@@ -376,9 +376,9 @@ TransformMatrix ScaleYOperation::toMatrix() const {
 
 // Translate
 TranslateOperation::TranslateOperation(const double value)
-    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
+    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
 TranslateOperation::TranslateOperation(const std::string &value)
-    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
+    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
@@ -564,7 +564,7 @@ TransformMatrix MatrixOperation::toMatrix() const {
 
 template struct TransformOperationBase<CSSDouble>;
 template struct TransformOperationBase<CSSAngle>;
-template struct TransformOperationBase<CSSDimension>;
+template struct TransformOperationBase<CSSLength>;
 template struct TransformOperationBase<
     std::variant<TransformMatrix, TransformOperations>>;
 
