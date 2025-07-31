@@ -6,6 +6,10 @@ export const svgPropertiesRoutes = {
     name: 'Circle',
     Component: svgAnimatedProperties.Circle,
   },
+  Rect: {
+    name: 'Rect',
+    Component: svgAnimatedProperties.Rect,
+  },
   Common: {
     name: 'Common',
     routes: {
