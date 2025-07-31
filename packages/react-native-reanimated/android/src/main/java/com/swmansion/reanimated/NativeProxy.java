@@ -304,6 +304,8 @@ public class NativeProxy {
           break;
 
         case CMD_OPACITY:
+        case CMD_ELEVATION:
+        case CMD_Z_INDEX:
         case CMD_SHADOW_OPACITY:
         case CMD_SHADOW_RADIUS:
         case CMD_BORDER_RADIUS:
@@ -325,8 +327,6 @@ public class NativeProxy {
             break;
           }
 
-        case CMD_ELEVATION:
-        case CMD_Z_INDEX:
         case CMD_BACKGROUND_COLOR:
         case CMD_COLOR:
         case CMD_TINT_COLOR:
