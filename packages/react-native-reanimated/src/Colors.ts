@@ -354,7 +354,6 @@ export const ColorProperties = [
   'stroke',
 ];
 
-
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 
