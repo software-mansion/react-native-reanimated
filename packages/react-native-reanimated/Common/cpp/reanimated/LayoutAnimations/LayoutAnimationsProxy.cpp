@@ -8,6 +8,10 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <glog/logging.h>
 #include <react/renderer/components/scrollview/ScrollViewShadowNode.h>
+#ifdef ANDROID
+#undef LOG
+#define LOG SYSLOG
+#endif
 
 #include <set>
 #include <utility>
@@ -251,11 +255,9 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
   
   if (mutations.size() == 0 && transitionState_){
     if (transitionState_ == START){
-      synchronized_ = false;
       auto root = lightNodes_[surfaceId];
       auto beforeTopScreen = topScreen[surfaceId];
       auto afterTopScreen = lightNodes_[transitionTag_];
-      topScreen[surfaceId] = afterTopScreen;
       if (beforeTopScreen && afterTopScreen){
         LOG(INFO) << "start progress transition: " << beforeTopScreen->current.tag << " -> " << afterTopScreen->current.tag;
         
@@ -293,7 +295,8 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
             auto copy2 = before;
             copy2.tag = myTag;
             startProgressTransition(myTag, copy2, copy, surfaceId);
-            restoreMap_[myTag] = after.tag;
+            restoreMap_[myTag][0] = before.tag;
+            restoreMap_[myTag][1] = after.tag;
             sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
             activeTransitions_.insert(myTag);
             myTag+=2;
@@ -323,7 +326,14 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
     } else if (transitionState_ == END || transitionState_ == CANCELLED){
       for (auto tag: activeTransitions_){
         sharedContainersToRemove_.push_back(tag);
-        tagsToRestore_.push_back(restoreMap_[tag]);
+        tagsToRestore_.push_back(restoreMap_[tag][1]);
+        if (transitionState_ == CANCELLED){
+          tagsToRestore_.push_back(restoreMap_[tag][0]);
+        }
+      }
+      if (transitionState_ == END){
+        topScreen[surfaceId] = lightNodes_[transitionTag_];
+        synchronized_ = false;
       }
       sharedTransitionManager_->groups_.clear();
       activeTransitions_.clear();
@@ -416,7 +426,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
         auto copy2 = before;
         copy2.tag = fakeTag;
         startSharedTransition(fakeTag, copy2, copy, surfaceId);
-        restoreMap_[fakeTag] = after.tag;
+        restoreMap_[fakeTag][1] = after.tag;
         if (shouldCreateContainer){
           sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
           myTag+=2;
@@ -555,7 +565,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   sharedTransitionManager_->groups_.erase(sharedTag);
   
   sharedContainersToRemove_.push_back(tag);
-  tagsToRestore_.push_back(restoreMap_[tag]);
+  tagsToRestore_.push_back(restoreMap_[tag][1]);
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return surfaceId;
@@ -595,6 +605,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(){
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (transitionState_){
     transitionState_ = CANCELLED;
+    transitionUpdated_ = true;
     return 1;
   }
   return {};
