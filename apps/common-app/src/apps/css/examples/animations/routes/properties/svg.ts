@@ -21,6 +21,10 @@ export const svgPropertiesRoutes = {
         name: 'Fill and Color',
         Component: svgAnimatedProperties.common.FillAndColor,
       },
+      Stroke: {
+        name: 'Stroke',
+        Component: svgAnimatedProperties.common.Stroke,
+      },
     },
   },
 } satisfies Routes;
