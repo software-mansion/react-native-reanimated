@@ -927,7 +927,7 @@ void ReanimatedModuleProxy::performOperations() {
         if (hasOnlySynchronousProps) {
           synchronousUpdatesBatch.emplace_back(shadowNode, props);
         } else {
-          // shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
         }
       }
 
