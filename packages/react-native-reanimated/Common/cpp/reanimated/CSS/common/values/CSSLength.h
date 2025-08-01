@@ -6,16 +6,16 @@
 
 namespace reanimated::css {
 
-struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
+struct CSSLength : public CSSResolvableValue<CSSLength, double> {
   double value;
   bool isRelative;
 
-  CSSDimension();
-  explicit CSSDimension(double value);
-  explicit CSSDimension(double value, bool isRelative);
-  explicit CSSDimension(const char *value);
-  explicit CSSDimension(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  explicit CSSDimension(const folly::dynamic &value);
+  CSSLength();
+  explicit CSSLength(double value);
+  explicit CSSLength(double value, bool isRelative);
+  explicit CSSLength(const char *value);
+  explicit CSSLength(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSLength(const folly::dynamic &value);
 
   static bool canConstruct(const std::string &value);
   static bool canConstruct(const char *value);
@@ -24,19 +24,17 @@ struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSDimension interpolate(
+  CSSLength interpolate(
       double progress,
-      const CSSDimension &to,
+      const CSSLength &to,
       const CSSResolvableValueInterpolationContext &context) const override;
   std::optional<double> resolve(
       const CSSResolvableValueInterpolationContext &context) const override;
 
-  bool operator==(const CSSDimension &other) const;
+  bool operator==(const CSSLength &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDimension &dimension);
+  friend std::ostream &operator<<(std::ostream &os, const CSSLength &dimension);
 #endif // NDEBUG
 };
 

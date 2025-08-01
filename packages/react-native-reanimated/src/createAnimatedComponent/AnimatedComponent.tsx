@@ -307,14 +307,27 @@ export default class AnimatedComponent
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
 
-    if (__DEV__ && filteredStyles.cssStyle && filteredAnimatedProps.cssStyle) {
-      logger.warn(
-        'AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from animatedProps.'
-      );
-    }
+    if (filteredAnimatedProps.cssStyle) {
+      if (__DEV__ && filteredStyles.cssStyle) {
+        logger.warn(
+          'AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from the style object.'
+        );
+        this._cssStyle = filteredStyles.cssStyle;
+        return;
+      }
 
-    this._cssStyle =
-      filteredAnimatedProps.cssStyle ?? filteredStyles.cssStyle ?? {};
+      // Add all remaining props to cssStyle object
+      // (e.g. SVG components are styled via top level props, not via style object)
+      const mergedProps = {
+        ...props,
+        ...filteredAnimatedProps.cssStyle,
+      };
+      delete mergedProps.style;
+      delete mergedProps.animatedProps;
+      this._cssStyle = mergedProps;
+    } else {
+      this._cssStyle = filteredStyles.cssStyle ?? {};
+    }
   }
   _configureLayoutAnimation(
     type: LayoutAnimationType,
