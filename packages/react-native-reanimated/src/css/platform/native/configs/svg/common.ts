@@ -17,11 +17,11 @@ import type {
 } from 'react-native-svg';
 
 import {
-  processOpacity,
+  convertStringToNumber,
   processColorSVG,
+  processOpacity,
   processStrokeDashArray,
   type StyleBuilderConfig,
-  convertStringToNumber,
 } from '../../style';
 
 const colorAttributes = { process: processColorSVG };
