@@ -4,7 +4,7 @@ namespace reanimated::css {
 
 namespace {
 
-static ComponentInterpolatorsMap registry = {
+ComponentInterpolatorsMap registry = {
     {"View", VIEW_INTERPOLATORS},
     {"Paragraph", TEXT_INTERPOLATORS},
     {"Image", IMAGE_INTERPOLATORS},
