@@ -45,7 +45,7 @@ export default function SynchronousPropsExample() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}>
-      <Text>
+      <Text style={styles.summary}>
         This example tests all styles and props that can be animated using the
         synchronouslyUpdateViewOnUIThread method when
         ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS static feature flag is enabled.
@@ -303,5 +303,8 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
+  },
+  summary: {
+    padding: 20,
   },
 });
