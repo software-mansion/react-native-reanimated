@@ -20,6 +20,8 @@ export default function SynchronousPropsExample() {
 
   const degSv = useDerivedValue(() => `${sv.value * 90}deg`, [sv]);
 
+  const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 2}rad`, [sv]);
+
   const tenSv = useDerivedValue(() => sv.value * 10, [sv]);
 
   const colorSv = useDerivedValue(
@@ -185,10 +187,9 @@ export default function SynchronousPropsExample() {
         </React.Fragment>
       ))}
 
-      {/* TODO: test deg and rad */}
       {(['rotate', 'rotateX', 'rotateY', 'rotateZ'] as const).map((prop) => (
         <React.Fragment key={prop}>
-          <Text>{prop}</Text>
+          <Text>{prop} [deg]</Text>
           <Animated.View
             // @ts-expect-error TODO: fix types
             style={{
@@ -198,13 +199,22 @@ export default function SynchronousPropsExample() {
               transform: [{ perspective: 250 }, { [prop]: degSv }],
             }}
           />
+          <Text>{prop} [rad]</Text>
+          <Animated.View
+            // @ts-expect-error TODO: fix types
+            style={{
+              width: 50,
+              height: 50,
+              borderWidth: 1,
+              transform: [{ perspective: 250 }, { [prop]: radSv }],
+            }}
+          />
         </React.Fragment>
       ))}
 
-      {/* TODO: test deg and rad */}
       {(['skewX', 'skewY'] as const).map((prop) => (
         <React.Fragment key={prop}>
-          <Text>{prop} (works incorrectly on Android)</Text>
+          <Text>{prop} [deg] (works incorrectly on Android)</Text>
           <Animated.View
             // @ts-expect-error TODO: fix types
             style={{
@@ -212,6 +222,16 @@ export default function SynchronousPropsExample() {
               height: 50,
               borderWidth: 1,
               transform: [{ [prop]: degSv }],
+            }}
+          />
+          <Text>{prop} [rad] (works incorrectly on Android)</Text>
+          <Animated.View
+            // @ts-expect-error TODO: fix types
+            style={{
+              width: 50,
+              height: 50,
+              borderWidth: 1,
+              transform: [{ [prop]: radSv }],
             }}
           />
         </React.Fragment>
