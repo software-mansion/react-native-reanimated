@@ -17,9 +17,12 @@ export interface ReanimatedWebTransformProperties {
   skewX?: string;
 }
 
+type EasingName = keyof typeof WebEasings;
+
 export interface AnimationStyle {
   opacity?: number;
   transform?: ReanimatedWebTransformProperties[];
+  easing?: EasingName | { name: EasingName };
 }
 
 export interface AnimationData {
