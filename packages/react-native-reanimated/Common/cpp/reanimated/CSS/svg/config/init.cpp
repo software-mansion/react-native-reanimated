@@ -4,6 +4,7 @@ namespace reanimated::css {
 
 void initSvgCssSupport() {
   registerComponentInterpolators("RNSVGCircle", SVG_CIRCLE_INTERPOLATORS);
+  registerComponentInterpolators("RNSVGEllipse", SVG_ELLIPSE_INTERPOLATORS);
   registerComponentInterpolators("RNSVGPath", SVG_PATH_INTERPOLATORS);
   registerComponentInterpolators("RNSVGRect", SVG_RECT_INTERPOLATORS);
 
