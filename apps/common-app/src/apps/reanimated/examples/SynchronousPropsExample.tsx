@@ -18,13 +18,11 @@ export default function SynchronousPropsExample() {
 
   const fiftySv = useDerivedValue(() => sv.value * 50, [sv]);
 
+  const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
+
   const degSv = useDerivedValue(() => `${sv.value * 90}deg`, [sv]);
 
   const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 2}rad`, [sv]);
-
-  const tenSv = useDerivedValue(() => sv.value * 10, [sv]);
-
-  const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
 
   const colorSv = useDerivedValue(
     () => interpolateColor(sv.value, [0, 1], ['red', 'blue']),
@@ -61,7 +59,7 @@ export default function SynchronousPropsExample() {
           width: 50,
           height: 50,
           borderWidth: 1,
-          elevation: tenSv,
+          elevation: fiftySv,
         }}
       />
 
@@ -71,7 +69,7 @@ export default function SynchronousPropsExample() {
           width: 50,
           height: 50,
           borderWidth: 1,
-          zIndex: tenSv,
+          zIndex: fiftySv,
         }}
       />
 
@@ -167,7 +165,7 @@ export default function SynchronousPropsExample() {
               width: 50,
               height: 50,
               borderWidth: 1,
-              transform: [{ [prop]: tenSv }],
+              transform: [{ [prop]: fiftySv }],
             }}
           />
           <Text>{prop} [%]</Text>
