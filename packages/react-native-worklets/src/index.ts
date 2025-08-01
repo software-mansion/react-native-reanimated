@@ -17,6 +17,8 @@ export {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
+export type { Synchronizable } from './synchronizable';
+export { createSynchronizable, isSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
