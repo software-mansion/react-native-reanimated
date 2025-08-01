@@ -105,7 +105,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>blur</Text>
+      <Text>blur (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -114,7 +114,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>contrast</Text>
+      <Text>contrast (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -123,7 +123,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>dropShadow</Text>
+      <Text>dropShadow (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -132,7 +132,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>grayscale</Text>
+      <Text>grayscale (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -141,7 +141,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>hueRotate</Text>
+      <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -150,7 +150,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>invert</Text>
+      <Text>invert (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -159,7 +159,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>sepia</Text>
+      <Text>sepia (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
@@ -168,7 +168,7 @@ export default function FilterExample() {
         height={80}
       />
 
-      <Text>saturate</Text>
+      <Text>saturate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-expect-error TODO: fix types
