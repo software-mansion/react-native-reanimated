@@ -1,16 +1,16 @@
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { WithSpringConfig } from 'react-native-reanimated';
 import Animated, {
   Extrapolation,
   interpolate,
-  scrollTo,
   useAnimatedRef,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
+  useDerivedValue,
+  useScrollOffset,
   useSharedValue,
-  withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -47,11 +47,11 @@ export default function SearchScreen({ children }: SearchScreenProps) {
     web: spacing.md,
   });
 
-  const scrollY = useSharedValue(0);
-  const searchBarContainerHeight = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  const dragEndOffsetY = useSharedValue<number | null>(null);
   const searchBarHeight = useSharedValue(0);
-  const searchBarShowProgress = useSharedValue(0);
+  const isSearchBarOpen = useSharedValue(false);
+
+  const searchBarContainerHeight = useSharedValue(0);
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
 
   const [isFirstRender, setIsFirstRender] = useState(true);
@@ -115,86 +115,81 @@ export default function SearchScreen({ children }: SearchScreenProps) {
     });
   }, [navigation, hasSearchQuery, searchBarShowProgress]);
 
-  const scrollHandler = useAnimatedScrollHandler<{
-    dragStartTranslateY: number;
-    isDragging: boolean;
-    shrinkStartScrollY?: number;
-    shrinkStartContainerHeight?: number;
-  }>({
-    onBeginDrag: (_, ctx) => {
-      delete ctx.shrinkStartScrollY;
-      delete ctx.shrinkStartContainerHeight;
-      ctx.dragStartTranslateY = translateY.value;
-      ctx.isDragging = true;
-    },
-    onEndDrag: (_, ctx) => {
-      ctx.isDragging = false;
-      if (searchBarShowProgress.value < 1) {
-        translateY.value = withSpring(0, SPRING);
-        searchBarShowProgress.value = withSpring(0, SPRING);
-        searchBarContainerHeight.value = withSpring(0, SPRING);
-      }
-    },
-    onScroll: (e, ctx) => {
-      const y = e.contentOffset.y;
-      scrollY.value = y;
+  // const scrollHandler = useAnimatedScrollHandler({
+  //   onBeginDrag: () => {
+  //     dragEndOffsetY.value = null;
+  //   },
+  //   onEndDrag: () => {
+  //     dragEndOffsetY.value = offsetY.value;
+  //     isSearchBarOpen.value = searchBarShowProgress.value === 1;
+  //   },
+  //   onScroll: ({ contentOffset: { y } }) => {
+  //     offsetY.value = y;
+  //     if (dragEndOffsetY.value === null) {
+  //       searchBarShowProgress.value = interpolate(
+  //         -y + translateY.value,
+  //         [0, searchBarHeight.value],
+  //         [0, 1],
+  //         Extrapolation.CLAMP
+  //       );
+  //       if (searchBarShowProgress.value < 0) {
+  //         isSearchBarOpen.value = false;
+  //       }
+  //     } else if (isSearchBarOpen.value) {
+  //       translateY.value = interpolate(
+  //         offsetY.value,
+  //         [dragEndOffsetY.value, 0],
+  //         [0, searchBarHeight.value],
+  //         Extrapolation.CLAMP
+  //       );
+  //     }
+  //     console.log(
+  //       '>>>',
+  //       searchBarShowProgress.value,
+  //       isSearchBarOpen.value,
+  //       translateY.value,
+  //       offsetY.value
+  //     );
+  //   },
+  // });
 
-      if (y < 0) {
-        // Opening the search bar
-        if (ctx.isDragging) {
-          // Show search bar while pulling down
-          searchBarContainerHeight.value =
-            Math.max(0, -y) +
-            (ctx.dragStartTranslateY > 0
-              ? (translateY.value / ctx.dragStartTranslateY) *
-                searchBarHeight.value
-              : 0);
-          searchBarShowProgress.value = interpolate(
-            searchBarContainerHeight.value,
-            [0, searchBarHeight.value],
-            [0, 1],
-            Extrapolation.CLAMP
-          );
-          console.log('>>> is dragging', searchBarShowProgress.value);
-        } else if (searchBarShowProgress.value === 1) {
-          // Shrink search bar container to the search bar height and translate
-          // the ScrollView content to appear below it when the search bar should
-          // stay open
-          ctx.shrinkStartScrollY ??= y;
-          ctx.shrinkStartContainerHeight ??= searchBarContainerHeight.value;
-          searchBarContainerHeight.value = interpolate(
-            y,
-            [ctx.shrinkStartScrollY, 0],
-            [ctx.shrinkStartContainerHeight, searchBarHeight.value]
-          );
-          translateY.value = interpolate(
-            y,
-            [ctx.shrinkStartScrollY, 0],
-            [ctx.dragStartTranslateY, searchBarHeight.value - spacing.xs]
-          );
-        }
-        console.log(
-          '>>> is not dragging and === 1',
-          searchBarShowProgress.value
-        );
-      } else if (y > 0 && ctx.isDragging && searchBarShowProgress.value > 0) {
-        // Closing the search bar (if open)
-        translateY.value -= y;
-        searchBarContainerHeight.value -= y;
-        searchBarShowProgress.value = interpolate(
-          translateY.value,
-          [0, ctx.dragStartTranslateY],
-          [0, 1],
-          Extrapolation.CLAMP
-        );
-        scrollTo(scrollViewRef, 0, 0, false);
-        console.log('>>> is not dragging and > 0', searchBarShowProgress.value);
-      }
-    },
-  });
+  const translateY = useSharedValue(0);
+  const scrollOffset = useScrollOffset(scrollViewRef);
+  const totalOffsetY = useDerivedValue(
+    () => scrollOffset.value + translateY.value
+  );
+  const searchBarShowProgress = useDerivedValue(() =>
+    interpolate(
+      -totalOffsetY.value,
+      [0, searchBarHeight.value],
+      [0, 1],
+      Extrapolation.CLAMP
+    )
+  );
+
+  const gesture = useMemo(
+    () =>
+      Gesture.Simultaneous(
+        Gesture.Native(),
+        Gesture.Pan()
+          .onUpdate((e) => {
+            console.log('>>>', e.translationY);
+          })
+          .onEnd(() => {})
+      ),
+    []
+  );
 
   const animatedSearchBarContainerStyle = useAnimatedStyle(() => ({
-    height: searchBarContainerHeight.value,
+    height:
+      dragEndOffsetY.value !== null && isSearchBarOpen.value
+        ? interpolate(
+            totalOffsetY.value,
+            [dragEndOffsetY.value, 0],
+            [-dragEndOffsetY.value, searchBarHeight.value],
+            Extrapolation.CLAMP
+          )
+        : Math.max(0, -totalOffsetY.value),
   }));
 
   const animatedScrollViewStyle = useAnimatedStyle(() => ({
@@ -232,16 +227,17 @@ export default function SearchScreen({ children }: SearchScreenProps) {
         />
       </Animated.View>
       {!searchQuery && (
-        <Animated.ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          ref={scrollViewRef}
-          style={animatedScrollViewStyle}
-          onScroll={scrollHandler}>
-          <Stagger enabled={isFirstRender} interval={50}>
-            {children}
-          </Stagger>
-          <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
-        </Animated.ScrollView>
+        <GestureDetector gesture={gesture}>
+          <Animated.ScrollView
+            contentContainerStyle={styles.scrollViewContent}
+            ref={scrollViewRef}
+            style={animatedScrollViewStyle}>
+            <Stagger enabled={isFirstRender} interval={50}>
+              {children}
+            </Stagger>
+            <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
+          </Animated.ScrollView>
+        </GestureDetector>
       )}
     </>
   );
@@ -254,6 +250,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   searchBarContainer: {
+    backgroundColor: 'red',
     justifyContent: 'center',
     left: 0,
     position: 'absolute',
