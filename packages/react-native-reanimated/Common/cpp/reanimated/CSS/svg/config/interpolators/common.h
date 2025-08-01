@@ -31,11 +31,11 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray",
      value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
-    {"strokeDashoffset", value<CSSDouble>(0)},
-    {"strokeLinecap", value<CSSKeyword>("butt")},
-    {"strokeLinejoin", value<CSSKeyword>("miter")},
+    {"strokeDashoffset", value<SVGLength>(0)},
+    {"strokeLinecap", value<CSSInteger>(0)},
+    {"strokeLinejoin", value<CSSInteger>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
-    {"vectorEffect", value<CSSKeyword>("none")},
+    {"vectorEffect", value<CSSInteger>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
