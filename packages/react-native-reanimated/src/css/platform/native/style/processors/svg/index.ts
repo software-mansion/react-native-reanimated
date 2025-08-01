@@ -1,5 +1,5 @@
 'use strict';
 export * from './colors';
 export * from './fill';
-export * from './others';
-export * from './stroke';
+export { convertNumberPropToNumber } from './others';
+export { processStrokeDashArray } from './stroke';

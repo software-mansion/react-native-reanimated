@@ -18,7 +18,7 @@ import type {
 } from 'react-native-svg';
 
 import {
-  convertPercentageToNumber,
+  convertNumberPropToNumber,
   processStrokeDashArray,
   type StyleBuilderConfig,
 } from '../../style';
@@ -32,14 +32,14 @@ const colorProps: StyleBuilderConfig<ColorProps> = {
 
 const fillProps: StyleBuilderConfig<FillProps> = {
   fill: colorAttributes,
-  fillOpacity: { process: convertPercentageToNumber },
+  fillOpacity: { process: convertNumberPropToNumber },
   fillRule: { process: processFillRule },
 };
 
 const stokeProps: StyleBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
-  strokeOpacity: { process: convertPercentageToNumber },
+  strokeOpacity: { process: convertNumberPropToNumber },
   strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
   strokeLinecap: true,
