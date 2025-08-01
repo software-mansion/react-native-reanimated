@@ -33,12 +33,6 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(
 void registerComponentInterpolators(
     const std::string &componentName,
     const InterpolatorFactoriesRecord &interpolators) {
-  if (registry.contains(componentName)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSS interpolators for component '" + componentName +
-        "' are already registered. Cannot register duplicate interpolators.");
-  }
-
   registry[componentName] = interpolators;
 }
 

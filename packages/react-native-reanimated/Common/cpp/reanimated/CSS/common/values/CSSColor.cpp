@@ -164,10 +164,10 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
   return os;
 }
 
+#endif // NDEBUG
+
 bool CSSColor::isValidColorString(const std::string &colorString) {
   return colorString == "transparent" || colorString == "currentColor";
 }
-
-#endif // NDEBUG
 
 } // namespace reanimated::css
