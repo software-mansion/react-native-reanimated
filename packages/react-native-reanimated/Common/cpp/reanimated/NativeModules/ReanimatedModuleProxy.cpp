@@ -585,16 +585,47 @@ jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &payload,
+    const jsi::Value &payloadd,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
+
+    if (!strcmp(eventName.c_str(), "onTransitionProgress")){
+        jsi::Runtime &rt =
+                workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        jsi::Object payload = payloadd.asObject(rt);
+        auto progress = payload.getProperty(rt, "progress").asNumber();
+        auto closing = payload.getProperty(rt, "closing").asNumber();
+        auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
+//        auto swiping = payload.getProperty(rt, "swiping").asNumber();
+
+        auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(emitterReactTag, progress, closing, goingForward, false);
+        if (!surfaceId){
+            return false;
+        }
+        uiManager_->getShadowTreeRegistry().visit(
+                *surfaceId, [](const ShadowTree &shadowTree) {
+                    shadowTree.notifyDelegatesOfUpdates();
+                });
+        return false;
+    } else if (!strcmp(eventName.c_str(), "onGestureCancel")){
+
+        auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
+        if (!surfaceId){
+            return false;
+        }
+        uiManager_->getShadowTreeRegistry().visit(
+                *surfaceId, [](const ShadowTree &shadowTree) {
+                    shadowTree.notifyDelegatesOfUpdates();
+                });
+        return false;
+    }
 
   eventHandlerRegistry_->processEvent(
       workletsModuleProxy_->getUIWorkletRuntime(),
       currentTime,
       eventName,
       emitterReactTag,
-      payload);
+      payloadd);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
