@@ -2,7 +2,7 @@
 import type { NumberProp } from 'react-native-svg';
 
 import { ReanimatedError } from '../../../../../../common';
-import { isPercentage } from '../../../../../utils';
+import { isNumber, isPercentage } from '../../../../../utils';
 import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
@@ -16,8 +16,7 @@ export const convertNumberPropToNumber: ValueProcessor<NumberProp, number> = (
   if (isPercentage(value)) {
     return parseFloat(value) / 100;
   }
-
-  if (typeof value === 'number') {
+  if (isNumber(value)) {
     return value;
   }
 
