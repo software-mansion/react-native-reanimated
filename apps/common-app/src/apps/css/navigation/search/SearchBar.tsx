@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     ...text.subHeading2,
   },
   inputContainer: {
-    backgroundColor: colors.background3,
+    backgroundColor: 'blue',
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
