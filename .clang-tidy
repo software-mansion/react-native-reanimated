@@ -36,6 +36,6 @@ Checks:
   # - performance-*
   # - portability-*
   # - readability-*
-WarningsAsErrors: "*"
+WarningsAsErrors: '*'
 CheckOptions:
   cppcoreguidelines-avoid-non-const-global-variables.AllowInternalLinkage: true
