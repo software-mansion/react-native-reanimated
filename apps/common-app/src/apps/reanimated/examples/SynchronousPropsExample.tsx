@@ -131,8 +131,6 @@ export default function SynchronousPropsExample() {
         source={require('./assets/logo.png')}
       />
 
-      {/* TODO: support % for border(...)Radius */}
-      {/* TODO: test px and % */}
       {[
         'borderRadius',
         'borderTopLeftRadius',
@@ -149,13 +147,22 @@ export default function SynchronousPropsExample() {
         'borderEndEndRadius',
       ].map((prop) => (
         <React.Fragment key={prop}>
-          <Text>{prop}</Text>
+          <Text>{prop} [px]</Text>
           <Animated.View
             style={{
               width: 50,
               height: 50,
               borderWidth: 1,
               [prop]: fiftySv,
+            }}
+          />
+          <Text>{prop} [%]</Text>
+          <Animated.View
+            style={{
+              width: 50,
+              height: 50,
+              borderWidth: 1,
+              [prop]: percentSv,
             }}
           />
         </React.Fragment>
