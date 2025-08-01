@@ -16,6 +16,8 @@ export default function SynchronousPropsExample() {
     sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
   }, [sv]);
 
+  const tenSv = useDerivedValue(() => sv.value * 10, [sv]);
+
   const fiftySv = useDerivedValue(() => sv.value * 50, [sv]);
 
   const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
@@ -73,9 +75,27 @@ export default function SynchronousPropsExample() {
         }}
       />
 
-      {/* TODO: add shadowOpacity once it's supported on Android */}
+      <Text>shadowOpacity (not supported on Android)</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          shadowRadius: 2,
+          shadowOpacity: sv,
+        }}
+      />
 
-      {/* TODO: add shadowRadius once it's supported on Android */}
+      <Text>shadowRadius (not supported on Android)</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          shadowRadius: tenSv,
+          shadowOpacity: 1,
+        }}
+      />
 
       <Text>backgroundColor</Text>
       <Animated.View
