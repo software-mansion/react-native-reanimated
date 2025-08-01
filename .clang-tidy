@@ -37,4 +37,4 @@ Checks:
   # - performance-*
   # - portability-*
   # - readability-*
-WarningsAsErrors: "*"
+WarningsAsErrors: '*'
