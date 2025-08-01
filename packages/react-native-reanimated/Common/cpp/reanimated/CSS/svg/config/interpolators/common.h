@@ -8,7 +8,9 @@
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+
 #include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 namespace reanimated::css {
 
@@ -25,9 +27,10 @@ const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"stroke", value<CSSColor>(BLACK)},
-    {"strokeWidth", value<CSSDouble>(1)},
+    {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<CSSDouble>(0)}, // TODO - add support for array
+    {"strokeDasharray",
+     value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
     {"strokeDashoffset", value<CSSDouble>(0)},
     {"strokeLinecap", value<CSSKeyword>("butt")},
     {"strokeLinejoin", value<CSSKeyword>("miter")},
