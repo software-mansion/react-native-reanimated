@@ -36,6 +36,7 @@
 
 namespace reanimated {
 
+#ifdef RCT_NEW_ARCH_ENABLED
 #if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
@@ -43,7 +44,8 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
       rt, shadowNodeWrapper);
 }
-#endif
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+#endif // RCT_NEW_ARCH_ENABLED
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
