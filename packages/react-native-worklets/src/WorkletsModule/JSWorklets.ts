@@ -25,49 +25,49 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeShareableString(): ShareableRef<string> {
+  makeShareableString(): never {
     throw new WorkletsError(
       'makeShareableString should never be called in JSWorklets.'
     );
   }
 
-  makeShareableNumber(): ShareableRef<number> {
+  makeShareableNumber(): never {
     throw new WorkletsError(
       'makeShareableNumber should never be called in JSWorklets.'
     );
   }
 
-  makeShareableBoolean(): ShareableRef<boolean> {
+  makeShareableBoolean(): never {
     throw new WorkletsError(
       'makeShareableBoolean should never be called in JSWorklets.'
     );
   }
 
-  makeShareableBigInt(): ShareableRef<bigint> {
+  makeShareableBigInt(): never {
     throw new WorkletsError(
       'makeShareableBigInt should never be called in JSWorklets.'
     );
   }
 
-  makeShareableUndefined(): ShareableRef<undefined> {
+  makeShareableUndefined(): never {
     throw new WorkletsError(
       'makeShareableUndefined should never be called in JSWorklets.'
     );
   }
 
-  makeShareableNull(): ShareableRef<null> {
+  makeShareableNull(): never {
     throw new WorkletsError(
       'makeShareableNull should never be called in JSWorklets.'
     );
   }
 
-  makeShareableTurboModuleLike<T extends object>(): ShareableRef<T> {
+  makeShareableTurboModuleLike(): never {
     throw new WorkletsError(
       'makeShareableTurboModuleLike should never be called in JSWorklets.'
     );
   }
 
-  makeShareableObject<T extends object>(): ShareableRef<T> {
+  makeShareableObject(): never {
     throw new WorkletsError(
       'makeShareableObject should never be called in JSWorklets.'
     );
@@ -91,33 +91,31 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeShareableHostObject<T extends object>(): ShareableRef<T> {
+  makeShareableHostObject(): never {
     throw new WorkletsError(
       'makeShareableHostObject should never be called in JSWorklets.'
     );
   }
 
-  makeShareableArray(): ShareableRef<unknown[]> {
+  makeShareableArray(): never {
     throw new WorkletsError(
       'makeShareableArray should never be called in JSWorklets.'
     );
   }
 
-  makeShareableInitializer(): ShareableRef<object> {
+  makeShareableInitializer(): never {
     throw new WorkletsError(
       'makeShareableInitializer should never be called in JSWorklets.'
     );
   }
 
-  makeShareableFunction<TArgs extends unknown[], TReturn>(
-    _func: (...args: TArgs) => TReturn
-  ): ShareableRef<TReturn> {
+  makeShareableFunction(): never {
     throw new WorkletsError(
       'makeShareableRemoteFunction should never be called in JSWorklets.'
     );
   }
 
-  makeShareableWorklet(): ShareableRef<object> {
+  makeShareableWorklet(): never {
     throw new WorkletsError(
       'makeShareableWorklet should never be called in JSWorklets.'
     );
@@ -155,15 +153,39 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeSynchronizableBoolRef(): never {
+  synchronizableGetDirty(): never {
     throw new WorkletsError(
-      'makeSynchronizableBoolRef should never be called in JSWorklets.'
+      'synchronizableGetDirty should never be called in JSWorklets.'
     );
   }
 
-  makeSynchronizableNumberRef(): never {
+  synchronizableGetBlocking(): never {
     throw new WorkletsError(
-      'makeSynchronizableNumberRef should never be called in JSWorklets.'
+      'synchronizableGetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableSetDirty(): never {
+    throw new WorkletsError(
+      'synchronizableSetDirty should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableSetBlocking(): never {
+    throw new WorkletsError(
+      'synchronizableSetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableLock(): never {
+    throw new WorkletsError(
+      'synchronizableLock should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableUnlock(): never {
+    throw new WorkletsError(
+      'synchronizableUnlock should never be called in JSWorklets.'
     );
   }
 

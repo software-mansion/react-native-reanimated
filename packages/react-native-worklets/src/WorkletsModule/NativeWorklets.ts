@@ -5,9 +5,8 @@ import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
 import type {
-  HostSynchronizableRef,
   ShareableRef,
-  Synchronizable,
+  SynchronizableRef,
   WorkletRuntime,
 } from '../workletTypes';
 import type {
@@ -181,20 +180,54 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue> {
+  makeSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
     return this.#workletsModuleProxy.makeSynchronizable(value);
   }
 
-  makeSynchronizableBoolRef(
-    value: boolean
-  ): ShareableRef<Synchronizable<boolean>> {
-    return this.#workletsModuleProxy.makeSynchronizableBoolRef(value);
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetDirty(synchronizableRef);
   }
 
-  makeSynchronizableNumberRef(
-    value: number
-  ): ShareableRef<Synchronizable<number>> {
-    return this.#workletsModuleProxy.makeSynchronizableNumberRef(value);
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetBlocking(
+      synchronizableRef
+    );
+  }
+
+  synchronizableSetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: ShareableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.synchronizableSetDirty(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: ShareableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableLock(synchronizableRef);
+  }
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
   reportFatalErrorOnJS(

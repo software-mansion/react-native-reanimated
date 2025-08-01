@@ -1,9 +1,8 @@
 'use strict';
 
 import type {
-  HostSynchronizableRef,
   ShareableRef,
-  Synchronizable,
+  SynchronizableRef,
   WorkletRuntime,
 } from '../workletTypes';
 
@@ -93,15 +92,33 @@ export interface WorkletsModuleProxy {
     jsEngine: string
   ): void;
 
-  makeSynchronizable<TValue>(value: TValue): HostSynchronizableRef<TValue>;
+  makeSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
 
-  makeSynchronizableBoolRef(
-    value: boolean
-  ): ShareableRef<Synchronizable<boolean>>;
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
 
-  makeSynchronizableNumberRef(
-    value: number
-  ): ShareableRef<Synchronizable<number>>;
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
+
+  synchronizableSetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: ShareableRef<TValue>
+  ): void;
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: ShareableRef<TValue>
+  ): void;
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }

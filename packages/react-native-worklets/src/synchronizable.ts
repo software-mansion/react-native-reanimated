@@ -1,5 +1,6 @@
 'use strict';
 
+import { makeShareableCloneRecursive } from './shareables';
 import { __synchronizableUnpacker } from './synchronizableUnpacker';
 import { WorkletsModule } from './WorkletsModule';
 import type { Synchronizable } from './workletTypes';
@@ -7,9 +8,13 @@ import type { Synchronizable } from './workletTypes';
 export function makeSynchronizable<TValue>(
   initialValue: TValue
 ): Synchronizable<TValue> {
-  const hostSynchronizableRef = WorkletsModule.makeSynchronizable(initialValue);
+  const synchronizableRef = WorkletsModule.makeSynchronizable(
+    makeShareableCloneRecursive(initialValue)
+  );
 
-  return __synchronizableUnpacker(hostSynchronizableRef);
+  return __synchronizableUnpacker(
+    synchronizableRef
+  ) as unknown as Synchronizable<TValue>;
 }
 
 export function isSynchronizableRef<TValue>(

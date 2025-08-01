@@ -588,26 +588,8 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
 function cloneSynchronizable<TValue>(
   value: Synchronizable<TValue>
 ): ShareableRef<TValue> {
-  const hostSynchronizableRef = Object.getPrototypeOf(value);
-
-  const type = typeof value.getDirty();
-  let clone;
-
-  if (type === 'boolean') {
-    clone = WorkletsModule.makeSynchronizableBoolRef(hostSynchronizableRef);
-  } else if (type === 'number') {
-    clone = WorkletsModule.makeSynchronizableNumberRef(hostSynchronizableRef);
-  } else {
-    throw new WorkletsError(
-      `Unsupported synchronizable type: ${type}. Only boolean and number are supported.`
-    );
-  }
-
-  shareableMappingCache.set(value, clone);
-  shareableMappingCache.set(hostSynchronizableRef, clone);
-  shareableMappingCache.set(clone);
-
-  return clone as ShareableRef<TValue>;
+  shareableMappingCache.set(value);
+  return value;
 }
 
 function cloneImport<TValue extends WorkletImport>(
@@ -728,6 +710,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       if (Array.isArray(value)) {
         return global._makeShareableArray(
           value.map(cloneRecursive)
+        ) as FlatShareableRef<T>;
+      }
+      if ((value as Record<string, unknown>).__synchronizableRef) {
+        return global._makeShareableSynchronizable(
+          value
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};

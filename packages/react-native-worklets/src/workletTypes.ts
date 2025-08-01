@@ -14,21 +14,18 @@ export type ShareableRef<T = unknown> = {
   __nativeStateShareableJSRef: T;
 };
 
-export interface HostSynchronizableRef<TValue = unknown> {
-  // TODO: TSDOC with links to documentation.
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setDirty(value: TValue): void;
-  setBlocking(value: TValue): void;
-  // TODO: Consider allowing `lock` and `unlock` in public API.
-  lock(): void;
-  unlock(): void;
+export interface SynchronizableRef<TValue = unknown> {
+  __synchronizableRef: true;
+  __nativeStateSynchronizableJSRef: TValue;
+  getDirty?(): TValue;
+  getBlocking?(): TValue;
+  setDirty?(value: TValue | ((prev: TValue) => TValue)): void;
+  setBlocking?(value: TValue | ((prev: TValue) => TValue)): void;
+  lock?(): void;
+  unlock?(): void;
 }
 
-export interface Synchronizable<TValue = unknown> {
-  // TODO: consider removing
-  // extends Omit<HostSynchronizableRef<TValue>, 'lock' | 'unlock'>
-  // TODO: TSDOC with links to documentation.
+export interface Synchronizable<TValue = unknown> extends ShareableRef<TValue> {
   __synchronizableRef: true;
   getDirty(): TValue;
   getBlocking(): TValue;

@@ -1,6 +1,11 @@
 import React, { useEffect } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { makeSynchronizable, runOnJS, runOnUI } from 'react-native-worklets';
+import {
+  executeOnUIRuntimeSync,
+  makeSynchronizable,
+  runOnJS,
+  runOnUI,
+} from 'react-native-worklets';
 
 const initialValue = 0;
 
@@ -128,6 +133,13 @@ export default function SynchronizableExample() {
         {/* TODO: Call these on another Worklet Runtime instead of UI Runtime and use an animating indicator here. */}
         <Text>Please wait...</Text>
       </View>
+      <Button
+        onPress={() => {
+          const sync = executeOnUIRuntimeSync(() => synchronizable)();
+          console.log(sync.getDirty());
+        }}
+        title="Test"
+      />
       <Button
         onPress={() => {
           resetState();

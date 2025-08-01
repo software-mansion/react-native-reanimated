@@ -1,3 +1,4 @@
+#include <react/debug/react_native_assert.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -5,8 +6,6 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/SharedItems/Synchronizable.h>
-#include <worklets/SharedItems/SynchronizableBool.h>
-#include <worklets/SharedItems/SynchronizableNumber.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
@@ -72,22 +71,6 @@ inline jsi::Value createWorkletRuntime(
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
       jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
-}
-
-inline jsi::Value makeSynchronizable(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  // TODO: Type handling.
-  if (value.isBool()) {
-    auto synchronizable =
-        std::make_shared<Synchronizable<bool>>(value.asBool());
-    return jsi::Object::createFromHostObject(rt, synchronizable);
-  } else if (value.isNumber()) {
-    auto synchronizable =
-        std::make_shared<Synchronizable<double>>(value.asNumber());
-    return jsi::Object::createFromHostObject(rt, synchronizable);
-  }
-  return jsi::Value::undefined();
 }
 
 #ifdef WORKLETS_BUNDLE_MODE
@@ -227,9 +210,17 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "makeSynchronizable"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeSynchronizableBoolRef"));
+      jsi::PropNameID::forAscii(rt, "synchronizableGetDirty"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeSynchronizableNumberRef"));
+      jsi::PropNameID::forAscii(rt, "synchronizableGetBlocking"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableSetDirty"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableSetBlocking"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableLock"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -576,11 +567,14 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeSynchronizable(rt, /* value */ args[0]);
+          auto initial = extractSerializableOrThrow<Serializable>(
+              rt, args[0], "[Worklets] Value must be a Serializable.");
+          auto synchronizable = std::make_shared<Synchronizable>(initial);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
         });
   }
 
-  if (name == "makeSynchronizableBoolRef") {
+  if (name == "synchronizableGetDirty") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -589,13 +583,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          const auto synchronizable =
-              args[0].asObject(rt).asHostObject<Synchronizable<bool>>(rt);
-          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          return synchronizable->getDirty()->toJSValue(rt);
         });
   }
 
-  if (name == "makeSynchronizableNumberRef") {
+  if (name == "synchronizableGetBlocking") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -604,9 +597,72 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          const auto synchronizable =
-              args[0].asObject(rt).asHostObject<Synchronizable<double>>(rt);
-          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          return synchronizable->getBlocking()->toJSValue(rt);
+        });
+  }
+
+  if (name == "synchronizableSetDirty") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          auto newValue = extractSerializableOrThrow(
+              rt, args[1], "[Worklets] Value must be a Serializable.");
+          synchronizable->setDirty(std::move(newValue));
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "synchronizableSetBlocking") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          auto newValue = extractSerializableOrThrow(
+              rt, args[1], "[Worklets] Value must be a Serializable.");
+          synchronizable->setBlocking(std::move(newValue));
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "synchronizableLock") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          synchronizable->lock();
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "synchronizableUnlock") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          synchronizable->unlock();
+          return jsi::Value::undefined();
         });
   }
 
