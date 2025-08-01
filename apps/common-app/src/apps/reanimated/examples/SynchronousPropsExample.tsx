@@ -16,7 +16,7 @@ export default function SynchronousPropsExample() {
     sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
   }, [sv]);
 
-  const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
+  const fiftySv = useDerivedValue(() => sv.value * 50, [sv]);
 
   const degSv = useDerivedValue(() => `${sv.value * 90}deg`, [sv]);
 
@@ -100,6 +100,7 @@ export default function SynchronousPropsExample() {
         source={require('./assets/logo.png')}
       />
 
+      {/* TODO: support % for border(...)Radius */}
       {/* TODO: test px and % */}
       {[
         'borderRadius',
@@ -123,7 +124,7 @@ export default function SynchronousPropsExample() {
               width: 50,
               height: 50,
               borderWidth: 1,
-              [prop]: percentSv,
+              [prop]: fiftySv,
             }}
           />
         </React.Fragment>
