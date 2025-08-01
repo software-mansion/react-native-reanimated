@@ -4,6 +4,7 @@
 
 #include <reanimated/CSS/svg/config/interpolators/circle.h>
 #include <reanimated/CSS/svg/config/interpolators/path.h>
+#include <reanimated/CSS/svg/config/interpolators/rect.h>
 
 namespace reanimated::css {
 

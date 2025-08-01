@@ -4,6 +4,7 @@ import { BASE_PROPERTIES_CONFIG } from './configs';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
+  SVG_RECT_PROPERTIES_CONFIG,
 } from './configs/svg';
 import { createStyleBuilder } from './style';
 
@@ -16,6 +17,7 @@ const STYLE_BUILDERS = {
     // react-native-svg
     RNSVGCircle: createStyleBuilder(SVG_CIRCLE_PROPERTIES_CONFIG),
     RNSVGPath: createStyleBuilder(SVG_PATH_PROPERTIES_CONFIG),
+    RNSVGRect: createStyleBuilder(SVG_RECT_PROPERTIES_CONFIG),
   }),
 };
 
