@@ -20,9 +20,9 @@ export default function SynchronousPropsExample() {
 
   const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
 
-  const degSv = useDerivedValue(() => `${sv.value * 90}deg`, [sv]);
+  const degSv = useDerivedValue(() => `${sv.value * 45}deg`, [sv]);
 
-  const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 2}rad`, [sv]);
+  const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 4}rad`, [sv]);
 
   const colorSv = useDerivedValue(
     () => interpolateColor(sv.value, [0, 1], ['red', 'blue']),
