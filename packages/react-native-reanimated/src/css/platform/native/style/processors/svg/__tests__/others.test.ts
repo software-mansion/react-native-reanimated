@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../../../../common';
 import { convertNumberPropToNumber, ERROR_MESSAGES } from '../others';
 
