@@ -8,49 +8,50 @@ namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
     R"DELIMITER__(function __synchronizableUnpacker(synchronizableRef) {
+  var synchronizable = synchronizableRef;
   var proxy = globalThis.__workletsModuleProxy;
   var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
     return (0, _shareables.makeShareableCloneRecursive)(value);
   } : globalThis._makeShareableClone;
-  synchronizableRef.__synchronizableRef = true;
-  synchronizableRef.getDirty = function () {
-    return proxy.synchronizableGetDirty(synchronizableRef);
+  synchronizable.__synchronizableRef = true;
+  synchronizable.getDirty = function () {
+    return proxy.synchronizableGetDirty(synchronizable);
   };
-  synchronizableRef.getBlocking = function () {
-    return proxy.synchronizableGetBlocking(synchronizableRef);
+  synchronizable.getBlocking = function () {
+    return proxy.synchronizableGetBlocking(synchronizable);
   };
-  synchronizableRef.setDirty = function (valueOrFunction) {
+  synchronizable.setDirty = function (valueOrFunction) {
     var newValue;
     if (typeof valueOrFunction === 'function') {
       var func = valueOrFunction;
-      var prev = synchronizableRef.getDirty();
+      var prev = synchronizable.getDirty();
       newValue = func(prev);
     } else {
       newValue = valueOrFunction;
     }
-    proxy.synchronizableSetDirty(synchronizableRef, serializer(newValue, undefined));
+    proxy.synchronizableSetDirty(synchronizable, serializer(newValue, undefined));
   };
-  synchronizableRef.setBlocking = function (valueOrFunction) {
+  synchronizable.setBlocking = function (valueOrFunction) {
     var newValue;
     if (typeof valueOrFunction === 'function') {
       var func = valueOrFunction;
-      synchronizableRef.lock();
-      var prev = synchronizableRef.getBlocking();
+      synchronizable.lock();
+      var prev = synchronizable.getBlocking();
       newValue = func(prev);
-      proxy.synchronizableSetBlocking(synchronizableRef, serializer(newValue, undefined));
-      synchronizableRef.unlock();
+      proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+      synchronizable.unlock();
     } else {
       var value = valueOrFunction;
       newValue = value;
-      proxy.synchronizableSetBlocking(synchronizableRef, serializer(newValue, undefined));
+      proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
     }
   };
-  synchronizableRef.lock = function () {
-    proxy.synchronizableLock(synchronizableRef);
+  synchronizable.lock = function () {
+    proxy.synchronizableLock(synchronizable);
   };
-  synchronizableRef.unlock = function () {
-    proxy.synchronizableUnlock(synchronizableRef);
+  synchronizable.unlock = function () {
+    proxy.synchronizableUnlock(synchronizable);
   };
-  return synchronizableRef;
+  return synchronizable;
 })DELIMITER__";
 } // namespace worklets

@@ -1,4 +1,5 @@
 #include <worklets/SharedItems/SynchronizableAccess.h>
+
 #include <mutex>
 
 namespace worklets {

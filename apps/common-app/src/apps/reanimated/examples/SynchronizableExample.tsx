@@ -20,7 +20,7 @@ export default function SynchronizableExample() {
 
   const synchronizable = makeSynchronizable(initialValue);
 
-  function setUiValueRemote(value: number, durationMS: number) {
+  function setUIValueRemote(value: number, durationMS: number) {
     setValueUI(value);
     setDurationUIMS(durationMS);
   }
@@ -28,7 +28,7 @@ export default function SynchronizableExample() {
   function setValueAndDuration(value: number, durationMS: number) {
     'worklet';
     if (globalThis._WORKLET) {
-      runOnJS(setUiValueRemote)(value, durationMS);
+      runOnJS(setUIValueRemote)(value, durationMS);
     } else {
       setValueRN(value);
       setDurationRNMS(durationMS);

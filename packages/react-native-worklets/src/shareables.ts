@@ -6,7 +6,8 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
-import { isSynchronizableRef } from './synchronizable';
+import type { Synchronizable } from './synchronizable';
+import { isSynchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -14,7 +15,6 @@ import { WorkletsModule } from './WorkletsModule';
 import type {
   FlatShareableRef,
   ShareableRef,
-  Synchronizable,
   WorkletFunction,
   WorkletImport,
 } from './workletTypes';
@@ -183,9 +183,6 @@ function makeShareableCloneRecursiveNative<T>(
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value);
   }
-  if (isSynchronizableRef(value)) {
-    return cloneSynchronizable(value) as ShareableRef<T>;
-  }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
   // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
   if (isTurboModuleLike(value)) {
@@ -206,6 +203,9 @@ function makeShareableCloneRecursiveNative<T>(
   }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
+  }
+  if (isSynchronizable(value)) {
+    return cloneSynchronizable(value) as ShareableRef<T>;
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);

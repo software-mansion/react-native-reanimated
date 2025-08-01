@@ -1,14 +1,11 @@
 'use strict';
 
 import { WorkletsTurboModule } from '../specs';
+import type { SynchronizableRef } from '../synchronizable';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type {
-  ShareableRef,
-  SynchronizableRef,
-  WorkletRuntime,
-} from '../workletTypes';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,

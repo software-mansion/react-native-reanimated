@@ -3,9 +3,9 @@
 import { makeShareableCloneRecursive } from './shareables';
 import { __synchronizableUnpacker } from './synchronizableUnpacker';
 import { WorkletsModule } from './WorkletsModule';
-import type { Synchronizable } from './workletTypes';
+import type { ShareableRef } from './workletTypes';
 
-export function makeSynchronizable<TValue>(
+export function createSynchronizable<TValue>(
   initialValue: TValue
 ): Synchronizable<TValue> {
   const synchronizableRef = WorkletsModule.makeSynchronizable(
@@ -17,7 +17,7 @@ export function makeSynchronizable<TValue>(
   ) as unknown as Synchronizable<TValue>;
 }
 
-export function isSynchronizableRef<TValue>(
+export function isSynchronizable<TValue>(
   value: unknown
 ): value is Synchronizable<TValue> {
   return (
@@ -26,4 +26,21 @@ export function isSynchronizableRef<TValue>(
     '__synchronizableRef' in value &&
     value.__synchronizableRef === true
   );
+}
+
+export interface SynchronizableRef<TValue = unknown> {
+  __synchronizableRef: true;
+  __nativeStateSynchronizableJSRef: TValue;
+}
+
+export interface Synchronizable<TValue = unknown>
+  extends ShareableRef<TValue>,
+    SynchronizableRef<TValue> {
+  __synchronizableRef: true;
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setDirty(value: TValue | ((prev: TValue) => TValue)): void;
+  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
 }

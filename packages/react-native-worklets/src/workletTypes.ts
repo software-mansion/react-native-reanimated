@@ -14,27 +14,6 @@ export type ShareableRef<T = unknown> = {
   __nativeStateShareableJSRef: T;
 };
 
-export interface SynchronizableRef<TValue = unknown> {
-  __synchronizableRef: true;
-  __nativeStateSynchronizableJSRef: TValue;
-  getDirty?(): TValue;
-  getBlocking?(): TValue;
-  setDirty?(value: TValue | ((prev: TValue) => TValue)): void;
-  setBlocking?(value: TValue | ((prev: TValue) => TValue)): void;
-  lock?(): void;
-  unlock?(): void;
-}
-
-export interface Synchronizable<TValue = unknown> extends ShareableRef<TValue> {
-  __synchronizableRef: true;
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setDirty(value: TValue | ((prev: TValue) => TValue)): void;
-  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-  lock(): void;
-  unlock(): void;
-}
-
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
 export type FlatShareableRef<T> =

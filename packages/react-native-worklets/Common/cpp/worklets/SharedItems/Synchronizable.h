@@ -5,8 +5,6 @@
 #include <worklets/SharedItems/SynchronizableAccess.h>
 
 #include <memory>
-#include <utility>
-#include <vector>
 
 using namespace facebook;
 
