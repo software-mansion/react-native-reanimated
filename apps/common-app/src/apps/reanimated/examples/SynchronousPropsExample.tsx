@@ -24,6 +24,8 @@ export default function SynchronousPropsExample() {
 
   const tenSv = useDerivedValue(() => sv.value * 10, [sv]);
 
+  const percentSv = useDerivedValue(() => `${sv.value * 100}%`, [sv]);
+
   const colorSv = useDerivedValue(
     () => interpolateColor(sv.value, [0, 1], ['red', 'blue']),
     [sv]
@@ -158,7 +160,7 @@ export default function SynchronousPropsExample() {
       {/* TODO: test px and % */}
       {(['translateX', 'translateY'] as const).map((prop) => (
         <React.Fragment key={prop}>
-          <Text>{prop}</Text>
+          <Text>{prop} [px]</Text>
           <Animated.View
             // @ts-expect-error TODO: fix types
             style={{
@@ -166,6 +168,16 @@ export default function SynchronousPropsExample() {
               height: 50,
               borderWidth: 1,
               transform: [{ [prop]: tenSv }],
+            }}
+          />
+          <Text>{prop} [%]</Text>
+          <Animated.View
+            // @ts-expect-error TODO: fix types
+            style={{
+              width: 50,
+              height: 50,
+              borderWidth: 1,
+              transform: [{ [prop]: percentSv }],
             }}
           />
         </React.Fragment>
