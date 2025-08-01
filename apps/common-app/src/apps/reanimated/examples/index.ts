@@ -33,6 +33,7 @@ import DragAndSnapExample from './DragAndSnapExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FilterExample from './FilterExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
@@ -300,6 +301,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌈',
     title: 'Animate colors',
     screen: ColorExample,
+  },
+  FilterExample: {
+    icon: '🖼️',
+    title: 'Animate filter',
+    screen: FilterExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
     icon: '🎨',
