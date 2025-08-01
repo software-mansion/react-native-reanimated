@@ -1,7 +1,10 @@
 'use strict';
 import { UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS } from '../../../featureFlags/staticFlags.json';
 import { BASE_PROPERTIES_CONFIG } from './configs';
-import { SVG_CIRCLE_PROPERTIES_CONFIG } from './configs/svg';
+import {
+  SVG_CIRCLE_PROPERTIES_CONFIG,
+  SVG_PATH_PROPERTIES_CONFIG,
+} from './configs/svg';
 import { createStyleBuilder } from './style';
 
 const STYLE_BUILDERS = {
@@ -12,6 +15,7 @@ const STYLE_BUILDERS = {
   ...(UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS && {
     // react-native-svg
     RNSVGCircle: createStyleBuilder(SVG_CIRCLE_PROPERTIES_CONFIG),
+    RNSVGPath: createStyleBuilder(SVG_PATH_PROPERTIES_CONFIG),
   }),
 };
 
