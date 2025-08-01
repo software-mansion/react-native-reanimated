@@ -175,7 +175,6 @@ export default function SynchronousPropsExample() {
         </React.Fragment>
       ))}
 
-      {/* TODO: test px and % */}
       {(['translateX', 'translateY'] as const).map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop} [px]</Text>
@@ -201,7 +200,6 @@ export default function SynchronousPropsExample() {
         </React.Fragment>
       ))}
 
-      {/* TODO: test px and % */}
       {(['scale', 'scaleX', 'scaleY'] as const).map((prop) => (
         <React.Fragment key={prop}>
           <Text>{prop}</Text>
