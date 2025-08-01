@@ -269,7 +269,7 @@ void WorkletRuntimeDecorator::decorate(
              size_t count) { return jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
 
-  enum TaskType { NORMAL = 0, PRIORITY = 1, TIMEOUT = 2 };
+  enum TaskType { MICROTASK = 0, TIMEOUT = 1 };
   jsi_utils::installJsiFunction(
       rt,
       "_requestEventLoopTick",
@@ -283,10 +283,7 @@ void WorkletRuntimeDecorator::decorate(
           rt.global().getPropertyAsFunction(rt, "__runQueuedTask").call(rt);
         };
         switch (type) {
-          case NORMAL:
-            queue->push(job);
-            break;
-          case PRIORITY:
+          case MICROTASK:
             queue->pushPriority(job);
             break;
           case TIMEOUT:

@@ -9,9 +9,8 @@ export type Queue = {
 };
 
 enum TaskType {
-  NORMAL = 0,
-  PRIORITY = 1,
-  TIMEOUT = 2,
+  PRIORITY = 0,
+  TIMEOUT = 1,
 }
 
 export function setupTaskQueue() {
