@@ -82,8 +82,6 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
   },
   searchResultsText: {
     marginBottom: spacing.sm,
