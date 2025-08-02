@@ -95,12 +95,15 @@ void WorkletRuntime::init(
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
+  queue_ = std::make_shared<AsyncQueueImpl>(name_);
+
   WorkletRuntimeDecorator::decorate(
       rt,
       name_,
       jsScheduler,
       isDevBundle,
-      std::move(optimizedJsiWorkletsModuleProxy));
+      std::move(optimizedJsiWorkletsModuleProxy),
+      queue_);
 
 #ifdef WORKLETS_BUNDLE_MODE
   if (!script) {

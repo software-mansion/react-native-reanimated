@@ -3,6 +3,7 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -79,6 +80,7 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
+      setupRunLoop();
       initializerFn?.();
     }),
     useDefaultQueue,

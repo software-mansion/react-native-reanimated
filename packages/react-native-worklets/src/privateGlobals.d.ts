@@ -5,6 +5,7 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './errors';
+import type { Queue } from './runLoop/workletRuntime/taskQueue';
 import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
@@ -68,4 +69,11 @@ declare global {
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
   var WorkletsError: IWorkletsErrorConstructor;
+  var _requestEventLoopTick: (
+    type: number,
+    delay?: number,
+    handlerId?: number
+  ) => void;
+  var __runQueuedTask: (id?: number) => void;
+  var _taskQueue: Queue;
 }
