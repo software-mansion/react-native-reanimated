@@ -11,6 +11,13 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
+// Turn off build IDs for reproducibility (ensuring the same code will produce the same bundle when built) 
+// See https://gitlab.com/IzzyOnDroid/repo/-/wikis/Reproducible-Builds/RB-Hints-for-Developers#no-funny-build-time-generated-ids 
+// for more information
+add_link_options(
+  -Wl,--build-id=none
+)
+
 string(
   APPEND
   CMAKE_CXX_FLAGS
