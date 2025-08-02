@@ -16,14 +16,12 @@ import { colors, radius, sizes, spacing, text } from '@/theme';
 type SearchBarProps = {
   value: string;
   showProgress: SharedValue<number>;
-  onMeasureHeight: (height: number) => void;
   onSearch: (query: string) => void;
 };
 
 export default function SearchBar({
   onSearch,
   value,
-  onMeasureHeight,
   showProgress,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
@@ -45,11 +43,7 @@ export default function SearchBar({
   }));
 
   return (
-    <Animated.View
-      style={[styles.inputContainer, animatedContainerStyle]}
-      onLayout={(e) => {
-        onMeasureHeight(e.nativeEvent.layout.height);
-      }}>
+    <Animated.View style={[styles.inputContainer, animatedContainerStyle]}>
       <TextInput
         autoCapitalize="none"
         autoComplete="off"
@@ -92,7 +86,6 @@ const styles = StyleSheet.create({
     ...text.subHeading2,
   },
   inputContainer: {
-    backgroundColor: 'blue',
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
