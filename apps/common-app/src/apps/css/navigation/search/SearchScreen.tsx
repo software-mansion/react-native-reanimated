@@ -1,55 +1,42 @@
 import { useNavigation } from '@react-navigation/native';
-import { useMemo, useState } from 'react';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import type { WithSpringConfig } from 'react-native-reanimated';
-import { useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { runOnJS } from 'react-native-worklets';
 
 import { Stagger } from '@/apps/css/components';
-import { spacing } from '@/theme';
+import { flex, spacing } from '@/theme';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
 import { INITIAL_ROUTE_NAME } from '../routes';
-import ExpandableHeaderScreen from './ExpandableHeaderScreen';
+import ExpandableHeaderScreen, { ExpandMode } from './ExpandableHeaderScreen';
 import { searchRoutes } from './fuse';
 import SearchBar from './SearchBar';
 import SearchFilters from './SearchFilters';
 import SearchResults from './SearchResults';
-
-const PULL_TO_SEARCH_SHOW_DELAY = 1000;
-const PULL_TO_SEARCH_SHOW_DURATION = 2000;
-
-const SPRING: WithSpringConfig = { stiffness: 140, damping: 22, mass: 0.6 };
-const POW = 0.9;
-const EDGE_SLACK = 2;
-const VELOCITY_FACTOR = 6;
-const OUT_MS = 100;
-
-enum SearchBarState {
-  OPEN = 'OPEN',
-  CLOSED = 'CLOSED',
-  TRANSITIONING = 'TRANSITIONING',
-}
 
 type SearchScreenProps = {
   children: React.ReactNode;
 };
 
 export default function SearchScreen({ children }: SearchScreenProps) {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<Record<string, never>>>();
   const insets = useSafeAreaInsets();
   const state = navigation.getState();
 
-  const inset = Platform.select({
+  const bottomInset = Platform.select({
     default: insets.bottom,
     web: spacing.md,
   });
 
-  const searchBarHeight = useSharedValue(0);
   const searchBarShowProgress = useSharedValue(0);
 
-  const [isFirstRender, setIsFirstRender] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandMode, setExpandMode] = useState<ExpandMode>(ExpandMode.AUTO);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<Array<string> | null>(
     () => {
       const routeName = state?.routes[state.routes.length - 1]?.name;
@@ -61,7 +48,21 @@ export default function SearchScreen({ children }: SearchScreenProps) {
   );
 
   const hasSearchQuery = !!searchQuery;
-  const isFocused = navigation.isFocused();
+
+  useEffect(() => {
+    if (hasSearchQuery) {
+      setExpandMode(ExpandMode.EXPANDED);
+    } else {
+      setExpandMode(ExpandMode.AUTO);
+      return navigation.addListener(
+        'transitionEnd',
+        ({ data: { closing } }) => {
+          setExpandMode(closing ? ExpandMode.COLLAPSED : ExpandMode.AUTO);
+          setIsExpanded(false);
+        }
+      );
+    }
+  }, [hasSearchQuery, navigation]);
 
   const searchResults = useMemo(() => {
     const result = searchRoutes(searchQuery);
@@ -82,45 +83,67 @@ export default function SearchScreen({ children }: SearchScreenProps) {
       )} */}
 
       <ExpandableHeaderScreen
-        contentContainerStyle={styles.scrollViewContent}
+        expandMode={expandMode}
         headerContainerStyle={styles.headerContainer}
-        headerShowProgress={searchBarShowProgress}
-        header={
+        HeaderComponent={
           <SearchBar
             showProgress={searchBarShowProgress}
             value={searchQuery}
-            onSearch={(query) => {
-              setSearchQuery(query);
-              setIsFirstRender(false);
+            onCancel={() => {
+              setSearchQuery('');
+              setIsExpanded(false);
+              setExpandMode(ExpandMode.COLLAPSED);
+            }}
+            onChangeText={(query) => {
+              if (isExpanded) {
+                setSearchQuery(query);
+              }
             }}
           />
-        }>
-        {searchQuery ? (
-          <>
-            <SearchFilters
-              currentFilter={currentFilter}
-              setCurrentFilter={setCurrentFilter}
-            />
-            <SearchResults searchResults={searchResults} />
-          </>
-        ) : (
-          <Stagger enabled={isFirstRender} interval={50}>
-            {children}
-          </Stagger>
-        )}
-        <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
+        }
+        onHeaderShowProgressChange={(progress) => {
+          'worklet';
+          searchBarShowProgress.value = progress;
+          if (progress === 1) {
+            runOnJS(setIsExpanded)(true);
+          } else if (progress === 0) {
+            runOnJS(setIsExpanded)(false);
+          }
+        }}>
+        {(scrollProps) =>
+          searchQuery ? (
+            <Animated.View entering={FadeIn}>
+              <SearchFilters
+                currentFilter={currentFilter}
+                setCurrentFilter={setCurrentFilter}
+              />
+              <SearchResults searchResults={searchResults} />
+            </Animated.View>
+          ) : (
+            <Animated.ScrollView
+              contentContainerStyle={styles.content}
+              style={flex.fill}
+              {...scrollProps}>
+              <Stagger enabled={!isExpanded} interval={50}>
+                {children}
+              </Stagger>
+              <View style={{ height: BOTTOM_BAR_HEIGHT + bottomInset }} />
+            </Animated.ScrollView>
+          )
+        }
       </ExpandableHeaderScreen>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    justifyContent: 'center',
-  },
-  scrollViewContent: {
+  content: {
     gap: spacing.md,
+    minHeight: '100%',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+  },
+  headerContainer: {
+    justifyContent: 'center',
   },
 });

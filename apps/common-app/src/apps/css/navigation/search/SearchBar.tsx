@@ -16,13 +16,15 @@ import { colors, radius, sizes, spacing, text } from '@/theme';
 type SearchBarProps = {
   value: string;
   showProgress: SharedValue<number>;
-  onSearch: (query: string) => void;
+  onChangeText: (query: string) => void;
+  onCancel: () => void;
 };
 
 export default function SearchBar({
-  onSearch,
+  onChangeText,
   value,
   showProgress,
+  onCancel,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
 
@@ -53,14 +55,21 @@ export default function SearchBar({
         ref={inputRef}
         style={styles.input}
         value={value}
-        onChangeText={onSearch}
+        onChangeText={onChangeText}
       />
       {value && (
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut}
           style={styles.buttonWrapper}>
-          <Button size="small" title="Clear" onPress={() => onSearch('')} />
+          <Button
+            size="small"
+            title="Cancel"
+            onPress={() => {
+              onCancel();
+              inputRef.current?.blur();
+            }}
+          />
         </Animated.View>
       )}
     </Animated.View>
