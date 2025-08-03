@@ -1,25 +1,29 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { SelectListOption } from '@/apps/css/components';
 import { SelectListDropdown, Text } from '@/apps/css/components';
-import { colors, flex, iconSizes, radius, sizes, spacing, text } from '@/theme';
+import { colors, flex, iconSizes, radius, spacing, text } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 import type { Route, Routes } from '../types';
 import { isRouteWithRoutes } from '../utils';
+import type { SearchDoc } from './fuse';
 import { ROUTES } from './fuse';
 
 const NEXT_FILTER_KEY = '__next__';
 
 type SearchFiltersProps = {
   currentFilter: Array<string> | null;
+  queryResults: Array<SearchDoc>;
   setCurrentFilter: (filter: Array<string> | null) => void;
 };
 
-function SearchFilters({
+export default function SearchFilters({
   currentFilter,
+  queryResults,
   setCurrentFilter,
 }: SearchFiltersProps) {
   const scrollRef = useRef<ScrollView>(null);
@@ -30,13 +34,18 @@ function SearchFilters({
 
   const filterOptions = useMemo(() => {
     let currentRoutes = ROUTES as Routes;
+    let currentResults = queryResults;
     let nextRoute: Route | undefined;
     const options: Array<{
       key: string;
       options: Array<SelectListOption<string>>;
     }> = [];
 
-    const addNewOptions = (key: string, routes: Routes) => {
+    const addNewOptions = (
+      key: string,
+      routes: Routes,
+      resultCounts: Record<string, number>
+    ) => {
       const handleRemove = () => {
         setCurrentFilter(
           currentFilter && currentFilter.slice(0, currentFilter.indexOf(key))
@@ -46,7 +55,7 @@ function SearchFilters({
       const newOptions: Array<SelectListOption<string>> = Object.entries(
         routes
       ).map(([optionKey, value]) => ({
-        label: value.name,
+        label: `${value.name} (${resultCounts[optionKey] ?? 0})`,
         value: optionKey,
       }));
 
@@ -68,15 +77,37 @@ function SearchFilters({
       });
     };
 
-    for (const chunk of currentFilter ?? []) {
-      addNewOptions(chunk, currentRoutes);
+    for (let i = 0; i < (currentFilter?.length ?? 0); i++) {
+      const filterChunk = currentFilter![i];
+      const resultCounts: Record<string, number> = {};
+      const newResults: Array<SearchDoc> = [];
 
-      nextRoute = currentRoutes[chunk];
+      for (const result of currentResults) {
+        const resultChunk = result.path[i];
+        if (resultChunk === filterChunk) {
+          newResults.push(result);
+        }
+        resultCounts[resultChunk] = (resultCounts[resultChunk] ?? 0) + 1;
+      }
+
+      addNewOptions(filterChunk, currentRoutes, resultCounts);
+
+      nextRoute = currentRoutes[filterChunk];
       if (!isRouteWithRoutes(nextRoute)) {
         return options;
       }
 
+      currentResults = newResults;
       currentRoutes = nextRoute.routes;
+    }
+
+    const resultCounts: Record<string, number> = {};
+    const index = currentFilter?.length ?? 0;
+    for (const result of currentResults) {
+      const chunk = result.path[index];
+      if (chunk) {
+        resultCounts[chunk] = (resultCounts[chunk] ?? 0) + 1;
+      }
     }
 
     if (
@@ -84,14 +115,14 @@ function SearchFilters({
       isRouteWithRoutes(nextRoute) &&
       Object.values(nextRoute.routes).some(isRouteWithRoutes)
     ) {
-      addNewOptions(NEXT_FILTER_KEY, nextRoute.routes);
+      addNewOptions(NEXT_FILTER_KEY, nextRoute.routes, resultCounts);
     }
     if (!options.length) {
-      addNewOptions(NEXT_FILTER_KEY, currentRoutes);
+      addNewOptions(NEXT_FILTER_KEY, currentRoutes, resultCounts);
     }
 
     return options;
-  }, [currentFilter, setCurrentFilter]);
+  }, [currentFilter, setCurrentFilter, queryResults]);
 
   const handleSelect = (key: string, value: string) => {
     if (key === NEXT_FILTER_KEY) {
@@ -148,11 +179,18 @@ function SearchFilters({
                 </View>
               )
             : undefined;
+          const formatInputLabel = isNextFilter
+            ? undefined
+            : (selected?: SelectListOption<string>) =>
+                typeof selected?.label === 'string'
+                  ? selected.label.replace(/\(.*\)$/, '')
+                  : undefined;
           const showSeparator = index < pathChunkCount;
 
           return (
             <Fragment key={key}>
               <SelectListDropdown
+                formatInputLabel={formatInputLabel}
                 options={options}
                 renderInput={renderInput}
                 selected={key}
@@ -174,8 +212,6 @@ function SearchFilters({
   );
 }
 
-export default memo(SearchFilters);
-
 const styles = StyleSheet.create({
   content: {
     gap: spacing.xxs,
@@ -183,7 +219,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxs,
   },
   dropdown: {
-    minWidth: sizes.xxl,
+    minWidth: 150,
   },
   filterArrow: {
     paddingVertical: spacing.sm,
@@ -222,7 +258,7 @@ const styles = StyleSheet.create({
   title: {
     ...text.label2,
     color: colors.foreground1,
-    marginLeft: spacing.lg,
+    marginLeft: IS_WEB ? spacing.sm : spacing.lg,
     marginTop: spacing.xxs,
   },
 });

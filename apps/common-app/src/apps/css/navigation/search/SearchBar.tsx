@@ -12,6 +12,7 @@ import Animated, {
 
 import { Button } from '@/apps/css/components';
 import { colors, radius, sizes, spacing, text } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 type SearchBarProps = {
   value: string;
@@ -31,6 +32,9 @@ export default function SearchBar({
   useAnimatedReaction(
     () => showProgress.value,
     (progress) => {
+      if (IS_WEB) {
+        return;
+      }
       if (progress === 1) {
         dispatchCommand(inputRef, 'focus');
       } else if (progress === 0) {
@@ -57,7 +61,7 @@ export default function SearchBar({
         value={value}
         onChangeText={onChangeText}
       />
-      {value && (
+      {value ? (
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut}
@@ -71,14 +75,14 @@ export default function SearchBar({
             }}
           />
         </Animated.View>
-      )}
+      ) : null}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   buttonWrapper: {
-    marginTop: spacing.md,
+    marginTop: IS_WEB ? spacing.xxs : spacing.md,
     position: 'absolute',
     right: spacing.lg + spacing.xs,
     top: '50%',

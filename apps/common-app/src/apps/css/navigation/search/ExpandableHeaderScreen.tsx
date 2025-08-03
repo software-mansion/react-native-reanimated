@@ -1,5 +1,5 @@
 import type { Component } from 'react';
-import { isValidElement, useEffect, useMemo } from 'react';
+import { isValidElement, useMemo } from 'react';
 import type {
   ScrollView,
   ScrollViewProps,
@@ -24,6 +24,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { flex } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 const SPRING: WithSpringConfig = { stiffness: 140, damping: 22, mass: 0.6 };
 
@@ -68,7 +69,7 @@ export default function ExpandableHeaderScreen({
   const scrollableRef = useAnimatedRef<ScrollableComponent>();
   const headerHeight = useSharedValue(0);
   const offsetY = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  const translateY = useSharedValue(IS_WEB ? 72 : 0);
   const dragStartTranslateY = useSharedValue<number | null>(null);
   const isScrolling = useSharedValue(false);
   const scrollOffsetY = useScrollOffset(scrollableRef);
@@ -77,19 +78,23 @@ export default function ExpandableHeaderScreen({
   const headerShowProgress = useSharedValue(0);
 
   const expandEnabled = expandMode === ExpandMode.AUTO;
+  const isExpanded = expandMode === ExpandMode.EXPANDED;
 
-  useEffect(() => {
-    console.log('expandEnabled', expandEnabled, expandMode);
-    if (!expandEnabled) {
-      translateY.value =
-        expandMode === ExpandMode.EXPANDED ? headerHeight.value : 0;
-      console.log(
-        'translateY',
-        expandMode === ExpandMode.EXPANDED ? headerHeight.value : 0
-      );
-      offsetY.value = 0;
+  useAnimatedReaction(
+    () => ({
+      mode: expandMode,
+      height: headerHeight.value,
+    }),
+    ({ mode, height }) => {
+      if (mode === ExpandMode.EXPANDED && height > 0) {
+        translateY.value = height;
+        offsetY.value = 0;
+      } else if (mode === ExpandMode.COLLAPSED) {
+        translateY.value = 0;
+        offsetY.value = 0;
+      }
     }
-  }, [expandMode, expandEnabled, headerHeight, offsetY, translateY]);
+  );
 
   useAnimatedReaction(
     () => totalOffsetY.value,
@@ -100,7 +105,6 @@ export default function ExpandableHeaderScreen({
         [0, 1],
         Extrapolation.CLAMP
       );
-      console.log('headerShowProgress', headerShowProgress.value);
       onHeaderShowProgressChange?.(headerShowProgress.value);
     }
   );
@@ -214,6 +218,7 @@ export default function ExpandableHeaderScreen({
 
   const animatedContentContainerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
+    paddingBottom: isExpanded ? headerHeight.value : 0,
   }));
 
   const header = useMemo(() => {
@@ -251,7 +256,11 @@ export default function ExpandableHeaderScreen({
         </View>
       </Animated.View>
       <Animated.View style={[flex.fill, animatedContentContainerStyle]}>
-        <GestureDetector gesture={gesture}>{content}</GestureDetector>
+        {isExpanded ? (
+          content
+        ) : (
+          <GestureDetector gesture={gesture}>{content}</GestureDetector>
+        )}
       </Animated.View>
     </View>
   );
