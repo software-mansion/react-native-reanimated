@@ -1,5 +1,5 @@
 import type { Component } from 'react';
-import { isValidElement, useMemo } from 'react';
+import { isValidElement, useEffect, useMemo } from 'react';
 import type {
   ScrollView,
   ScrollViewProps,
@@ -67,8 +67,8 @@ export default function ExpandableHeaderScreen({
   children,
 }: ExpandableHeaderScreenProps) {
   const scrollableRef = useAnimatedRef<ScrollableComponent>();
-  const headerHeight = useSharedValue(0);
   const offsetY = useSharedValue(0);
+  const headerHeight = useSharedValue(IS_WEB ? 72 : 0);
   const translateY = useSharedValue(IS_WEB ? 72 : 0);
   const dragStartTranslateY = useSharedValue<number | null>(null);
   const isScrolling = useSharedValue(false);
@@ -80,21 +80,13 @@ export default function ExpandableHeaderScreen({
   const expandEnabled = expandMode === ExpandMode.AUTO;
   const isExpanded = expandMode === ExpandMode.EXPANDED;
 
-  useAnimatedReaction(
-    () => ({
-      mode: expandMode,
-      height: headerHeight.value,
-    }),
-    ({ mode, height }) => {
-      if (mode === ExpandMode.EXPANDED && height > 0) {
-        translateY.value = height;
-        offsetY.value = 0;
-      } else if (mode === ExpandMode.COLLAPSED) {
-        translateY.value = 0;
-        offsetY.value = 0;
-      }
+  useEffect(() => {
+    if (!expandEnabled) {
+      translateY.value =
+        expandMode === ExpandMode.EXPANDED ? headerHeight.value : 0;
+      offsetY.value = 0;
     }
-  );
+  }, [expandMode, expandEnabled, headerHeight, offsetY, translateY]);
 
   useAnimatedReaction(
     () => totalOffsetY.value,

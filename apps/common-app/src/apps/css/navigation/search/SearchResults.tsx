@@ -1,10 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
 import { memo, useCallback, useMemo } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Text } from '@/apps/css/components';
 import { colors, radius, spacing, text } from '@/theme';
+import { IS_IOS } from '@/utils';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
 import type { SearchDoc } from './fuse';
@@ -32,19 +39,23 @@ export default function SearchResults({
   );
 
   return searchResults.length ? (
-    <FlatList
-      contentContainerStyle={styles.scrollViewContent}
-      data={searchResults}
-      renderItem={renderItem}
-      ListFooterComponent={() => (
-        <View style={{ height: BOTTOM_BAR_HEIGHT + insets.bottom }} />
-      )}
-      ListHeaderComponent={() => (
-        <Text style={styles.searchResultsText} variant="heading3">
-          Search Results ({searchResults.length}):
-        </Text>
-      )}
-    />
+    <KeyboardAvoidingView
+      behavior={IS_IOS ? 'padding' : 'height'}
+      keyboardVerticalOffset={100}>
+      <FlatList
+        contentContainerStyle={styles.scrollViewContent}
+        data={searchResults}
+        renderItem={renderItem}
+        ListFooterComponent={() => (
+          <View style={{ height: BOTTOM_BAR_HEIGHT + insets.bottom }} />
+        )}
+        ListHeaderComponent={() => (
+          <Text style={styles.searchResultsText} variant="heading3">
+            Search Results ({searchResults.length}):
+          </Text>
+        )}
+      />
+    </KeyboardAvoidingView>
   ) : (
     <View style={styles.noResultsContainer}>
       <Text style={styles.noResults}>No results found</Text>
