@@ -2,9 +2,9 @@
 
 import { setupSetImmediate } from '../common/setImmediatePolyfill';
 import { setupSetInterval } from '../common/setIntervalPolyfill';
-import { setupQueueMicrotask } from './queueMicrotaskPolyfill';
+import { setupQueueMicrotask } from './queueMicrotask';
 import { setupRequestAnimationFrame } from './requestAnimationFramePolyfill';
-import { setupSetTimeout } from './setTimeoutPolyfill';
+import { setupSetTimeout } from './setTimeout';
 import { setupTaskQueue } from './taskQueue';
 
 export function setupRunLoop(animationQueuePollingRate?: number) {
