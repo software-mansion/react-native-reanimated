@@ -1,5 +1,10 @@
 'use strict';
 
+import type {
+  EasingFunction,
+  EasingFunctionFactory,
+} from 'react-native-reanimated';
+
 import type { WebEasingsNames } from './Easing.web';
 import { WebEasings } from './Easing.web';
 
@@ -17,12 +22,10 @@ export interface ReanimatedWebTransformProperties {
   skewX?: string;
 }
 
-type EasingName = keyof typeof WebEasings;
-
 export interface AnimationStyle {
   opacity?: number;
   transform?: ReanimatedWebTransformProperties[];
-  easing?: EasingName | { name: EasingName };
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 
 export interface AnimationData {
