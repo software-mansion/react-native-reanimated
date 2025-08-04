@@ -62,24 +62,16 @@ void AsyncQueueImpl::startMainRunLoopThread(const std::string &name) {
 #endif
     while (state->running) {
       std::unique_lock<std::mutex> lock(state->mutex);
-      state->cv.wait(lock, [state] {
-        return !state->queue.empty() || !state->priorityQueue.empty() ||
-            !state->running;
-      });
+      state->cv.wait(
+          lock, [state] { return !state->queue.empty() || !state->running; });
       if (!state->running) {
         return;
       }
-      if (state->queue.empty() && state->priorityQueue.empty()) {
+      if (state->queue.empty()) {
         continue;
       }
-      std::function<void()> job;
-      if (!state->priorityQueue.empty()) {
-        job = std::move(state->priorityQueue.front());
-        state->priorityQueue.pop();
-      } else {
-        job = std::move(state->queue.front());
-        state->queue.pop();
-      }
+      auto job = std::move(state->queue.front());
+      state->queue.pop();
       lock.unlock();
       job();
     }

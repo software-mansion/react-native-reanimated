@@ -9,7 +9,6 @@ class AsyncQueue : public facebook::jsi::NativeState {
   virtual ~AsyncQueue() = default;
 
   virtual void push(std::function<void()> &&job) = 0;
-  virtual void pushPriority(std::function<void()> &&job) {}
 };
 
 } // namespace worklets
