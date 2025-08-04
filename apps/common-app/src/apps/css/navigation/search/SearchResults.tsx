@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    ...(IS_WEB && { marginHorizontal: 'auto', width: 600, maxWidth: '100%' }),
+    ...(IS_WEB && style.webContainer),
   },
   resultCard: {
     backgroundColor: colors.background2,

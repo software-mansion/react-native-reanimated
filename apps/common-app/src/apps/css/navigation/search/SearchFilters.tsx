@@ -232,12 +232,15 @@ const styles = StyleSheet.create({
   },
   filtersContentContainer: {
     ...style.scrollViewContent,
-    ...(IS_WEB && { gap: 0, paddingHorizontal: 0 }),
+    gap: 0,
+    paddingVertical: spacing.xs,
+    ...(IS_WEB && { paddingHorizontal: 0 }),
   },
   noFilters: {
     alignItems: 'center',
     gap: spacing.sm,
     paddingBottom: spacing.xs,
+    ...(IS_WEB && style.webContainer),
   },
   pathSeparator: {
     ...text.label2,

@@ -14,15 +14,18 @@ export const flex = {
   wrap: { flexWrap: 'wrap' },
 } as const;
 
+const webContainer = {
+  marginHorizontal: 'auto',
+  maxWidth: '100%',
+  width: 600,
+} as const;
+
 export const style = StyleSheet.create({
   scrollViewContent: {
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    ...(IS_WEB && {
-      marginHorizontal: 'auto',
-      maxWidth: '100%',
-      width: 600,
-    }),
+    ...(IS_WEB && webContainer),
   },
+  webContainer,
 });

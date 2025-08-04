@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Button } from '@/apps/css/components';
-import { colors, radius, sizes, spacing, text } from '@/theme';
+import { colors, radius, sizes, spacing, style, text } from '@/theme';
 import { IS_WEB } from '@/utils';
 
 type SearchBarProps = {
@@ -102,10 +102,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    ...(IS_WEB && {
-      marginHorizontal: 'auto',
-      width: 600,
-      maxWidth: '100%',
-    }),
+    ...(IS_WEB && style.webContainer),
   },
 });
