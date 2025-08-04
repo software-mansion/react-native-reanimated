@@ -101,6 +101,8 @@ void WorkletRuntime::init(
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   queue_ = std::make_shared<AsyncQueueImpl>(name_);
+  eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+  eventLoop_->run();
 
   WorkletRuntimeDecorator::decorate(
       rt,

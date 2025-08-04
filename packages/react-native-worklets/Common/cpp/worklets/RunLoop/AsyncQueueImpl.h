@@ -13,18 +13,6 @@
 
 namespace worklets {
 
-struct Timeout {
-  std::function<void()> callback;
-  int64_t targetTime;
-};
-
-struct TimeoutsQueueState {
-  std::atomic_bool running{true};
-  std::mutex mutex;
-  std::condition_variable cv;
-  std::vector<Timeout> queue;
-};
-
 struct AsyncQueueState {
   std::atomic_bool running{true};
   std::mutex mutex;
@@ -41,12 +29,9 @@ class AsyncQueueImpl : public AsyncQueue {
 
   void push(std::function<void()> &&job) override;
   void pushPriority(std::function<void()> &&job) override;
-  void pushTimeout(std::function<void()> &&job, int64_t delay) override;
 
  private:
   const std::shared_ptr<AsyncQueueState> state_;
-  const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
-  int64_t getCurrentTimeInMs();
   void startMainRunLoopThread(const std::string &name);
   void startTimeoutRunLoopThread(const std::string &name);
 };
