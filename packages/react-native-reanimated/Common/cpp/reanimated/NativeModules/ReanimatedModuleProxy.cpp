@@ -1000,7 +1000,8 @@ void ReanimatedModuleProxy::performOperations() {
               case CMD_START_OF_TRANSFORM:
                 intBuffer.push_back(command);
                 react_native_assert(
-                    value.isArray() && "[Reanimated] Transform value must be an array");
+                    value.isArray() &&
+                    "[Reanimated] Transform value must be an array");
                 for (const auto &item : value) {
                   react_native_assert(
                       item.isObject() &&
@@ -1059,7 +1060,8 @@ void ReanimatedModuleProxy::performOperations() {
                         intBuffer.push_back(CMD_UNIT_RAD);
                       } else {
                         throw std::runtime_error(
-                            "[Reanimated] Unsupported rotation unit: " + transformValueStr);
+                            "[Reanimated] Unsupported rotation unit: " +
+                            transformValueStr);
                       }
                       doubleBuffer.push_back(
                           std::stof(transformValueStr.substr(0, -3)));
