@@ -81,6 +81,8 @@ class TransformInterpolatorBase : public TransformInterpolator {
 };
 
 using TransformInterpolators = TransformInterpolator::Interpolators;
+using TransformInterpolatorsRecord =
+    std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>>;
 using TransformInterpolatorUpdateContext = TransformInterpolator::UpdateContext;
 
 } // namespace reanimated::css

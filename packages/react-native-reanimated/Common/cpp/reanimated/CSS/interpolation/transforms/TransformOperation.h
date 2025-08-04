@@ -154,8 +154,9 @@ struct ScaleYOperation final : public ScaleOperation {
 };
 
 // Translate
-struct TranslateOperation : public TransformOperationBase<CSSLength> {
-  using TransformOperationBase<CSSLength>::TransformOperationBase;
+template <typename TValue>
+struct TranslateOperation : public TransformOperationBase<TValue> {
+  using TransformOperationBase<TValue>::TransformOperationBase;
   explicit TranslateOperation(double value);
   explicit TranslateOperation(const std::string &value);
   bool isRelative() const override;
@@ -164,14 +165,16 @@ struct TranslateOperation : public TransformOperationBase<CSSLength> {
   TransformMatrix toMatrix() const override;
 };
 
-struct TranslateXOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
+template <typename TValue>
+struct TranslateXOperation final : public TranslateOperation<TValue> {
+  using TranslateOperation<TValue>::TranslateOperation;
   TransformOperationType type() const override;
   TransformMatrix toMatrix(double resolvedValue) const override;
 };
 
-struct TranslateYOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
+template <typename TValue>
+struct TranslateYOperation final : public TranslateOperation<TValue> {
+  using TranslateOperation<TValue>::TranslateOperation;
   TransformOperationType type() const override;
   TransformMatrix toMatrix(double resolvedValue) const override;
 };

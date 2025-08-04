@@ -134,16 +134,18 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
       return std::make_shared<ScaleYOperation>(propertyValue.asNumber());
     case TransformOperationType::TranslateX: {
       if (propertyValue.isNumber()) {
-        return std::make_shared<TranslateXOperation>(propertyValue.asNumber());
+        return std::make_shared<TranslateXOperation<CSSLength>>(
+            propertyValue.asNumber());
       }
-      return std::make_shared<TranslateXOperation>(
+      return std::make_shared<TranslateXOperation<CSSLength>>(
           propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::TranslateY: {
       if (propertyValue.isNumber()) {
-        return std::make_shared<TranslateYOperation>(propertyValue.asNumber());
+        return std::make_shared<TranslateYOperation<CSSLength>>(
+            propertyValue.asNumber());
       }
-      return std::make_shared<TranslateYOperation>(
+      return std::make_shared<TranslateYOperation<CSSLength>>(
           propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::SkewX:
@@ -198,15 +200,19 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
       return std::make_shared<ScaleYOperation>(propertyValue.getDouble());
     case TransformOperationType::TranslateX: {
       if (propertyValue.isNumber()) {
-        return std::make_shared<TranslateXOperation>(propertyValue.getDouble());
+        return std::make_shared<TranslateXOperation<CSSLength>>(
+            propertyValue.getDouble());
       }
-      return std::make_shared<TranslateXOperation>(propertyValue.getString());
+      return std::make_shared<TranslateXOperation<CSSLength>>(
+          propertyValue.getString());
     }
     case TransformOperationType::TranslateY: {
       if (propertyValue.isNumber()) {
-        return std::make_shared<TranslateYOperation>(propertyValue.getDouble());
+        return std::make_shared<TranslateYOperation<CSSLength>>(
+            propertyValue.getDouble());
       }
-      return std::make_shared<TranslateYOperation>(propertyValue.getString());
+      return std::make_shared<TranslateYOperation<CSSLength>>(
+          propertyValue.getString());
     }
     case TransformOperationType::SkewX:
       return std::make_shared<SkewXOperation>(propertyValue.getString());
@@ -375,36 +381,47 @@ TransformMatrix ScaleYOperation::toMatrix() const {
 }
 
 // Translate
-TranslateOperation::TranslateOperation(const double value)
-    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
-TranslateOperation::TranslateOperation(const std::string &value)
-    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
-bool TranslateOperation::isRelative() const {
-  return value.isRelative;
+template <typename TValue>
+TranslateOperation<TValue>::TranslateOperation(const double value)
+    : TransformOperationBase<TValue>(TValue(value)) {}
+template <typename TValue>
+TranslateOperation<TValue>::TranslateOperation(const std::string &value)
+    : TransformOperationBase<TValue>(TValue(value)) {}
+template <typename TValue>
+bool TranslateOperation<TValue>::isRelative() const {
+  return this->value.isRelative;
 }
-folly::dynamic TranslateOperation::valueToDynamic() const {
-  return value.toDynamic();
+template <typename TValue>
+folly::dynamic TranslateOperation<TValue>::valueToDynamic() const {
+  return this->value.toDynamic();
 }
-TransformMatrix TranslateOperation::toMatrix() const {
-  return toMatrix(value.value);
+template <typename TValue>
+TransformMatrix TranslateOperation<TValue>::toMatrix() const {
+  return toMatrix(this->value.value);
 }
 
-TransformOperationType TranslateXOperation::type() const {
+template <typename TValue>
+TransformOperationType TranslateXOperation<TValue>::type() const {
   return TransformOperationType::TranslateX;
 }
-TransformMatrix TranslateXOperation::toMatrix(double resolvedValue) const {
-  if (value.isRelative) {
+template <typename TValue>
+TransformMatrix TranslateXOperation<TValue>::toMatrix(
+    double resolvedValue) const {
+  if (this->value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateX to the matrix.");
   }
   return TransformMatrix::TranslateX(resolvedValue);
 }
 
-TransformOperationType TranslateYOperation::type() const {
+template <typename TValue>
+TransformOperationType TranslateYOperation<TValue>::type() const {
   return TransformOperationType::TranslateY;
 }
-TransformMatrix TranslateYOperation::toMatrix(double resolvedValue) const {
-  if (value.isRelative) {
+template <typename TValue>
+TransformMatrix TranslateYOperation<TValue>::toMatrix(
+    double resolvedValue) const {
+  if (this->value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateY to the matrix.");
   }
@@ -567,5 +584,9 @@ template struct TransformOperationBase<CSSAngle>;
 template struct TransformOperationBase<CSSLength>;
 template struct TransformOperationBase<
     std::variant<TransformMatrix, TransformOperations>>;
+
+template struct TranslateOperation<CSSLength>;
+template struct TranslateXOperation<CSSLength>;
+template struct TranslateYOperation<CSSLength>;
 
 } // namespace reanimated::css

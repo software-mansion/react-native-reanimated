@@ -150,8 +150,6 @@ std::shared_ptr<PropertyInterpolatorFactory> array(
  * Transform interpolators
  */
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<
-        std::string,
-        std::shared_ptr<TransformInterpolator>> &interpolators);
+    const TransformInterpolatorsRecord &interpolators);
 
 } // namespace reanimated::css

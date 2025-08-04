@@ -121,9 +121,15 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"scaleX", transformOp<ScaleXOperation>(1)},
           {"scaleY", transformOp<ScaleYOperation>(1)},
           {"translateX",
-           transformOp<TranslateXOperation>(RelativeTo::Self, "width", 0)},
+           transformOp<TranslateXOperation<CSSLength>>(
+               RelativeTo::Self,
+               "width",
+               0)},
           {"translateY",
-           transformOp<TranslateYOperation>(RelativeTo::Self, "height", 0)},
+           transformOp<TranslateYOperation<CSSLength>>(
+               RelativeTo::Self,
+               "height",
+               0)},
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
           {"matrix",
