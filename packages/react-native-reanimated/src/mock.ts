@@ -83,7 +83,6 @@ const hook = {
   },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
-  useAnimatedGestureHandler: NOOP_FACTORY,
   useAnimatedReaction: NOOP,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedScrollHandler: NOOP_FACTORY,

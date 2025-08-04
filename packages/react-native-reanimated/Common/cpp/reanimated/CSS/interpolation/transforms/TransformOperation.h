@@ -3,12 +3,11 @@
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
-#include <folly/dynamic.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -58,6 +57,9 @@ struct TransformOperation {
   virtual TransformOperationType type() const = 0;
   virtual bool isRelative() const;
 
+  static std::shared_ptr<TransformOperation> fromJSIValue(
+      jsi::Runtime &rt,
+      const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(
       const folly::dynamic &value);
   folly::dynamic toDynamic() const;
@@ -152,8 +154,8 @@ struct ScaleYOperation final : public ScaleOperation {
 };
 
 // Translate
-struct TranslateOperation : public TransformOperationBase<CSSDimension> {
-  using TransformOperationBase<CSSDimension>::TransformOperationBase;
+struct TranslateOperation : public TransformOperationBase<CSSLength> {
+  using TransformOperationBase<CSSLength>::TransformOperationBase;
   explicit TranslateOperation(double value);
   explicit TranslateOperation(const std::string &value);
   bool isRelative() const override;

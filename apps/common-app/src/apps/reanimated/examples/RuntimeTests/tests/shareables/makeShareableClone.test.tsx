@@ -581,7 +581,7 @@ describe('Test makeShareableClone', () => {
           'worklet';
           // make shareable boolean returns a SerializableRef<boolean> which is a host object
           const shareableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', 'magicKey' in shareableBoolean];
+          const checks = [typeof hostFunction === 'function', shareableBoolean.__shareableRef];
           return checks.every(Boolean);
         }}
       />,

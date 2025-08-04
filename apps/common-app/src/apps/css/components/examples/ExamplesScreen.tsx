@@ -1,39 +1,44 @@
-import type { AnyRecord, PartialBy } from '@/types';
+import type { AnyRecord, PartialBy, PlainStyle } from '@/types';
 
 import { Screen } from '../layout/Screens';
 import TabView from '../layout/TabView';
 import type { ExamplesListProps } from './ExamplesList';
 import ExamplesList from './ExamplesList';
 
-type ExamplesScreenProps<P extends AnyRecord | Array<AnyRecord>> =
+type ExamplesScreenProps<
+  P extends AnyRecord | Array<AnyRecord>,
+  S extends AnyRecord,
+> =
   P extends Array<infer T>
     ? T extends AnyRecord
-      ? DifferentTypeTabsScreenProps<T>
+      ? DifferentTypeTabsScreenProps<T, S>
       : never
     :
-        | DifferentTypeTabsScreenProps<P>
-        | ExamplesListProps<P>
-        | SameTypeTabsScreenProps<P>;
+        | DifferentTypeTabsScreenProps<P, S>
+        | ExamplesListProps<P, S>
+        | SameTypeTabsScreenProps<P, S>;
 
-type DifferentTypeTabsScreenProps<P extends AnyRecord> = {
-  tabs: Array<{ name: string } & ExamplesListProps<P>>;
+type DifferentTypeTabsScreenProps<P extends AnyRecord, S extends AnyRecord> = {
+  tabs: Array<{ name: string } & ExamplesListProps<P, S>>;
 };
 
 type PartialExamplesListProps<
   P extends AnyRecord,
-  K extends keyof ExamplesListProps<P>,
+  S extends AnyRecord,
+  K extends keyof ExamplesListProps<P, S>,
 > = {
-  tabs: Array<{ name: string } & PartialBy<ExamplesListProps<P>, K>>;
-} & Pick<ExamplesListProps<P>, K>;
+  tabs: Array<{ name: string } & PartialBy<ExamplesListProps<P, S>, K>>;
+} & Pick<ExamplesListProps<P, S>, K>;
 
-type SameTypeTabsScreenProps<P extends AnyRecord> =
-  | PartialExamplesListProps<P, 'buildAnimation' | 'renderExample'>
-  | PartialExamplesListProps<P, 'buildAnimation'>
-  | PartialExamplesListProps<P, 'renderExample'>;
+type SameTypeTabsScreenProps<P extends AnyRecord, S extends AnyRecord> =
+  | PartialExamplesListProps<P, S, 'buildAnimation' | 'renderExample'>
+  | PartialExamplesListProps<P, S, 'buildAnimation'>
+  | PartialExamplesListProps<P, S, 'renderExample'>;
 
-export default function ExamplesScreen<P extends AnyRecord | Array<AnyRecord>>(
-  props: ExamplesScreenProps<P>
-) {
+export default function ExamplesScreen<
+  P extends AnyRecord | Array<AnyRecord>,
+  S extends AnyRecord = PlainStyle,
+>(props: ExamplesScreenProps<P, S>) {
   if ('tabs' in props) {
     return (
       <Screen>

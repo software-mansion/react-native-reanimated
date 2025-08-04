@@ -10,6 +10,7 @@ import {
 import Animated, {
   Extrapolation,
   interpolate,
+  SharedValue,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -101,10 +102,10 @@ const styles = StyleSheet.create({
 type ButtonProps = {
   item: string;
   index: number;
-  activeIndex: Animated.SharedValue<number>;
+  activeIndex: SharedValue<number>;
   width: number;
   position: number;
-  readonly indicatorPosition: Animated.SharedValue<number>;
+  readonly indicatorPosition: SharedValue<number>;
 };
 function Button({
   item,
@@ -146,7 +147,7 @@ function Button({
 type ActiveIconProps = {
   item: string;
   index: number;
-  activeIndex: Animated.SharedValue<number>;
+  activeIndex: SharedValue<number>;
   width: number;
 };
 function ActiveIcon({ item, index, activeIndex }: ActiveIconProps) {

@@ -121,7 +121,7 @@ class RetainingSerializable : virtual public BaseClass {
   }
 };
 
-class SerializableJSRef : public jsi::HostObject {
+class SerializableJSRef : public jsi::NativeState {
  private:
   const std::shared_ptr<Serializable> value_;
 
@@ -135,11 +135,13 @@ class SerializableJSRef : public jsi::HostObject {
     return value_;
   }
 
-  static jsi::Object newHostObject(
+  static jsi::Object newNativeStateObject(
       jsi::Runtime &rt,
       const std::shared_ptr<Serializable> &value) {
-    return jsi::Object::createFromHostObject(
-        rt, std::make_shared<SerializableJSRef>(value));
+    auto object = jsi::Object(rt);
+    object.setNativeState(rt, std::make_shared<SerializableJSRef>(value));
+    object.setProperty(rt, "__serializableRef", true);
+    return object;
   }
 };
 

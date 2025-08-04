@@ -21,6 +21,12 @@ export interface AnimatedProps extends Record<string, unknown> {
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
+  // This is a React host instance view name which might differ from the
+  // Fabric component name. For clarity, we use the viewName property
+  // here and componentName in C++ after converting react viewName to
+  // Fabric component name.
+  // (see react/renderer/componentregistry/componentNameByReactViewName.cpp)
+  viewName?: string;
   DOMElement?: HTMLElement | null;
 }
 
@@ -119,7 +125,8 @@ export interface IAnimatedComponentInternal {
   ChildComponent: AnyComponent;
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
-  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };

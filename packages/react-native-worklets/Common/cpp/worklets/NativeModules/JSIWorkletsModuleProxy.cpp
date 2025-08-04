@@ -64,11 +64,30 @@ inline jsi::Value createWorkletRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
-    std::shared_ptr<SerializableWorklet> &initializer) {
+    std::shared_ptr<SerializableWorklet> &initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      jsiWorkletsModuleProxy, true /* supportsLocking */, name, initializer);
+      jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
+
+#ifdef WORKLETS_BUNDLE_MODE
+inline jsi::Value propagateModuleUpdate(
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  const auto runtimes = runtimeManager->getAllRuntimes();
+
+  for (auto runtime : runtimes) {
+    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+      rt.evaluateJavaScript(buffer, sourceUrl);
+      return jsi::Value::undefined();
+    });
+  }
+  return jsi::Value::undefined();
+}
+#endif // WORKLETS_BUNDLE_MODE
 
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -84,6 +103,24 @@ inline jsi::Value reportFatalErrorOnJS(
           .name = name,
           .jsEngine = jsEngine});
   return jsi::Value::undefined();
+}
+
+inline std::shared_ptr<AsyncQueue> extractAsyncQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (!value.isObject()) {
+    return nullptr;
+  }
+  const auto object = value.asObject(rt);
+
+  if (!object.hasNativeState(rt)) {
+    return nullptr;
+  }
+
+  const auto &nativeState = object.getNativeState(rt);
+  auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
+
+  return asyncQueue;
 }
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -169,6 +206,11 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+#ifdef WORKLETS_BUNDLE_MODE
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
+#endif // WORKLETS_BUNDLE_MODE
 
   return propertyNames;
 }
@@ -438,16 +480,24 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
+        4,
         [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
-          auto name = args[0].asString(rt).utf8(rt);
+          const auto name = args[0].asString(rt).utf8(rt);
           auto serializableInitializer =
               extractSerializableOrThrow<SerializableWorklet>(
                   rt, args[1], "[Worklets] Initializer must be a worklet.");
+          const auto useDefaultQueue = args[2].asBool();
+
+          std::shared_ptr<AsyncQueue> asyncQueue;
+          if (useDefaultQueue) {
+            asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+          } else {
+            asyncQueue = extractAsyncQueue(rt, args[3]);
+          }
 
           return createWorkletRuntime(
               rt,
@@ -455,7 +505,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone->getJSQueue(),
               clone,
               name,
-              serializableInitializer);
+              serializableInitializer,
+              asyncQueue);
         });
   }
 
@@ -491,6 +542,25 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* jsEngine */ args[3].asString(rt).utf8(rt));
         });
   }
+
+#ifdef WORKLETS_BUNDLE_MODE
+  if (name == "propagateModuleUpdate") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return propagateModuleUpdate(
+              runtimeManager,
+              /* code */ args[0].asString(rt).utf8(rt),
+              /* sourceURL */ args[1].asString(rt).utf8(rt));
+        });
+  }
+#endif // WORKLETS_BUNDLE_MODE
 
   if (name == "setDynamicFeatureFlag") {
     return jsi::Function::createFromHostFunction(

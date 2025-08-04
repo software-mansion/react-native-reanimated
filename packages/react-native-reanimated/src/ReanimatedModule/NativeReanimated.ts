@@ -197,16 +197,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSKeyframes(
     animationName: string,
+    viewName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
+      viewName,
       keyframesConfig
     );
   }
 
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  unregisterCSSKeyframes(animationName: string, viewName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName, viewName);
   }
 
   applyCSSAnimations(

@@ -8,6 +8,7 @@ import reanimated from 'eslint-plugin-reanimated';
 import noInlineStyles from 'eslint-plugin-no-inline-styles';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import jest from 'eslint-plugin-jest';
 
 /** @type {import('typescript-eslint').ConfigWithExtends[]} */
 export default tsEslint.config(
@@ -25,6 +26,7 @@ export default tsEslint.config(
       'react-native': fixupPluginRules(reactNative),
       reanimated: reanimated,
       'react-hooks': reactHooks,
+      jest,
     },
     rules: {
       '@typescript-eslint/no-shadow': 'off',
@@ -97,6 +99,13 @@ export default tsEslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+      'jest/unbound-method': 'error',
     },
   },
   globalIgnores(['**/*.snapshot.ts', '**/*.prettierrc.js'])

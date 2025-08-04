@@ -33,6 +33,12 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
+export function isShareableRef(value: unknown): value is ShareableRef {
+  return (
+    typeof value === 'object' && value !== null && '__shareableRef' in value
+  );
+}
+
 function isPlainJSObject(object: object): object is Record<string, unknown> {
   'worklet';
   return Object.getPrototypeOf(object) === Object.prototype;

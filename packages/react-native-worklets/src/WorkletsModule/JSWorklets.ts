@@ -3,7 +3,7 @@
 import { IS_JEST } from '../PlatformChecker';
 import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
-import type { SerializableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
@@ -137,10 +137,7 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  createWorkletRuntime(
-    _name: string,
-    _initializer: SerializableRef<() => void>
-  ): WorkletRuntime {
+  createWorkletRuntime(): never {
     throw new WorkletsError(
       'createWorkletRuntime is not available in JSWorklets.'
     );
