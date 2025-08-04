@@ -1,3 +1,5 @@
+'use strict';
+
 import type { CreateSerializable } from './shareables';
 import {
   createSerializable,
