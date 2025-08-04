@@ -8,6 +8,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 using namespace facebook;
 

@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace worklets {
 
