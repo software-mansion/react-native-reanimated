@@ -88,9 +88,8 @@ bool TransformOperation::isRelative() const {
   return false;
 }
 
-std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
+std::pair<TransformOperationType, jsi::Value>
+TransformOperation::parseOperation(jsi::Runtime &rt, const jsi::Value &value) {
   if (!value.isObject()) {
     throw std::invalid_argument(
         "[Reanimated] TransformOperation must be an object.");
@@ -106,10 +105,16 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
 
   const auto propertyName =
       propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
-  const auto propertyValue =
-      obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
-  TransformOperationType operationType =
-      getTransformOperationType(propertyName);
+
+  return std::make_pair<TransformOperationType, jsi::Value>(
+      getTransformOperationType(propertyName),
+      obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName)));
+}
+
+std::shared_ptr<TransformOperation> TransformOperation::from(
+    jsi::Runtime &rt,
+    std::pair<TransformOperationType, jsi::Value> parsedOperation) {
+  const auto &[operationType, propertyValue] = parsedOperation;
 
   switch (operationType) {
     case TransformOperationType::Perspective:
@@ -157,14 +162,17 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
     case TransformOperationType::Matrix:
       return std::make_shared<MatrixOperation>(
           TransformMatrix(rt, propertyValue));
-    default:
-      throw std::invalid_argument(
-          "[Reanimated] Unknown transform operation: " + propertyName);
   }
 }
 
-std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
-    const folly::dynamic &value) {
+std::shared_ptr<TransformOperation> TransformOperation::from(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  return from(rt, parseOperation(rt, value));
+}
+
+std::pair<TransformOperationType, folly::dynamic>
+TransformOperation::parseOperation(const folly::dynamic &value) {
   if (!value.isObject()) {
     throw std::invalid_argument(
         "[Reanimated] TransformOperation must be an object.");
@@ -178,8 +186,14 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
 
   auto propertyName = obj.items().begin()->first.getString();
   auto propertyValue = obj.items().begin()->second;
-  TransformOperationType operationType =
-      getTransformOperationType(propertyName);
+
+  return std::make_pair<TransformOperationType, folly::dynamic>(
+      getTransformOperationType(propertyName), std::move(propertyValue));
+}
+
+std::shared_ptr<TransformOperation> TransformOperation::from(
+    std::pair<TransformOperationType, folly::dynamic> parsedOperation) {
+  const auto &[operationType, propertyValue] = parsedOperation;
 
   switch (operationType) {
     case TransformOperationType::Perspective:
@@ -220,10 +234,12 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOperationType::Matrix:
       return std::make_shared<MatrixOperation>(TransformMatrix(propertyValue));
-    default:
-      throw std::invalid_argument(
-          "[Reanimated] Unknown transform operation: " + propertyName);
   }
+}
+
+std::shared_ptr<TransformOperation> TransformOperation::from(
+    const folly::dynamic &value) {
+  return from(parseOperation(value));
 }
 
 folly::dynamic TransformOperation::toDynamic() const {
@@ -578,15 +594,5 @@ TransformMatrix MatrixOperation::toMatrix() const {
   }
   return std::get<TransformMatrix>(value);
 }
-
-template struct TransformOperationBase<CSSDouble>;
-template struct TransformOperationBase<CSSAngle>;
-template struct TransformOperationBase<CSSLength>;
-template struct TransformOperationBase<
-    std::variant<TransformMatrix, TransformOperations>>;
-
-template struct TranslateOperation<CSSLength>;
-template struct TranslateXOperation<CSSLength>;
-template struct TranslateYOperation<CSSLength>;
 
 } // namespace reanimated::css

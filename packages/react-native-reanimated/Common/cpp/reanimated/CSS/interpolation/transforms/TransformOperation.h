@@ -57,11 +57,22 @@ struct TransformOperation {
   virtual TransformOperationType type() const = 0;
   virtual bool isRelative() const;
 
-  static std::shared_ptr<TransformOperation> fromJSIValue(
+  static std::pair<TransformOperationType, jsi::Value> parseOperation(
       jsi::Runtime &rt,
       const jsi::Value &value);
-  static std::shared_ptr<TransformOperation> fromDynamic(
+  static std::shared_ptr<TransformOperation> from(
+      jsi::Runtime &rt,
+      std::pair<TransformOperationType, jsi::Value> parsedOperation);
+  static std::shared_ptr<TransformOperation> from(
+      jsi::Runtime &rt,
+      const jsi::Value &value);
+
+  static std::pair<TransformOperationType, folly::dynamic> parseOperation(
       const folly::dynamic &value);
+  static std::shared_ptr<TransformOperation> from(
+      std::pair<TransformOperationType, folly::dynamic> parsedOperation);
+  static std::shared_ptr<TransformOperation> from(const folly::dynamic &value);
+
   folly::dynamic toDynamic() const;
   virtual folly::dynamic valueToDynamic() const = 0;
 

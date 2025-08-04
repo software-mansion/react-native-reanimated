@@ -165,8 +165,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto transform = transformsArray.getValueAtIndex(rt, i);
-    transformOperations.emplace_back(
-        TransformOperation::fromJSIValue(rt, transform));
+    transformOperations.emplace_back(TransformOperation::from(rt, transform));
   }
   return transformOperations;
 }
@@ -186,8 +185,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto &transform = transformsArray[i];
-    transformOperations.emplace_back(
-        TransformOperation::fromDynamic(transform));
+    transformOperations.emplace_back(TransformOperation::from(transform));
   }
   return transformOperations;
 }
