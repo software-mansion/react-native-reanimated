@@ -102,5 +102,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    ...(IS_WEB && {
+      marginHorizontal: 'auto',
+      width: 600,
+      maxWidth: '100%',
+    }),
   },
 });

@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { SelectListOption } from '@/apps/css/components';
 import { SelectListDropdown, Text } from '@/apps/css/components';
-import { colors, flex, iconSizes, radius, spacing, text } from '@/theme';
+import { colors, flex, iconSizes, radius, spacing, style, text } from '@/theme';
 import { IS_WEB } from '@/utils';
 
 import type { Route, Routes } from '../types';
@@ -159,12 +159,16 @@ export default function SearchFilters({
       : filterOptions.length - 1;
 
   return (
-    <View>
+    <View
+      style={
+        IS_WEB && { width: 600, maxWidth: '100%', marginHorizontal: 'auto' }
+      }>
       <Text style={styles.title}>Searching in:</Text>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.filtersContentContainer}
         ref={scrollRef}
         showsHorizontalScrollIndicator={false}
+        style={IS_WEB && { marginHorizontal: spacing.lg }}
         horizontal>
         {filterOptions.map(({ key, options }, index) => {
           const isNextFilter = key === NEXT_FILTER_KEY;
@@ -213,11 +217,6 @@ export default function SearchFilters({
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.xxs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xxs,
-  },
   dropdown: {
     minWidth: 150,
   },
@@ -230,6 +229,10 @@ const styles = StyleSheet.create({
   },
   filterInputText: {
     color: colors.primary,
+  },
+  filtersContentContainer: {
+    ...style.scrollViewContent,
+    ...(IS_WEB && { gap: 0, paddingHorizontal: 0 }),
   },
   noFilters: {
     alignItems: 'center',

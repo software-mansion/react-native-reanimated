@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { runOnJS } from 'react-native-worklets';
 
 import { Stagger } from '@/apps/css/components';
-import { flex, spacing } from '@/theme';
+import { flex, spacing, style } from '@/theme';
 import { IS_WEB } from '@/utils';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
@@ -106,7 +106,7 @@ export default function SearchScreen({ children }: SearchScreenProps) {
   );
 
   return (
-    <View style={[flex.fill, IS_WEB && styles.webContainer]}>
+    <View style={flex.fill}>
       {!IS_WEB && !pullToSearchShown && <PullToSearchIndicator />}
       <ExpandableHeaderScreen
         expandMode={expandMode}
@@ -161,8 +161,14 @@ export default function SearchScreen({ children }: SearchScreenProps) {
             </Animated.View>
           ) : (
             <Animated.ScrollView
-              contentContainerStyle={styles.content}
-              style={flex.fill}
+              contentContainerStyle={style.scrollViewContent}
+              style={[
+                flex.fill,
+                IS_WEB && {
+                  // @ts-expect-error - scrollbarGutter is a valid CSS property on web
+                  scrollbarGutter: 'stable both-edges',
+                },
+              ]}
               {...scrollProps}>
               <Stagger enabled={!isExpanded} interval={50}>
                 {children}
@@ -177,18 +183,7 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.md,
-    minHeight: '100%',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
   headerContainer: {
     justifyContent: 'center',
-  },
-  webContainer: {
-    marginHorizontal: 'auto',
-    maxWidth: '100%',
-    width: 600 + 2 * spacing.sm,
   },
 });

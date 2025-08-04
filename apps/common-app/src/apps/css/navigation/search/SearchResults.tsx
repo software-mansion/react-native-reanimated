@@ -10,8 +10,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Text } from '@/apps/css/components';
-import { colors, radius, spacing, text } from '@/theme';
-import { IS_IOS } from '@/utils';
+import { colors, radius, spacing, style, text } from '@/theme';
+import { IS_IOS, IS_WEB } from '@/utils';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
 import type { SearchDoc } from './fuse';
@@ -38,24 +38,40 @@ export default function SearchResults({
     [currentFilter]
   );
 
-  return searchResults.length ? (
+  const list = (
+    <FlatList
+      contentContainerStyle={styles.contentContainer}
+      data={searchResults}
+      renderItem={renderItem}
+      ListFooterComponent={() => (
+        <View style={{ height: BOTTOM_BAR_HEIGHT + insets.bottom }} />
+      )}
+      ListHeaderComponent={() => (
+        <Text style={styles.searchResultsText} variant="heading3">
+          Search Results ({searchResults.length}):
+        </Text>
+      )}
+      style={
+        IS_WEB && {
+          // @ts-expect-error - scrollbarGutter is a valid CSS property on web
+          scrollbarGutter: 'stable both-edges',
+        }
+      }
+    />
+  );
+
+  const results = IS_WEB ? (
+    list
+  ) : (
     <KeyboardAvoidingView
       behavior={IS_IOS ? 'padding' : 'height'}
       keyboardVerticalOffset={100}>
-      <FlatList
-        contentContainerStyle={styles.scrollViewContent}
-        data={searchResults}
-        renderItem={renderItem}
-        ListFooterComponent={() => (
-          <View style={{ height: BOTTOM_BAR_HEIGHT + insets.bottom }} />
-        )}
-        ListHeaderComponent={() => (
-          <Text style={styles.searchResultsText} variant="heading3">
-            Search Results ({searchResults.length}):
-          </Text>
-        )}
-      />
+      {list}
     </KeyboardAvoidingView>
+  );
+
+  return searchResults.length ? (
+    results
   ) : (
     <View style={styles.noResultsContainer}>
       <Text style={styles.noResults}>No results found</Text>
@@ -124,6 +140,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     justifyContent: 'flex-start',
   },
+  contentContainer: {
+    ...style.scrollViewContent,
+    gap: spacing.xs,
+  },
   fullPath: {
     ...text.body1,
     color: colors.foreground3,
@@ -136,6 +156,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
+    ...(IS_WEB && { marginHorizontal: 'auto', width: 600, maxWidth: '100%' }),
   },
   resultCard: {
     backgroundColor: colors.background2,
@@ -146,11 +167,6 @@ const styles = StyleSheet.create({
   resultName: {
     ...text.subHeading3,
     color: colors.foreground1,
-  },
-  scrollViewContent: {
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
   },
   searchResultsText: {
     marginBottom: spacing.sm,
