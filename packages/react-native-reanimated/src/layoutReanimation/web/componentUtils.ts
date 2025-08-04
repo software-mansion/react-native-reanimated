@@ -314,9 +314,9 @@ export function handleExitingAnimation(
 
   // Moving elements in DOM resets their scroll positions
   // so we memorize them here and restore after
-  const scrollPositions: { top: number; left: number }[] = [];
+  const scrollPositions = new Map<Element, { top: number; left: number }>();
   const saveScrollPosition = (node: Element) => {
-    scrollPositions.push({
+    scrollPositions.set(node, {
       top: node.scrollTop,
       left: node.scrollLeft,
     });
@@ -337,11 +337,12 @@ export function handleExitingAnimation(
 
   parent?.appendChild(dummy);
 
-  let index = 0;
   const restoreScrollPosition = (node: Element) => {
-    const scrollPosition = scrollPositions[index++];
-    node.scrollTop = scrollPosition.top;
-    node.scrollLeft = scrollPosition.left;
+    const scrollPosition = scrollPositions.get(node === dummy ? element : node);
+    if (scrollPosition) {
+      node.scrollTop = scrollPosition.top;
+      node.scrollLeft = scrollPosition.left;
+    }
     for (const child of Array.from(node.children)) {
       restoreScrollPosition(child);
     }
