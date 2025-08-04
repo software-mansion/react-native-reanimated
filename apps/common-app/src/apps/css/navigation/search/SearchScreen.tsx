@@ -139,7 +139,6 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 
           searchBarShowProgress.value = progress;
           if (progress === 1) {
-            console.log('expand', progress);
             runOnJS(changeIsExpanded)(true);
           } else if (progress === 0) {
             runOnJS(changeIsExpanded)(false);
