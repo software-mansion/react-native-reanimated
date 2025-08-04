@@ -1,5 +1,6 @@
 #pragma once
 
+#include <worklets/RunLoop/EventLoop.h>
 #include <worklets/Tools/JSScheduler.h>
 
 #include <jsi/jsi.h>
@@ -19,7 +20,7 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy,
-      const std::shared_ptr<AsyncQueue> &queue);
+      const std::shared_ptr<EventLoop> &queue);
 };
 
 } // namespace worklets

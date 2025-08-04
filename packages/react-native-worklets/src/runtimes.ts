@@ -56,6 +56,7 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
+  let animationQueuePollingRate: number | undefined;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -65,6 +66,7 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
+    animationQueuePollingRate = nameOrConfig?.animationQueuePollingRate;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -80,7 +82,7 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      setupRunLoop();
+      setupRunLoop(animationQueuePollingRate);
       initializerFn?.();
     }),
     useDefaultQueue,
@@ -133,6 +135,11 @@ export type WorkletRuntimeConfig = {
    * before any other worklets.
    */
   initializer?: () => void;
+  /**
+   * Time interval in milliseconds between polling of frame callbacks scheduled
+   * by requestAnimationFrame.
+   */
+  animationQueuePollingRate?: number;
 } & (
   | {
       /**

@@ -1,7 +1,8 @@
 'use strict';
 
-export function setupRequestAnimationFrame() {
+export function setupRequestAnimationFrame(animationQueuePollingRate?: number) {
   'worklet';
+  const timeoutIntervel = animationQueuePollingRate ?? 16;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -40,7 +41,7 @@ export function setupRequestAnimationFrame() {
     if (!flushRequested) {
       flushRequested = true;
 
-      setTimeout(flushAnimationFrame, 16);
+      setTimeout(flushAnimationFrame, timeoutIntervel);
     }
     return handle;
   };

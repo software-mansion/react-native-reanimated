@@ -23,12 +23,10 @@ export function setupTaskQueue() {
   globalThis._taskQueue = queue;
 
   globalThis.__runQueuedTask = function (handlerId?: number) {
-    while (queue.priority.length > 0) {
-      const priorityTask = queue.priority.shift();
-      if (priorityTask) {
-        priorityTask();
-      }
+    for (let i = 0; i < queue.priority.length; i++) {
+      queue.priority[i]();
     }
+    queue.priority = [];
     queue.isMicroTasksProcessing = false;
 
     if (handlerId !== undefined) {
