@@ -1,6 +1,6 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { shareableMappingCache } from './shareableMappingCache';
+import { serializableMappingCache } from './shareableMappingCache';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
@@ -135,7 +135,7 @@ if (__DEV__) {
   }
 
   const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
-  shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
+  serializableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
@@ -311,7 +311,7 @@ if (__DEV__) {
 
   const shareableRunOnUIAsyncWorklet =
     makeShareableCloneRecursive(runOnUIAsyncWorklet);
-  shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+  serializableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(

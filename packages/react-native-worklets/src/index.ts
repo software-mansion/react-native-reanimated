@@ -10,7 +10,7 @@ init();
 export type { ShareableRef } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { shareableMappingCache } from './shareableMappingCache';
+export { serializableMappingCache } from './shareableMappingCache';
 export type { MakeShareableClone } from './shareables';
 export {
   makeShareable,

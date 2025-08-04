@@ -11,9 +11,9 @@ import {
 export { createJSReanimatedModule } from './JSReanimated';
 
 // TODO: Install these global functions in a more suitable location.
-global._makeShareableClone = () => {
+global._createSerializable = () => {
   throw new ReanimatedError(
-    '`_makeShareableClone` should never be called from React runtime.'
+    '`_createSerializable` should never be called from React runtime.'
   );
 };
 
