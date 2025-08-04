@@ -53,7 +53,9 @@ export interface WorkletsModuleProxy {
     values: TValue[]
   ): SerializableRef<Map<TKey, TValue>>;
 
-  createSerializableSet<TValues>(values: TValues[]): SerializableRef<Set<TValues>>;
+  createSerializableSet<TValues>(
+    values: TValues[]
+  ): SerializableRef<Set<TValues>>;
 
   createSerializableInitializer(obj: object): SerializableRef<object>;
 

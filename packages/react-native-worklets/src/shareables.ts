@@ -33,9 +33,13 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-export function isShareableRef(value: unknown): value is ShareableRef {
+export function isSerializableRef(value: unknown): value is SerializableRef {
+  'worklet';
   return (
-    typeof value === 'object' && value !== null && '__shareableRef' in value
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
   );
 }
 
@@ -58,7 +62,7 @@ function getFromCache(value: object) {
 }
 
 // The below object is used as a replacement for objects that cannot be transferred
-// as shareable values. In makeShareableCloneRecursive we detect if an object is of
+// as shareable values. In createSerializableRecursive we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
 // us avoid all sorts of react internals from leaking into the UI runtime. To make it
 // possible to catch errors when someone actually tries to access such object on the UI
@@ -117,15 +121,15 @@ const VALID_ARRAY_VIEWS_NAMES = [
 ];
 
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
-// Below variable stores object that we process in makeShareableCloneRecursive at the specified depth.
+// Below variable stores object that we process in createSerializableRecursive at the specified depth.
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-function makeShareableCloneRecursiveWeb<T>(value: T): SerializableRef<T> {
+function createSerializableRecursiveWeb<T>(value: T): SerializableRef<T> {
   return value as SerializableRef<T>;
 }
 
-function makeShareableCloneRecursiveNative<T>(
+function createSerializableRecursiveNative<T>(
   value: T,
   shouldPersistRemote = false,
   depth = 0
@@ -229,14 +233,14 @@ function makeShareableCloneRecursiveNative<T>(
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
-  makeShareableCloneRecursiveNative.__bundleData = {
-    imported: 'makeShareableCloneRecursive',
+  createSerializableRecursiveNative.__bundleData = {
+    imported: 'createSerializableRecursive',
     // @ts-expect-error resolveWeak is defined by Metro
     source: require.resolveWeak('./index'),
   };
 }
 
-export interface MakeShareableClone {
+export interface CreateSerializable {
   <T>(
     value: T,
     shouldPersistRemote?: boolean,
@@ -244,9 +248,9 @@ export interface MakeShareableClone {
   ): SerializableRef<T>;
 }
 
-export const makeShareableCloneRecursive: MakeShareableClone = SHOULD_BE_USE_WEB
-  ? makeShareableCloneRecursiveWeb
-  : makeShareableCloneRecursiveNative;
+export const createSerializableRecursive: CreateSerializable = SHOULD_BE_USE_WEB
+  ? createSerializableRecursiveWeb
+  : createSerializableRecursiveNative;
 
 function detectCyclicObject(value: unknown, depth: number) {
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -311,7 +315,7 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = makeShareableCloneRecursive(
+    clonedProps[key] = createSerializableRecursive(
       element,
       shouldPersistRemote,
       depth + 1
@@ -339,7 +343,7 @@ function cloneArray<T extends unknown[]>(
   depth: number
 ): SerializableRef<T> {
   const clonedElements = value.map((element) =>
-    makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
+    createSerializableRecursive(element, shouldPersistRemote, depth + 1)
   );
   const clone = WorkletsModule.createSerializableArray(
     clonedElements,
@@ -410,7 +414,7 @@ function cloneWorklet<T extends WorkletFunction>(
   // that the __initData field that contains long strings representing the
   // worklet code, source map, and location, will always be
   // serialized/deserialized once.
-  clonedProps.__initData = makeShareableCloneRecursive(
+  clonedProps.__initData = createSerializableRecursive(
     value.__initData,
     true,
     depth + 1
@@ -488,8 +492,8 @@ function cloneMap<T extends Map<unknown, unknown>>(
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
   for (const [key, element] of value.entries()) {
-    clonedKeys.push(makeShareableCloneRecursive(key));
-    clonedValues.push(makeShareableCloneRecursive(element));
+    clonedKeys.push(createSerializableRecursive(key));
+    clonedValues.push(createSerializableRecursive(element));
   }
   const clone = WorkletsModule.createSerializableMap(
     clonedKeys,
@@ -505,7 +509,7 @@ function cloneMap<T extends Map<unknown, unknown>>(
 function cloneSet<T extends Set<unknown>>(value: T): SerializableRef<T> {
   const clonedElements: unknown[] = [];
   for (const element of value) {
-    clonedElements.push(makeShareableCloneRecursive(element));
+    clonedElements.push(createSerializableRecursive(element));
   }
   const clone = WorkletsModule.createSerializableSet(
     clonedElements
@@ -607,7 +611,7 @@ function inaccessibleObject<T extends object>(value: T): SerializableRef<T> {
   // as attributes of objects being captured by worklets but should never
   // be used on the UI runtime regardless. If they are being accessed, the user
   // will get an appropriate error message.
-  const clone = makeShareableCloneRecursive<T>(INACCESSIBLE_OBJECT as T);
+  const clone = createSerializableRecursive<T>(INACCESSIBLE_OBJECT as T);
   serializableMappingCache.set(value, clone);
   return clone;
 }
@@ -675,7 +679,7 @@ function freezeObjectInDev<T extends object>(value: T) {
   Object.preventExtensions(value);
 }
 
-function makeShareableCloneOnUIRecursiveLEGACY<T>(
+function createSerializableOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatSerializableRef<T> {
   'worklet';
@@ -691,7 +695,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       typeof value === 'function'
     ) {
       if (isHostObject(value)) {
-        // We call `_makeShareableClone` to wrap the provided HostObject
+        // We call `_createSerializableClone` to wrap the provided HostObject
         // inside ShareableJSRef.
         return global._createSerializableHostObject(
           value
@@ -700,7 +704,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
         // a Shareable out of the box and there is no need to
-        // call `_makeShareableClone`.
+        // call `_createSerializableClone`.
         return value.__remoteFunction;
       }
       if (Array.isArray(value)) {
@@ -747,21 +751,21 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
   return cloneRecursive(value);
 }
 
-export const makeShareableCloneOnUIRecursive = (
+export const createSerializableOnUIRecursive = (
   globalThis._WORKLETS_BUNDLE_MODE
-    ? makeShareableCloneRecursive
-    : makeShareableCloneOnUIRecursiveLEGACY
-) as typeof makeShareableCloneOnUIRecursiveLEGACY;
+    ? createSerializableRecursive
+    : createSerializableOnUIRecursiveLEGACY
+) as typeof createSerializableOnUIRecursiveLEGACY;
 
-function makeShareableJS<T extends object>(value: T): T {
+function createSerializableJS<T extends object>(value: T): T {
   return value;
 }
 
-function makeShareableNative<T extends object>(value: T): T {
+function createSerializableNative<T extends object>(value: T): T {
   if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = makeShareableCloneRecursive({
+  const handle = createSerializableRecursive({
     __init: () => {
       'worklet';
       return value;
@@ -776,6 +780,6 @@ function makeShareableNative<T extends object>(value: T): T {
  * the UI thread will be seen by all worklets. Use it when you want to create a
  * value that is read and written only on the UI thread.
  */
-export const makeShareable = SHOULD_BE_USE_WEB
-  ? makeShareableJS
-  : makeShareableNative;
+export const createSerializable = SHOULD_BE_USE_WEB
+  ? createSerializableJS
+  : createSerializableNative;

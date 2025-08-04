@@ -13,6 +13,7 @@ import {
   wait,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
+import { isSerializableRef } from 'react-native-worklets';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -572,7 +573,7 @@ describe('Test makeShareableClone', () => {
   test('makeShareableHostFunction', async () => {
     // Arrange
     // @ts-expect-error It's ok
-    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
+    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
 
     // Act
     await render(
@@ -581,7 +582,7 @@ describe('Test makeShareableClone', () => {
           'worklet';
           // make shareable boolean returns a SerializableRef<boolean> which is a host object
           const shareableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', shareableBoolean.__shareableRef];
+          const checks = [typeof hostFunction === 'function', isSerializableRef(shareableBoolean)];
           return checks.every(Boolean);
         }}
       />,

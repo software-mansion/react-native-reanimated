@@ -18,8 +18,8 @@ class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
   #shareableUndefined: SerializableRef<undefined>;
   #shareableNull: SerializableRef<null>;
-  #shareableTrue: SerializableRef<boolean>;
-  #shareableFalse: SerializableRef<boolean>;
+  #serializableTrue: SerializableRef<boolean>;
+  #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
     globalThis._WORKLETS_VERSION_JS = jsVersion;
@@ -39,9 +39,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#shareableNull = this.#workletsModuleProxy.createSerializableNull();
     this.#shareableUndefined =
       this.#workletsModuleProxy.createSerializableUndefined();
-    this.#shareableTrue =
+    this.#serializableTrue =
       this.#workletsModuleProxy.createSerializableBoolean(true);
-    this.#shareableFalse =
+    this.#serializableFalse =
       this.#workletsModuleProxy.createSerializableBoolean(false);
   }
 
@@ -73,7 +73,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableBoolean(bool: boolean) {
-    return bool ? this.#shareableTrue : this.#shareableFalse;
+    return bool ? this.#serializableTrue : this.#serializableFalse;
   }
 
   createSerializableBigInt(bigInt: bigint) {

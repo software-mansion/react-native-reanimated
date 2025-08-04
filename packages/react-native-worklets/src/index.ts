@@ -7,16 +7,21 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
-export type { ShareableRef } from './deprecated';
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { serializableMappingCache } from './shareableMappingCache';
-export type { MakeShareableClone } from './shareables';
+export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
-  isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
+} from './deprecated';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
+export { serializableMappingCache } from './shareableMappingCache';
+export type { CreateSerializable } from './shareables';
+export {
+  createSerializable,
+  createSerializableOnUIRecursive,
+  createSerializableRecursive,
+  isSerializableRef,
 } from './shareables';
 export {
   callMicrotasks,

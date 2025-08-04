@@ -2,8 +2,8 @@
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { serializableMappingCache } from './shareableMappingCache';
 import {
-  makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
+  createSerializableOnUIRecursive,
+  createSerializableRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -105,7 +105,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // mechanism we just schedule the work ommiting the queue. This is ok for the
       // uses that we currently have but may not be ok for future tests that we write.
       WorkletsModule.scheduleOnUI(
-        makeShareableCloneRecursive(() => {
+        createSerializableRecursive(() => {
           'worklet';
           worklet(...args);
         })
@@ -118,8 +118,8 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // situation when conversion is only done via microtask queue. This does not
       // make the app particularily less efficient as converted objects are cached
       // and for a given worklet the conversion only happens once.
-      makeShareableCloneRecursive(worklet);
-      makeShareableCloneRecursive(args);
+      createSerializableRecursive(worklet);
+      createSerializableRecursive(args);
     }
 
     enqueueUI(worklet, args);
@@ -134,7 +134,7 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
+  const shareableRunOnUIWorklet = createSerializableRecursive(runOnUIWorklet);
   serializableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
 
@@ -148,10 +148,10 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => ReturnValue {
   return (...args) => {
     return WorkletsModule.executeOnUIRuntimeSync(
-      makeShareableCloneRecursive(() => {
+      createSerializableRecursive(() => {
         'worklet';
         const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
+        return createSerializableOnUIRecursive(result);
       })
     );
   };
@@ -236,7 +236,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+      args.length > 0 ? createSerializableOnUIRecursive(args) : undefined
     );
   };
 }
@@ -279,7 +279,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         // mechanism we just schedule the work ommiting the queue. This is ok for the
         // uses that we currently have but may not be ok for future tests that we write.
         WorkletsModule.scheduleOnUI(
-          makeShareableCloneRecursive(() => {
+          createSerializableRecursive(() => {
             'worklet';
             worklet(...args);
           })
@@ -292,8 +292,8 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         // situation when conversion is only done via microtask queue. This does not
         // make the app particularily less efficient as converted objects are cached
         // and for a given worklet the conversion only happens once.
-        makeShareableCloneRecursive(worklet);
-        makeShareableCloneRecursive(args);
+        createSerializableRecursive(worklet);
+        createSerializableRecursive(args);
       }
 
       enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
@@ -310,7 +310,7 @@ if (__DEV__) {
   }
 
   const shareableRunOnUIAsyncWorklet =
-    makeShareableCloneRecursive(runOnUIAsyncWorklet);
+    createSerializableRecursive(runOnUIAsyncWorklet);
   serializableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 }
 
@@ -331,7 +331,7 @@ function flushUIQueue(): void {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
     WorkletsModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
+      createSerializableRecursive(() => {
         'worklet';
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);
