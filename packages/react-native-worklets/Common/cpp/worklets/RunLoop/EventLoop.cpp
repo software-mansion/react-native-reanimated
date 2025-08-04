@@ -33,7 +33,7 @@ void EventLoop::run() {
 #endif
         while (state->running) {
           std::unique_lock<std::mutex> lock(state->mutex);
-          auto currentTime = getCurrentTimeInMs();
+          const auto currentTime = getCurrentTimeInMs();
           std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
           auto &timeouts = state->queue;
           timeouts.erase(
