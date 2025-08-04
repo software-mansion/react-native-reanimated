@@ -1,19 +1,18 @@
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 
 namespace reanimated::css {
 
-CSSDimension::CSSDimension() : value(0), isRelative(false) {}
+CSSLength::CSSLength() : value(0), isRelative(false) {}
 
-CSSDimension::CSSDimension(const double value)
-    : value(value), isRelative(false) {}
+CSSLength::CSSLength(const double value) : value(value), isRelative(false) {}
 
-CSSDimension::CSSDimension(const double value, const bool isRelative)
+CSSLength::CSSLength(const double value, const bool isRelative)
     : value(value), isRelative(isRelative) {}
 
-CSSDimension::CSSDimension(const char *value) {
+CSSLength::CSSLength(const char *value) {
   if (!canConstruct(value)) {
     throw std::invalid_argument(
-        "[Reanimated] CSSDimension: Invalid value: " + std::string(value));
+        "[Reanimated] CSSLength: Invalid value: " + std::string(value));
   }
 
   std::string str = value;
@@ -22,76 +21,72 @@ CSSDimension::CSSDimension(const char *value) {
   this->isRelative = true;
 }
 
-CSSDimension::CSSDimension(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+CSSLength::CSSLength(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (jsiValue.isNumber()) {
     this->value = jsiValue.asNumber();
     this->isRelative = false;
   } else if (jsiValue.isString()) {
     std::string strValue = jsiValue.asString(rt).utf8(rt);
-    *this = CSSDimension(strValue); // Delegate to the string constructor
+    *this = CSSLength(strValue); // Delegate to the string constructor
   } else {
-    throw std::runtime_error(
-        "[Reanimated] CSSDimension: Unsupported value type");
+    throw std::runtime_error("[Reanimated] CSSLength: Unsupported value type");
   }
 }
 
-CSSDimension::CSSDimension(const folly::dynamic &value) {
+CSSLength::CSSLength(const folly::dynamic &value) {
   if (value.isNumber()) {
     this->value = value.getDouble();
     this->isRelative = false;
   } else if (value.isString()) {
     std::string strValue = value.getString();
-    *this =
-        CSSDimension(strValue.c_str()); // Delegate to the string constructor
+    *this = CSSLength(strValue.c_str()); // Delegate to the string constructor
   } else {
-    throw std::runtime_error(
-        "[Reanimated] CSSDimension: Unsupported value type");
+    throw std::runtime_error("[Reanimated] CSSLength: Unsupported value type");
   }
 }
 
-bool CSSDimension::canConstruct(const std::string &value) {
+bool CSSLength::canConstruct(const std::string &value) {
   return !value.empty() && value.back() == '%';
 }
 
-bool CSSDimension::canConstruct(const char *value) {
-  auto str = std::string(value);
-  return !str.empty() && str.back() == '%';
+bool CSSLength::canConstruct(const char *value) {
+  return canConstruct(std::string(value));
 }
 
-bool CSSDimension::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+bool CSSLength::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isNumber() ||
       (jsiValue.isString() && canConstruct(jsiValue.getString(rt).utf8(rt)));
 }
 
-bool CSSDimension::canConstruct(const folly::dynamic &value) {
+bool CSSLength::canConstruct(const folly::dynamic &value) {
   return value.isNumber() ||
       (value.isString() && canConstruct(value.getString()));
 }
 
-folly::dynamic CSSDimension::toDynamic() const {
+folly::dynamic CSSLength::toDynamic() const {
   if (isRelative) {
     return std::to_string(value * 100) + "%";
   }
   return value;
 }
 
-std::string CSSDimension::toString() const {
+std::string CSSLength::toString() const {
   if (isRelative) {
     return std::to_string(value * 100) + "%";
   }
   return std::to_string(value);
 }
 
-CSSDimension CSSDimension::interpolate(
+CSSLength CSSLength::interpolate(
     const double progress,
-    const CSSDimension &to,
+    const CSSLength &to,
     const CSSResolvableValueInterpolationContext &context) const {
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
   // (also, when one of the values is 0, and the other is relative)
   if ((isRelative == to.isRelative) || (isRelative && to.value == 0) ||
       (to.isRelative && value == 0)) {
-    return CSSDimension(
+    return CSSLength(
         value + (to.value - value) * progress, isRelative || to.isRelative);
   }
   // Otherwise, we need to read the relative value from the shadow node and
@@ -102,12 +97,12 @@ CSSDimension CSSDimension::interpolate(
   if (!resolvedFrom.has_value() || !resolvedTo.has_value()) {
     return progress < 0.5 ? *this : to;
   }
-  return CSSDimension(
+  return CSSLength(
       resolvedFrom.value() +
       (resolvedTo.value() - resolvedFrom.value()) * progress);
 }
 
-std::optional<double> CSSDimension::resolve(
+std::optional<double> CSSLength::resolve(
     const CSSResolvableValueInterpolationContext &context) const {
   if (!isRelative) {
     return value;
@@ -129,14 +124,14 @@ std::optional<double> CSSDimension::resolve(
   return value * relativeValue.getNumber();
 }
 
-bool CSSDimension::operator==(const CSSDimension &other) const {
+bool CSSLength::operator==(const CSSLength &other) const {
   return value == other.value && isRelative == other.isRelative;
 }
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(std::ostream &os, const CSSDimension &dimension) {
-  os << "CSSDimension(" << dimension.toString() << ")";
+std::ostream &operator<<(std::ostream &os, const CSSLength &value) {
+  os << "CSSLength(" << value.toString() << ")";
   return os;
 }
 

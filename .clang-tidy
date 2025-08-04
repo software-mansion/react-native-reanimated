@@ -27,6 +27,7 @@ Checks:
   - -cppcoreguidelines-pro-bounds-constant-array-index
   - -cppcoreguidelines-init-variables
   - -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+  - -cppcoreguidelines-avoid-non-const-global-variables
   # - google-*
   # - hicpp-*
   # - llvm-*
@@ -36,4 +37,4 @@ Checks:
   # - performance-*
   # - portability-*
   # - readability-*
-WarningsAsErrors: "*"
+WarningsAsErrors: '*'

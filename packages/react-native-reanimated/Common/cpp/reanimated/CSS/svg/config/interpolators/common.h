@@ -6,9 +6,11 @@
 #include <reanimated/CSS/config/interpolators/utils.h>
 
 #include <reanimated/CSS/common/values/CSSColor.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+
+#include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 namespace reanimated::css {
 
@@ -20,19 +22,20 @@ const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
     {"fill", value<CSSColor>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
-    {"fillRule", value<CSSKeyword>("nonzero")},
+    {"fillRule", value<CSSInteger>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"stroke", value<CSSColor>(BLACK)},
-    {"strokeWidth", value<CSSDouble>(1)},
+    {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<CSSDouble>(0)}, // TODO - add support for array
-    {"strokeDashoffset", value<CSSDouble>(0)},
-    {"strokeLinecap", value<CSSKeyword>("butt")},
-    {"strokeLinejoin", value<CSSKeyword>("miter")},
+    {"strokeDasharray",
+     value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
+    {"strokeDashoffset", value<SVGLength>(0)},
+    {"strokeLinecap", value<CSSInteger>(0)},
+    {"strokeLinejoin", value<CSSInteger>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
-    {"vectorEffect", value<CSSKeyword>("none")},
+    {"vectorEffect", value<CSSInteger>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
@@ -43,10 +46,10 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"translateY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
-    {"originX", value<CSSDimension>(RelativeTo::Parent, "width", 0)},
-    {"originY", value<CSSDimension>(RelativeTo::Parent, "height", 0)},
+    {"translateX", value<SVGLength>(0)},
+    {"translateY", value<SVGLength>(0)},
+    {"originX", value<SVGLength>(0)},
+    {"originY", value<SVGLength>(0)},
     {"scaleX", value<CSSDouble>(1)},
     {"scaleY", value<CSSDouble>(1)},
     {"skewX", value<CSSAngle>(0)},

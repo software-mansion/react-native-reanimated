@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 #include <memory>

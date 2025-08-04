@@ -1,34 +1,26 @@
 #include <reanimated/CSS/config/interpolators/registry.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 namespace reanimated::css {
 
 namespace {
 
-ComponentInterpolatorsMap registry_ = [] {
-  ComponentInterpolatorsMap result = {
-      {"View", VIEW_INTERPOLATORS},
-      {"Paragraph", TEXT_INTERPOLATORS},
-      {"Image", IMAGE_INTERPOLATORS},
-  };
-  if constexpr (StaticFeatureFlags::getFlag(
-                    "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
-    result["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
-  }
-  return result;
-}();
+ComponentInterpolatorsMap registry = {
+    {"View", VIEW_INTERPOLATORS},
+    {"Paragraph", TEXT_INTERPOLATORS},
+    {"Image", IMAGE_INTERPOLATORS},
+};
 
 } // namespace
 
 bool hasInterpolators(const std::string &componentName) {
-  return registry_.contains(componentName);
+  return registry.contains(componentName);
 }
 
-const InterpolatorFactoriesRecord &getInterpolators(
+const InterpolatorFactoriesRecord &getComponentInterpolators(
     const std::string &componentName) {
-  const auto it = registry_.find(componentName);
+  const auto it = registry.find(componentName);
 
-  if (it == registry_.end()) {
+  if (it == registry.end()) {
     // Use View interpolators as a fallback for unknown components
     // (e.g. we get the ScrollView component name for the ScrollView component
     // but it should be styled in the same way as a View)
@@ -36,6 +28,12 @@ const InterpolatorFactoriesRecord &getInterpolators(
   }
 
   return it->second;
+}
+
+void registerComponentInterpolators(
+    const std::string &componentName,
+    const InterpolatorFactoriesRecord &interpolators) {
+  registry[componentName] = interpolators;
 }
 
 } // namespace reanimated::css

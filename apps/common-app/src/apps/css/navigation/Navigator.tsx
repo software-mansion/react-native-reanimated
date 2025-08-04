@@ -11,11 +11,11 @@ import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
 import BottomTabBar from './BottomTabBar';
-import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './constants';
 import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
+import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './routes';
 import { SearchScreen } from './search';
 import type { Routes } from './types';
 import { isRouteWithRoutes } from './utils';
