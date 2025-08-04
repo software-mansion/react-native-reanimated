@@ -2,7 +2,6 @@ import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
 import { Rect, type RectProps, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
-import { colors } from '@/theme';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 

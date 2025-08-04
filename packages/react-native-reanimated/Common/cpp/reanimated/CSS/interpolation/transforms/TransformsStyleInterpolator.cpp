@@ -149,6 +149,28 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
+folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
+    const TransformOperations &operations) {
+  auto result = folly::dynamic::array();
+
+  for (const auto &operation : operations) {
+    result.push_back(operation->toDynamic());
+  }
+
+  return result;
+}
+
+TransformOperation TransformsStyleInterpolator::operationFrom(
+    jsi::Runtime &rt,
+    const jsi::Value &value) const {
+  return TransformOperation::from(rt, value);
+}
+
+TransformOperation TransformsStyleInterpolator::operationFrom(
+    const folly::dynamic &value) const {
+  return TransformOperation::from(value);
+}
+
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
     jsi::Runtime &rt,
@@ -165,7 +187,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto transform = transformsArray.getValueAtIndex(rt, i);
-    transformOperations.emplace_back(TransformOperation::from(rt, transform));
+    transformOperations.emplace_back(operationFrom(rt, transform));
   }
   return transformOperations;
 }
@@ -185,7 +207,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto &transform = transformsArray[i];
-    transformOperations.emplace_back(TransformOperation::from(transform));
+    transformOperations.emplace_back(operationFrom(transform));
   }
   return transformOperations;
 }
@@ -385,17 +407,6 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const auto &interpolator = interpolators_->at(fromOperation->type());
     result.emplace_back(interpolator->interpolate(
         keyframeProgress, fromOperation, toOperation, transformUpdateContext));
-  }
-
-  return result;
-}
-
-folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
-    const TransformOperations &operations) {
-  auto result = folly::dynamic::array();
-
-  for (const auto &operation : operations) {
-    result.push_back(operation->toDynamic());
   }
 
   return result;
