@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Text } from '@/apps/css/components';
-import { colors, radius, spacing, style, text } from '@/theme';
+import { colors, flex, radius, spacing, style, text } from '@/theme';
 import { IS_IOS, IS_WEB } from '@/utils';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
@@ -65,7 +65,8 @@ export default function SearchResults({
   ) : (
     <KeyboardAvoidingView
       behavior={IS_IOS ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}>
+      keyboardVerticalOffset={100}
+      style={flex.fill}>
       {list}
     </KeyboardAvoidingView>
   );
