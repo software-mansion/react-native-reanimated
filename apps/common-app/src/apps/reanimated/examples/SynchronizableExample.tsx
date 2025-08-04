@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
   executeOnUIRuntimeSync,
@@ -36,12 +36,14 @@ export default function SynchronizableExample() {
     setDurationBGMS(durationMS);
   }
 
+  const decrementRuntimes = () => setRunningRuntimes((prev) => prev - 1);
+
   function setValueAndDuration(value: number, durationMS: number) {
     'worklet';
     if (!globalThis._WORKLET) {
       setValueRN(value);
       setDurationRNMS(durationMS);
-      setRunningRuntimes((prev) => prev - 1);
+      decrementRuntimes();
       return;
     }
 
@@ -51,7 +53,7 @@ export default function SynchronizableExample() {
       runOnJS(setBGValueRemote)(value, durationMS);
     }
 
-    runOnJS(setRunningRuntimes)((prev) => prev - 1);
+    runOnJS(decrementRuntimes)();
   }
 
   function resetState() {
