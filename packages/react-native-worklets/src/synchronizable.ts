@@ -39,7 +39,6 @@ export interface Synchronizable<TValue = unknown>
   __synchronizableRef: true;
   getDirty(): TValue;
   getBlocking(): TValue;
-  setDirty(value: TValue | ((prev: TValue) => TValue)): void;
   setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
   lock(): void;
   unlock(): void;

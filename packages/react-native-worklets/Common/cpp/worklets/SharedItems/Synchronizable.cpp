@@ -1,3 +1,4 @@
+#include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
 namespace worklets {
@@ -13,11 +14,13 @@ std::shared_ptr<Serializable> Synchronizable::getBlocking() {
   return value;
 }
 
-void Synchronizable::setDirty(const std::shared_ptr<Serializable> &value) {
-  setDirtyBefore();
-  value_ = value;
-  setDirtyAfter();
-}
+// TODO: Shared pointer members (unless they're atomic) can't be assigned
+// in a non thread-safe manner, therefore `setDirty` has little sense now.
+// void Synchronizable::setDirty(const std::shared_ptr<Serializable> &value) {
+//   setDirtyBefore();
+//   value_ = value;
+//   setDirtyAfter();
+// }
 
 void Synchronizable::setBlocking(const std::shared_ptr<Serializable> &value) {
   setBlockingBefore();

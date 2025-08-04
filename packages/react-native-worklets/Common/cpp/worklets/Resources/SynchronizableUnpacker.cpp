@@ -20,17 +20,6 @@ const char SynchronizableUnpackerCode[] =
   synchronizable.getBlocking = function () {
     return proxy.synchronizableGetBlocking(synchronizable);
   };
-  synchronizable.setDirty = function (valueOrFunction) {
-    var newValue;
-    if (typeof valueOrFunction === 'function') {
-      var func = valueOrFunction;
-      var prev = synchronizable.getDirty();
-      newValue = func(prev);
-    } else {
-      newValue = valueOrFunction;
-    }
-    proxy.synchronizableSetDirty(synchronizable, serializer(newValue, undefined));
-  };
   synchronizable.setBlocking = function (valueOrFunction) {
     var newValue;
     if (typeof valueOrFunction === 'function') {

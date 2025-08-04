@@ -195,16 +195,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  synchronizableSetDirty<TValue>(
-    synchronizableRef: SynchronizableRef<TValue>,
-    value: ShareableRef<TValue>
-  ) {
-    return this.#workletsModuleProxy.synchronizableSetDirty(
-      synchronizableRef,
-      value
-    );
-  }
-
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
     value: ShareableRef<TValue>

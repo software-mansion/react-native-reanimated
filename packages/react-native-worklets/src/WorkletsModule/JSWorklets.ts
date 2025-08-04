@@ -165,12 +165,6 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  synchronizableSetDirty(): never {
-    throw new WorkletsError(
-      'synchronizableSetDirty should never be called in JSWorklets.'
-    );
-  }
-
   synchronizableSetBlocking(): never {
     throw new WorkletsError(
       'synchronizableSetBlocking should never be called in JSWorklets.'

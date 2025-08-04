@@ -1,4 +1,3 @@
-#include <react/debug/react_native_assert.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
@@ -213,8 +212,6 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "synchronizableGetDirty"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "synchronizableGetBlocking"));
-  propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "synchronizableSetDirty"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "synchronizableSetBlocking"));
   propertyNames.emplace_back(
@@ -599,23 +596,6 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
           return synchronizable->getBlocking()->toJSValue(rt);
-        });
-  }
-
-  if (name == "synchronizableSetDirty") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        2,
-        [](jsi::Runtime &rt,
-           const jsi::Value &thisValue,
-           const jsi::Value *args,
-           size_t count) {
-          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
-          auto newValue = extractSerializableOrThrow(
-              rt, args[1], "[Worklets] Value must be a Serializable.");
-          synchronizable->setDirty(std::move(newValue));
-          return jsi::Value::undefined();
         });
   }
 

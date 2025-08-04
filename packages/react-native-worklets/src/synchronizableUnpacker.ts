@@ -19,22 +19,6 @@ export function __synchronizableUnpacker<TValue>(
   synchronizable.getBlocking = () => {
     return proxy.synchronizableGetBlocking(synchronizable);
   };
-  synchronizable.setDirty = (
-    valueOrFunction: TValue | ((prev: TValue) => TValue)
-  ) => {
-    let newValue: TValue;
-    if (typeof valueOrFunction === 'function') {
-      const func = valueOrFunction as (prev: TValue) => TValue;
-      const prev = synchronizable.getDirty();
-      newValue = func(prev);
-    } else {
-      newValue = valueOrFunction;
-    }
-    proxy.synchronizableSetDirty(
-      synchronizable,
-      serializer(newValue, undefined)
-    );
-  };
   synchronizable.setBlocking = (
     valueOrFunction: TValue | ((prev: TValue) => TValue)
   ) => {

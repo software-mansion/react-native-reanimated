@@ -99,11 +99,6 @@ export interface WorkletsModuleProxy {
     synchronizableRef: SynchronizableRef<TValue>
   ): TValue;
 
-  synchronizableSetDirty<TValue>(
-    synchronizableRef: SynchronizableRef<TValue>,
-    value: ShareableRef<TValue>
-  ): void;
-
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
     value: ShareableRef<TValue>

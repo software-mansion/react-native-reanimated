@@ -26,11 +26,13 @@ class Synchronizable : public SynchronizableAccess,
    */
   std::shared_ptr<Serializable> getBlocking();
 
+  // TODO: Shared pointer members (unless they're atomic) can't be assigned
+  // in a non thread-safe manner, therefore `setDirty` has little sense now.
   /**
    * Can run concurrently with getDirty, getBlocking.
    * Can't run concurrently with setDirty, setBlocking.
    */
-  void setDirty(const std::shared_ptr<Serializable> &value);
+  // void setDirty(const std::shared_ptr<Serializable> &value);
 
   /**
    * Can run concurrently with getDirty.
