@@ -1,10 +1,7 @@
 'use strict';
 
-import type {
-  EasingFunction,
-  EasingFunctionFactory,
-} from 'react-native-reanimated';
-
+import type { EasingFunction } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import type { WebEasingsNames } from './Easing.web';
 import { WebEasings } from './Easing.web';
 
