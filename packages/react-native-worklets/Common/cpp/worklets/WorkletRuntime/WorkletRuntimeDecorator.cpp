@@ -269,34 +269,21 @@ void WorkletRuntimeDecorator::decorate(
              size_t count) { return jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
 
-  enum TaskType { MICROTASK = 0, TIMEOUT = 1 };
   jsi_utils::installJsiFunction(
       rt,
-      "_requestEventLoopTick",
+      "_scheduleTimeoutCallback",
       [eventLoop](
           jsi::Runtime &rt,
-          const jsi::Value &taskJs,
           const jsi::Value &delayJs,
           const jsi::Value &handlerIdJs) -> jsi::Value {
-        TaskType type = static_cast<TaskType>(taskJs.asNumber());
-        const auto job = [](jsi::Runtime &rt) {
-          rt.global().getPropertyAsFunction(rt, "__runQueuedTask").call(rt);
+        const auto delay = delayJs.asNumber();
+        const auto handlerId = handlerIdJs.asNumber();
+        const auto job = [handlerId](jsi::Runtime &rt) {
+          rt.global()
+              .getPropertyAsFunction(rt, "__runTimeoutCallback")
+              .call(rt, handlerId);
         };
-        switch (type) {
-          case MICROTASK:
-            eventLoop->pushMicrotask(job);
-            break;
-          case TIMEOUT:
-            const auto delay = delayJs.asNumber();
-            const auto handlerId = handlerIdJs.asNumber();
-            const auto job = [handlerId](jsi::Runtime &rt) {
-              rt.global()
-                  .getPropertyAsFunction(rt, "__runQueuedTask")
-                  .call(rt, handlerId);
-            };
-            eventLoop->pushTimeout(job, delay);
-            break;
-        }
+        eventLoop->pushTimeout(job, delay);
         return jsi::Value::undefined();
       });
 }

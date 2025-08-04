@@ -80,11 +80,15 @@ void EventLoop::run() {
 }
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
-  queue_->push(decorateWithRuntime(std::move(job)));
-}
-
-void EventLoop::pushMicrotask(std::function<void(jsi::Runtime &rt)> &&job) {
-  queue_->pushPriority(decorateWithRuntime(std::move(job)));
+  queue_->push([weakThis = weak_from_this(), job = std::move(job)] {
+    const auto self = weakThis.lock();
+    if (!self) {
+      return;
+    }
+    if (auto runtime = self->runtime_.lock()) {
+      job(*runtime);
+    }
+  });
 }
 
 void EventLoop::pushTimeout(
@@ -103,19 +107,6 @@ int64_t EventLoop::getCurrentTimeInMs() {
   const auto currentTime = std::chrono::system_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
       .count();
-}
-
-inline std::function<void()> EventLoop::decorateWithRuntime(
-    std::function<void(jsi::Runtime &rt)> &&job) {
-  return [weakThis = weak_from_this(), job = std::move(job)] {
-    const auto self = weakThis.lock();
-    if (!self) {
-      return;
-    }
-    if (auto runtime = self->runtime_.lock()) {
-      job(*runtime);
-    }
-  };
 }
 
 } // namespace worklets

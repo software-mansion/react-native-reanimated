@@ -69,11 +69,8 @@ declare global {
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
   var WorkletsError: IWorkletsErrorConstructor;
-  var _requestEventLoopTick: (
-    type: number,
-    delay?: number,
-    handlerId?: number
-  ) => void;
-  var __runQueuedTask: (id?: number) => void;
+  var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
+  var __runTimeoutCallback: (handlerId: number) => void;
+  var __flushMicrotasks: () => void;
   var _taskQueue: Queue;
 }

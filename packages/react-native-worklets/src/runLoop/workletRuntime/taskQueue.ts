@@ -3,54 +3,42 @@
 type Callback = () => void;
 
 export type Queue = {
-  priority: Array<Callback>;
-  isMicroTasksProcessing: boolean;
-  normal: Map<number, Callback>;
+  microtasks: Array<Callback>;
+  timeoutCallbacks: Map<number, Callback>;
 };
-
-enum TaskType {
-  PRIORITY = 0,
-  TIMEOUT = 1,
-}
 
 export function setupTaskQueue() {
   'worklet';
   const queue: Queue = {
-    priority: [],
-    isMicroTasksProcessing: false,
-    normal: new Map(),
+    microtasks: [],
+    timeoutCallbacks: new Map(),
   };
   globalThis._taskQueue = queue;
 
-  globalThis.__runQueuedTask = function (handlerId?: number) {
-    for (let i = 0; i < queue.priority.length; i++) {
-      queue.priority[i]();
-    }
-    queue.priority = [];
-    queue.isMicroTasksProcessing = false;
+  globalThis.__runTimeoutCallback = function (handlerId: number) {
+    const task = queue.timeoutCallbacks.get(handlerId);
+    task?.();
+    queue.timeoutCallbacks.delete(handlerId);
+    globalThis.__flushMicrotasks();
+  };
 
-    if (handlerId !== undefined) {
-      const task = queue.normal.get(handlerId);
-      task?.();
-      queue.normal.delete(handlerId);
+  globalThis.__flushMicrotasks = function () {
+    for (let i = 0; i < queue.microtasks.length; i++) {
+      queue.microtasks[i]();
     }
+    queue.microtasks = [];
   };
 }
 
 export function pushMicrotask(callback: Callback) {
   'worklet';
   const queue = globalThis._taskQueue;
-  queue.priority.push(callback);
-  if (queue.isMicroTasksProcessing) {
-    return;
-  }
-  queue.isMicroTasksProcessing = true;
-  globalThis._requestEventLoopTick(TaskType.PRIORITY, 0, 0);
+  queue.microtasks.push(callback);
 }
 
 export function pushTask(callback: Callback, handlerId: number, delay: number) {
   'worklet';
   const queue = globalThis._taskQueue;
-  queue.normal.set(handlerId, callback);
-  global._requestEventLoopTick(TaskType.TIMEOUT, delay, handlerId);
+  queue.timeoutCallbacks.set(handlerId, callback);
+  global._scheduleTimeoutCallback(delay, handlerId);
 }

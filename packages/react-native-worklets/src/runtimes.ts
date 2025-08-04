@@ -122,6 +122,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       makeShareableCloneRecursive(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks();
       })
     );
 }

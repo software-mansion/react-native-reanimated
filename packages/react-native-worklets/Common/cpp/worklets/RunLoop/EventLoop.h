@@ -35,7 +35,6 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
-  void pushMicrotask(std::function<void(jsi::Runtime &rt)> &&job);
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
 
  private:
@@ -45,8 +44,6 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   const std::string name_;
 
   static int64_t getCurrentTimeInMs();
-  inline std::function<void()> decorateWithRuntime(
-      std::function<void(jsi::Runtime &rt)> &&job);
 };
 
 } // namespace worklets
