@@ -78,6 +78,7 @@ export function createCustomKeyFrameAnimation(
     if (style.easing) {
       keyframeDefinitions[i - 1].easing = style.easing;
     }
+    delete style.easing;
   }
 
   const parsedKeyframe = convertAnimationObjectToKeyframes(animationData);
