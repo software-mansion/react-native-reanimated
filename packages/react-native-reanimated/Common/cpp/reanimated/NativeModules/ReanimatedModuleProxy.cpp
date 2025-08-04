@@ -982,7 +982,7 @@ void ReanimatedModuleProxy::performOperations() {
                 intBuffer.push_back(command);
                 if (value.isDouble()) {
                   intBuffer.push_back(CMD_UNIT_PX);
-                  doubleBuffer.push_back(value.asDouble());
+                  doubleBuffer.push_back(value.getDouble());
                 } else if (value.isString()) {
                   const auto &valueStr = value.getString();
                   if (!valueStr.ends_with("%")) {
@@ -1026,7 +1026,7 @@ void ReanimatedModuleProxy::performOperations() {
                       intBuffer.push_back(transformCommand);
                       if (transformValue.isDouble()) {
                         intBuffer.push_back(CMD_UNIT_PX);
-                        doubleBuffer.push_back(transformValue.asDouble());
+                        doubleBuffer.push_back(transformValue.getDouble());
                       } else if (transformValue.isString()) {
                         const auto &transformValueStr =
                             transformValue.getString();
