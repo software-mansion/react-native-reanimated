@@ -116,6 +116,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronousPropsExample from './SynchronousPropsExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
@@ -300,6 +301,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌈',
     title: 'Animate colors',
     screen: ColorExample,
+  },
+  SynchronousPropsExample: {
+    icon: '⚡',
+    title: 'Animate synchronous props',
+    screen: SynchronousPropsExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
     icon: '🎨',
