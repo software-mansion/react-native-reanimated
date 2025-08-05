@@ -120,7 +120,7 @@ function removeWebAnimation(
   }
 }
 
-const timeoutScale = 1.25; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
+const timeoutScale = 5; // We use this value to enlarge timeout duration. It can prove useful if animation lags.
 const frameDurationMs = 16; // Just an approximation.
 const minimumFrames = 10;
 
