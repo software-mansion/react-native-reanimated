@@ -42,32 +42,29 @@ describe('WithSequence animation of number', () => {
   const DELAY = 25;
   const WidthComponent = ({ startValue, middleValue, finalValue, animationNumber }: TestCase) => {
     const leftActiveSV = useSharedValue(startValue);
-    const ref = useTestRef(Component.ACTIVE);
+    const leftPassiveSV = useSharedValue(startValue);
+
+    const refOne = useTestRef(Component.ACTIVE);
+    const refTwo = useTestRef(Component.PASSIVE);
 
     const animateValueFn = useCallback(
-      function animateValue(finalValue: number, sendNotification: boolean) {
+      function animateValue(finalValue: number) {
         'worklet';
         switch (animationNumber) {
           case 0:
             return withDelay(
               DELAY,
               withSequence(
-                withTiming(finalValue, { duration: 200 }, () => sendNotification && notify(START_NOTIFICATION_NAME)),
+                withTiming(finalValue, { duration: 200 }, () => notify(START_NOTIFICATION_NAME)),
                 withDelay(
                   DELAY,
-                  withTiming(
-                    middleValue,
-                    { duration: 300, easing: Easing.exp },
-                    () => sendNotification && notify(MIDDLE_NOTIFICATION_NAME),
+                  withTiming(middleValue, { duration: 300, easing: Easing.exp }, () =>
+                    notify(MIDDLE_NOTIFICATION_NAME),
                   ),
                 ),
                 withDelay(
                   DELAY,
-                  withTiming(
-                    finalValue + 20,
-                    { duration: 200 },
-                    () => sendNotification && notify(FINAL_NOTIFICATION_NAME),
-                  ),
+                  withTiming(finalValue + 20, { duration: 200 }, () => notify(FINAL_NOTIFICATION_NAME)),
                 ),
               ),
             );
@@ -75,26 +72,16 @@ describe('WithSequence animation of number', () => {
             return withSequence(
               withDelay(
                 DELAY,
-                withSpring(
-                  finalValue,
-                  { duration: 200, dampingRatio: 1 },
-                  () => sendNotification && notify(START_NOTIFICATION_NAME),
-                ),
+                withSpring(finalValue, { duration: 200, dampingRatio: 1 }, () => notify(START_NOTIFICATION_NAME)),
               ),
               withDelay(
                 DELAY,
-                withSpring(
-                  middleValue,
-                  { duration: 300, dampingRatio: 1.5 },
-                  () => sendNotification && notify(MIDDLE_NOTIFICATION_NAME),
-                ),
+                withSpring(middleValue, { duration: 300, dampingRatio: 1.5 }, () => notify(MIDDLE_NOTIFICATION_NAME)),
               ),
               withDelay(
                 DELAY,
-                withSpring(
-                  finalValue + 20,
-                  { duration: 200, dampingRatio: 0.9 },
-                  () => sendNotification && notify(FINAL_NOTIFICATION_NAME),
+                withSpring(finalValue + 20, { duration: 200, dampingRatio: 0.9 }, () =>
+                  notify(FINAL_NOTIFICATION_NAME),
                 ),
               ),
             );
@@ -102,34 +89,33 @@ describe('WithSequence animation of number', () => {
             return withDelay(
               DELAY,
               withSequence(
-                withSpring(finalValue, { duration: 1000, dampingRatio: 1 }, () => {
-                  sendNotification && notify(START_NOTIFICATION_NAME);
-                }),
+                withSpring(finalValue, { duration: 200, dampingRatio: 1 }, () => notify(START_NOTIFICATION_NAME)),
                 withDelay(
                   DELAY,
-                  withSpring(
-                    middleValue,
-                    { duration: 1000 },
-                    () => sendNotification && notify(MIDDLE_NOTIFICATION_NAME),
-                  ),
+                  withTiming(middleValue, { duration: 300 }, () => notify(MIDDLE_NOTIFICATION_NAME)),
                 ),
                 withDelay(
                   DELAY,
-                  withSpring(finalValue + 20, { duration: 1000, dampingRatio: 1 }, () => {
-                    sendNotification && notify(FINAL_NOTIFICATION_NAME);
-                  }),
+                  withSpring(finalValue + 20, { duration: 200, dampingRatio: 1 }, () =>
+                    notify(FINAL_NOTIFICATION_NAME),
+                  ),
                 ),
               ),
             );
         }
         return 0;
       },
-      [animationNumber, leftActiveSV.value, middleValue],
+      [animationNumber, middleValue],
     );
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        left: animateValueFn(leftActiveSV.value, true),
+        left: animateValueFn(leftActiveSV.value),
+      };
+    });
+    const stylePassive = useAnimatedStyle(() => {
+      return {
+        left: leftPassiveSV.value,
       };
     });
 
@@ -137,9 +123,14 @@ describe('WithSequence animation of number', () => {
       leftActiveSV.value = finalValue;
     }, [leftActiveSV, finalValue]);
 
+    useEffect(() => {
+      leftPassiveSV.value = animateValueFn(finalValue);
+    }, [leftPassiveSV, finalValue, animateValueFn]);
+
     return (
       <View style={styles.container}>
-        <Animated.View ref={ref} style={[styles.animatedBox, { backgroundColor: 'red' }, styleActive]} />
+        <Animated.View ref={refOne} style={[styles.animatedBox, { backgroundColor: 'palevioletred' }, styleActive]} />
+        <Animated.View ref={refTwo} style={[styles.animatedBox, { backgroundColor: 'royalblue' }, stylePassive]} />
       </View>
     );
   };
@@ -166,6 +157,7 @@ describe('WithSequence animation of number', () => {
         />,
       );
       const activeComponent = getTestComponent(Component.ACTIVE);
+      const passiveComponent = getTestComponent(Component.PASSIVE);
 
       const margin = 30;
       const stopValues = [startValue, finalValue, middleValue, finalValue + 20].map(value => value + margin);
@@ -173,12 +165,16 @@ describe('WithSequence animation of number', () => {
       await wait(DELAY / 2);
       // TODO The condition below is not fulfilled, decide whether its bug or expected behavior
       // expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.PIXEL);
       await waitForNotify(START_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
       await waitForNotify(MIDDLE_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
       await waitForNotify(FINAL_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
     },
   );
 });
