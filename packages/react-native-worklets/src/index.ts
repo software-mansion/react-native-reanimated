@@ -9,20 +9,17 @@ init();
 
 export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
+  isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
+  shareableMappingCache,
 } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { serializableMappingCache } from './shareableMappingCache';
 export type { CreateSerializable } from './shareables';
-export {
-  createSerializable,
-  createSerializableOnUIRecursive,
-  createSerializableRecursive,
-  isSerializableRef,
-} from './shareables';
+export { createSerializable, isSerializableRef } from './shareables';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

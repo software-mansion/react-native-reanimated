@@ -1,24 +1,32 @@
 'use strict';
 
-import type { CreateSerializable } from './shareables';
+import { serializableMappingCache } from './shareableMappingCache';
 import {
   createSerializable,
-  createSerializableOnUIRecursive,
-  createSerializableRecursive,
+  isSerializableRef,
+  makeShareable,
+  makeShareableCloneOnUIRecursive,
 } from './shareables';
 import type { SerializableRef } from './workletTypes';
 
 /** @deprecated Use SerializableRef instead. */
-export type ShareableRef = SerializableRef;
+export type ShareableRef<T> = SerializableRef<T>;
 
-/** @deprecated Use createSerializable instead. */
-export const makeShareable = createSerializable;
-
-/** @deprecated Use createSerializableOnUIRecursive instead. */
-export const makeShareableCloneOnUIRecursive = createSerializableOnUIRecursive;
-
-/** @deprecated Use createSerializableRecursive instead. */
-export const makeShareableCloneRecursive = createSerializableRecursive;
+export { makeShareable, makeShareableCloneOnUIRecursive };
 
 /** @deprecated Use CreateSerializable instead. */
-export type MakeShareableClone = CreateSerializable;
+export type MakeShareableClone = <T>(
+  value: T,
+  shouldPersistRemote?: boolean,
+  depth?: number
+) => ShareableRef<T>;
+
+/** @deprecated Use createSerializable instead. */
+export const makeShareableCloneRecursive: MakeShareableClone =
+  createSerializable;
+
+/** @deprecated Use isSerializableRef instead. */
+export const isShareableRef = isSerializableRef;
+
+/** @deprecated Use serializableMappingCache instead. */
+export const shareableMappingCache = serializableMappingCache;

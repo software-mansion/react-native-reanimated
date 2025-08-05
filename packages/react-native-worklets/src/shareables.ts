@@ -34,12 +34,8 @@ function isHostObject(value: NonNullable<object>) {
 }
 
 export function isSerializableRef(value: unknown): value is SerializableRef {
-  'worklet';
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    '__serializableRef' in value &&
-    value.__serializableRef === true
+    typeof value === 'object' && value !== null && '__serializableRef' in value
   );
 }
 
@@ -241,14 +237,15 @@ if (globalThis._WORKLETS_BUNDLE_MODE) {
 }
 
 export interface CreateSerializable {
+  <T>(value: T): SerializableRef<T>;
   <T>(
     value: T,
-    shouldPersistRemote?: boolean,
-    depth?: number
+    shouldPersistRemote: boolean,
+    depth: number
   ): SerializableRef<T>;
 }
 
-export const createSerializableRecursive: CreateSerializable = SHOULD_BE_USE_WEB
+export const createSerializable: CreateSerializable = SHOULD_BE_USE_WEB
   ? createSerializableRecursiveWeb
   : createSerializableRecursiveNative;
 
@@ -315,7 +312,7 @@ function cloneObjectProperties<T extends object>(
     if (key === '__initData' && clonedProps.__initData !== undefined) {
       continue;
     }
-    clonedProps[key] = createSerializableRecursive(
+    clonedProps[key] = createSerializable(
       element,
       shouldPersistRemote,
       depth + 1
@@ -343,7 +340,7 @@ function cloneArray<T extends unknown[]>(
   depth: number
 ): SerializableRef<T> {
   const clonedElements = value.map((element) =>
-    createSerializableRecursive(element, shouldPersistRemote, depth + 1)
+    createSerializable(element, shouldPersistRemote, depth + 1)
   );
   const clone = WorkletsModule.createSerializableArray(
     clonedElements,
@@ -414,7 +411,7 @@ function cloneWorklet<T extends WorkletFunction>(
   // that the __initData field that contains long strings representing the
   // worklet code, source map, and location, will always be
   // serialized/deserialized once.
-  clonedProps.__initData = createSerializableRecursive(
+  clonedProps.__initData = createSerializable(
     value.__initData,
     true,
     depth + 1
@@ -492,8 +489,8 @@ function cloneMap<T extends Map<unknown, unknown>>(
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
   for (const [key, element] of value.entries()) {
-    clonedKeys.push(createSerializableRecursive(key));
-    clonedValues.push(createSerializableRecursive(element));
+    clonedKeys.push(createSerializable(key));
+    clonedValues.push(createSerializable(element));
   }
   const clone = WorkletsModule.createSerializableMap(
     clonedKeys,
@@ -509,7 +506,7 @@ function cloneMap<T extends Map<unknown, unknown>>(
 function cloneSet<T extends Set<unknown>>(value: T): SerializableRef<T> {
   const clonedElements: unknown[] = [];
   for (const element of value) {
-    clonedElements.push(createSerializableRecursive(element));
+    clonedElements.push(createSerializable(element));
   }
   const clone = WorkletsModule.createSerializableSet(
     clonedElements
@@ -611,7 +608,7 @@ function inaccessibleObject<T extends object>(value: T): SerializableRef<T> {
   // as attributes of objects being captured by worklets but should never
   // be used on the UI runtime regardless. If they are being accessed, the user
   // will get an appropriate error message.
-  const clone = createSerializableRecursive<T>(INACCESSIBLE_OBJECT as T);
+  const clone = createSerializable<T>(INACCESSIBLE_OBJECT as T);
   serializableMappingCache.set(value, clone);
   return clone;
 }
@@ -679,7 +676,7 @@ function freezeObjectInDev<T extends object>(value: T) {
   Object.preventExtensions(value);
 }
 
-function createSerializableOnUIRecursiveLEGACY<T>(
+function makeShareableCloneOnUIRecursiveLEGACY<T>(
   value: T
 ): FlatSerializableRef<T> {
   'worklet';
@@ -751,21 +748,22 @@ function createSerializableOnUIRecursiveLEGACY<T>(
   return cloneRecursive(value);
 }
 
-export const createSerializableOnUIRecursive = (
+/** @deprecated This function is no longer supported. */
+export const makeShareableCloneOnUIRecursive = (
   globalThis._WORKLETS_BUNDLE_MODE
-    ? createSerializableRecursive
-    : createSerializableOnUIRecursiveLEGACY
-) as typeof createSerializableOnUIRecursiveLEGACY;
+    ? createSerializable
+    : makeShareableCloneOnUIRecursiveLEGACY
+) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
-function createSerializableJS<T extends object>(value: T): T {
+function makeShareableJS<T>(value: T): T {
   return value;
 }
 
-function createSerializableNative<T extends object>(value: T): T {
+function makeShareableNative<T extends object>(value: T): T {
   if (serializableMappingCache.get(value)) {
     return value;
   }
-  const handle = createSerializableRecursive({
+  const handle = createSerializable({
     __init: () => {
       'worklet';
       return value;
@@ -780,6 +778,7 @@ function createSerializableNative<T extends object>(value: T): T {
  * the UI thread will be seen by all worklets. Use it when you want to create a
  * value that is read and written only on the UI thread.
  */
-export const createSerializable = SHOULD_BE_USE_WEB
-  ? createSerializableJS
-  : createSerializableNative;
+/** @deprecated This function is no longer supported. */
+export const makeShareable = SHOULD_BE_USE_WEB
+  ? makeShareableJS
+  : makeShareableNative;

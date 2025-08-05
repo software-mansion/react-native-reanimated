@@ -13,7 +13,6 @@ import {
   wait,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { isSerializableRef } from 'react-native-worklets';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -580,9 +579,9 @@ describe('Test makeShareableClone', () => {
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          // createSerializableBoolean returns a SerializableRef<boolean> which is a host object
+          // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
           const shareableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', isSerializableRef(shareableBoolean)];
+          const checks = [typeof hostFunction === 'function', shareableBoolean.__serializableRef];
           return checks.every(Boolean);
         }}
       />,
