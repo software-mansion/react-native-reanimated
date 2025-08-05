@@ -44,14 +44,14 @@ struct LayoutAnimationsProxy
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::vector<Tag> finishedAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  ContextContainer::Shared contextContainer_;
+  std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      ContextContainer::Shared contextContainer,
+      std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
