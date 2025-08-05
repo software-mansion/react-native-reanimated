@@ -19,6 +19,7 @@ import {
   registerValue,
   render,
   test,
+  wait,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';
@@ -101,6 +102,8 @@ describe(`Cascade of callbacks`, () => {
     await waitForAnimationUpdates(Snapshots.CallbackCascade.length);
     const updates = updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
+    console.log('updates', updates);
+    console.log('nativeUpdates', nativeUpdates);
 
     expect(updates).toMatchSnapshots(Snapshots.CallbackCascade);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
