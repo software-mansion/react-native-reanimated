@@ -3,23 +3,36 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    types: [opened, synchronize, labeled, unlabeled]
-  schedule:
-    - cron: '37 19 * * *'
+  merge_group:
+    branches:
+      - main
   workflow_call:
   workflow_dispatch:
 
 jobs:
+  read-compatibility-json:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    outputs:
+      compatibility-json: ${{ steps.read-compatibility-json.outputs.compatibility-json }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read compatibility.json
+        working-directory: packages/react-native-reanimated
+        run: cat compatibility.json > compatibility-json.json
+      - name: Set output
+        id: read-compatibility-json
+        run: echo "compatibility-json=$(cat compatibility-json.json)" >> $GITHUB_OUTPUT
+
   reanimated-compatibility-check-nightly:
+    needs: read-compatibility-json
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: ['iOS', 'Android']
+        platform: ${{ needs.read-compatibility-json.outputs.compatibility-json.platforms }}
         mode: ['Debug', 'Release']
-        # TODO: Fetch compatibility in docs and here from common sources.
-        # Update it when dropping support for RN versions.
-        react-native-version: ['0.78', '0.79', '0.80']
+        react-native-version: ${{ needs.read-compatibility-json.outputs.compatibility-json.react-native-versions }}
       fail-fast: false
     env:
       APP_NAME: app
