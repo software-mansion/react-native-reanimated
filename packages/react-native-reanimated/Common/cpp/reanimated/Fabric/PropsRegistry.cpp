@@ -48,12 +48,10 @@ void PropsRegistry::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
     if (!shadowNode) {
       continue;
     }
-    // Check if the node has no ancestors in the current root
+
     if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
-      // Remove from main map
       map_.erase(tag);
     } else {
-      // Keep the node in removable list
       remainingShadowNodes.emplace(tag, shadowNode);
     }
   }
