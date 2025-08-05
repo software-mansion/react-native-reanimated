@@ -5330,9 +5330,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-mac/virtualized-lists@npm:0.78.2":
-  version: 0.78.2
-  resolution: "@react-native-mac/virtualized-lists@npm:0.78.2"
+"@react-native-macos/virtualized-lists@npm:0.78.4":
+  version: 0.78.4
+  resolution: "@react-native-macos/virtualized-lists@npm:0.78.4"
   dependencies:
     invariant: "npm:^2.2.4"
     nullthrows: "npm:^1.1.1"
@@ -5343,7 +5343,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10/1e4b81902c905377114dfff6b1428e9e026723f1f4fa8548f307bddbdb378f8266a28a13b3391b485154f3003b8e63d2b837ccb04c8783e2572b127966906278
+  checksum: 10/bcea56c29c537deab4c7b87dbb972aa2c4e5f302ee23b55d3a260b55e8c71f4631632f013f533ec14af48b1b59126771688bdd2f31682b2461a56510960474d0
   languageName: node
   linkType: hard
 
@@ -15428,7 +15428,7 @@ __metadata:
     react: "npm:19.0.0"
     react-native: "npm:0.78.3"
     react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.25.0#~/.yarn/patches/react-native-gesture-handler-npm-2.25.0-84335ae2d8.patch"
-    react-native-macos: "npm:0.78.3"
+    react-native-macos: "npm:0.78.4"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.6.1#~/.yarn/patches/react-native-pager-view-npm-6.6.1-dda1167cca.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -19108,12 +19108,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-macos@npm:0.78.3":
-  version: 0.78.3
-  resolution: "react-native-macos@npm:0.78.3"
+"react-native-macos@npm:0.78.4":
+  version: 0.78.4
+  resolution: "react-native-macos@npm:0.78.4"
   dependencies:
     "@jest/create-cache-key-function": "npm:^29.6.3"
-    "@react-native-mac/virtualized-lists": "npm:0.78.2"
+    "@react-native-macos/virtualized-lists": "npm:0.78.4"
     "@react-native/assets-registry": "npm:0.78.2"
     "@react-native/codegen": "npm:0.78.2"
     "@react-native/community-cli-plugin": "npm:0.78.2"
@@ -19151,12 +19151,13 @@ __metadata:
   peerDependencies:
     "@types/react": ^19.0.0
     react: ^19.0.0
+    react-native: 0.78.2
   peerDependenciesMeta:
     "@types/react":
       optional: true
   bin:
     react-native: cli.js
-  checksum: 10/f8ad453f0f4166ff1dc704d43107995f9d8b77cb42c00875f7f4ce5ee681184500405832788929a8c1994a71c340a1271b8d1060205bbab9542b879667375195
+  checksum: 10/bfd8d193459a18b9daea2e6c5cecf063057e95ffa03646ecf75edc63ece8411ae88afc4e1991821d7da4ed2cedca18b2b1fc7393339e35dbd1ef04659dd45624
   languageName: node
   linkType: hard
 
