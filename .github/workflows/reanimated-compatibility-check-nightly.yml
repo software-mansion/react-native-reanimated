@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
@@ -21,14 +21,14 @@ jobs:
         # Update it when dropping support for RN versions.
         react-native:
           [
-            { version: '0.75', architecture: 'Paper' },
-            { version: '0.75', architecture: 'Fabric' },
-            { version: '0.76', architecture: 'Paper' },
-            { version: '0.76', architecture: 'Fabric' },
-            { version: '0.77', architecture: 'Paper' },
-            { version: '0.77', architecture: 'Fabric' },
             { version: '0.78', architecture: 'Paper' },
             { version: '0.78', architecture: 'Fabric' },
+            { version: '0.79', architecture: 'Paper' },
+            { version: '0.79', architecture: 'Fabric' },
+            { version: '0.80', architecture: 'Paper' },
+            { version: '0.80', architecture: 'Fabric' },
+            { version: '0.81', architecture: 'Paper' },
+            { version: '0.81', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
@@ -61,7 +61,7 @@ jobs:
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
+        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern in app
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
