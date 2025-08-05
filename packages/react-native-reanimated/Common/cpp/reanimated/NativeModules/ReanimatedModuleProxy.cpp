@@ -930,19 +930,6 @@ void ReanimatedModuleProxy::performOperations() {
               case CMD_Z_INDEX:
               case CMD_SHADOW_OPACITY:
               case CMD_SHADOW_RADIUS:
-              case CMD_BORDER_RADIUS:
-              case CMD_BORDER_TOP_LEFT_RADIUS:
-              case CMD_BORDER_TOP_RIGHT_RADIUS:
-              case CMD_BORDER_TOP_START_RADIUS:
-              case CMD_BORDER_TOP_END_RADIUS:
-              case CMD_BORDER_BOTTOM_LEFT_RADIUS:
-              case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
-              case CMD_BORDER_BOTTOM_START_RADIUS:
-              case CMD_BORDER_BOTTOM_END_RADIUS:
-              case CMD_BORDER_START_START_RADIUS:
-              case CMD_BORDER_START_END_RADIUS:
-              case CMD_BORDER_END_START_RADIUS:
-              case CMD_BORDER_END_END_RADIUS:
                 intBuffer.push_back(command);
                 doubleBuffer.push_back(value.asDouble());
                 break;
@@ -959,6 +946,37 @@ void ReanimatedModuleProxy::performOperations() {
               case CMD_BORDER_END_COLOR:
                 intBuffer.push_back(command);
                 intBuffer.push_back(value.asInt());
+                break;
+
+              case CMD_BORDER_RADIUS:
+              case CMD_BORDER_TOP_LEFT_RADIUS:
+              case CMD_BORDER_TOP_RIGHT_RADIUS:
+              case CMD_BORDER_TOP_START_RADIUS:
+              case CMD_BORDER_TOP_END_RADIUS:
+              case CMD_BORDER_BOTTOM_LEFT_RADIUS:
+              case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
+              case CMD_BORDER_BOTTOM_START_RADIUS:
+              case CMD_BORDER_BOTTOM_END_RADIUS:
+              case CMD_BORDER_START_START_RADIUS:
+              case CMD_BORDER_START_END_RADIUS:
+              case CMD_BORDER_END_START_RADIUS:
+              case CMD_BORDER_END_END_RADIUS:
+                intBuffer.push_back(command);
+                if (value.isDouble()) {
+                  intBuffer.push_back(CMD_UNIT_PX);
+                  doubleBuffer.push_back(value.getDouble());
+                } else if (value.isString()) {
+                  const auto &valueStr = value.getString();
+                  if (!valueStr.ends_with("%")) {
+                    throw std::runtime_error(
+                        "Border radius string must be a percentage");
+                  }
+                  intBuffer.push_back(CMD_UNIT_PERCENT);
+                  doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
+                } else {
+                  throw std::runtime_error(
+                      "Border radius value must be either a number or a string");
+                }
                 break;
 
               case CMD_START_OF_TRANSFORM:
@@ -990,7 +1008,7 @@ void ReanimatedModuleProxy::performOperations() {
                       intBuffer.push_back(transformCommand);
                       if (transformValue.isDouble()) {
                         intBuffer.push_back(CMD_UNIT_PX);
-                        doubleBuffer.push_back(transformValue.asDouble());
+                        doubleBuffer.push_back(transformValue.getDouble());
                       } else if (transformValue.isString()) {
                         const auto &transformValueStr =
                             transformValue.getString();
