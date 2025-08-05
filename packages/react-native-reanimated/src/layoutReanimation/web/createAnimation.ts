@@ -68,6 +68,19 @@ export function createCustomKeyFrameAnimation(
 
   animationData.name = generateNextCustomKeyframeName();
 
+  // Move keyframe easings one keyframe up (our LA Keyframe definition is different
+  // from the CSS keyframes and expects easing to be present in the keyframe to which
+  // we animate instead of the keyframe we animate from)
+  const offsets = Object.keys(keyframeDefinitions).map(Number);
+
+  for (let i = 1; i < offsets.length; i++) {
+    const style = keyframeDefinitions[offsets[i]];
+    if (style.easing) {
+      keyframeDefinitions[i - 1].easing = style.easing;
+      delete style.easing;
+    }
+  }
+
   const parsedKeyframe = convertAnimationObjectToKeyframes(animationData);
 
   insertWebAnimation(animationData.name, parsedKeyframe);
