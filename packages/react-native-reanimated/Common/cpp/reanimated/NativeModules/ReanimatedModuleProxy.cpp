@@ -60,12 +60,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       workletsModuleProxy_(workletsModuleProxy),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
-          rnRuntime,
-          workletsModuleProxy->getJSQueue(),
-          workletsModuleProxy->getJSScheduler(),
-          "Reanimated UI runtime",
-          true /* supportsLocking */,
-          valueUnpackerCode_)),
+              rnRuntime,
+              workletsModuleProxy->getJSQueue(),
+              workletsModuleProxy->getJSScheduler(),
+              "Reanimated UI runtime",
+              true /* supportsLocking */,
+              valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -412,8 +412,8 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
   }
 
   throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+          "Getting property `" + propName +
+          "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -621,6 +621,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
+  auto lock = propsRegistry_->createLock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   propsRegistry_->markNodeAsRemovable(shadowNode);
 }
@@ -628,6 +629,7 @@ void ReanimatedModuleProxy::markNodeAsRemovable(
 void ReanimatedModuleProxy::unmarkNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
+  auto lock = propsRegistry_->createLock();
   propsRegistry_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 

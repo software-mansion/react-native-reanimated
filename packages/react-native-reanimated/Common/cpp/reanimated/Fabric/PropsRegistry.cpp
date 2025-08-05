@@ -24,9 +24,10 @@ void PropsRegistry::update(
   }
 }
 
-void PropsRegistry::for_each(std::function<void(
-                                 const ShadowNodeFamily &family,
-                                 const folly::dynamic &props)> callback) const {
+void PropsRegistry::for_each(
+    std::function<
+        void(const ShadowNodeFamily &family, const folly::dynamic &props)>
+        callback) const {
   for (const auto &[_, value] : map_) {
     callback(value.first->getFamily(), value.second);
   }
@@ -45,17 +46,15 @@ void PropsRegistry::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
   for (auto it = removableShadowNodes_.begin();
        it != removableShadowNodes_.end();) {
     const auto &shadowNode = it->second;
-    const auto &family = shadowNode->getFamily();
-    const auto &ancestors = family.getAncestors(rootShadowNode);
 
-    // Skip if the node hasn't been removed
-    if (!ancestors.empty()) {
+    if (!shadowNode ||
+        !shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+      // Skip if the node hasn't been removed (still has ancestors)
       ++it;
       continue;
     }
 
-    const auto tag = shadowNode->getTag();
-    map_.erase(tag);
+    map_.erase(shadowNode->getTag());
     it = removableShadowNodes_.erase(it);
   }
 }
