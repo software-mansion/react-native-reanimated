@@ -24,6 +24,8 @@ jobs:
     env:
       APP_NAME: app
     steps:
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.

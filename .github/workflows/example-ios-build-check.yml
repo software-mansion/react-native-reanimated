@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`

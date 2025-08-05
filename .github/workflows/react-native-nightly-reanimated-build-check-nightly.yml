@@ -26,6 +26,9 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Select Xcode
+        if: ${{ matrix.platform == 'iOS' }}
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.

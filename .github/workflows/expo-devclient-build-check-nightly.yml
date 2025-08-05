@@ -35,6 +35,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+      - name: Select Xcode
+        if: ${{ matrix.platform == 'iOS' }}
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - uses: ruby/setup-ruby@v1
         if: ${{ matrix.platform == 'iOS' }}
         with:

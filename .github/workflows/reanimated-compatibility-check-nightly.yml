@@ -48,6 +48,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Select Xcode
+        if: ${{ matrix.platform == 'iOS' }}
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - uses: ruby/setup-ruby@v1
         if: ${{ matrix.platform == 'iOS' }}
         with:
