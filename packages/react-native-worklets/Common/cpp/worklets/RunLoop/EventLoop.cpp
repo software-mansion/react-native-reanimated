@@ -50,9 +50,9 @@ void EventLoop::run() {
               timeouts.end());
           lock.unlock();
 
-          if (auto stronThis = weakThis.lock()) {
+          if (auto strongThis = weakThis.lock()) {
             for (auto &job : jobs) {
-              stronThis->pushTask(std::move(job));
+              strongThis->pushTask(std::move(job));
             }
           }
 
