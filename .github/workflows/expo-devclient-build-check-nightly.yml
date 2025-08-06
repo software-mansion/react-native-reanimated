@@ -69,10 +69,10 @@ jobs:
         working-directory: ${{ env.APP_NAME }}
         run: npx expo prebuild
       - name: Build app (iOS)
-        working-directory: ${{ env.APP_NAME }}
+        working-directory: ${{ env.APP_NAME }}/ios
         if: ${{ matrix.platform == 'iOS' }}
-        run: npx expo run:ios --no-bundler
+        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -configuration Debug -scheme ${{env.APP_NAME}} -destination "generic/platform=iOS Simulator" -quiet
       - name: Build app (Android)
-        working-directory: ${{ env.APP_NAME }}
+        working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
-        run: npx expo run:android --no-bundler
+        run: ./gradlew assembleDebug --console=plain
