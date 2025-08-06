@@ -69,6 +69,10 @@ jobs:
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+      - name: Setup Paper (Android)
+        if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'Android' }}
+        working-directory: ${{ env.APP_NAME }}/android
+        run: sed -i 's/newArchEnabled=true/newArchEnabled=false/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
