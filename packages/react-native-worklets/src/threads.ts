@@ -61,7 +61,7 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
  * Lets you asynchronously run
  * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
  * functions on the [UI
- * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  *
  * This method does not schedule the work immediately but instead waits for
  * other worklets to be scheduled within the same JS loop. It uses
@@ -69,12 +69,12 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
  * within the same frame boundaries on the UI thread.
  *
  * @param fun - A reference to a function you want to execute on the [UI
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/)
  *   from the [JavaScript
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  * @returns A function that accepts arguments for the function passed as the
  *   first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/
  */
 // @ts-expect-error This overload is correct since it's what user sees in his code
 // before it's transformed by Reanimated Babel plugin.
@@ -245,7 +245,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * Lets you asynchronously run
  * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
  * functions on the [UI
- * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  *
  * This method does not schedule the work immediately but instead waits for
  * other worklets to be scheduled within the same JS loop. It uses
@@ -253,12 +253,12 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * within the same frame boundaries on the UI thread.
  *
  * @param fun - A reference to a function you want to execute on the [UI
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/)
  *   from the [JavaScript
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  * @returns A promise that resolves to the return value of the function passed
  *   as the first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUIAsync
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync/
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
