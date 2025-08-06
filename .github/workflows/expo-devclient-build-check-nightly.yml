@@ -49,7 +49,7 @@ jobs:
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: ${{ env.APP_NAME }}
         run: |
-          sed -i 's/newArchEnabled.*true/newArchEnabled": false/' app.json
+          sed -i '' 's/newArchEnabled.*true/newArchEnabled": false/' app.json
       - name: Load Expo tag
         working-directory: ${{ env.APP_NAME }}
         run: |
