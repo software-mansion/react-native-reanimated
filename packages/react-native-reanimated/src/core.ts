@@ -4,6 +4,7 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -17,7 +18,6 @@ import type {
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import { makeShareableCloneRecursive } from './workletFunctions';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
@@ -95,9 +95,7 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -132,9 +130,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -156,7 +152,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler as WorkletFunction)
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
 
