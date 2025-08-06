@@ -533,6 +533,30 @@ index d6552a8a978..ff9445980f7 100644
        const std::string& sourceURL);
  
    void callFunctionOnModule(
+diff --git a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
+index d7bc14e3ef3..138691a4ee3 100644
+--- a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
++++ b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
+@@ -150,6 +150,7 @@ class JSI_EXPORT TurboModule : public jsi::HostObject {
+  private:
+   friend class TurboModuleBinding;
+   std::unique_ptr<jsi::WeakObject> jsRepresentation_;
++  jsi::Runtime* representationRuntime_;
+ };
+ 
+ /**
+diff --git a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
+index 3ec219424f3..bc63b58cf5d 100644
+--- a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
++++ b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
+@@ -178,6 +178,7 @@ jsi::Value TurboModuleBinding::getModule(
+     jsi::Object jsRepresentation(runtime);
+     weakJsRepresentation =
+         std::make_unique<jsi::WeakObject>(runtime, jsRepresentation);
++    module->representationRuntime_ = &runtime;
+ 
+     // Lazily populate the jsRepresentation, on property access.
+     //
 diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
 index 29d2910fe7a..55b84560ee4 100644
 --- a/ReactCommon/react/runtime/ReactInstance.cpp
