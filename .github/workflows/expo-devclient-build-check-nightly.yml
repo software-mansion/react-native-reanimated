@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  expo-devclient-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest' }}
     strategy:
@@ -71,8 +71,8 @@ jobs:
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: npx expo run:ios
+        run: npx expo run:ios --no-bundler
       - name: Build app (Android)
-        working-directory: ${{ env.APP_NAME }}
+        working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
-        run: npx expo run:android
+        run: npx expo run:android --no-bundler

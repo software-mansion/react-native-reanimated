@@ -33,7 +33,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-ios-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-15
     strategy:

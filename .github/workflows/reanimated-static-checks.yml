@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  reanimated-static-checks:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:

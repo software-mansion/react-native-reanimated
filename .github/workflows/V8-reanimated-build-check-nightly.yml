@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  v8-reanimated-build-check-nightly:
     # Disable V8 CI for now
     if: github.repository == 'software-mansion/react-native-reanimated' && false
     runs-on: ubuntu-latest

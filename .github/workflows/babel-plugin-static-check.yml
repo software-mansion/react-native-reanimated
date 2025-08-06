@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  babel-plugin-static-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     concurrency:

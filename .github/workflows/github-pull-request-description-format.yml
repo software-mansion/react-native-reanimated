@@ -5,7 +5,7 @@ on:
       - opened
 
 jobs:
-  format-pull-request-description:
+  github-pull-request-description-format:
     runs-on: ubuntu-latest
     steps:
       - name: Update PR Description
