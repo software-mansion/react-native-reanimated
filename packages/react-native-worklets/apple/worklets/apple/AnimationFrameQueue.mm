@@ -16,13 +16,6 @@ const auto LOW = CAFrameRateRangeMake(24, 30, 30);
 const auto POOR = CAFrameRateRangeMake(10, 24, 24);
 } // namespace FrameRateRange
 
-enum FrameRateRangeEnum {
-  BEST,
-  STANDARD,
-  LOW,
-  POOR,
-};
-
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
@@ -30,7 +23,7 @@ enum FrameRateRangeEnum {
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
   int timeDeltaIndex_;
-  FrameRateRangeEnum curentFrameRate_;
+  const CAFrameRateRange *curentFrameRate_;
 }
 
 typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
@@ -43,7 +36,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
     SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
-    curentFrameRate_ = supportsProMotion ? BEST : STANDARD;
+    curentFrameRate_ = supportsProMotion ? &FrameRateRange::BEST : &FrameRateRange::STANDARD;
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
   } else {
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
@@ -116,14 +109,19 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     averageFrameDuration += timeDeltas_[i].count();
   }
   averageFrameDuration = averageFrameDuration / TIME_SAMPLES_AMOUNT;
-  if (averageFrameDuration < 8 && curentFrameRate_ != BEST) {
-    displayLink_.preferredFrameRateRange = FrameRateRange::BEST;
-  } else if (averageFrameDuration < 16 && curentFrameRate_ != STANDARD) {
-    displayLink_.preferredFrameRateRange = FrameRateRange::STANDARD;
-  } else if (averageFrameDuration < 33 && curentFrameRate_ != LOW) {
-    displayLink_.preferredFrameRateRange = FrameRateRange::LOW;
-  } else if (curentFrameRate_ != POOR) {
-    displayLink_.preferredFrameRateRange = FrameRateRange::POOR;
+  const CAFrameRateRange *frameRateRange;
+  if (averageFrameDuration < 8) {
+    frameRateRange = &FrameRateRange::BEST;
+  } else if (averageFrameDuration < 16) {
+    frameRateRange = &FrameRateRange::STANDARD;
+  } else if (averageFrameDuration < 33) {
+    frameRateRange = &FrameRateRange::LOW;
+  } else {
+    frameRateRange = &FrameRateRange::POOR;
+  }
+  if (curentFrameRate_ != frameRateRange) {
+    displayLink_.preferredFrameRateRange = *frameRateRange;
+    curentFrameRate_ = frameRateRange;
   }
 }
 
