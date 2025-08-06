@@ -34,6 +34,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
+import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
@@ -143,6 +144,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  FpsExample: {
+    icon: '🎞️',
+    title: 'FPS',
+    screen: FpsExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
