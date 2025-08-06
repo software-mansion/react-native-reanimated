@@ -58,12 +58,12 @@ jobs:
           touch yarn.lock
           yarn set version berry
           yarn config set nodeLinker node-modules
-      - name: Install Worklets
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Select Xcode (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         run: sudo xcode-select --switch /Applications/Xcode_16.4.app

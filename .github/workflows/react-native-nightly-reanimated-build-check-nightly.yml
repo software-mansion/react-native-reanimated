@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  react-native-nightly-reanimated-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{ matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
     strategy:
@@ -53,6 +53,9 @@ jobs:
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Select Xcode (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         run: sudo xcode-select --switch /Applications/Xcode_16.4.app
