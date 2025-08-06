@@ -57,12 +57,14 @@ class PropsRegistry {
   void handleNodeRemovals(const RootShadowNode &rootShadowNode);
 
  private:
+  using RemovableShadowNodes =
+      std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
+
   std::unordered_map<
       Tag,
       std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>
       map_;
-  std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>
-      removableShadowNodes_;
+  RemovableShadowNodes removableShadowNodes_;
 
   mutable std::mutex mutex_; // Protects `map_`.
 
