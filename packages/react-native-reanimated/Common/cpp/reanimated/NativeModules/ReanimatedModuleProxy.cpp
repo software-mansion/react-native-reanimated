@@ -849,7 +849,7 @@ void ReanimatedModuleProxy::performOperations() {
         if (name == "transform")
           return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
 
-        throw std::runtime_error("Unsupported style: " + name);
+        throw std::runtime_error("[Reanimated] Unsupported style: " + name);
       };
 
       const auto transformNameToCommand = [](const std::string &name) {
@@ -892,7 +892,7 @@ void ReanimatedModuleProxy::performOperations() {
         if (name == "perspective")
           return CMD_TRANSFORM_PERSPECTIVE;
 
-        throw std::runtime_error("Unsupported transform: " + name);
+        throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
       };
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
@@ -969,27 +969,28 @@ void ReanimatedModuleProxy::performOperations() {
                   const auto &valueStr = value.getString();
                   if (!valueStr.ends_with("%")) {
                     throw std::runtime_error(
-                        "Border radius string must be a percentage");
+                        "[Reanimated] Border radius string must be a percentage");
                   }
                   intBuffer.push_back(CMD_UNIT_PERCENT);
                   doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
                 } else {
                   throw std::runtime_error(
-                      "Border radius value must be either a number or a string");
+                      "[Reanimated] Border radius value must be either a number or a string");
                 }
                 break;
 
               case CMD_START_OF_TRANSFORM:
                 intBuffer.push_back(command);
                 react_native_assert(
-                    value.isArray() && "Transform value must be an array");
+                    value.isArray() &&
+                    "[Reanimated] Transform value must be an array");
                 for (const auto &item : value) {
                   react_native_assert(
                       item.isObject() &&
-                      "Transform array item must be an object");
+                      "[Reanimated] Transform array item must be an object");
                   react_native_assert(
                       item.size() == 1 &&
-                      "Transform array item must have exactly one key-value pair");
+                      "[Reanimated] Transform array item must have exactly one key-value pair");
                   const auto transformCommand =
                       transformNameToCommand(item.keys().begin()->getString());
                   const auto &transformValue = *item.values().begin();
@@ -1014,14 +1015,14 @@ void ReanimatedModuleProxy::performOperations() {
                             transformValue.getString();
                         if (!transformValueStr.ends_with("%")) {
                           throw std::runtime_error(
-                              "String translate must be a percentage");
+                              "[Reanimated] String translate must be a percentage");
                         }
                         intBuffer.push_back(CMD_UNIT_PERCENT);
                         doubleBuffer.push_back(
                             std::stof(transformValueStr.substr(0, -1)));
                       } else {
                         throw std::runtime_error(
-                            "Translate value must be a number or a string");
+                            "[Reanimated] Translate value must be either a number or a string");
                       }
                       break;
                     }
@@ -1041,7 +1042,8 @@ void ReanimatedModuleProxy::performOperations() {
                         intBuffer.push_back(CMD_UNIT_RAD);
                       } else {
                         throw std::runtime_error(
-                            "Unsupported rotation unit: " + transformValueStr);
+                            "[Reanimated] Unsupported rotation unit: " +
+                            transformValueStr);
                       }
                       doubleBuffer.push_back(
                           std::stof(transformValueStr.substr(0, -3)));
@@ -1052,7 +1054,7 @@ void ReanimatedModuleProxy::performOperations() {
                       intBuffer.push_back(transformCommand);
                       react_native_assert(
                           transformValue.isArray() &&
-                          "Matrix must be an array");
+                          "[Reanimated] Matrix must be an array");
                       int size = transformValue.size();
                       intBuffer.push_back(size);
                       for (int i = 0; i < size; i++) {
