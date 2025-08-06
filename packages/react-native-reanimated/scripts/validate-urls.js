@@ -36,7 +36,6 @@ const ignoredDirectories = [
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
-/** @param dir */
 async function getFileAndUrls(dir) {
   const directories = await fsp.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -63,7 +62,6 @@ async function getFileAndUrls(dir) {
   return Array.prototype.concat(...files);
 }
 
-/** @param data */
 function validUrls(data) {
   let index = 0;
   let isBrokenUrlDetected = false;
