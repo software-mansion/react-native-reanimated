@@ -42,11 +42,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'shareables',
+          testSuiteName: 'memory',
           importTest: () => {
-            require('./tests/shareables/makeShareableClone.test');
-            require('./tests/shareables/makeShareableCloneOnUI.test');
-            require('./tests/shareables/isShareableRef.test');
+            require('./tests/memory/makeShareableClone.test');
+            require('./tests/memory/makeShareableCloneOnUI.test');
+            require('./tests/memory/isShareableRef.test');
+            require('./tests/memory/synchronizable.test');
           },
         },
         {

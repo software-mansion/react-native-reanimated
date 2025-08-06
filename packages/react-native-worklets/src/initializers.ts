@@ -9,6 +9,7 @@ import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
 import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { __synchronizableUnpacker as synchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -103,6 +104,7 @@ export function init() {
 function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+    globalThis.__synchronizableUnpacker = synchronizableUnpacker;
   }
 }
 

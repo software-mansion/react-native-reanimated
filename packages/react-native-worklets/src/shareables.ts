@@ -1,11 +1,13 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
+import { isSynchronizable } from './isSynchronizable';
 import { logger } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import type { Synchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -201,6 +203,9 @@ function makeShareableCloneRecursiveNative<T>(
   }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
+  }
+  if (isSynchronizable(value)) {
+    return cloneSynchronizable(value) as ShareableRef<T>;
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
@@ -580,6 +585,13 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   return handle;
 }
 
+function cloneSynchronizable<TValue>(
+  value: Synchronizable<TValue>
+): ShareableRef<TValue> {
+  shareableMappingCache.set(value);
+  return value;
+}
+
 function cloneImport<TValue extends WorkletImport>(
   value: TValue
 ): ShareableRef<TValue> {
@@ -698,6 +710,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       if (Array.isArray(value)) {
         return global._makeShareableArray(
           value.map(cloneRecursive)
+        ) as FlatShareableRef<T>;
+      }
+      if ((value as Record<string, unknown>).__synchronizableRef) {
+        return global._makeShareableSynchronizable(
+          value
         ) as FlatShareableRef<T>;
       }
       const toAdapt: Record<string, FlatShareableRef<T>> = {};
