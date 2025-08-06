@@ -1,5 +1,6 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
+import { isSynchronizable } from './isSynchronizable';
 import { logger } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
@@ -7,7 +8,6 @@ import {
   shareableMappingFlag,
 } from './shareableMappingCache';
 import type { Synchronizable } from './synchronizable';
-import { isSynchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';

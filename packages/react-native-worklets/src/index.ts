@@ -8,6 +8,7 @@ import { bundleModeInit } from './workletRuntimeEntry';
 init();
 
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { isSynchronizable } from './isSynchronizable';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export type { MakeShareableClone } from './shareables';
@@ -18,7 +19,7 @@ export {
   makeShareableCloneRecursive,
 } from './shareables';
 export type { Synchronizable } from './synchronizable';
-export { createSynchronizable, isSynchronizable } from './synchronizable';
+export { createSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

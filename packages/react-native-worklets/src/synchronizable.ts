@@ -17,17 +17,6 @@ export function createSynchronizable<TValue>(
   ) as unknown as Synchronizable<TValue>;
 }
 
-export function isSynchronizable<TValue>(
-  value: unknown
-): value is Synchronizable<TValue> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    '__synchronizableRef' in value &&
-    value.__synchronizableRef === true
-  );
-}
-
 export interface SynchronizableRef<TValue = unknown> {
   __synchronizableRef: true;
   __nativeStateSynchronizableJSRef: TValue;
