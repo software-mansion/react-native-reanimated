@@ -44,7 +44,7 @@ jobs:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app
-        run: npx create-expo-app@latest ${{ env.APP_NAME }}
+        run: yarn create expo ${{ env.APP_NAME }} --template blank-typescript
       - name: Configure architecture (Paper)
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: ${{ env.APP_NAME }}
@@ -58,25 +58,21 @@ jobs:
           fi
       - name: Install Expo
         working-directory: ${{ env.APP_NAME }}
-        run: npm install expo@${{ env.EXPO_TAG }}
+        run: yarn add expo@${{ env.EXPO_TAG }}
       - name: Setup configuration
         working-directory: ${{ env.APP_NAME }}
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: npm install react-native-reanimated@reanimated3-nightly
+        run: yarn add react-native-reanimated@reanimated3-nightly
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
-        run: npx expo prebuild
-      - name: Install pods
-        if: ${{ matrix.platform == 'iOS' }}
-        working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
+        run: yarn expo prebuild
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: yarn react-native run-ios --terminal='Terminal'
+        run: yarn expo run:ios
       - name: Build app (Android)
         working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
-        run: ./gradlew assembleDebug --console=plain
+        run: yarn expo run:android
