@@ -1,6 +1,8 @@
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
+#include <utility>
+
 namespace worklets {
 
 std::shared_ptr<Serializable> Synchronizable::getDirty() {

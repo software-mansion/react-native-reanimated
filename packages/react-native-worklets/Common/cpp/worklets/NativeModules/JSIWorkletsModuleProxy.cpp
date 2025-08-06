@@ -14,6 +14,8 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <utility>
+
 using namespace facebook;
 
 namespace worklets {
