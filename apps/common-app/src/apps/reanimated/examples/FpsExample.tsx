@@ -18,7 +18,7 @@ export default function FpsExample() {
           frameInfo.timeSincePreviousFrame !== null &&
           frameInfo.timeSincePreviousFrame < 0
         ) {
-          throw new Error('Negative time since previous frame detected');
+          throw new Error('Negative `timeSincePreviousFrame` detected');
         }
       },
       [frameInfoSharedValue]
