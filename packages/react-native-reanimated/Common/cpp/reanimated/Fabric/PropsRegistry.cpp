@@ -42,22 +42,21 @@ void PropsRegistry::unmarkNodeAsRemovable(Tag viewTag) {
 }
 
 void PropsRegistry::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
-  for (auto it = removableShadowNodes_.begin();
-       it != removableShadowNodes_.end();) {
-    const auto &shadowNode = it->second;
-    const auto &family = shadowNode->getFamily();
-    const auto &ancestors = family.getAncestors(rootShadowNode);
+  RemovableShadowNodes remainingShadowNodes;
 
-    // Skip if the node hasn't been removed
-    if (!ancestors.empty()) {
-      ++it;
+  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
+    if (!shadowNode) {
       continue;
     }
 
-    const auto tag = shadowNode->getTag();
-    map_.erase(tag);
-    it = removableShadowNodes_.erase(it);
+    if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+      map_.erase(tag);
+    } else {
+      remainingShadowNodes.emplace(tag, shadowNode);
+    }
   }
+
+  removableShadowNodes_ = std::move(remainingShadowNodes);
 }
 
 void PropsRegistry::remove(const Tag tag) {
