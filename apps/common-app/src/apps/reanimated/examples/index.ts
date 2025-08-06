@@ -33,6 +33,7 @@ import DragAndSnapExample from './DragAndSnapExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FilterExample from './FilterExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
@@ -116,6 +117,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronousPropsExample from './SynchronousPropsExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
@@ -300,6 +302,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌈',
     title: 'Animate colors',
     screen: ColorExample,
+  },
+  FilterExample: {
+    icon: '🖼️',
+    title: 'Animate filter',
+    screen: FilterExample,
+  },
+  SynchronousPropsExample: {
+    icon: '⚡',
+    title: 'Animate synchronous props',
+    screen: SynchronousPropsExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
     icon: '🎨',

@@ -3,7 +3,7 @@
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <react/renderer/core/ShadowNode.h>
@@ -154,8 +154,8 @@ struct ScaleYOperation final : public ScaleOperation {
 };
 
 // Translate
-struct TranslateOperation : public TransformOperationBase<CSSDimension> {
-  using TransformOperationBase<CSSDimension>::TransformOperationBase;
+struct TranslateOperation : public TransformOperationBase<CSSLength> {
+  using TransformOperationBase<CSSLength>::TransformOperationBase;
   explicit TranslateOperation(double value);
   explicit TranslateOperation(const std::string &value);
   bool isRelative() const override;

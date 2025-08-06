@@ -28,6 +28,7 @@
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.8.0#~/.yarn/patches/@shopify-flash-list-npm-1.8.0-54e02d8f74.patch",
     "d3-shape": "^3.2.0",
     "eslint-plugin-reanimated": "workspace:*",
+    "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.1.0",
     "react-native-gesture-handler": "patch:react-native-gesture-handler@npm%3A2.26.0#~/.yarn/patches/react-native-gesture-handler-npm-2.26.0-60cb6bb430.patch",
     "react-native-pager-view": "6.8.1",

@@ -71,11 +71,13 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name)
+    const std::string &name,
+    const std::shared_ptr<AsyncQueue> &queue)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
-      name_(name) {
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
 }
@@ -128,6 +130,22 @@ void WorkletRuntime::init(
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
+}
+
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &worklet) {
+  react_native_assert(
+      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
+      "the async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet, weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runGuarded(worklet);
+  });
 }
 
 jsi::Value WorkletRuntime::executeSync(

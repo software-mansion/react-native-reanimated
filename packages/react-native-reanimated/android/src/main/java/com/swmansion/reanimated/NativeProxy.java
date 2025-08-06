@@ -185,11 +185,38 @@ public class NativeProxy {
   private static final int CMD_START_OF_TRANSFORM = 2;
   private static final int CMD_END_OF_TRANSFORM = 3;
   private static final int CMD_END_OF_VIEW = 4;
+
   private static final int CMD_OPACITY = 10;
-  private static final int CMD_BORDER_RADIUS = 11;
-  private static final int CMD_BACKGROUND_COLOR = 12;
-  private static final int CMD_BORDER_COLOR = 13;
-  private static final int CMD_COLOR = 14;
+  private static final int CMD_ELEVATION = 11;
+  private static final int CMD_Z_INDEX = 12;
+  private static final int CMD_SHADOW_OPACITY = 13;
+  private static final int CMD_SHADOW_RADIUS = 14;
+  private static final int CMD_BACKGROUND_COLOR = 15;
+  private static final int CMD_COLOR = 16;
+  private static final int CMD_TINT_COLOR = 17;
+
+  private static final int CMD_BORDER_RADIUS = 20;
+  private static final int CMD_BORDER_TOP_LEFT_RADIUS = 21;
+  private static final int CMD_BORDER_TOP_RIGHT_RADIUS = 22;
+  private static final int CMD_BORDER_TOP_START_RADIUS = 23;
+  private static final int CMD_BORDER_TOP_END_RADIUS = 24;
+  private static final int CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
+  private static final int CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
+  private static final int CMD_BORDER_BOTTOM_START_RADIUS = 27;
+  private static final int CMD_BORDER_BOTTOM_END_RADIUS = 28;
+  private static final int CMD_BORDER_START_START_RADIUS = 29;
+  private static final int CMD_BORDER_START_END_RADIUS = 30;
+  private static final int CMD_BORDER_END_START_RADIUS = 31;
+  private static final int CMD_BORDER_END_END_RADIUS = 32;
+
+  private static final int CMD_BORDER_COLOR = 40;
+  private static final int CMD_BORDER_TOP_COLOR = 41;
+  private static final int CMD_BORDER_BOTTOM_COLOR = 42;
+  private static final int CMD_BORDER_LEFT_COLOR = 43;
+  private static final int CMD_BORDER_RIGHT_COLOR = 44;
+  private static final int CMD_BORDER_START_COLOR = 45;
+  private static final int CMD_BORDER_END_COLOR = 46;
+
   private static final int CMD_TRANSFORM_TRANSLATE_X = 100;
   private static final int CMD_TRANSFORM_TRANSLATE_Y = 101;
   private static final int CMD_TRANSFORM_SCALE = 102;
@@ -203,6 +230,7 @@ public class NativeProxy {
   private static final int CMD_TRANSFORM_SKEW_Y = 110;
   private static final int CMD_TRANSFORM_MATRIX = 111;
   private static final int CMD_TRANSFORM_PERSPECTIVE = 112;
+
   private static final int CMD_UNIT_DEG = 200;
   private static final int CMD_UNIT_RAD = 201;
   private static final int CMD_UNIT_PX = 202;
@@ -211,10 +239,33 @@ public class NativeProxy {
   private static String commandToString(int command) {
     return switch (command) {
       case CMD_OPACITY -> "opacity";
-      case CMD_BORDER_RADIUS -> "borderRadius";
+      case CMD_ELEVATION -> "elevation";
+      case CMD_Z_INDEX -> "zIndex";
+      case CMD_SHADOW_OPACITY -> "shadowOpacity";
+      case CMD_SHADOW_RADIUS -> "shadowRadius";
       case CMD_BACKGROUND_COLOR -> "backgroundColor";
-      case CMD_BORDER_COLOR -> "borderColor";
       case CMD_COLOR -> "color";
+      case CMD_TINT_COLOR -> "tintColor";
+      case CMD_BORDER_RADIUS -> "borderRadius";
+      case CMD_BORDER_TOP_LEFT_RADIUS -> "borderTopLeftRadius";
+      case CMD_BORDER_TOP_RIGHT_RADIUS -> "borderTopRightRadius";
+      case CMD_BORDER_TOP_START_RADIUS -> "borderTopStartRadius";
+      case CMD_BORDER_TOP_END_RADIUS -> "borderTopEndRadius";
+      case CMD_BORDER_BOTTOM_LEFT_RADIUS -> "borderBottomLeftRadius";
+      case CMD_BORDER_BOTTOM_RIGHT_RADIUS -> "borderBottomRightRadius";
+      case CMD_BORDER_BOTTOM_START_RADIUS -> "borderBottomStartRadius";
+      case CMD_BORDER_BOTTOM_END_RADIUS -> "borderBottomEndRadius";
+      case CMD_BORDER_START_START_RADIUS -> "borderStartStartRadius";
+      case CMD_BORDER_START_END_RADIUS -> "borderStartEndRadius";
+      case CMD_BORDER_END_START_RADIUS -> "borderEndStartRadius";
+      case CMD_BORDER_END_END_RADIUS -> "borderEndEndRadius";
+      case CMD_BORDER_COLOR -> "borderColor";
+      case CMD_BORDER_TOP_COLOR -> "borderTopColor";
+      case CMD_BORDER_BOTTOM_COLOR -> "borderBottomColor";
+      case CMD_BORDER_LEFT_COLOR -> "borderLeftColor";
+      case CMD_BORDER_RIGHT_COLOR -> "borderRightColor";
+      case CMD_BORDER_START_COLOR -> "borderStartColor";
+      case CMD_BORDER_END_COLOR -> "borderEndColor";
       default -> throw new RuntimeException("Unknown command: " + command);
     };
   }
@@ -253,7 +304,10 @@ public class NativeProxy {
           break;
 
         case CMD_OPACITY:
-        case CMD_BORDER_RADIUS:
+        case CMD_ELEVATION:
+        case CMD_Z_INDEX:
+        case CMD_SHADOW_OPACITY:
+        case CMD_SHADOW_RADIUS:
           {
             String name = commandToString(command);
             props.putDouble(name, doubleIterator.nextDouble());
@@ -261,11 +315,42 @@ public class NativeProxy {
           }
 
         case CMD_BACKGROUND_COLOR:
-        case CMD_BORDER_COLOR:
         case CMD_COLOR:
+        case CMD_TINT_COLOR:
+        case CMD_BORDER_COLOR:
+        case CMD_BORDER_TOP_COLOR:
+        case CMD_BORDER_BOTTOM_COLOR:
+        case CMD_BORDER_LEFT_COLOR:
+        case CMD_BORDER_RIGHT_COLOR:
+        case CMD_BORDER_START_COLOR:
+        case CMD_BORDER_END_COLOR:
           {
             String name = commandToString(command);
             props.putInt(name, intIterator.nextInt());
+            break;
+          }
+
+        case CMD_BORDER_RADIUS:
+        case CMD_BORDER_TOP_LEFT_RADIUS:
+        case CMD_BORDER_TOP_RIGHT_RADIUS:
+        case CMD_BORDER_TOP_START_RADIUS:
+        case CMD_BORDER_TOP_END_RADIUS:
+        case CMD_BORDER_BOTTOM_LEFT_RADIUS:
+        case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
+        case CMD_BORDER_BOTTOM_START_RADIUS:
+        case CMD_BORDER_BOTTOM_END_RADIUS:
+        case CMD_BORDER_START_START_RADIUS:
+        case CMD_BORDER_START_END_RADIUS:
+        case CMD_BORDER_END_START_RADIUS:
+        case CMD_BORDER_END_END_RADIUS:
+          {
+            String name = commandToString(command);
+            double value = doubleIterator.nextDouble();
+            switch (intIterator.nextInt()) {
+              case CMD_UNIT_PX -> props.putDouble(name, value);
+              case CMD_UNIT_PERCENT -> props.putString(name, value + "%");
+              default -> throw new RuntimeException("Unknown unit command");
+            }
             break;
           }
 

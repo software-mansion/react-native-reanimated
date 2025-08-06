@@ -152,8 +152,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
   }
 
-  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.#workletsModuleProxy.createWorkletRuntime(name, initializer);
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>,
+    useDefaultQueue: boolean,
+    customQueue: object | undefined
+  ) {
+    return this.#workletsModuleProxy.createWorkletRuntime(
+      name,
+      initializer,
+      useDefaultQueue,
+      customQueue
+    );
   }
 
   scheduleOnRuntime<T>(

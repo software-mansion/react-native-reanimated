@@ -6,7 +6,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    - **patch** (last number) – small adjustments, fixes, in most cases only JS code is modified.
    - **minor** (middle number) – new features, all changes that applies to a patch release and fixes in the native code that couldn't be applied in a patch.
-   - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered from 1 (e.g. `3.17.1-rc.1`).
+   - **pre-release** - versions before the official release (alpha, beta, rc) should be numbered from 1 (e.g. `5.0.0-rc.1`).
 
 2. Make sure you're up-to-date:
    When releasing a patch or minor version, you ought to do it from the respective `x.x-stable branch`.
@@ -31,7 +31,6 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 6. Update the **Compatibility Table** in the documentation:
 
    - You need to do this in a separate PR as docs are hosted on `main`,
-   - Update both in Paper and Fabric section,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
 
 7. If releasing v3, run `bundle install && bundle exec pod install` in all example apps to update following files:
@@ -45,7 +44,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 8. When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
 
-9. When releasing a minor version, update the minimal supported React Native version (general and New Architecture specific)
+9. When releasing a minor version, update the minimal supported React Native version:
 
    - Android: `build.gradle`
    - iOS: `reanimated_utils.rb`
@@ -118,10 +117,10 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
     - The version tag list can be found [here](https://www.npmjs.com/package/react-native-reanimated?activeTab=versions).
     - It should look like this:
-      - `latest` &rarr; newest Reanimated v3,
+      - `latest` &rarr; Reanimated v4,
+      - `reanimated-3`,
       - `reanimated-2`,
       - `reanimated-1`,
-      - `next` &rarr; Reanimated v4,
       - `nightly`,
       - `reanimated3-nightly`.
     - If you see something's wrong, run `npm dist-tag`.
@@ -148,7 +147,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - When making at least a minor release or a patch release with numerous commits, please highlight the key changes beside the automatically generated notes, like [here](https://github.com/software-mansion/react-native-reanimated/releases/tag/3.17.0),
     - Make sure you've checked the right boxes:
       - **Set as pre-release** - select this when prereleasing (alpha, beta, rc),
-      - **Set as the latest release** - check if releasing v3, don't check when dealing with v2.
+      - **Set as the latest release** - check if releasing v4, don't check when dealing with v3 or v2.
 
 26. Share the good news with the team.
 27. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).

@@ -3,6 +3,7 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
+#include <react/debug/react_native_assert.h>
 
 #include <worklets/Public/AsyncQueue.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -31,7 +32,8 @@ class WorkletRuntime : public jsi::HostObject,
   explicit WorkletRuntime(
       uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::string &name);
+      const std::string &name,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr);
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
@@ -48,20 +50,7 @@ class WorkletRuntime : public jsi::HostObject,
         rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
-  void runAsyncGuarded(
-      const std::shared_ptr<SerializableWorklet> &serializableWorklet) {
-    if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueueImpl>(name_);
-    }
-    queue_->push([=, weakThis = weak_from_this()] {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-
-      strongThis->runGuarded(serializableWorklet);
-    });
-  }
+  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 

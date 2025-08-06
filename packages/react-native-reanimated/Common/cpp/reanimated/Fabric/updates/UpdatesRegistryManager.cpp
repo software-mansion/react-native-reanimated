@@ -132,7 +132,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(
 
       const auto &componentName = shadowNode->getComponentName();
       if (hasInterpolators(componentName)) {
-        const auto &interpolators = getInterpolators(componentName);
+        const auto &interpolators = getComponentInterpolators(componentName);
         const auto &it = interpolators.find(propName);
 
         if (it != interpolators.end()) {
