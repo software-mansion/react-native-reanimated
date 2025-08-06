@@ -73,6 +73,6 @@ jobs:
         if: ${{ matrix.platform == 'iOS' }}
         run: npx expo run:ios --no-bundler
       - name: Build app (Android)
-        working-directory: ${{ env.APP_NAME }}/android
+        working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'Android' }}
         run: npx expo run:android --no-bundler
