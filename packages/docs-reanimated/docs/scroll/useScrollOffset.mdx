@@ -2,20 +2,20 @@
 sidebar_position: 2
 ---
 
-# useScrollViewOffset
+# useScrollOffset
 
-`useScrollViewOffset` lets you to create animations based on the offset of a `ScrollView`.
+`useScrollOffset` lets you to create animations based on the offset of a `ScrollView`.
 The hook automatically detects if the `ScrollView` is horizontal or vertical.
 
 ## Reference
 
 ```tsx
-import { useScrollViewOffset } from 'react-native-reanimated';
+import { useScrollOffset } from 'react-native-reanimated';
 
 function App() {
   const animatedRef = useAnimatedRef();
   // highlight-next-line
-  const scrollOffset = useScrollViewOffset(animatedRef);
+  const scrollOffset = useScrollOffset(animatedRef);
   return (
     <Animated.ScrollView ref={animatedRef}>{/* ... */}</Animated.ScrollView>
   );
@@ -26,7 +26,7 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
-function useScrollViewOffset(
+function useScrollOffset(
   animatedRef: AnimatedRef<AnimatedScrollView>,
   initialRef?: SharedValue<number>
 ): SharedValue<number>;
@@ -46,7 +46,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 
 ### Returns
 
-`useScrollViewOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
+`useScrollOffset` returns a [shared value](/docs/fundamentals/glossary#shared-value) which holds the current offset of the `ScrollView`.
 
 ## Example
 
@@ -63,7 +63,7 @@ import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffse
 
 - The `animatedRef` argument can be changed at will and the hook will correctly return values based on the ScrollView component it is connected to, for example:
 
-  `useScrollViewOffset(someState ? someScrollRefA : someScrollRefB)`
+  `useScrollOffset(someState ? someScrollRefA : someScrollRefB)`
 
 ## Platform compatibility
 
