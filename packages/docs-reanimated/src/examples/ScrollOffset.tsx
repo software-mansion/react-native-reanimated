@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Button,
+  ScrollView,
+} from 'react-native';
 import Animated, {
   useAnimatedProps,
   useAnimatedRef,
@@ -9,7 +16,7 @@ import Animated, {
 import type { DerivedValue } from 'react-native-reanimated';
 
 export default function App() {
-  const animatedRef = useAnimatedRef<Animated.ScrollView>();
+  const animatedRef = useAnimatedRef<ScrollView>();
   // highlight-start
   const offset = useScrollOffset(animatedRef);
   const text = useDerivedValue(
@@ -22,7 +29,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <AnimatedText text={text} />
-      <Animated.ScrollView
+      <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         ref={animatedRef}
@@ -32,7 +39,7 @@ export default function App() {
             <Text style={styles.center}>{i}</Text>
           </View>
         ))}
-      </Animated.ScrollView>
+      </ScrollView>
       <Button
         title={`Toggle scroll to ${
           isScrollHorizontal ? 'vertical' : 'horizontal'
