@@ -44,7 +44,7 @@ jobs:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app
-        run: yarn create expo ${{ env.APP_NAME }} --template blank-typescript
+        run: npx create-expo-app@latest ${{ env.APP_NAME }} --template blank-typescript
       - name: Configure architecture (Paper)
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: ${{ env.APP_NAME }}
@@ -58,21 +58,21 @@ jobs:
           fi
       - name: Install Expo
         working-directory: ${{ env.APP_NAME }}
-        run: yarn add expo@${{ env.EXPO_TAG }}
+        run: npm install expo@${{ env.EXPO_TAG }}
       - name: Setup configuration
         working-directory: ${{ env.APP_NAME }}
         run: node ${{ env.SCRIPT_PATH }} setBundleIdentifier
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: yarn add react-native-reanimated@reanimated3-nightly
+        run: npm install react-native-reanimated@reanimated3-nightly
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
-        run: yarn expo prebuild
+        run: npx expo prebuild
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: yarn expo run:ios
+        run: npx expo run:ios
       - name: Build app (Android)
-        working-directory: ${{ env.APP_NAME }}/android
+        working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'Android' }}
-        run: yarn expo run:android
+        run: npx expo run:android
