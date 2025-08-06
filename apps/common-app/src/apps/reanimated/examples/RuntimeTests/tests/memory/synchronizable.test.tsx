@@ -118,11 +118,71 @@ const initialValue = 0;
 
 const targetValue = 100000;
 
+function getDirtySetBlocking(synchronizable: Synchronizable<number>) {
+  'worklet';
+  for (let i = 0; i < targetValue; i++) {
+    const value = synchronizable.getDirty();
+    synchronizable.setBlocking(value + 1);
+  }
+  return synchronizable.getBlocking();
+}
+
+function getBlockingSetBlocking(synchronizable: Synchronizable<number>) {
+  'worklet';
+  for (let i = 0; i < targetValue; i++) {
+    const value = synchronizable.getBlocking();
+    synchronizable.setBlocking(value + 1);
+  }
+  return synchronizable.getBlocking();
+}
+
+function transactionGetSet(synchronizable: Synchronizable<number>) {
+  'worklet';
+  for (let i = 0; i < targetValue; i++) {
+    synchronizable.setBlocking(prev => prev + 1);
+  }
+  return synchronizable.getBlocking();
+}
+
+function imperativeLockGetSet(synchronizable: Synchronizable<number>) {
+  'worklet';
+  for (let i = 0; i < targetValue; i++) {
+    synchronizable.lock();
+    const value = synchronizable.getBlocking();
+    synchronizable.setBlocking(value + 1);
+    synchronizable.unlock();
+  }
+  return synchronizable.getBlocking();
+}
+
+function dispatch(
+  method: (synchronizable: Synchronizable<number>) => number,
+  callbackRN: (value: number) => void,
+  callbackUI: (value: number) => void,
+  callbackBG: (value: number) => void,
+) {
+  const synchronizable = createSynchronizable(initialValue);
+  const runtime = createWorkletRuntime({ name: 'test' });
+  runOnRuntime(runtime, () => {
+    'worklet';
+    const value = method(synchronizable);
+    runOnJS(callbackBG)(value);
+  })();
+
+  runOnUI(() => {
+    'worklet';
+    const value = method(synchronizable);
+    runOnJS(callbackUI)(value);
+  })();
+
+  queueMicrotask(() => {
+    const value = method(synchronizable);
+    runOnJS(callbackRN)(value);
+  });
+}
+
 describe('Test Synchronizable access', () => {
   test('dirty reading yields intermediate values', async () => {
-    const synchronizable = createSynchronizable(initialValue);
-    const runtime = createWorkletRuntime({ name: 'test' });
-
     let valueRN = 0;
     let valueUI = 0;
     let valueBG = 0;
@@ -148,31 +208,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    function getDirtySetBlocking() {
-      'worklet';
-      for (let i = 0; i < targetValue; i++) {
-        const value = synchronizable.getDirty();
-        synchronizable.setBlocking(value + 1);
-      }
-      return synchronizable.getBlocking();
-    }
-
-    runOnRuntime(runtime, () => {
-      'worklet';
-      const value = getDirtySetBlocking();
-      runOnJS(setValueBG)(value);
-    })();
-
-    runOnUI(() => {
-      'worklet';
-      const value = getDirtySetBlocking();
-      runOnJS(setValueUI)(value);
-    })();
-
-    queueMicrotask(() => {
-      const value = getDirtySetBlocking();
-      setValueRN(value);
-    });
+    dispatch(getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotify(NOTIFICATION);
 
@@ -182,9 +218,6 @@ describe('Test Synchronizable access', () => {
   });
 
   test('blocking reading yields intermediate values', async () => {
-    const synchronizable = createSynchronizable(initialValue);
-    const runtime = createWorkletRuntime({ name: 'test' });
-
     let valueRN = 0;
     let valueUI = 0;
     let valueBG = 0;
@@ -210,31 +243,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    function getBlockingSetBlocking() {
-      'worklet';
-      for (let i = 0; i < targetValue; i++) {
-        const value = synchronizable.getBlocking();
-        synchronizable.setBlocking(value + 1);
-      }
-      return synchronizable.getBlocking();
-    }
-
-    runOnRuntime(runtime, () => {
-      'worklet';
-      const value = getBlockingSetBlocking();
-      runOnJS(setValueBG)(value);
-    })();
-
-    runOnUI(() => {
-      'worklet';
-      const value = getBlockingSetBlocking();
-      runOnJS(setValueUI)(value);
-    })();
-
-    queueMicrotask(() => {
-      const value = getBlockingSetBlocking();
-      setValueRN(value);
-    });
+    dispatch(getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotify(NOTIFICATION);
 
@@ -244,9 +253,6 @@ describe('Test Synchronizable access', () => {
   });
 
   test('transaction reading is atomic', async () => {
-    const synchronizable = createSynchronizable(initialValue);
-    const runtime = createWorkletRuntime({ name: 'test' });
-
     let valueRN = 0;
     let valueUI = 0;
     let valueBG = 0;
@@ -272,30 +278,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    function transactionGetSet() {
-      'worklet';
-      for (let i = 0; i < targetValue; i++) {
-        synchronizable.setBlocking(prev => prev + 1);
-      }
-      return synchronizable.getBlocking();
-    }
-
-    runOnRuntime(runtime, () => {
-      'worklet';
-      const value = transactionGetSet();
-      runOnJS(setValueBG)(value);
-    })();
-
-    runOnUI(() => {
-      'worklet';
-      const value = transactionGetSet();
-      runOnJS(setValueUI)(value);
-    })();
-
-    queueMicrotask(() => {
-      const value = transactionGetSet();
-      setValueRN(value);
-    });
+    dispatch(transactionGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotify(NOTIFICATION);
 
@@ -303,9 +286,6 @@ describe('Test Synchronizable access', () => {
   });
 
   test('imperative locking reading is atomic', async () => {
-    const synchronizable = createSynchronizable(initialValue);
-    const runtime = createWorkletRuntime({ name: 'test' });
-
     let valueRN = 0;
     let valueUI = 0;
     let valueBG = 0;
@@ -331,33 +311,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    function imperativeLockGetSet() {
-      'worklet';
-      for (let i = 0; i < targetValue; i++) {
-        synchronizable.lock();
-        const value = synchronizable.getBlocking();
-        synchronizable.setBlocking(value + 1);
-        synchronizable.unlock();
-      }
-      return synchronizable.getBlocking();
-    }
-
-    runOnRuntime(runtime, () => {
-      'worklet';
-      const value = imperativeLockGetSet();
-      runOnJS(setValueBG)(value);
-    })();
-
-    runOnUI(() => {
-      'worklet';
-      const value = imperativeLockGetSet();
-      runOnJS(setValueUI)(value);
-    })();
-
-    queueMicrotask(() => {
-      const value = imperativeLockGetSet();
-      setValueRN(value);
-    });
+    dispatch(imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotify(NOTIFICATION);
 
