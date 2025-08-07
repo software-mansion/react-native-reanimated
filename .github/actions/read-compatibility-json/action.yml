@@ -8,7 +8,7 @@ runs:
       working-directory: packages/react-native-reanimated
       shell: bash
       run: |
-        PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['platforms'])")
+        PLATFORMS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['platforms']))")
         VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']))")
         VERSIONS_WITH_NIGHTLY=$(node -e "const versions = JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']; versions.push('nightly'); console.log(JSON.stringify(versions))")
         echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
