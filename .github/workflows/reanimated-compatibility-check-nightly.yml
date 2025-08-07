@@ -20,15 +20,7 @@ jobs:
       platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
       react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Read compatibility.json
-        id: read-compatibility-json
-        working-directory: packages/react-native-reanimated
-        run: |
-          PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['platforms'])")
-          VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']))")
-          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
-          echo "react-native-versions=$VERSIONS" >> $GITHUB_OUTPUT
+      - uses: ./.github/actions/read-compatibility-json
 
   reanimated-compatibility-check-nightly:
     needs: read-compatibility-json

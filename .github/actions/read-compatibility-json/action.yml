@@ -1,0 +1,15 @@
+name: 'Read Compatibility JSON with Nightly'
+description: 'Reads compatibility.json file and outputs platforms and react-native-versions with nightly version added'
+runs:
+  using: 'composite'
+  steps:
+    - name: Read compatibility.json with nightly
+      id: read-compatibility-json
+      working-directory: packages/react-native-reanimated
+      shell: bash
+      run: |
+        PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['platforms'])")
+        VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']))")
+        VERSIONS_WITH_NIGHTLY=$(node -e "const versions = JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']; versions.push('nightly'); console.log(JSON.stringify(versions))")
+        echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+        echo "react-native-versions=$VERSIONS_WITH_NIGHTLY" >> $GITHUB_OUTPUT 

@@ -3,21 +3,32 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    paths:
-      - .github/workflows/reanimated-typescript-compatibility-test-nightly.yml
-  schedule:
-    - cron: '37 19 * * *'
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
   workflow_call:
   workflow_dispatch:
 
 jobs:
+  read-compatibility-json:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    outputs:
+      platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
+      react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
+    steps:
+      - uses: ./.github/actions/read-compatibility-json-with-nightly
+
   reanimated-typescript-compatibility-test-nightly:
+    needs: read-compatibility-json
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # TODO: Fetch versions from common source.
-        react-native-version: ['0.78', 'nightly']
+        react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
