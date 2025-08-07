@@ -58,7 +58,7 @@ function getFromCache(value: object) {
 }
 
 // The below object is used as a replacement for objects that cannot be transferred
-// as shareable values. In createSerializableRecursive we detect if an object is of
+// as shareable values. In createSerializable we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
 // us avoid all sorts of react internals from leaking into the UI runtime. To make it
 // possible to catch errors when someone actually tries to access such object on the UI
@@ -117,15 +117,15 @@ const VALID_ARRAY_VIEWS_NAMES = [
 ];
 
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
-// Below variable stores object that we process in createSerializableRecursive at the specified depth.
+// Below variable stores object that we process in createSerializable at the specified depth.
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-function createSerializableRecursiveWeb<T>(value: T): SerializableRef<T> {
+function createSerializableWeb<T>(value: T): SerializableRef<T> {
   return value as SerializableRef<T>;
 }
 
-function createSerializableRecursiveNative<T>(
+function createSerializableNative<T>(
   value: T,
   shouldPersistRemote = false,
   depth = 0
@@ -229,14 +229,14 @@ function createSerializableRecursiveNative<T>(
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
-  createSerializableRecursiveNative.__bundleData = {
-    imported: 'createSerializableRecursive',
+  createSerializableNative.__bundleData = {
+    imported: 'createSerializable',
     // @ts-expect-error resolveWeak is defined by Metro
     source: require.resolveWeak('./index'),
   };
 }
 
-export interface CreateSerializable {
+interface CreateSerializable {
   <T>(value: T): SerializableRef<T>;
   <T>(
     value: T,
@@ -246,8 +246,8 @@ export interface CreateSerializable {
 }
 
 export const createSerializable: CreateSerializable = SHOULD_BE_USE_WEB
-  ? createSerializableRecursiveWeb
-  : createSerializableRecursiveNative;
+  ? createSerializableWeb
+  : createSerializableNative;
 
 function detectCyclicObject(value: unknown, depth: number) {
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -693,14 +693,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
     ) {
       if (isHostObject(value)) {
         // We call `_createSerializableClone` to wrap the provided HostObject
-        // inside ShareableJSRef.
+        // inside SerializableJSRef.
         return global._createSerializableHostObject(
           value
         ) as FlatSerializableRef<T>;
       }
       if (isRemoteFunction<T>(value)) {
         // RemoteFunctions are created by us therefore they are
-        // a Shareable out of the box and there is no need to
+        // a Serializable out of the box and there is no need to
         // call `_createSerializableClone`.
         return value.__remoteFunction;
       }

@@ -1,5 +1,5 @@
 'use strict';
-import { logger, ReanimatedError } from '../../common';
+import { logger } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
 import {
@@ -9,25 +9,6 @@ import {
 } from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
-
-// TODO: Install these global functions in a more suitable location.
-global._createSerializable = () => {
-  throw new ReanimatedError(
-    '`_createSerializable` should never be called from React runtime.'
-  );
-};
-
-global._scheduleHostFunctionOnJS = () => {
-  throw new ReanimatedError(
-    '`_scheduleOnJS` should never be called from React runtime.'
-  );
-};
-
-global._scheduleOnRuntime = () => {
-  throw new ReanimatedError(
-    '`_scheduleOnRuntime` should never be called from React runtime.'
-  );
-};
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;

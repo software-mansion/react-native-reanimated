@@ -580,8 +580,8 @@ describe('Test makeShareableClone', () => {
         onRunUIFunction={() => {
           'worklet';
           // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
-          const shareableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', shareableBoolean.__serializableRef];
+          const serializableBoolean = hostFunction(true);
+          const checks = [typeof hostFunction === 'function', serializableBoolean.__serializableRef];
           return checks.every(Boolean);
         }}
       />,
