@@ -62,11 +62,7 @@ jobs:
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
-      - name: Setup Fabric (Android)
-        if: ${{ matrix.platform == 'Android' }}
-        working-directory: ${{ env.APP_NAME }}/android
-        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+        run: bundle install && bundle exec pod install
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
