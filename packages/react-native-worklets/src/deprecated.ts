@@ -14,7 +14,7 @@ export type ShareableRef<T> = SerializableRef<T>;
 
 export { makeShareable, makeShareableCloneOnUIRecursive };
 
-/** @deprecated Use {@link createSerializable} instead. */
+/** @deprecated It will be removed in the next major version. */
 export type MakeShareableClone = <T>(
   value: T,
   shouldPersistRemote?: boolean,
