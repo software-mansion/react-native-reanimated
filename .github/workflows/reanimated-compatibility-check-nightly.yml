@@ -60,20 +60,23 @@ jobs:
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      - name:
-          Setup Yarn
-          # Sometimes `npx @react-native-community/cli init` fails at random.
-          # Pre-installing it with Yarn seems to improve stability.
-        run: corepack enable && yarn init
-      - name: Install React Native CLI
-        run: yarn add @react-native-community/cli
       - name: Check if react-native version exists
         id: check-react-native-version
         run: |
-          if ! npm view react-native@0.81 dist-tags | grep -q 'next:' ; then 
-            echo "React Native version 0.81 does not exist - Skipping..."
-            echo "SKIP_BUILD=true" >> $GITHUB_ENV
-          fi
+          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
+            echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
+              echo "SKIP_BUILD=true" >> $GITHUB_ENV
+            fi
+
+      - name: Setup Yarn
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
+        run: corepack enable && yarn init
+      - name: Install React Native CLI
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        run: yarn add @react-native-community/cli
+
       - name: Create app
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --install-pods 0 --skip-git-init
