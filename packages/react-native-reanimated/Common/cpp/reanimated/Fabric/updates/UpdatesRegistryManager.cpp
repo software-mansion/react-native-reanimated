@@ -57,25 +57,24 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
 
 void UpdatesRegistryManager::handleNodeRemovals(
     const RootShadowNode &rootShadowNode) {
-  for (auto it = removableShadowNodes_.begin();
-       it != removableShadowNodes_.end();) {
-    const auto &shadowNode = it->second;
-    const auto &family = shadowNode->getFamily();
-    const auto &ancestors = family.getAncestors(rootShadowNode);
+  RemovableShadowNodes remainingShadowNodes;
 
-    // Skip if the node hasn't been removed
-    if (!ancestors.empty()) {
-      ++it;
+  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
+    if (!shadowNode) {
       continue;
     }
 
-    const auto tag = shadowNode->getTag();
-    for (auto &registry : registries_) {
-      registry->remove(tag);
+    if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+      for (auto &registry : registries_) {
+        registry->remove(tag);
+      }
+      staticPropsRegistry_->remove(tag);
+    } else {
+      remainingShadowNodes.emplace(tag, shadowNode);
     }
-    staticPropsRegistry_->remove(tag);
-    it = removableShadowNodes_.erase(it);
   }
+
+  removableShadowNodes_ = std::move(remainingShadowNodes);
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {
