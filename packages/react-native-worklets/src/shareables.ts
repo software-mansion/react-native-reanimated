@@ -236,7 +236,7 @@ if (globalThis._WORKLETS_BUNDLE_MODE) {
   };
 }
 
-export interface CreateSerializable {
+interface CreateSerializable {
   <T>(value: T): SerializableRef<T>;
   <T>(
     value: T,
