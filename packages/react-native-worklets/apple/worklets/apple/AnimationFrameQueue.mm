@@ -23,7 +23,7 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
   int timeDeltaIndex_;
-  const CAFrameRateRange *curentFrameRate_;
+  CAFrameRateRange currentFrameRate_;
 }
 
 typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
@@ -36,7 +36,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
     SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
-    curentFrameRate_ = supportsProMotion ? &FrameRateRange::BEST : &FrameRateRange::STANDARD;
+    currentFrameRate_ = supportsProMotion ? FrameRateRange::BEST : FrameRateRange::STANDARD;
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
   } else {
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
@@ -104,24 +104,24 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     // Perform this on every TIME_SAMPLES_AMOUNT-nth frame instead of each one
     return;
   }
-  float averageFrameDuration = 0;
+  float averageComputationTime = 0;
   for (int i = 0; i < TIME_SAMPLES_AMOUNT; i++) {
-    averageFrameDuration += timeDeltas_[i].count();
+    averageComputationTime += timeDeltas_[i].count();
   }
-  averageFrameDuration = averageFrameDuration / TIME_SAMPLES_AMOUNT;
-  const CAFrameRateRange *frameRateRange;
-  if (averageFrameDuration < 8) {
-    frameRateRange = &FrameRateRange::BEST;
-  } else if (averageFrameDuration < 16) {
-    frameRateRange = &FrameRateRange::STANDARD;
-  } else if (averageFrameDuration < 33) {
-    frameRateRange = &FrameRateRange::LOW;
+  averageComputationTime = averageComputationTime / TIME_SAMPLES_AMOUNT;
+  CAFrameRateRange frameRateRange;
+  if (averageComputationTime < 8) {
+    frameRateRange = FrameRateRange::BEST;
+  } else if (averageComputationTime < 16) {
+    frameRateRange = FrameRateRange::STANDARD;
+  } else if (averageComputationTime < 33) {
+    frameRateRange = FrameRateRange::LOW;
   } else {
-    frameRateRange = &FrameRateRange::POOR;
+    frameRateRange = FrameRateRange::POOR;
   }
-  if (curentFrameRate_ != frameRateRange) {
-    displayLink_.preferredFrameRateRange = *frameRateRange;
-    curentFrameRate_ = frameRateRange;
+  if (currentFrameRate_.preferred != frameRateRange.preferred) {
+    displayLink_.preferredFrameRateRange = frameRateRange;
+    currentFrameRate_ = frameRateRange;
   }
 }
 
