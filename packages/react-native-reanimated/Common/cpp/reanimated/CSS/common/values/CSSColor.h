@@ -26,7 +26,7 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 
   CSSColor();
   explicit CSSColor(ColorType colorType);
-  explicit CSSColor(int64_t numberValue);
+  explicit CSSColor(double numberValue);
   explicit CSSColor(const std::string &colorString);
 
   explicit CSSColor(uint8_t r, uint8_t g, uint8_t b);

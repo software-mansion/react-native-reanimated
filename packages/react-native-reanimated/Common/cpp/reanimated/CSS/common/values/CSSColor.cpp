@@ -8,7 +8,7 @@ CSSColor::CSSColor()
 CSSColor::CSSColor(ColorType colorType)
     : channels{0, 0, 0, 0}, colorType(colorType) {}
 
-CSSColor::CSSColor(int64_t numberValue)
+CSSColor::CSSColor(double numberValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
   uint32_t color;
   // On Android, colors are represented as signed 32-bit integers. In JS, we use
@@ -73,7 +73,7 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
 CSSColor::CSSColor(const folly::dynamic &value)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
-    *this = CSSColor(value.asInt());
+    *this = CSSColor(value.getDouble());
   } else if (value.isString()) {
     *this = CSSColor(value.getString());
   } else if (value.empty()) {
