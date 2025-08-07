@@ -1,52 +1,52 @@
-import { isSerializableRef, makeShareableCloneRecursive } from 'react-native-worklets';
+import { isSerializableRef, createSerializable } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test isSerializableRef', () => {
-  test('check if makeShareableCloneRecursive<number> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive(1);
+  test('check if createSerializable<number> returns shareable ref', () => {
+    const serializableRef = createSerializable(1);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<object> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive({ a: 1, b: '2' });
+  test('check if createSerializable<object> returns shareable ref', () => {
+    const serializableRef = createSerializable({ a: 1, b: '2' });
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<string> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive('test');
+  test('check if createSerializable<string> returns shareable ref', () => {
+    const serializableRef = createSerializable('test');
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<boolean> returns shareable ref', () => {
-    const trueShareableRef = makeShareableCloneRecursive(true);
-    const falseShareableRef = makeShareableCloneRecursive(false);
+  test('check if createSerializable<boolean> returns shareable ref', () => {
+    const trueShareableRef = createSerializable(true);
+    const falseShareableRef = createSerializable(false);
 
     expect(isSerializableRef(trueShareableRef)).toBe(true);
     expect(isSerializableRef(falseShareableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<undefined> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive(undefined);
+  test('check if createSerializable<undefined> returns shareable ref', () => {
+    const serializableRef = createSerializable(undefined);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<null> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive(null);
+  test('check if createSerializable<null> returns shareable ref', () => {
+    const serializableRef = createSerializable(null);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<bigint> returns shareable ref', () => {
-    const shareableRef = makeShareableCloneRecursive(BigInt(123));
+  test('check if createSerializable<bigint> returns shareable ref', () => {
+    const serializableRef = createSerializable(BigInt(123));
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<array> returns shareable ref', () => {
+  test('check if createSerializable<array> returns shareable ref', () => {
     const arrayValue = [
       1,
       true,
@@ -65,44 +65,44 @@ describe('Test isSerializableRef', () => {
       /a/,
       new ArrayBuffer(3),
     ];
-    const shareableRef = makeShareableCloneRecursive(arrayValue);
+    const serializableRef = createSerializable(arrayValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<Set> returns shareable ref', () => {
+  test('check if createSerializable<Set> returns shareable ref', () => {
     const setValue = new Set([1, '1', true]);
-    const shareableRef = makeShareableCloneRecursive(setValue);
+    const serializableRef = createSerializable(setValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<Map> returns shareable ref', () => {
+  test('check if createSerializable<Map> returns shareable ref', () => {
     const mapValue = new Map<any, any>([
       [1, 2],
       ['1', '2'],
       [true, false],
     ]);
-    const shareableRef = makeShareableCloneRecursive(mapValue);
+    const serializableRef = createSerializable(mapValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<Error> returns shareable ref', () => {
+  test('check if createSerializable<Error> returns shareable ref', () => {
     const errorValue = new Error('test');
-    const shareableRef = makeShareableCloneRecursive(errorValue);
+    const serializableRef = createSerializable(errorValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<RegExp> returns shareable ref', () => {
+  test('check if createSerializable<RegExp> returns shareable ref', () => {
     const regExpValue = /a/;
-    const shareableRef = makeShareableCloneRecursive(regExpValue);
+    const serializableRef = createSerializable(regExpValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<complex object> returns shareable ref', () => {
+  test('check if createSerializable<complex object> returns shareable ref', () => {
     const obj = {
       number: 1,
       true: true,
@@ -121,52 +121,52 @@ describe('Test isSerializableRef', () => {
       initializer: /test/,
       arrayBuffer: new ArrayBuffer(3),
     };
-    const shareableRef = makeShareableCloneRecursive(obj);
+    const serializableRef = createSerializable(obj);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<worklet function> returns shareable ref', () => {
+  test('check if createSerializable<worklet function> returns shareable ref', () => {
     const workletFunction = () => {
       'worklet';
       return 1;
     };
-    const shareableRef = makeShareableCloneRecursive(workletFunction);
+    const serializableRef = createSerializable(workletFunction);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<remote function> returns shareable ref', () => {
+  test('check if createSerializable<remote function> returns shareable ref', () => {
     const remoteFunction = () => 1;
-    const shareableRef = makeShareableCloneRecursive(remoteFunction);
+    const serializableRef = createSerializable(remoteFunction);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<ArrayBuffer> returns shareable ref', () => {
+  test('check if createSerializable<ArrayBuffer> returns shareable ref', () => {
     const arrayBuffer = new ArrayBuffer(3);
-    const shareableRef = makeShareableCloneRecursive(arrayBuffer);
+    const serializableRef = createSerializable(arrayBuffer);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<host object> returns shareable ref', () => {
+  test('check if createSerializable<host object> returns shareable ref', () => {
     // @ts-expect-error It's ok
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
-    const shareableRef = makeShareableCloneRecursive(hostObjectValue);
+    const serializableRef = createSerializable(hostObjectValue);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<host function> returns shareable ref', () => {
+  test('check if createSerializable<host function> returns shareable ref', () => {
     // @ts-expect-error It's ok
     const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
-    const shareableRef = makeShareableCloneRecursive(hostFunction);
+    const serializableRef = createSerializable(hostFunction);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if makeShareableCloneRecursive<TurboModule-like object> returns shareable ref', () => {
+  test('check if createSerializable<TurboModule-like object> returns shareable ref', () => {
     // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const obj = {
@@ -174,9 +174,9 @@ describe('Test isSerializableRef', () => {
       b: 'test',
     };
     Object.setPrototypeOf(obj, proto);
-    const shareableRef = makeShareableCloneRecursive(obj);
+    const serializableRef = createSerializable(obj);
 
-    expect(isSerializableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
   test('check if non-shareable values return false', () => {
