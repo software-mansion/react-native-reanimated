@@ -19,7 +19,7 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 // @ts-expect-error Public API overload.
 export function createWorkletRuntime(
@@ -38,7 +38,7 @@ export function createWorkletRuntime(
  *   the same thread immediately after the runtime is created.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 export function createWorkletRuntime(
   name?: string,

@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  reanimated-apple-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     env:
       REANIMATED_DIR: packages/react-native-reanimated
