@@ -69,8 +69,8 @@ jobs:
         run: yarn add @react-native-community/cli
       - name: Check if react-native version exists
         run: |
-          if npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
-            echo "React Native version ${matrix.react-native-version} does not exist - Skipping..."
+          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
+            echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
             exit 0
           fi
       - name: Create app
