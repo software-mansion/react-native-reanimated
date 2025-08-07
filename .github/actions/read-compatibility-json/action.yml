@@ -2,6 +2,10 @@ name: 'Read Compatibility JSON'
 description: 'Reads compatibility.json file and outputs platforms and react-native-versions with nightly version added'
 runs:
   using: 'composite'
+  outputs:
+    platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
+    react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
+    react-native-versions-with-nightly: ${{ steps.read-compatibility-json.outputs.react-native-versions-with-nightly }}
   steps:
     - name: Read compatibility.json with nightly
       id: read-compatibility-json
