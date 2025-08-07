@@ -12,13 +12,13 @@ import Animated, {
   useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
-  useScrollOffset,
+  useScrollViewOffset,
 } from 'react-native-reanimated';
 
 export default function App() {
-  const animatedRef = useAnimatedRef<ScrollView>();
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
   // highlight-start
-  const offset = useScrollOffset(animatedRef);
+  const offset = useScrollViewOffset(animatedRef);
   const text = useDerivedValue(
     () => `Scroll offset: ${offset.value.toFixed(1)}`
   );
