@@ -1,8 +1,10 @@
-name: 'Read Compatibility JSON with Nightly'
+name: 'Read Compatibility JSON'
 description: 'Reads compatibility.json file and outputs platforms and react-native-versions with nightly version added'
 runs:
   using: 'composite'
   steps:
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Read compatibility.json with nightly
       id: read-compatibility-json
       working-directory: packages/react-native-reanimated
