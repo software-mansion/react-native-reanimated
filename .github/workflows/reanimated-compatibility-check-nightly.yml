@@ -17,15 +17,18 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     outputs:
-      compatibility-json: ${{ steps.read-compatibility-json.outputs.compatibility-json }}
+      platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
+      react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
     steps:
       - uses: actions/checkout@v4
       - name: Read compatibility.json
-        working-directory: packages/react-native-reanimated
-        run: cat compatibility.json > compatibility-json.json
-      - name: Set output
         id: read-compatibility-json
-        run: echo "compatibility-json=$(cat compatibility-json.json)" >> $GITHUB_OUTPUT
+        working-directory: packages/react-native-reanimated
+        run: |
+          PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8')).platforms)")
+          VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8')).react-native-versions))")
+          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+          echo "react-native-versions=$VERSIONS" >> $GITHUB_OUTPUT
 
   reanimated-compatibility-check-nightly:
     needs: read-compatibility-json
@@ -33,9 +36,9 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: ${{ needs.read-compatibility-json.outputs.compatibility-json.platforms }}
+        platform: ${{ fromJson(needs.read-compatibility-json.outputs.platforms) }}
         mode: ['Debug', 'Release']
-        react-native-version: ${{ needs.read-compatibility-json.outputs.compatibility-json.react-native-versions }}
+        react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
       fail-fast: false
     env:
       APP_NAME: app
