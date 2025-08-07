@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "react": "19.0.0",
-    "react-native": "npm:react-native-tvos@0.79.1-0",
+    "react-native": "patch:react-native@patch%3Areact-native@npm%253A0.80.0%23~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch%3A%3Aversion=0.80.0&hash=79b219#~/.yarn/patches/react-native-patch-b8dfe99434.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-worklets": "workspace:*"
   },
