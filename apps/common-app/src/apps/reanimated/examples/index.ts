@@ -13,6 +13,7 @@ import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BokehExample from './BokehExample';
+import BottomSheetExample from './BottomSheetExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
@@ -200,7 +201,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
   },
-
+  BottomSheetExample: {
+    icon: '⬆️',
+    title: 'Bottom sheet',
+    screen: BottomSheetExample,
+  },
   CopyShareablesPerformanceTest: {
     icon: '🔄',
     title: 'Copy shareables performance test',
