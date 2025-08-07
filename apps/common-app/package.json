@@ -26,7 +26,7 @@
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.0.0",
     "@react-navigation/stack": "^7.1.1",
-    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.8.0#~/.yarn/patches/@shopify-flash-list-npm-1.8.0-54e02d8f74.patch",
+    "@shopify/flash-list": "2.0.2",
     "d3-shape": "^3.2.0",
     "eslint-plugin-reanimated": "workspace:*",
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
