@@ -25,8 +25,8 @@ jobs:
         id: read-compatibility-json
         working-directory: packages/react-native-reanimated
         run: |
-          PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8')).platforms)")
-          VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8')).react-native-versions))")
+          PLATFORMS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['platforms'])")
+          VERSIONS=$(node -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']))")
           echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
           echo "react-native-versions=$VERSIONS" >> $GITHUB_OUTPUT
 
