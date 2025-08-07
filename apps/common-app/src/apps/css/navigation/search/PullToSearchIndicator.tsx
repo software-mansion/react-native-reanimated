@@ -1,41 +1,36 @@
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { StyleSheet } from 'react-native';
-import Animated, {
-  Easing,
-  type SharedValue,
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
 
 import { Text } from '@/apps/css/components';
-import { spacing } from '@/theme';
+import { colors, iconSizes, radius, spacing } from '@/theme';
 
-type PullToSearchIndicatorProps = {
-  show: SharedValue<boolean>;
-};
+import { usePullToSearch } from './PullToSearchProvider';
 
-export default function PullToSearchIndicator({
-  show,
-}: PullToSearchIndicatorProps) {
-  const progress = useDerivedValue(() =>
-    withTiming(show.value ? 1 : 0, {
-      easing: Easing.inOut(Easing.ease),
-    })
-  );
+export default function PullToSearchIndicator() {
+  const { setPullToSearchShown } = usePullToSearch();
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: progress.value,
-      transform: [{ scale: (1 + progress.value) / 2 }],
-    };
-  });
+  useEffect(() => {
+    setTimeout(() => {
+      setPullToSearchShown(true);
+    }, 5000);
+  }, [setPullToSearchShown]);
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      <FontAwesomeIcon icon={faSearch} />
-      <Text variant="heading3">Pull down to search</Text>
+    <Animated.View
+      entering={SlideInUp.duration(1000)}
+      exiting={SlideOutUp.duration(1000)}
+      style={styles.container}>
+      <View style={styles.pullToSearchBadge}>
+        <FontAwesomeIcon
+          color={colors.foreground1}
+          icon={faSearch}
+          size={iconSizes.sm}
+        />
+        <Text variant="label1">Pull down to search</Text>
+      </View>
     </Animated.View>
   );
 }
@@ -51,5 +46,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
+    zIndex: 1000,
+  },
+  pullToSearchBadge: {
+    alignItems: 'center',
+    backgroundColor: colors.background1,
+    borderRadius: radius.full,
+    boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.15)',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    padding: spacing.md,
   },
 });
