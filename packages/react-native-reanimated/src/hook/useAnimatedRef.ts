@@ -108,13 +108,13 @@ function useAnimatedRefNative<
   });
 
   if (!serializableMappingCache.get(ref)) {
-    const animatedRefShareableHandle = createSerializable({
+    const animatedRefSerializableHandle = createSerializable({
       __init: (): AnimatedRefOnUI => {
         'worklet';
         return () => sharedWrapper.value;
       },
     });
-    serializableMappingCache.set(ref, animatedRefShareableHandle);
+    serializableMappingCache.set(ref, animatedRefSerializableHandle);
   }
 
   return ref;

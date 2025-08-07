@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createSerializable } from '..';
 
-export function createSerializableTypeTests() {
+function createSerializableTypeTests() {
   const serializable0 = createSerializable(0);
   const serializable1 = createSerializable(true);
   const serializable2 = createSerializable(null);
