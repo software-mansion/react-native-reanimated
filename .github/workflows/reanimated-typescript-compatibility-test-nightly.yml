@@ -17,11 +17,16 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     outputs:
-      platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
-      react-native-versions-with-nightly: ${{ steps.read-compatibility-json.outputs.react-native-versions-with-nightly }}
+      platforms: ${{ steps.set-outputs.outputs.platforms }}
+      react-native-versions-with-nightly: ${{ steps.set-outputs.outputs.react-native-versions-with-nightly }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/read-compatibility-json
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          cat /tmp/platforms.json >> $GITHUB_OUTPUT
+          cat /tmp/react-native-versions-with-nightly.json >> $GITHUB_OUTPUT
 
   reanimated-typescript-compatibility-test-nightly:
     needs: read-compatibility-json
