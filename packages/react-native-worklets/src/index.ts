@@ -18,7 +18,6 @@ export {
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { serializableMappingCache } from './shareableMappingCache';
-export type { CreateSerializable } from './shareables';
 export { createSerializable, isSerializableRef } from './shareables';
 export {
   callMicrotasks,
