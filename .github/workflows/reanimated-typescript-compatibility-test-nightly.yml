@@ -25,7 +25,6 @@ jobs:
       - name: Set outputs
         id: set-outputs
         run: |
-          cat /tmp/platforms.json >> $GITHUB_OUTPUT
           cat /tmp/react-native-versions-with-nightly.json >> $GITHUB_OUTPUT
 
   reanimated-typescript-compatibility-test-nightly:
