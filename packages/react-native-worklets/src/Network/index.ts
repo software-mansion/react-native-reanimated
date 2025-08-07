@@ -1,53 +1,75 @@
-// @ts-nocheck
-
 'use strict';
 
-import invariant from 'invariant';
 import { TurboModuleRegistry } from 'react-native';
 
-// const BlobManager = TurboModuleRegistry.getEnforcing;
+import { WorkletsError } from '../WorkletsError';
 
-const FileReaderModule = getHostObjectFromTurboModule(
-  TurboModuleRegistry.getEnforcing('FileReaderModule')
-);
-const PlatformConstans = getHostObjectFromTurboModule(
-  TurboModuleRegistry.getEnforcing('PlatformConstants')
-);
-const WebSocketModule = getHostObjectFromTurboModule(
-  TurboModuleRegistry.getEnforcing('WebSocketModule')
-);
+// const FileReaderModule = getHostObjectFromTurboModule(
+//   TurboModuleRegistry.getEnforcing('FileReaderModule')
+// );
+// const PlatformConstans = getHostObjectFromTurboModule(
+//   TurboModuleRegistry.getEnforcing('PlatformConstants')
+// );
+// const WebSocketModule = getHostObjectFromTurboModule(
+//   TurboModuleRegistry.getEnforcing('WebSocketModule')
+// );
 const BlobModule = getHostObjectFromTurboModule(
   TurboModuleRegistry.getEnforcing('BlobModule')
 );
 
-// const NetworkingModule = getHostObjectFromTurboModule(
-//   TurboModuleRegistry.getEnforcing('Networking')
-// );
-
 export function initializeNetworking() {
   'worklet';
+
+  const errorProxyFactory = (moduleName: string) => {
+    return new Proxy(
+      {},
+      {
+        get: (__, propName) => {
+          throw new WorkletsError(
+            `${propName as string} not available in ${moduleName}`
+          );
+        },
+      }
+    );
+  };
+
+  const BlobProxy = new Proxy(BlobModule, {
+    get: (target, propName) => {
+      if (propName === 'addNetworkingHandler') {
+        return () => {};
+      }
+      if (propName === 'getConstants') {
+        return target.getConstants.bind(BlobModule);
+      } else {
+        return undefined;
+      }
+    },
+  });
+
+  const TurboModules = (globalThis as Record<string, unknown>)
+    .TurboModules as Map<string, unknown>;
+
   try {
-    globalThis.TurboModules.set('FileReaderModule', FileReaderModule);
-    globalThis.TurboModules.set('PlatformConstants', PlatformConstans);
-    globalThis.TurboModules.set('WebSocketModule', WebSocketModule);
-    globalThis.TurboModules.set('BlobModule', BlobModule);
-    // globalThis.TurboModules.set('Networking', NetworkingModule);
+    TurboModules.set('FileReaderModule', errorProxyFactory('FileReaderModule'));
+    TurboModules.set(
+      'PlatformConstants',
+      errorProxyFactory('PlatformConstants')
+    );
+    TurboModules.set('WebSocketModule', errorProxyFactory('WebSocketModule'));
+    TurboModules.set('BlobModule', BlobProxy);
   } catch (e) {
     console.error('Error initializing networking:', e);
   }
-  // console.log('dupa');
-  // console.log('globalThis.fetch', globalThis.fetch?.toString());
-  // console.log(Object.keys(globalThis));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('react-native/Libraries/Core/setUpXHR');
-  // console.log('globalThis.fetch', globalThis.fetch.toString());
-  // console.log(Object.keys(globalThis));
-  // console.log(www);
-  // console.log('post dupa');
 }
 
 function getHostObjectFromTurboModule(turboModule: object) {
   const hostObject = Object.getPrototypeOf(turboModule);
-  console.log(turboModule, hostObject);
-  invariant('mmmmmmagic' in hostObject, 'Host object is available.');
+  if (!('mmmmmmagic' in hostObject)) {
+    throw new WorkletsError(
+      'Host object is not available. Make sure you are using the correct TurboModule.'
+    );
+  }
   return hostObject;
 }

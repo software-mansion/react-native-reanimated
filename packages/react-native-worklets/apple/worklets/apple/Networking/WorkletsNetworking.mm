@@ -22,11 +22,13 @@
 #import <React-Core/React/RCTFollyConvert.h>
 #import <React-jsi/jsi/JSIDynamic.h>
 
-typedef WorkletsURLRequestCancellationBlock (^WorkletsHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
+// TODO: Document thread switching because it's a mess right now...
+
+typedef RCTURLRequestCancellationBlock (^WorkletsHTTPQueryResult)(NSError *error, NSDictionary<NSString *, id> *result);
 
 @interface WorkletsNetworking ()
 
-- (WorkletsURLRequestCancellationBlock)processDataForHTTPQuery:(NSDictionary<NSString *, id> *)data
+- (RCTURLRequestCancellationBlock)processDataForHTTPQuery:(NSDictionary<NSString *, id> *)data
                                            workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                                  callback:(WorkletsHTTPQueryResult)callback;
 @end
@@ -69,9 +71,7 @@ static NSString *WorkletsGenerateFormBoundary()
                                   freeWhenDone:YES];
 }
 
-// TODO: Document thread switching because it's a mess right now...
-
-- (WorkletsURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData
+- (RCTURLRequestCancellationBlock)process:(NSArray<NSDictionary *> *)formData
                            workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                  callback:(WorkletsHTTPQueryResult)callback
 {
@@ -101,12 +101,10 @@ static NSString *WorkletsGenerateFormBoundary()
                                     }];
 }
 
-- (WorkletsURLRequestCancellationBlock)handleResult:(NSDictionary<NSString *, id> *)result
+- (RCTURLRequestCancellationBlock)handleResult:(NSDictionary<NSString *, id> *)result
                                 workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                          error:(NSError *)error
 {
-  //  RCTAssertThread(_networker.methodQueue, @"handleResult: must be called on request queue");
-
   if (error) {
     return _callback(error, nil);
   }
@@ -219,17 +217,6 @@ static NSString *WorkletsGenerateFormBoundary()
 
 - (void)jsiAbortRequest:(double)requestID
 {
-  //  auto originRuntime = runtimeManager_->getRuntime(&rt);
-  //  if(!originRuntime) {
-  //    return;
-  //  }
-  // TODO: RESTORE
-  // dispatch_async(_methodQueue, ^{
-  //  self->uiScheduler_->scheduleOnUI([self, requestID]() {
-  //    [self->_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
-  //    [self->_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
-  //  });
-
   [_tasksLock lock];
   [_tasksByRequestID[[NSNumber numberWithDouble:requestID]] cancel];
   [_tasksByRequestID removeObjectForKey:[NSNumber numberWithDouble:requestID]];
@@ -238,11 +225,6 @@ static NSString *WorkletsGenerateFormBoundary()
 
 - (void)jsiClearCookies:(facebook::jsi::Runtime &)rt responseSender:(jsi::Function &&)responseSender
 {
-  //  auto originRuntime = runtimeManager_->getRuntime(&rt);
-  //  if(!originRuntime) {
-  //    return;
-  //  }
-  //  originRuntime->runOnQueue([self, responseSender{std::move(responseSender)}](jsi::Runtime &rt){
   NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
   if (!storage.cookies.count) {
     responseSender.call(rt, jsi::Value(rt, false));
@@ -253,12 +235,11 @@ static NSString *WorkletsGenerateFormBoundary()
     [storage deleteCookie:cookie];
   }
   responseSender.call(rt, jsi::Value(rt, true));
-  //  });
 }
 
 #pragma mark - internals
 
-- (WorkletsURLRequestCancellationBlock)buildRequest:(NSDictionary<NSString *, id> *)query
+- (RCTURLRequestCancellationBlock)buildRequest:(NSDictionary<NSString *, id> *)query
                                 workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
                                completionBlock:(void (^)(NSURLRequest *request, jsi::Runtime &rt))completionBlock
 {
@@ -293,7 +274,7 @@ static NSString *WorkletsGenerateFormBoundary()
                                 if (error) {
                                   RCTLogError(@"Error processing request body: %@", error);
                                   // Ideally we'd circle back to JS here and notify an error/abort on the request.
-                                  return (WorkletsURLRequestCancellationBlock)nil;
+                                  return (RCTURLRequestCancellationBlock)nil;
                                 }
                                 request.HTTPBody = result[@"body"];
                                 NSString *dataContentType = result[@"contentType"];
@@ -328,7 +309,7 @@ static NSString *WorkletsGenerateFormBoundary()
                                 strongWorkletRuntime->runOnQueue(
                                     [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
 
-                                return (WorkletsURLRequestCancellationBlock)nil;
+                                return (RCTURLRequestCancellationBlock)nil;
                               }];
 }
 
@@ -410,10 +391,10 @@ static NSString *WorkletsGenerateFormBoundary()
  * - @"contentType" (NSString): the content type header of the request
  *
  */
-- (WorkletsURLRequestCancellationBlock)
+- (RCTURLRequestCancellationBlock)
     processDataForHTTPQuery:(nullable NSDictionary<NSString *, id> *)query
              workletRuntime:(std::weak_ptr<worklets::WorkletRuntime>)workletRuntime
-                   callback:(WorkletsURLRequestCancellationBlock (^)(NSError *error, NSDictionary<NSString *, id> *result))
+                   callback:(RCTURLRequestCancellationBlock (^)(NSError *error, NSDictionary<NSString *, id> *result))
                                 callback
 {
   if (!query) {
@@ -438,7 +419,7 @@ static NSString *WorkletsGenerateFormBoundary()
   }
   NSURLRequest *request = [RCTConvert NSURLRequest:query[@"uri"]];
   if (request) {
-    __block WorkletsURLRequestCancellationBlock cancellationBlock = nil;
+    __block RCTURLRequestCancellationBlock cancellationBlock = nil;
     RCTNetworkTask *task = [self->rctNetworking_
         networkTaskWithRequest:request
                completionBlock:^(NSURLResponse *response, NSData *data, NSError *error) {
@@ -553,6 +534,7 @@ static NSString *WorkletsGenerateFormBoundary()
               rt:(facebook::jsi::Runtime &)rt
 {
   id responseData = nil;
+  // TODO: ???
   //  for (id<RCTNetworkingResponseHandler> handler in _responseHandlers) {
   //    if ([handler canHandleNetworkingResponse:responseType]) {
   //      responseData = [handler handleNetworkingResponse:response data:data];
