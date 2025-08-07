@@ -3,7 +3,7 @@ import {
   executeOnUIRuntimeSync,
   makeShareableCloneRecursive,
   runOnUI,
-  shareableMappingCache,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
@@ -195,7 +195,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  shareableMappingCache.set(mutable, handle);
+  serializableMappingCache.set(mutable, handle);
   return mutable as Mutable<Value>;
 }
 

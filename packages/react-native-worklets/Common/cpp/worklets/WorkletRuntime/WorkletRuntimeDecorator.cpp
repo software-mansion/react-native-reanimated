@@ -94,7 +94,7 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableClone",
+      "_createSerializable",
       [](jsi::Runtime &rt,
          const jsi::Value &value,
          const jsi::Value &nativeStateSource) {
@@ -105,7 +105,7 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableHostObject",
+      "_createSerializableHostObject",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableHostObject(
             rt, value.asObject(rt).asHostObject(rt));
@@ -113,49 +113,52 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableString",
+      "_createSerializableString",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableString(rt, value.asString(rt));
       });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableNumber",
+      "_createSerializableNumber",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableNumber(rt, value.asNumber());
       });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableBoolean",
+      "_createSerializableBoolean",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableBoolean(rt, value.asBool());
       });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableBigInt",
+      "_createSerializableBigInt",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableBigInt(rt, value.asBigInt(rt));
       });
 
   jsi_utils::installJsiFunction(
-      rt, "_makeShareableUndefined", [](jsi::Runtime &rt) {
+      rt, "_createSerializableUndefined", [](jsi::Runtime &rt) {
         return makeSerializableUndefined(rt);
       });
 
   jsi_utils::installJsiFunction(
-      rt, "_makeShareableArray", [](jsi::Runtime &rt, const jsi::Value &value) {
+      rt,
+      "_createSerializableArray",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableArray(rt, value.asObject(rt).asArray(rt), false);
       });
 
-  jsi_utils::installJsiFunction(rt, "_makeShareableNull", [](jsi::Runtime &rt) {
-    return makeSerializableNull(rt);
-  });
+  jsi_utils::installJsiFunction(
+      rt, "_createSerializableNull", [](jsi::Runtime &rt) {
+        return makeSerializableNull(rt);
+      });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableObject",
+      "_createSerializableObject",
       [](jsi::Runtime &rt,
          const jsi::Value &value,
          const jsi::Value &shouldRetainRemote,
@@ -169,21 +172,21 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableWorklet",
+      "_createSerializableWorklet",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableWorklet(rt, value.asObject(rt), false);
       });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableInitializer",
+      "_createSerializableInitializer",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableInitializer(rt, value.asObject(rt));
       });
 
   jsi_utils::installJsiFunction(
       rt,
-      "_makeShareableFunction",
+      "_createSerializableFunction",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
       });

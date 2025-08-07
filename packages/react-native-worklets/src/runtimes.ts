@@ -4,8 +4,8 @@ import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -74,7 +74,7 @@ export function createWorkletRuntime(
 
   return WorkletsModule.createWorkletRuntime(
     name,
-    makeShareableCloneRecursive(() => {
+    createSerializable(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
@@ -115,7 +115,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   return (...args) =>
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         worklet(...args);
       })

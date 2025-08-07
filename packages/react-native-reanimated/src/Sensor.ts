@@ -1,5 +1,5 @@
 'use strict';
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
   SensorConfig,
@@ -49,7 +49,7 @@ export default class Sensor {
   }
 
   register(
-    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) {
     const config = this.config;
     const sensorType = this.sensorType;
@@ -57,7 +57,7 @@ export default class Sensor {
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      eventHandler as ShareableRef<WorkletFunction>
+      eventHandler as SerializableRef<WorkletFunction>
     );
     return this.sensorId !== -1;
   }

@@ -140,7 +140,7 @@ class SerializableJSRef : public jsi::NativeState {
       const std::shared_ptr<Serializable> &value) {
     auto object = jsi::Object(rt);
     object.setNativeState(rt, std::make_shared<SerializableJSRef>(value));
-    object.setProperty(rt, "__shareableRef", true);
+    object.setProperty(rt, "__serializableRef", true);
     return object;
   }
 };
