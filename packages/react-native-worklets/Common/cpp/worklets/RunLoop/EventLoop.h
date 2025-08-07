@@ -17,6 +17,9 @@ namespace worklets {
 struct Timeout {
   std::function<void(jsi::Runtime &rt)> callback;
   int64_t targetTime;
+  bool operator<(const Timeout &v) const {
+    return targetTime < v.targetTime;
+  }
 };
 
 struct TimeoutsQueueState {

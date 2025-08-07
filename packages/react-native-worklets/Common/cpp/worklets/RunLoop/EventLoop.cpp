@@ -60,14 +60,9 @@ void EventLoop::run() {
           if (state->queue.empty()) {
             state->cv.wait(lock);
           } else {
-            const auto nextTimeout = std::min_element(
-                state->queue.begin(),
-                state->queue.end(),
-                [](const auto &v1, const auto &v2) {
-                  return v1.targetTime < v2.targetTime;
-                });
+            const auto &nextTimeout = state->queue[0];
             const auto timeToWait =
-                nextTimeout->targetTime - getCurrentTimeInMs();
+                nextTimeout.targetTime - getCurrentTimeInMs();
             state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
           }
           lock.unlock();
@@ -97,8 +92,10 @@ void EventLoop::pushTimeout(
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
     const auto targetTime = getCurrentTimeInMs() + delay;
-    timeoutsQueueState_->queue.emplace_back(
-        Timeout{std::move(job), targetTime});
+    const auto tomeout = Timeout{std::move(job), targetTime};
+    auto &queue = timeoutsQueueState_->queue;
+    auto it = std::lower_bound(queue.begin(), queue.end(), tomeout);
+    queue.insert(it, tomeout);
   }
   timeoutsQueueState_->cv.notify_one();
 }
