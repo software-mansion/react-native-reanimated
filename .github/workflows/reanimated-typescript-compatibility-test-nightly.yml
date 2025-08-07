@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
+        react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions-with-nightly) }}
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}

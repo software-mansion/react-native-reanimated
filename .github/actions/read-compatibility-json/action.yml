@@ -15,4 +15,4 @@ runs:
         VERSIONS_WITH_NIGHTLY=$(node -e "const versions = JSON.parse(require('fs').readFileSync('compatibility.json', 'utf8'))['react-native-versions']; versions.push('nightly'); console.log(JSON.stringify(versions))")
         echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
         echo "react-native-versions=$VERSIONS" >> $GITHUB_OUTPUT
-        echo "react-native-versions-with-nightly=$VERSIONS_WITH_NIGHTLY" >> $GITHUB_OUTPUT 
+        echo "react-native-versions-with-nightly=$VERSIONS_WITH_NIGHTLY" >> $GITHUB_OUTPUT
