@@ -21,7 +21,8 @@ jobs:
       react-native-versions-with-nightly: ${{ steps.set-outputs.outputs.react-native-versions-with-nightly }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/read-compatibility-json
+      - name: Read compatibility.json
+        run: node .github/workflows/helper/read-compatibility.js
       - name: Set outputs
         id: set-outputs
         run: |
@@ -52,6 +53,13 @@ jobs:
         run: yarn install
       - name: Build Reanimated
         run: yarn workspace react-native-reanimated build
+
+      - name: Check if react-native version exists
+        run: |
+          if npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
+            echo "React Native version ${matrix.react-native-version} does not exist - Skipping..."
+            exit 0
+          fi
       - name: Install react-native ${{ matrix.react-native-version }}
         run: yarn up react-native@${{ matrix.react-native-version }}
 
