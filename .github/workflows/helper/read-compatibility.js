@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const compatibilityPath = path.join(__dirname, '..', 'compatibility.json');
+const compatibilityPath = path.join(__dirname, '..', '..', '..', 'packages', 'react-native-reanimated', 'compatibility.json');
 const compatibilityData = JSON.parse(fs.readFileSync(compatibilityPath, 'utf8'));
 
 const platforms = compatibilityData['platforms'];
