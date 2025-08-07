@@ -68,14 +68,17 @@ jobs:
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Check if react-native version exists
+        id: check-react-native-version
         run: |
-          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
-            echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
-            exit 0
+          if ! npm view react-native@0.81 dist-tags | grep -q 'next:' ; then 
+            echo "React Native version 0.81 does not exist - Skipping..."
+            echo "SKIP_BUILD=true" >> $GITHUB_ENV
           fi
       - name: Create app
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern in app
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
         run: |
@@ -83,20 +86,22 @@ jobs:
           yarn set version berry
           yarn config set nodeLinker node-modules
       - name: Install Worklets
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Install Reanimated
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Pods
-        if: ${{ matrix.platform == 'iOS' }}
+        if: ${{ matrix.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod update
       - name: Build app (iOS)
-        if: ${{ matrix.platform == 'iOS' }}
+        if: ${{ matrix.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -configuration ${{matrix.mode}} -scheme ${{env.APP_NAME}} -destination "generic/platform=iOS Simulator" -quiet
       - name: Build app (Android)
-        if: ${{ matrix.platform == 'Android' }}
+        if: ${{ matrix.platform == 'Android' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assemble${{ matrix.mode }} --console=plain

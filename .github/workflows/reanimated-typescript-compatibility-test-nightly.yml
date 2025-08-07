@@ -55,23 +55,29 @@ jobs:
         run: yarn workspace react-native-reanimated build
 
       - name: Check if react-native version exists
+        id: check-react-native-version
         run: |
           if ! npm view react-native@${{ matrix.react-native-version }} dist-tags | grep -q 'next:' ; then 
             echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
-            exit 0
+            echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
           fi
       - name: Install react-native ${{ matrix.react-native-version }}
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         run: yarn up react-native@${{ matrix.react-native-version }}
 
       - name: Check source types
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: packages/react-native-reanimated
         run: yarn type:check:src
       - name: Check plugin types
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: packages/react-native-reanimated
         run: yarn type:check:plugin
       - name: Check API
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: packages/react-native-reanimated
         run: yarn type:check:app
       - name: Run common type tests
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         working-directory: packages/react-native-reanimated
         run: yarn type:check:tests:common
