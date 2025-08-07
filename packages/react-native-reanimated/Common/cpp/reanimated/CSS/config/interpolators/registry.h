@@ -2,11 +2,9 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-// react-native style props interpolators
 #include <reanimated/CSS/config/interpolators/base/image.h>
 #include <reanimated/CSS/config/interpolators/base/text.h>
 #include <reanimated/CSS/config/interpolators/base/view.h>
-#include <reanimated/CSS/config/interpolators/svg/circle.h>
 
 #include <stdexcept>
 #include <string>
@@ -20,7 +18,11 @@ using ComponentInterpolatorsMap =
 
 bool hasInterpolators(const std::string &componentName);
 
-const InterpolatorFactoriesRecord &getInterpolators(
+const InterpolatorFactoriesRecord &getComponentInterpolators(
     const std::string &componentName);
+
+void registerComponentInterpolators(
+    const std::string &componentName,
+    const InterpolatorFactoriesRecord &interpolators);
 
 } // namespace reanimated::css

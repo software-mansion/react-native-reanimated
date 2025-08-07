@@ -1,9 +1,9 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { shareableMappingCache } from './shareableMappingCache';
+import { serializableMappingCache } from './shareableMappingCache';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -105,7 +105,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // mechanism we just schedule the work ommiting the queue. This is ok for the
       // uses that we currently have but may not be ok for future tests that we write.
       WorkletsModule.scheduleOnUI(
-        makeShareableCloneRecursive(() => {
+        createSerializable(() => {
           'worklet';
           worklet(...args);
         })
@@ -118,8 +118,8 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // situation when conversion is only done via microtask queue. This does not
       // make the app particularily less efficient as converted objects are cached
       // and for a given worklet the conversion only happens once.
-      makeShareableCloneRecursive(worklet);
-      makeShareableCloneRecursive(args);
+      createSerializable(worklet);
+      createSerializable(args);
     }
 
     enqueueUI(worklet, args);
@@ -134,8 +134,8 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
-  shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
+  const shareableRunOnUIWorklet = createSerializable(runOnUIWorklet);
+  serializableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
 }
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
@@ -148,7 +148,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => ReturnValue {
   return (...args) => {
     return WorkletsModule.executeOnUIRuntimeSync(
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         const result = worklet(...args);
         return makeShareableCloneOnUIRecursive(result);
@@ -279,7 +279,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         // mechanism we just schedule the work ommiting the queue. This is ok for the
         // uses that we currently have but may not be ok for future tests that we write.
         WorkletsModule.scheduleOnUI(
-          makeShareableCloneRecursive(() => {
+          createSerializable(() => {
             'worklet';
             worklet(...args);
           })
@@ -292,8 +292,8 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         // situation when conversion is only done via microtask queue. This does not
         // make the app particularily less efficient as converted objects are cached
         // and for a given worklet the conversion only happens once.
-        makeShareableCloneRecursive(worklet);
-        makeShareableCloneRecursive(args);
+        createSerializable(worklet);
+        createSerializable(args);
       }
 
       enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
@@ -309,9 +309,8 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIAsyncWorklet =
-    makeShareableCloneRecursive(runOnUIAsyncWorklet);
-  shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+  const shareableRunOnUIAsyncWorklet = createSerializable(runOnUIAsyncWorklet);
+  serializableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
@@ -331,7 +330,7 @@ function flushUIQueue(): void {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
     WorkletsModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);

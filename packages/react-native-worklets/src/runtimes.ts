@@ -9,8 +9,8 @@ import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
 } from './shareables';
 import { setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
@@ -80,7 +80,7 @@ export function createWorkletRuntime(
 
   const workletRuntime = WorkletsModule.createWorkletRuntime(
     name,
-    makeShareableCloneRecursive(() => {
+    createSerializable(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
@@ -138,7 +138,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   return (...args) =>
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         worklet(...args);
       })

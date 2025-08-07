@@ -14,11 +14,17 @@ import type {
   StrokeProps,
   TouchableProps,
   TransformProps,
-  VectorEffectProps,
 } from 'react-native-svg';
 
-import type { StyleBuilderConfig } from '../../style';
-import { colorAttributes } from '../common';
+import {
+  convertStringToNumber,
+  processColorSVG,
+  processOpacity,
+  processStrokeDashArray,
+  type StyleBuilderConfig,
+} from '../../style';
+
+const colorAttributes = { process: processColorSVG };
 
 const colorProps: StyleBuilderConfig<ColorProps> = {
   color: colorAttributes,
@@ -26,20 +32,46 @@ const colorProps: StyleBuilderConfig<ColorProps> = {
 
 const fillProps: StyleBuilderConfig<FillProps> = {
   fill: colorAttributes,
-  fillOpacity: true,
-  fillRule: true,
+  fillOpacity: { process: processOpacity },
+  fillRule: {
+    process: convertStringToNumber({
+      evenodd: 0,
+      nonzero: 1,
+    }),
+  },
 };
 
 const stokeProps: StyleBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
-  strokeOpacity: true,
-  strokeDasharray: true, // TODO - add preprocessor
+  strokeOpacity: { process: processOpacity },
+  strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
-  strokeLinecap: true,
-  strokeLinejoin: true,
+  strokeLinecap: {
+    process: convertStringToNumber({
+      butt: 0,
+      square: 2,
+      round: 1,
+    }),
+  },
+  strokeLinejoin: {
+    process: convertStringToNumber({
+      miter: 0,
+      bevel: 2,
+      round: 1,
+    }),
+  },
   strokeMiterlimit: true,
-  vectorEffect: true,
+  vectorEffect: {
+    process: convertStringToNumber({
+      none: 0,
+      default: 0,
+      nonScalingStroke: 1,
+      'non-scaling-stroke': 1,
+      inherit: 2,
+      uri: 3,
+    }),
+  },
 };
 
 const clipProps: StyleBuilderConfig<ClipProps> = {
@@ -64,10 +96,6 @@ const transformProps: StyleBuilderConfig<TransformProps> = {
   x: true,
   y: true,
   transform: true, // TODO - add preprocessor
-};
-
-const vectorEffectProps: StyleBuilderConfig<VectorEffectProps> = {
-  vectorEffect: true,
 };
 
 const responderProps: StyleBuilderConfig<
@@ -109,7 +137,6 @@ export const commonSvgProps = {
   ...stokeProps,
   ...clipProps,
   ...transformProps,
-  ...vectorEffectProps,
   ...responderProps,
   ...commonMarkerProps,
   ...commonMaskProps,

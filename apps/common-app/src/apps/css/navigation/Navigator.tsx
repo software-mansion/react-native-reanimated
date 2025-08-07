@@ -11,12 +11,12 @@ import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
 import BottomTabBar from './BottomTabBar';
-import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './constants';
 import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
-import { SearchScreen } from './search';
+import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './routes';
+import { PullToSearchProvider, SearchScreen } from './search';
 import type { Routes } from './types';
 import { isRouteWithRoutes } from './utils';
 
@@ -175,32 +175,34 @@ function Navigator() {
 
   return (
     <LocalNavigationProvider>
-      <Stack.Navigator
-        screenListeners={{
-          focus: (e) => {
-            currentRoute.value = e.target?.split('-')[0];
-          },
-        }}
-        screenOptions={{
-          animation: 'default',
-          gestureEnabled: true,
-          headerStyle: {
-            backgroundColor: colors.background1,
-          },
-          headerTintColor: colors.foreground1,
-          headerTitleAlign: 'center',
-          statusBarStyle: 'dark',
-        }}>
-        {Object.entries(TAB_ROUTES).flatMap(([key, value]) =>
-          createStackScreens(
-            value.routes,
-            value.name,
-            [key],
-            shouldReduceMotion
-          )
-        )}
-      </Stack.Navigator>
-      <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
+      <PullToSearchProvider>
+        <Stack.Navigator
+          screenListeners={{
+            focus: (e) => {
+              currentRoute.value = e.target?.split('-')[0];
+            },
+          }}
+          screenOptions={{
+            animation: 'default',
+            gestureEnabled: true,
+            headerStyle: {
+              backgroundColor: colors.background1,
+            },
+            headerTintColor: colors.foreground1,
+            headerTitleAlign: 'center',
+            statusBarStyle: 'dark',
+          }}>
+          {Object.entries(TAB_ROUTES).flatMap(([key, value]) =>
+            createStackScreens(
+              value.routes,
+              value.name,
+              [key],
+              shouldReduceMotion
+            )
+          )}
+        </Stack.Navigator>
+        <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
+      </PullToSearchProvider>
     </LocalNavigationProvider>
   );
 }

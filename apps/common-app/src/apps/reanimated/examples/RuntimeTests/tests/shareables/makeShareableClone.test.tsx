@@ -572,16 +572,16 @@ describe('Test makeShareableClone', () => {
   test('makeShareableHostFunction', async () => {
     // Arrange
     // @ts-expect-error It's ok
-    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
+    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
 
     // Act
     await render(
       <ValueComponent
         onRunUIFunction={() => {
           'worklet';
-          // make shareable boolean returns a ShareableRef<boolean> which is a host object
-          const shareableBoolean = hostFunction(true);
-          const checks = [typeof hostFunction === 'function', shareableBoolean.__shareableRef];
+          // createSerializableBoolean returns a SerializableRef<boolean> which is a serializable ref
+          const serializableBoolean = hostFunction(true);
+          const checks = [typeof hostFunction === 'function', serializableBoolean.__serializableRef];
           return checks.every(Boolean);
         }}
       />,

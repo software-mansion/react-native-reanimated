@@ -32,7 +32,8 @@ type SelectListsDropdownProps<T> = {
     inputTextStyle?: StyleProp<TextStyle>;
     chevronColor?: string;
   };
-  renderInput?: (selected: T) => ReactNode;
+  formatInputLabel?: (selected?: SelectListOption<T>) => string | undefined;
+  renderInput?: (selected?: SelectListOption<T>) => ReactNode;
   onSelect: (value: T) => void;
 };
 
@@ -43,12 +44,14 @@ export default function SelectListDropdown<T>({
   selected,
   fitInScreen,
   styleOptions,
+  formatInputLabel,
   renderInput,
 }: SelectListsDropdownProps<T>) {
   const isExpanded = useSharedValue(false);
 
-  const selectedLabel =
-    options.find((option) => option.value === selected)?.label ?? '-';
+  const selectedOption = options.find((option) => option.value === selected);
+  const inputLabel =
+    formatInputLabel?.(selectedOption) ?? selectedOption?.label ?? '-';
 
   const dropdownOptions = options.map((option) => ({
     key: (option.key ?? option.label) as string,
@@ -61,13 +64,13 @@ export default function SelectListDropdown<T>({
     ),
   }));
 
-  const input = renderInput?.(selected) ?? (
+  const input = renderInput?.(selectedOption) ?? (
     <View style={[styles.input, styleOptions?.inputStyle]}>
       <Text
         numberOfLines={1}
         style={[flex.shrink, styleOptions?.inputTextStyle]}
         variant="subHeading3">
-        {selectedLabel}
+        {inputLabel}
       </Text>
       <RotatableChevron
         color={styleOptions?.chevronColor ?? colors.foreground2}

@@ -2,6 +2,7 @@
 import {
   IS_ANDROID,
   processBoxShadowNative,
+  processColor,
   processTransformOrigin,
 } from '../../../../common';
 import type { PlainStyle } from '../../../types';
@@ -15,7 +16,8 @@ import {
   processInsetInline,
   processTransform,
 } from '../style';
-import { colorAttributes } from './common';
+
+const colorAttributes = { process: processColor };
 
 export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
