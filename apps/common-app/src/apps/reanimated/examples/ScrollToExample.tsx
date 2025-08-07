@@ -1,18 +1,15 @@
-import type {
+import {
+  FlashList,
   FlashListProps,
+  FlashListRef,
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
-import { FlashList } from '@shopify/flash-list';
 import type { Ref } from 'react';
 import React, { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ListRenderItem as FlatListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
-import type { AnimatedProps } from 'react-native-reanimated';
-import Animated, {
-  runOnUI,
-  scrollTo,
-  useAnimatedRef,
-} from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
+import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
 
 const DATA = [...Array(100).keys()];
 
@@ -21,9 +18,9 @@ function getRandomOffset() {
   return Math.random() * 2000;
 }
 
-const AnimatedFlashList = Animated.createAnimatedComponent(
-  FlashList
-) as React.ComponentClass<AnimatedProps<FlashListProps<number>>>;
+const AnimatedFlashList = Animated.createAnimatedComponent<
+  FlashListProps<number> & { ref?: React.Ref<FlashListRef<number>> }
+>(FlashList);
 
 type Scrollable = {
   scrollFromJS: () => void;
@@ -148,7 +145,7 @@ const FlatListExample = ({ animated, ref }: ExampleProps) => {
 };
 
 const FlashListExample = ({ animated, ref }: ExampleProps) => {
-  const aref = useAnimatedRef<FlashList<number>>();
+  const aref = useAnimatedRef<React.Component & FlashListRef<number>>();
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
@@ -168,14 +165,7 @@ const FlashListExample = ({ animated, ref }: ExampleProps) => {
     []
   );
 
-  return (
-    <AnimatedFlashList
-      ref={aref}
-      estimatedItemSize={60}
-      renderItem={renderItem}
-      data={DATA}
-    />
-  );
+  return <AnimatedFlashList ref={aref} renderItem={renderItem} data={DATA} />;
 };
 
 const styles = StyleSheet.create({
