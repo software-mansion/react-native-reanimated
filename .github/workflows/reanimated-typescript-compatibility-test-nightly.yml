@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
-      react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
+      react-native-versions-with-nightly: ${{ steps.read-compatibility-json.outputs.react-native-versions-with-nightly }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/read-compatibility-json
