@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  reanimated-android-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:

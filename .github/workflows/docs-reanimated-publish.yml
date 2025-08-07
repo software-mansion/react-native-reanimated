@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish:
+  docs-reanimated-publish:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:

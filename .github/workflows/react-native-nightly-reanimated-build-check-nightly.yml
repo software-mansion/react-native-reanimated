@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  react-native-nightly-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -26,6 +26,9 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Select Xcode
+        if: ${{ matrix.platform == 'iOS' }}
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - name: Setup Yarn
         # Sometimes `npx @react-native-community/cli init` fails at random.
         # Pre-installing it with Yarn seems to improve stability.
@@ -66,6 +69,10 @@ jobs:
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
+      - name: Setup Paper (Android)
+        if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'Android' }}
+        working-directory: ${{ env.APP_NAME }}/android
+        run: sed -i 's/newArchEnabled=true/newArchEnabled=false/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}

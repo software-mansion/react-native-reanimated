@@ -28,7 +28,7 @@ export type WorkletRuntime = {
  *   the same thread immediately after the runtime is created.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<reanimated::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/3.x/threading/createWorkletRuntime
  */
 // @ts-expect-error Check `runOnUI` overload.
 export function createWorkletRuntime(

@@ -24,7 +24,14 @@ const extensions = [
   '.swift',
 ];
 // Every hidden directory is ignored as well.
-const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build', 'cypress'];
+const ignoredDirectories = [
+  'node_modules',
+  'Pods',
+  'lib',
+  'build',
+  'cypress',
+  'vendor',
+];
 
 const urlRegex =
   /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
@@ -70,7 +77,8 @@ function validUrls(data) {
       currentData.url.includes('twitter.com') || // redirect issue
       currentData.url.includes('blog.swmansion.com') || // authorization issue
       currentData.url.includes('opensource.org') || // request from GitHub actions probably blocked
-      currentData.url.includes('good+first+issue') // sometimes we don't have any issues with this label
+      currentData.url.includes('good+first+issue') || // sometimes we don't have any issues with this label
+      currentData.url.includes('freepik.com') // 403 Forbidden due to bot detection
     ) {
       index++;
       sendRequest();

@@ -9,8 +9,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-// This class is an almost exact copy of MessageQueueThreadImpl taken from here:
-// https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/bridge/queue/MessageQueueThreadImpl.java
+// This class is an almost exact copy of MessageQueueThreadImpl from the React Native source code.
 // The only method that has changed is `quitSynchronous()` (see comment above
 // function implementation for details).
 @DoNotStrip

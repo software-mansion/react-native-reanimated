@@ -31,9 +31,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-macos-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       WORKING_DIRECTORY: apps/macos-example
     concurrency:
@@ -42,6 +42,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`

@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
+  reanimated-common-validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: cpplint
     runs-on: ubuntu-latest
