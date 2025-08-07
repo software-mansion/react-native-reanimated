@@ -3,10 +3,12 @@ env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
-    paths:
-      - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
-  schedule:
-    - cron: '37 19 * * *'
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
   workflow_call:
   workflow_dispatch:
 
@@ -51,6 +53,9 @@ jobs:
           touch yarn.lock
           yarn set version berry
           yarn config set nodeLinker node-modules
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
