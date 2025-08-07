@@ -4,7 +4,7 @@ import {
   isWorkletFunction,
   makeShareableCloneRecursive,
   runOnUI,
-  shareableMappingCache,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
@@ -52,7 +52,7 @@ import {
  */
 const IN_STYLE_UPDATER = { current: false };
 const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
-shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
+serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,

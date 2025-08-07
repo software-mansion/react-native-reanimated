@@ -1,49 +1,49 @@
-import { isShareableRef, makeShareableCloneRecursive } from 'react-native-worklets';
+import { isSerializableRef, makeShareableCloneRecursive } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
-describe('Test isShareableRef', () => {
+describe('Test isSerializableRef', () => {
   test('check if makeShareableCloneRecursive<number> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive(1);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<object> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive({ a: 1, b: '2' });
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<string> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive('test');
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<boolean> returns shareable ref', () => {
     const trueShareableRef = makeShareableCloneRecursive(true);
     const falseShareableRef = makeShareableCloneRecursive(false);
 
-    expect(isShareableRef(trueShareableRef)).toBe(true);
-    expect(isShareableRef(falseShareableRef)).toBe(true);
+    expect(isSerializableRef(trueShareableRef)).toBe(true);
+    expect(isSerializableRef(falseShareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<undefined> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive(undefined);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<null> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive(null);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<bigint> returns shareable ref', () => {
     const shareableRef = makeShareableCloneRecursive(BigInt(123));
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<array> returns shareable ref', () => {
@@ -67,14 +67,14 @@ describe('Test isShareableRef', () => {
     ];
     const shareableRef = makeShareableCloneRecursive(arrayValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<Set> returns shareable ref', () => {
     const setValue = new Set([1, '1', true]);
     const shareableRef = makeShareableCloneRecursive(setValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<Map> returns shareable ref', () => {
@@ -85,21 +85,21 @@ describe('Test isShareableRef', () => {
     ]);
     const shareableRef = makeShareableCloneRecursive(mapValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<Error> returns shareable ref', () => {
     const errorValue = new Error('test');
     const shareableRef = makeShareableCloneRecursive(errorValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<RegExp> returns shareable ref', () => {
     const regExpValue = /a/;
     const shareableRef = makeShareableCloneRecursive(regExpValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<complex object> returns shareable ref', () => {
@@ -123,7 +123,7 @@ describe('Test isShareableRef', () => {
     };
     const shareableRef = makeShareableCloneRecursive(obj);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<worklet function> returns shareable ref', () => {
@@ -133,21 +133,21 @@ describe('Test isShareableRef', () => {
     };
     const shareableRef = makeShareableCloneRecursive(workletFunction);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<remote function> returns shareable ref', () => {
     const remoteFunction = () => 1;
     const shareableRef = makeShareableCloneRecursive(remoteFunction);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<ArrayBuffer> returns shareable ref', () => {
     const arrayBuffer = new ArrayBuffer(3);
     const shareableRef = makeShareableCloneRecursive(arrayBuffer);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<host object> returns shareable ref', () => {
@@ -155,7 +155,7 @@ describe('Test isShareableRef', () => {
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const shareableRef = makeShareableCloneRecursive(hostObjectValue);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<host function> returns shareable ref', () => {
@@ -163,7 +163,7 @@ describe('Test isShareableRef', () => {
     const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
     const shareableRef = makeShareableCloneRecursive(hostFunction);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if makeShareableCloneRecursive<TurboModule-like object> returns shareable ref', () => {
@@ -176,23 +176,23 @@ describe('Test isShareableRef', () => {
     Object.setPrototypeOf(obj, proto);
     const shareableRef = makeShareableCloneRecursive(obj);
 
-    expect(isShareableRef(shareableRef)).toBe(true);
+    expect(isSerializableRef(shareableRef)).toBe(true);
   });
 
   test('check if non-shareable values return false', () => {
-    expect(isShareableRef(1)).toBe(false);
-    expect(isShareableRef('test')).toBe(false);
-    expect(isShareableRef(true)).toBe(false);
-    expect(isShareableRef(false)).toBe(false);
-    expect(isShareableRef(null)).toBe(false);
-    expect(isShareableRef(undefined)).toBe(false);
-    expect(isShareableRef({ a: 1 })).toBe(false);
-    expect(isShareableRef([1, 2, 3])).toBe(false);
-    expect(isShareableRef(() => {})).toBe(false);
-    expect(isShareableRef(new Set([1, 2]))).toBe(false);
-    expect(isShareableRef(new Map([[1, 2]]))).toBe(false);
-    expect(isShareableRef(new Error('test'))).toBe(false);
-    expect(isShareableRef(/test/)).toBe(false);
-    expect(isShareableRef(new ArrayBuffer(3))).toBe(false);
+    expect(isSerializableRef(1)).toBe(false);
+    expect(isSerializableRef('test')).toBe(false);
+    expect(isSerializableRef(true)).toBe(false);
+    expect(isSerializableRef(false)).toBe(false);
+    expect(isSerializableRef(null)).toBe(false);
+    expect(isSerializableRef(undefined)).toBe(false);
+    expect(isSerializableRef({ a: 1 })).toBe(false);
+    expect(isSerializableRef([1, 2, 3])).toBe(false);
+    expect(isSerializableRef(() => {})).toBe(false);
+    expect(isSerializableRef(new Set([1, 2]))).toBe(false);
+    expect(isSerializableRef(new Map([[1, 2]]))).toBe(false);
+    expect(isSerializableRef(new Error('test'))).toBe(false);
+    expect(isSerializableRef(/test/)).toBe(false);
+    expect(isSerializableRef(new ArrayBuffer(3))).toBe(false);
   });
 });
