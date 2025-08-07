@@ -20,6 +20,7 @@ jobs:
       platforms: ${{ steps.read-compatibility-json.outputs.platforms }}
       react-native-versions: ${{ steps.read-compatibility-json.outputs.react-native-versions }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/read-compatibility-json
 
   reanimated-typescript-compatibility-test-nightly:
