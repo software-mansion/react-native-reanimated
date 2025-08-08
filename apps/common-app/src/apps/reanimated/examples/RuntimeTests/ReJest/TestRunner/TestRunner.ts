@@ -3,7 +3,15 @@ import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
-import type { MaybeAsync, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
+import type {
+  DefaultFlags,
+  FlagWrapper,
+  MaybeAsync,
+  TestCase,
+  TestConfiguration,
+  TestSuite,
+  TestValue,
+} from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase, assertTestSuite } from './Asserts';
@@ -13,6 +21,7 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+import { runOnJS } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
@@ -56,6 +65,25 @@ export class TestRunner {
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
     return this._renderLock;
+  }
+
+  public useFlag<T = DefaultFlags>(
+    defaultValue: T | DefaultFlags = 'not_ok',
+  ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
+    const flag: FlagWrapper<T> = {
+      value: defaultValue,
+    };
+    const jsSetter = (value: T | DefaultFlags = 'ok', notificationName?: string) => {
+      flag.value = value;
+      if (notificationName) {
+        this._notificationRegistry.notify(notificationName);
+      }
+    };
+    const confirmation = (value?: T | DefaultFlags, notificationName?: string) => {
+      'worklet';
+      runOnJS(jsSetter)(value, notificationName);
+    };
+    return [flag, confirmation];
   }
 
   public async render(component: ReactElement<Component> | null) {

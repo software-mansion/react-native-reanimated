@@ -94,7 +94,7 @@ void EventLoop::pushTimeout(
     const auto targetTime = getCurrentTimeInMs() + delay;
     const auto tomeout = Timeout{std::move(job), targetTime};
     auto &queue = timeoutsQueueState_->queue;
-    auto it = std::lower_bound(queue.begin(), queue.end(), tomeout);
+    auto it = std::upper_bound(queue.begin(), queue.end(), tomeout);
     queue.insert(it, tomeout);
   }
   timeoutsQueueState_->cv.notify_one();
