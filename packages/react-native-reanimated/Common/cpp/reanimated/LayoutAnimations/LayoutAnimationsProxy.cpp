@@ -396,8 +396,12 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
 void printTree(LightNode::Unshared &node, int level) {
     if (!(strcmp(node->current.componentName, "RNSScreen"))) {
 //        bool isActive = false;
+#ifdef ANDROID
         float f = node->current.props->rawProps.getDefault("activityState", 0).asDouble();
 //        isActive = f == 2.0f;
+#else
+      float f =  std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState;
+#endif
         LOG(INFO) << "screen start (activityState: " << f << ") " << node->current.tag << " " << level;
     } else {
 //        LOG(INFO) << node->current.componentName << " " << node->current.tag << " " << level;
@@ -604,8 +608,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(int tag, do
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   transitionUpdated_ = true;
 //  LOG(INFO) << "notifyTransitionProgress ("<< tag <<"): " << progress << ", closing: " << isClosing << ", goingForward: " << isGoingForward << ", isSwiping: " <<isSwiping;
-  
-  if (isSwiping && !isClosing){
+bool isAndroid;
+#ifdef ANDROID
+isAndroid = true;
+#else
+isAndroid = false;
+#endif
+  // TODO: this new approach causes all back transitions to be progress transitions
+  if (isSwiping && !isClosing && !isGoingForward && !isAndroid){
     transitionProgress_ = progress;
     if (transitionState_ == NONE && progress < 1){
       transitionState_ = START;
