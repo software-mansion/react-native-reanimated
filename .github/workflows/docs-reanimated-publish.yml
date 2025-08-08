@@ -8,6 +8,7 @@ on:
     paths:
       - packages/docs-reanimated/**
       - packages/docs-worklets/**
+      - packages/react-native-reanimated/compatibility.json
   workflow_dispatch:
 
 jobs:
