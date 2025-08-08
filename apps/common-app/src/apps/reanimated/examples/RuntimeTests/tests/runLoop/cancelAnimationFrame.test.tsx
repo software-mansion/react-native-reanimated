@@ -78,7 +78,7 @@ describe('Test cancelAnimationFrame', () => {
 
   test('cancels flushed callback within execution loop', async () => {
     // Arrange
-    const notification1 = 'callback1';
+    const notifications = 'callback1';
     const notification2 = 'callback3';
 
     // Act
