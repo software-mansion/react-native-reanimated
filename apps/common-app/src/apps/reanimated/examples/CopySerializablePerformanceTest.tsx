@@ -18,7 +18,7 @@ function createRandomObject(numberOfKeys: number) {
   return obj;
 }
 
-function copyShareablesPerformanceTest(
+function copySerializablePerformanceTest(
   numberOfObjects: number,
   numberOfKeys: number
 ) {
@@ -31,13 +31,13 @@ function copyShareablesPerformanceTest(
   return end - start;
 }
 
-export default function CopyShareablesPerformanceTest() {
+export default function CopySerializablePerformanceTest() {
   const [time, setTime] = useState<number | null>(null);
   const [numberOfObjects, setNumberOfObjects] = useState<number>(1000);
   const [numberOfKeys, setNumberOfKeys] = useState<number>(1000);
 
   const startTest = () => {
-    setTime(copyShareablesPerformanceTest(numberOfObjects, numberOfKeys));
+    setTime(copySerializablePerformanceTest(numberOfObjects, numberOfKeys));
   };
 
   return (

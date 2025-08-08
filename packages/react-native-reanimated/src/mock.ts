@@ -310,7 +310,7 @@ const core = {
   createWorkletRuntime: NOOP,
   runOnRuntime: NOOP,
   makeMutable: ID,
-  makeShareableCloneRecursive: ID,
+  createSerializable: ID,
   isReanimated3: () => false,
   // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,

@@ -17,8 +17,8 @@ export {
 } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { serializableMappingCache } from './shareableMappingCache';
-export { createSerializable, isSerializableRef } from './shareables';
+export { serializableMappingCache } from './serializableMappingCache';
+export { createSerializable, isSerializableRef } from './serializable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,

@@ -1,12 +1,12 @@
 'use strict';
 
-import { serializableMappingCache } from './shareableMappingCache';
+import { serializableMappingCache } from './serializableMappingCache';
 import {
   createSerializable,
   isSerializableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
-} from './shareables';
+} from './serializable';
 import type { SerializableRef } from './workletTypes';
 
 /** @deprecated Use {@link SerializableRef} instead. */

@@ -5,7 +5,7 @@ import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   serializableMappingCache,
   serializableMappingFlag,
-} from './shareableMappingCache';
+} from './serializableMappingCache';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
