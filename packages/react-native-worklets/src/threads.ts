@@ -309,7 +309,8 @@ if (__DEV__) {
     );
   }
 
-  const serializableRunOnUIAsyncWorklet = createSerializable(runOnUIAsyncWorklet);
+  const serializableRunOnUIAsyncWorklet =
+    createSerializable(runOnUIAsyncWorklet);
   serializableMappingCache.set(runOnUIAsync, serializableRunOnUIAsyncWorklet);
 }
 
