@@ -86,6 +86,16 @@ export class TestRunner {
     return [state, setter];
   }
 
+  public orderGuard() {
+    'worklet';
+    let lastExecuted = 0;
+    return (expectedOrder: number) => {
+      'worklet';
+      lastExecuted = lastExecuted == expectedOrder - 1 ? expectedOrder : lastExecuted;
+      return lastExecuted;
+    };
+  }
+
   public async render(component: ReactElement<Component> | null) {
     if (!component && this._renderLock.wasRenderedNull()) {
       return;

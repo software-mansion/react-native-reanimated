@@ -181,3 +181,10 @@ export async function recordAnimationUpdates() {
 export async function stopRecordingAnimationUpdates() {
   await animationRecorder.stopRecordingAnimationUpdates();
 }
+
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const orderGuardFn = testRunner.orderGuard;
+export function orderGuard() {
+  'worklet';
+  return orderGuardFn();
+}

@@ -33,7 +33,7 @@ const TestComponent = ({ worklet, runtimeType }: { worklet: () => void; runtimeT
 };
 
 describe('Test clearTimeout', () => {
-  test.each(['ui', 'worklet'])('does nothing on invalid handle', async runtimeType => {
+  test.each(['ui', 'worklet'])('does nothing on invalid handle, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
 
@@ -54,7 +54,7 @@ describe('Test clearTimeout', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'cancels scheduled callback outside of execution loop, runtime type: **%s**',
+    'cancels scheduled callback outside of execution loop, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const notification = 'callback2';
@@ -81,40 +81,37 @@ describe('Test clearTimeout', () => {
     },
   );
 
-  test.each(['ui', 'worklet'])(
-    'cancels flushed callback within execution loop, runtime type: **%s**',
-    async runtimeType => {
-      // Arrange
-      const [notification1, notification2] = ['callback1', 'callback3'];
-      const [flag, setFlag] = useTestState('ok');
+  test.each(['ui', 'worklet'])('cancels flushed callback within execution loop, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback3'];
+    const [flag, setFlag] = useTestState('ok');
 
-      // Act
-      await render(
-        <TestComponent
-          worklet={() => {
-            'worklet';
-            let handle = 0;
-            setTimeout(() => {
-              clearTimeout(handle);
-              notify(notification1);
-            }) as unknown as number;
-            handle = setTimeout(() => {
-              setFlag('not_ok');
-            }) as unknown as number;
-            setTimeout(() => notify(notification2));
-          }}
-          runtimeType={runtimeType}
-        />,
-      );
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          let handle = 0;
+          setTimeout(() => {
+            clearTimeout(handle);
+            notify(notification1);
+          }) as unknown as number;
+          handle = setTimeout(() => {
+            setFlag('not_ok');
+          }) as unknown as number;
+          setTimeout(() => notify(notification2));
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
 
-      // Assert
-      await waitForNotifies([notification1, notification2]);
-      expect(flag.value).toBe('ok');
-    },
-  );
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
+  });
 
   test.each(['ui', 'worklet'])(
-    'cancels scheduled callback within execution loop, runtime type: **%s**',
+    'cancels scheduled callback within execution loop, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];

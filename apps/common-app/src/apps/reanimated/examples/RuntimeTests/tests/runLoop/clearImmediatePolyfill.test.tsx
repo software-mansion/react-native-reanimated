@@ -1,38 +1,39 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
   render,
   test,
-  wait,
+  useTestState,
+  waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { s } from 'react-strict-dom/dist/dom/html';
+import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
 
-const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
-
-type Result = 'ok' | 'not_ok' | 'error';
-
-const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => void }) => {
-  const sharedResult = useSharedValue<Result>('not_ok');
-  registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
+const TestComponent = ({ worklet, runtimeType }: { worklet: () => void; runtimeType: string }) => {
   useEffect(() => {
-    runOnUI(() => {
-      worklet(sharedResult);
-    })();
+    if (runtimeType === 'ui') {
+      runOnUI(() => {
+        'worklet';
+        worklet();
+      })();
+    } else {
+      const rt = createWorkletRuntime({ name: 'testRuntime' });
+      runOnRuntime(rt, () => {
+        'worklet';
+        worklet();
+      })();
+    }
   });
 
   return <View />;
 };
 
 describe('Test clearImmediate', () => {
-  test('does nothing on invalid handle', async () => {
+  test.each(['ui', 'worklet'])('does nothing on invalid handle, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
 
@@ -44,6 +45,7 @@ describe('Test clearImmediate', () => {
           clearImmediate(2137);
           setImmediate(() => notify(notification));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
@@ -51,95 +53,95 @@ describe('Test clearImmediate', () => {
     await waitForNotify(notification);
   });
 
-  test('cancels scheduled callback outside of execution loop', async () => {
+  test.each(['ui', 'worklet'])(
+    'cancels scheduled callback outside of execution loop, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const notification = 'callback2';
+      const [flag, setFlag] = useTestState('ok');
+
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            const handle = setImmediate(() => {
+              setFlag('not_ok');
+            }) as unknown as number;
+            setImmediate(() => notify(notification));
+            clearImmediate(handle);
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
+
+      // Assert
+      await waitForNotify(notification);
+      expect(flag.value).toBe('ok');
+    },
+  );
+
+  test.each(['ui', 'worklet'])('cancels flushed callback within execution loop, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification = 'callback2';
+    const [notification1, notification2] = ['callback1', 'callback1'];
+    const [flag, setFlag] = useTestState('ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
-          'worklet';
-          sharedResult.value = 'ok';
-          const handle = setImmediate(() => {
-            sharedResult.value = 'not_ok';
-          }) as unknown as number;
-          setImmediate(() => notify(notification));
-          clearImmediate(handle);
-        }}
-      />,
-    );
-
-    // Assert
-    await waitForNotify(notification);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
-  });
-
-  test('cancels flushed callback within execution loop', async () => {
-    // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback3';
-
-    // Act
-    await render(
-      <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           let handle = 0;
-          sharedResult.value = 'ok';
           setImmediate(() => {
             clearImmediate(handle);
             notify(notification1);
           }) as unknown as number;
           handle = setImmediate(() => {
-            sharedResult.value = 'not_ok';
+            setFlag('not_ok');
           }) as unknown as number;
           setImmediate(() => notify(notification2));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
 
-  test('cancels scheduled callback within execution loop', async () => {
-    // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback3';
-    const notification3 = 'callback4';
+  test.each(['ui', 'worklet'])(
+    'cancels scheduled callback within execution loop, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+      const [flag, setFlag] = useTestState('ok');
 
-    // Act
-    await render(
-      <TestComponent
-        worklet={sharedResult => {
-          'worklet';
-          let handle = 0;
-          sharedResult.value = 'ok';
-          setImmediate(() => {
-            handle = setImmediate(() => {
-              sharedResult.value = 'not_ok';
-            }) as unknown as number;
-            notify(notification1);
-          });
-          setImmediate(() => {
-            clearImmediate(handle);
-            setImmediate(() => notify(notification3));
-            notify(notification2);
-          });
-        }}
-      />,
-    );
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            let handle = 0;
+            setImmediate(() => {
+              handle = setImmediate(() => {
+                setFlag('not_ok');
+              }) as unknown as number;
+              notify(notification1);
+            });
+            setImmediate(() => {
+              clearImmediate(handle);
+              setImmediate(() => notify(notification3));
+              notify(notification2);
+            });
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
 
-    // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    await waitForNotify(notification3);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
-  });
+      // Assert
+      await waitForNotifies([notification1, notification2, notification3]);
+      expect(flag.value).toBe('ok');
+    },
+  );
 });
