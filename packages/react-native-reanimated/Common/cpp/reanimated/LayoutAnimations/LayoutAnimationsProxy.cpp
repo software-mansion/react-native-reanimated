@@ -126,7 +126,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(Surfac
     
     root = lightNodes_[surfaceId];
     auto afterTopScreen = findTopScreen(root);
-    
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen){
       findSharedElementsOnScreen(afterTopScreen, 1);
@@ -186,8 +185,10 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(LightNode::Unshared nod
   if (!(strcmp(node->current.componentName, "RNSScreen"))){
       bool isActive = false;
 #ifdef ANDROID
-      float f = node->current.props->rawProps.getDefault("activityState", 0).asDouble();
-      isActive = f == 2.0f;
+      // TODO: this looks like a RNSScreens bug - sometimes there is no active screen at a deeper level, when going back
+//      float f = node->current.props->rawProps.getDefault("activityState", 0).asDouble();
+//      isActive = f == 2.0f;
+        isActive = true;
 #else
       isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
 #endif
@@ -390,6 +391,23 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
         break;
     }
   }
+}
+
+void printTree(LightNode::Unshared &node, int level) {
+    if (!(strcmp(node->current.componentName, "RNSScreen"))) {
+//        bool isActive = false;
+        float f = node->current.props->rawProps.getDefault("activityState", 0).asDouble();
+//        isActive = f == 2.0f;
+        LOG(INFO) << "screen start (activityState: " << f << ") " << node->current.tag << " " << level;
+    } else {
+//        LOG(INFO) << node->current.componentName << " " << node->current.tag << " " << level;
+    }
+    for (auto& child: node->children){
+        printTree(child, level + 1);
+    }
+    if (!(strcmp(node->current.componentName, "RNSScreen"))) {
+        LOG(INFO) << "screen end" << " " << node->current.tag;
+    }
 }
 
 void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshared &afterTopScreen, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const {
