@@ -21,6 +21,7 @@ import {
   processColorSVG,
   processOpacity,
   processStrokeDashArray,
+  processTransformSVG,
   type StyleBuilderConfig,
 } from '../../style';
 
@@ -80,22 +81,24 @@ const clipProps: StyleBuilderConfig<ClipProps> = {
 };
 
 const transformProps: StyleBuilderConfig<TransformProps> = {
-  translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
-  translateX: true,
-  translateY: true,
-  origin: true, // TODO - add preprocessor (NumberArray) and split to originX and originY
-  originX: true,
-  originY: true,
-  scale: true, // TODO - add preprocessor (NumberArray) and split to scaleX and scaleY
-  scaleX: true,
-  scaleY: true,
-  skew: true, // TODO - add preprocessor (NumberArray) and split to skewX and skewY
-  skewX: true,
-  skewY: true,
-  rotation: true,
-  x: true,
-  y: true,
-  transform: true, // TODO - add preprocessor
+  // Begin of deprecated props
+  translate: false,
+  translateX: false,
+  translateY: false,
+  origin: false,
+  originX: false,
+  originY: false,
+  scale: false,
+  scaleX: false,
+  scaleY: false,
+  skew: false,
+  skewX: false,
+  skewY: false,
+  rotation: false,
+  x: false,
+  y: false,
+  // End of deprecated props
+  transform: { process: processTransformSVG },
 };
 
 const responderProps: StyleBuilderConfig<

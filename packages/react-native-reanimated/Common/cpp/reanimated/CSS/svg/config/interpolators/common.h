@@ -46,20 +46,31 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0)},
-    {"translateY", value<SVGLength>(0)},
-    {"originX", value<SVGLength>(0)},
-    {"originY", value<SVGLength>(0)},
-    {"scaleX", value<CSSDouble>(1)},
-    {"scaleY", value<CSSDouble>(1)},
-    {"skewX", value<CSSAngle>(0)},
-    {"skewY", value<CSSAngle>(0)},
-    {"rotation", value<CSSAngle>(0)},
+    // {"transform",
+    //  transforms(
+    //      {"perspective",
+    //       transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+    //      {"rotate", transformOp<RotateOperation>("0deg")},
+    //      {"rotateX", transformOp<RotateXOperation>("0deg")},
+    //      {"rotateY", transformOp<RotateYOperation>("0deg")},
+    //      {"rotateZ", transformOp<RotateZOperation>("0deg")},
+    //      {"scale", transformOp<ScaleOperation>(1)},
+    //      {"scaleX", transformOp<ScaleXOperation>(1)},
+    //      {"scaleY", transformOp<ScaleYOperation>(1)},
+    //      {"translateX",
+    //       transformOp<TranslateXOperation>(RelativeTo::Self, "width", 0)},
+    //      {"translateY",
+    //       transformOp<TranslateYOperation>(RelativeTo::Self, "height", 0)},
+    //      {"skewX", transformOp<SkewXOperation>("0deg")},
+    //      {"skewY", transformOp<SkewYOperation>("0deg")},
+    //      {"matrix",
+    //       transformOp<MatrixOperation>(TransformMatrix::Identity())})},
 };
 
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators(
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
-    SVG_STROKE_INTERPOLATORS);
+    SVG_STROKE_INTERPOLATORS,
+    SVG_TRANSFORM_INTERPOLATORS);
 
 } // namespace reanimated::css

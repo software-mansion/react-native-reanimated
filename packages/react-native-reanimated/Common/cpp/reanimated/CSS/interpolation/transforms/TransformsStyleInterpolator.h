@@ -23,7 +23,7 @@ struct TransformKeyframe {
   const std::optional<TransformOperations> toOperations;
 };
 
-class TransformsStyleInterpolator final : public PropertyInterpolator {
+class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
@@ -50,6 +50,14 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const folly::dynamic &newStyleValue,
       const folly::dynamic &lastUpdateValue) override;
 
+ protected:
+  virtual folly::dynamic convertResultToDynamic(
+      const TransformOperations &operations) const;
+  virtual TransformOperation operationFrom(
+      jsi::Runtime &rt,
+      const jsi::Value &value) const;
+  virtual TransformOperation operationFrom(const folly::dynamic &value) const;
+
  private:
   const std::shared_ptr<TransformInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
@@ -57,11 +65,11 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::optional<TransformOperations> reversingAdjustedStartValue_;
 
-  static std::optional<TransformOperations> parseTransformOperations(
+  std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
-      const jsi::Value &values);
-  static std::optional<TransformOperations> parseTransformOperations(
-      const folly::dynamic &values);
+      const jsi::Value &values) const;
+  std::optional<TransformOperations> parseTransformOperations(
+      const folly::dynamic &values) const;
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       double fromOffset,
       double toOffset,
@@ -89,8 +97,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static folly::dynamic convertResultToDynamic(
-      const TransformOperations &operations);
   TransformInterpolatorUpdateContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };
