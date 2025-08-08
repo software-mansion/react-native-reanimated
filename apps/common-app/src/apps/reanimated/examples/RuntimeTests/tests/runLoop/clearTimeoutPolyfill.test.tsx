@@ -8,7 +8,7 @@ import {
   notify,
   render,
   test,
-  useFlag,
+  useTestState,
   waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -59,7 +59,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const notification = 'callback2';
-      const [flag, confirmation] = useFlag<string>('ok');
+      const [flag, confirmation] = useTestState<string>('ok');
 
       // Act
       await render(
@@ -87,7 +87,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback3'];
-      const [flag, confirmation] = useFlag<string>('ok');
+      const [flag, confirmation] = useTestState<string>('ok');
 
       // Act
       await render(
@@ -119,7 +119,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [flag, confirmation] = useFlag<string>('ok');
+      const [flag, confirmation] = useTestState<string>('ok');
 
       // Act
       await render(

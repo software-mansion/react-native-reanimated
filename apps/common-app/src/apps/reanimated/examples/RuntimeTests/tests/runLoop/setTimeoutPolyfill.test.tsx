@@ -7,7 +7,7 @@ import {
   notify,
   render,
   test,
-  useFlag,
+  useTestState,
   waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -65,7 +65,7 @@ describe('Test setTimeout', () => {
     // Arrange
     const notification = 'callback';
     const argValue = 42;
-    const [flag, confirmation] = useFlag();
+    const [flag, confirmation] = useTestState();
 
     // Act
     await render(
@@ -94,7 +94,7 @@ describe('Test setTimeout', () => {
   test.each(['ui', 'worklet'])('increments handle on each request, runtime type: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, confirmation] = useFlag();
+    const [flag, confirmation] = useTestState();
 
     // Act
     await render(
@@ -121,7 +121,7 @@ describe('Test setTimeout', () => {
     // Arrange
     const notification = 'callback';
     const delay = 128;
-    const [flag, confirmation] = useFlag();
+    const [flag, confirmation] = useTestState();
 
     // Act
     await render(
@@ -148,7 +148,7 @@ describe('Test setTimeout', () => {
   test.each(['ui', 'worklet'])('nested timeouts, runtime type: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, confirmation] = useFlag<number>(0);
+    const [flag, confirmation] = useTestState<number>(0);
 
     // Act
     await render(
@@ -176,7 +176,7 @@ describe('Test setTimeout', () => {
   test.each(['ui', 'worklet'])('timeouts order of execution, same time, runtime type: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, confirmation] = useFlag<number>(0);
+    const [flag, confirmation] = useTestState<number>(0);
 
     // Act
     await render(
@@ -206,7 +206,7 @@ describe('Test setTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, confirmation] = useFlag<number>(0);
+      const [flag, confirmation] = useTestState<number>(0);
 
       // Act
       await render(
@@ -237,7 +237,7 @@ describe('Test setTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, confirmation] = useFlag<number>(0);
+      const [flag, confirmation] = useTestState<number>(0);
 
       // Act
       await render(
@@ -268,7 +268,7 @@ describe('Test setTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [flag, confirmation] = useFlag<number>(0);
+      const [flag, confirmation] = useTestState<number>(0);
 
       // Act
       await render(
@@ -303,7 +303,7 @@ describe('Test setTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, confirmation] = useFlag<number>(0);
+      const [flag, confirmation] = useTestState<number>(0);
 
       // Act
       await render(

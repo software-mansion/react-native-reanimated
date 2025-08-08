@@ -154,8 +154,8 @@ export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
-export function useFlag<T = DefaultFlags>(defaultValue?: T) {
-  return testRunner.useFlag<T>(defaultValue);
+export function useTestState<T = DefaultFlags>(defaultValue?: T) {
+  return testRunner.useTestState<T>(defaultValue);
 }
 
 export async function mockAnimationTimer() {

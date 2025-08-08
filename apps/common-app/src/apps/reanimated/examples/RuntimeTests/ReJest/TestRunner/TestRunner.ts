@@ -67,23 +67,23 @@ export class TestRunner {
     return this._renderLock;
   }
 
-  public useFlag<T = DefaultFlags>(
+  public useTestState<T = DefaultFlags>(
     defaultValue: T | DefaultFlags = 'not_ok',
   ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
-    const flag: FlagWrapper<T> = {
+    const state: FlagWrapper<T> = {
       value: defaultValue,
     };
     const jsSetter = (value: T | DefaultFlags = 'ok', notificationName?: string) => {
-      flag.value = value;
+      state.value = value;
       if (notificationName) {
         this._notificationRegistry.notify(notificationName);
       }
     };
-    const confirmation = (value?: T | DefaultFlags, notificationName?: string) => {
+    const setter = (value?: T | DefaultFlags, notificationName?: string) => {
       'worklet';
       runOnJS(jsSetter)(value, notificationName);
     };
-    return [flag, confirmation];
+    return [state, setter];
   }
 
   public async render(component: ReactElement<Component> | null) {
