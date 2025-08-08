@@ -1,10 +1,10 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { serializableMappingCache } from './serializableMappingCache';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './serializable';
+import { serializableMappingCache } from './serializableMappingCache';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
