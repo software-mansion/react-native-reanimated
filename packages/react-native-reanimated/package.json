@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -93,7 +93,7 @@
     "@babel/core": "^7.0.0-0",
     "react": "*",
     "react-native": "*",
-    "react-native-worklets": ">=0.3.0"
+    "react-native-worklets": ">=0.4.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
