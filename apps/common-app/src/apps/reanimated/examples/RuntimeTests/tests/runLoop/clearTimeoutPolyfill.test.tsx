@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
   render,
   test,
@@ -59,7 +58,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const notification = 'callback2';
-      const [flag, confirmation] = useTestState<string>('ok');
+      const [flag, setFlag] = useTestState('ok');
 
       // Act
       await render(
@@ -67,7 +66,7 @@ describe('Test clearTimeout', () => {
           worklet={() => {
             'worklet';
             const handle = setTimeout(() => {
-              confirmation('not_ok');
+              setFlag('not_ok');
             }) as unknown as number;
             setTimeout(() => notify(notification));
             clearTimeout(handle);
@@ -87,7 +86,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback3'];
-      const [flag, confirmation] = useTestState<string>('ok');
+      const [flag, setFlag] = useTestState('ok');
 
       // Act
       await render(
@@ -100,7 +99,7 @@ describe('Test clearTimeout', () => {
               notify(notification1);
             }) as unknown as number;
             handle = setTimeout(() => {
-              confirmation('not_ok');
+              setFlag('not_ok');
             }) as unknown as number;
             setTimeout(() => notify(notification2));
           }}
@@ -119,7 +118,7 @@ describe('Test clearTimeout', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [flag, confirmation] = useTestState<string>('ok');
+      const [flag, setFlag] = useTestState('ok');
 
       // Act
       await render(
@@ -129,7 +128,7 @@ describe('Test clearTimeout', () => {
             let handle = 0;
             setTimeout(() => {
               handle = setTimeout(() => {
-                confirmation('not_ok');
+                setFlag('not_ok');
               }) as unknown as number;
               notify(notification1);
             });

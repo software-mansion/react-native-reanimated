@@ -154,7 +154,7 @@ export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
-export function useTestState<T = DefaultFlags>(defaultValue?: T) {
+export function useTestState<T = DefaultFlags>(defaultValue: T) {
   return testRunner.useTestState<T>(defaultValue);
 }
 

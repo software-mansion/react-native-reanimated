@@ -68,7 +68,7 @@ export class TestRunner {
   }
 
   public useTestState<T = DefaultFlags>(
-    defaultValue: T | DefaultFlags = 'not_ok',
+    defaultValue: T | DefaultFlags,
   ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
     const state: FlagWrapper<T> = {
       value: defaultValue,
