@@ -92,10 +92,10 @@ void EventLoop::pushTimeout(
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
     const auto targetTime = getCurrentTimeInMs() + delay;
-    const auto tomeout = Timeout{std::move(job), targetTime};
+    const auto timeout = Timeout{std::move(job), targetTime};
     auto &queue = timeoutsQueueState_->queue;
-    auto it = std::upper_bound(queue.begin(), queue.end(), tomeout);
-    queue.insert(it, tomeout);
+    auto it = std::upper_bound(queue.begin(), queue.end(), timeout);
+    queue.insert(it, timeout);
   }
   timeoutsQueueState_->cv.notify_one();
 }

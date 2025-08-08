@@ -2,7 +2,7 @@
 
 export function setupRequestAnimationFrame(animationQueuePollingRate?: number) {
   'worklet';
-  const timeoutIntervel = animationQueuePollingRate ?? 16;
+  const timeoutInterval = animationQueuePollingRate ?? 16;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -42,7 +42,7 @@ export function setupRequestAnimationFrame(animationQueuePollingRate?: number) {
     if (!flushRequested) {
       flushRequested = true;
 
-      setTimeout(flushAnimationFrame, timeoutIntervel);
+      setTimeout(flushAnimationFrame, timeoutInterval);
     }
     return handle;
   };
