@@ -14,7 +14,7 @@ on:
 jobs:
   use-frameworks-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-14
+    runs-on: macos-15
     concurrency:
       group: use-${{matrix.type}}-frameworks-reanimated-build-check-nightly-${{ github.ref }}
       cancel-in-progress: true
@@ -51,6 +51,8 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - name: Install ${{matrix.type}} Pods
         working-directory: ${{env.APP_NAME}}/ios
         run: export USE_FRAMEWORKS=${{matrix.type}} && bundle install && bundle exec pod update

@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  example-next-build-check-and-test:
     runs-on: ubuntu-latest
     concurrency:
       group: build-next-example-${{ github.ref }}

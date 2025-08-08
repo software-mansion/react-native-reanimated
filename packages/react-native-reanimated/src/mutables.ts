@@ -1,9 +1,9 @@
 'use strict';
 import {
+  createSerializable,
   executeOnUIRuntimeSync,
-  makeShareableCloneRecursive,
   runOnUI,
-  shareableMappingCache,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
@@ -140,7 +140,7 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
-  const handle = makeShareableCloneRecursive({
+  const handle = createSerializable({
     __init: () => {
       'worklet';
       return makeMutableUI(initial);
@@ -195,7 +195,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  shareableMappingCache.set(mutable, handle);
+  serializableMappingCache.set(mutable, handle);
   return mutable as Mutable<Value>;
 }
 
