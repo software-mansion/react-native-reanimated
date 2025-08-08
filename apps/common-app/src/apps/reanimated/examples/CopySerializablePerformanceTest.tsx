@@ -47,7 +47,8 @@ export default function CopySerializablePerformanceTest() {
           This test measures the performance of Worklet&apos;s
           createSerializable function.{'\n\n'}
           The test creates an array of objects with random numeric values and
-          measures how long it takes to make them shareable. You can configure:
+          measures how long it takes to make them serializable. You can
+          configure:
           {'\n'}• Number of objects: Total objects in the array{'\n'}• Number of
           keys: Key-value pairs per object{'\n\n'}
         </Text>

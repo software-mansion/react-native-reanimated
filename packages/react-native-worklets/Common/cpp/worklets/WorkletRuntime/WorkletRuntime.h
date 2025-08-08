@@ -94,6 +94,6 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    const jsi::Value &serializableWorkletValue);
 
 } // namespace worklets
