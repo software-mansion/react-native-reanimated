@@ -65,7 +65,7 @@ struct LayoutAnimationsProxy
         mutable bool transitionUpdated_;
         mutable TransitionState transitionState_ = NONE;
         mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
-        mutable int myTag = 10001;
+        mutable int myTag = 10002;
         mutable std::vector<Tag> sharedContainersToRemove_;
         mutable std::unordered_map<Tag, Tag[2]> restoreMap_;
         mutable std::vector<Tag> tagsToRestore_;
