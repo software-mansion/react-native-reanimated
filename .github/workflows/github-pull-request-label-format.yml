@@ -6,7 +6,7 @@ on:
       - synchronize
 
 jobs:
-  format-pull-request-label:
+  github-pull-request-label-format:
     permissions:
       contents: read
       pull-requests: write
