@@ -216,6 +216,9 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
     transition.parentTag[index] = node->parent.lock()->current.tag;
     if (transition.parentTag[0] && transition.parentTag[1]){
       transitions_.push_back({sharedTag, transition});
+    } else if (transition.parentTag[1]){
+      // TODO: this is too eager
+      tagsToRestore_.push_back(transition.snapshot[1].tag);
     }
   }
   for (auto& child: node->children){
