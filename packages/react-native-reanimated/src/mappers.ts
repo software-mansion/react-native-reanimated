@@ -5,6 +5,7 @@ import { IS_JEST } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
+  SharedRegisterer,
   SharedValue,
 } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
@@ -166,7 +167,8 @@ function createMapperRegistry() {
       mapperID: number,
       worklet: () => void,
       inputs: MapperRawInputs,
-      outputs?: MapperOutputs
+      outputs?: MapperOutputs,
+      sharedRegisterer?: SharedRegisterer
     ) => {
       const mapper: Mapper = {
         id: mapperID,
@@ -178,9 +180,22 @@ function createMapperRegistry() {
       mappers.set(mapper.id, mapper);
       sortedMappers = [];
       for (const sv of mapper.inputs) {
-        sv.addListener(mapper.id, () => {
-          mapper.dirty = true;
-          maybeRequestUpdates();
+        sv.addListener(mapper.id, (_value, key?: number | string) => {
+          'worklet';
+          if (
+            key !== undefined &&
+            sharedRegisterer &&
+            sharedRegisterer.has(sv)
+          ) {
+            const sharedRegistryItem = sharedRegisterer.get(sv);
+            if (sharedRegistryItem?.keys.includes(key)) {
+              mapper.dirty = true;
+              maybeRequestUpdates();
+            }
+          } else {
+            mapper.dirty = true;
+            maybeRequestUpdates();
+          }
         });
       }
       maybeRequestUpdates();
@@ -203,7 +218,8 @@ let MAPPER_ID = 9999;
 export function startMapper(
   worklet: () => void,
   inputs: MapperRawInputs = [],
-  outputs: MapperOutputs = []
+  outputs: MapperOutputs = [],
+  sharedRegisterer?: SharedRegisterer
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
@@ -212,7 +228,7 @@ export function startMapper(
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
     }
-    mapperRegistry.start(mapperID, worklet, inputs, outputs);
+    mapperRegistry.start(mapperID, worklet, inputs, outputs, sharedRegisterer);
   })();
 
   return mapperID;

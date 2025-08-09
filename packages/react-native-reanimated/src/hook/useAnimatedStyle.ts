@@ -13,12 +13,14 @@ import type {
   AnimatedStyle,
   AnimationObject,
   NestedObjectValues,
+  SharedRegisterer,
   SharedValue,
   StyleProps,
   Timestamp,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import { makeShareableRegistry } from '../SharedValuesSet';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -447,7 +449,7 @@ function checkSharedValueUsage(
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: () => Style,
+  updater: (sharedRegistry?: SharedRegisterer) => Style,
   dependencies?: DependencyList | null
 ): Style;
 
@@ -501,8 +503,10 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     dependencies.push(adaptersHash);
   }
 
+  const registerer = makeShareableRegistry();
+
   if (!animatedUpdaterData.current) {
-    const initialStyle = initialUpdaterRun(updater);
+    const initialStyle = initialUpdaterRun(updater, registerer);
     if (__DEV__) {
       validateAnimatedStyles(initialStyle);
     }
@@ -525,6 +529,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   const shareableViewDescriptors = viewDescriptors.shareableViewDescriptors;
 
   dependencies.push(shareableViewDescriptors);
+  dependencies.push(registerer.shareableRegistry);
 
   useEffect(() => {
     let fun;
@@ -564,7 +569,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         );
       };
     }
-    const mapperId = startMapper(fun, inputs);
+    const mapperId = startMapper(fun, inputs, undefined, registerer);
     return () => {
       stopMapper(mapperId);
     };
