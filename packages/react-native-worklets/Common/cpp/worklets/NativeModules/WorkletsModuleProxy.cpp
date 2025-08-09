@@ -2,7 +2,7 @@
 #include <react/renderer/uimanager/primitives.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>

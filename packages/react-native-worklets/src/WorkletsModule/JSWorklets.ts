@@ -131,7 +131,7 @@ class JSWorklets implements IWorkletsModule {
     requestAnimationFrameImpl(worklet);
   }
 
-  executeOnUIRuntimeSync<T, R>(_shareable: SerializableRef<T>): R {
+  executeOnUIRuntimeSync<T, R>(_serializable: SerializableRef<T>): R {
     throw new WorkletsError(
       '`executeOnUIRuntimeSync` is not available in JSWorklets.'
     );

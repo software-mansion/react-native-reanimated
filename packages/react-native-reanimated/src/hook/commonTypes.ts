@@ -41,7 +41,10 @@ export type AnimatedRef<T extends Component> = {
 // Might make that type generic if it's ever needed.
 export type AnimatedRefOnJS = AnimatedRef<Component>;
 
-/** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
+/**
+ * `AnimatedRef` is mapped to this type on the UI thread via a serializable
+ * handle.
+ */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
 };

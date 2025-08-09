@@ -44,8 +44,8 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
   return <View />;
 };
 
-describe('Test makeShareableClone', () => {
-  test('makeShareableCloneString', async () => {
+describe('Test createSerializable', () => {
+  test('createSerializableString', async () => {
     // Arrange
     const testString = 'test';
 
@@ -67,7 +67,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedResult.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneNumber', async () => {
+  test('createSerializableNumber', async () => {
     // Arrange
     const testNumber = 123;
 
@@ -89,7 +89,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneTrue', async () => {
+  test('createSerializableTrue', async () => {
     // Arrange
     const trueValue = true;
 
@@ -111,7 +111,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneFalse', async () => {
+  test('createSerializableFalse', async () => {
     // Arrange
     const falseValue = false;
 
@@ -133,7 +133,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneUndefined', async () => {
+  test('createSerializableUndefined', async () => {
     // Arrange
     const undefinedValue = undefined;
 
@@ -155,7 +155,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneNull', async () => {
+  test('createSerializableNull', async () => {
     // Arrange
     const nullValue = null;
 
@@ -177,7 +177,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneBigInt', async () => {
+  test('createSerializableBigInt', async () => {
     // Arrange
     const bigIntValue = BigInt(123);
 
@@ -199,7 +199,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneHostObject', async () => {
+  test('createSerializableHostObject', async () => {
     // Arrange
     // @ts-expect-error It's ok
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
@@ -227,7 +227,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneArray', async () => {
+  test('createSerializableArray', async () => {
     // Arrange
     enum index {
       number = 0,
@@ -336,7 +336,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneSet', async () => {
+  test('createSerializableSet', async () => {
     // Arrange
     const setValue = new Set([1, '1', true]);
 
@@ -365,7 +365,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneMap', async () => {
+  test('createSerializableMap', async () => {
     // Arrange
     const mapValue = new Map<any, any>([
       [1, 2],
@@ -398,7 +398,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCloneError', async () => {
+  test('createSerializableError', async () => {
     // Arrange
     const errorValue = new Error('test');
 
@@ -420,7 +420,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableInitializer', async () => {
+  test('createSerializableInitializer', async () => {
     // Arrange
     const regExpValue = /a/;
 
@@ -442,7 +442,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareablePlainObject', async () => {
+  test('createSerializablePlainObject', async () => {
     // Arrange
     enum key {
       number = 0,
@@ -518,7 +518,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableWorklet', async () => {
+  test('createSerializableWorklet', async () => {
     // Arrange
     const workletFunction = () => {
       'worklet';
@@ -543,7 +543,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableRemoteFunction', async () => {
+  test('createSerializableRemoteFunction', async () => {
     // Arrange
     const remoteFunction = () => {
       return 1;
@@ -569,7 +569,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onUI).toBe('ok');
   });
 
-  test('makeShareableHostFunction', async () => {
+  test('createSerializableHostFunction', async () => {
     // Arrange
     // @ts-expect-error It's ok
     const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
@@ -594,7 +594,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableTurboModuleLike', async () => {
+  test('createSerializableTurboModuleLike', async () => {
     // Arrange
     // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
@@ -628,7 +628,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableArrayBuffer', async () => {
+  test('createSerializableArrayBuffer', async () => {
     // Arrange
     const arrayBuffer = new ArrayBuffer(3);
     const uint8Array = new Uint8Array(arrayBuffer);
@@ -654,7 +654,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('makeShareableCyclicObject', async () => {
+  test('createSerializableCyclicObject', async () => {
     // Arrange
     type RecursiveArray = (number | RecursiveArray)[];
     const cyclicArray: RecursiveArray = [];
@@ -680,7 +680,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('error');
   });
 
-  test('makeShareableInaccessibleObject', async () => {
+  test('createSerializableInaccessibleObject', async () => {
     // Arrange
     class Inaccessible {
       access() {
@@ -706,7 +706,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('error');
   });
 
-  test('makeShareableRemoteNamedFunctionSyncCall', async () => {
+  test('createSerializableRemoteNamedFunctionSyncCall', async () => {
     // Arrange
     function foo() {}
 
@@ -728,7 +728,7 @@ describe('Test makeShareableClone', () => {
     expect(sharedValue.onJS).toBe('error');
   });
 
-  test('makeShareableRemoteAnonymousFunctionSyncCall', async () => {
+  test('createSerializableRemoteAnonymousFunctionSyncCall', async () => {
     // Arrange
     const foo = () => {};
 

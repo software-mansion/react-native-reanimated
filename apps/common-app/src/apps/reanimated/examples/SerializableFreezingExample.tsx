@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { createSerializable } from 'react-native-worklets';
 
-export default function FreezingShareables() {
+export default function SerializableFreezingExample() {
   return (
     <View style={styles.container}>
       <View style={styles.textAndButton}>

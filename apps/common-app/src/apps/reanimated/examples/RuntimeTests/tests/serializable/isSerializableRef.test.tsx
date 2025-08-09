@@ -2,51 +2,51 @@ import { isSerializableRef, createSerializable } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test isSerializableRef', () => {
-  test('check if createSerializable<number> returns shareable ref', () => {
+  test('check if createSerializable<number> returns serializable ref', () => {
     const serializableRef = createSerializable(1);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<object> returns shareable ref', () => {
+  test('check if createSerializable<object> returns serializable ref', () => {
     const serializableRef = createSerializable({ a: 1, b: '2' });
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<string> returns shareable ref', () => {
+  test('check if createSerializable<string> returns serializable ref', () => {
     const serializableRef = createSerializable('test');
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<boolean> returns shareable ref', () => {
-    const trueShareableRef = createSerializable(true);
-    const falseShareableRef = createSerializable(false);
+  test('check if createSerializable<boolean> returns serializable ref', () => {
+    const trueSerializableRef = createSerializable(true);
+    const falseSerializableRef = createSerializable(false);
 
-    expect(isSerializableRef(trueShareableRef)).toBe(true);
-    expect(isSerializableRef(falseShareableRef)).toBe(true);
+    expect(isSerializableRef(trueSerializableRef)).toBe(true);
+    expect(isSerializableRef(falseSerializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<undefined> returns shareable ref', () => {
+  test('check if createSerializable<undefined> returns serializable ref', () => {
     const serializableRef = createSerializable(undefined);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<null> returns shareable ref', () => {
+  test('check if createSerializable<null> returns serializable ref', () => {
     const serializableRef = createSerializable(null);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<bigint> returns shareable ref', () => {
+  test('check if createSerializable<bigint> returns serializable ref', () => {
     const serializableRef = createSerializable(BigInt(123));
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<array> returns shareable ref', () => {
+  test('check if createSerializable<array> returns serializable ref', () => {
     const arrayValue = [
       1,
       true,
@@ -70,14 +70,14 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<Set> returns shareable ref', () => {
+  test('check if createSerializable<Set> returns serializable ref', () => {
     const setValue = new Set([1, '1', true]);
     const serializableRef = createSerializable(setValue);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<Map> returns shareable ref', () => {
+  test('check if createSerializable<Map> returns serializable ref', () => {
     const mapValue = new Map<any, any>([
       [1, 2],
       ['1', '2'],
@@ -88,21 +88,21 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<Error> returns shareable ref', () => {
+  test('check if createSerializable<Error> returns serializable ref', () => {
     const errorValue = new Error('test');
     const serializableRef = createSerializable(errorValue);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<RegExp> returns shareable ref', () => {
+  test('check if createSerializable<RegExp> returns serializable ref', () => {
     const regExpValue = /a/;
     const serializableRef = createSerializable(regExpValue);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<complex object> returns shareable ref', () => {
+  test('check if createSerializable<complex object> returns serializable ref', () => {
     const obj = {
       number: 1,
       true: true,
@@ -126,7 +126,7 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<worklet function> returns shareable ref', () => {
+  test('check if createSerializable<worklet function> returns serializable ref', () => {
     const workletFunction = () => {
       'worklet';
       return 1;
@@ -136,21 +136,21 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<remote function> returns shareable ref', () => {
+  test('check if createSerializable<remote function> returns serializable ref', () => {
     const remoteFunction = () => 1;
     const serializableRef = createSerializable(remoteFunction);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<ArrayBuffer> returns shareable ref', () => {
+  test('check if createSerializable<ArrayBuffer> returns serializable ref', () => {
     const arrayBuffer = new ArrayBuffer(3);
     const serializableRef = createSerializable(arrayBuffer);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<host object> returns shareable ref', () => {
+  test('check if createSerializable<host object> returns serializable ref', () => {
     // @ts-expect-error It's ok
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const serializableRef = createSerializable(hostObjectValue);
@@ -158,7 +158,7 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<host function> returns shareable ref', () => {
+  test('check if createSerializable<host function> returns serializable ref', () => {
     // @ts-expect-error It's ok
     const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
     const serializableRef = createSerializable(hostFunction);
@@ -166,7 +166,7 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if createSerializable<TurboModule-like object> returns shareable ref', () => {
+  test('check if createSerializable<TurboModule-like object> returns serializable ref', () => {
     // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const obj = {
@@ -179,7 +179,7 @@ describe('Test isSerializableRef', () => {
     expect(isSerializableRef(serializableRef)).toBe(true);
   });
 
-  test('check if non-shareable values return false', () => {
+  test('check if non-serializable values return false', () => {
     expect(isSerializableRef(1)).toBe(false);
     expect(isSerializableRef('test')).toBe(false);
     expect(isSerializableRef(true)).toBe(false);
