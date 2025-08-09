@@ -3,6 +3,7 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -55,6 +56,7 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
+  let animationQueuePollingRate: number | undefined;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -64,6 +66,7 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
+    animationQueuePollingRate = nameOrConfig?.animationQueuePollingRate;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -79,6 +82,7 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
+      setupRunLoop(animationQueuePollingRate);
       initializerFn?.();
     }),
     useDefaultQueue,
@@ -118,6 +122,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       createSerializable(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks();
       })
     );
 }
@@ -131,6 +136,11 @@ export type WorkletRuntimeConfig = {
    * before any other worklets.
    */
   initializer?: () => void;
+  /**
+   * Time interval in milliseconds between polling of frame callbacks scheduled
+   * by requestAnimationFrame.
+   */
+  animationQueuePollingRate?: number;
 } & (
   | {
       /**

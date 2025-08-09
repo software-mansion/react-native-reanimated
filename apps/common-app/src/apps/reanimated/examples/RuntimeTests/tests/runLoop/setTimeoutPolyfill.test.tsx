@@ -1,127 +1,295 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
+  orderGuard,
   render,
   test,
-  wait,
+  useTestState,
+  waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-
-const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
-
-type Result = 'ok' | 'not_ok' | 'error';
-
-const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => void }) => {
-  const sharedResult = useSharedValue<Result>('not_ok');
-  registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
-  useEffect(() => {
-    runOnUI(() => {
-      worklet(sharedResult);
-    })();
-  });
-
-  return <View />;
-};
+import { TestComponent } from './TestComponent';
 
 describe('Test setTimeout', () => {
-  test('executes single callback', async () => {
+  test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          setTimeout(() => notify(notification));
+          setTimeout(() => setFlag('ok', notification));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
   });
 
-  test('passes parameters', async () => {
+  test.each(['ui', 'worklet'])('passes parameters, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
     const argValue = 42;
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
-          setTimeout(value => {
-            if (value === argValue) {
-              sharedResult.value = 'ok';
-            }
-            notify(notification);
-          }, argValue);
+          setTimeout(
+            (value: number) => {
+              if (value === argValue) {
+                setFlag('ok');
+              }
+              notify(notification);
+            },
+            0,
+            argValue,
+          );
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
   });
 
-  test('increments handle on each request', async () => {
+  test.each(['ui', 'worklet'])('increments handle on each request, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           const handle1 = setTimeout(() => notify(notification1)) as unknown as number;
           const handle2 = setTimeout(() => notify(notification2)) as unknown as number;
 
           if (handle1 + 1 === handle2) {
-            sharedResult.value = 'ok';
+            setFlag('ok');
           }
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
 
-  test('executes after requested delay', async () => {
+  test.each(['ui', 'worklet'])('executes after requested delay, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
     const delay = 128;
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           const startTime = performance.now();
           setTimeout(() => {
             if (performance.now() - startTime >= delay) {
-              sharedResult.value = 'ok';
+              setFlag();
             }
             notify(notification);
           }, delay);
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
     await waitForNotify(notification);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    expect(flag.value).toBe('ok');
   });
+
+  test.each(['ui', 'worklet'])('nested timeouts, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          setTimeout(() => {
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            });
+            setFlag(order(1), notification1);
+          });
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe(2);
+  });
+
+  test.each(['ui', 'worklet'])('timeouts order of execution, same time, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          setTimeout(() => {
+            setFlag(order(1), notification1);
+          });
+          setTimeout(() => {
+            setFlag(order(2), notification2);
+          });
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe(2);
+  });
+
+  test.each(['ui', 'worklet'])('timeouts order of execution, different times, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          setTimeout(() => {
+            setFlag(order(1), notification1);
+          }, 50);
+          setTimeout(() => {
+            setFlag(order(2), notification2);
+          }, 70);
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe(2);
+  });
+
+  test.each(['ui', 'worklet'])(
+    'timeouts order of execution, inverted scheduled order, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestState<number>(0);
+
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            const order = orderGuard();
+
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            }, 70);
+            setTimeout(() => {
+              setFlag(order(1), notification1);
+            }, 50);
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
+
+      // Assert
+      await waitForNotifies([notification1, notification2]);
+      expect(flag.value).toBe(2);
+    },
+  );
+
+  test.each(['ui', 'worklet'])('timeouts order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          setTimeout(() => {
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            }, 20);
+            setFlag(order(1), notification1);
+          }, 20);
+
+          setTimeout(() => {
+            setFlag(order(3), notification3);
+          }, 100);
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2, notification3]);
+    expect(flag.value).toBe(3);
+  });
+
+  test.each(['ui', 'worklet'])(
+    'timeouts order of execution, asynchronus scheduling, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestState<number>(0);
+
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            const order = orderGuard();
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            });
+            setFlag(order(1), notification1);
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
+
+      // Assert
+      await waitForNotifies([notification1, notification2]);
+      expect(flag.value).toBe(2);
+    },
+  );
 });
