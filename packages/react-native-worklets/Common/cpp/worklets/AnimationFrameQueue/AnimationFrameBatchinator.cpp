@@ -64,7 +64,7 @@ AnimationFrameBatchinator::pullCallbacks() {
 AnimationFrameBatchinator::AnimationFrameBatchinator(
     facebook::jsi::Runtime &uiRuntime,
     std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame)
+        forwardedRequestAnimationFrame)
     : uiRuntime_(&uiRuntime),
       requestAnimationFrame_(std::move(forwardedRequestAnimationFrame)) {}
 
