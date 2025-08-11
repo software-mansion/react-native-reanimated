@@ -142,10 +142,6 @@ export async function waitForNotify(name: string) {
   return notificationRegistry.waitForNotify(name);
 }
 
-export async function waitForNotifications(names: string[]) {
-  return notificationRegistry.waitForNotifications(names);
-}
-
 export function expect(value: TestValue) {
   return testRunner.expect(value);
 }

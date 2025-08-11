@@ -21,7 +21,6 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
-import { runOnJS } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
