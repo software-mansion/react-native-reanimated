@@ -57,6 +57,7 @@ export function createWorkletRuntime(
   let useDefaultQueue = true;
   let customQueue: object | undefined;
   let animationQueuePollingRate: number | undefined;
+  let enableEventLoop: true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -67,6 +68,7 @@ export function createWorkletRuntime(
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
     animationQueuePollingRate = nameOrConfig?.animationQueuePollingRate;
+    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -82,7 +84,9 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
-      setupRunLoop(animationQueuePollingRate);
+      if (enableEventLoop) {
+        setupRunLoop(animationQueuePollingRate);
+      }
       initializerFn?.();
     }),
     useDefaultQueue,
@@ -141,6 +145,13 @@ export type WorkletRuntimeConfig = {
    * by requestAnimationFrame.
    */
   animationQueuePollingRate?: number;
+  /**
+   * Determines whether to enable the default Event Loop or not. The Event Loop
+   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
+   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
+   * `clearImmediate`, and `cancelAnimationFrame` methods.
+   */
+  enableEventLoop: true;
 } & (
   | {
       /**
