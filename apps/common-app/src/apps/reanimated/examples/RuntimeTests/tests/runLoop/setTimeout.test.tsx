@@ -13,10 +13,10 @@ import {
 } from '../../ReJest/RuntimeTestsApi';
 import { TestComponent } from './TestComponent';
 
-describe('Test requestAnimationFrame', () => {
+describe('Test setTimeout', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification = 'callback1';
+    const notification = 'callback';
     const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
@@ -24,7 +24,37 @@ describe('Test requestAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          requestAnimationFrame(() => setFlag('ok', notification));
+          setTimeout(() => setFlag('ok', notification));
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
+  });
+
+  test.each(['ui', 'worklet'])('passes parameters, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const notification = 'callback';
+    const argValue = 42;
+    const [flag, setFlag] = useTestValue('not_ok');
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          setTimeout(
+            (value: number) => {
+              if (value === argValue) {
+                setFlag('ok');
+              }
+              notify(notification);
+            },
+            0,
+            argValue,
+          );
         }}
         runtimeType={runtimeType}
       />,
@@ -44,8 +74,8 @@ describe('Test requestAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          const handle1 = requestAnimationFrame(() => notify(notification1));
-          const handle2 = requestAnimationFrame(() => notify(notification2));
+          const handle1 = setTimeout(() => notify(notification1)) as unknown as number;
+          const handle2 = setTimeout(() => notify(notification2)) as unknown as number;
 
           if (handle1 + 1 === handle2) {
             setFlag('ok');
@@ -60,9 +90,10 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('executes two callbacks in the same iteration, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('executes after requested delay, runtime: **%s**', async runtimeType => {
     // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
+    const notification = 'callback';
+    const delay = 128;
     const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
@@ -70,60 +101,24 @@ describe('Test requestAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
-            notify(notification1);
-          });
-          requestAnimationFrame(frameTimestamp => {
-            if (timestamp === frameTimestamp) {
-              setFlag('ok');
+          const startTime = performance.now();
+          setTimeout(() => {
+            if (performance.now() - startTime >= delay) {
+              setFlag();
             }
-            notify(notification2);
-          });
+            notify(notification);
+          }, delay);
         }}
         runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotifications([notification1, notification2]);
+    await waitForNotify(notification);
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('executes two callbacks in different iterations, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue('not_ok');
-
-    // Act
-    await render(
-      <TestComponent
-        worklet={() => {
-          'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
-            requestAnimationFrame(frameTimestamp => {
-              if (frameTimestamp > timestamp) {
-                setFlag('ok');
-              }
-              notify(notification2);
-            });
-            notify(notification1);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
-
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe('ok');
-  });
-
-  //TODO
-  test.each(['ui', 'worklet'])('nested frames, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('nested timeouts, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [flag, setFlag] = useTestValue<number>(0);
@@ -135,8 +130,8 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
+          setTimeout(() => {
+            setTimeout(() => {
               setFlag(order(2), notification2);
             });
             setFlag(order(1), notification1);
@@ -151,7 +146,7 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('frames order of execution, same time, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('timeouts order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [flag, setFlag] = useTestValue<number>(0);
@@ -163,10 +158,10 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             setFlag(order(1), notification1);
           });
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             setFlag(order(2), notification2);
           });
         }}
@@ -179,9 +174,9 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('frames order of execution, nested frames, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('timeouts order of execution, different times, runtime: **%s**', async runtimeType => {
     // Arrange
-    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+    const [notification1, notification2] = ['callback1', 'callback2'];
     const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
@@ -191,27 +186,24 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              setFlag(order(3), notification2);
-            });
+          setTimeout(() => {
             setFlag(order(1), notification1);
-          });
-          requestAnimationFrame(() => {
-            setFlag(order(2), notification3);
-          });
+          }, 50);
+          setTimeout(() => {
+            setFlag(order(2), notification2);
+          }, 70);
         }}
         runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotifications([notification1, notification2, notification3]);
-    expect(flag.value).toBe(3);
+    await waitForNotifications([notification1, notification2]);
+    expect(flag.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])(
-    'frame order of execution, asynchronus scheduling, runtime: **%s**',
+    'timeouts order of execution, inverted scheduled order, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
@@ -223,7 +215,70 @@ describe('Test requestAnimationFrame', () => {
           worklet={() => {
             'worklet';
             const order = orderGuard();
-            requestAnimationFrame(() => {
+
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            }, 70);
+            setTimeout(() => {
+              setFlag(order(1), notification1);
+            }, 50);
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
+
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(flag.value).toBe(2);
+    },
+  );
+
+  test.each(['ui', 'worklet'])('timeouts order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+    const [flag, setFlag] = useTestValue<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          setTimeout(() => {
+            setTimeout(() => {
+              setFlag(order(2), notification2);
+            }, 20);
+            setFlag(order(1), notification1);
+          }, 20);
+
+          setTimeout(() => {
+            setFlag(order(3), notification3);
+          }, 100);
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifications([notification1, notification2, notification3]);
+    expect(flag.value).toBe(3);
+  });
+
+  test.each(['ui', 'worklet'])(
+    'timeouts order of execution, asynchronus scheduling, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestValue<number>(0);
+
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            const order = orderGuard();
+            setTimeout(() => {
               setFlag(order(2), notification2);
             });
             setFlag(order(1), notification1);

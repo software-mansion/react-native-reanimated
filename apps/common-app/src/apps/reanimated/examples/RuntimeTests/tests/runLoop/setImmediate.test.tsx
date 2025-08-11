@@ -13,10 +13,10 @@ import {
 } from '../../ReJest/RuntimeTestsApi';
 import { TestComponent } from './TestComponent';
 
-describe('Test requestAnimationFrame', () => {
+describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification = 'callback1';
+    const notification = 'callback';
     const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
@@ -24,7 +24,33 @@ describe('Test requestAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          requestAnimationFrame(() => setFlag('ok', notification));
+          setImmediate(() => setFlag('ok', notification));
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
+  });
+
+  test.each(['ui', 'worklet'])('passes parameters, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const notification = 'callback';
+    const argValue = 42;
+    const [flag, setFlag] = useTestValue('not_ok');
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          setImmediate(value => {
+            if (value === argValue) {
+              setFlag('ok');
+            }
+            notify(notification);
+          }, argValue);
         }}
         runtimeType={runtimeType}
       />,
@@ -44,8 +70,8 @@ describe('Test requestAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          const handle1 = requestAnimationFrame(() => notify(notification1));
-          const handle2 = requestAnimationFrame(() => notify(notification2));
+          const handle1 = setImmediate(() => notify(notification1)) as unknown as number;
+          const handle2 = setImmediate(() => notify(notification2)) as unknown as number;
 
           if (handle1 + 1 === handle2) {
             setFlag('ok');
@@ -60,70 +86,7 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('executes two callbacks in the same iteration, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue('not_ok');
-
-    // Act
-    await render(
-      <TestComponent
-        worklet={() => {
-          'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
-            notify(notification1);
-          });
-          requestAnimationFrame(frameTimestamp => {
-            if (timestamp === frameTimestamp) {
-              setFlag('ok');
-            }
-            notify(notification2);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
-
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe('ok');
-  });
-
-  test.each(['ui', 'worklet'])('executes two callbacks in different iterations, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue('not_ok');
-
-    // Act
-    await render(
-      <TestComponent
-        worklet={() => {
-          'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
-            requestAnimationFrame(frameTimestamp => {
-              if (frameTimestamp > timestamp) {
-                setFlag('ok');
-              }
-              notify(notification2);
-            });
-            notify(notification1);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
-
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe('ok');
-  });
-
-  //TODO
-  test.each(['ui', 'worklet'])('nested frames, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('nested tasks, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [flag, setFlag] = useTestValue<number>(0);
@@ -135,8 +98,8 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
+          setImmediate(() => {
+            setImmediate(() => {
               setFlag(order(2), notification2);
             });
             setFlag(order(1), notification1);
@@ -151,7 +114,7 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('frames order of execution, same time, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('tasks order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [flag, setFlag] = useTestValue<number>(0);
@@ -163,10 +126,10 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
+          setImmediate(() => {
             setFlag(order(1), notification1);
           });
-          requestAnimationFrame(() => {
+          setImmediate(() => {
             setFlag(order(2), notification2);
           });
         }}
@@ -179,7 +142,7 @@ describe('Test requestAnimationFrame', () => {
     expect(flag.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('frames order of execution, nested frames, runtime: **%s**', async runtimeType => {
+  test.each(['ui', 'worklet'])('tasks order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
     const [flag, setFlag] = useTestValue<number>(0);
@@ -191,13 +154,13 @@ describe('Test requestAnimationFrame', () => {
           'worklet';
           const order = orderGuard();
 
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
+          setImmediate(() => {
+            setImmediate(() => {
               setFlag(order(3), notification2);
             });
             setFlag(order(1), notification1);
           });
-          requestAnimationFrame(() => {
+          setImmediate(() => {
             setFlag(order(2), notification3);
           });
         }}
@@ -211,7 +174,7 @@ describe('Test requestAnimationFrame', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'frame order of execution, asynchronus scheduling, runtime: **%s**',
+    'tasks order of execution, asynchronus scheduling, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
@@ -223,7 +186,7 @@ describe('Test requestAnimationFrame', () => {
           worklet={() => {
             'worklet';
             const order = orderGuard();
-            requestAnimationFrame(() => {
+            setImmediate(() => {
               setFlag(order(2), notification2);
             });
             setFlag(order(1), notification1);

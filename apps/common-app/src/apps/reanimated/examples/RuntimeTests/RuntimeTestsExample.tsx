@@ -45,7 +45,7 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'serializable',
           importTest: () => {
             require('./tests/serializable/createSerializable.test');
-            require('./tests/serializable/createSerializableOnUI.test');
+            require('./tests/serializable/makeShareableCloneOnUI.test');
             require('./tests/serializable/isSerializableRef.test');
           },
         },
@@ -60,12 +60,14 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
             require('./tests/runLoop/cancelAnimationFrame.test');
-            require('./tests/runLoop/setTimeoutPolyfill.test');
-            require('./tests/runLoop/clearTimeoutPolyfill.test');
-            require('./tests/runLoop/setImmediatePolyfill.test');
-            require('./tests/runLoop/clearImmediatePolyfill.test');
-            require('./tests/runLoop/setIntervalPolyfill.test');
-            require('./tests/runLoop/clearIntervalPolyfill.test');
+            require('./tests/runLoop/setTimeout.test');
+            require('./tests/runLoop/clearTimeout.test');
+            require('./tests/runLoop/setImmediate.test');
+            require('./tests/runLoop/clearImmediate.test');
+            require('./tests/runLoop/setInterval.test');
+            require('./tests/runLoop/clearInterval.test');
+            require('./tests/runLoop/queueMicrotask.test');
+            require('./tests/runLoop/executionOrder.test');
           },
         },
         {
