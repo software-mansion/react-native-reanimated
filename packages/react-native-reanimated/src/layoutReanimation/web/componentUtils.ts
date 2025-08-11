@@ -1,6 +1,7 @@
 'use strict';
 import { logger } from '../../common';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
@@ -14,13 +15,18 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  EasingType,
   KeyframeDefinitions,
 } from './config';
 import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import type { WebEasingsNames } from './Easing.web';
-import { getEasingByName, WebEasings } from './Easing.web';
+import {
+  getEasingByName,
+  maybeGetBezierEasing,
+  WebEasings,
+} from './Easing.web';
 import { prepareCurvedTransition } from './transition/Curved.web';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -28,15 +34,23 @@ function getEasingFromConfig(config: CustomConfig): string {
     return getEasingByName('linear');
   }
 
-  const easingName = config.easingV[EasingNameSymbol];
+  const easingName = (config.easingV as EasingType)[EasingNameSymbol];
 
-  if (!(easingName in WebEasings)) {
+  if (easingName in WebEasings) {
+    return getEasingByName(easingName as WebEasingsNames);
+  }
+
+  const bezierEasing = maybeGetBezierEasing(
+    config.easingV as EasingFunctionFactory
+  );
+
+  if (!bezierEasing) {
     logger.warn(`Selected easing is not currently supported on web.`);
 
     return getEasingByName('linear');
   }
 
-  return getEasingByName(easingName as WebEasingsNames);
+  return bezierEasing;
 }
 
 function getRandomDelay(maxDelay = 1000) {

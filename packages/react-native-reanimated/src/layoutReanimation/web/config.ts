@@ -4,6 +4,7 @@ import type {
   ReduceMotion,
   StyleProps,
 } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import {
   BounceIn,
   BounceInData,
@@ -59,13 +60,13 @@ export interface AnimationConfig {
   reversed: boolean;
 }
 
-interface EasingType {
+export interface EasingType {
   (): number;
   [EasingNameSymbol: symbol]: string;
 }
 
 export interface CustomConfig {
-  easingV?: EasingType;
+  easingV?: EasingType | EasingFunctionFactory;
   easingXV?: EasingType;
   easingYV?: EasingType;
   durationV?: number;
