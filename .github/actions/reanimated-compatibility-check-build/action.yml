@@ -21,61 +21,40 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Setup Yarn
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+    - name:
+        Setup Yarn
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
       run: corepack enable && yarn init
-
     - name: Install React Native CLI
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
       run: yarn add @react-native-community/cli
-
     - name: Create app
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
-      run: yarn rnc-cli init ${{ inputs.app-name }} --version ${{ inputs.react-native-versions }} --skip-install --install-pods 0 --skip-git-init
-
+      run: yarn rnc-cli init ${{inputs.app-name}} --version ${{ inputs.react-native-versions }} --skip-install --install-pods 0 --skip-git-init
     - name: Setup Yarn Modern in app
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+      # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
       working-directory: ${{ inputs.app-name }}
       run: |
         touch yarn.lock
         yarn set version berry
         yarn config set nodeLinker node-modules
-
-    - name: Install Worklets
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.app-name }}
-      run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ inputs.github-sha }}"
-
     - name: Install Reanimated
-      if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
       working-directory: ${{ inputs.app-name }}
-      run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ inputs.github-sha }}"
-
+      run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+    - name: Install Worklets
+      working-directory: ${{ inputs.app-name }}
+      run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
     - name: Select Xcode (iOS)
-      if: ${{ inputs.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+      if: ${{ inputs.platform == 'iOS' }}
       run: sudo xcode-select --switch /Applications/Xcode_16.4.app
-
-    - name: Install Pods
-      if: ${{ inputs.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+    - name: Install Pods (iOS)
+      if: ${{ inputs.platform == 'iOS' }}
       working-directory: ${{ inputs.app-name }}/ios
       run: bundle install && bundle exec pod update
-
     - name: Build app (iOS)
-      if: ${{ inputs.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+      if: ${{ inputs.platform == 'iOS' }}
       working-directory: ${{ inputs.app-name }}/ios
-      run: xcodebuild -workspace ${{ inputs.app-name }}.xcworkspace -configuration ${{ inputs.mode }} -scheme ${{ inputs.app-name }} -destination "generic/platform=iOS Simulator" -quiet
-
+      run: xcodebuild -workspace ${{inputs.app-name}}.xcworkspace -configuration ${{inputs.mode}} -scheme ${{inputs.app-name}} -destination "generic/platform=iOS Simulator" -quiet
     - name: Build app (Android)
-      if: ${{ inputs.platform == 'Android' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-      shell: bash
+      if: ${{ inputs.platform == 'Android' }}
       working-directory: ${{ inputs.app-name }}/android
       run: ./gradlew assemble${{ inputs.mode }} --console=plain
