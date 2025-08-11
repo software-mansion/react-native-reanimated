@@ -64,13 +64,3 @@ jobs:
             echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
               echo "SKIP_BUILD=true" >> $GITHUB_ENV
             fi
-
-      - name: Reanimated Compatibility Check Build
-        uses: ./.github/actions/reanimated-compatibility-check-build
-        if: ${{ steps.check-react-native-version.outputs.skip-build != 'true' }}
-        with:
-          react-native-versions: ${{ matrix.react-native-version }}
-          platform: ${{ matrix.platform }}
-          mode: ${{ matrix.mode }}
-          github-sha: ${{ github.sha }}
-          app-name: ${{ env.APP_NAME }}
