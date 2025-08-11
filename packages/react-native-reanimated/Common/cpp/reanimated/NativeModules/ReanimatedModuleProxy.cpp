@@ -658,8 +658,8 @@ void ReanimatedModuleProxy::performOperations() {
         });
   }
 
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  // jsi::Runtime &rt =
+  //     workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
   {
@@ -723,6 +723,7 @@ void ReanimatedModuleProxy::performOperations() {
           "borderStartColor",
           "borderEndColor",
           "transform",
+          "transformOrigin",
       };
 
       // NOTE: Keep in sync with NativeProxy.java
@@ -739,6 +740,7 @@ void ReanimatedModuleProxy::performOperations() {
       static constexpr auto CMD_BACKGROUND_COLOR = 15;
       static constexpr auto CMD_COLOR = 16;
       static constexpr auto CMD_TINT_COLOR = 17;
+      static constexpr auto CMD_TRANSFORM_ORIGIN = 18;
 
       static constexpr auto CMD_BORDER_RADIUS = 20;
       static constexpr auto CMD_BORDER_TOP_LEFT_RADIUS = 21;
@@ -780,6 +782,12 @@ void ReanimatedModuleProxy::performOperations() {
       static constexpr auto CMD_UNIT_RAD = 201;
       static constexpr auto CMD_UNIT_PX = 202;
       static constexpr auto CMD_UNIT_PERCENT = 203;
+      
+      static constexpr auto CMD_KEYWORD_TOP = 210;
+      static constexpr auto CMD_KEYWORD_LEFT = 211;
+      static constexpr auto CMD_KEYWORD_RIGHT = 212;
+      static constexpr auto CMD_KEYWORD_BOTTOM = 213;
+      static constexpr auto CMD_KEYWORD_CENTER = 214;
 
       const auto propNameToCommand = [](const std::string &name) {
         if (name == "opacity")
@@ -805,6 +813,9 @@ void ReanimatedModuleProxy::performOperations() {
 
         if (name == "tintColor")
           return CMD_TINT_COLOR;
+
+        if (name == "transformOrigin")
+          return CMD_TRANSFORM_ORIGIN;
 
         if (name == "borderRadius")
           return CMD_BORDER_RADIUS;
@@ -915,6 +926,25 @@ void ReanimatedModuleProxy::performOperations() {
         throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
       };
 
+      const auto keywordToCommand = [](const std::string &name) {
+        if (name == "top")
+          return CMD_KEYWORD_TOP;
+
+        if (name == "left")
+          return CMD_KEYWORD_LEFT;
+
+        if (name == "right")
+          return CMD_KEYWORD_RIGHT;
+
+        if (name == "bottom")
+          return CMD_KEYWORD_BOTTOM;
+
+        if (name == "center")
+          return CMD_KEYWORD_CENTER;
+
+        throw std::runtime_error("[Reanimated] Unsupported keyword: " + name);
+      };
+
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
       for (const auto &[shadowNode, props] : updatesBatch) {
@@ -997,6 +1027,11 @@ void ReanimatedModuleProxy::performOperations() {
                   throw std::runtime_error(
                       "[Reanimated] Border radius value must be either a number or a string");
                 }
+                break;
+
+              case CMD_TRANSFORM_ORIGIN:
+                intBuffer.push_back(command);
+                // TODO: implement
                 break;
 
               case CMD_START_OF_TRANSFORM:
@@ -1112,7 +1147,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, updatesBatch);
+  // commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated

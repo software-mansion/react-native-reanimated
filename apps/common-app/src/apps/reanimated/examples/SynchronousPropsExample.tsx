@@ -54,6 +54,44 @@ export default function SynchronousPropsExample() {
         also always on iOS), the updates will be committed to the ShadowTree.
       </Text>
 
+      <Text>transformOrigin string</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          transform: [
+            { perspective: 250 },
+            { rotateX: '30deg' },
+            { rotateY: '30deg' },
+            { rotateZ: '30deg' },
+          ],
+          transformOrigin: useDerivedValue(
+            () => `${sv.value * 100}% ${sv.value * 100}% ${sv.value * 100}px`,
+            [sv]
+          ),
+        }}
+      />
+
+      <Text>transformOrigin array</Text>
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          borderWidth: 1,
+          transform: [
+            { perspective: 250 },
+            { rotateX: '30deg' },
+            { rotateY: '30deg' },
+            { rotateZ: '30deg' },
+          ],
+          transformOrigin: useDerivedValue(
+            () => [`${sv.value * 100}%`, `${sv.value * 100}%`, sv.value * 100],
+            [sv]
+          ),
+        }}
+      />
+
       <Text>opacity</Text>
       <Animated.View
         style={{
