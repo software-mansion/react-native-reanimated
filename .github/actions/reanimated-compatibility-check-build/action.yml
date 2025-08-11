@@ -20,11 +20,9 @@ inputs:
 
 runs:
   using: 'composite'
+  shell: bash
   steps:
-    - name:
-        Setup Yarn
-        # Sometimes `npx @react-native-community/cli init` fails at random.
-        # Pre-installing it with Yarn seems to improve stability.
+    - name: Setup Yarn
       run: corepack enable && yarn init
     - name: Install React Native CLI
       run: yarn add @react-native-community/cli
