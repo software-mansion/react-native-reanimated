@@ -145,7 +145,7 @@ const FlatListExample = ({ animated, ref }: ExampleProps) => {
 };
 
 const FlashListExample = ({ animated, ref }: ExampleProps) => {
-  const aref = useAnimatedRef<React.Component & FlashListRef<number>>();
+  const aref = useAnimatedRef<FlashListRef<number>>();
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
