@@ -12,6 +12,7 @@ import {
   getTestComponent,
   getTrackerCallCount,
   notify,
+  orderGuard,
   Presets,
   registerValue,
   render,

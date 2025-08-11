@@ -39,6 +39,17 @@ export class NotificationRegistry {
     });
   }
 
+  public async waitForNotifications(names: string[]) {
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        if (names.every(name => notificationRegistry[name])) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, 10);
+    });
+  }
+
   public resetRegistry() {
     notificationRegistry = {};
   }
