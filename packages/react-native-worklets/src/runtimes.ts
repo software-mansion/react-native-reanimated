@@ -5,9 +5,9 @@ import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+} from './serializable';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -20,7 +20,7 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 // @ts-expect-error Public API overload.
 export function createWorkletRuntime(
@@ -39,7 +39,7 @@ export function createWorkletRuntime(
  *   the same thread immediately after the runtime is created.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 export function createWorkletRuntime(
   name?: string,
@@ -79,7 +79,7 @@ export function createWorkletRuntime(
 
   return WorkletsModule.createWorkletRuntime(
     name,
-    makeShareableCloneRecursive(() => {
+    createSerializable(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
@@ -123,7 +123,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   return (...args) =>
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         worklet(...args);
         globalThis.__flushMicrotasks();

@@ -42,11 +42,11 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'shareables',
+          testSuiteName: 'serializable',
           importTest: () => {
-            require('./tests/shareables/makeShareableClone.test');
-            require('./tests/shareables/makeShareableCloneOnUI.test');
-            require('./tests/shareables/isShareableRef.test');
+            require('./tests/serializable/createSerializable.test');
+            require('./tests/serializable/createSerializableOnUI.test');
+            require('./tests/serializable/isSerializableRef.test');
           },
         },
         {

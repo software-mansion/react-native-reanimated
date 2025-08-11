@@ -3,8 +3,8 @@ import type { Component } from 'react';
 import { useRef, useState } from 'react';
 import type { FlatList } from 'react-native';
 import {
-  makeShareableCloneRecursive,
-  shareableMappingCache,
+  createSerializable,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common/constants';
@@ -107,14 +107,14 @@ function useAnimatedRefNative<
     return currentWrapper;
   });
 
-  if (!shareableMappingCache.get(ref)) {
-    const animatedRefShareableHandle = makeShareableCloneRecursive({
+  if (!serializableMappingCache.get(ref)) {
+    const animatedRefSerializableHandle = createSerializable({
       __init: (): AnimatedRefOnUI => {
         'worklet';
         return () => sharedWrapper.value;
       },
     });
-    shareableMappingCache.set(ref, animatedRefShareableHandle);
+    serializableMappingCache.set(ref, animatedRefSerializableHandle);
   }
 
   return ref;

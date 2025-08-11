@@ -13,6 +13,7 @@ import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BokehExample from './BokehExample';
+import BottomSheetExample from './BottomSheetExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
@@ -24,7 +25,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
-import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
+import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -34,6 +35,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
+import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
@@ -109,7 +111,7 @@ import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
-import FreezingShareablesExample from './ShareableFreezingExample';
+import SerializableFreezingExample from './SerializableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringComparisonExample from './SpringComparisonExample';
 import SpringPresetsExample from './SpringPresetsExample';
@@ -143,6 +145,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  FpsExample: {
+    icon: '🎞️',
+    title: 'FPS',
+    screen: FpsExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
@@ -184,21 +191,25 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Memo',
     screen: MemoExample,
   },
-  FreezingShareablesExample: {
+  SerializableFreezingExample: {
     icon: '🥶',
-    title: 'Freezing shareables',
-    screen: FreezingShareablesExample,
+    title: 'Serializable freezing',
+    screen: SerializableFreezingExample,
   },
   InvalidReadWriteExample: {
     icon: '🔒',
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
   },
-
-  CopyShareablesPerformanceTest: {
+  BottomSheetExample: {
+    icon: '⬆️',
+    title: 'Bottom sheet',
+    screen: BottomSheetExample,
+  },
+  CopySerializablePerformanceTest: {
     icon: '🔄',
-    title: 'Copy shareables performance test',
-    screen: CopyShareablesPerformanceTest,
+    title: 'Copy serializable performance test',
+    screen: CopySerializablePerformanceTest,
   },
 
   // About
