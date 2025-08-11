@@ -69,8 +69,8 @@ jobs:
             fi
 
       - name: Reanimated Compatibility Check Build
-        uses: ./.github/actions/reanimated-compatibility-check-build
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        uses: ./.github/actions/reanimated-compatibility-check-build
         with:
           react-native-versions: ${{ matrix.react-native-version }}
           platform: ${{ matrix.platform }}
