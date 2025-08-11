@@ -21,34 +21,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up JDK 18
-      if: ${{ inputs.platform == 'Android' }}
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '18'
-
-    - name: Setup Node
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-
-    - name: Setup Ruby
-      if: ${{ inputs.platform == 'iOS' }}
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.3'
-        bundler-cache: true
-
-    - name: Check if react-native version exists
-      id: check-react-native-version
-      shell: bash
-      run: |
-        if ! npm view react-native@${{ inputs.react-native-versions }} dist-tags ; then 
-          echo "React Native version ${{ inputs.react-native-versions }} does not exist - Skipping..."
-          echo "SKIP_BUILD=true" >> $GITHUB_ENV
-        fi
-
     - name: Setup Yarn
       if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
       shell: bash
