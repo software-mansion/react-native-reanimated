@@ -2,7 +2,7 @@
 
 export function setupRequestAnimationFrame(animationQueuePollingRate?: number) {
   'worklet';
-  const timeoutInterval = animationQueuePollingRate ?? 16;
+  const timeoutInterval = Math.round(animationQueuePollingRate ?? 16);
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
