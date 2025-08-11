@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
-import type React from 'react';
 import type {
   IWorkletsModule,
   SerializableRef,

@@ -5,10 +5,10 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
-  WrapperRef,
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
