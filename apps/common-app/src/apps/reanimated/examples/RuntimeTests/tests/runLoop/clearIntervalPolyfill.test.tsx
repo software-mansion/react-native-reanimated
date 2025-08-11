@@ -31,7 +31,7 @@ const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => 
   return <View />;
 };
 
-describe('Test cancelAnimationFrame', () => {
+describe('Test clearInterval', () => {
   test('does nothing on invalid handle', async () => {
     // Arrange
     const notification = 'callback';
@@ -41,8 +41,11 @@ describe('Test cancelAnimationFrame', () => {
       <TestComponent
         worklet={() => {
           'worklet';
-          cancelAnimationFrame(2137);
-          requestAnimationFrame(() => notify(notification));
+          clearInterval(2137);
+          const handle = setInterval(() => {
+            clearInterval(handle);
+            notify(notification);
+          });
         }}
       />,
     );
@@ -61,11 +64,15 @@ describe('Test cancelAnimationFrame', () => {
         worklet={sharedResult => {
           'worklet';
           sharedResult.value = 'ok';
-          const handle = requestAnimationFrame(() => {
+          const testHandle = setInterval(() => {
             sharedResult.value = 'not_ok';
+            clearInterval(testHandle);
+          }) as unknown as number;
+          const handle = setInterval(() => {
+            clearInterval(handle);
+            notify(notification);
           });
-          requestAnimationFrame(() => notify(notification));
-          cancelAnimationFrame(handle);
+          clearInterval(testHandle);
         }}
       />,
     );
@@ -86,16 +93,21 @@ describe('Test cancelAnimationFrame', () => {
       <TestComponent
         worklet={sharedResult => {
           'worklet';
-          let handle = 0;
+          let testHandle = 0;
           sharedResult.value = 'ok';
-          requestAnimationFrame(() => {
-            cancelAnimationFrame(handle);
+          const handle1 = setInterval(() => {
+            clearInterval(testHandle);
+            clearInterval(handle1);
             notify(notification1);
-          });
-          handle = requestAnimationFrame(() => {
+          }) as unknown as number;
+          testHandle = setInterval(() => {
             sharedResult.value = 'not_ok';
+            clearInterval(testHandle);
+          }) as unknown as number;
+          const handle2 = setInterval(() => {
+            clearInterval(handle2);
+            notify(notification2);
           });
-          requestAnimationFrame(() => notify(notification2));
         }}
       />,
     );
@@ -118,17 +130,23 @@ describe('Test cancelAnimationFrame', () => {
       <TestComponent
         worklet={sharedResult => {
           'worklet';
-          let handle = 0;
+          let testHandle = 0;
           sharedResult.value = 'ok';
-          requestAnimationFrame(() => {
-            handle = requestAnimationFrame(() => {
+          const handle1 = setInterval(() => {
+            testHandle = setInterval(() => {
               sharedResult.value = 'not_ok';
-            });
+              clearInterval(testHandle);
+            }) as unknown as number;
+            clearInterval(handle1);
             notify(notification1);
           });
-          requestAnimationFrame(() => {
-            cancelAnimationFrame(handle);
-            requestAnimationFrame(() => notify(notification3));
+          const handle2 = setInterval(() => {
+            clearInterval(testHandle);
+            const handle3 = setInterval(() => {
+              clearInterval(handle3);
+              notify(notification3);
+            });
+            clearInterval(handle2);
             notify(notification2);
           });
         }}

@@ -1,4 +1,4 @@
-import { runOnJS } from 'react-native-worklets';
+import { runOnJS } from 'react-native-reanimated';
 
 let notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {
@@ -8,7 +8,7 @@ function notifyJS(name: string) {
 export class NotificationRegistry {
   public notify(name: string) {
     'worklet';
-    if (globalThis._WORKLET) {
+    if (_WORKLET) {
       runOnJS(notifyJS)(name);
     } else {
       notifyJS(name);
@@ -19,17 +19,6 @@ export class NotificationRegistry {
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (notificationRegistry[name]) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 10);
-    });
-  }
-
-  public async waitForNotifications(names: string[]) {
-    return new Promise(resolve => {
-      const interval = setInterval(() => {
-        if (names.every(name => notificationRegistry[name])) {
           clearInterval(interval);
           resolve(true);
         }

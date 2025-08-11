@@ -13,6 +13,7 @@ import {
   wait,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
+import { s } from 'react-strict-dom/dist/dom/html';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -30,40 +31,71 @@ const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => 
   return <View />;
 };
 
-describe('Test requestAnimationFrame', () => {
-  test('executes single callback', async () => {
+describe('Test clearTimeout', () => {
+  test('does nothing on invalid handle', async () => {
     // Arrange
-    const notification = 'callback1';
+    const notification = 'callback';
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          requestAnimationFrame(() => notify(notification));
+          clearTimeout(2137);
+          setTimeout(() => notify(notification));
         }}
       />,
     );
 
+    // Assert
     await waitForNotify(notification);
   });
 
-  test('increments handle on each request', async () => {
+  test('cancels scheduled callback outside of execution loop', async () => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const notification = 'callback2';
 
     // Act
     await render(
       <TestComponent
         worklet={sharedResult => {
           'worklet';
-          const handle1 = requestAnimationFrame(() => notify(notification1));
-          const handle2 = requestAnimationFrame(() => notify(notification2));
+          sharedResult.value = 'ok';
+          const handle = setTimeout(() => {
+            sharedResult.value = 'not_ok';
+          }) as unknown as number;
+          setTimeout(() => notify(notification));
+          clearTimeout(handle);
+        }}
+      />,
+    );
 
-          if (handle1 + 1 === handle2) {
-            sharedResult.value = 'ok';
-          }
+    // Assert
+    await waitForNotify(notification);
+    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
+    expect(sharedResult.onUI).toBe('ok');
+  });
+
+  test('cancels flushed callback within execution loop', async () => {
+    // Arrange
+    const notification1 = 'callback1';
+    const notification2 = 'callback3';
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={sharedResult => {
+          'worklet';
+          let handle = 0;
+          sharedResult.value = 'ok';
+          setTimeout(() => {
+            clearTimeout(handle);
+            notify(notification1);
+          }) as unknown as number;
+          handle = setTimeout(() => {
+            sharedResult.value = 'not_ok';
+          }) as unknown as number;
+          setTimeout(() => notify(notification2));
         }}
       />,
     );
@@ -75,25 +107,28 @@ describe('Test requestAnimationFrame', () => {
     expect(sharedResult.onUI).toBe('ok');
   });
 
-  test('executes two callbacks in the same iteration', async () => {
+  test('cancels scheduled callback within execution loop', async () => {
     // Arrange
     const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const notification2 = 'callback3';
+    const notification3 = 'callback4';
 
     // Act
     await render(
       <TestComponent
         worklet={sharedResult => {
           'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
+          let handle = 0;
+          sharedResult.value = 'ok';
+          setTimeout(() => {
+            handle = setTimeout(() => {
+              sharedResult.value = 'not_ok';
+            }) as unknown as number;
             notify(notification1);
           });
-          requestAnimationFrame(frameTimestamp => {
-            if (timestamp === frameTimestamp) {
-              sharedResult.value = 'ok';
-            }
+          setTimeout(() => {
+            clearTimeout(handle);
+            setTimeout(() => notify(notification3));
             notify(notification2);
           });
         }}
@@ -103,38 +138,7 @@ describe('Test requestAnimationFrame', () => {
     // Assert
     await waitForNotify(notification1);
     await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
-  });
-
-  test('executes two callbacks in different iterations', async () => {
-    // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
-
-    // Act
-    await render(
-      <TestComponent
-        worklet={sharedResult => {
-          'worklet';
-          let timestamp = 0;
-          requestAnimationFrame(frameTimestamp => {
-            timestamp = frameTimestamp;
-            requestAnimationFrame(frameTimestamp => {
-              if (frameTimestamp > timestamp) {
-                sharedResult.value = 'ok';
-              }
-              notify(notification2);
-            });
-            notify(notification1);
-          });
-        }}
-      />,
-    );
-
-    // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
+    await waitForNotify(notification3);
     const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
     expect(sharedResult.onUI).toBe('ok');
   });
