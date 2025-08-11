@@ -26,7 +26,7 @@ export class NotificationRegistry {
     });
   }
 
-  public async waitForNotifies(names: string[]) {
+  public async waitForNotifications(names: string[]) {
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (names.every(name => notificationRegistry[name])) {

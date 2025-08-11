@@ -7,7 +7,7 @@ import {
   render,
   test,
   useTestState,
-  waitForNotifies,
+  waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { TestComponent } from './TestComponent';
 
@@ -92,7 +92,7 @@ describe('Test mixed sheduling scenarios', () => {
         />,
       );
 
-      await waitForNotifies([notification1, notification2]);
+      await waitForNotifications([notification1, notification2]);
       expect(flag.value).toBe(2);
     },
   );

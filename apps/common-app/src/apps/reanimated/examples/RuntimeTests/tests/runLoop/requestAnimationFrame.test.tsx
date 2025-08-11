@@ -8,7 +8,7 @@ import {
   render,
   test,
   useTestState,
-  waitForNotifies,
+  waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
 import { TestComponent } from './TestComponent';
@@ -56,7 +56,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2]);
+    await waitForNotifications([notification1, notification2]);
     expect(flag.value).toBe('ok');
   });
 
@@ -87,7 +87,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2]);
+    await waitForNotifications([notification1, notification2]);
     expect(flag.value).toBe('ok');
   });
 
@@ -118,7 +118,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2]);
+    await waitForNotifications([notification1, notification2]);
     expect(flag.value).toBe('ok');
   });
 
@@ -147,7 +147,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2]);
+    await waitForNotifications([notification1, notification2]);
     expect(flag.value).toBe(2);
   });
 
@@ -175,7 +175,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2]);
+    await waitForNotifications([notification1, notification2]);
     expect(flag.value).toBe(2);
   });
 
@@ -206,7 +206,7 @@ describe('Test requestAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotifies([notification1, notification2, notification3]);
+    await waitForNotifications([notification1, notification2, notification3]);
     expect(flag.value).toBe(3);
   });
 
@@ -233,7 +233,7 @@ describe('Test requestAnimationFrame', () => {
       );
 
       // Assert
-      await waitForNotifies([notification1, notification2]);
+      await waitForNotifications([notification1, notification2]);
       expect(flag.value).toBe(2);
     },
   );

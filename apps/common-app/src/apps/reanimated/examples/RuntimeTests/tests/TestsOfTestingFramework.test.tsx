@@ -22,7 +22,7 @@ import {
   useTestRef,
   useTestState,
   wait,
-  waitForNotifies,
+  waitForNotifications,
   waitForNotify,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
@@ -412,7 +412,7 @@ describe('Tests of Test Framework', () => {
         setState3('ok', notification3);
       })();
 
-      await waitForNotifies([notification2, notification3]);
+      await waitForNotifications([notification2, notification3]);
       expect(state1.value).toBe('ok');
       expect(state2.value).toBe('ok');
       expect(state3.value).toBe('ok');
