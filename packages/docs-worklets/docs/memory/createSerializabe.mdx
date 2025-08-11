@@ -58,23 +58,29 @@ function createSerializable<T>(value: T): SerializableRef<T> {
 - The function automatically detects the type of the input value and applies appropriate serialization strategies. 
 
 Supported types:
-  | Type | Description | Supported |
-  |------|-------------|-----------|
-  | Primitives | `number`, `string`, `boolean`, `null`, `undefined` | ✅ |
-  | Objects | `{ [key: string]: any }` | ✅ |
-  | Arrays | `any[]` | ✅ |
-  | Functions | `() => any` | ✅ |
-  | Host objects | `TurboModule` | ✅ |
-  | Worklets | `Worklet` | ✅ |
-  | Maps | `Map<any, any>` | ✅ |
-  | Sets | `Set<any>` | ✅ |
-  | ArrayBuffers | `ArrayBuffer` | ✅ |
-  | RegExp | `RegExp` | ✅ |
-  | Cyclic objects | `{ a: { b: { c: { ... } } } }` | ❌ |
+  | Type | Supported |
+  |------|-----------|
+  | string | ✅ |
+  | number | ✅ |
+  | boolean | ✅ |
+  | object | ✅ |
+  | array | ✅ |
+  | function | ✅ |
+  | HostObject | ✅ |
+  | TurboModule | ✅ |
+  | Worklet Function | ✅ |
+  | Map | ✅ |
+  | Set | ✅ |
+  | ArrayBuffer | ✅ |
+  | RegExp | ✅ |
+  | Cyclic objects | ❌ |
+  | Objects with custom prototype | ❌ |
+  
 - For objects and arrays, it recursively processes nested properties
 - The function includes cycle detection to prevent infinite recursion
 - Objects are frozen after serialization to prevent accidental modifications that won't propagate to the UI thread
+- Functions that are not workletized are serialized as references to function instances on the respective runtime
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios />

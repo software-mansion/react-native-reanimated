@@ -11,13 +11,11 @@ function BooleanIcon({ value }: BooleanIconProps) {
 interface PlatformCompatibilityProps {
   android?: boolean;
   ios?: boolean;
-  web?: boolean;
 }
 
 export default function PlatformCompatibility({
   android = false,
   ios = false,
-  web = false,
 }: PlatformCompatibilityProps) {
   return (
     <table className="platform-compatibility">
@@ -25,7 +23,6 @@ export default function PlatformCompatibility({
         <tr>
           <th>Android</th>
           <th>iOS</th>
-          <th>Web</th>
         </tr>
       </thead>
       <tbody>
@@ -35,9 +32,6 @@ export default function PlatformCompatibility({
           </td>
           <td>
             <BooleanIcon value={ios} />
-          </td>
-          <td>
-            <BooleanIcon value={web} />
           </td>
         </tr>
       </tbody>
