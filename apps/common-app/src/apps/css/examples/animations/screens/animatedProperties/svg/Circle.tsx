@@ -6,8 +6,6 @@ import { colors } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// TODO - fix animation without keyframe value - should animate to the value from the component props
-// instead of a default value
 export default function CircleExample() {
   return (
     <ExamplesScreen<
@@ -32,110 +30,151 @@ export default function CircleExample() {
           />
         </Svg>
       )}
-      sections={[
+      tabs={[
         {
-          examples: [
+          name: 'Radius',
+          sections: [
             {
-              keyframes: {
-                to: {
-                  r: 50,
+              examples: [
+                {
+                  keyframes: {
+                    to: {
+                      r: 50,
+                    },
+                  },
+                  title: 'Absolute value',
                 },
-              },
-              title: 'Changing Circle Radius',
+                {
+                  keyframes: {
+                    from: {
+                      r: '10%',
+                    },
+                    to: {
+                      r: '50%',
+                    },
+                  },
+                  title: 'Percentage values (from 10% to 50%)',
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      r: 10,
+                    },
+                    to: {
+                      r: '50%',
+                    },
+                  },
+                  title: 'Mixed values (from 10 to 50%)',
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the circle radius is changed **abruptly**',
+                },
+              ],
+              title: 'Circle Radius',
             },
           ],
-          title: 'Circle Radius',
         },
         {
-          examples: [
+          name: 'Position',
+          sections: [
             {
-              keyframes: {
-                to: {
-                  cx: 0,
+              examples: [
+                {
+                  keyframes: {
+                    to: {
+                      cx: 0,
+                    },
+                  },
+                  title: 'Absolute value',
                 },
-              },
-              title: 'Absolute value',
+                {
+                  keyframes: {
+                    from: {
+                      cx: 0,
+                    },
+                    to: {
+                      cx: '100%',
+                    },
+                  },
+                  title: 'Relative value (from 0 to 100%)',
+                  description:
+                    '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      cx: 50,
+                    },
+                    to: {
+                      cx: '100%',
+                    },
+                  },
+                  title: 'Mixed values (from 50 to 100%)',
+                  description:
+                    'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
+                },
+              ],
+              title: 'Circle Center X',
             },
             {
-              keyframes: {
-                from: {
-                  cx: 0,
+              examples: [
+                {
+                  keyframes: {
+                    to: {
+                      cy: 0,
+                    },
+                  },
+                  title: 'Absolute value',
                 },
-                to: {
-                  cx: '100%',
+                {
+                  keyframes: {
+                    from: {
+                      cy: 0,
+                    },
+                    to: {
+                      cy: '100%',
+                    },
+                  },
+                  title: 'Relative values (from 0 to 100%)',
+                  description:
+                    '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
                 },
-              },
-              title: 'Relative value (from 0 to 100%)',
-              description:
-                '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
-            },
-            {
-              keyframes: {
-                from: {
-                  cx: 50,
+                {
+                  keyframes: {
+                    from: {
+                      cy: 50,
+                    },
+                    to: {
+                      cy: '100%',
+                    },
+                  },
+                  title: 'Mixed values (from 50 to 100%)',
+                  description:
+                    'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
                 },
-                to: {
-                  cx: '100%',
-                },
-              },
-              title: 'Mixed values (from 50 to 100%)',
-              description:
-                'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
+              ],
+              title: 'Circle Center Y',
             },
           ],
-          title: 'Circle Center X',
         },
         {
-          examples: [
+          name: 'Appearance',
+          sections: [
             {
-              keyframes: {
-                to: {
-                  cy: 0,
+              examples: [
+                {
+                  keyframes: {
+                    to: {
+                      opacity: 0,
+                    },
+                  },
+                  title: 'Opacity',
                 },
-              },
-              title: 'Absolute value',
-            },
-            {
-              keyframes: {
-                from: {
-                  cy: 0,
-                },
-                to: {
-                  cy: '100%',
-                },
-              },
-              title: 'Relative values (from 0 to 100%)',
-              description:
-                '0 is the same as 0%, so the circle animation is smooth between 0 and 100%',
-            },
-            {
-              keyframes: {
-                from: {
-                  cy: 50,
-                },
-                to: {
-                  cy: '100%',
-                },
-              },
-              title: 'Mixed values (from 50 to 100%)',
-              description:
-                'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
-            },
-          ],
-          title: 'Circle Center Y',
-        },
-        {
-          examples: [
-            {
-              keyframes: {
-                to: {
-                  opacity: 0,
-                },
-              },
+              ],
               title: 'Opacity',
             },
           ],
-          title: 'Opacity',
         },
       ]}
     />

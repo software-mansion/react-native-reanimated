@@ -4,6 +4,7 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -17,7 +18,6 @@ import type {
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import { makeShareableCloneRecursive } from './workletFunctions';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
@@ -26,7 +26,8 @@ const EDGE_TO_EDGE = isEdgeToEdge();
 
 /**
  * @deprecated Please use the exported variable `reanimatedVersion` instead.
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
  */
 export const isReanimated3 = () => {
   logger.warn(
@@ -38,10 +39,9 @@ export const isReanimated3 = () => {
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
 /**
- * @deprecated This function was superseded by other checks. We keep it here for
- *   backward compatibility reasons. If you need to check if you are using
- *   Reanimated 3 or Reanimated 2 please use `isReanimated3` function instead.
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
  */
 export const isConfigured = isReanimated3;
 
@@ -95,9 +95,7 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -132,9 +130,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -156,7 +152,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler as WorkletFunction)
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
 

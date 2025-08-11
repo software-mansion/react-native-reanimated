@@ -82,26 +82,5 @@ declare global {
    *   future.
    */
   var __frameTimestamp: number | undefined;
-  /**
-   * @deprecated Internals of `react-native-worklets`, abstain from using in the
-   *   future.
-   */
-  var _scheduleOnRuntime: (
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<() => void>
-  ) => void;
-  /**
-   * @deprecated Internals of `react-native-worklets`, abstain from using in the
-   *   future.
-   */
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  /**
-   * @deprecated Internals of `react-native-worklets`, abstain from using in the
-   *   future.
-   */
-  var _makeShareableClone: <T>(
-    value: T,
-    nativeStateSource?: object
-  ) => FlatShareableRef<T>;
   var ReanimatedError: IReanimatedErrorConstructor;
 }

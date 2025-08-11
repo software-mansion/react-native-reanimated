@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
 import {
+  createSerializable,
   isWorkletFunction,
-  makeShareableCloneRecursive,
   runOnUI,
-  shareableMappingCache,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
@@ -51,8 +51,8 @@ import {
  * object to prevent from freezing it in development.
  */
 const IN_STYLE_UPDATER = { current: false };
-const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
-shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
+const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
+serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
