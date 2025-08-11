@@ -160,7 +160,7 @@ describe('Test isSerializableRef', () => {
 
   test('check if createSerializable<host function> returns serializable ref', () => {
     // @ts-expect-error It's ok
-    const hostFunction = globalThis.__workletsModuleProxy.makeShareableBoolean;
+    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
     const serializableRef = createSerializable(hostFunction);
 
     expect(isSerializableRef(serializableRef)).toBe(true);
