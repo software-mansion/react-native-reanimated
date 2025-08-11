@@ -5,25 +5,36 @@ sidebar_position: 1
 # createSerializable
 
 `createSerializable` recursively converts JavaScript values into serializable references that can be used on different Runtimes than RN Runtime.
-The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`. 
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
+It handles various data types including primitives, objects, arrays, functions, and special cases like host objects and worklets.
 To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
+
+![Serializable](/img/serializable.png)
+<figcaption style={{ textAlign: 'center' }}>Serializable flow diagram</figcaption>
 
 **Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Serializable` references.**
 
 ## Usage
 
 ```tsx
-import { createSerializable } from 'react-native-worklets';
+import { createSerializable, runOnJS } from 'react-native-worklets';
 
-// The function `() => { console.log('Hello world!'); }` is converted into a Serializable reference,
-// that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
-const serializable = createSerializable(() => {
-  console.log('Hello world!');
-});
+const object = {
+  a: 1,
+  b: 2,
+  c: 4,
+};
 
-// The serializable reference allows the function to be executed on different runtimes,
-// while maintaining its original behavior.
-global.customWorkletScheduler(serializable);
+object.c = 3; // <-- Correct: you can modify the object before serializing it
+
+createSerializable(object);
+
+object.a = 10; // <-- Warning: You can't mutate the object after serializing it
+
+runOnJS(() => {
+  object.a = 10; // <-- Warning: You can't mutate the object after serializing it
+  console.log(object); // { a: 1, b: 2, c: 3 }
+})();
 ```
 
 <details>
@@ -35,13 +46,34 @@ type SerializableRef<T = unknown> = {
   __nativeStateSerializableJSRef: T;
 };
 
-
 function createSerializable<T>(value: T): SerializableRef<T> {
   return value as SerializableRef<T>;
 }
 ```
 
 </details>
+
+## Remarks
+
+- The function automatically detects the type of the input value and applies appropriate serialization strategies. 
+
+Supported types:
+  | Type | Description | Supported |
+  |------|-------------|-----------|
+  | Primitives | `number`, `string`, `boolean`, `null`, `undefined` | ✅ |
+  | Objects | `{ [key: string]: any }` | ✅ |
+  | Arrays | `any[]` | ✅ |
+  | Functions | `() => any` | ✅ |
+  | Host objects | `TurboModule` | ✅ |
+  | Worklets | `Worklet` | ✅ |
+  | Maps | `Map<any, any>` | ✅ |
+  | Sets | `Set<any>` | ✅ |
+  | ArrayBuffers | `ArrayBuffer` | ✅ |
+  | RegExp | `RegExp` | ✅ |
+  | Cyclic objects | `{ a: { b: { c: { ... } } } }` | ❌ |
+- For objects and arrays, it recursively processes nested properties
+- The function includes cycle detection to prevent infinite recursion
+- Objects are frozen after serialization to prevent accidental modifications that won't propagate to the UI thread
 
 ## Platform compatibility
 
