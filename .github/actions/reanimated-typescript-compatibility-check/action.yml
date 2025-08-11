@@ -7,7 +7,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-
     - name: Install monorepo node dependencies
       shell: bash
       run: yarn install
