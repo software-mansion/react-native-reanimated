@@ -6,7 +6,7 @@ import {
   orderGuard,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -16,7 +16,7 @@ describe('Test queueMicrotask', () => {
   test.each(['ui', 'worklet'])('executes single microtask, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -36,7 +36,7 @@ describe('Test queueMicrotask', () => {
   test.each(['ui', 'worklet'])('nested microtasks, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -64,7 +64,7 @@ describe('Test queueMicrotask', () => {
   test.each(['ui', 'worklet'])('microtasks order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -92,7 +92,7 @@ describe('Test queueMicrotask', () => {
   test.each(['ui', 'worklet'])('microtasks order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -126,7 +126,7 @@ describe('Test queueMicrotask', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestState<number>(0);
+      const [flag, setFlag] = useTestValue<number>(0);
 
       // Act
       await render(

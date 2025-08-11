@@ -20,7 +20,7 @@ import {
   render,
   test,
   useTestRef,
-  useTestState,
+  useTestValue,
   wait,
   waitForNotifications,
   waitForNotify,
@@ -395,16 +395,16 @@ describe('Tests of Test Framework', () => {
     });
 
     test('useTestState', async () => {
-      const [state1, setState1] = useTestState('not_ok');
+      const [state1, setState1] = useTestValue('not_ok');
       setState1('ok');
 
-      const [state2, setState2] = useTestState('not_ok');
+      const [state2, setState2] = useTestValue('not_ok');
       const notification2 = 'notification2';
       runOnUI(() => {
         setState2('ok', notification2);
       })();
 
-      const [state3, setState3] = useTestState('not_ok');
+      const [state3, setState3] = useTestValue('not_ok');
       const notification3 = 'notification3';
       const rt = createWorkletRuntime({ name: 'test' });
       runOnRuntime(rt, () => {

@@ -67,7 +67,7 @@ export class TestRunner {
     return this._renderLock;
   }
 
-  public useTestState<T = DefaultFlags>(
+  public useTestValue<T = DefaultFlags>(
     defaultValue: T | DefaultFlags,
   ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
     const state: FlagWrapper<T> = {

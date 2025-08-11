@@ -7,7 +7,7 @@ import {
   orderGuard,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -17,7 +17,7 @@ describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback';
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -38,7 +38,7 @@ describe('Test setImmediate', () => {
     // Arrange
     const notification = 'callback';
     const argValue = 42;
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -63,7 +63,7 @@ describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('increments handle on each request, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -89,7 +89,7 @@ describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('nested tasks, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -117,7 +117,7 @@ describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('tasks order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -145,7 +145,7 @@ describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('tasks order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -178,7 +178,7 @@ describe('Test setImmediate', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestState<number>(0);
+      const [flag, setFlag] = useTestValue<number>(0);
 
       // Act
       await render(

@@ -7,7 +7,7 @@ import {
   orderGuard,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -17,7 +17,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback1';
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -37,7 +37,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('increments handle on each request, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -63,7 +63,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('executes two callbacks in the same iteration, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -94,7 +94,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('executes two callbacks in different iterations, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState('not_ok');
+    const [flag, setFlag] = useTestValue('not_ok');
 
     // Act
     await render(
@@ -126,7 +126,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('nested frames, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -154,7 +154,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('frames order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -182,7 +182,7 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('frames order of execution, nested frames, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestState<number>(0);
+    const [flag, setFlag] = useTestValue<number>(0);
 
     // Act
     await render(
@@ -215,7 +215,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestState<number>(0);
+      const [flag, setFlag] = useTestValue<number>(0);
 
       // Act
       await render(

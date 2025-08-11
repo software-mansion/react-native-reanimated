@@ -6,7 +6,7 @@ import {
   notify,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -38,7 +38,7 @@ describe('Test clearImmediate', () => {
     async runtimeType => {
       // Arrange
       const notification = 'callback2';
-      const [flag, setFlag] = useTestState('ok');
+      const [flag, setFlag] = useTestValue('ok');
 
       // Act
       await render(
@@ -64,7 +64,7 @@ describe('Test clearImmediate', () => {
   test.each(['ui', 'worklet'])('cancels flushed callback within execution loop, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback1'];
-    const [flag, setFlag] = useTestState('ok');
+    const [flag, setFlag] = useTestValue('ok');
 
     // Act
     await render(
@@ -95,7 +95,7 @@ describe('Test clearImmediate', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [flag, setFlag] = useTestState('ok');
+      const [flag, setFlag] = useTestValue('ok');
 
       // Act
       await render(

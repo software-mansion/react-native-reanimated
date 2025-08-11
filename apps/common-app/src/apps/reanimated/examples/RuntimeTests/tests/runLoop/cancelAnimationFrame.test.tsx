@@ -6,7 +6,7 @@ import {
   notify,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -36,7 +36,7 @@ describe('Test cancelAnimationFrame', () => {
   test.each(['ui', 'worklet'])('cancels scheduled callback outside of execution loop', async runtimeType => {
     // Arrange
     const notification = 'callback2';
-    const [flag, setFlag] = useTestState('ok');
+    const [flag, setFlag] = useTestValue('ok');
 
     // Act
     await render(
@@ -61,7 +61,7 @@ describe('Test cancelAnimationFrame', () => {
   test.each(['ui', 'worklet'])('cancels flushed callback within execution loop', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback3'];
-    const [flag, setFlag] = useTestState('ok');
+    const [flag, setFlag] = useTestValue('ok');
 
     // Act
     await render(
@@ -90,7 +90,7 @@ describe('Test cancelAnimationFrame', () => {
   test.each(['ui', 'worklet'])('cancels scheduled callback within execution loop', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestState('ok');
+    const [flag, setFlag] = useTestValue('ok');
 
     // Act
     await render(

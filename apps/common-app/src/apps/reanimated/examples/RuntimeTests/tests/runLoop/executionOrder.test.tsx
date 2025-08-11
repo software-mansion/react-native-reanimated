@@ -6,7 +6,7 @@ import {
   orderGuard,
   render,
   test,
-  useTestState,
+  useTestValue,
   waitForNotifications,
 } from '../../ReJest/RuntimeTestsApi';
 import { TestComponent } from './TestComponent';
@@ -64,7 +64,7 @@ describe('Test mixed sheduling scenarios', () => {
     async ([firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder, runtimeType]) => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestState<number>(0);
+      const [flag, setFlag] = useTestValue<number>(0);
       // Act
       await render(
         <TestComponent
