@@ -1,5 +1,5 @@
 #include <jsi/jsi.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 
 using namespace facebook;
 
