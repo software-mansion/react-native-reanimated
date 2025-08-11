@@ -151,7 +151,7 @@ export type WorkletRuntimeConfig = {
    * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
    * `clearImmediate`, and `cancelAnimationFrame` methods.
    */
-  enableEventLoop: true;
+  enableEventLoop?: true;
 } & (
   | {
       /**
