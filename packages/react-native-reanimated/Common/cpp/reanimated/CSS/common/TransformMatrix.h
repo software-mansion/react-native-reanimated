@@ -8,6 +8,8 @@
 #include <string>
 #include <utility>
 
+#include <glog/logging.h>
+
 namespace reanimated::css {
 
 struct DecomposedTransformMatrix {
@@ -72,12 +74,15 @@ class TransformMatrix {
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
 
-  std::optional<DecomposedTransformMatrix> decompose() const;
+  std::optional<std::reference_wrapper<const DecomposedTransformMatrix>>
+  decompose() const;
   static TransformMatrix recompose(const DecomposedTransformMatrix &decomposed);
   static TransformMatrix fromQuaternion(const Quaternion &q);
 
  private:
   Matrix4x4 matrix_;
+  mutable std::optional<std::pair<Matrix4x4, DecomposedTransformMatrix>>
+      cachedDecomposition_;
 
   std::optional<Vector4D> computePerspective() const;
 

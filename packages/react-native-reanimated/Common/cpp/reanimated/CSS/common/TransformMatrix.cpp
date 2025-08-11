@@ -60,10 +60,10 @@ TransformMatrix::TransformMatrix(const folly::dynamic &array) {
 
 TransformMatrix TransformMatrix::Identity() {
   return TransformMatrix({{// clang-format off
-      {1, 0, 0, 0},
-      {0, 1, 0, 0},
-      {0, 0, 1, 0},
-      {0, 0, 0, 1}
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
   }}); // clang-format on
 }
 
@@ -159,22 +159,22 @@ TransformMatrix TransformMatrix::TranslateY(const double v) {
 }
 
 TransformMatrix TransformMatrix::SkewX(const double v) {
-  const auto tan = std::tan(v);
+  const auto tanVal = std::tan(v);
   return TransformMatrix({{// clang-format off
-    {  1, 0, 0, 0},
-    {tan, 1, 0, 0},
-    {  0, 0, 1, 0},
-    {  0, 0, 0, 1}
+    {     1, 0, 0, 0},
+    {tanVal, 1, 0, 0},
+    {     0, 0, 1, 0},
+    {     0, 0, 0, 1}
   }}); // clang-format on
 }
 
 TransformMatrix TransformMatrix::SkewY(const double v) {
-  const auto tan = std::tan(v);
+  const auto tanVal = std::tan(v);
   return TransformMatrix({{// clang-format off
-    {1, tan, 0, 0},
-    {0,   1, 0, 0},
-    {0,   0, 1, 0},
-    {0,   0, 0, 1}
+    {1, tanVal, 0, 0},
+    {0,      1, 0, 0},
+    {0,      0, 1, 0},
+    {0,      0, 0, 1}
   }}); // clang-format on
 }
 
@@ -398,7 +398,16 @@ void TransformMatrix::scale3d(const Vector3D &scale) {
   }
 }
 
-std::optional<DecomposedTransformMatrix> TransformMatrix::decompose() const {
+std::optional<std::reference_wrapper<const DecomposedTransformMatrix>>
+TransformMatrix::decompose() const {
+  // Check if we have a valid cached result
+  LOG(INFO) << "Has value: " << cachedDecomposition_.has_value();
+
+  if (cachedDecomposition_.has_value() &&
+      matrix_ == cachedDecomposition_->first) {
+    return std::ref(cachedDecomposition_->second);
+  }
+
   auto matrixCp = *this;
 
   if (!matrixCp.normalize()) {
@@ -430,12 +439,16 @@ std::optional<DecomposedTransformMatrix> TransformMatrix::decompose() const {
   }
   const auto rotation = computeQuaternion(rows);
 
-  return DecomposedTransformMatrix{
-      .scale = scale,
-      .skew = skew,
-      .quaternion = rotation,
-      .translation = translation,
-      .perspective = perspective.value()};
+  cachedDecomposition_ = {
+      matrix_,
+      DecomposedTransformMatrix{
+          .scale = scale,
+          .skew = skew,
+          .quaternion = rotation,
+          .translation = translation,
+          .perspective = perspective.value()}};
+
+  return std::ref(cachedDecomposition_->second);
 }
 
 TransformMatrix TransformMatrix::recompose(
@@ -487,8 +500,7 @@ TransformMatrix TransformMatrix::fromQuaternion(const Quaternion &q) {
   const double yw = q.w * q.y;
   const double zw = q.w * q.z;
 
-  // clang-format off
-  return TransformMatrix({{
+  return TransformMatrix({{// clang-format off
     {1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0},
     {    2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0},
     {    2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0},

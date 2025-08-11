@@ -31,7 +31,7 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
   }
 
   return MatrixOperation(TransformMatrix::recompose(
-      decomposedFrom->interpolate(progress, decomposedTo.value())));
+      decomposedFrom->get().interpolate(progress, decomposedTo->get())));
 }
 
 TransformMatrix
