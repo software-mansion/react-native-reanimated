@@ -189,7 +189,7 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
  *   thread from the UI thread.
  * @returns A function that accepts arguments for the function passed as the
  *   first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnJS
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS
  */
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun:
