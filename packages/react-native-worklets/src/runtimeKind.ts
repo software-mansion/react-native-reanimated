@@ -1,3 +1,5 @@
+'use strict';
+
 export enum RuntimeKind {
   /**
    * The React Native runtime, which is the main runtime for React Native where
