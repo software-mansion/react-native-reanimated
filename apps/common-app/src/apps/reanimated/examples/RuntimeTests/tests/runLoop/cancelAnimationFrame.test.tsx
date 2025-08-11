@@ -1,38 +1,19 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
   render,
   test,
-  wait,
+  useTestState,
+  waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { s } from 'react-strict-dom/dist/dom/html';
-
-const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
-
-type Result = 'ok' | 'not_ok' | 'error';
-
-const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => void }) => {
-  const sharedResult = useSharedValue<Result>('not_ok');
-  registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
-  useEffect(() => {
-    runOnUI(() => {
-      worklet(sharedResult);
-    })();
-  });
-
-  return <View />;
-};
+import { TestComponent } from './TestComponent';
 
 describe('Test cancelAnimationFrame', () => {
-  test('does nothing on invalid handle', async () => {
+  test.each(['ui', 'worklet'])('does nothing on invalid handle', async runtimeType => {
     // Arrange
     const notification = 'callback';
 
@@ -44,6 +25,7 @@ describe('Test cancelAnimationFrame', () => {
           cancelAnimationFrame(2137);
           requestAnimationFrame(() => notify(notification));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
@@ -51,78 +33,74 @@ describe('Test cancelAnimationFrame', () => {
     await waitForNotify(notification);
   });
 
-  test('cancels scheduled callback outside of execution loop', async () => {
+  test.each(['ui', 'worklet'])('cancels scheduled callback outside of execution loop', async runtimeType => {
     // Arrange
     const notification = 'callback2';
+    const [flag, setFlag] = useTestState('ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
-          sharedResult.value = 'ok';
           const handle = requestAnimationFrame(() => {
-            sharedResult.value = 'not_ok';
+            setFlag('not_ok');
           });
           requestAnimationFrame(() => notify(notification));
           cancelAnimationFrame(handle);
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
     await waitForNotify(notification);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    expect(flag.value).toBe('ok');
   });
 
-  test('cancels flushed callback within execution loop', async () => {
+  test.each(['ui', 'worklet'])('cancels flushed callback within execution loop', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback3';
+    const [notification1, notification2] = ['callback1', 'callback3'];
+    const [flag, setFlag] = useTestState('ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           let handle = 0;
-          sharedResult.value = 'ok';
           requestAnimationFrame(() => {
             cancelAnimationFrame(handle);
             notify(notification1);
           });
           handle = requestAnimationFrame(() => {
-            sharedResult.value = 'not_ok';
+            setFlag('not_ok');
           });
           requestAnimationFrame(() => notify(notification2));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
 
-  test('cancels scheduled callback within execution loop', async () => {
+  test.each(['ui', 'worklet'])('cancels scheduled callback within execution loop', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback3';
-    const notification3 = 'callback4';
+    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+    const [flag, setFlag] = useTestState('ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           let handle = 0;
-          sharedResult.value = 'ok';
           requestAnimationFrame(() => {
             handle = requestAnimationFrame(() => {
-              sharedResult.value = 'not_ok';
+              setFlag('not_ok');
             });
             notify(notification1);
           });
@@ -132,14 +110,12 @@ describe('Test cancelAnimationFrame', () => {
             notify(notification2);
           });
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    await waitForNotify(notification3);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2, notification3]);
+    expect(flag.value).toBe('ok');
   });
 });

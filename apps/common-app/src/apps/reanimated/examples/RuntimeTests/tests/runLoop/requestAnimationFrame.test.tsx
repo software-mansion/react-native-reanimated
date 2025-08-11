@@ -1,89 +1,74 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
+  orderGuard,
   render,
   test,
-  wait,
+  useTestState,
+  waitForNotifies,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-
-const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
-
-type Result = 'ok' | 'not_ok' | 'error';
-
-const TestComponent = ({ worklet }: { worklet: (result: SharedValue<Result>) => void }) => {
-  const sharedResult = useSharedValue<Result>('not_ok');
-  registerValue(RESULT_SHARED_VALUE_REF, sharedResult);
-  useEffect(() => {
-    runOnUI(() => {
-      worklet(sharedResult);
-    })();
-  });
-
-  return <View />;
-};
+import { TestComponent } from './TestComponent';
 
 describe('Test requestAnimationFrame', () => {
-  test('executes single callback', async () => {
+  test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
     // Arrange
     const notification = 'callback1';
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          requestAnimationFrame(() => notify(notification));
+          requestAnimationFrame(() => setFlag('ok', notification));
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
   });
 
-  test('increments handle on each request', async () => {
+  test.each(['ui', 'worklet'])('increments handle on each request, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           const handle1 = requestAnimationFrame(() => notify(notification1));
           const handle2 = requestAnimationFrame(() => notify(notification2));
 
           if (handle1 + 1 === handle2) {
-            sharedResult.value = 'ok';
+            setFlag('ok');
           }
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
 
-  test('executes two callbacks in the same iteration', async () => {
+  test.each(['ui', 'worklet'])('executes two callbacks in the same iteration, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           let timestamp = 0;
           requestAnimationFrame(frameTimestamp => {
@@ -92,50 +77,164 @@ describe('Test requestAnimationFrame', () => {
           });
           requestAnimationFrame(frameTimestamp => {
             if (timestamp === frameTimestamp) {
-              sharedResult.value = 'ok';
+              setFlag('ok');
             }
             notify(notification2);
           });
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
 
-  test('executes two callbacks in different iterations', async () => {
+  test.each(['ui', 'worklet'])('executes two callbacks in different iterations, runtime: **%s**', async runtimeType => {
     // Arrange
-    const notification1 = 'callback1';
-    const notification2 = 'callback2';
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState('not_ok');
 
     // Act
     await render(
       <TestComponent
-        worklet={sharedResult => {
+        worklet={() => {
           'worklet';
           let timestamp = 0;
           requestAnimationFrame(frameTimestamp => {
             timestamp = frameTimestamp;
             requestAnimationFrame(frameTimestamp => {
               if (frameTimestamp > timestamp) {
-                sharedResult.value = 'ok';
+                setFlag('ok');
               }
               notify(notification2);
             });
             notify(notification1);
           });
         }}
+        runtimeType={runtimeType}
       />,
     );
 
     // Assert
-    await waitForNotify(notification1);
-    await waitForNotify(notification2);
-    const sharedResult = await getRegisteredValue<Result>(RESULT_SHARED_VALUE_REF);
-    expect(sharedResult.onUI).toBe('ok');
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe('ok');
   });
+
+  //TODO
+  test.each(['ui', 'worklet'])('nested frames, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setFlag(order(2), notification2);
+            });
+            setFlag(order(1), notification1);
+          });
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe(2);
+  });
+
+  test.each(['ui', 'worklet'])('frames order of execution, same time, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2] = ['callback1', 'callback2'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          requestAnimationFrame(() => {
+            setFlag(order(1), notification1);
+          });
+          requestAnimationFrame(() => {
+            setFlag(order(2), notification2);
+          });
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2]);
+    expect(flag.value).toBe(2);
+  });
+
+  test.each(['ui', 'worklet'])('frames order of execution, nested frames, runtime: **%s**', async runtimeType => {
+    // Arrange
+    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+    const [flag, setFlag] = useTestState<number>(0);
+
+    // Act
+    await render(
+      <TestComponent
+        worklet={() => {
+          'worklet';
+          const order = orderGuard();
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setFlag(order(3), notification2);
+            });
+            setFlag(order(1), notification1);
+          });
+          requestAnimationFrame(() => {
+            setFlag(order(2), notification3);
+          });
+        }}
+        runtimeType={runtimeType}
+      />,
+    );
+
+    // Assert
+    await waitForNotifies([notification1, notification2, notification3]);
+    expect(flag.value).toBe(3);
+  });
+
+  test.each(['ui', 'worklet'])(
+    'frame order of execution, asynchronus scheduling, runtime: **%s**',
+    async runtimeType => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestState<number>(0);
+
+      // Act
+      await render(
+        <TestComponent
+          worklet={() => {
+            'worklet';
+            const order = orderGuard();
+            requestAnimationFrame(() => {
+              setFlag(order(2), notification2);
+            });
+            setFlag(order(1), notification1);
+          }}
+          runtimeType={runtimeType}
+        />,
+      );
+
+      // Assert
+      await waitForNotifies([notification1, notification2]);
+      expect(flag.value).toBe(2);
+    },
+  );
 });
