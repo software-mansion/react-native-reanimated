@@ -72,7 +72,7 @@ jobs:
         uses: ./.github/actions/reanimated-compatibility-check-build
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
         with:
-          react-native-versions: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
+          react-native-versions: ${{ matrix.react-native-version }}
           platform: ${{ matrix.platform }}
           mode: ${{ matrix.mode }}
           github-sha: ${{ github.sha }}
