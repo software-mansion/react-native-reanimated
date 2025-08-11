@@ -4,7 +4,7 @@ import { executeOnUIRuntimeSync } from 'react-native-reanimated';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test makeShareableCloneOnUI', () => {
-  test('makeShareableCloneOnUIString', () => {
+  test('createSerializableOnUI', () => {
     // Arrange & Act
     const stringValue = executeOnUIRuntimeSync(() => {
       'worklet';
