@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Animated, { FadeIn, runOnUI, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import {
   callTracker,
@@ -13,17 +13,21 @@ import {
   getTrackerCallCount,
   mockAnimationTimer,
   notify,
+  orderGuard,
   Presets,
   recordAnimationUpdates,
   registerValue,
   render,
   test,
   useTestRef,
+  useTestState,
   wait,
+  waitForNotifies,
   waitForNotify,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
+import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -388,6 +392,39 @@ describe('Tests of Test Framework', () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');
+    });
+
+    test('useTestState', async () => {
+      const [state1, setState1] = useTestState('not_ok');
+      setState1('ok');
+
+      const [state2, setState2] = useTestState('not_ok');
+      const notification2 = 'notification2';
+      runOnUI(() => {
+        setState2('ok', notification2);
+      })();
+
+      const [state3, setState3] = useTestState('not_ok');
+      const notification3 = 'notification3';
+      const rt = createWorkletRuntime({ name: 'test' });
+      runOnRuntime(rt, () => {
+        'worklet';
+        setState3('ok', notification3);
+      })();
+
+      await waitForNotifies([notification2, notification3]);
+      expect(state1.value).toBe('ok');
+      expect(state2.value).toBe('ok');
+      expect(state3.value).toBe('ok');
+    });
+
+    test('order constraints', () => {
+      let lastCurrentOrder = 0;
+      const order = orderGuard();
+      lastCurrentOrder = order(1);
+      lastCurrentOrder = order(2);
+      lastCurrentOrder = order(3);
+      expect(lastCurrentOrder).toBe(3);
     });
   });
 });

@@ -10,7 +10,7 @@ export function setupSetTimeout() {
 
   const setTimeoutPolyfill = (
     callback: (...args: unknown[]) => void,
-    delay: number = 1,
+    delay: number = 0,
     ...args: unknown[]
   ) => {
     const handlerId = ID++;
