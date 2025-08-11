@@ -3,8 +3,8 @@ import { executeOnUIRuntimeSync } from 'react-native-reanimated';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
-describe('Test makeShareableCloneOnUI', () => {
-  test('createSerializableOnUI', () => {
+describe('Test createSerializableOnUI', () => {
+  test('createSerializableOnUIString', () => {
     // Arrange & Act
     const stringValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -16,7 +16,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(stringValue).toBe('test');
   });
 
-  test('makeShareableCloneOnUINumber', () => {
+  test('createSerializableOnUINumber', () => {
     // Arrange & Act
     const numberValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -28,7 +28,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(numberValue).toBe(123);
   });
 
-  test('makeShareableCloneOnUITrue', () => {
+  test('createSerializableOnUITrue', () => {
     // Arrange & Act
     const trueValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -40,7 +40,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(trueValue).toBe(true);
   });
 
-  test('makeShareableCloneOnUIFalse', () => {
+  test('createSerializableOnUIFalse', () => {
     // Arrange & Act
     const falseValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -52,7 +52,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(falseValue).toBe(false);
   });
 
-  test('makeShareableCloneOnUIUndefined', () => {
+  test('createSerializableOnUIUndefined', () => {
     // Arrange & Act
     const undefinedValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -64,7 +64,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(undefinedValue).toBe(undefined);
   });
 
-  test('makeShareableCloneOnUINull', () => {
+  test('createSerializableOnUINull', () => {
     // Arrange & Act
     const nullValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -76,7 +76,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(nullValue).toBe(null);
   });
 
-  test('makeShareableCloneOnUIBigInt', () => {
+  test('createSerializableOnUIBigInt', () => {
     // Arrange & Act
     const bigIntValue = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -88,7 +88,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(bigIntValue).toBe(BigInt(123));
   });
 
-  test('makeShareableCloneOnUIHostObject', () => {
+  test('createSerializableOnUIHostObject', () => {
     // Arrange & Act
     // Prototype of TurboModule is a host object
     const hostObject = Object.getPrototypeOf(TurboModuleRegistry.get('Clipboard'));
@@ -104,7 +104,7 @@ describe('Test makeShareableCloneOnUI', () => {
     expect(hostObjectKeys.every(key => hostObjectValue[key] !== undefined)).toBe(true);
   });
 
-  test('makeShareableCloneOnUIArray', () => {
+  test('createSerializableOnUIArray', () => {
     // Arrange
     enum index {
       number = 0,
@@ -188,7 +188,7 @@ describe('Test makeShareableCloneOnUI', () => {
   });
 
   // These types are not supported yet
-  // test('makeShareableCloneOnUIError', async () => {
+  // test('createSerializableOnUIError', async () => {
   //   // Arrange
   //   const errorValue = executeOnUIRuntimeSync(() => {
   //     'worklet';
@@ -213,7 +213,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
-  // test('makeShareableCloneOnUIInitializer', async () => {
+  // test('createSerializableOnUIInitializer', async () => {
   //   // Arrange
   //   const regExpValue = executeOnUIRuntimeSync(() => {
   //     'worklet';
@@ -238,7 +238,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
-  test('makeShareableCloneOnUIPlainObject', () => {
+  test('createSerializableOnUIPlainObject', () => {
     // Arrange & Act
     enum key {
       number = 0,
@@ -299,7 +299,7 @@ describe('Test makeShareableCloneOnUI', () => {
   });
 
   // These types are not supported yet
-  // test('makeShareableCloneOnUIWorklet', async () => {
+  // test('createSerializableCloneOnUIWorklet', async () => {
   //   // Arrange
   //   const workletFunction = executeOnUIRuntimeSync(() => {
   //     'worklet';
@@ -327,7 +327,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
-  // test('makeShareableCloneOnUIArrayBuffer', async () => {
+  // test('createSerializableCloneOnUIArrayBuffer', async () => {
   //   // Arrange
   //   const arrayBuffer = executeOnUIRuntimeSync(() => {
   //     'worklet';
@@ -356,7 +356,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(sharedValue.onJS).toBe('ok');
   // });
 
-  // test('makeShareableRemoteFunction', async () => {
+  // test('createSerializableRemoteFunction', async () => {
   //   // Arrange & Act
   //   const remoteFunction = executeOnUIRuntimeSync(() => {
   //     'worklet';
@@ -371,12 +371,12 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect(__DEV__ === false || ('__remoteFunction' in remoteFunction && !!remoteFunction.__remoteFunction)).toBe(true);
   // });
 
-  // test('makeShareableHostFunction', async () => {
+  // test('createSerializableHostFunction', async () => {
   //   // Arrange & Act
   //   const hostFunction = executeOnUIRuntimeSync(() => {
   //     'worklet';
   //     // @ts-expect-error It's ok
-  //     return globalThis.__workletsModuleProxy.makeShareableBoolean;
+  //     return globalThis.__workletsModuleProxy.createSerializableBoolean;
   //   })();
 
   //   // Assert
@@ -385,7 +385,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect('magicKey' in shareableBoolean).toBe(true);
   // });
 
-  // test('makeShareableTurboModuleLike', async () => {
+  // test('createSerializableTurboModuleLike', async () => {
   //   // Arrange & Act
   //   const { obj, reanimatedModuleKeys } = executeOnUIRuntimeSync(() => {
   //     // @ts-expect-error This global host object isn't exposed in the types.
@@ -406,7 +406,7 @@ describe('Test makeShareableCloneOnUI', () => {
   //   expect('magicKey' in Object.getPrototypeOf(obj)).toBe(true);
   // });
 
-  test('makeShareableCloneOnUIInaccessibleObject', async () => {
+  test('createSerializableOnUIInaccessibleObject', async () => {
     // Arrange
     const set = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -419,7 +419,7 @@ describe('Test makeShareableCloneOnUI', () => {
     }).toThrow();
   });
 
-  test('makeShareableCloneOnUIRemoteNamedFunctionSyncCall', async () => {
+  test('createSerializableOnUIRemoteNamedFunctionSyncCall', async () => {
     // Arrange
     const foo = executeOnUIRuntimeSync(() => {
       'worklet';
@@ -432,7 +432,7 @@ describe('Test makeShareableCloneOnUI', () => {
     }).toThrow();
   });
 
-  test('makeShareableCloneOnUIRemoteAnonymousFunctionSyncCall', async () => {
+  test('createSerializableOnUIRemoteAnonymousFunctionSyncCall', async () => {
     // Arrange
     const foo = executeOnUIRuntimeSync(() => {
       'worklet';
