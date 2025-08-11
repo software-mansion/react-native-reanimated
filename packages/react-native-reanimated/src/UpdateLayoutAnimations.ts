@@ -1,5 +1,5 @@
 'use strict';
-import { makeShareableCloneRecursive } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from './common';
 import type {
@@ -69,7 +69,7 @@ if (SHOULD_BE_USE_WEB) {
       {
         viewTag,
         type,
-        config: config ? makeShareableCloneRecursive(config) : undefined,
+        config: config ? createSerializable(config) : undefined,
       },
       isUnmounting
     );

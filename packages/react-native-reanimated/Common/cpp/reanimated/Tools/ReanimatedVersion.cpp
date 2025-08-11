@@ -40,7 +40,7 @@ void checkJSVersion(
       jsLogger,
       cppVersion,
       "Reanimated",
-      "https://docs.swmansion.com/react-native-reanimated/docs");
+      "https://docs.swmansion.com/react-native-reanimated/");
 }
 #else
 void checkJSVersion(

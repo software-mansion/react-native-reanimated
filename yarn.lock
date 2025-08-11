@@ -4089,7 +4089,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gorhom/portal@npm:^1.0.14":
+"@gorhom/bottom-sheet@npm:^5.1.8":
+  version: 5.1.8
+  resolution: "@gorhom/bottom-sheet@npm:5.1.8"
+  dependencies:
+    "@gorhom/portal": "npm:1.0.14"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-native": "*"
+    react: "*"
+    react-native: "*"
+    react-native-gesture-handler: ">=2.16.1"
+    react-native-reanimated: "*"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-native":
+      optional: true
+  checksum: 10/16c0de9d0902c994bb099dc173c0d0cf984fd0b47f823e05186b090bd46d885d5b271682dddd0aad1b76d80509c23dddba559d1dc3c39afa0673e5c8ff08d9a1
+  languageName: node
+  linkType: hard
+
+"@gorhom/portal@npm:1.0.14, @gorhom/portal@npm:^1.0.14":
   version: 1.0.14
   resolution: "@gorhom/portal@npm:1.0.14"
   dependencies:
@@ -9841,6 +9863,7 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": "npm:^6.5.2"
     "@fortawesome/free-solid-svg-icons": "npm:^6.5.2"
     "@fortawesome/react-native-fontawesome": "npm:^0.3.2"
+    "@gorhom/bottom-sheet": "npm:^5.1.8"
     "@gorhom/portal": "npm:^1.0.14"
     "@react-native-async-storage/async-storage": "npm:2.1.0"
     "@react-native-clipboard/clipboard": "patch:@react-native-clipboard/clipboard@npm%3A1.16.1#~/.yarn/patches/@react-native-clipboard-clipboard-npm-1.16.1-f5284115c3.patch"

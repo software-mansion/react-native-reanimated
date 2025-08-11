@@ -1,59 +1,68 @@
 'use strict';
 
-import { makeShareableCloneRecursive } from './shareables';
+import { createSerializable } from './shareables';
 import type { Synchronizable, SynchronizableRef } from './synchronizable';
 
-export function __synchronizableUnpacker<TValue>(
-  synchronizableRef: SynchronizableRef<TValue>
-): Synchronizable<TValue> {
-  const synchronizable = synchronizableRef as unknown as Synchronizable<TValue>;
-  const proxy = globalThis.__workletsModuleProxy!;
-  const serializer =
-    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
-      ? (value: TValue, _: unknown) => makeShareableCloneRecursive(value)
-      : globalThis._makeShareableClone;
-  synchronizable.__synchronizableRef = true;
-  synchronizable.getDirty = () => {
-    return proxy.synchronizableGetDirty(synchronizable);
-  };
-  synchronizable.getBlocking = () => {
-    return proxy.synchronizableGetBlocking(synchronizable);
-  };
-  synchronizable.setBlocking = (
-    valueOrFunction: TValue | ((prev: TValue) => TValue)
-  ) => {
-    let newValue: TValue;
-    if (typeof valueOrFunction === 'function') {
-      const func = valueOrFunction as (prev: TValue) => TValue;
-      synchronizable.lock();
-      const prev = synchronizable.getBlocking();
-      newValue = func(prev);
+export function __installUnpacker() {
+  // TODO: Add cache for synchronizables.
 
-      proxy.synchronizableSetBlocking(
-        synchronizable,
-        serializer(newValue, undefined)
-      );
+  function synchronizableUnpacker<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): Synchronizable<TValue> {
+    const synchronizable =
+      synchronizableRef as unknown as Synchronizable<TValue>;
+    const proxy = globalThis.__workletsModuleProxy!;
+    const serializer =
+      !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
+        ? (value: TValue, _: unknown) => createSerializable(value)
+        : globalThis._createSerializable;
+    synchronizable.__synchronizableRef = true;
+    synchronizable.getDirty = () => {
+      return proxy.synchronizableGetDirty(synchronizable);
+    };
+    synchronizable.getBlocking = () => {
+      return proxy.synchronizableGetBlocking(synchronizable);
+    };
+    synchronizable.setBlocking = (
+      valueOrFunction: TValue | ((prev: TValue) => TValue)
+    ) => {
+      let newValue: TValue;
+      if (typeof valueOrFunction === 'function') {
+        const func = valueOrFunction as (prev: TValue) => TValue;
+        synchronizable.lock();
+        const prev = synchronizable.getBlocking();
+        newValue = func(prev);
 
-      synchronizable.unlock();
-    } else {
-      const value = valueOrFunction;
-      newValue = value;
-      proxy.synchronizableSetBlocking(
-        synchronizable,
-        serializer(newValue, undefined)
-      );
-    }
-  };
-  synchronizable.lock = () => {
-    proxy.synchronizableLock(synchronizable);
-  };
-  synchronizable.unlock = () => {
-    proxy.synchronizableUnlock(synchronizable);
-  };
+        proxy.synchronizableSetBlocking(
+          synchronizable,
+          serializer(newValue, undefined)
+        );
 
-  return synchronizable;
+        synchronizable.unlock();
+      } else {
+        const value = valueOrFunction;
+        newValue = value;
+        proxy.synchronizableSetBlocking(
+          synchronizable,
+          serializer(newValue, undefined)
+        );
+      }
+    };
+    synchronizable.lock = () => {
+      proxy.synchronizableLock(synchronizable);
+    };
+    synchronizable.unlock = () => {
+      proxy.synchronizableUnlock(synchronizable);
+    };
+
+    return synchronizable;
+  }
+
+  globalThis.__synchronizableUnpacker = synchronizableUnpacker;
+
+  return synchronizableUnpacker;
 }
 
-globalThis.__synchronizableUnpacker = __synchronizableUnpacker;
-
-export type SynchronizableUnpacker = typeof __synchronizableUnpacker;
+export type SynchronizableUnpacker = <TValue>(
+  synchronizableRef: SynchronizableRef<TValue>
+) => Synchronizable<TValue>;

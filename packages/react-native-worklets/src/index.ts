@@ -7,17 +7,19 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
-export { isSynchronizable } from './isSynchronizable';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { shareableMappingCache } from './shareableMappingCache';
-export type { MakeShareableClone } from './shareables';
+export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
   isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
+  shareableMappingCache,
+} from './deprecated';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { isSynchronizable } from './isSynchronizable';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
+export { serializableMappingCache } from './shareableMappingCache';
+export { createSerializable, isSerializableRef } from './shareables';
 export type { Synchronizable } from './synchronizable';
 export { createSynchronizable } from './synchronizable';
 export {
@@ -31,7 +33,7 @@ export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,

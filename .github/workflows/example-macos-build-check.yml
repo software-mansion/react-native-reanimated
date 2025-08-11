@@ -37,7 +37,7 @@ on:
 jobs:
   example-macos-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated' && false # Disable this workflow until react-native-macos supports Fabric
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       WORKING_DIRECTORY: apps/macos-example
       REANIMATED_DIR: packages/react-native-reanimated
@@ -51,6 +51,9 @@ jobs:
         with:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Select Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies

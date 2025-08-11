@@ -354,10 +354,9 @@ export function isAnimationTerminatingCalculation(
   const { toValue, velocity, startValue, current, initialEnergy } = animation;
 
   if (config.overshootClamping) {
-    if (
-      (current > toValue && startValue < toValue) ||
-      (current < toValue && startValue > toValue)
-    ) {
+    const leftBound = startValue >= 0 ? toValue : toValue + startValue;
+    const rightBound = leftBound + Math.abs(startValue);
+    if (current < leftBound || current > rightBound) {
       return true;
     }
   }

@@ -1,18 +1,17 @@
 'use strict';
 
-import { makeShareableCloneRecursive } from './shareables';
-import { __synchronizableUnpacker } from './synchronizableUnpacker';
+import { createSerializable } from './shareables';
 import { WorkletsModule } from './WorkletsModule';
-import type { ShareableRef } from './workletTypes';
+import type { SerializableRef } from './workletTypes';
 
 export function createSynchronizable<TValue>(
   initialValue: TValue
 ): Synchronizable<TValue> {
-  const synchronizableRef = WorkletsModule.makeSynchronizable(
-    makeShareableCloneRecursive(initialValue)
+  const synchronizableRef = WorkletsModule.createSynchronizable(
+    createSerializable(initialValue)
   );
 
-  return __synchronizableUnpacker(
+  return globalThis.__synchronizableUnpacker(
     synchronizableRef
   ) as unknown as Synchronizable<TValue>;
 }
@@ -23,7 +22,7 @@ export interface SynchronizableRef<TValue = unknown> {
 }
 
 export interface Synchronizable<TValue = unknown>
-  extends ShareableRef<TValue>,
+  extends SerializableRef<TValue>,
     SynchronizableRef<TValue> {
   __synchronizableRef: true;
   getDirty(): TValue;

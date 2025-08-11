@@ -87,7 +87,7 @@ SVGLength SVGLength::interpolate(const double progress, const SVGLength &to)
         value + (to.value - value) * progress, isPercentage || to.isPercentage);
   }
 
-  // Otherwise, we interpolate values as keywords
+  // Otherwise, we interpolate values as discrete values
   return progress < 0.5 ? *this : to;
 }
 

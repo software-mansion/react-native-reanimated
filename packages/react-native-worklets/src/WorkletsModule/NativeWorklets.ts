@@ -5,7 +5,7 @@ import type { SynchronizableRef } from '../synchronizable';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, WorkletRuntime } from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -17,10 +17,10 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
-  #shareableUndefined: ShareableRef<undefined>;
-  #shareableNull: ShareableRef<null>;
-  #shareableTrue: ShareableRef<boolean>;
-  #shareableFalse: ShareableRef<boolean>;
+  #shareableUndefined: SerializableRef<undefined>;
+  #shareableNull: SerializableRef<null>;
+  #serializableTrue: SerializableRef<boolean>;
+  #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
     globalThis._WORKLETS_VERSION_JS = jsVersion;
@@ -37,125 +37,134 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
-    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
+    this.#shareableNull = this.#workletsModuleProxy.createSerializableNull();
     this.#shareableUndefined =
-      this.#workletsModuleProxy.makeShareableUndefined();
-    this.#shareableTrue = this.#workletsModuleProxy.makeShareableBoolean(true);
-    this.#shareableFalse =
-      this.#workletsModuleProxy.makeShareableBoolean(false);
+      this.#workletsModuleProxy.createSerializableUndefined();
+    this.#serializableTrue =
+      this.#workletsModuleProxy.createSerializableBoolean(true);
+    this.#serializableFalse =
+      this.#workletsModuleProxy.createSerializableBoolean(false);
   }
 
-  makeShareableClone<TValue>(
+  createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
-    return this.#workletsModuleProxy.makeShareableClone(
+    return this.#workletsModuleProxy.createSerializable(
       value,
       shouldPersistRemote,
       nativeStateSource
     );
   }
 
-  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
-    return this.#workletsModuleProxy.makeShareableImport(from, to);
+  createSerializableImport<TValue>(
+    from: string,
+    to: string
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createSerializableImport(from, to);
   }
 
-  makeShareableString(str: string) {
-    return this.#workletsModuleProxy.makeShareableString(str);
+  createSerializableString(str: string) {
+    return this.#workletsModuleProxy.createSerializableString(str);
   }
 
-  makeShareableNumber(num: number) {
-    return this.#workletsModuleProxy.makeShareableNumber(num);
+  createSerializableNumber(num: number) {
+    return this.#workletsModuleProxy.createSerializableNumber(num);
   }
 
-  makeShareableBoolean(bool: boolean) {
-    return bool ? this.#shareableTrue : this.#shareableFalse;
+  createSerializableBoolean(bool: boolean) {
+    return bool ? this.#serializableTrue : this.#serializableFalse;
   }
 
-  makeShareableBigInt(bigInt: bigint) {
-    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  createSerializableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.createSerializableBigInt(bigInt);
   }
 
-  makeShareableUndefined() {
+  createSerializableUndefined() {
     return this.#shareableUndefined;
   }
 
-  makeShareableNull() {
+  createSerializableNull() {
     return this.#shareableNull;
   }
 
-  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
-    props: TProps,
-    proto: TProto
-  ): ShareableRef<TProps> {
-    return this.#workletsModuleProxy.makeShareableTurboModuleLike(props, proto);
+  createSerializableTurboModuleLike<
+    TProps extends object,
+    TProto extends object,
+  >(props: TProps, proto: TProto): SerializableRef<TProps> {
+    return this.#workletsModuleProxy.createSerializableTurboModuleLike(
+      props,
+      proto
+    );
   }
 
-  makeShareableObject<T extends object>(
+  createSerializableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<T> {
-    return this.#workletsModuleProxy.makeShareableObject(
+  ): SerializableRef<T> {
+    return this.#workletsModuleProxy.createSerializableObject(
       obj,
       shouldRetainRemote,
       nativeStateSource
     );
   }
 
-  makeShareableHostObject<T extends object>(obj: T) {
-    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  createSerializableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.createSerializableHostObject(obj);
   }
 
-  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
-    return this.#workletsModuleProxy.makeShareableArray(
+  createSerializableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.createSerializableArray(
       array,
       shouldRetainRemote
     );
   }
 
-  makeShareableMap<TKey, TValue>(
+  createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
-  ): ShareableRef<Map<TKey, TValue>> {
-    return this.#workletsModuleProxy.makeShareableMap(keys, values);
+  ): SerializableRef<Map<TKey, TValue>> {
+    return this.#workletsModuleProxy.createSerializableMap(keys, values);
   }
 
-  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>> {
-    return this.#workletsModuleProxy.makeShareableSet(values);
+  createSerializableSet<TValues>(
+    values: TValues[]
+  ): SerializableRef<Set<TValues>> {
+    return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
-  makeShareableInitializer(obj: object) {
-    return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  createSerializableInitializer(obj: object) {
+    return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  makeShareableFunction<TArgs extends unknown[], TReturn>(
+  createSerializableFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
   ) {
-    return this.#workletsModuleProxy.makeShareableFunction(func);
+    return this.#workletsModuleProxy.createSerializableFunction(func);
   }
 
-  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
-    return this.#workletsModuleProxy.makeShareableWorklet(
+  createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.createSerializableWorklet(
       worklet,
       shouldPersistRemote
     );
   }
 
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
+  scheduleOnUI<TValue>(shareable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(shareable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: ShareableRef<TValue>
+    shareable: SerializableRef<TValue>
   ): TReturn {
     return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(
     name: string,
-    initializer: ShareableRef<() => void>,
+    initializer: SerializableRef<() => void>,
     useDefaultQueue: boolean,
     customQueue: object | undefined
   ) {
@@ -169,7 +178,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<T>
+    shareableWorklet: SerializableRef<T>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
@@ -177,8 +186,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  makeSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
-    return this.#workletsModuleProxy.makeSynchronizable(value);
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizable(value);
   }
 
   synchronizableGetDirty<TValue>(
@@ -197,7 +206,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   synchronizableSetBlocking<TValue>(
     synchronizableRef: SynchronizableRef<TValue>,
-    value: ShareableRef<TValue>
+    value: SerializableRef<TValue>
   ) {
     return this.#workletsModuleProxy.synchronizableSetBlocking(
       synchronizableRef,
