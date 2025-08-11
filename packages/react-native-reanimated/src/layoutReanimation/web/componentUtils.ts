@@ -45,7 +45,9 @@ function getEasingFromConfig(config: CustomConfig): string {
   );
 
   if (!bezierEasing) {
-    logger.warn(`Selected easing is not currently supported on web.`);
+    logger.warn(
+      `Selected easing is not currently supported on web. Using linear easing instead.`
+    );
 
     return getEasingByName('linear');
   }
