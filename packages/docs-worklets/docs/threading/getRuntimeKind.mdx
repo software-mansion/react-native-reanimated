@@ -1,0 +1,109 @@
+---
+sidebar_position: 8
+---
+
+# getRuntimeKind
+
+`getRuntimeKind` allows you to get the [kind of the current runtime](/docs/fundamentals/runtimeKinds) in a programmatic fashion. It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
+
+`getRuntimeKind` is a direct replacement for the deprecated `_WORKLET` global variable.
+
+## Reference
+
+```typescript
+import {
+  getRuntimeKind,
+  runOnUI,
+  createWorkletRuntime,
+  runOnRuntime,
+} from 'react-native-worklets';
+
+console.log(getRuntimeKind()); // 1 (RN Runtime)
+
+runOnUI(() => {
+  console.log(getRuntimeKind()); // 2 (UI Runtime)
+})();
+
+runOnRuntime(createWorkletRuntime(), () => {
+  console.log(getRuntimeKind()); // 3 (Worker Runtime)
+})();
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+enum RuntimeKind {
+  ReactNative = 1,
+  UI = 2,
+  Worker = 3,
+}
+
+function getRuntimeKind(): RuntimeKind;
+```
+
+</details>
+
+### Returns
+
+An enum value representing the current runtime kind:
+
+- `1` for RN Runtime
+- `2` for UI Runtime
+- `3` for Worker Runtime
+
+## Example
+
+```typescript
+import {
+  getRuntimeKind,
+  RuntimeKind,
+  runOnJS,
+  runOnUI,
+} from 'react-native-worklets';
+
+function logToConsole(message: string) {
+  console.log(message);
+}
+
+function log(message: string) {
+  'worklet';
+  if (getRuntimeKind() === RuntimeKind.ReactNative) {
+    console.log(`RN: ${message}`);
+  } else {
+    // Fun fact - this is how `console.log` is implemented on Worklet Runtimes.
+    runOnJS(logToConsole)(`UI: ${message}`);
+  }
+}
+
+function randomDispatch() {
+  if (Math.random() > 0.5) {
+    runOnUI(log)('Hello!');
+  } else {
+    log('Hello!');
+  }
+}
+
+randomDispatch(); // Could log either "RN: Hello!" or "UI: Hello!"
+```
+
+## Optimizations
+
+For micro-optimizations of your code you can skip the invocation of `getRuntimeKind` and use the global variable `__RUNTIME_KIND` directly:
+
+```typescript
+import {
+  getRuntimeKind,
+  runOnUI,
+  createWorkletRuntime,
+  runOnRuntime,
+} from 'react-native-worklets';
+
+console.log(globalThis.__RUNTIME_KIND); // 1 (RN Runtime)
+```
+
+Be aware that accessing the global variable `__RUNTIME_KIND` before importing anything from `react-native-worklets` might result in it being undefined. This is because the global variable is set only after the `react-native-worklets` module is loaded. This is especially important in Web contexts, where additional bundler optimizations may be in place.
+
+## Remarks
+
+- If you're using the global variable `__RUNTIME_KIND` make sure to reference it by accessing the global object, i.e. `globalThis.__RUNTIME_KIND` to make sure you don't accidentally reference a local variable with the same name.
