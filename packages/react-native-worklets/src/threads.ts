@@ -190,7 +190,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     | ((...args: Args) => ReturnValue)
     | RemoteFunction<Args, ReturnValue>
     | WorkletFunction<Args, ReturnValue>,
-  args: Args
+  ...args: Args
 ): void {
   'worklet';
   runOnJS(fun)(...args);
