@@ -1,5 +1,3 @@
-import { WorkletsError } from './WorkletsError';
-
 export enum RuntimeKind {
   /**
    * The React Native runtime, which is the main runtime for React Native where
@@ -26,15 +24,5 @@ export enum RuntimeKind {
  */
 export function getRuntimeKind(): RuntimeKind {
   'worklet';
-  const kind = globalThis.__RUNTIME_KIND;
-  switch (kind) {
-    case RuntimeKind.ReactNative:
-      return RuntimeKind.ReactNative;
-    case RuntimeKind.UI:
-      return RuntimeKind.UI;
-    case RuntimeKind.Worker:
-      return RuntimeKind.Worker;
-    default:
-      throw new WorkletsError(`Unknown runtime kind: ${kind}`);
-  }
+  return globalThis.__RUNTIME_KIND;
 }

@@ -35,5 +35,5 @@ declare global {
    * - Value _2_: UI Worklet Runtime
    * - Value _3_: Worker Worklet Runtime
    */
-  var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3 | undefined;
+  var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
 }
