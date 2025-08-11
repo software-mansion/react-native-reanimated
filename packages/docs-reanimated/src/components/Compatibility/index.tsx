@@ -61,11 +61,10 @@ export function ReanimatedCompatibility() {
 
   const compatibilityItems: CompatibilityItem[] = Object.entries(
     compatibilityData
-  ).map(([version, data]) => {
-    const isSpacer = version === '4.0.0 – 4.0.1';
+  ).map(([version, data], index) => {
     return {
       version,
-      isSpacer,
+      isSpacer: index === 1,
       compatibility: createCompatibility(data['react-native-versions']),
     };
   });
