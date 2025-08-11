@@ -5,10 +5,10 @@ import type {
   WorkletRuntime as WorkletRuntimeFromWorklets,
 } from 'react-native-worklets';
 import {
+  createSerializable,
   createWorkletRuntime as createWorkletRuntimeFromWorklets,
   executeOnUIRuntimeSync as executeOnUIRuntimeSyncFromWorklets,
   isWorkletFunction as isWorkletFunctionFromWorklets,
-  makeShareableCloneRecursive as makeShareableCloneRecursiveFromWorklets,
   runOnJS as runOnJSFromWorklets,
   runOnRuntime as runOnRuntimeFromWorklets,
   runOnUI as runOnUIFromWorklets,
@@ -19,7 +19,7 @@ import {
  *   `react-native-worklets` instead of `react-native-reanimated`.
  */
 export const makeShareableCloneRecursive: MakeShareableClone =
-  makeShareableCloneRecursiveFromWorklets;
+  createSerializable;
 
 /**
  * @deprecated Please import `createWorkletRuntime` directly from

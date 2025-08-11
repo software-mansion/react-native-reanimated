@@ -1,10 +1,10 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { shareableMappingCache } from './shareableMappingCache';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+} from './serializable';
+import { serializableMappingCache } from './serializableMappingCache';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -61,7 +61,7 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
  * Lets you asynchronously run
  * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
  * functions on the [UI
- * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  *
  * This method does not schedule the work immediately but instead waits for
  * other worklets to be scheduled within the same JS loop. It uses
@@ -69,12 +69,12 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
  * within the same frame boundaries on the UI thread.
  *
  * @param fun - A reference to a function you want to execute on the [UI
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/)
  *   from the [JavaScript
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  * @returns A function that accepts arguments for the function passed as the
  *   first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/
  */
 // @ts-expect-error This overload is correct since it's what user sees in his code
 // before it's transformed by Reanimated Babel plugin.
@@ -105,7 +105,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // mechanism we just schedule the work ommiting the queue. This is ok for the
       // uses that we currently have but may not be ok for future tests that we write.
       WorkletsModule.scheduleOnUI(
-        makeShareableCloneRecursive(() => {
+        createSerializable(() => {
           'worklet';
           worklet(...args);
         })
@@ -113,13 +113,13 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       return;
     }
     if (__DEV__) {
-      // in DEV mode we call shareable conversion here because in case the object
+      // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
       // situation when conversion is only done via microtask queue. This does not
       // make the app particularily less efficient as converted objects are cached
       // and for a given worklet the conversion only happens once.
-      makeShareableCloneRecursive(worklet);
-      makeShareableCloneRecursive(args);
+      createSerializable(worklet);
+      createSerializable(args);
     }
 
     enqueueUI(worklet, args);
@@ -134,8 +134,8 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIWorklet = makeShareableCloneRecursive(runOnUIWorklet);
-  shareableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
+  const serializableRunOnUIWorklet = createSerializable(runOnUIWorklet);
+  serializableMappingCache.set(runOnUI, serializableRunOnUIWorklet);
 }
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
@@ -148,7 +148,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => ReturnValue {
   return (...args) => {
     return WorkletsModule.executeOnUIRuntimeSync(
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         const result = worklet(...args);
         return makeShareableCloneOnUIRecursive(result);
@@ -189,7 +189,7 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
  *   thread from the UI thread.
  * @returns A function that accepts arguments for the function passed as the
  *   first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnJS
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS
  */
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun:
@@ -245,7 +245,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * Lets you asynchronously run
  * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
  * functions on the [UI
- * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  *
  * This method does not schedule the work immediately but instead waits for
  * other worklets to be scheduled within the same JS loop. It uses
@@ -253,12 +253,12 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * within the same frame boundaries on the UI thread.
  *
  * @param fun - A reference to a function you want to execute on the [UI
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/)
  *   from the [JavaScript
- *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ *   thread](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI/).
  * @returns A promise that resolves to the return value of the function passed
  *   as the first argument.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUIAsync
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync/
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
@@ -279,7 +279,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         // mechanism we just schedule the work ommiting the queue. This is ok for the
         // uses that we currently have but may not be ok for future tests that we write.
         WorkletsModule.scheduleOnUI(
-          makeShareableCloneRecursive(() => {
+          createSerializable(() => {
             'worklet';
             worklet(...args);
           })
@@ -287,13 +287,13 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         return;
       }
       if (__DEV__) {
-        // in DEV mode we call shareable conversion here because in case the object
+        // in DEV mode we call serializable conversion here because in case the object
         // can't be converted, we will get a meaningful stack-trace as opposed to the
         // situation when conversion is only done via microtask queue. This does not
         // make the app particularily less efficient as converted objects are cached
         // and for a given worklet the conversion only happens once.
-        makeShareableCloneRecursive(worklet);
-        makeShareableCloneRecursive(args);
+        createSerializable(worklet);
+        createSerializable(args);
       }
 
       enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
@@ -309,9 +309,9 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIAsyncWorklet =
-    makeShareableCloneRecursive(runOnUIAsyncWorklet);
-  shareableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+  const serializableRunOnUIAsyncWorklet =
+    createSerializable(runOnUIAsyncWorklet);
+  serializableMappingCache.set(runOnUIAsync, serializableRunOnUIAsyncWorklet);
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(
@@ -331,7 +331,7 @@ function flushUIQueue(): void {
     const queue = runOnUIQueue;
     runOnUIQueue = [];
     WorkletsModule.scheduleOnUI(
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);

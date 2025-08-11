@@ -6,7 +6,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
@@ -415,6 +415,7 @@ void ReanimatedModuleProxy::setViewStyle(
 void ReanimatedModuleProxy::markNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
+  auto lock = updatesRegistryManager_->lock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
@@ -422,6 +423,7 @@ void ReanimatedModuleProxy::markNodeAsRemovable(
 void ReanimatedModuleProxy::unmarkNodeAsRemovable(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
+  auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 

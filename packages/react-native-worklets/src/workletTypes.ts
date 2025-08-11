@@ -9,15 +9,15 @@
  * this field is not actually defined nor should be used for anything else as
  * assigning any data to those objects will throw an error.
  */
-export type ShareableRef<T = unknown> = {
-  __shareableRef: true;
-  __nativeStateShareableJSRef: T;
+export type SerializableRef<T = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: T;
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
-export type FlatShareableRef<T> =
-  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
+export type FlatSerializableRef<T> =
+  T extends SerializableRef<infer U> ? SerializableRef<U> : SerializableRef<T>;
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
