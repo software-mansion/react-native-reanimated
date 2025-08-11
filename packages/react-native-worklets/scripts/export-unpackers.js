@@ -15,8 +15,8 @@ exportToCpp('valueUnpacker.ts', 'ValueUnpacker');
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to
  *   transform.
- * @param {string} outputFilename - The path where the generated C++ file should
- *   be written, without extension.
+ * @param {string} outputFilename - The filename (without extension) to use for
+ *   the generated C++ file.
  */
 function exportToCpp(sourceFilePath, outputFilename) {
   const transformed = transformFileSync(
