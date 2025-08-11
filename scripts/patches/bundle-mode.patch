@@ -1,13 +1,16 @@
 diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
-index 628c28e453..edde3065d2 100644
+index efcfd4720d..9f26a1d953 100644
 --- a/apps/fabric-example/android/gradle.properties
 +++ b/apps/fabric-example/android/gradle.properties
-@@ -44,4 +44,4 @@ isReanimatedExampleApp=true
+@@ -44,7 +44,7 @@ isReanimatedExampleApp=true
  enableReanimatedProfiling=true
  
  # Uncomment the next line to enable bundle mode.
 -# workletsBundleMode=true
 +workletsBundleMode=true
+ 
+ # https://docs.gradle.org/current/userguide/configuration_cache.html
+ org.gradle.configuration-cache=true
 diff --git a/apps/fabric-example/android/settings.gradle b/apps/fabric-example/android/settings.gradle
 index afaf8c45a5..c3c5434878 100644
 --- a/apps/fabric-example/android/settings.gradle

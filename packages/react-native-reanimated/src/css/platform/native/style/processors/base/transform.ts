@@ -2,7 +2,7 @@
 import { ReanimatedError } from '../../../../../../common';
 import type { TransformsArray } from '../../../../../types';
 import {
-  isAngleValue,
+  isAngle,
   isNumber,
   isNumberArray,
   isPercentage,
@@ -111,7 +111,7 @@ function parseRotate(
   key: string,
   values: (string | number)[]
 ): TransformsArray {
-  return values.length === 1 && (isAngleValue(values[0]) || values[0] === 0)
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? ([
         { [key]: values[0] === 0 ? '0deg' : values[0] },
       ] as unknown as TransformsArray)
@@ -129,13 +129,13 @@ function parseSkew(values: (number | string)[]): TransformsArray {
 }
 
 function parseSkewX(values: (number | string)[]): TransformsArray {
-  return values.length === 1 && (isAngleValue(values[0]) || values[0] === 0)
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? [{ skewX: values[0] === 0 ? '0deg' : values[0] }]
     : [];
 }
 
 function parseSkewY(values: (number | string)[]): TransformsArray {
-  return values.length === 1 && (isAngleValue(values[0]) || values[0] === 0)
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? [{ skewY: values[0] === 0 ? '0deg' : values[0] }]
     : [];
 }

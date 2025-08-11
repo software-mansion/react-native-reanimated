@@ -15,7 +15,7 @@ import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
-  'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
+  'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 
 const NATIVE_SCROLL_EVENT_NAMES = [
   'onScroll',

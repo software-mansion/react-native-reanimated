@@ -12,19 +12,19 @@ on:
 jobs:
   reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
-    runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    runs-on: ${{matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
     strategy:
       matrix:
         platform: ['iOS', 'Android']
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
-        react-native-version: ['0.78', '0.79', '0.80']
+        react-native-version: ['0.78', '0.79', '0.80', '0.81']
       fail-fast: false
     env:
       APP_NAME: app
     concurrency:
-      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native-version}}-${{matrix.platform}}-${{ matrix.mode }}-${{ github.ref }}
+      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native-version}}-${{matrix.platform}}-${{matrix.mode}}-${{github.ref}}
       cancel-in-progress: true
     steps:
       - name: Set up JDK 18
@@ -58,13 +58,16 @@ jobs:
           touch yarn.lock
           yarn set version berry
           yarn config set nodeLinker node-modules
-      - name: Install Worklets
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
-      - name: Install Pods
+      - name: Install Worklets
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
+      - name: Select Xcode (iOS)
+        if: ${{ matrix.platform == 'iOS' }}
+        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+      - name: Install Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod update
