@@ -43,7 +43,7 @@ import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const REAL_VERSION = require('../../package.json').version;
 
 const MOCK_VERSION = 'x.y.z';
@@ -112,10 +112,20 @@ export function makeWorkletFactory(
 
   const { workletName, reactName } = makeWorkletName(fun, state);
 
+  let mutatedClosureVariables;
+  if (state.opts.bundleMode) {
+    mutatedClosureVariables = closureVariables.map((variable) =>
+      cloneNode(variable, true)
+    );
+  } else {
+    mutatedClosureVariables = closureVariables;
+  }
+
+  // eslint-disable-next-line prefer-const
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
-    closureVariables,
+    mutatedClosureVariables,
     workletName,
     transformed.map
   );
@@ -179,19 +189,9 @@ export function makeWorkletFactory(
     );
   }
 
-  const shouldInjectVersion = !isRelease();
-  if (shouldInjectVersion) {
-    initDataObjectExpression.properties.push(
-      objectProperty(
-        identifier('version'),
-        stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
-      )
-    );
-  }
-
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     pathForStringDefinitions.insertBefore(
       variableDeclaration('const', [
         variableDeclarator(initDataId, initDataObjectExpression),
@@ -220,7 +220,7 @@ export function makeWorkletFactory(
         memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           closureVariables.map((variable) =>
-            !state.opts.experimentalBundling &&
+            !state.opts.bundleMode &&
             variable.name.endsWith(workletClassFactorySuffix)
               ? objectProperty(
                   identifier(variable.name),
@@ -257,7 +257,23 @@ export function makeWorkletFactory(
     ),
   ];
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  const shouldInjectVersion = !isRelease();
+  if (shouldInjectVersion) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(
+            identifier(reactName),
+            identifier('__pluginVersion')
+          ),
+          stringLiteral(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)
+        )
+      )
+    );
+  }
+
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     statements.push(
       expressionStatement(
         assignmentExpression(
@@ -309,7 +325,7 @@ export function makeWorkletFactory(
   const factoryParams = closureVariables.map((variableId) => {
     const clonedId = cloneNode(variableId, true);
     if (
-      !state.opts.experimentalBundling &&
+      !state.opts.bundleMode &&
       clonedId.name.endsWith(workletClassFactorySuffix)
     ) {
       clonedId.name = clonedId.name.slice(
@@ -320,7 +336,7 @@ export function makeWorkletFactory(
     return clonedId;
   });
 
-  if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+  if (shouldIncludeInitData && !state.opts.bundleMode) {
     factoryParams.unshift(cloneNode(initDataId, true));
   }
 
@@ -354,7 +370,7 @@ export function makeWorkletFactory(
     )
   );
 
-  if (state.opts.experimentalBundling) {
+  if (state.opts.bundleMode) {
     generateWorkletFile(
       libraryBindingsToImport,
       relativeBindingsToImport,

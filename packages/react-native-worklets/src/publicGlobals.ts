@@ -1,11 +1,4 @@
 'use strict';
-/* eslint-disable no-var */
-/* eslint-disable reanimated/use-global-this */
-import type { RuntimeKind } from './runtimeKind';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getRuntimeKind } from './runtimeKind';
-
-export {};
 
 declare global {
   /**
@@ -36,3 +29,5 @@ declare global {
    */
   var _RUNTIME_KIND: RuntimeKind | undefined;
 }
+
+export {};

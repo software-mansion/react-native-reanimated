@@ -57,13 +57,10 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &listenerId) = 0;
 
   // other
-  virtual jsi::Value enableLayoutAnimations(
+  virtual jsi::Value setDynamicFeatureFlag(
       jsi::Runtime &rt,
-      const jsi::Value &config) = 0;
-  virtual jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) = 0;
+      const jsi::Value &name,
+      const jsi::Value &value) = 0;
 
   // layout animations
   virtual jsi::Value configureLayoutAnimationBatch(
@@ -93,10 +90,12 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
+      const jsi::Value &viewName,
       const jsi::Value &keyframesConfig) = 0;
   virtual void unregisterCSSKeyframes(
       jsi::Runtime &rt,
-      const jsi::Value &animationName) = 0;
+      const jsi::Value &animationName,
+      const jsi::Value &viewName) = 0;
 
   // CSS animations
   virtual void applyCSSAnimations(

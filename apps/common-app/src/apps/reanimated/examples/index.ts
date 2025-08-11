@@ -13,11 +13,13 @@ import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BokehExample from './BokehExample';
+import BottomSheetExample from './BottomSheetExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
@@ -32,6 +34,8 @@ import DragAndSnapExample from './DragAndSnapExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FilterExample from './FilterExample';
+import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
@@ -40,7 +44,6 @@ import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -53,6 +56,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -61,6 +65,7 @@ import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation'
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedTest from './LayoutAnimations/Nested';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
@@ -68,6 +73,7 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
@@ -79,6 +85,7 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
@@ -105,12 +112,15 @@ import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
+import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronousPropsExample from './SynchronousPropsExample';
+import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
@@ -136,6 +146,16 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Empty',
     screen: EmptyExample,
   },
+  FpsExample: {
+    icon: '🎞️',
+    title: 'FPS',
+    screen: FpsExample,
+  },
+  ThirdPartyComponentsExample: {
+    icon: '3️⃣',
+    title: 'Third party components',
+    screen: ThirdPartyComponentsExample,
+  },
   RuntimeTests: {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
@@ -156,20 +176,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
   },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
-  },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',
@@ -186,7 +201,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
   },
-
+  BottomSheetExample: {
+    icon: '⬆️',
+    title: 'Bottom sheet',
+    screen: BottomSheetExample,
+  },
   CopyShareablesPerformanceTest: {
     icon: '🔄',
     title: 'Copy shareables performance test',
@@ -294,6 +313,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌈',
     title: 'Animate colors',
     screen: ColorExample,
+  },
+  FilterExample: {
+    icon: '🖼️',
+    title: 'Animate filter',
+    screen: FilterExample,
+  },
+  SynchronousPropsExample: {
+    icon: '⚡',
+    title: 'Animate synchronous props',
+    screen: SynchronousPropsExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
     icon: '🎨',
@@ -464,6 +493,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🕰',
     title: 'Pendulum example',
     screen: PendulumExample,
+  },
+  SpringPresetsExample: {
+    icon: '🛠',
+    title: 'Spring presets',
+    screen: SpringPresetsExample,
+  },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
   },
   SpringClampExample: {
     icon: '🗜',
@@ -713,5 +752,21 @@ export const EXAMPLES: Record<string, Example> = {
   ViewRecycling: {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
+  },
+  ReparentingExample: {
+    title: '[LA] Reparenting',
+    screen: ReparentingExample,
+  },
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
+  },
+  MoveWithExiting: {
+    title: '[LA] Move with exiting',
+    screen: MoveWithExiting,
+  },
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

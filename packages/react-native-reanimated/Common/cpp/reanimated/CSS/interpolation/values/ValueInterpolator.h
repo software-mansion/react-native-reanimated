@@ -11,7 +11,7 @@
 namespace reanimated::css {
 
 struct ValueInterpolatorUpdateContext {
-  const ShadowNode::Shared &node;
+  const std::shared_ptr<const ShadowNode> &node;
 };
 
 template <typename TValue>
@@ -42,13 +42,13 @@ class ValueInterpolator : public PropertyInterpolator {
   virtual ~ValueInterpolator() = default;
 
   folly::dynamic getStyleValue(
-      const ShadowNode::Shared &shadowNode) const override {
+      const std::shared_ptr<const ShadowNode> &shadowNode) const override {
     return viewStylesRepository_->getStyleProp(
         shadowNode->getTag(), propertyPath_);
   }
 
   folly::dynamic getResetStyle(
-      const ShadowNode::Shared &shadowNode) const override {
+      const std::shared_ptr<const ShadowNode> &shadowNode) const override {
     auto styleValue = getStyleValue(shadowNode);
 
     if (styleValue.isNull()) {
@@ -119,7 +119,7 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
       const override {
     const auto toIndex = getToKeyframeIndex(progressProvider);
@@ -171,7 +171,8 @@ class ValueInterpolator : public PropertyInterpolator {
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
   std::optional<ValueType> reversingAdjustedStartValue_;
 
-  ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
+  ValueType getFallbackValue(
+      const std::shared_ptr<const ShadowNode> &shadowNode) const {
     const auto styleValue = getStyleValue(shadowNode);
     return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }

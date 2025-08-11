@@ -1,7 +1,5 @@
 'use strict';
-
-import { logger } from 'react-native-worklets';
-
+import { logger } from '../../common';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
@@ -175,27 +173,35 @@ export function setElementAnimation(
     configureAnimation();
   }
 
+  const maybeRemoveElement = () => {
+    if (element.reanimatedDummy && parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+  };
+
+  let wasCallbackCalled = false;
+  const maybeCallCallback = (finished: boolean) => {
+    if (!wasCallbackCalled && animationConfig.callback) {
+      animationConfig.callback(finished);
+      wasCallbackCalled = true;
+    }
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(true);
 
-    animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    animationConfig.callback?.(false);
-
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -214,6 +220,9 @@ export function setElementAnimation(
       if (shouldSavePosition) {
         setElementPosition(element, snapshots.get(element)!);
       }
+
+      maybeRemoveElement();
+      maybeCallCallback(false);
     });
   }
 }
@@ -303,6 +312,20 @@ export function handleExitingAnimation(
   element.style.animationName = '';
   dummy.style.animationName = '';
 
+  // Moving elements in DOM resets their scroll positions
+  // so we memorize them here and restore after
+  const scrollPositions = new Map<Element, { top: number; left: number }>();
+  const saveScrollPosition = (node: Element) => {
+    scrollPositions.set(node, {
+      top: node.scrollTop,
+      left: node.scrollLeft,
+    });
+    for (const child of Array.from(node.children)) {
+      saveScrollPosition(child);
+    }
+  };
+  saveScrollPosition(element);
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -313,6 +336,18 @@ export function handleExitingAnimation(
   }
 
   parent?.appendChild(dummy);
+
+  const restoreScrollPosition = (node: Element) => {
+    const scrollPosition = scrollPositions.get(node === dummy ? element : node);
+    if (scrollPosition) {
+      node.scrollTop = scrollPosition.top;
+      node.scrollLeft = scrollPosition.left;
+    }
+    for (const child of Array.from(node.children)) {
+      restoreScrollPosition(child);
+    }
+  };
+  restoreScrollPosition(dummy);
 
   const snapshot = snapshots.get(element)!;
 

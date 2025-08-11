@@ -8,10 +8,12 @@ import {
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
 } from '../../platform/native/native';
+import { cssKeyframesRegistry } from '../../registry';
 import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
+const VIEW_NAME = 'ViewName';
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
 jest.mock('../../platform/native/native.ts', () => ({
@@ -28,9 +30,10 @@ describe('CSSAnimationsManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSAnimationsManager(shadowNodeWrapper, viewTag);
+    manager = new CSSAnimationsManager(shadowNodeWrapper, VIEW_NAME, viewTag);
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
+    cssKeyframesRegistry.clear();
   });
 
   // TODO - add tests with keyframes rule class
@@ -173,11 +176,13 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(2);
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           1,
-          attachedAnimations[0].keyframesRule.name
+          attachedAnimations[0].keyframesRule.name,
+          VIEW_NAME
         );
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           2,
-          attachedAnimations[1].keyframesRule.name
+          attachedAnimations[1].keyframesRule.name,
+          VIEW_NAME
         );
 
         // Animations should be still attached because call to unmountCleanup

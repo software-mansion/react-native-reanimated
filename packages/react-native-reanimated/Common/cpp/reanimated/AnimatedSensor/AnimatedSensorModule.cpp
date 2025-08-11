@@ -1,3 +1,4 @@
+#include <react/debug/react_native_assert.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
 #include <utility>
@@ -11,7 +12,9 @@ AnimatedSensorModule::AnimatedSensorModule(
           platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  assert(sensorsIds_.empty());
+  react_native_assert(
+      sensorsIds_.empty() &&
+      "Tried to deallocate AnimatedSensorModule with registered sensors");
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -23,7 +26,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       sensorDataHandler,
       "[Reanimated] Sensor event handler must be a worklet.");
@@ -33,7 +36,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
       [sensorType,
-       shareableHandler,
+       serializableHandler,
        weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
@@ -62,7 +65,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         value.setProperty(
             uiRuntime, "interfaceOrientation", orientationDegrees);
 
-        uiWorkletRuntime->runGuarded(shareableHandler, value);
+        uiWorkletRuntime->runGuarded(serializableHandler, value);
       });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);

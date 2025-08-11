@@ -1,9 +1,16 @@
 'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 
+import type { ValueProcessor } from '../../../../../common';
+import { logger } from '../../../../../common';
 import { opacifyColor } from '../../utils';
 import { createRuleBuilder } from '../builderFactories';
-import { processColor, processShadowOffset } from '../processors';
+import { processColor } from '../processors';
+
+type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;
+
+const processShadowOffset: ValueProcessor<ShadowOffset, string> = (value) =>
+  `${value.width}px ${value.height}px`;
 
 type BoxShadowProps = Pick<
   ViewStyle,
@@ -28,7 +35,7 @@ export const boxShadowBuilder = createRuleBuilder<BoxShadowProps>(
       opacity !== 1 ? opacifyColor(shadowColor, opacity) : shadowColor;
 
     if (!processedColor) {
-      console.warn(`Cannot apply shadowOpacity to shadowColor: ${shadowColor}`);
+      logger.warn(`Cannot apply shadowOpacity to shadowColor: ${shadowColor}`);
     }
 
     return {

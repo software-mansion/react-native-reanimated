@@ -3,21 +3,23 @@
 namespace reanimated::css {
 
 CSSTransition::CSSTransition(
-    ShadowNode::Shared shadowNode,
+    std::shared_ptr<const ShadowNode> shadowNode,
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
       properties_(config.properties),
       settings_(config.settings),
-      progressProvider_(TransitionProgressProvider()),
-      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
+      styleInterpolator_(TransitionStyleInterpolator(
+          shadowNode_->getComponentName(),
+          viewStylesRepository)),
+      progressProvider_(TransitionProgressProvider()) {}
 
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
 }
 
-ShadowNode::Shared CSSTransition::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
   return shadowNode_;
 }
 
@@ -125,7 +127,7 @@ void CSSTransition::updateTransitionProperties(
 }
 
 bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
-  if (!isDiscreteProperty(propertyName)) {
+  if (!isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
     return true;
   }
 

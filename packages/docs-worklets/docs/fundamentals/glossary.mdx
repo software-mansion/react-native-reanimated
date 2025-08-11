@@ -1,0 +1,86 @@
+# Glossary of terms
+## Worklet
+
+Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
+
+Most of the time when working with Reanimated the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+
+```javascript
+const style = useAnimatedStyle(() => {
+  console.log('Running on the UI thread');
+  return { opacity: 0.5 };
+});
+```
+
+You can create your own worklets using the `"worklet";` directive at the top of a function.
+
+```javascript
+function myWorklet() {
+  'worklet';
+  console.log('Running on the UI thread');
+}
+```
+
+[`runOnUI`](/docs/threading/runOnUI) lets you manually run worklets on the UI thread:
+
+```javascript
+function myWorklet(greeting) {
+  'worklet';
+  console.log(`${greeting} from the UI thread`);
+}
+
+function onPress() {
+  // highlight-next-line
+  runOnUI(myWorklet)('Howdy');
+}
+```
+
+## to workletize
+
+To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](/docs/fundamentals/glossary#ui-thread).
+
+Functions marked with `"worklet";` directive are automatically picked up and workletized by the Reanimated Babel plugin.
+
+## Worklet Runtime
+
+A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets. 
+
+It isn't coupled to any thread, but there might be a thread dedicated to its execution.
+
+## JavaScript thread
+
+JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app.
+
+This is the primary place where the React Native app code is executed.
+
+## UI thread
+
+UI thread is responsible for handling user interface updates. Also known as Main thread.
+
+You can learn more about it by reading the [Threading model](https://reactnative.dev/architecture/threading-model) article in the official React Native docs.
+
+## Animations in inline styling
+
+Passing shared values directly to `style` property without the use of `useAnimatedStyle`.
+
+For example:
+
+```jsx
+function App() {
+  const width = useSharedValue(100);
+
+  return <Animated.View style={{ width }} />;
+}
+```
+
+## Reanimated Babel plugin
+
+The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
+
+You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).
+
+## Shareable
+
+<DeprecatedBanner />
+
+A `Shareable` is an object which can be assigned to a specific [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime), where it's shared across worklets in the same runtime.

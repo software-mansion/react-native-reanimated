@@ -376,9 +376,9 @@ TransformMatrix ScaleYOperation::toMatrix() const {
 
 // Translate
 TranslateOperation::TranslateOperation(const double value)
-    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
+    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
 TranslateOperation::TranslateOperation(const std::string &value)
-    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
+    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
@@ -549,7 +549,7 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 folly::dynamic MatrixOperation::valueToDynamic() const {
   if (!std::holds_alternative<TransformMatrix>(value)) {
     throw std::invalid_argument(
-        "[Reanimated] Cannot convert unprocessed transform operations to the JSI value.");
+        "[Reanimated] Cannot convert unprocessed transform operations to the dynamic value.");
   }
   return std::get<TransformMatrix>(value).toDynamic();
 }
@@ -564,7 +564,7 @@ TransformMatrix MatrixOperation::toMatrix() const {
 
 template struct TransformOperationBase<CSSDouble>;
 template struct TransformOperationBase<CSSAngle>;
-template struct TransformOperationBase<CSSDimension>;
+template struct TransformOperationBase<CSSLength>;
 template struct TransformOperationBase<
     std::variant<TransformMatrix, TransformOperations>>;
 

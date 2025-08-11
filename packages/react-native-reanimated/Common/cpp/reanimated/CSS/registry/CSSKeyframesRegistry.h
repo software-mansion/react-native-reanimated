@@ -1,6 +1,8 @@
 #pragma once
 
 #include <reanimated/CSS/config/CSSKeyframesConfig.h>
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
 #include <string>
@@ -11,12 +13,26 @@ namespace reanimated::css {
 
 class CSSKeyframesRegistry {
  public:
-  const CSSKeyframesConfig &get(const std::string &animationName) const;
-  void add(const std::string &animationName, CSSKeyframesConfig &&config);
-  void remove(const std::string &animationName);
+  CSSKeyframesRegistry(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+
+  const CSSKeyframesConfig &get(
+      const std::string &animationName,
+      const std::string &componentName);
+  void set(
+      const std::string &animationName,
+      const std::string &componentName,
+      CSSKeyframesConfig &&config);
+  void remove(
+      const std::string &animationName,
+      const std::string &componentName);
 
  private:
-  std::unordered_map<std::string, CSSKeyframesConfig> registry_;
+  using ConfigsByComponentName =
+      std::unordered_map<std::string, CSSKeyframesConfig>;
+
+  std::unordered_map<std::string, ConfigsByComponentName> registry_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 };
 
 } // namespace reanimated::css

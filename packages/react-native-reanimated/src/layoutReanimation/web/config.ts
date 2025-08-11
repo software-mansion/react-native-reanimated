@@ -43,7 +43,10 @@ import type { AnimationData, AnimationStyle } from './animationParser';
 
 export type AnimationCallback = ((finished: boolean) => void) | null;
 
-export type KeyframeDefinitions = Record<number, AnimationStyle>;
+export type KeyframeDefinitions = Record<
+  `${number}` | 'from' | 'to',
+  AnimationStyle
+>;
 
 export type InitialValuesStyleProps = Omit<StyleProps, 'opacity'> & {
   opacity?: number;
@@ -134,4 +137,3 @@ export const Animations = {
 };
 
 export type AnimationNames = keyof typeof Animations;
-export type LayoutTransitionsNames = keyof typeof AnimationsData;

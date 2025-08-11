@@ -1,0 +1,47 @@
+---
+sidebar_position: 2
+---
+
+# makeShareableCloneRecursive
+
+`makeShareableCloneRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than RN Runtime.
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`. 
+To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
+
+**Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Shareable` references.**
+
+## Usage
+
+```tsx
+import { makeShareableCloneRecursive } from 'react-native-worklets';
+
+// The function `() => { console.log('Hello world!'); }` is converted into a Shareable reference,
+// that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
+const shareable = makeShareableCloneRecursive(() => {
+  console.log('Hello world!');
+});
+
+// The shareable reference allows the function to be executed on different runtimes,
+// while maintaining its original behavior.
+global.customWorkletScheduler(shareable);
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type ShareableRef<T = unknown> = {
+  __hostObjectShareableJSRef: T;
+};
+
+
+function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
+  return value as ShareableRef<T>;
+}
+```
+
+</details>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

@@ -53,9 +53,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
 
-    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
-      reactContext.assertOnJSQueueThread();
-    }
+    reactContext.assertOnJSQueueThread();
 
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
@@ -66,9 +64,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   public boolean installTurboModule() {
     var context = getReactApplicationContext();
 
-    if (!BuildConfig.EXPERIMENTAL_BUNDLING) {
-      context.assertOnNativeModulesQueueThread();
-    }
+    context.assertOnJSQueueThread();
 
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
@@ -80,6 +76,14 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
+  }
+
+  /**
+   * @noinspection unused
+   */
+  @DoNotStrip
+  public boolean isOnJSQueueThread() {
+    return getReactApplicationContext().isOnJSQueueThread();
   }
 
   public void toggleSlowAnimations() {

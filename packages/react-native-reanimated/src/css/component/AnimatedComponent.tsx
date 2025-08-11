@@ -1,6 +1,6 @@
 'use strict';
 import type { ComponentProps, Ref } from 'react';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
@@ -61,8 +61,8 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
     let DOMElement: HTMLElement | null = null;
+    let viewName: string | undefined;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
@@ -85,10 +85,10 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
-      viewConfig = viewInfo.viewConfig;
+      viewName = viewInfo.viewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
+    this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }

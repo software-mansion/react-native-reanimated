@@ -380,13 +380,20 @@ var require_globals = __commonJS({
       "global",
       "window",
       "globalThis",
+      "self",
       "console",
       "performance",
-      "queueMicrotask",
-      "requestAnimationFrame",
-      "setImmediate",
       "arguments",
       "require",
+      "queueMicrotask",
+      "requestAnimationFrame",
+      "cancelAnimationFrame",
+      "setTimeout",
+      "clearTimeout",
+      "setImmediate",
+      "clearImmediate",
+      "setInterval",
+      "clearInterval",
       "HermesInternal",
       "_WORKLET"
     ];
@@ -454,7 +461,7 @@ var require_closure = __commonJS({
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
             return;
           }
-          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.experimentalBundling && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
+          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
             return;
           }
           if ("id" in funPath.node) {
@@ -470,7 +477,7 @@ var require_closure = __commonJS({
             }
             scope = scope.parent;
           }
-          if (state.opts.experimentalBundling && isImport(binding)) {
+          if (state.opts.bundleMode && isImport(binding)) {
             if (isImportRelative(binding) && isAllowedForRelativeImports(state.filename, state.opts.workletizableModules)) {
               capturedNames.add(name);
               relativeBindingsToImport.add(binding);
@@ -495,7 +502,7 @@ var require_closure = __commonJS({
     }
     exports2.getClosure = getClosure;
     function isImport(binding) {
-      return binding.kind === "module" && binding.constant && binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration();
+      return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
     }
     function isImportRelative(imported) {
       return imported.path.parentPath.node.source.value.startsWith(".");
@@ -526,7 +533,7 @@ var require_generate = __commonJS({
     var types_2 = require_types();
     function generateWorkletFile(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a;
-      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
+      const libraryImports = Array.from(libraryBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const relativeImports = Array.from(relativeBindingsToImport).filter((binding) => binding.path.isImportSpecifier() && binding.path.parentPath.isImportDeclaration()).map((binding) => {
         const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), binding.path.parentPath.node.source.value);
@@ -800,7 +807,13 @@ var require_workletFactory = __commonJS({
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
-      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, closureVariables, workletName, transformed.map);
+      let mutatedClosureVariables;
+      if (state.opts.bundleMode) {
+        mutatedClosureVariables = closureVariables.map((variable) => (0, types_12.cloneNode)(variable, true));
+      } else {
+        mutatedClosureVariables = closureVariables;
+      }
+      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -829,12 +842,8 @@ var require_workletFactory = __commonJS({
       if (sourceMapString) {
         initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("sourceMap"), (0, types_12.stringLiteral)(sourceMapString)));
       }
-      const shouldInjectVersion = !(0, utils_1.isRelease)();
-      if (shouldInjectVersion) {
-        initDataObjectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("version"), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION)));
-      }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]));
@@ -845,10 +854,14 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.experimentalBundling && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      const shouldInjectVersion = !(0, utils_1.isRelease)();
+      if (shouldInjectVersion) {
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__pluginVersion")), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));
+      }
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
       if (!(0, utils_1.isRelease)()) {
@@ -864,19 +877,19 @@ var require_workletFactory = __commonJS({
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = closureVariables.map((variableId) => {
         const clonedId = (0, types_12.cloneNode)(variableId, true);
-        if (!state.opts.experimentalBundling && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
+        if (!state.opts.bundleMode && clonedId.name.endsWith(types_2.workletClassFactorySuffix)) {
           clonedId.name = clonedId.name.slice(0, clonedId.name.length - types_2.workletClassFactorySuffix.length);
         }
         return clonedId;
       });
-      if (shouldIncludeInitData && !state.opts.experimentalBundling) {
+      if (shouldIncludeInitData && !state.opts.bundleMode) {
         factoryParams.unshift((0, types_12.cloneNode)(initDataId, true));
       }
       const factoryParamObjectPattern = (0, types_12.objectPattern)(factoryParams.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), [factoryParamObjectPattern], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.objectExpression)(factoryCallArgs.map((param) => (0, types_12.objectProperty)((0, types_12.cloneNode)(param, true), (0, types_12.cloneNode)(param, true), false, true)));
-      if (state.opts.experimentalBundling) {
+      if (state.opts.bundleMode) {
         (0, generate_1.generateWorkletFile)(libraryBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       }
       factory.workletized = true;
@@ -954,7 +967,7 @@ var require_workletFactoryCall = __commonJS({
     function makeWorkletFactoryCall(path, state) {
       const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       let factoryCall;
-      if (state.opts.experimentalBundling) {
+      if (state.opts.bundleMode) {
         factoryCall = (0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
           (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
         ]), (0, types_12.identifier)("default")), [factoryCallParamPack]);
@@ -1133,10 +1146,7 @@ var require_autoworkletization = __commonJS({
     var referencedWorklets_1 = require_referencedWorklets();
     var types_2 = require_types();
     var workletSubstitution_12 = require_workletSubstitution();
-    var reanimatedObjectHooks = /* @__PURE__ */ new Set([
-      "useAnimatedGestureHandler",
-      "useAnimatedScrollHandler"
-    ]);
+    var reanimatedObjectHooks = /* @__PURE__ */ new Set(["useAnimatedScrollHandler"]);
     var reanimatedFunctionHooks = /* @__PURE__ */ new Set([
       "useFrameCallback",
       "useAnimatedStyle",
@@ -1145,7 +1155,6 @@ var require_autoworkletization = __commonJS({
       "useDerivedValue",
       "useAnimatedScrollHandler",
       "useAnimatedReaction",
-      "useWorkletCallback",
       "withTiming",
       "withSpring",
       "withDecay",
@@ -1154,7 +1163,6 @@ var require_autoworkletization = __commonJS({
       "executeOnUIRuntimeSync"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
-      ["useAnimatedGestureHandler", [0]],
       ["useFrameCallback", [0]],
       ["useAnimatedStyle", [0]],
       ["useAnimatedProps", [0]],
@@ -1162,7 +1170,6 @@ var require_autoworkletization = __commonJS({
       ["useDerivedValue", [0]],
       ["useAnimatedScrollHandler", [0]],
       ["useAnimatedReaction", [0, 1]],
-      ["useWorkletCallback", [0]],
       ["withTiming", [2]],
       ["withSpring", [2]],
       ["withDecay", [1]],
@@ -1244,7 +1251,7 @@ var require_class = __commonJS({
     var utils_1 = require_utils();
     var classWorkletMarker = "__workletClass";
     function processIfWorkletClass(classPath, state) {
-      if (!isWorkletizableClass(classPath, state)) {
+      if (!isWorkletizableClass(classPath, state) || state.opts.bundleMode) {
         return false;
       }
       removeWorkletClassMarker(classPath.node.body);
@@ -1696,7 +1703,10 @@ module.exports = function WorkletsBabelPlugin() {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e}`);
+      const error = e;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = "WorkletsBabelPluginError";
+      throw error;
     }
   }
   return {
@@ -1719,9 +1729,7 @@ module.exports = function WorkletsBabelPlugin() {
       },
       [types_1.WorkletizableFunction]: {
         enter(path, state) {
-          runWithTaggedExceptions(() => {
-            (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
-          });
+          runWithTaggedExceptions(() => (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state));
         }
       },
       ObjectExpression: {

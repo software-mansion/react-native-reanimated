@@ -2,31 +2,23 @@
 
 import './publicGlobals';
 
-import { initializeUIRuntime } from './initializers';
-import { WorkletsModule } from './WorkletsModule';
+import { init } from './initializers';
+import { bundleModeInit } from './workletRuntimeEntry';
 
-// TODO: Specify the initialization pipeline since now there's no
-// universal source of truth for it.
-if (!globalThis._WORKLET) {
-  // Don't call this method on Worklet Runtimes.
-  initializeUIRuntime(WorkletsModule);
-}
+init();
 
-export type { LoggerConfig } from './logger';
+export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
-  logger,
-  LogLevel,
-  registerLoggerConfig,
-  updateLoggerConfig,
-} from './logger';
-export { getRuntimeKind, RuntimeKind } from './runtimeKind';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { shareableMappingCache } from './shareableMappingCache';
-export {
+  isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
+  shareableMappingCache,
+} from './deprecated';
+export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
+export { serializableMappingCache } from './shareableMappingCache';
+export { createSerializable, isSerializableRef } from './shareables';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
@@ -38,8 +30,15 @@ export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
+
+// @ts-expect-error We must trick the bundler to include
+// the `workletRuntimeEntry` file the way it cannot optimize it out.
+if (globalThis._ALWAYS_FALSE) {
+  // Bundle mode.
+  bundleModeInit();
+}

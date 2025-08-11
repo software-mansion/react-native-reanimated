@@ -2,6 +2,8 @@
 
 #ifndef NDEBUG
 
+#include <react/debug/react_native_assert.h>
+
 #include <cxxabi.h>
 
 #include <atomic>
@@ -35,7 +37,7 @@ class SingleInstanceChecker {
 #endif
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
-      assert(false);
+      react_native_assert(false && "SingleInstanceChecker failed");
 #endif
     }
   }

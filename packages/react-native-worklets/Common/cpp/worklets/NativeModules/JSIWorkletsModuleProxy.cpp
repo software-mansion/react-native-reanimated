@@ -5,13 +5,13 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/FeatureFlags.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
-
-#include <utility>
 
 using namespace facebook;
 
@@ -22,9 +22,9 @@ inline void scheduleOnUI(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, worklet, "[Worklets] Only worklets can be scheduled to run on UI.");
-  uiScheduler->scheduleOnUI([shareableWorklet, weakUIWorkletRuntime]() {
+  uiScheduler->scheduleOnUI([serializableWorklet, weakUIWorkletRuntime]() {
     // This callback can outlive the WorkletsModuleProxy object during the
     // invalidation of React Native. This happens when WorkletsModuleProxy
     // destructor is called on the JS thread and the UI thread is
@@ -44,7 +44,7 @@ inline void scheduleOnUI(
     const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
 #endif // JS_RUNTIME_HERMES
 
-    uiWorkletRuntime->runGuarded(shareableWorklet);
+    uiWorkletRuntime->runGuarded(serializableWorklet);
   });
 }
 
@@ -59,29 +59,68 @@ inline jsi::Value executeOnUIRuntimeSync(
 }
 
 inline jsi::Value createWorkletRuntime(
+    jsi::Runtime &originRuntime,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl,
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
-  auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt,
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
+    const std::string &name,
+    std::shared_ptr<SerializableWorklet> &initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      jsiWorkletsModuleProxy, name, initializer, queue);
+  return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
+}
+
+#ifdef WORKLETS_BUNDLE_MODE
+inline jsi::Value propagateModuleUpdate(
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::string &code,
+    const std::string &sourceUrl) {
+  const auto runtimes = runtimeManager->getAllRuntimes();
+
+  for (auto runtime : runtimes) {
+    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+      const auto buffer = std::make_shared<jsi::StringBuffer>(code);
+      rt.evaluateJavaScript(buffer, sourceUrl);
+      return jsi::Value::undefined();
+    });
+  }
+  return jsi::Value::undefined();
+}
+#endif // WORKLETS_BUNDLE_MODE
+
+inline jsi::Value reportFatalErrorOnJS(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::string &message,
+    const std::string &stack,
+    const std::string &name,
+    const std::string &jsEngine) {
+  JSLogger::reportFatalErrorOnJS(
       jsScheduler,
-      name.asString(rt).utf8(rt),
-      true /* supportsLocking */,
-      isDevBundle,
-      script,
-      sourceUrl);
-  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, initializer, "[Worklets] Initializer must be a worklet.");
-  workletRuntime->runGuarded(initializerShareable);
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
+      JSErrorData{
+          .message = message,
+          .stack = stack,
+          .name = name,
+          .jsEngine = jsEngine});
+  return jsi::Value::undefined();
+}
+
+inline std::shared_ptr<AsyncQueue> extractAsyncQueue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (!value.isObject()) {
+    return nullptr;
+  }
+  const auto object = value.asObject(rt);
+
+  if (!object.hasNativeState(rt)) {
+    return nullptr;
+  }
+
+  const auto &nativeState = object.getNativeState(rt);
+  auto asyncQueue = std::dynamic_pointer_cast<AsyncQueue>(nativeState);
+
+  return asyncQueue;
 }
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -91,7 +130,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    std::shared_ptr<WorkletRuntime> uiWorkletRuntime)
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -99,6 +139,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime) {}
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
@@ -110,6 +151,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
+      runtimeManager_(other.runtimeManager_),
       uiWorkletRuntime_(other.uiWorkletRuntime_) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
@@ -119,35 +161,39 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   std::vector<jsi::PropNameID> propertyNames;
 
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableClone"));
+      jsi::PropNameID::forAscii(rt, "createSerializable"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableBigInt"));
+      jsi::PropNameID::forAscii(rt, "createSerializableBigInt"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableBoolean"));
+      jsi::PropNameID::forAscii(rt, "createSerializableBoolean"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableImport"));
+      jsi::PropNameID::forAscii(rt, "createSerializableImport"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableNull"));
+      jsi::PropNameID::forAscii(rt, "createSerializableNull"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableNumber"));
+      jsi::PropNameID::forAscii(rt, "createSerializableNumber"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableString"));
+      jsi::PropNameID::forAscii(rt, "createSerializableString"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableUndefined"));
+      jsi::PropNameID::forAscii(rt, "createSerializableUndefined"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableHostObject"));
+      jsi::PropNameID::forAscii(rt, "createSerializableHostObject"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableInitializer"));
+      jsi::PropNameID::forAscii(rt, "createSerializableInitializer"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableArray"));
+      jsi::PropNameID::forAscii(rt, "createSerializableArray"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableFunction"));
+      jsi::PropNameID::forAscii(rt, "createSerializableFunction"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableTurboModuleLike"));
+      jsi::PropNameID::forAscii(rt, "createSerializableTurboModuleLike"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableObject"));
+      jsi::PropNameID::forAscii(rt, "createSerializableObject"));
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "makeShareableWorklet"));
+      jsi::PropNameID::forAscii(rt, "createSerializableMap"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "createSerializableSet"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "createSerializableWorklet"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
@@ -156,6 +202,15 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+#ifdef WORKLETS_BUNDLE_MODE
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
+#endif // WORKLETS_BUNDLE_MODE
 
   return propertyNames;
 }
@@ -165,7 +220,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
     const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
 
-  if (name == "makeShareableClone") {
+  if (name == "createSerializable") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -174,11 +229,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableClone(rt, args[0], args[1], args[2]);
+          return makeSerializableClone(rt, args[0], args[1], args[2]);
         });
   }
 
-  if (name == "makeShareableBigInt") {
+  if (name == "createSerializableBigInt") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -187,11 +242,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableBigInt(rt, args[0].asBigInt(rt));
+          return makeSerializableBigInt(rt, args[0].asBigInt(rt));
         });
   }
 
-  if (name == "makeShareableBoolean") {
+  if (name == "createSerializableBoolean") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -200,11 +255,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableBoolean(rt, args[0].asBool());
+          return makeSerializableBoolean(rt, args[0].asBool());
         });
   }
 
-  if (name == "makeShareableImport") {
+  if (name == "createSerializableImport") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -213,12 +268,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableImport(
+          return makeSerializableImport(
               rt, args[0].asNumber(), args[1].asString(rt));
         });
   }
 
-  if (name == "makeShareableNumber") {
+  if (name == "createSerializableNumber") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -227,11 +282,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableNumber(rt, args[0].asNumber());
+          return makeSerializableNumber(rt, args[0].asNumber());
         });
   }
 
-  if (name == "makeShareableNull") {
+  if (name == "createSerializableNull") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -239,10 +294,10 @@ jsi::Value JSIWorkletsModuleProxy::get(
         [](jsi::Runtime &rt,
            const jsi::Value &thisValue,
            const jsi::Value *args,
-           size_t count) { return makeShareableNull(rt); });
+           size_t count) { return makeSerializableNull(rt); });
   }
 
-  if (name == "makeShareableString") {
+  if (name == "createSerializableString") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -251,11 +306,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableString(rt, args[0].asString(rt));
+          return makeSerializableString(rt, args[0].asString(rt));
         });
   }
 
-  if (name == "makeShareableUndefined") {
+  if (name == "createSerializableUndefined") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -263,10 +318,10 @@ jsi::Value JSIWorkletsModuleProxy::get(
         [](jsi::Runtime &rt,
            const jsi::Value &thisValue,
            const jsi::Value *args,
-           size_t count) { return makeShareableUndefined(rt); });
+           size_t count) { return makeSerializableUndefined(rt); });
   }
 
-  if (name == "makeShareableInitializer") {
+  if (name == "createSerializableInitializer") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -275,11 +330,11 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableInitializer(rt, args[0].asObject(rt));
+          return makeSerializableInitializer(rt, args[0].asObject(rt));
         });
   }
 
-  if (name == "makeShareableArray") {
+  if (name == "createSerializableArray") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -288,39 +343,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableArray(
+          return makeSerializableArray(
               rt, args[0].asObject(rt).asArray(rt), args[1]);
         });
   }
 
-  if (name == "makeShareableHostObject") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        1,
-        [](jsi::Runtime &rt,
-           const jsi::Value &thisValue,
-           const jsi::Value *args,
-           size_t count) {
-          return makeShareableHostObject(
-              rt, args[0].asObject(rt).getHostObject(rt));
-        });
-  }
-
-  if (name == "makeShareableFunction") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        1,
-        [](jsi::Runtime &rt,
-           const jsi::Value &thisValue,
-           const jsi::Value *args,
-           size_t count) {
-          return makeShareableFunction(rt, args[0].asObject(rt).asFunction(rt));
-        });
-  }
-
-  if (name == "makeShareableTurboModuleLike") {
+  if (name == "createSerializableMap") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -329,12 +357,69 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableTurboModuleLike(
+          return makeSerializableMap(
+              rt,
+              args[0].asObject(rt).asArray(rt),
+              args[1].asObject(rt).asArray(rt));
+        });
+  }
+
+  if (name == "createSerializableSet") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSerializableSet(rt, args[0].asObject(rt).asArray(rt));
+        });
+  }
+
+  if (name == "createSerializableHostObject") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSerializableHostObject(
+              rt, args[0].asObject(rt).asHostObject(rt));
+        });
+  }
+
+  if (name == "createSerializableFunction") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSerializableFunction(
+              rt, args[0].asObject(rt).asFunction(rt));
+        });
+  }
+
+  if (name == "createSerializableTurboModuleLike") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return makeSerializableTurboModuleLike(
               rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
         });
   }
 
-  if (name == "makeShareableObject") {
+  if (name == "createSerializableObject") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -343,12 +428,12 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableObject(
+          return makeSerializableObject(
               rt, args[0].getObject(rt), args[1].getBool(), args[2]);
         });
   }
 
-  if (name == "makeShareableWorklet") {
+  if (name == "createSerializableWorklet") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -357,7 +442,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          return makeShareableWorklet(
+          return makeSerializableWorklet(
               rt, args[0].getObject(rt), args[1].getBool());
         });
   }
@@ -392,32 +477,36 @@ jsi::Value JSIWorkletsModuleProxy::get(
   }
 
   if (name == "createWorkletRuntime") {
-    auto clone = std::make_shared<JSIWorkletsModuleProxy>(*this);
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        2,
-        [jsQueue = jsQueue_,
-         jsScheduler = jsScheduler_,
-         isDevBundle = isDevBundle_,
-         script = script_,
-         sourceUrl = sourceUrl_,
-         clone](
+        4,
+        [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
             const jsi::Value *args,
             size_t count) {
+          const auto name = args[0].asString(rt).utf8(rt);
+          auto serializableInitializer =
+              extractSerializableOrThrow<SerializableWorklet>(
+                  rt, args[1], "[Worklets] Initializer must be a worklet.");
+          const auto useDefaultQueue = args[2].asBool();
+
+          std::shared_ptr<AsyncQueue> asyncQueue;
+          if (useDefaultQueue) {
+            asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+          } else {
+            asyncQueue = extractAsyncQueue(rt, args[3]);
+          }
+
           return createWorkletRuntime(
-              jsQueue,
-              jsScheduler,
-              std::move(clone),
-              isDevBundle,
-              script,
-              sourceUrl,
               rt,
-              args[0],
-              args[1]);
-          return jsi::Value::undefined();
+              clone->getRuntimeManager(),
+              clone->getJSQueue(),
+              clone,
+              name,
+              serializableInitializer,
+              asyncQueue);
         });
   }
 
@@ -431,6 +520,60 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value *args,
            size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "reportFatalErrorOnJS") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return reportFatalErrorOnJS(
+              jsScheduler,
+              /* message */ args[0].asString(rt).utf8(rt),
+              /* stack */ args[1].asString(rt).utf8(rt),
+              /* name */ args[2].asString(rt).utf8(rt),
+              /* jsEngine */ args[3].asString(rt).utf8(rt));
+        });
+  }
+
+#ifdef WORKLETS_BUNDLE_MODE
+  if (name == "propagateModuleUpdate") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          return propagateModuleUpdate(
+              runtimeManager,
+              /* code */ args[0].asString(rt).utf8(rt),
+              /* sourceURL */ args[1].asString(rt).utf8(rt));
+        });
+  }
+#endif // WORKLETS_BUNDLE_MODE
+
+  if (name == "setDynamicFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          DynamicFeatureFlags::setFlag(
+              /* name */ args[0].asString(rt).utf8(rt),
+              /* value */ args[1].asBool());
           return jsi::Value::undefined();
         });
   }

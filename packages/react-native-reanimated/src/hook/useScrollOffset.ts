@@ -2,9 +2,8 @@
 import type { Component } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import type { ScrollView, ScrollViewProps } from 'react-native';
-import { logger } from 'react-native-worklets';
 
-import { IS_WEB } from '../common';
+import { IS_WEB, logger } from '../common';
 import type { SharedValue } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -16,7 +15,7 @@ import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
-  'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
+  'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 
 const NATIVE_SCROLL_EVENT_NAMES = [
   'onScroll',

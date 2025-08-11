@@ -1,7 +1,5 @@
 'use strict';
-import { logger } from 'react-native-worklets';
-
-import { ReanimatedError } from '../../common';
+import { logger, ReanimatedError } from '../../common';
 import { PERCENTAGE_REGEX } from '../constants';
 import type { Point } from '../types';
 import type {
@@ -140,8 +138,9 @@ export class LinearEasing implements ParametrizedTimingFunction {
       if (missingCount > 0) {
         const range = x - precedingX;
 
-        for (let j = missingCount; j > 0; j--) {
-          result[i - j].x = precedingX + (range * j) / (missingCount + 1);
+        for (let j = 0; j < missingCount; j++) {
+          result[i - missingCount + j].x =
+            precedingX + (range * (j + 1)) / (missingCount + 1);
         }
       }
 

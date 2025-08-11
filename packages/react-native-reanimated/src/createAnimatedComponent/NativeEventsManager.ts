@@ -139,7 +139,7 @@ function executeForEachEventHandler(
 }
 
 type ComponentOptions = {
-  setNativeProps: (
+  setNativeProps?: (
     ref: AnimatedComponentRef,
     props: InitialComponentProps
   ) => void;

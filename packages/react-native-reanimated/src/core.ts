@@ -4,9 +4,9 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareableCloneRecursive } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
-import { ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -21,28 +21,27 @@ import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-export {
-  createWorkletRuntime,
-  executeOnUIRuntimeSync,
-  makeShareable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
-} from 'react-native-worklets';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 
-/** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
-export const isReanimated3 = () => true;
+/**
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
+ */
+export const isReanimated3 = () => {
+  logger.warn(
+    'The `isReanimated3` function is deprecated. Please use the exported variable `reanimatedVersion` instead.'
+  );
+  return false;
+};
 
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
 /**
- * @deprecated This function was superseded by other checks. We keep it here for
- *   backward compatibility reasons. If you need to check if you are using
- *   Reanimated 3 or Reanimated 2 please use `isReanimated3` function instead.
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
  */
 export const isConfigured = isReanimated3;
 
@@ -65,6 +64,7 @@ export function getViewProp<T>(
       component,
       (result: T) => {
         if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           reject(result);
         } else {
           resolve(result);
@@ -88,15 +88,14 @@ export function registerEventHandler<T>(
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
     global.__flushAnimationFrame(eventTimestamp);
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -114,6 +113,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     const now = global._getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);
@@ -130,9 +130,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -154,7 +152,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler as WorkletFunction)
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
 
@@ -171,33 +169,17 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-type FeaturesConfig = {
-  enableLayoutAnimations: boolean;
-  setByUser: boolean;
-};
-
-let featuresConfig: FeaturesConfig = {
-  enableLayoutAnimations: false,
-  setByUser: false,
-};
-
+/**
+ * @deprecated This function no longer has any effect in Reanimated and will be
+ *   removed in the future.
+ */
 export function enableLayoutAnimations(
-  flag: boolean,
-  isCallByUser = true
+  _flag: boolean,
+  _isCallByUser = true
 ): void {
-  if (isCallByUser) {
-    featuresConfig = {
-      enableLayoutAnimations: flag,
-      setByUser: true,
-    };
-    ReanimatedModule.enableLayoutAnimations(flag);
-  } else if (
-    !featuresConfig.setByUser &&
-    featuresConfig.enableLayoutAnimations !== flag
-  ) {
-    featuresConfig.enableLayoutAnimations = flag;
-    ReanimatedModule.enableLayoutAnimations(flag);
-  }
+  logger.warn(
+    '`enableLayoutAnimations` is deprecated and will be removed in the future.'
+  );
 }
 
 export function configureLayoutAnimationBatch(
@@ -214,13 +196,4 @@ export function setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
-}
-
-export function jsiConfigureProps(
-  uiProps: string[],
-  nativeProps: string[]
-): void {
-  if (!SHOULD_BE_USE_WEB) {
-    ReanimatedModule.configureProps(uiProps, nativeProps);
-  }
 }

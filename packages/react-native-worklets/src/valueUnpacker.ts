@@ -1,8 +1,6 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 import type { WorkletFunction } from './workletTypes';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function __valueUnpacker(
   objectToUnpack: ObjectToUnpack,
   category?: string,
@@ -27,9 +25,9 @@ function __valueUnpacker(
         // that debugger understands and loads the source code of the file where
         // the worklet is defined.
         workletFun = global.evalWithSourceMap(
-          '(' + initData.code + '\n)',
-          initData.location!,
-          initData.sourceMap!
+          '(' + initData!.code + '\n)',
+          initData!.location!,
+          initData!.sourceMap!
         );
       } else if (global.evalWithSourceUrl) {
         // if the runtime doesn't support loading source maps, in dev mode we
@@ -37,13 +35,13 @@ function __valueUnpacker(
         // the actual file location we use worklet hash, as it the allows us to
         // properly symbolicate traces (see errors.ts for details)
         workletFun = global.evalWithSourceUrl(
-          '(' + initData.code + '\n)',
+          '(' + initData!.code + '\n)',
           `worklet_${workletHash}`
         );
       } else {
         // in release we use the regular eval to save on JSI calls
         // eslint-disable-next-line no-eval
-        workletFun = eval('(' + initData.code + '\n)');
+        workletFun = eval('(' + initData!.code + '\n)');
       }
       workletsCache.set(workletHash, workletFun!);
     }
@@ -62,12 +60,14 @@ function __valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
+      // eslint-disable-next-line reanimated/use-worklets-error
       throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error(
       `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
         objectToUnpack

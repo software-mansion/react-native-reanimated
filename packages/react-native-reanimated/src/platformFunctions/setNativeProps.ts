@@ -1,8 +1,12 @@
 'use strict';
 import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
 
-import { IS_JEST, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
+import {
+  IS_JEST,
+  logger,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -54,7 +58,7 @@ function setNativePropsDefault() {
 
 if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
 } else if (IS_JEST) {

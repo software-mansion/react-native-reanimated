@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { makeShareableCloneRecursive } from 'react-native-reanimated';
+import { createSerializable } from 'react-native-worklets';
 
 function createRandomObject(numberOfKeys: number) {
   const obj: Record<string, number> = {};
@@ -26,7 +26,7 @@ function copyShareablesPerformanceTest(
     createRandomObject(numberOfKeys)
   );
   const start = performance.now();
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   const end = performance.now();
   return end - start;
 }
@@ -44,8 +44,8 @@ export default function CopyShareablesPerformanceTest() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Text style={styles.description}>
-          This test measures the performance of Reanimated's
-          makeShareableCloneRecursive function.{'\n\n'}
+          This test measures the performance of Worklet&apos;s
+          createSerializable function.{'\n\n'}
           The test creates an array of objects with random numeric values and
           measures how long it takes to make them shareable. You can configure:
           {'\n'}• Number of objects: Total objects in the array{'\n'}• Number of

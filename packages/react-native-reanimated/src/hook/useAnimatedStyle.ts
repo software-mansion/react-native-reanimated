@@ -1,16 +1,12 @@
 'use strict';
+
 import type { MutableRefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import {
-  IS_JEST,
-  processBoxShadow,
-  ReanimatedError,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -21,7 +17,7 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
+import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -33,6 +29,7 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
   isAnimated,
@@ -158,7 +155,7 @@ function runAnimations(
       animation.timestamp = timestamp;
       if (finished) {
         animation.finished = true;
-        animation.callback && animation.callback(true /* finished */);
+        animation.callback?.(true /* finished */);
       }
     }
     /*
@@ -221,13 +218,6 @@ function styleUpdater(
       animations[key] = value;
       hasAnimations = true;
     } else {
-      /* TODO: Improve this config structure in the future
-       * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-       * containing only properties that require processing and their associated processors
-       * */
-      if (key === 'boxShadow' && !SHOULD_BE_USE_WEB) {
-        newValues[key] = processBoxShadow(value);
-      }
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
@@ -496,7 +486,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
-  const [areAnimationsActive] = useState(() => makeMutable(true));
+  const areAnimationsActive = useSharedValue<boolean>(true);
   const jestAnimatedValues = useRef<Style | AnimatedProps>(
     {} as Style | AnimatedProps
   );
@@ -507,7 +497,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   } else {
     dependencies.push(updater.__workletHash);
   }
-  adaptersHash && dependencies.push(adaptersHash);
+  if (adaptersHash) {
+    dependencies.push(adaptersHash);
+  }
 
   if (!animatedUpdaterData.current) {
     const initialStyle = initialUpdaterRun(updater);
@@ -580,6 +572,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }, dependencies);
 
   useEffect(() => {
+    areAnimationsActive.value = true;
     return () => {
       areAnimationsActive.value = false;
     };

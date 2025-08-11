@@ -6,7 +6,7 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
@@ -157,7 +157,7 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -441,11 +441,3 @@ export type AnimatedStyle<Style = DefaultStyle> =
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
-
-/** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
-
-/** @deprecated This type is no longer relevant. */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;

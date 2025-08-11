@@ -1,7 +1,8 @@
 'use strict';
-import { runOnUI } from 'react-native-worklets';
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
-import { withStyleAnimation } from '../animation/styleAnimation';
+import { withStyleAnimation } from '../animation';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
@@ -82,8 +83,9 @@ function createLayoutAnimationManager(): {
           const shouldRemoveView = type === LayoutAnimationType.EXITING;
           stopObservingProgress(tag, value, shouldRemoveView);
         }
-        style.callback &&
+        if (style.callback) {
           style.callback(finished === undefined ? false : finished);
+        }
       };
 
       startObservingProgress(tag, value);
@@ -99,10 +101,12 @@ function createLayoutAnimationManager(): {
   };
 }
 
-runOnUI(() => {
-  'worklet';
-  global.LayoutAnimationsManager = createLayoutAnimationManager();
-})();
+if (!SHOULD_BE_USE_WEB) {
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+    global.LayoutAnimationsManager = createLayoutAnimationManager();
+  })();
+}
 
 export type LayoutAnimationsManager = ReturnType<
   typeof createLayoutAnimationManager

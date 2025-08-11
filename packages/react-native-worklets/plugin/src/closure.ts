@@ -56,7 +56,7 @@ export function getClosure(
 
         if (
           outsideBindingsToCaptureFromGlobalScope.has(name) ||
-          (!state.opts.experimentalBundling &&
+          (!state.opts.bundleMode &&
             internalBindingsToCaptureFromGlobalScope.has(name))
         ) {
           /**
@@ -84,7 +84,7 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (state.opts.experimentalBundling && isImport(binding)) {
+        if (state.opts.bundleMode && isImport(binding)) {
           if (
             isImportRelative(binding) &&
             isAllowedForRelativeImports(
@@ -125,7 +125,8 @@ function isImport(binding: Binding): boolean {
   return (
     binding.kind === 'module' &&
     binding.constant &&
-    binding.path.isImportSpecifier() &&
+    (binding.path.isImportSpecifier() ||
+      binding.path.isImportDefaultSpecifier()) &&
     binding.path.parentPath.isImportDeclaration()
   );
 }

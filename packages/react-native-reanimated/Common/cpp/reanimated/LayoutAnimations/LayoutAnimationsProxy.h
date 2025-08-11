@@ -22,12 +22,8 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 
 struct LayoutAnimation {
-#if REACT_NATIVE_MINOR_VERSION >= 78
   std::shared_ptr<ShadowView> finalView, currentView;
   Tag parentTag;
-#else
-  std::shared_ptr<ShadowView> finalView, currentView, parentView;
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
   std::optional<double> opacity;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
@@ -42,15 +38,16 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+  mutable std::vector<Tag> finishedAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  ContextContainer::Shared contextContainer_;
+  std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      ContextContainer::Shared contextContainer,
+      std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
       : layoutAnimationsManager_(layoutAnimationsManager),
@@ -74,7 +71,7 @@ struct LayoutAnimationsProxy
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
-      std::unordered_map<Tag, ShadowView> &movedViews,
+      std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
   void handleRemovals(
@@ -83,7 +80,7 @@ struct LayoutAnimationsProxy
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
-      const std::unordered_map<Tag, ShadowView> &movedViews,
+      const std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
