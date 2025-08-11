@@ -1,6 +1,3 @@
-/* eslint-disable reanimated/use-global-this */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-var */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -24,7 +21,7 @@ import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
-  var _WORKLET: boolean | undefined;
+  var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;

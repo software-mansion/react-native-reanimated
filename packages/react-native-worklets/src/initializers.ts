@@ -9,6 +9,7 @@ import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
 import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { RuntimeKind } from './runtimeKind';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -89,7 +90,7 @@ export function init() {
     initializeRuntimeOnWeb();
   }
 
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     initializeWorkletRuntime();
   } else {
     initializeRNRuntime();
@@ -195,6 +196,7 @@ function initializeWorkletRuntime() {
 /** A function that should be run only on RN Runtime in web implementation. */
 function initializeRuntimeOnWeb() {
   globalThis._WORKLET = false;
+  globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
   globalThis._log = console.log;
   globalThis._getAnimationTimestamp = () => performance.now();
   if (IS_JEST) {

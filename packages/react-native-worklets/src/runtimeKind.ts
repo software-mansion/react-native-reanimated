@@ -3,7 +3,7 @@ import { WorkletsError } from './WorkletsError';
 export enum RuntimeKind {
   /**
    * The React Native runtime, which is the main runtime for React Native where
-   * React exists.
+   * React exists and where components are rendered.
    */
   ReactNative = 1,
   /**
@@ -16,14 +16,17 @@ export enum RuntimeKind {
 }
 
 /**
- * Returns the kind of the current runtime. It's useful when you need specific
- * implementations for different runtimes created by Worklets.
+ * Programmatic way to check the current runtime kind. It's useful when you need
+ * specific implementations for different runtimes created by Worklets.
+ *
+ * For more optimized calls you can check the value of
+ * `globalThis.__RUNTIME_KIND` directly.
  *
  * @returns The kind of the current runtime.
  */
 export function getRuntimeKind(): RuntimeKind {
   'worklet';
-  const kind = globalThis._RUNTIME_KIND;
+  const kind = globalThis.__RUNTIME_KIND;
   switch (kind) {
     case RuntimeKind.ReactNative:
       return RuntimeKind.ReactNative;

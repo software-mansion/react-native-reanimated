@@ -12,16 +12,18 @@ void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<JSLogger> &jsLogger) {
-  const auto &global = rnRuntime.global();
+  rnRuntime.global().setProperty(
+      rnRuntime,
+      runtimeKindBindingName,
+      static_cast<int>(RuntimeKind::ReactNative));
 
-  global.setProperty(rnRuntime, "_RUNTIME_KIND", RuntimeKind::ReactNative);
-  global.setProperty(rnRuntime, "_WORKLET", false);
+  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
   // TODO: Remove _IS_FABRIC sometime in the future
   // react-native-screens 4.9.0 depends on it
-  global.setProperty(rnRuntime, "_IS_FABRIC", true);
+  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", true);
 
-  global.setProperty(
+  rnRuntime.global().setProperty(
       rnRuntime, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeCollector::install(rnRuntime);

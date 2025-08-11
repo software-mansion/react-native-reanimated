@@ -44,11 +44,11 @@ void WorkletRuntimeDecorator::decorate(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy) {
-  const auto &global = rt.global();
-
-  global.setProperty(rt, "_RUNTIME_KIND", RuntimeKind::Worker);
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
+
+  rt.global().setProperty(
+      rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 

@@ -3,6 +3,7 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -102,7 +103,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `runOnRuntime` is not a worklet.'
     );
   }
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return (...args) =>
       globalThis._scheduleOnRuntime(
         workletRuntime,

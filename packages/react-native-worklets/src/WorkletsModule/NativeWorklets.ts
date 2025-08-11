@@ -1,5 +1,6 @@
 'use strict';
 
+import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
@@ -23,7 +24,10 @@ class NativeWorklets implements IWorkletsModule {
 
   constructor() {
     globalThis._WORKLETS_VERSION_JS = jsVersion;
-    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
+    if (
+      global.__workletsModuleProxy === undefined &&
+      globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
+    ) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {

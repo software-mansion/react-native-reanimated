@@ -16,6 +16,7 @@ export {
   shareableMappingCache,
 } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { serializableMappingCache } from './shareableMappingCache';
 export { createSerializable, isSerializableRef } from './shareables';
