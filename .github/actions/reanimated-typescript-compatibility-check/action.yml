@@ -1,0 +1,46 @@
+name: 'Run Reanimated TypeScript Compatibility Check'
+description: 'Runs TypeScript compatibility tests for React Native Reanimated with different React Native versions'
+inputs:
+  react-native-version:
+    description: 'React Native version to test compatibility with'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Install monorepo node dependencies
+      shell: bash
+      run: yarn install
+
+    - name: Build Reanimated
+      shell: bash
+      run: yarn workspace react-native-reanimated build
+
+    - name: Install react-native ${{ inputs.react-native-version }}
+      if: steps.check-react-native-version.outputs.SKIP_BUILD != 'true'
+      shell: bash
+      run: yarn up react-native@${{ inputs.react-native-version }}
+
+    - name: Check source types
+      if: steps.check-react-native-version.outputs.SKIP_BUILD != 'true'
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:src
+
+    - name: Check plugin types
+      if: steps.check-react-native-version.outputs.SKIP_BUILD != 'true'
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:plugin
+
+    - name: Check API
+      if: steps.check-react-native-version.outputs.SKIP_BUILD != 'true'
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:app
+
+    - name: Run common type tests
+      if: steps.check-react-native-version.outputs.SKIP_BUILD != 'true'
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:tests:common

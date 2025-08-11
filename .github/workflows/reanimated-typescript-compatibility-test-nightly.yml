@@ -56,30 +56,9 @@ jobs:
             echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install monorepo node dependencies
+      - name: Run TypeScript Compatibility Check
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: yarn install
-      - name: Build Reanimated
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: yarn workspace react-native-reanimated build
-
-      - name: Install react-native ${{ matrix.react-native-version }}
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: yarn up react-native@${{ matrix.react-native-version }}
-
-      - name: Check source types
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:src
-      - name: Check plugin types
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:plugin
-      - name: Check API
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:app
-      - name: Run common type tests
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:common
+        uses: ./.github/actions/reanimated-typescript-compatibility-check
+        with:
+          react-native-version: ${{ matrix.react-native-version }}
+          working-directory: '.'

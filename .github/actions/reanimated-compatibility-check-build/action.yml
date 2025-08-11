@@ -1,4 +1,4 @@
-name: 'Reanimated Compatibility Check Build'
+name: 'Reanimated Compatibility Check - Build'
 description: 'Check React Native Reanimated compatibility with different React Native versions'
 inputs:
   react-native-versions:
