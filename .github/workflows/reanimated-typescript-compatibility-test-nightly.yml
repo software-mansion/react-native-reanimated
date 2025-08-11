@@ -17,7 +17,6 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     outputs:
-      platforms: ${{ steps.set-outputs.outputs.platforms }}
       react-native-versions-with-nightly: ${{ steps.set-outputs.outputs.react-native-versions-with-nightly }}
     steps:
       - uses: actions/checkout@v4

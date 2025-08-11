@@ -30,6 +30,7 @@ jobs:
   reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
+    needs: read-compatibility-json
     strategy:
       matrix:
         platform: ['iOS', 'Android']
@@ -65,46 +66,12 @@ jobs:
               echo "SKIP_BUILD=true" >> $GITHUB_ENV
             fi
 
-      - name: Setup Yarn
+      - name: Reanimated Compatibility Check Build
+        uses: ./.github/actions/reanimated-compatibility-check-build
         if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        # Sometimes `npx @react-native-community/cli init` fails at random.
-        # Pre-installing it with Yarn seems to improve stability.
-        run: corepack enable && yarn init
-      - name: Install React Native CLI
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: yarn add @react-native-community/cli
-
-      - name: Create app
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native-version }} --skip-install --install-pods 0 --skip-git-init
-      - name: Setup Yarn Modern in app
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
-        working-directory: ${{ env.APP_NAME }}
-        run: |
-          touch yarn.lock
-          yarn set version berry
-          yarn config set nodeLinker node-modules
-      - name: Install Worklets
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - name: Install Reanimated
-        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
-      - name: Select Xcode (iOS)
-        if: ${{ matrix.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
-      - name: Install Pods
-        if: ${{ matrix.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod update
-      - name: Build app (iOS)
-        if: ${{ matrix.platform == 'iOS' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: ${{ env.APP_NAME }}/ios
-        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -configuration ${{matrix.mode}} -scheme ${{env.APP_NAME}} -destination "generic/platform=iOS Simulator" -quiet
-      - name: Build app (Android)
-        if: ${{ matrix.platform == 'Android' && steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
-        working-directory: ${{ env.APP_NAME }}/android
-        run: ./gradlew assemble${{ matrix.mode }} --console=plain
+        with:
+          react-native-versions: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
+          platform: ${{ matrix.platform }}
+          mode: ${{ matrix.mode }}
+          github-sha: ${{ github.sha }}
+          app-name: ${{ env.APP_NAME }}
