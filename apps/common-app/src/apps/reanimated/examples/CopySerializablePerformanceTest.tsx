@@ -18,7 +18,7 @@ function createRandomObject(numberOfKeys: number) {
   return obj;
 }
 
-function copyShareablesPerformanceTest(
+function copySerializablePerformanceTest(
   numberOfObjects: number,
   numberOfKeys: number
 ) {
@@ -31,13 +31,13 @@ function copyShareablesPerformanceTest(
   return end - start;
 }
 
-export default function CopyShareablesPerformanceTest() {
+export default function CopySerializablePerformanceTest() {
   const [time, setTime] = useState<number | null>(null);
   const [numberOfObjects, setNumberOfObjects] = useState<number>(1000);
   const [numberOfKeys, setNumberOfKeys] = useState<number>(1000);
 
   const startTest = () => {
-    setTime(copyShareablesPerformanceTest(numberOfObjects, numberOfKeys));
+    setTime(copySerializablePerformanceTest(numberOfObjects, numberOfKeys));
   };
 
   return (
@@ -47,7 +47,8 @@ export default function CopyShareablesPerformanceTest() {
           This test measures the performance of Worklet&apos;s
           createSerializable function.{'\n\n'}
           The test creates an array of objects with random numeric values and
-          measures how long it takes to make them shareable. You can configure:
+          measures how long it takes to make them serializable. You can
+          configure:
           {'\n'}• Number of objects: Total objects in the array{'\n'}• Number of
           keys: Key-value pairs per object{'\n\n'}
         </Text>
