@@ -1,16 +1,18 @@
 'use strict';
-import type { Component } from 'react';
-
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
+import type {
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  WrapperRef,
+} from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <T extends Component>(
-  animatedRef: AnimatedRef<T>
+type Measure = <Ref extends WrapperRef>(
+  animatedRef: AnimatedRef<Ref>
 ) => MeasuredDimensions | null;
 
 /**

@@ -5,6 +5,7 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
+  WrapperRef,
   StyleProps,
   Value3D,
   ValueRotation,
@@ -94,7 +95,7 @@ export interface IReanimatedModule
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined,
+    component: WrapperRef | null,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

@@ -1,16 +1,14 @@
 'use strict';
-import type { Component } from 'react';
-
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type DispatchCommand = <Ref extends WrapperRef>(
+  animatedRef: AnimatedRef<Ref>,
   commandName: string,
   args?: unknown[]
 ) => void;

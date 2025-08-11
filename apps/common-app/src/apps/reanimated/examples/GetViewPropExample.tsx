@@ -27,7 +27,7 @@ export default function GetViewPropExample() {
   const handlePress = async () => {
     // @ts-ignore this is fine
     const viewTag = animatedRef() as number;
-    const result = await getViewProp(viewTag, 'opacity');
+    const result = await getViewProp(viewTag, 'opacity', animatedRef.current);
     console.log(result);
   };
 

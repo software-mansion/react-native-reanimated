@@ -1,12 +1,10 @@
 'use strict';
-import type { Component } from 'react';
-
 import { logger } from '../common';
-import type { MeasuredDimensions } from '../commonTypes';
+import type { MeasuredDimensions, WrapperRef } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function measure<T extends Component>(
-  animatedRef: AnimatedRef<T>
+export function measure<Ref extends WrapperRef>(
+  animatedRef: AnimatedRef<Ref>
 ): MeasuredDimensions | null {
   const element = animatedRef() as HTMLElement | null;
 

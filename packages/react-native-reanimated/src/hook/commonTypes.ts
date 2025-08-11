@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, MutableRefObject } from 'react';
+import type { MutableRefObject } from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -13,6 +13,7 @@ import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
   ShadowNodeWrapper,
+  WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
@@ -29,17 +30,17 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<T extends Component> = {
-  (component?: T):
+export type AnimatedRef<Ref extends WrapperRef> = {
+  (ref?: Ref | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: T | null;
+  current: Ref | null;
   observe: (observer: AnimatedRefObserver) => void;
   getTag?: () => number | null;
 };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<Component>;
+export type AnimatedRefOnJS = AnimatedRef<WrapperRef>;
 
 /**
  * `AnimatedRef` is mapped to this type on the UI thread via a serializable

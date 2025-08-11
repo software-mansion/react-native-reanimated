@@ -1,16 +1,11 @@
 'use strict';
-import type { Component } from 'react';
-
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
+import type { WrapperRef } from '../commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type ScrollTo = <Ref extends WrapperRef>(
+  animatedRef: AnimatedRef<Ref>,
   x: number,
   y: number,
   animated: boolean
@@ -29,19 +24,14 @@ type ScrollTo = <T extends Component>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToNative(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+function scrollToNative<Ref extends WrapperRef>(
+  animatedRef: AnimatedRef<Ref>,
   x: number,
   y: number,
   animated: boolean
 ) {
   'worklet';
-  dispatchCommand(
-    // This assertion is needed to comply to `dispatchCommand` interface
-    animatedRef as unknown as AnimatedRef<Component>,
-    'scrollTo',
-    [x, y, animated]
-  );
+  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
 }
 
 function scrollToJest() {
