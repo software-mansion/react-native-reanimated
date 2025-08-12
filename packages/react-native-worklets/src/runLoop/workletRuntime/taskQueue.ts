@@ -40,5 +40,5 @@ export function pushTask(callback: Callback, handlerId: number, delay: number) {
   'worklet';
   const queue = globalThis._taskQueue;
   queue.timeoutCallbacks.set(handlerId, callback);
-  global._scheduleTimeoutCallback(delay, handlerId);
+  globalThis._scheduleTimeoutCallback(delay, handlerId);
 }
