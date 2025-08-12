@@ -1,7 +1,7 @@
 'use strict';
 /* eslint-disable */
 
-import type { ShadowNodeWrapper } from './commonTypes';
+import type { ShadowNodeWrapper, WrapperRef } from './commonTypes';
 import {
   findHostInstance,
   HostInstance,
@@ -12,7 +12,7 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component,
+  ref: WrapperRef,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
@@ -38,9 +38,9 @@ export function getShadowNodeWrapperFromRef(
 
   let resolvedRef;
   if (scrollViewRef) {
-    resolvedRef = scrollViewRef.__internalInstanceHandle.stateNode.node;
+    resolvedRef = scrollViewRef.__internalInstanceHandle?.stateNode.node;
   } else if (otherScrollViewRef) {
-    resolvedRef = otherScrollViewRef.__internalInstanceHandle.stateNode.node;
+    resolvedRef = otherScrollViewRef.__internalInstanceHandle?.stateNode.node;
   } else if (textInputRef) {
     resolvedRef = textInputRef;
   } else {

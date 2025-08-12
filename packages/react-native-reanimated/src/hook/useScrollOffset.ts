@@ -1,10 +1,8 @@
 'use strict';
-import type { Component } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-import type { ScrollView, ScrollViewProps } from 'react-native';
 
 import { IS_WEB, logger } from '../common';
-import type { SharedValue } from '../commonTypes';
+import type { SharedValue, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -25,11 +23,6 @@ const NATIVE_SCROLL_EVENT_NAMES = [
   'onMomentumScrollEnd',
 ] as const;
 
-type ScrollableComponent = Component<
-  Pick<ScrollViewProps, (typeof NATIVE_SCROLL_EVENT_NAMES)[number]>
-> &
-  Pick<ScrollView, 'getScrollableNode'>;
-
 /**
  * Lets you synchronously get the current offset of a scrollable component.
  *
@@ -44,8 +37,8 @@ export const useScrollOffset = IS_WEB
   ? useScrollOffsetWeb
   : useScrollOffsetNative;
 
-function useScrollOffsetWeb<C extends ScrollableComponent>(
-  animatedRef: AnimatedRef<C> | null,
+function useScrollOffsetWeb<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -84,8 +77,8 @@ function useScrollOffsetWeb<C extends ScrollableComponent>(
   return offset;
 }
 
-function useScrollOffsetNative<C extends ScrollableComponent>(
-  animatedRef: AnimatedRef<C> | null,
+function useScrollOffsetNative<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -126,10 +119,7 @@ function useScrollOffsetNative<C extends ScrollableComponent>(
 }
 
 function getWebScrollableElement(
-  scrollComponent: ScrollableComponent | null
+  scrollComponent: WrapperRef | null
 ): HTMLElement {
-  return (
-    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
-    scrollComponent
-  );
+  return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
 }
