@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { describe, expect, useOrderConstraint, render, test, waitForNotifications } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
 describe('Test mixed scheduling scenarios', () => {
@@ -60,7 +60,7 @@ describe('Test mixed scheduling scenarios', () => {
       const [confirmedOrder, order] = useOrderConstraint();
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             const nameToMethod: any = {

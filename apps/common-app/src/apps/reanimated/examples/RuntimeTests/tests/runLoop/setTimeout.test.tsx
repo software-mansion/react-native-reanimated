@@ -11,7 +11,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test setTimeout', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
@@ -21,7 +21,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(() => setFlag('ok', notification));
@@ -42,7 +42,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(
@@ -71,7 +71,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setTimeout(() => notify(notification1)) as unknown as number;
@@ -98,7 +98,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const startTime = performance.now();
@@ -125,7 +125,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(() => {
@@ -151,7 +151,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(() => {
@@ -177,7 +177,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(() => {
@@ -205,7 +205,7 @@ describe('Test setTimeout', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             setTimeout(() => {
@@ -232,7 +232,7 @@ describe('Test setTimeout', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setTimeout(() => {
@@ -264,7 +264,7 @@ describe('Test setTimeout', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             setTimeout(() => {

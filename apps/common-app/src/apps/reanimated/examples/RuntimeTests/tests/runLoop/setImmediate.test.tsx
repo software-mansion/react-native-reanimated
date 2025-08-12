@@ -11,7 +11,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test setImmediate', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
@@ -21,7 +21,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setImmediate(() => setFlag('ok', notification));
@@ -42,7 +42,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setImmediate(value => {
@@ -67,7 +67,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setImmediate(() => notify(notification1)) as unknown as number;
@@ -93,7 +93,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setImmediate(() => {
@@ -119,7 +119,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setImmediate(() => {
@@ -145,7 +145,7 @@ describe('Test setImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           setImmediate(() => {
@@ -176,7 +176,7 @@ describe('Test setImmediate', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             setImmediate(() => {

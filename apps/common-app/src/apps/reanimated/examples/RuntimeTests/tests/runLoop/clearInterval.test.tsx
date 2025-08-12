@@ -10,7 +10,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test clearInterval', () => {
   test.each(['ui', 'worklet'])('does nothing on invalid handle, runtime: **%s**', async runtimeType => {
@@ -19,7 +19,7 @@ describe('Test clearInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           clearInterval(2137);
@@ -45,7 +45,7 @@ describe('Test clearInterval', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             const testHandle = setInterval(() => {
@@ -75,7 +75,7 @@ describe('Test clearInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let testHandle = 0;
@@ -111,7 +111,7 @@ describe('Test clearInterval', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             let testHandle = 0;

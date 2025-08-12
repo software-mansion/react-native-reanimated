@@ -11,7 +11,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
@@ -21,7 +21,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           requestAnimationFrame(() => setFlag('ok', notification));
@@ -41,7 +41,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = requestAnimationFrame(() => notify(notification1));
@@ -67,7 +67,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let timestamp = 0;
@@ -98,7 +98,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let timestamp = 0;
@@ -130,7 +130,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           requestAnimationFrame(() => {
@@ -156,7 +156,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           requestAnimationFrame(() => {
@@ -182,7 +182,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           requestAnimationFrame(() => {
@@ -213,7 +213,7 @@ describe('Test requestAnimationFrame', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             requestAnimationFrame(() => {

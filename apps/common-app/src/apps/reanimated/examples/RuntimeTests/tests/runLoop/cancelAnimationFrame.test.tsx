@@ -10,7 +10,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test cancelAnimationFrame', () => {
   test.each(['ui', 'worklet'])('does nothing on invalid handle', async runtimeType => {
@@ -19,7 +19,7 @@ describe('Test cancelAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           cancelAnimationFrame(2137);
@@ -40,7 +40,7 @@ describe('Test cancelAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle = requestAnimationFrame(() => {
@@ -65,7 +65,7 @@ describe('Test cancelAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let handle = 0;
@@ -94,7 +94,7 @@ describe('Test cancelAnimationFrame', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let handle = 0;

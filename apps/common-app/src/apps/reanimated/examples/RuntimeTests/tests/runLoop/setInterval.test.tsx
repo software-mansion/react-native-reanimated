@@ -11,7 +11,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test setInterval', () => {
   test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
@@ -21,7 +21,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let iter = 1;
@@ -54,7 +54,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle = setInterval(
@@ -84,7 +84,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setInterval(() => {
@@ -117,7 +117,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let lastTime = performance.now();
@@ -160,7 +160,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setInterval(() => {
@@ -188,7 +188,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setInterval(() => {
@@ -216,7 +216,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setInterval(() => {
@@ -246,7 +246,7 @@ describe('Test setInterval', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             const handle1 = setInterval(() => {
@@ -275,7 +275,7 @@ describe('Test setInterval', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           const handle1 = setInterval(() => {
@@ -310,7 +310,7 @@ describe('Test setInterval', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             const handle1 = setInterval(() => {

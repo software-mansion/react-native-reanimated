@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
 
-export function TestComponent({ worklet, runtimeType }: { worklet: () => void; runtimeType: string }) {
+export function DispatchTestComponent({ worklet, runtimeType }: { worklet: () => void; runtimeType: string }) {
   useEffect(() => {
     if (runtimeType === 'ui') {
       runOnUI(() => {

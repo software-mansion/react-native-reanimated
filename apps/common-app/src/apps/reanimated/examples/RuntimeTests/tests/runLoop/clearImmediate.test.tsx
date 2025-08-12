@@ -10,7 +10,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test clearImmediate', () => {
   test.each(['ui', 'worklet'])('does nothing on invalid handle, runtime: **%s**', async runtimeType => {
@@ -19,7 +19,7 @@ describe('Test clearImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           clearImmediate(2137);
@@ -42,7 +42,7 @@ describe('Test clearImmediate', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             const handle = setImmediate(() => {
@@ -68,7 +68,7 @@ describe('Test clearImmediate', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           let handle = 0;
@@ -99,7 +99,7 @@ describe('Test clearImmediate', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             let handle = 0;

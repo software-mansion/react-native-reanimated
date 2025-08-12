@@ -10,7 +10,7 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { TestComponent } from './TestComponent';
+import { DispatchTestComponent } from './TestComponent';
 
 describe('Test queueMicrotask', () => {
   test.each(['ui', 'worklet'])('executes single microtask, runtime: **%s**', async runtimeType => {
@@ -20,7 +20,7 @@ describe('Test queueMicrotask', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           queueMicrotask(() => setFlag('ok', notification));
@@ -40,7 +40,7 @@ describe('Test queueMicrotask', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           queueMicrotask(() => {
@@ -66,7 +66,7 @@ describe('Test queueMicrotask', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           queueMicrotask(() => {
@@ -92,7 +92,7 @@ describe('Test queueMicrotask', () => {
 
     // Act
     await render(
-      <TestComponent
+      <DispatchTestComponent
         worklet={() => {
           'worklet';
           queueMicrotask(() => {
@@ -124,7 +124,7 @@ describe('Test queueMicrotask', () => {
 
       // Act
       await render(
-        <TestComponent
+        <DispatchTestComponent
           worklet={() => {
             'worklet';
             queueMicrotask(() => {
