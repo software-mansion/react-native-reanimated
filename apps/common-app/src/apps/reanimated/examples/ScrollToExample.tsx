@@ -1,6 +1,5 @@
 import {
   FlashList,
-  FlashListProps,
   FlashListRef,
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
@@ -18,9 +17,7 @@ function getRandomOffset() {
   return Math.random() * 2000;
 }
 
-const AnimatedFlashList = Animated.createAnimatedComponent<
-  FlashListProps<number> & { ref?: React.Ref<FlashListRef<number>> }
->(FlashList);
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList<number>);
 
 type Scrollable = {
   scrollFromJS: () => void;
