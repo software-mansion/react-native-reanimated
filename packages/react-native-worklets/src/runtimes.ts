@@ -56,7 +56,7 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
-  let animationQueuePollingRate: number | undefined;
+  let animationQueuePollingRate: number;
   let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
@@ -67,7 +67,9 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
-    animationQueuePollingRate = nameOrConfig?.animationQueuePollingRate;
+    animationQueuePollingRate = Math.round(
+      nameOrConfig?.animationQueuePollingRate ?? 16
+    );
     enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
 
@@ -143,14 +145,15 @@ export type WorkletRuntimeConfig = {
   initializer?: () => void;
   /**
    * Time interval in milliseconds between polling of frame callbacks scheduled
-   * by requestAnimationFrame.
+   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
    */
   animationQueuePollingRate?: number;
   /**
    * Determines whether to enable the default Event Loop or not. The Event Loop
    * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
    * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
-   * `clearImmediate`, and `cancelAnimationFrame` methods.
+   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
+   * defaults to `true`.
    */
   enableEventLoop?: true;
 } & (

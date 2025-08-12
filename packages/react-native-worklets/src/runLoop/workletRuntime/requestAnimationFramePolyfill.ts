@@ -1,8 +1,8 @@
 'use strict';
 
-export function setupRequestAnimationFrame(animationQueuePollingRate?: number) {
+export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
   'worklet';
-  const timeoutInterval = Math.round(animationQueuePollingRate ?? 16);
+  const timeoutInterval = animationQueuePollingRate;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
