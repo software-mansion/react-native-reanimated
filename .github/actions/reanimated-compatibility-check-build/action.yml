@@ -1,20 +1,20 @@
-name: 'Reanimated Compatibility Check - Build'
-description: 'Check React Native Reanimated compatibility with different React Native versions'
+name: Reanimated compatibility check build
+description: Check React Native Reanimated compatibility with different React Native versions
 inputs:
   react-native-versions:
-    description: 'JSON array of React Native versions to test'
+    description: Array of React Native versions
     required: true
   platform:
-    description: 'Platform to test (iOS or Android)'
+    description: Platform to test (iOS or Android)
     required: true
   mode:
-    description: 'Build mode (Debug or Release)'
+    description: Build mode (Debug or Release)
     required: true
   github-sha:
-    description: 'GitHub SHA to use for installing packages'
+    description: GitHub SHA to use for installing packages
     required: true
   app-name:
-    description: 'Name of the test app'
+    description: Name of the test app
     default: 'app'
     required: false
 
