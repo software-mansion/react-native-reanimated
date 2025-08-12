@@ -4,7 +4,7 @@ sidebar_position: 8
 
 # getRuntimeKind
 
-`getRuntimeKind` allows you to get the [kind of the current runtime](/docs/fundamentals/runtimeKinds) in a programmatic fashion. It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
+`getRuntimeKind` allows you to get the [kind of the current runtime](/docs/fundamentals/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
 
 `getRuntimeKind` is a direct replacement for the deprecated `_WORKLET` global variable.
 
@@ -102,7 +102,7 @@ import {
 console.log(globalThis.__RUNTIME_KIND); // 1 (RN Runtime)
 ```
 
-Be aware that accessing the global variable `__RUNTIME_KIND` before importing anything from `react-native-worklets` might result in it being undefined. This is because the global variable is set only after the `react-native-worklets` module is loaded. This is especially important in Web contexts, where additional bundler optimizations may be in place.
+Be aware that accessing the global variable `__RUNTIME_KIND` before importing anything from `react-native-worklets` might be undefined. This is because the global variable is set only after the `react-native-worklets` module is loaded. This is especially important in Web contexts, where additional bundler optimizations may be in place.
 
 ## Remarks
 
