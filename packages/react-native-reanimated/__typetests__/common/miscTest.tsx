@@ -1,14 +1,10 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  createAnimatedPropAdapter,
   Easing,
   interpolateColor,
   isSharedValue,
   Keyframe,
   makeMutable,
-  useAnimatedProps,
-  useAnimatedStyle,
   useSharedValue,
 } from '../..';
 
@@ -37,19 +33,6 @@ function InterpolateColorTest() {
   interpolateColor(sv.value, [0, 1], ['#FF0000', '#00FF99'], 'HSV');
 
   return null;
-}
-
-function UpdatePropsTest() {
-  const adapter1 = createAnimatedPropAdapter((props) => {}, []);
-  const adapter2 = createAnimatedPropAdapter((props) => {}, ['prop1', 'prop2']);
-  const adapter3 = createAnimatedPropAdapter(() => {});
-
-  // @ts-expect-error works only for useAnimatedProps
-  useAnimatedStyle(() => ({}), undefined, [adapter1, adapter2, adapter3]);
-
-  useAnimatedProps(() => ({}), null, adapter1);
-
-  useAnimatedProps(() => ({}), null, [adapter2, adapter3]);
 }
 
 function EasingFactoryFunctionTest() {
