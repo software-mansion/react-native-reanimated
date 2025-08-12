@@ -126,6 +126,7 @@ export interface IAnimatedComponentInternalBase {
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _hasAnimatedRef: boolean;
   _viewInfo?: ViewInfo;
+
   /**
    * Used for Layout Animations and Animated Styles. It is not related to event
    * handling.
