@@ -13,12 +13,12 @@ import {
   getTrackerCallCount,
   mockAnimationTimer,
   notify,
-  orderGuard,
   Presets,
   recordAnimationUpdates,
   registerValue,
   render,
   test,
+  useOrderConstraint,
   useTestRef,
   useTestValue,
   wait,
@@ -418,13 +418,13 @@ describe('Tests of Test Framework', () => {
       expect(state3.value).toBe('ok');
     });
 
-    test('order constraints', () => {
-      let lastCurrentOrder = 0;
-      const order = orderGuard();
-      lastCurrentOrder = order(1);
-      lastCurrentOrder = order(2);
-      lastCurrentOrder = order(3);
-      expect(lastCurrentOrder).toBe(3);
+    test('useOrderConstraint', async () => {
+      const [confirmedOrder, order] = useOrderConstraint();
+      order(1);
+      order(2);
+      order(3, 'finish');
+      await waitForNotify('finish');
+      expect(confirmedOrder.value).toBe(3);
     });
   });
 });
