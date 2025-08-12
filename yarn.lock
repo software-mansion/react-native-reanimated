@@ -6447,6 +6447,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shopify/flash-list@npm:2.0.2":
+  version: 2.0.2
+  resolution: "@shopify/flash-list@npm:2.0.2"
+  dependencies:
+    tslib: "npm:2.8.1"
+  peerDependencies:
+    "@babel/runtime": "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10/9e4dad24e886b6ff318a66a27500e1293fa28d7c466453893c45a73ca195e9fac5d6cd41142cb5ad7480f8a89475ecd5ba0dfbac61a20b7704eb85b690990540
+  languageName: node
+  linkType: hard
+
 "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.8.0#~/.yarn/patches/@shopify-flash-list-npm-1.8.0-54e02d8f74.patch":
   version: 1.8.0
   resolution: "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.8.0#~/.yarn/patches/@shopify-flash-list-npm-1.8.0-54e02d8f74.patch::version=1.8.0&hash=ccc3df"
@@ -19862,6 +19875,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.80.0"
     "@react-native/metro-config": "npm:0.80.0"
     "@react-native/typescript-config": "npm:0.80.0"
+    "@shopify/flash-list": "npm:2.0.2"
     "@testing-library/jest-native": "npm:^4.0.4"
     "@testing-library/react-hooks": "npm:^8.0.1"
     "@testing-library/react-native": "npm:^13.0.1"

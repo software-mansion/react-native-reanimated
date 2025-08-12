@@ -1,21 +1,19 @@
 'use strict';
-import type { Component } from 'react';
-
 import {
   IS_JEST,
   logger,
   processColorsInProps,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import type { ShadowNodeWrapper, StyleProps, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type SetNativeProps = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
 /**

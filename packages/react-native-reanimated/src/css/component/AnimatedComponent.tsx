@@ -5,9 +5,10 @@ import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import type { ShadowNodeWrapper, WrapperRef } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
+  IAnimatedComponentInternalBase,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
@@ -27,8 +28,11 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-  P extends AnyRecord = AnimatedComponentProps,
-> extends Component<P> {
+    P extends AnyRecord = AnimatedComponentProps,
+  >
+  extends Component<P>
+  implements IAnimatedComponentInternalBase
+{
   ChildComponent: AnyComponent;
 
   _CSSManager?: CSSManager;
@@ -86,7 +90,10 @@ export default class AnimatedComponent<
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
       viewName = viewInfo.viewName;
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(
+        this as WrapperRef,
+        hostInstance
+      );
     }
     this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
     if (DOMElement) {
