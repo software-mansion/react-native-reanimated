@@ -2,6 +2,7 @@
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -45,6 +46,9 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
+
+  rt.global().setProperty(
+      rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 

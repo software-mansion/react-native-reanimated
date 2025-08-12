@@ -1,4 +1,6 @@
 'use strict';
+import { RuntimeKind } from 'react-native-worklets';
+
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import type {
   MeasuredDimensions,
@@ -30,7 +32,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return null;
   }
 

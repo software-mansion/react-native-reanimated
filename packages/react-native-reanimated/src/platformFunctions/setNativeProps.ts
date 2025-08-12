@@ -1,4 +1,6 @@
 'use strict';
+import { RuntimeKind } from 'react-native-worklets';
+
 import {
   IS_JEST,
   logger,
@@ -37,7 +39,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
