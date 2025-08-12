@@ -84,7 +84,7 @@ In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the 
 
 `useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and has been removed in Reanimated 4. You need to refactor all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
 
-### Removed `adapters` parameter from `useAnimatedProps`
+### Removed `createAnimatedPropAdapter`
 
 In Reanimated 4, the `adapters` parameter has been removed from `useAnimatedProps`. All properties that previously required adapters now should work directly.
 
