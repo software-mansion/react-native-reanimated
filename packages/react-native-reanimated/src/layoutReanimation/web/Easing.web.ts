@@ -1,5 +1,15 @@
 'use strict';
 
+import type { EasingFunctionFactory } from '../../Easing';
+
+type BezierClosure = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  Bezier: () => void;
+};
+
 // Those are the easings that can be implemented using Bezier curves.
 // Others should be done as CSS animations
 export const WebEasings = {
@@ -14,6 +24,28 @@ export const WebEasings = {
 
 export function getEasingByName(easingName: WebEasingsNames) {
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
+}
+
+export function maybeGetBezierEasing(
+  easing: EasingFunctionFactory
+): null | string {
+  if (!('factory' in easing)) {
+    return null;
+  }
+
+  const easingFactory = easing.factory;
+
+  if (!('__closure' in easingFactory)) {
+    return null;
+  }
+
+  const closure = easingFactory.__closure as BezierClosure;
+
+  if (!('Bezier' in closure)) {
+    return null;
+  }
+
+  return `cubic-bezier(${closure.x1}, ${closure.y1}, ${closure.x2}, ${closure.y2})`;
 }
 
 export type WebEasingsNames = keyof typeof WebEasings;
