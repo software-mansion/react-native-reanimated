@@ -3,7 +3,7 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import type { DefaultFlags, MaybeAsync, TestConfiguration, TestValue } from './types';
+import type { DefaultValue, MaybeAsync, TestConfiguration, TestValue } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -154,7 +154,7 @@ export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
-export function useTestValue<T = DefaultFlags>(defaultValue: T) {
+export function useTestValue<T = DefaultValue>(defaultValue: T) {
   return testRunner.useTestValue<T>(defaultValue);
 }
 

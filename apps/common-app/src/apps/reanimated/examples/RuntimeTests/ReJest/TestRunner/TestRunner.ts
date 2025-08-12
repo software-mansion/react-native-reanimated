@@ -4,8 +4,8 @@ import { useRef } from 'react';
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
 import type {
-  DefaultFlags,
-  FlagWrapper,
+  DefaultValue,
+  ValueWrapper,
   MaybeAsync,
   TestCase,
   TestConfiguration,
@@ -67,14 +67,14 @@ export class TestRunner {
     return this._renderLock;
   }
 
-  public useTestValue<T = DefaultFlags>(
-    defaultValue: T | DefaultFlags,
+  public useTestValue<T = DefaultValue>(
+    defaultValue: T | DefaultValue,
     setterCondition?: (prev: T, current: T) => boolean,
-  ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
-    const state: FlagWrapper<T> = {
+  ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
+    const state: ValueWrapper<T> = {
       value: defaultValue,
     };
-    const jsSetter = (value: T | DefaultFlags = 'ok', notificationName?: string) => {
+    const jsSetter = (value: T | DefaultValue = 'ok', notificationName?: string) => {
       if (!setterCondition || setterCondition(state.value as T, value as T)) {
         state.value = value;
       }
@@ -82,7 +82,7 @@ export class TestRunner {
         this._notificationRegistry.notify(notificationName);
       }
     };
-    const setter = (value?: T | DefaultFlags, notificationName?: string) => {
+    const setter = (value?: T | DefaultValue, notificationName?: string) => {
       'worklet';
       runOnJS(jsSetter)(value, notificationName);
     };
