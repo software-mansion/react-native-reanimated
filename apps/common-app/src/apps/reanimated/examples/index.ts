@@ -119,7 +119,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
-import SynchronizableExample from './SynchronizableExample';
+import SynchronizablePerformanceExample from './SynchronizableExample';
 import SynchronousPropsExample from './SynchronousPropsExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
@@ -164,8 +164,8 @@ export const EXAMPLES: Record<string, Example> = {
   },
   Synchronizable: {
     icon: '🔄',
-    title: 'Synchronizable',
-    screen: SynchronizableExample,
+    title: 'Synchronizable performance',
+    screen: SynchronizablePerformanceExample,
   },
   ReactFreeze: {
     icon: '❄️',

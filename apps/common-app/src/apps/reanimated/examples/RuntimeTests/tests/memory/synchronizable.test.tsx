@@ -13,7 +13,7 @@ import { describe, expect, notify, test, waitForNotify } from '../../ReJest/Runt
 const NOTIFICATION = 'NOTIFICATION';
 
 describe('Test Synchronizable creation and serialization', () => {
-  test('createSynchronizable retuns Synchronizable', () => {
+  test('createSynchronizable returns Synchronizable', () => {
     const synchronizable = createSynchronizable(0);
 
     expect(isSynchronizable(synchronizable)).toBe(true);
@@ -85,7 +85,8 @@ describe('Test Synchronizable creation and serialization', () => {
     expect(value).toBe(42);
   });
 
-  // This fail doesn't work beacuse nested `runOnJS` isn't copied properly.
+  // TODO: This test doesn't work because nested `runOnJS` isn't copied properly.
+  // It will be fixed when BundleMode™ becomes the standard.
   // test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
   //   const synchronizable = createSynchronizable(42);
   //   let readValue = 0;

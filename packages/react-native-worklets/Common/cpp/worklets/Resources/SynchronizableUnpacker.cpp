@@ -8,12 +8,12 @@ namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
     R"DELIMITER__((function () {
+  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
+    return (0, _serializable.createSerializable)(value);
+  } : globalThis._createSerializable;
   function synchronizableUnpacker(synchronizableRef) {
     var synchronizable = synchronizableRef;
     var proxy = globalThis.__workletsModuleProxy;
-    var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
-      return (0, _shareables.createSerializable)(value);
-    } : globalThis._createSerializable;
     synchronizable.__synchronizableRef = true;
     synchronizable.getDirty = function () {
       return proxy.synchronizableGetDirty(synchronizable);
@@ -45,6 +45,5 @@ const char SynchronizableUnpackerCode[] =
     return synchronizable;
   }
   globalThis.__synchronizableUnpacker = synchronizableUnpacker;
-  return synchronizableUnpacker;
 })();)DELIMITER__";
 } // namespace worklets

@@ -104,8 +104,8 @@ export function init() {
 function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
-    installSynchronizableUnpacker();
   }
+  installSynchronizableUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */

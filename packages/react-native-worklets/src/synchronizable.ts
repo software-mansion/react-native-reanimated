@@ -1,6 +1,6 @@
 'use strict';
 
-import { createSerializable } from './shareables';
+import { createSerializable } from './serializable';
 import { WorkletsModule } from './WorkletsModule';
 import type { SerializableRef } from './workletTypes';
 
@@ -16,18 +16,17 @@ export function createSynchronizable<TValue>(
   ) as unknown as Synchronizable<TValue>;
 }
 
-export interface SynchronizableRef<TValue = unknown> {
+export type SynchronizableRef<TValue = unknown> = {
   __synchronizableRef: true;
   __nativeStateSynchronizableJSRef: TValue;
-}
+};
 
-export interface Synchronizable<TValue = unknown>
-  extends SerializableRef<TValue>,
-    SynchronizableRef<TValue> {
-  __synchronizableRef: true;
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-  lock(): void;
-  unlock(): void;
-}
+export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
+  SynchronizableRef<TValue> & {
+    __synchronizableRef: true;
+    getDirty(): TValue;
+    getBlocking(): TValue;
+    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+    lock(): void;
+    unlock(): void;
+  };

@@ -568,7 +568,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          auto initial = extractSerializableOrThrow<Serializable>(
+          auto initial = extractSerializableOrThrow(
               rt, args[0], "[Worklets] Value must be a Serializable.");
           auto synchronizable = std::make_shared<Synchronizable>(initial);
           return SerializableJSRef::newNativeStateObject(rt, synchronizable);

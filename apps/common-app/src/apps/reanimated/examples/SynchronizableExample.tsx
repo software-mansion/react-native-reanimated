@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
-  executeOnUIRuntimeSync,
   createSynchronizable,
   runOnJS,
   runOnUI,
@@ -13,7 +12,7 @@ const initialValue = 0;
 
 const targetValue = 200000;
 
-export default function SynchronizableExample() {
+export default function SynchronizablePerformanceExample() {
   const [valueRN, setValueRN] = React.useState(initialValue);
   const [durationRNMS, setDurationRNMS] = React.useState(0);
   const [valueUI, setValueUI] = React.useState(initialValue);
@@ -142,13 +141,6 @@ export default function SynchronizableExample() {
       <View style={{ opacity: runningRuntimes >= 1 ? 1 : 0 }}>
         <Text>Please wait...</Text>
       </View>
-      <Button
-        onPress={() => {
-          const sync = executeOnUIRuntimeSync(() => synchronizable)();
-          console.log(sync.getDirty());
-        }}
-        title="Test"
-      />
       <Button
         onPress={() => {
           resetState();

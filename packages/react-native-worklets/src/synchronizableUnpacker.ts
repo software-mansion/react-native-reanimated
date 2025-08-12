@@ -1,10 +1,14 @@
 'use strict';
 
-import { createSerializable } from './shareables';
+import { createSerializable } from './serializable';
 import type { Synchronizable, SynchronizableRef } from './synchronizable';
 
 export function __installUnpacker() {
   // TODO: Add cache for synchronizables.
+  const serializer =
+    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
+      ? (value: unknown, _: unknown) => createSerializable(value)
+      : globalThis._createSerializable;
 
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
@@ -12,10 +16,7 @@ export function __installUnpacker() {
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
     const proxy = globalThis.__workletsModuleProxy!;
-    const serializer =
-      !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
-        ? (value: TValue, _: unknown) => createSerializable(value)
-        : globalThis._createSerializable;
+
     synchronizable.__synchronizableRef = true;
     synchronizable.getDirty = () => {
       return proxy.synchronizableGetDirty(synchronizable);
@@ -59,8 +60,6 @@ export function __installUnpacker() {
   }
 
   globalThis.__synchronizableUnpacker = synchronizableUnpacker;
-
-  return synchronizableUnpacker;
 }
 
 export type SynchronizableUnpacker = <TValue>(
