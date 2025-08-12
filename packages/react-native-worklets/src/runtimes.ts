@@ -7,7 +7,7 @@ import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from './shareables';
+} from './serializable';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';

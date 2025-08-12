@@ -18,8 +18,8 @@ export {
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { serializableMappingCache } from './shareableMappingCache';
-export { createSerializable, isSerializableRef } from './shareables';
+export { createSerializable, isSerializableRef } from './serializable';
+export { serializableMappingCache } from './serializableMappingCache';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
