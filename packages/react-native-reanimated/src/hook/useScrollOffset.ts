@@ -46,7 +46,7 @@ function useScrollOffsetWeb<TRef extends WrapperRef>(
 
   const eventHandler = useCallback(() => {
     'worklet';
-    if (animatedRef) {
+    if (animatedRef?.current) {
       const element = getWebScrollableElement(animatedRef.current);
       // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
       offset.value =
@@ -60,7 +60,7 @@ function useScrollOffsetWeb<TRef extends WrapperRef>(
     }
 
     return animatedRef.observe((tag) => {
-      if (!tag) {
+      if (!animatedRef.current || !tag) {
         logger.warn(NOT_INITIALIZED_WARNING);
         return;
       }
@@ -118,8 +118,6 @@ function useScrollOffsetNative<TRef extends WrapperRef>(
   return offset;
 }
 
-function getWebScrollableElement(
-  scrollComponent: WrapperRef | null
-): HTMLElement {
+function getWebScrollableElement(scrollComponent: WrapperRef): HTMLElement {
   return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
 }
