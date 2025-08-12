@@ -94,42 +94,42 @@ describe('Test mixed sheduling scenarios', () => {
     ['setTimeout', 1, 'requestAnimationFrame', 2],
     ['setTimeout', 1, 'setInterval', 2],
     ['setTimeout', 2, 'queueMicrotask', 1],
-    ['setTimeout', 2, 'root', 1],
+    ['setTimeout', 2, 'topLevel', 1],
 
     ['setImmediate', 1, 'setTimeout', 2],
     ['setImmediate', 1, 'setImmediate', 2],
     ['setImmediate', 1, 'requestAnimationFrame', 2],
     ['setImmediate', 1, 'setInterval', 2],
     ['setImmediate', 2, 'queueMicrotask', 1],
-    ['setImmediate', 2, 'root', 1],
+    ['setImmediate', 2, 'topLevel', 1],
 
     ['requestAnimationFrame', 2, 'setTimeout', 1],
     ['requestAnimationFrame', 2, 'setImmediate', 1],
     ['requestAnimationFrame', 1, 'requestAnimationFrame', 2],
     ['requestAnimationFrame', 2, 'setInterval', 1],
     ['requestAnimationFrame', 2, 'queueMicrotask', 1],
-    ['requestAnimationFrame', 2, 'root', 1],
+    ['requestAnimationFrame', 2, 'topLevel', 1],
 
     ['setInterval', 1, 'setTimeout', 2],
     ['setInterval', 1, 'setImmediate', 2],
     ['setInterval', 1, 'requestAnimationFrame', 2],
     ['setInterval', 1, 'setInterval', 2],
     ['setInterval', 2, 'queueMicrotask', 1],
-    ['setInterval', 2, 'root', 1],
+    ['setInterval', 2, 'topLevel', 1],
 
     ['queueMicrotask', 1, 'setTimeout', 2],
     ['queueMicrotask', 1, 'setImmediate', 2],
     ['queueMicrotask', 1, 'requestAnimationFrame', 2],
     ['queueMicrotask', 1, 'setInterval', 2],
     ['queueMicrotask', 1, 'queueMicrotask', 2],
-    ['queueMicrotask', 1, 'root', 2],
+    ['queueMicrotask', 1, 'topLevel', 2],
 
-    ['root', 1, 'setTimeout', 2],
-    ['root', 1, 'setImmediate', 2],
-    ['root', 1, 'requestAnimationFrame', 2],
-    ['root', 1, 'setInterval', 2],
-    ['root', 1, 'queueMicrotask', 2],
-    ['root', 1, 'root', 2],
+    ['topLevel', 1, 'setTimeout', 2],
+    ['topLevel', 1, 'setImmediate', 2],
+    ['topLevel', 1, 'requestAnimationFrame', 2],
+    ['topLevel', 1, 'setInterval', 2],
+    ['topLevel', 1, 'queueMicrotask', 2],
+    ['topLevel', 1, 'topLevel', 2],
   ];
   test.each(RUN_ON_RUNTIME_EXPECTED_ORDER_OF_EXECUTION)(
     'runOnRuntime, order of execution, **${0}** - order: **${1}**, **${2}** - order: **${3}**',
@@ -141,7 +141,7 @@ describe('Test mixed sheduling scenarios', () => {
       function getMethodMap(): any {
         'worklet';
         return {
-          root: (callback: () => void) => callback(),
+          topLevel: (callback: () => void) => callback(),
           setTimeout,
           setImmediate,
           requestAnimationFrame,
