@@ -88,8 +88,11 @@ In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the 
 
 In Reanimated 4, the `adapters` parameter has been removed from `useAnimatedProps`. All properties that previously required adapters now should work directly.
 
+#### Before
+
+Using custom adapter for fill and stroke properties:
+
 ```jsx
-// Before - using custom adapter for fill and stroke properties
 import {
   createAnimatedPropAdapter,
   processColor,
@@ -115,8 +118,13 @@ const animatedProps = useAnimatedProps(
   [],
   adapter
 );
+```
 
-// After - properties work directly without adapter
+#### After
+
+Properties work directly without adapter:
+
+```jsx
 const animatedProps = useAnimatedProps(() => ({
   fill: 'yellow',
   stroke: 'rgb(255,0,0)',
