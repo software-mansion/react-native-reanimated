@@ -69,12 +69,15 @@ export class TestRunner {
 
   public useTestValue<T = DefaultFlags>(
     defaultValue: T | DefaultFlags,
+    setterCondition?: (prev: T, current: T) => boolean,
   ): [FlagWrapper<T>, (value?: T | DefaultFlags, notificationName?: string) => void] {
     const state: FlagWrapper<T> = {
       value: defaultValue,
     };
     const jsSetter = (value: T | DefaultFlags = 'ok', notificationName?: string) => {
-      state.value = value;
+      if (!setterCondition || setterCondition(state.value as T, value as T)) {
+        state.value = value;
+      }
       if (notificationName) {
         this._notificationRegistry.notify(notificationName);
       }
@@ -86,14 +89,12 @@ export class TestRunner {
     return [state, setter];
   }
 
-  public orderGuard() {
+  public useOrderConstraint() {
     'worklet';
-    let lastExecuted = 0;
-    return (expectedOrder: number) => {
+    return this.useTestValue<number>(0, (prev: number, current: number) => {
       'worklet';
-      lastExecuted = lastExecuted == expectedOrder - 1 ? expectedOrder : lastExecuted;
-      return lastExecuted;
-    };
+      return prev == current - 1;
+    });
   }
 
   public async render(component: ReactElement<Component> | null) {

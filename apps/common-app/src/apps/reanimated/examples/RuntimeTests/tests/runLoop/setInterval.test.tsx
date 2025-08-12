@@ -4,9 +4,9 @@ import {
   describe,
   expect,
   notify,
-  orderGuard,
   render,
   test,
+  useOrderConstraint,
   useTestValue,
   waitForNotifications,
   waitForNotify,
@@ -156,21 +156,19 @@ describe('Test setInterval', () => {
   test.each(['ui', 'worklet'])('nested intervals, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           const handle1 = setInterval(() => {
             const handle2 = setInterval(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
               clearInterval(handle2);
             });
-            setFlag(order(1), notification1);
+            order(1, notification1);
             clearInterval(handle1);
           });
         }}
@@ -180,27 +178,25 @@ describe('Test setInterval', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe(2);
+    expect(confirmedOrder.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])('intervals order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           const handle1 = setInterval(() => {
-            setFlag(order(1), notification1);
+            order(1, notification1);
             clearInterval(handle1);
           });
           const handle2 = setInterval(() => {
-            setFlag(order(2), notification2);
+            order(2, notification2);
             clearInterval(handle2);
           });
         }}
@@ -210,27 +206,25 @@ describe('Test setInterval', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe(2);
+    expect(confirmedOrder.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])('intervals order of execution, different times, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           const handle1 = setInterval(() => {
-            setFlag(order(1), notification1);
+            order(1, notification1);
             clearInterval(handle1);
           }, 50);
           const handle2 = setInterval(() => {
-            setFlag(order(2), notification2);
+            order(2, notification2);
             clearInterval(handle2);
           }, 70);
         }}
@@ -240,7 +234,7 @@ describe('Test setInterval', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe(2);
+    expect(confirmedOrder.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])(
@@ -248,21 +242,19 @@ describe('Test setInterval', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue<number>(0);
+      const [confirmedOrder, order] = useOrderConstraint();
 
       // Act
       await render(
         <TestComponent
           worklet={() => {
             'worklet';
-            const order = orderGuard();
-
             const handle1 = setInterval(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
               clearInterval(handle1);
             }, 70);
             const handle2 = setInterval(() => {
-              setFlag(order(1), notification1);
+              order(1, notification1);
               clearInterval(handle2);
             }, 50);
           }}
@@ -272,33 +264,31 @@ describe('Test setInterval', () => {
 
       // Assert
       await waitForNotifications([notification1, notification2]);
-      expect(flag.value).toBe(2);
+      expect(confirmedOrder.value).toBe(2);
     },
   );
 
   test.each(['ui', 'worklet'])('intervals order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           const handle1 = setInterval(() => {
             const handle2 = setInterval(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
               clearInterval(handle2);
             }, 20);
-            setFlag(order(1), notification1);
+            order(1, notification1);
             clearInterval(handle1);
           }, 20);
 
           const handle3 = setInterval(() => {
-            setFlag(order(3), notification3);
+            order(3, notification3);
             clearInterval(handle3);
           }, 100);
         }}
@@ -308,7 +298,7 @@ describe('Test setInterval', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2, notification3]);
-    expect(flag.value).toBe(3);
+    expect(confirmedOrder.value).toBe(3);
   });
 
   test.each(['ui', 'worklet'])(
@@ -316,19 +306,18 @@ describe('Test setInterval', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue<number>(0);
+      const [confirmedOrder, order] = useOrderConstraint();
 
       // Act
       await render(
         <TestComponent
           worklet={() => {
             'worklet';
-            const order = orderGuard();
             const handle1 = setInterval(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
               clearInterval(handle1);
             });
-            setFlag(order(1), notification1);
+            order(1, notification1);
           }}
           runtimeType={runtimeType}
         />,
@@ -336,7 +325,7 @@ describe('Test setInterval', () => {
 
       // Assert
       await waitForNotifications([notification1, notification2]);
-      expect(flag.value).toBe(2);
+      expect(confirmedOrder.value).toBe(2);
     },
   );
 });

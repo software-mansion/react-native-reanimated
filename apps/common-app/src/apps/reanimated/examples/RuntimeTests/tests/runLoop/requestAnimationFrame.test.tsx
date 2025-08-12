@@ -4,9 +4,9 @@ import {
   describe,
   expect,
   notify,
-  orderGuard,
   render,
   test,
+  useOrderConstraint,
   useTestValue,
   waitForNotifications,
   waitForNotify,
@@ -126,20 +126,18 @@ describe('Test requestAnimationFrame', () => {
   test.each(['ui', 'worklet'])('nested frames, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
             });
-            setFlag(order(1), notification1);
+            order(1, notification1);
           });
         }}
         runtimeType={runtimeType}
@@ -148,26 +146,24 @@ describe('Test requestAnimationFrame', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe(2);
+    expect(confirmedOrder.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])('frames order of execution, same time, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           requestAnimationFrame(() => {
-            setFlag(order(1), notification1);
+            order(1, notification1);
           });
           requestAnimationFrame(() => {
-            setFlag(order(2), notification2);
+            order(2, notification2);
           });
         }}
         runtimeType={runtimeType}
@@ -176,29 +172,27 @@ describe('Test requestAnimationFrame', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe(2);
+    expect(confirmedOrder.value).toBe(2);
   });
 
   test.each(['ui', 'worklet'])('frames order of execution, nested frames, runtime: **%s**', async runtimeType => {
     // Arrange
     const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [flag, setFlag] = useTestValue<number>(0);
+    const [confirmedOrder, order] = useOrderConstraint();
 
     // Act
     await render(
       <TestComponent
         worklet={() => {
           'worklet';
-          const order = orderGuard();
-
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              setFlag(order(3), notification2);
+              order(3, notification2);
             });
-            setFlag(order(1), notification1);
+            order(1, notification1);
           });
           requestAnimationFrame(() => {
-            setFlag(order(2), notification3);
+            order(2, notification3);
           });
         }}
         runtimeType={runtimeType}
@@ -207,7 +201,7 @@ describe('Test requestAnimationFrame', () => {
 
     // Assert
     await waitForNotifications([notification1, notification2, notification3]);
-    expect(flag.value).toBe(3);
+    expect(confirmedOrder.value).toBe(3);
   });
 
   test.each(['ui', 'worklet'])(
@@ -215,18 +209,17 @@ describe('Test requestAnimationFrame', () => {
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue<number>(0);
+      const [confirmedOrder, order] = useOrderConstraint();
 
       // Act
       await render(
         <TestComponent
           worklet={() => {
             'worklet';
-            const order = orderGuard();
             requestAnimationFrame(() => {
-              setFlag(order(2), notification2);
+              order(2, notification2);
             });
-            setFlag(order(1), notification1);
+            order(1, notification1);
           }}
           runtimeType={runtimeType}
         />,
@@ -234,7 +227,7 @@ describe('Test requestAnimationFrame', () => {
 
       // Assert
       await waitForNotifications([notification1, notification2]);
-      expect(flag.value).toBe(2);
+      expect(confirmedOrder.value).toBe(2);
     },
   );
 });
