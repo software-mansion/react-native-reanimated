@@ -1,5 +1,10 @@
 const { transformFileSync, traverse } = require('@babel/core');
-const { program } = require('@babel/types');
+const {
+  program,
+  callExpression,
+  functionExpression,
+  expressionStatement,
+} = require('@babel/types');
 const generate = require('@babel/generator').default;
 const path = require('path');
 const fs = require('fs');
@@ -24,19 +29,23 @@ assert(
   'Transformation failed or AST not generated.'
 );
 
-let valueUnpackerFn;
+let unpackerBody;
 
 traverse(transformed.ast, {
   FunctionDeclaration(path) {
-    if (path.node?.id?.name === '__valueUnpacker') {
-      valueUnpackerFn = path.node;
+    if (path.node?.id?.name === '__installUnpacker') {
+      unpackerBody = path.node.body;
     }
   },
 });
 
-assert(valueUnpackerFn, 'Value unpacker function not found in the AST.');
+assert(unpackerBody, 'Value unpacker function not found in the AST.');
 
-const prog = program([valueUnpackerFn]);
+const iife = expressionStatement(
+  callExpression(functionExpression(null, [], unpackerBody), [])
+);
+
+const prog = program([iife]);
 
 const transformFrom = generate(prog, {
   comments: false,

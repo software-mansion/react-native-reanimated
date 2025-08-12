@@ -1,10 +1,10 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { serializableMappingCache } from './shareableMappingCache';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from './shareables';
+} from './serializable';
+import { serializableMappingCache } from './serializableMappingCache';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -113,7 +113,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       return;
     }
     if (__DEV__) {
-      // in DEV mode we call shareable conversion here because in case the object
+      // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
       // situation when conversion is only done via microtask queue. This does not
       // make the app particularily less efficient as converted objects are cached
@@ -134,8 +134,8 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIWorklet = createSerializable(runOnUIWorklet);
-  serializableMappingCache.set(runOnUI, shareableRunOnUIWorklet);
+  const serializableRunOnUIWorklet = createSerializable(runOnUIWorklet);
+  serializableMappingCache.set(runOnUI, serializableRunOnUIWorklet);
 }
 
 // @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
@@ -307,7 +307,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
         return;
       }
       if (__DEV__) {
-        // in DEV mode we call shareable conversion here because in case the object
+        // in DEV mode we call serializable conversion here because in case the object
         // can't be converted, we will get a meaningful stack-trace as opposed to the
         // situation when conversion is only done via microtask queue. This does not
         // make the app particularily less efficient as converted objects are cached
@@ -329,8 +329,9 @@ if (__DEV__) {
     );
   }
 
-  const shareableRunOnUIAsyncWorklet = createSerializable(runOnUIAsyncWorklet);
-  serializableMappingCache.set(runOnUIAsync, shareableRunOnUIAsyncWorklet);
+  const serializableRunOnUIAsyncWorklet =
+    createSerializable(runOnUIAsyncWorklet);
+  serializableMappingCache.set(runOnUIAsync, serializableRunOnUIAsyncWorklet);
 }
 
 function enqueueUI<Args extends unknown[], ReturnValue>(

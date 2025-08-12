@@ -16,8 +16,8 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
-  #shareableUndefined: SerializableRef<undefined>;
-  #shareableNull: SerializableRef<null>;
+  #serializableUndefined: SerializableRef<undefined>;
+  #serializableNull: SerializableRef<null>;
   #serializableTrue: SerializableRef<boolean>;
   #serializableFalse: SerializableRef<boolean>;
 
@@ -36,8 +36,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
-    this.#shareableNull = this.#workletsModuleProxy.createSerializableNull();
-    this.#shareableUndefined =
+    this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
+    this.#serializableUndefined =
       this.#workletsModuleProxy.createSerializableUndefined();
     this.#serializableTrue =
       this.#workletsModuleProxy.createSerializableBoolean(true);
@@ -81,11 +81,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableUndefined() {
-    return this.#shareableUndefined;
+    return this.#serializableUndefined;
   }
 
   createSerializableNull() {
-    return this.#shareableNull;
+    return this.#serializableNull;
   }
 
   createSerializableTurboModuleLike<
@@ -151,14 +151,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(shareable: SerializableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(shareable);
+  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: SerializableRef<TValue>
+    serializable: SerializableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
+    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
   }
 
   createWorkletRuntime(
@@ -177,11 +177,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
-    shareableWorklet: SerializableRef<T>
+    serializableWorklet: SerializableRef<T>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      shareableWorklet
+      serializableWorklet
     );
   }
 

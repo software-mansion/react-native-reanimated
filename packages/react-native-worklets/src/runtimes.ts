@@ -6,7 +6,7 @@ import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from './shareables';
+} from './serializable';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
