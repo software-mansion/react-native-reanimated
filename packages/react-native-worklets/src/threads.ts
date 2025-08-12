@@ -178,25 +178,6 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 }
 
 /**
- * Lets you schedule a function to be executed on the RN runtime.
- *
- * @param fun - A reference to a function you want to schedule on the RN
- *   runtime.
- * @param args - Arguments to pass to the function.
- * @see https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRN
- */
-export function scheduleOnRN<Args extends unknown[], ReturnValue>(
-  fun:
-    | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
-    | WorkletFunction<Args, ReturnValue>,
-  ...args: Args
-): void {
-  'worklet';
-  runOnJS(fun)(...args);
-}
-
-/**
  * Lets you asynchronously run
  * non-[workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
  * functions that couldn't otherwise run on the [UI
@@ -259,6 +240,25 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
       args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
     );
   };
+}
+
+/**
+ * Lets you schedule a function to be executed on the RN runtime.
+ *
+ * @param fun - A reference to a function you want to schedule on the RN
+ *   runtime.
+ * @param args - Arguments to pass to the function.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRN
+ */
+export function scheduleOnRN<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction<Args, ReturnValue>
+    | WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): void {
+  'worklet';
+  runOnJS(fun)(...args);
 }
 
 /**

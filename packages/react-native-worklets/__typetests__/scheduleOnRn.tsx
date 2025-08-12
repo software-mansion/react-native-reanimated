@@ -11,7 +11,7 @@ function scheduleOnRNTypeTests() {
   scheduleOnRN((num: number) => {
     console.log(num);
     // @ts-expect-error - wrong args type
-  }, 'asdas');
+  }, 'tets');
 
   // @ts-expect-error - wrong args type
   scheduleOnRN((obj: Record<string, unknown>) => console.log(obj), []);
