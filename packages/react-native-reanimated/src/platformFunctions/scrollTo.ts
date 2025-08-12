@@ -4,8 +4,8 @@ import type { WrapperRef } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+type ScrollTo = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean
@@ -24,8 +24,8 @@ type ScrollTo = <Ref extends WrapperRef>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToNative<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+function scrollToNative<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean

@@ -7,8 +7,8 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+type DispatchCommand = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   commandName: string,
   args?: unknown[]
 ) => void;

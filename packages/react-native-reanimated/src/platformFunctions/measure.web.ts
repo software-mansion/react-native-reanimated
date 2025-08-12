@@ -3,8 +3,8 @@ import { logger } from '../common';
 import type { MeasuredDimensions, WrapperRef } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function measure<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>
+export function measure<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>
 ): MeasuredDimensions | null {
   const element = animatedRef() as HTMLElement | null;
 

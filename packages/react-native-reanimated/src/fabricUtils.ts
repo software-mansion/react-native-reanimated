@@ -1,8 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+/* eslint-disable */
+
 import type { ShadowNodeWrapper, WrapperRef } from './commonTypes';
-import type { HostInstance } from './platform-specific/findHostInstance';
-import { findHostInstance } from './platform-specific/findHostInstance';
+import {
+  findHostInstance,
+  HostInstance,
+} from './platform-specific/findHostInstance';
 
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
   stateNode: { node: unknown };
@@ -15,26 +18,36 @@ export function getShadowNodeWrapperFromRef(
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
     try {
       getInternalInstanceHandleFromPublicInstance =
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
         require('react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance')
           .getInternalInstanceHandleFromPublicInstance ??
         ((_ref: any) => _ref._internalInstanceHandle);
-    } catch {
+    } catch (e) {
       getInternalInstanceHandleFromPublicInstance = (_ref: any) =>
         _ref._internalInstanceHandle;
     }
   }
 
-  const resolvedRef =
-    ref.getScrollResponder?.()?.getNativeScrollRef?.() ??
-    ref.getNativeScrollRef?.() ??
-    ref;
+  // TODO: Clean this up since 0.74 is the minimum supported version now.
+  // taken from https://github.com/facebook/react-native/commit/803bb16531697233686efd475f004c1643e03617#diff-d8172256c6d63b5d32db10e54d7b10f37a26b337d5280d89f5bfd7bcea778292R196
+  // @ts-ignore some weird stuff on RN 0.74 - see examples with scrollView
+  const scrollViewRef = ref?.getScrollResponder?.()?.getNativeScrollRef?.();
+  // @ts-ignore some weird stuff on RN 0.74  - see examples with scrollView
+  const otherScrollViewRef = ref?.getNativeScrollRef?.();
+  // @ts-ignore some weird stuff on RN 0.74 - see setNativeProps example
+  const textInputRef = ref?.__internalInstanceHandle?.stateNode?.node;
 
-  const resolvedInstance =
-    ref?.__internalInstanceHandle ??
-    getInternalInstanceHandleFromPublicInstance(
-      hostInstance ?? findHostInstance(resolvedRef)
-    );
+  let resolvedRef;
+  if (scrollViewRef) {
+    resolvedRef = scrollViewRef.__internalInstanceHandle?.stateNode.node;
+  } else if (otherScrollViewRef) {
+    resolvedRef = otherScrollViewRef.__internalInstanceHandle?.stateNode.node;
+  } else if (textInputRef) {
+    resolvedRef = textInputRef;
+  } else {
+    const instance = hostInstance ?? findHostInstance(ref);
+    resolvedRef =
+      getInternalInstanceHandleFromPublicInstance(instance).stateNode.node;
+  }
 
-  return resolvedInstance?.stateNode?.node;
+  return resolvedRef;
 }

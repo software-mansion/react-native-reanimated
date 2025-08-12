@@ -4,8 +4,8 @@ import type { ScrollView } from 'react-native';
 import type { WrapperRef } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function scrollTo<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+export function scrollTo<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean

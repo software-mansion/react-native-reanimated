@@ -12,8 +12,8 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+type SetNativeProps = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
 /**

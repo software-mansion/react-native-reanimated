@@ -11,8 +11,8 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>
+type Measure = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 
 /**

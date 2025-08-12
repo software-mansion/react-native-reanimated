@@ -21,8 +21,8 @@ export interface ComponentCoords {
  *   {@link ComponentCoords}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/getRelativeCoords
  */
-export function getRelativeCoords<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref>,
+export function getRelativeCoords<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   absoluteX: number,
   absoluteY: number
 ): ComponentCoords | null {

@@ -21,17 +21,17 @@ function getComponentOrScrollable(ref: WrapperRef) {
   return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
 }
 
-function useAnimatedRefBase<Ref extends WrapperRef>(
-  getWrapper: (ref: Ref) => ShadowNodeWrapper
-): AnimatedRef<Ref> {
+function useAnimatedRefBase<TRef extends WrapperRef>(
+  getWrapper: (ref: TRef) => ShadowNodeWrapper
+): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
   ).current;
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
-  const resultRef = useRef<AnimatedRef<Ref> | null>(null);
+  const resultRef = useRef<AnimatedRef<TRef> | null>(null);
 
   if (!resultRef.current) {
-    const fun = <AnimatedRef<Ref>>((ref) => {
+    const fun = <AnimatedRef<TRef>>((ref) => {
       if (ref) {
         wrapperRef.current = getWrapper(ref);
 
@@ -74,13 +74,13 @@ function useAnimatedRefBase<Ref extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  Ref extends WrapperRef = React.Component,
->(): AnimatedRef<Ref> {
+  TRef extends WrapperRef = React.Component,
+>(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
   );
 
-  const resultRef = useAnimatedRefBase<Ref>((ref) => {
+  const resultRef = useAnimatedRefBase<TRef>((ref) => {
     const currentWrapper = getShadowNodeWrapperFromRef(
       getComponentOrScrollable(ref)
     );
@@ -104,9 +104,9 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  Ref extends WrapperRef = React.Component,
->(): AnimatedRef<Ref> {
-  return useAnimatedRefBase<Ref>((ref) => getComponentOrScrollable(ref));
+  TRef extends WrapperRef = React.Component,
+>(): AnimatedRef<TRef> {
+  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
 }
 
 /**

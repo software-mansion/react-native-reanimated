@@ -30,11 +30,11 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<Ref extends WrapperRef> = {
-  (ref?: Ref | null):
+export type AnimatedRef<TRef extends WrapperRef> = {
+  (ref?: TRef | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: Ref | null;
+  current: TRef | null;
   observe: (observer: AnimatedRefObserver) => void;
   getTag?: () => number | null;
 };
