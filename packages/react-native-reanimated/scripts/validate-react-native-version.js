@@ -34,6 +34,10 @@ for (const key in compatibilityFile) {
   }
 }
 
+if (supportedRNVersions.length === 0) {
+  process.exit(0);
+}
+
 for (const version of supportedRNVersions) {
   if (semverSatisfies(reactNativeVersion, `${version}.x`)) {
     process.exit(0);
