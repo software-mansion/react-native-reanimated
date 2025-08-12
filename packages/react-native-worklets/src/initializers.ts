@@ -84,6 +84,12 @@ export function init() {
   }
   initialized = true;
 
+  if (globalThis.__RUNTIME_KIND === undefined) {
+    // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+    // is the RN Runtime. We must set it as soon as possible.
+    globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+  }
+
   initializeRuntime();
 
   if (SHOULD_BE_USE_WEB) {
@@ -196,7 +202,6 @@ function initializeWorkletRuntime() {
 /** A function that should be run only on RN Runtime in web implementation. */
 function initializeRuntimeOnWeb() {
   globalThis._WORKLET = false;
-  globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
   globalThis._log = console.log;
   globalThis._getAnimationTimestamp = () => performance.now();
   if (IS_JEST) {

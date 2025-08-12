@@ -28,3 +28,10 @@ export function getRuntimeKind(): RuntimeKind {
   'worklet';
   return globalThis.__RUNTIME_KIND;
 }
+
+if (globalThis.__RUNTIME_KIND === undefined) {
+  // In Jest environments eager imports make this file to evaluate before
+  // `initializers.ts` file, therefore we have to set the RuntimeKind here,
+  // just to be safe.
+  globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+}
