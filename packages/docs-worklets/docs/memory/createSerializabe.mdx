@@ -7,7 +7,7 @@ sidebar_position: 1
 `createSerializable` recursively converts JavaScript values into serializable references that can be used on different Runtimes than RN Runtime.
 The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
 It handles various data types including primitives, objects, arrays, functions, and special cases like host objects and worklets.
-To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
+To prevent misconceptions Worklets library freezes the original value for object-like values and for arrays.
 
 ![Serializable](/img/serializable.png)
 <figcaption style={{ textAlign: 'center' }}>Serializable flow diagram</figcaption>
