@@ -302,7 +302,7 @@ describe('Test setInterval', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'intervals order of execution, asynchronus scheduling, runtime: **%s**',
+    'intervals order of execution, asynchronous scheduling, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];

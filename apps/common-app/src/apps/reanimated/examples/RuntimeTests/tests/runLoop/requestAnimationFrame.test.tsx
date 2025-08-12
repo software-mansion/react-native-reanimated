@@ -205,7 +205,7 @@ describe('Test requestAnimationFrame', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'frame order of execution, asynchronus scheduling, runtime: **%s**',
+    'frame order of execution, asynchronous scheduling, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];

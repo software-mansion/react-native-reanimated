@@ -116,7 +116,7 @@ describe('Test queueMicrotask', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'microtasks order of execution, asynchronus scheduling, runtime: **%s**',
+    'microtasks order of execution, asynchronous scheduling, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];

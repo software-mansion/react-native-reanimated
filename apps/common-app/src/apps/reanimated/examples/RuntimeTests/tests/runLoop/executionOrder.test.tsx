@@ -4,7 +4,7 @@ import { describe, expect, useOrderConstraint, render, test, waitForNotification
 import { TestComponent } from './TestComponent';
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
-describe('Test mixed sheduling scenarios', () => {
+describe('Test mixed scheduling scenarios', () => {
   const EXPECTED_ORDER_OF_EXECUTION: [string, number, string, number, string][] = [
     ['setTimeout', 1, 'setImmediate', 2, 'ui'],
     ['setTimeout', 1, 'setImmediate', 2, 'worklet'],

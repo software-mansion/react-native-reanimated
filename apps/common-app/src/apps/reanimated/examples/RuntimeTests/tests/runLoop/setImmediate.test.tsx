@@ -168,7 +168,7 @@ describe('Test setImmediate', () => {
   });
 
   test.each(['ui', 'worklet'])(
-    'tasks order of execution, asynchronus scheduling, runtime: **%s**',
+    'tasks order of execution, asynchronous scheduling, runtime: **%s**',
     async runtimeType => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
