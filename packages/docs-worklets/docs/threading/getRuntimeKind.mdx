@@ -106,4 +106,4 @@ Be aware that accessing the global variable `__RUNTIME_KIND` before importing an
 
 ## Remarks
 
-- If you're using the global variable `__RUNTIME_KIND` make sure to reference it by accessing the global object, i.e. `globalThis.__RUNTIME_KIND` to make sure you don't accidentally reference a local variable with the same name.
+- If you're using the global variable `__RUNTIME_KIND` make sure to reference it by accessing the global object, i.e. `globalThis.__RUNTIME_KIND` to avoid the pitfall where you accidentally reference a local variable with the same name.
