@@ -65,7 +65,7 @@ export function ReanimatedCompatibility() {
     return {
       version,
       isSpacer: index === 1,
-      compatibility: createCompatibility(data['react-native-versions']),
+      compatibility: createCompatibility(data['react-native']),
     };
   });
 
