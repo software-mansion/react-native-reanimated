@@ -84,6 +84,45 @@ In Reanimated 4, we renamed `useScrollViewOffset` to `useScrollOffset`. For the 
 
 `useAnimatedGestureHandler` was marked as deprecated in Reanimated 3 and has been removed in Reanimated 4. You need to refactor all its usages to the new `Gesture` API introduced in Gesture Handler 2 according to the steps described in [React Native Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2).
 
+### Removed `adapters` parameter from `useAnimatedProps`
+
+In Reanimated 4, the `adapters` parameter has been removed from `useAnimatedProps`. All properties that previously required adapters now should work directly.
+
+```jsx
+// Before - using custom adapter for fill and stroke properties
+import {
+  createAnimatedPropAdapter,
+  processColor,
+} from 'react-native-reanimated';
+
+const adapter = createAnimatedPropAdapter(
+  (props) => {
+    if (Object.keys(props).includes('fill')) {
+      props.fill = { type: 0, payload: processColor(props.fill) };
+    }
+    if (Object.keys(props).includes('stroke')) {
+      props.stroke = { type: 0, payload: processColor(props.stroke) };
+    }
+  },
+  ['fill', 'stroke']
+);
+
+const animatedProps = useAnimatedProps(
+  () => ({
+    fill: 'yellow',
+    stroke: 'rgb(255,0,0)',
+  }),
+  [],
+  adapter
+);
+
+// After - properties work directly without adapter
+const animatedProps = useAnimatedProps(() => ({
+  fill: 'yellow',
+  stroke: 'rgb(255,0,0)',
+}));
+```
+
 ## Integration with other libraries
 
 All integrations with other third-party libraries such as [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/docs/) or [React Native Skia](https://shopify.github.io/react-native-skia/) work the same as on 3.x. However, Reanimated 4 no longer provides support for [React Native V8](https://github.com/Kudo/react-native-v8/issues).
