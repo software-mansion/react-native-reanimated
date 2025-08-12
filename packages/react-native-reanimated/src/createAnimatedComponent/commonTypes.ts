@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, MutableRefObject, Ref } from 'react';
+import type { Component, Ref, RefObject } from 'react';
 
 import type {
   AnimatedStyle,
@@ -80,7 +80,7 @@ export type AnimatedComponentProps<
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  jestAnimatedValues?: MutableRefObject<AnimatedProps>;
+  jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder

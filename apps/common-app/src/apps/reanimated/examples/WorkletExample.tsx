@@ -6,8 +6,6 @@ import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
-  runOnUI,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -16,6 +14,7 @@ import Animated, {
   useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {

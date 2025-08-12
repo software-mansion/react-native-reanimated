@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
-  runOnUI,
   scrollTo,
   useAnimatedRef,
   useAnimatedStyle,
@@ -20,6 +19,7 @@ import { colors, radius, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
 
 import Text from '../core/Text';
+import { runOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxxs;
 

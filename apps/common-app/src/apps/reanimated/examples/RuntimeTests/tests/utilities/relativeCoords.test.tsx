@@ -2,9 +2,10 @@ import React from 'react';
 import type { FlexStyle, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
-import Animated, { getRelativeCoords, measure, runOnUI, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import { runOnUI } from 'react-native-worklets';
 
 const REGISTERED_VALUE_KEY = 'sv';
 
