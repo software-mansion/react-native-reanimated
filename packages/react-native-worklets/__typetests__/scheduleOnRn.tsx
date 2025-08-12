@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { scheduleOnRN } from '../src';
+import { scheduleOnRN } from '..';
 
 function scheduleOnRNTypeTests() {
   scheduleOnRN((num: number) => {
