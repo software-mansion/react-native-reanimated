@@ -33,6 +33,21 @@ void EventLoop::run() {
 #endif
         while (state->running) {
           std::unique_lock<std::mutex> lock(state->mutex);
+
+          if (state->queue.empty()) {
+            state->cv.wait(lock);
+          } else {
+            const auto &nextTimeout = state->queue[0];
+            const auto timeToWait =
+                nextTimeout.targetTime - getCurrentTimeInMs();
+            state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
+          }
+
+          // During waiting, the Event Loop could be destroyed.
+          if (!state->running) {
+            return;
+          }
+
           const auto currentTime = getCurrentTimeInMs();
           std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
           auto &timeouts = state->queue;
@@ -55,17 +70,6 @@ void EventLoop::run() {
               strongThis->pushTask(std::move(job));
             }
           }
-
-          lock.lock();
-          if (state->queue.empty()) {
-            state->cv.wait(lock);
-          } else {
-            const auto &nextTimeout = state->queue[0];
-            const auto timeToWait =
-                nextTimeout.targetTime - getCurrentTimeInMs();
-            state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
-          }
-          lock.unlock();
         }
       });
 #ifdef ANDROID

@@ -72,7 +72,8 @@ WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const std::shared_ptr<AsyncQueue> &queue)
+    const std::shared_ptr<AsyncQueue> &queue,
+    bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
@@ -80,6 +81,10 @@ WorkletRuntime::WorkletRuntime(
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+  if (enableEventLoop) {
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_->run();
+  }
 }
 
 void WorkletRuntime::init(
@@ -94,10 +99,6 @@ void WorkletRuntime::init(
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
-
-  queue_ = std::make_shared<AsyncQueueImpl>(name_);
-  eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
-  eventLoop_->run();
 
   WorkletRuntimeDecorator::decorate(
       rt,

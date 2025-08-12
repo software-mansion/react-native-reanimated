@@ -57,7 +57,7 @@ export function createWorkletRuntime(
   let useDefaultQueue = true;
   let customQueue: object | undefined;
   let animationQueuePollingRate: number | undefined;
-  let enableEventLoop: true;
+  let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -90,7 +90,8 @@ export function createWorkletRuntime(
       initializerFn?.();
     }),
     useDefaultQueue,
-    customQueue
+    customQueue,
+    enableEventLoop
   );
 }
 
