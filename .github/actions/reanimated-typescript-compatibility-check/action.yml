@@ -1,8 +1,8 @@
-name: 'Run Reanimated TypeScript Compatibility Check'
-description: 'Runs TypeScript compatibility tests for React Native Reanimated with different React Native versions'
+name: Run Reanimated TypeScript Compatibility Check
+description: Runs TypeScript compatibility tests for React Native Reanimated with different React Native versions
 inputs:
   react-native-version:
-    description: 'React Native version to test compatibility with'
+    description: React Native version to test compatibility with
     required: true
 runs:
   using: 'composite'
