@@ -4,7 +4,6 @@ import {
   describe,
   expect,
   notify,
-  orderGuard,
   render,
   test,
   createOrderConstraint,
@@ -257,7 +256,7 @@ describe('Test setTimeout', () => {
               }, 20);
               order(1, notification1);
             }, 20);
-            setFlag(order(1), notification1);
+            order(1, notification1);
           }, 20);
 
             setTimeout(() => {
