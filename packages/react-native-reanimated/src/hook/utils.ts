@@ -6,7 +6,7 @@ import { ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
-export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+function buildWorkletsHash<Args extends unknown[], ReturnValue>(
   worklets:
     | Record<string, WorkletFunction<Args, ReturnValue>>
     | WorkletFunction<Args, ReturnValue>[]

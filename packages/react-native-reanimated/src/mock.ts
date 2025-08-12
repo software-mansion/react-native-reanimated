@@ -210,10 +210,6 @@ const Colors = {
   // convertToRGBA: ADD ME IF NEEDED
 };
 
-const PropAdapters = {
-  // createAnimatedPropAdapter: ADD ME IF NEEDED
-};
-
 class BaseAnimationMock {
   duration() {
     return this;
@@ -476,7 +472,6 @@ const Reanimated = {
   ...Easing,
   ...platformFunctions,
   ...Colors,
-  ...PropAdapters,
   ...layoutReanimation,
   ...isSharedValue,
   ...commonTypes,

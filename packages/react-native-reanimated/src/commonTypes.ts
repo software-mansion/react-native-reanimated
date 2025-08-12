@@ -6,7 +6,7 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
-import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef } from 'react-native-worklets';
 
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
@@ -226,15 +226,6 @@ export type MapperRegistry = {
   ) => void;
   stop: (mapperID: number) => void;
 };
-
-export type AnimatedPropsAdapterFunction = (
-  props: Record<string, unknown>
-) => void;
-
-export type AnimatedPropsAdapterWorklet = WorkletFunction<
-  [props: Record<string, unknown>],
-  void
->;
 
 export interface NestedObject<T> {
   [key: string]: NestedObjectValues<T>;

@@ -9,11 +9,7 @@ import type {
 } from 'react-native';
 import type { WorkletFunction } from 'react-native-worklets';
 
-import type {
-  AnimatedPropsAdapterFunction,
-  AnimatedStyle,
-  ShadowNodeWrapper,
-} from '../commonTypes';
+import type { AnimatedStyle, ShadowNodeWrapper } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -108,9 +104,5 @@ export interface JestAnimatedStyleHandle<
 export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
   updater: WorkletFunction<[], Style> | (() => Style),
   dependencies?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null,
   isAnimatedProps?: boolean
 ) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;
