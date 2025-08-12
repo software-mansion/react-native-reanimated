@@ -37,8 +37,8 @@ export const useScrollOffset = IS_WEB
   ? useScrollOffsetWeb
   : useScrollOffsetNative;
 
-function useScrollOffsetWeb<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref> | null,
+function useScrollOffsetWeb<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -60,7 +60,7 @@ function useScrollOffsetWeb<Ref extends WrapperRef>(
     }
 
     return animatedRef.observe((tag) => {
-      if (!animatedRef.current || !tag) {
+      if (!tag) {
         logger.warn(NOT_INITIALIZED_WARNING);
         return;
       }
@@ -77,8 +77,8 @@ function useScrollOffsetWeb<Ref extends WrapperRef>(
   return offset;
 }
 
-function useScrollOffsetNative<Ref extends WrapperRef>(
-  animatedRef: AnimatedRef<Ref> | null,
+function useScrollOffsetNative<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
