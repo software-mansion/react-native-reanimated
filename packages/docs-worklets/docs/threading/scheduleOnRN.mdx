@@ -1,0 +1,35 @@
+---
+sidebar_position: 9
+---
+
+# scheduleOnRN
+
+`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) from any Runtime ([Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime) - [UI Runtime](/docs/fundamentals/glossary#ui-runtime)).
+
+`scheduleOnRN` is commonly used to update React state from UI Runtime, e.g. when animation finishes or conditionally within a gesture.
+
+## Reference
+
+```javascript
+import { scheduleOnRN } from 'react-native-worklets';
+
+function App() {
+  // While on the UI thread
+  scheduleOnRN(navigation.goBack);
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function scheduleOnRN<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction<Args, ReturnValue>
+    | WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): void
+```
+
+</details>
