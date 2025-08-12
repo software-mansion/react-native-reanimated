@@ -43,7 +43,7 @@ void EventLoop::run() {
             state->cv.wait_for(lock, std::chrono::milliseconds(timeToWait));
           }
 
-          // During waiting, the Event Loop could be destroyed.
+          // Early return if the Event Loop got destroyed already.
           if (!state->running) {
             return;
           }

@@ -7,7 +7,7 @@ import { setupRequestAnimationFrame } from './requestAnimationFramePolyfill';
 import { setupSetTimeout } from './setTimeout';
 import { setupTaskQueue } from './taskQueue';
 
-export function setupRunLoop(animationQueuePollingRate?: number) {
+export function setupRunLoop(animationQueuePollingRate: number) {
   'worklet';
   setupTaskQueue();
   setupQueueMicrotask();
