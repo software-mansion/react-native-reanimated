@@ -18,8 +18,8 @@ export {
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export { isSynchronizable } from './isSynchronizable';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { serializableMappingCache } from './shareableMappingCache';
-export { createSerializable, isSerializableRef } from './shareables';
+export { createSerializable, isSerializableRef } from './serializable';
+export { serializableMappingCache } from './serializableMappingCache';
 export type { Synchronizable } from './synchronizable';
 export { createSynchronizable } from './synchronizable';
 export {

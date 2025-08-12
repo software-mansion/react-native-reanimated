@@ -6,7 +6,7 @@ import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   serializableMappingCache,
   serializableMappingFlag,
-} from './shareableMappingCache';
+} from './serializableMappingCache';
 import type { Synchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
@@ -20,8 +20,8 @@ import type {
 } from './workletTypes';
 
 // for web and jest environments this file provides a stub implementation
-// where no shareable references are used. Instead, the objects themselves are used
-// instead of shareable references, because of the fact that we don't have to deal with
+// where no serializable references are used. Instead, the objects themselves are used
+// instead of serializable references, because of the fact that we don't have to deal with
 // running the code on separate VMs.
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
@@ -60,7 +60,7 @@ function getFromCache(value: object) {
 }
 
 // The below object is used as a replacement for objects that cannot be transferred
-// as shareable values. In createSerializable we detect if an object is of
+// as serializable values. In createSerializable we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
 // us avoid all sorts of react internals from leaking into the UI runtime. To make it
 // possible to catch errors when someone actually tries to access such object on the UI
@@ -78,7 +78,7 @@ const INACCESSIBLE_OBJECT = {
             prop === '__remoteFunction'
           ) {
             // not very happy about this check here, but we need to allow for
-            // "inaccessible" objects to be tested with isSharedValue check
+            // "inaccessible" objects to be tested with isSerializableRef check
             // as it is being used in the mappers when extracting inputs recursively
             // as well as with isRemoteFunction when cloning objects recursively.
             // Apparently we can't check if a key exists there as HostObjects always
@@ -257,7 +257,7 @@ export const createSerializable: CreateSerializable = SHOULD_BE_USE_WEB
 function detectCyclicObject(value: unknown, depth: number) {
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
     // if we reach certain recursion depth we suspect that we are dealing with a cyclic object.
-    // this type of objects are not supported and cannot be transferred as shareable, so we
+    // this type of objects are not supported and cannot be transferred as serializable, so we
     // implement a simple detection mechanism that remembers the value at a given depth and
     // tests whether we try reenter this method later on with the same value. If that happens
     // we throw an appropriate error.
@@ -265,7 +265,7 @@ function detectCyclicObject(value: unknown, depth: number) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
       throw new WorkletsError(
-        'Trying to convert a cyclic object to a shareable. This is not supported.'
+        'Trying to convert a cyclic object to a serializable. This is not supported.'
       );
     }
   } else {
@@ -370,7 +370,7 @@ function cloneRemoteFunction<TArgs extends unknown[], TReturn>(
 }
 
 function cloneHostObject<T extends object>(value: T): SerializableRef<T> {
-  // for host objects we pass the reference to the object as shareable and
+  // for host objects we pass the reference to the object as serializable and
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
   const clone = WorkletsModule.createSerializableHostObject(value);
@@ -412,7 +412,7 @@ function cloneWorklet<T extends WorkletFunction>(
     depth
   );
   // to save on transferring static __initData field of worklet structure
-  // we request shareable value to persist its UI counterpart. This means
+  // we request serializable value to persist its UI counterpart. This means
   // that the __initData field that contains long strings representing the
   // worklet code, source map, and location, will always be
   // serialized/deserialized once.
@@ -613,7 +613,7 @@ function cloneImport<TValue extends WorkletImport>(
 
 function inaccessibleObject<T extends object>(value: T): SerializableRef<T> {
   // This is reached for object types that are not of plain Object.prototype.
-  // We don't support such objects from being transferred as shareables to
+  // We don't support such objects from being transferred as serializables to
   // the UI runtime and hence we replace them with "inaccessible object"
   // which is implemented as a Proxy object that throws on any attempt
   // of accessing its fields. We argue that such objects can sometimes leak
@@ -656,7 +656,7 @@ function isRemoteFunction<T>(value: {
  * - Remote functions,
  * - Plain JS objects,
  *
- * That are transformed to a shareable with a meaningful warning. This should
+ * That are transformed to a serializable with a meaningful warning. This should
  * help detect issues when someone modifies data after it's been converted.
  * Meaning that they may be doing a faulty assumption in their code expecting
  * that the updates are going to automatically propagate to the object sent to
@@ -679,7 +679,7 @@ function freezeObjectInDev<T extends object>(value: T) {
       set() {
         logger.warn(
           `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See
-        https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable
+        https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-serializable
         for more details.`
         );
       },

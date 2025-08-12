@@ -25,7 +25,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
-import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
+import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -111,7 +111,7 @@ import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
-import FreezingShareablesExample from './ShareableFreezingExample';
+import SerializableFreezingExample from './SerializableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringComparisonExample from './SpringComparisonExample';
 import SpringPresetsExample from './SpringPresetsExample';
@@ -197,10 +197,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Memo',
     screen: MemoExample,
   },
-  FreezingShareablesExample: {
+  SerializableFreezingExample: {
     icon: '🥶',
-    title: 'Freezing shareables',
-    screen: FreezingShareablesExample,
+    title: 'Serializable freezing',
+    screen: SerializableFreezingExample,
   },
   InvalidReadWriteExample: {
     icon: '🔒',
@@ -212,10 +212,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Bottom sheet',
     screen: BottomSheetExample,
   },
-  CopyShareablesPerformanceTest: {
+  CopySerializablePerformanceTest: {
     icon: '🔄',
-    title: 'Copy shareables performance test',
-    screen: CopyShareablesPerformanceTest,
+    title: 'Copy serializable performance test',
+    screen: CopySerializablePerformanceTest,
   },
 
   // About

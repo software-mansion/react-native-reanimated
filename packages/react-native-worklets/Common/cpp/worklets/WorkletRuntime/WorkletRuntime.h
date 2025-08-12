@@ -6,7 +6,7 @@
 #include <react/debug/react_native_assert.h>
 
 #include <worklets/Public/AsyncQueue.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/AsyncQueueImpl.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
@@ -94,6 +94,6 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    const jsi::Value &serializableWorkletValue);
 
 } // namespace worklets
