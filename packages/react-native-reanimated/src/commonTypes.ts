@@ -2,6 +2,7 @@
 import type { ComponentRef } from 'react';
 import type {
   ImageStyle,
+  NativeMethods,
   ScrollResponderMixin,
   ScrollViewComponent,
   TextStyle,
@@ -448,7 +449,11 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
 >;
 
 type NativeScrollRef = Maybe<
-  (ComponentRef<typeof View> | ComponentRef<typeof ScrollViewComponent>) & {
+  (
+    | ComponentRef<typeof View>
+    | ComponentRef<typeof ScrollViewComponent>
+    | NativeMethods
+  ) & {
     __internalInstanceHandle?: AnyRecord;
   }
 >;
