@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, View, StyleSheet, Text } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 import { useAnimatedStyle } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';

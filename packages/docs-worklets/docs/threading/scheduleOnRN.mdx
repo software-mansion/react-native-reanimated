@@ -73,3 +73,13 @@ withTiming(0, {}, () => {
 
 - It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
 
+## Implementation Details
+
+- Scheduling function from the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) (we are already on RN Runtime) simply
+  uses `queueMicrotask`.
+- When functions need to be scheduled from the [UI Runtime](/docs/fundamentals/glossary#ui-runtime), first function and
+  args are serialized and then the system passes the scheduling responsibility
+  to the `JSScheduler`. The `JSScheduler` then uses the RN `CallInvoker` to schedule
+  the function asynchronously on the JavaScript thread by calling
+  `jsCallInvoker_->invokeAsync()`.
+- When called from a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-worklet-runtime---worker-runtime), it uses the same JSScheduler mechanism.
