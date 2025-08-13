@@ -80,7 +80,3 @@ withTiming(0, {}, () => {
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
 
 - It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
-
-## Platform compatibility
-
-<PlatformCompatibility android ios web />
