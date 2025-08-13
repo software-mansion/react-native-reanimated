@@ -243,10 +243,24 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 }
 
 /**
- * Lets you schedule a function to be executed on the RN runtime.
+ * Lets you schedule a function to be executed on the RN runtime from any
+ * runtime. Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
  *
- * @param fun - A reference to a function you want to schedule on the RN
- *   runtime.
+ * Scheduling function from the RN Runtime (we are already on RN Runtime) simply
+ * uses `queueMicrotask`.
+ *
+ * When functions need to be scheduled from the UI Runtime, first function and
+ * args are serialized and then the system passes the scheduling responsibility
+ * to the JSScheduler. The JSScheduler then uses the RN CallInvoker to schedule
+ * the function asynchronously on the JavaScript thread by calling
+ * `jsCallInvoker_->invokeAsync()`.
+ *
+ * When called from a Worklet Runtime, it uses the same JSScheduler mechanism.
+ *
+ * @param fun - A function you want to schedule on the RN runtime. A function
+ *   can be a worklet, a remote function or a regular function.
  * @param args - Arguments to pass to the function.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRN
  */
