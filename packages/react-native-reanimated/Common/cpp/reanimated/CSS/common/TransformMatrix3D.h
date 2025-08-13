@@ -28,36 +28,36 @@ struct DecomposedTransformMatrix {
       const DecomposedTransformMatrix &other) const;
 };
 
-class TransformMatrix {
+class TransformMatrix3D {
  public:
-  explicit TransformMatrix(const Vec16Array &matrix);
-  explicit TransformMatrix(const Matrix4x4 &matrix);
-  explicit TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
-  explicit TransformMatrix(const folly::dynamic &value);
+  explicit TransformMatrix3D(const Vec16Array &matrix);
+  explicit TransformMatrix3D(const Matrix4x4 &matrix);
+  explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix3D(const folly::dynamic &value);
 
-  static TransformMatrix Identity();
-  static TransformMatrix Perspective(double value);
-  static TransformMatrix RotateX(double value);
-  static TransformMatrix RotateY(double value);
-  static TransformMatrix RotateZ(double value);
-  static TransformMatrix Scale(double value);
-  static TransformMatrix ScaleX(double value);
-  static TransformMatrix ScaleY(double value);
-  static TransformMatrix TranslateX(double value);
-  static TransformMatrix TranslateY(double value);
-  static TransformMatrix SkewX(double value);
-  static TransformMatrix SkewY(double value);
+  static TransformMatrix3D Identity();
+  static TransformMatrix3D Perspective(double value);
+  static TransformMatrix3D RotateX(double value);
+  static TransformMatrix3D RotateY(double value);
+  static TransformMatrix3D RotateZ(double value);
+  static TransformMatrix3D Scale(double value);
+  static TransformMatrix3D ScaleX(double value);
+  static TransformMatrix3D ScaleY(double value);
+  static TransformMatrix3D TranslateX(double value);
+  static TransformMatrix3D TranslateY(double value);
+  static TransformMatrix3D SkewX(double value);
+  static TransformMatrix3D SkewY(double value);
 
   std::array<double, 4> &operator[](size_t rowIdx);
   const std::array<double, 4> &operator[](size_t rowIdx) const;
-  bool operator==(const TransformMatrix &other) const;
-  TransformMatrix operator*(const TransformMatrix &rhs) const;
-  TransformMatrix operator*=(const TransformMatrix &rhs);
+  bool operator==(const TransformMatrix3D &other) const;
+  TransformMatrix3D operator*(const TransformMatrix3D &rhs) const;
+  TransformMatrix3D operator*=(const TransformMatrix3D &rhs);
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
-      const TransformMatrix &matrix);
+      const TransformMatrix3D &matrix);
 #endif // NDEBUG
 
   std::string toString() const;
@@ -73,8 +73,9 @@ class TransformMatrix {
   void scale3d(const Vector3D &scale);
 
   std::optional<DecomposedTransformMatrix> decompose() const;
-  static TransformMatrix recompose(const DecomposedTransformMatrix &decomposed);
-  static TransformMatrix fromQuaternion(const Quaternion &q);
+  static TransformMatrix3D recompose(
+      const DecomposedTransformMatrix &decomposed);
+  static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:
   Matrix4x4 matrix_;
@@ -98,6 +99,6 @@ class TransformMatrix {
       double i);
 };
 
-Vector4D operator*(const Vector4D &v, const TransformMatrix &m);
+Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m);
 
 } // namespace reanimated::css
