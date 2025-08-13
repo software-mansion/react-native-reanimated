@@ -1,6 +1,5 @@
 'use strict';
-
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
@@ -305,7 +304,7 @@ function jestStyleUpdater(
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[]
 ): void {
   'worklet';

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
-
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { runOnJS, runOnUI } from 'react-native-worklets';
 
 import {
@@ -65,7 +64,7 @@ if (SHOULD_BE_USE_WEB) {
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {

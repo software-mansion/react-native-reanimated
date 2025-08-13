@@ -1,5 +1,5 @@
 'use strict';
-import type { Component } from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
   IS_JEST,
@@ -7,15 +7,15 @@ import {
   processColorsInProps,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import type { ShadowNodeWrapper, StyleProps, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type SetNativeProps = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
 /**
@@ -39,7 +39,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
