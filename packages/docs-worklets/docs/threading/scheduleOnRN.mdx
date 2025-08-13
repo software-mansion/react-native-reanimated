@@ -6,6 +6,8 @@ sidebar_position: 9
 
 `scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) from any [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime).
 
+To learn more about the different runtime kinds, check [Runtime Kinds](/docs/fundamentals/runtimeKinds).
+
 `scheduleOnRN` is commonly used to update React state from [UI Runtime](/docs/fundamentals/glossary#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
 
 ## Reference
@@ -71,6 +73,3 @@ withTiming(0, {}, () => {
 
 - It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
 
-## Platform compatibility
-
-<PlatformCompatibility android ios web />
