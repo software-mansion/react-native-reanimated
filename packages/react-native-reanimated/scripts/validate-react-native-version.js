@@ -34,6 +34,7 @@ for (const key in compatibilityFile) {
   }
 }
 
+// If user uses a version of Reanimated that is not listed in the compatibility file, we skip the check
 if (supportedRNVersions.length === 0) {
   process.exit(0);
 }
