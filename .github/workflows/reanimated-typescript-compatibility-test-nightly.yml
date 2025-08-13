@@ -3,7 +3,8 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    types: [opened, synchronize, labeled, unlabeled]
+    paths:
+      - .github/workflows/reanimated-typescript-compatibility-test-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
