@@ -8,7 +8,7 @@ namespace worklets {
 
 EventLoop::EventLoop(
     const std::string &name,
-    const std::weak_ptr<jsi::Runtime> runtime,
+    const std::shared_ptr<jsi::Runtime> runtime,
     const std::shared_ptr<AsyncQueue> &queue)
     : runtime_(runtime),
       queue_(queue),
@@ -79,12 +79,9 @@ void EventLoop::run() {
 }
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
-  queue_->push([weakThis = weak_from_this(), job = std::move(job)] {
-    const auto self = weakThis.lock();
-    if (!self) {
-      return;
-    }
-    if (auto runtime = self->runtime_.lock()) {
+  queue_->push([weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_},
+                job = std::move(job)] {
+    if (auto runtime = weakRuntime.lock()) {
       job(*runtime);
     }
   });

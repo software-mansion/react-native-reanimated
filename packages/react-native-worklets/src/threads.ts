@@ -1,5 +1,6 @@
 'use strict';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -199,7 +200,10 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (SHOULD_BE_USE_WEB || !globalThis._WORKLET) {
+  if (
+    SHOULD_BE_USE_WEB ||
+    globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
+  ) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
       queueMicrotask(

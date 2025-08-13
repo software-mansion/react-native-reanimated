@@ -1,4 +1,9 @@
+---
+sidebar_position: 2
+---
+
 # Glossary of terms
+
 ## Worklet
 
 Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
@@ -43,7 +48,7 @@ Functions marked with `"worklet";` directive are automatically picked up and wor
 
 ## Worklet Runtime
 
-A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets. 
+A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets.
 
 It isn't coupled to any thread, but there might be a thread dedicated to its execution.
 
@@ -79,8 +84,10 @@ The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-wo
 
 You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).
 
-## Shareable
+## Serializable
 
-<DeprecatedBanner />
+A Serializable is an object that represents a JavaScript value that can be copied between [Worklet Runtimes](/docs/fundamentals/glossary/#worklet-runtime). JavaScript values cannot be passed to other runtimes without prior serialization.
 
-A `Shareable` is an object which can be assigned to a specific [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime), where it's shared across worklets in the same runtime.
+## SerializableRef
+
+A `SerializableRef` is a reference to a `Serializable` object.
