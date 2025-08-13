@@ -120,9 +120,7 @@ std::shared_ptr<PropertyInterpolatorFactory> array(
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<
-        std::string,
-        std::shared_ptr<TransformInterpolator>> &interpolators) {
+    const TransformInterpolatorsRecord &interpolators) {
   TransformInterpolators result;
   for (const auto &[property, interpolator] : interpolators) {
     result[getTransformOperationType(property)] = interpolator;

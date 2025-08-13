@@ -29,6 +29,16 @@ export const svgPropertiesRoutes = {
         name: 'Stroke',
         Component: svgAnimatedProperties.common.Stroke,
       },
+      Transforms: {
+        name: 'Transforms',
+        flatten: true,
+        routes: {
+          Translate: {
+            name: 'Translate',
+            Component: svgAnimatedProperties.common.transforms.Translate,
+          },
+        },
+      },
     },
   },
 } satisfies Routes;
