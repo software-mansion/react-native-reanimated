@@ -402,14 +402,14 @@ void TransformMatrix3D::transpose() {
 
 void TransformMatrix3D::translate3d(const Vector3D &translation) {
   for (size_t i = 0; i < 4; ++i) {
-    matrix_[12 + i] += translation[0] * matrix_[0 + i] +
+    matrix_[12 + i] += translation[0] * matrix_[i] +
         translation[1] * matrix_[4 + i] + translation[2] * matrix_[8 + i];
   }
 }
 
 void TransformMatrix3D::scale3d(const Vector3D &scale) {
   for (size_t i = 0; i < 4; ++i) {
-    matrix_[0 + i] *= scale[0];
+    matrix_[i] *= scale[0];
     matrix_[4 + i] *= scale[1];
     matrix_[8 + i] *= scale[2];
   }
@@ -439,7 +439,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
   auto [scale, skew] = computeScaleAndSkew(rows);
 
   // At this point, the matrix (in rows) is orthonormal.
-  // Check for a coordinate system flip.  If the determinant
+  // Check for a coordinate system flip. If the determinant
   // is -1, then negate the matrix and the scaling factors.
   if (rows[0].dot(rows[1].cross(rows[2])) < 0) {
     for (size_t i = 0; i < 3; ++i) {
