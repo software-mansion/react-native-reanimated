@@ -7,8 +7,8 @@ import type { Ref } from 'react';
 import React, { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ListRenderItem as FlatListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
-import { runOnUI } from 'react-native-worklets';
 import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
 
 const DATA = [...Array(100).keys()];
 
