@@ -26,6 +26,7 @@ export {
   runOnJS,
   runOnUI,
   runOnUIAsync,
+  scheduleOnRN,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
