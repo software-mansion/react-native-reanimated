@@ -121,8 +121,21 @@ export interface AnimatedComponentRef extends Component {
   elementRef?: React.RefObject<HTMLElement>;
 }
 
-export interface IAnimatedComponentInternal {
+export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
+  _componentRef: AnimatedComponentRef | HTMLElement | null;
+  _hasAnimatedRef: boolean;
+  _viewInfo?: ViewInfo;
+
+  /**
+   * Used for Layout Animations and Animated Styles. It is not related to event
+   * handling.
+   */
+  getComponentViewTag: () => number;
+}
+
+export interface IAnimatedComponentInternal
+  extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
@@ -131,19 +144,11 @@ export interface IAnimatedComponentInternal {
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   jestAnimatedProps: { value: AnimatedProps };
-  _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _hasAnimatedRef: boolean;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
-  _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
-  /**
-   * Used for Layout Animations and Animated Styles. It is not related to event
-   * handling.
-   */
-  getComponentViewTag: () => number;
   setNativeProps: (props: StyleProps) => void;
 }
 
