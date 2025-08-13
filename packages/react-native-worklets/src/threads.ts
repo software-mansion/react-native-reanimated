@@ -257,7 +257,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * the function asynchronously on the JavaScript thread by calling
  * `jsCallInvoker_->invokeAsync()`.
  *
- * When called from a Worklet Runtime, it uses the same JSScheduler mechanism.
+ * When called from a Worker Runtime, it uses the same JSScheduler mechanism.
  *
  * @param fun - A function you want to schedule on the RN runtime. A function
  *   can be a worklet, a remote function or a regular function.
