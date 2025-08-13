@@ -1,13 +1,11 @@
 'use strict';
 
 const semverSatisfies = require('semver/functions/satisfies');
-const semverGte = require('semver/functions/gte');
-const semverLte = require('semver/functions/lte');
 const path = require('path');
 
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const packageJson = require(packageJsonPath);
-const jsVersion = packageJson.version;
+const reanimatedVersion = packageJson.version;
 const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
@@ -18,17 +16,11 @@ for (const key in compatibilityFile) {
   if (key.includes('–')) {
     let min = key.split(' –')[0];
     let max = key.split(' –')[1];
-    if (min.includes('x')) {
-        min = min.replace('x', '0');
-    }
-    if (max.includes('x')) {
-        max = max.replace('x', '1000');
-    }
-    if (semverGte(jsVersion, min) && semverLte(jsVersion, max)) {
+    if (semverSatisfies(reanimatedVersion, `>=${min} <=${max}`)) {
       // @ts-ignore
       supportedRNVersions.push(...compatibilityFile[key]['react-native']);
     }
-  } else if (semverSatisfies(jsVersion, key)) {
+  } else if (semverSatisfies(reanimatedVersion, key)) {
     // @ts-ignore
     supportedRNVersions.push(...compatibilityFile[key]['react-native']);
   }
@@ -46,5 +38,5 @@ for (const version of supportedRNVersions) {
 }
 
 // eslint-disable-next-line reanimated/use-logger
-console.error(`[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${jsVersion}`);
+console.error(`[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`);
 process.exit(1);
