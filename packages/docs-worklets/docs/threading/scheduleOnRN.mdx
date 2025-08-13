@@ -55,7 +55,7 @@ import ScheduleOnRNsrc from '!!raw-loader!@site/src/examples/ScheduleOnRN';
 
 ## Remarks
 
-- Functions passed to `scheduleOnRN` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
+- Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
 
 <Indent>
 
@@ -71,7 +71,7 @@ withTiming(0, {}, () => {
 
 </Indent>
 
-- It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
+- It's safe to run functions via `scheduleOnRN` on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime), as this has no effect.
 
 ## Implementation Details
 
