@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
-import type React from 'react';
 import type {
   IWorkletsModule,
   SerializableRef,
@@ -19,6 +18,7 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -135,12 +135,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined, // required on Fabric
+    component: WrapperRef, // required on Fabric
     callback?: (result: T) => void
   ) {
-    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
-      component as React.Component
-    );
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     return this.#reanimatedModuleProxy.getViewProp(
       shadowNodeWrapper,
       propName,
