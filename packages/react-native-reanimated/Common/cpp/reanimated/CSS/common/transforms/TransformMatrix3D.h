@@ -1,8 +1,11 @@
 #pragma once
 
-#include <reanimated/CSS/common/Quaternion.h>
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/transforms/DecomposedTransform.h>
 #include <reanimated/CSS/common/vectors.h>
+
+#include <reanimated/CSS/common/transforms/Quaternion.h>
 
 #include <folly/dynamic.h>
 #include <string>
@@ -10,9 +13,12 @@
 
 namespace reanimated::css {
 
-class TransformMatrix3D {
+class TransformMatrix3D : public TransformMatrix<
+                              TransformMatrix3D,
+                              Vec16Array,
+                              TransformMatrix3D::Decomposed> {
  public:
-  struct Decomposed {
+  struct Decomposed : public DecomposedTransform<Decomposed, TransformMatrix3D> {
     Vector3D scale;
     Vector3D skew;
     Quaternion quaternion;
@@ -25,7 +31,8 @@ class TransformMatrix3D {
         const Decomposed &decomposed);
 #endif // NDEBUG
 
-    Decomposed interpolate(double progress, const Decomposed &other) const;
+    Decomposed interpolate(double progress, const Decomposed &other) const override;
+    TransformMatrix3D recompose() const override;
   };
 
   explicit TransformMatrix3D(Vec16Array matrix);
@@ -47,18 +54,20 @@ class TransformMatrix3D {
 
   double &operator[](size_t index);
   const double &operator[](size_t index) const;
-  bool operator==(const TransformMatrix3D &other) const;
-  TransformMatrix3D operator*(const TransformMatrix3D &rhs) const;
-  TransformMatrix3D operator*=(const TransformMatrix3D &rhs);
+  bool operator==(const TransformMatrix3D &other) const override;
+  TransformMatrix3D operator*(const TransformMatrix3D &rhs) const override;
+  TransformMatrix3D operator*=(const TransformMatrix3D &rhs) override;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const TransformMatrix3D &matrix);
+  std::ostream &print(std::ostream &os) const override;
 #endif // NDEBUG
 
-  std::string toString() const;
-  folly::dynamic toDynamic() const;
+  std::string toString() const override;
+  folly::dynamic toDynamic() const override;
+  std::optional<Decomposed> decompose() const override;
 
   bool isSingular() const;
   bool normalize();
@@ -69,8 +78,6 @@ class TransformMatrix3D {
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
 
-  std::optional<Decomposed> decompose() const;
-  static TransformMatrix3D recompose(const Decomposed &decomposed);
   static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:

@@ -30,8 +30,8 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
   }
 
-  return MatrixOperation(TransformMatrix3D::recompose(
-      decomposedFrom->interpolate(progress, decomposedTo.value())));
+  return MatrixOperation(
+      decomposedFrom->interpolate(progress, decomposedTo.value()).recompose());
 }
 
 TransformMatrix3D

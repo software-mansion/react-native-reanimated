@@ -2,6 +2,40 @@
 
 namespace reanimated::css {
 
+// Vector2D
+
+double &Vector2D::operator[](const size_t idx) {
+  return vec[idx];
+}
+
+const double &Vector2D::operator[](const size_t idx) const {
+  return vec[idx];
+}
+
+Vector2D &Vector2D::operator*=(const double scalar) {
+  vec[0] *= scalar;
+  vec[1] *= scalar;
+  return *this;
+}
+
+#ifndef NDEBUG
+
+std::ostream &operator<<(std::ostream &os, const Vector2D &vector) {
+  os << "Vector2D(" << vector.vec[0] << ", " << vector.vec[1] << ")";
+  return os;
+}
+
+#endif // NDEBUG
+
+Vector2D Vector2D::interpolate(const double progress, const Vector2D &other)
+    const {
+  return Vector2D{
+      vec[0] + progress * (other.vec[0] - vec[0]),
+      vec[1] + progress * (other.vec[1] - vec[1])};
+}
+
+// Vector3D
+
 double &Vector3D::operator[](const size_t idx) {
   return vec[idx];
 }
@@ -70,6 +104,8 @@ Vector3D Vector3D::interpolate(const double progress, const Vector3D &other)
       vec[1] + progress * (other.vec[1] - vec[1]),
       vec[2] + progress * (other.vec[2] - vec[2])};
 }
+
+// Vector4D
 
 double &Vector4D::operator[](const size_t idx) {
   return vec[idx];

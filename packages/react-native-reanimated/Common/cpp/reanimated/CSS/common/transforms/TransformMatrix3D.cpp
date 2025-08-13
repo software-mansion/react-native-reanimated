@@ -1,4 +1,4 @@
-#include <reanimated/CSS/common/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 
 namespace reanimated::css {
 
@@ -11,6 +11,49 @@ TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
       .quaternion = quaternion.interpolate(progress, other.quaternion),
       .translation = translation.interpolate(progress, other.translation),
       .perspective = perspective.interpolate(progress, other.perspective)};
+}
+
+TransformMatrix3D TransformMatrix3D::Decomposed::recompose() const {
+  auto result = TransformMatrix3D::Identity();
+
+  // Start from applying perspective
+  for (size_t i = 0; i < 4; ++i) {
+    result[3 + i * 4] = perspective[i];
+  }
+
+  // Apply translation
+  result.translate3d(translation);
+
+  // Apply rotation
+  result = TransformMatrix3D::fromQuaternion(quaternion) * result;
+
+  // Apply skew
+  auto hasSkewYZ = skew[2] != 0;
+  auto hasSkewXZ = skew[1] != 0;
+  auto hasSkewXY = skew[0] != 0;
+
+  if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
+    auto tmp = TransformMatrix3D::Identity();
+    if (hasSkewYZ) { // YZ
+      tmp[9] = skew[2];
+      result = tmp * result;
+    }
+    if (hasSkewXZ) { // XZ
+      tmp[9] = 0;
+      tmp[8] = skew[1];
+      result = tmp * result;
+    }
+    if (hasSkewXY) { // XY
+      tmp[8] = 0;
+      tmp[4] = skew[0];
+      result = tmp * result;
+    }
+  }
+
+  // Apply scale
+  result.scale3d(scale);
+
+  return result;
 }
 
 #ifndef NDEBUG
@@ -248,15 +291,7 @@ Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
 #ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const TransformMatrix3D &matrix) {
-  std::string result = "TransformMatrix3D{";
-  for (size_t i = 0; i < 16; ++i) {
-    result += std::to_string(matrix[i]);
-    if (i < 15) {
-      result += ", ";
-    }
-  }
-  result += "}";
-  return os << result;
+  return matrix.print(os);
 }
 
 #endif // NDEBUG
@@ -457,50 +492,6 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
       .perspective = perspective.value()};
 }
 
-TransformMatrix3D TransformMatrix3D::recompose(
-    const TransformMatrix3D::Decomposed &decomposed) {
-  auto result = TransformMatrix3D::Identity();
-
-  // Start from applying perspective
-  for (size_t i = 0; i < 4; ++i) {
-    result[3 + i * 4] = decomposed.perspective[i];
-  }
-
-  // Apply translation
-  result.translate3d(decomposed.translation);
-
-  // Apply rotation
-  result = fromQuaternion(decomposed.quaternion) * result;
-
-  // Apply skew
-  auto hasSkewYZ = decomposed.skew[2] != 0;
-  auto hasSkewXZ = decomposed.skew[1] != 0;
-  auto hasSkewXY = decomposed.skew[0] != 0;
-
-  if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
-    auto tmp = TransformMatrix3D::Identity();
-    if (hasSkewYZ) { // YZ
-      tmp[9] = decomposed.skew[2];
-      result = tmp * result;
-    }
-    if (hasSkewXZ) { // XZ
-      tmp[9] = 0;
-      tmp[8] = decomposed.skew[1];
-      result = tmp * result;
-    }
-    if (hasSkewXY) { // XY
-      tmp[8] = 0;
-      tmp[4] = decomposed.skew[0];
-      result = tmp * result;
-    }
-  }
-
-  // Apply scale
-  result.scale3d(decomposed.scale);
-
-  return result;
-}
-
 TransformMatrix3D TransformMatrix3D::fromQuaternion(const Quaternion &q) {
   const double xx = q.x * q.x;
   const double yy = q.y * q.y;
@@ -655,5 +646,18 @@ double TransformMatrix3D::determinant3x3(
   return (a * e * i) + (b * f * g) + (c * d * h) - (c * e * g) - (b * d * i) -
       (a * f * h);
 }
+
+#ifndef NDEBUG
+std::ostream &TransformMatrix3D::print(std::ostream &os) const {
+  os << "TransformMatrix3D([";
+  for (size_t i = 0; i < 16; ++i) {
+    if (i > 0)
+      os << ", ";
+    os << matrix_[i];
+  }
+  os << "])";
+  return os;
+}
+#endif // NDEBUG
 
 } // namespace reanimated::css
