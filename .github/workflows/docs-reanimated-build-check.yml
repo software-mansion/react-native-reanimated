@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/docs-reanimated-build-check.yml'
       - packages/docs-reanimated/**
+      - packages/react-native-reanimated/compatibility.json
   merge_group:
     branches:
       - main
