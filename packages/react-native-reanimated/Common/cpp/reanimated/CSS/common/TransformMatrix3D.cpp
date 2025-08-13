@@ -27,14 +27,8 @@ std::ostream &operator<<(
 
 #endif // NDEBUG
 
-TransformMatrix3D::TransformMatrix3D(const Vec16Array &matrix) {
-  for (size_t i = 0; i < 16; ++i) {
-    matrix_[i / 4][i % 4] = matrix[i];
-  }
-}
-
-TransformMatrix3D::TransformMatrix3D(const Matrix4x4 &matrix)
-    : matrix_(matrix) {}
+TransformMatrix3D::TransformMatrix3D(Vec16Array matrix)
+    : matrix_(std::move(matrix)) {}
 
 TransformMatrix3D::TransformMatrix3D(
     jsi::Runtime &rt,
@@ -46,7 +40,7 @@ TransformMatrix3D::TransformMatrix3D(
   }
 
   for (size_t i = 0; i < 16; ++i) {
-    matrix_[i / 4][i % 4] = array.getValueAtIndex(rt, i).asNumber();
+    matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
   }
 }
 
@@ -57,17 +51,19 @@ TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array) {
   }
 
   for (size_t i = 0; i < 16; ++i) {
-    matrix_[i / 4][i % 4] = array[i].getDouble();
+    matrix_[i] = array[i].asDouble();
   }
 }
 
 TransformMatrix3D TransformMatrix3D::Identity() {
-  return TransformMatrix3D({{// clang-format off
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::Perspective(const double v) {
@@ -75,143 +71,156 @@ TransformMatrix3D TransformMatrix3D::Perspective(const double v) {
     // Ignore perspective if it is invalid
     return TransformMatrix3D::Identity();
   }
-  return TransformMatrix3D({{// clang-format off
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, -1.0 / v},
-    {0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, -1.0 / v,
+    0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::RotateX(const double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
-  return TransformMatrix3D({{// clang-format off
-    {1,       0,      0, 0},
-    {0,  cosVal, sinVal, 0},
-    {0, -sinVal, cosVal, 0},
-    {0,       0,      0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1,       0,      0, 0,
+    0,  cosVal, sinVal, 0,
+    0, -sinVal, cosVal, 0,
+    0,       0,      0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::RotateY(const double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
-  return TransformMatrix3D({{// clang-format off
-    {cosVal, 0, -sinVal, 0},
-    {     0, 1,       0, 0},
-    {sinVal, 0,  cosVal, 0},
-    {     0, 0,       0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    cosVal, 0, -sinVal, 0,
+         0, 1,       0, 0,
+    sinVal, 0,  cosVal, 0,
+         0, 0,       0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::RotateZ(const double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
-  return TransformMatrix3D({{// clang-format off
-    { cosVal, sinVal, 0, 0},
-    {-sinVal, cosVal, 0, 0},
-    {      0,      0, 1, 0},
-    {      0,      0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+     cosVal, sinVal, 0, 0,
+    -sinVal, cosVal, 0, 0,
+          0,      0, 1, 0,
+          0,      0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::Scale(const double v) {
-  return TransformMatrix3D({{// clang-format off
-    {v, 0, 0, 0},
-    {0, v, 0, 0},
-    {0, 0, v, 0},
-    {0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    v, 0, 0, 0,
+    0, v, 0, 0,
+    0, 0, v, 0,
+    0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::ScaleX(const double v) {
-  return TransformMatrix3D({{// clang-format off
-    {v, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    v, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::ScaleY(const double v) {
-  return TransformMatrix3D({{// clang-format off
-    {1, 0, 0, 0},
-    {0, v, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, 0, 0, 0,
+    0, v, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::TranslateX(const double v) {
-  return TransformMatrix3D({{// clang-format off
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {v, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    v, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::TranslateY(const double v) {
-  return TransformMatrix3D({{// clang-format off
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, v, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, v, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::SkewX(const double v) {
   const auto tanVal = std::tan(v);
-  return TransformMatrix3D({{// clang-format off
-    {     1, 0, 0, 0},
-    {tanVal, 1, 0, 0},
-    {     0, 0, 1, 0},
-    {     0, 0, 0, 1}
-  }}); // clang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+         1, 0, 0, 0,
+    tanVal, 1, 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1
+  });
+  // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
   const auto tanVal = std::tan(v);
-  return TransformMatrix3D({{// clang-format off
-    {1, tanVal, 0, 0},
-    {0,      1, 0, 0},
-    {0,      0, 1, 0},
-    {0,      0, 0, 1}
-  }}); // cl ang-format on
+  // clang-format off
+  return TransformMatrix3D(Vec16Array{
+    1, tanVal, 0, 0,
+    0,      1, 0, 0,
+    0,      0, 1, 0,
+    0,      0, 0, 1
+  });
+  // clang-format on
 }
 
-std::array<double, 4> &TransformMatrix3D::operator[](const size_t rowIdx) {
-  return matrix_[rowIdx];
+double &TransformMatrix3D::operator[](const size_t index) {
+  return matrix_[index];
 }
 
-const std::array<double, 4> &TransformMatrix3D::operator[](
-    const size_t rowIdx) const {
-  return matrix_[rowIdx];
+const double &TransformMatrix3D::operator[](const size_t index) const {
+  return matrix_[index];
 }
 
 bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
-  for (size_t i = 0; i < 4; ++i) {
-    for (size_t j = 0; j < 4; ++j) {
-      if (matrix_[i][j] != other.matrix_[i][j]) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return matrix_ == other.matrix_;
 }
 
 TransformMatrix3D TransformMatrix3D::operator*(
     const TransformMatrix3D &rhs) const {
   const auto &a = matrix_;
   const auto &b = rhs.matrix_;
-  Matrix4x4 result{};
 
+  Vec16Array result{};
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      result[i][j] = 0;
       for (size_t k = 0; k < 4; ++k) {
-        result[i][j] += a[i][k] * b[k][j];
+        result[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
       }
     }
   }
@@ -228,9 +237,8 @@ Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
   Vector4D result;
 
   for (size_t i = 0; i < 4; ++i) {
-    result[i] = 0;
     for (size_t j = 0; j < 4; ++j) {
-      result[i] += v[j] * m[j][i];
+      result[i] += v[j] * m[j * 4 + i];
     }
   }
 
@@ -242,7 +250,7 @@ Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
 std::ostream &operator<<(std::ostream &os, const TransformMatrix3D &matrix) {
   std::string result = "TransformMatrix3D{";
   for (size_t i = 0; i < 16; ++i) {
-    result += std::to_string(matrix[i / 4][i % 4]);
+    result += std::to_string(matrix[i]);
     if (i < 15) {
       result += ", ";
     }
@@ -256,7 +264,7 @@ std::ostream &operator<<(std::ostream &os, const TransformMatrix3D &matrix) {
 std::string TransformMatrix3D::toString() const {
   std::string result = "[";
   for (size_t i = 0; i < 16; ++i) {
-    result += std::to_string(matrix_[i / 4][i % 4]);
+    result += std::to_string(matrix_[i]);
     if (i < 15) {
       result += ", ";
     }
@@ -268,7 +276,7 @@ std::string TransformMatrix3D::toString() const {
 folly::dynamic TransformMatrix3D::toDynamic() const {
   folly::dynamic result = folly::dynamic::array;
   for (size_t i = 0; i < 16; ++i) {
-    result.push_back(matrix_[i / 4][i % 4]);
+    result.push_back(matrix_[i]);
   }
   return result;
 }
@@ -278,39 +286,46 @@ bool TransformMatrix3D::isSingular() const {
 }
 
 bool TransformMatrix3D::normalize() {
-  if (matrix_[3][3] == 0) {
+  if (matrix_[15] == 0) {
     return false;
   }
 
-  for (size_t i = 0; i < 4; ++i) {
-    for (size_t j = 0; j < 4; ++j) {
-      matrix_[i][j] /= matrix_[3][3];
-    }
+  for (size_t i = 0; i < 16; ++i) {
+    matrix_[i] /= matrix_[15];
   }
 
   return true;
 }
 
+/**
+ * Calculates the determinant of the 4x4 matrix using the minor (Laplace
+ * expansion) method.
+ *
+ * | a1 a2 a3 a4 |
+ * | b1 b2 b3 b4 |
+ * | c1 c2 c3 c4 |
+ * | d1 d2 d3 d4 |
+ */
 double TransformMatrix3D::determinant() const {
-  const double a1 = matrix_[0][0];
-  const double b1 = matrix_[0][1];
-  const double c1 = matrix_[0][2];
-  const double d1 = matrix_[0][3];
+  const double a1 = matrix_[0];
+  const double b1 = matrix_[1];
+  const double c1 = matrix_[2];
+  const double d1 = matrix_[3];
 
-  const double a2 = matrix_[1][0];
-  const double b2 = matrix_[1][1];
-  const double c2 = matrix_[1][2];
-  const double d2 = matrix_[1][3];
+  const double a2 = matrix_[4];
+  const double b2 = matrix_[5];
+  const double c2 = matrix_[6];
+  const double d2 = matrix_[7];
 
-  const double a3 = matrix_[2][0];
-  const double b3 = matrix_[2][1];
-  const double c3 = matrix_[2][2];
-  const double d3 = matrix_[2][3];
+  const double a3 = matrix_[8];
+  const double b3 = matrix_[9];
+  const double c3 = matrix_[10];
+  const double d3 = matrix_[11];
 
-  const double a4 = matrix_[3][0];
-  const double b4 = matrix_[3][1];
-  const double c4 = matrix_[3][2];
-  const double d4 = matrix_[3][3];
+  const double a4 = matrix_[12];
+  const double b4 = matrix_[13];
+  const double c4 = matrix_[14];
+  const double d4 = matrix_[15];
 
   return a1 * determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) -
       b1 * determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) +
@@ -319,45 +334,45 @@ double TransformMatrix3D::determinant() const {
 }
 
 void TransformMatrix3D::adjugate() {
-  const double a1 = matrix_[0][0];
-  const double b1 = matrix_[0][1];
-  const double c1 = matrix_[0][2];
-  const double d1 = matrix_[0][3];
+  const double a1 = matrix_[0];
+  const double b1 = matrix_[1];
+  const double c1 = matrix_[2];
+  const double d1 = matrix_[3];
 
-  const double a2 = matrix_[1][0];
-  const double b2 = matrix_[1][1];
-  const double c2 = matrix_[1][2];
-  const double d2 = matrix_[1][3];
+  const double a2 = matrix_[4];
+  const double b2 = matrix_[5];
+  const double c2 = matrix_[6];
+  const double d2 = matrix_[7];
 
-  const double a3 = matrix_[2][0];
-  const double b3 = matrix_[2][1];
-  const double c3 = matrix_[2][2];
-  const double d3 = matrix_[2][3];
+  const double a3 = matrix_[8];
+  const double b3 = matrix_[9];
+  const double c3 = matrix_[10];
+  const double d3 = matrix_[11];
 
-  const double a4 = matrix_[3][0];
-  const double b4 = matrix_[3][1];
-  const double c4 = matrix_[3][2];
-  const double d4 = matrix_[3][3];
+  const double a4 = matrix_[12];
+  const double b4 = matrix_[13];
+  const double c4 = matrix_[14];
+  const double d4 = matrix_[15];
 
-  matrix_[0][0] = determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
-  matrix_[1][0] = -determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
-  matrix_[2][0] = determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4);
-  matrix_[3][0] = -determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+  matrix_[0] = determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
+  matrix_[4] = -determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
+  matrix_[8] = determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4);
+  matrix_[12] = -determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
 
-  matrix_[0][1] = -determinant3x3(b1, b3, b4, c1, c3, c4, d1, d3, d4);
-  matrix_[1][1] = determinant3x3(a1, a3, a4, c1, c3, c4, d1, d3, d4);
-  matrix_[2][1] = -determinant3x3(a1, a3, a4, b1, b3, b4, d1, d3, d4);
-  matrix_[3][1] = determinant3x3(a1, a3, a4, b1, b3, b4, c1, c3, c4);
+  matrix_[1] = -determinant3x3(b1, b3, b4, c1, c3, c4, d1, d3, d4);
+  matrix_[5] = determinant3x3(a1, a3, a4, c1, c3, c4, d1, d3, d4);
+  matrix_[9] = -determinant3x3(a1, a3, a4, b1, b3, b4, d1, d3, d4);
+  matrix_[13] = determinant3x3(a1, a3, a4, b1, b3, b4, c1, c3, c4);
 
-  matrix_[0][2] = determinant3x3(b1, b2, b4, c1, c2, c4, d1, d2, d4);
-  matrix_[1][2] = -determinant3x3(a1, a2, a4, c1, c2, c4, d1, d2, d4);
-  matrix_[2][2] = determinant3x3(a1, a2, a4, b1, b2, b4, d1, d2, d4);
-  matrix_[3][2] = -determinant3x3(a1, a2, a4, b1, b2, b4, c1, c2, c4);
+  matrix_[2] = determinant3x3(b1, b2, b4, c1, c2, c4, d1, d2, d4);
+  matrix_[6] = -determinant3x3(a1, a2, a4, c1, c2, c4, d1, d2, d4);
+  matrix_[10] = determinant3x3(a1, a2, a4, b1, b2, b4, d1, d2, d4);
+  matrix_[14] = -determinant3x3(a1, a2, a4, b1, b2, b4, c1, c2, c4);
 
-  matrix_[0][3] = -determinant3x3(b1, b2, b3, c1, c2, c3, d1, d2, d3);
-  matrix_[1][3] = determinant3x3(a1, a2, a3, c1, c2, c3, d1, d2, d3);
-  matrix_[2][3] = -determinant3x3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
-  matrix_[3][3] = determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
+  matrix_[3] = -determinant3x3(b1, b2, b3, c1, c2, c3, d1, d2, d3);
+  matrix_[7] = determinant3x3(a1, a2, a3, c1, c2, c3, d1, d2, d3);
+  matrix_[11] = -determinant3x3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
+  matrix_[15] = determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
 }
 
 bool TransformMatrix3D::invert() {
@@ -370,10 +385,8 @@ bool TransformMatrix3D::invert() {
   }
 
   adjugate();
-  for (size_t i = 0; i < 4; ++i) {
-    for (size_t j = 0; j < 4; ++j) {
-      matrix_[i][j] /= det;
-    }
+  for (size_t i = 0; i < 16; ++i) {
+    matrix_[i] /= det;
   }
 
   return true;
@@ -382,23 +395,23 @@ bool TransformMatrix3D::invert() {
 void TransformMatrix3D::transpose() {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = i + 1; j < 4; ++j) {
-      std::swap(matrix_[i][j], matrix_[j][i]);
+      std::swap(matrix_[i * 4 + j], matrix_[j * 4 + i]);
     }
   }
 }
 
 void TransformMatrix3D::translate3d(const Vector3D &translation) {
   for (size_t i = 0; i < 4; ++i) {
-    matrix_[3][i] += translation[0] * matrix_[0][i] +
-        translation[1] * matrix_[1][i] + translation[2] * matrix_[2][i];
+    matrix_[12 + i] += translation[0] * matrix_[0 + i] +
+        translation[1] * matrix_[4 + i] + translation[2] * matrix_[8 + i];
   }
 }
 
 void TransformMatrix3D::scale3d(const Vector3D &scale) {
   for (size_t i = 0; i < 4; ++i) {
-    matrix_[0][i] *= scale[0];
-    matrix_[1][i] *= scale[1];
-    matrix_[2][i] *= scale[2];
+    matrix_[0 + i] *= scale[0];
+    matrix_[4 + i] *= scale[1];
+    matrix_[8 + i] *= scale[2];
   }
 }
 
@@ -419,7 +432,8 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
   // processing
   std::array<Vector3D, 3> rows;
   for (size_t i = 0; i < 3; ++i) {
-    rows[i] = Vector3D(matrixCp[i][0], matrixCp[i][1], matrixCp[i][2]);
+    rows[i] =
+        Vector3D(matrixCp[i * 4], matrixCp[i * 4 + 1], matrixCp[i * 4 + 2]);
   }
 
   auto [scale, skew] = computeScaleAndSkew(rows);
@@ -449,7 +463,7 @@ TransformMatrix3D TransformMatrix3D::recompose(
 
   // Start from applying perspective
   for (size_t i = 0; i < 4; ++i) {
-    result[i][3] = decomposed.perspective[i];
+    result[3 + i * 4] = decomposed.perspective[i];
   }
 
   // Apply translation
@@ -459,20 +473,26 @@ TransformMatrix3D TransformMatrix3D::recompose(
   result = fromQuaternion(decomposed.quaternion) * result;
 
   // Apply skew
-  auto tmp = TransformMatrix3D::Identity();
-  if (decomposed.skew[2] != 0) { // YZ
-    tmp[2][1] = decomposed.skew[2];
-    result = tmp * result;
-  }
-  if (decomposed.skew[1] != 0) { // XZ
-    tmp[2][1] = 0;
-    tmp[2][0] = decomposed.skew[1];
-    result = tmp * result;
-  }
-  if (decomposed.skew[0] != 0) { // XY
-    tmp[2][0] = 0;
-    tmp[1][0] = decomposed.skew[0];
-    result = tmp * result;
+  auto hasSkewYZ = decomposed.skew[2] != 0;
+  auto hasSkewXZ = decomposed.skew[1] != 0;
+  auto hasSkewXY = decomposed.skew[0] != 0;
+
+  if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
+    auto tmp = TransformMatrix3D::Identity();
+    if (hasSkewYZ) { // YZ
+      tmp[9] = decomposed.skew[2];
+      result = tmp * result;
+    }
+    if (hasSkewXZ) { // XZ
+      tmp[9] = 0;
+      tmp[8] = decomposed.skew[1];
+      result = tmp * result;
+    }
+    if (hasSkewXY) { // XY
+      tmp[8] = 0;
+      tmp[4] = decomposed.skew[0];
+      result = tmp * result;
+    }
   }
 
   // Apply scale
@@ -493,27 +513,28 @@ TransformMatrix3D TransformMatrix3D::fromQuaternion(const Quaternion &q) {
   const double zw = q.w * q.z;
 
   // clang-format off
-  return TransformMatrix3D({{
-    {1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0},
-    {    2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0},
-    {    2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0},
-    {                0,                  0,                0, 1}
-  }}); // clang-format on
+  return TransformMatrix3D(Vec16Array{
+    1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0,
+        2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0,
+        2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0,
+                    0,                    0,              0, 1
+  });
+  // clang-format on
 }
 
 std::optional<Vector4D> TransformMatrix3D::computePerspective() const {
   auto perspectiveMatrix = *this;
 
   for (size_t i = 0; i < 3; ++i) {
-    perspectiveMatrix[i][3] = 0;
+    perspectiveMatrix[3 + i * 4] = 0;
   }
-  perspectiveMatrix[3][3] = 1;
+  perspectiveMatrix[15] = 1;
 
   if (perspectiveMatrix.isSingular()) {
     return std::nullopt;
   }
 
-  if (matrix_[0][3] == 0 && matrix_[1][3] == 0 && matrix_[2][3] == 0) {
+  if (matrix_[3] == 0 && matrix_[7] == 0 && matrix_[11] == 0) {
     // No perspective
     return Vector4D{0, 0, 0, 1};
   }
@@ -526,14 +547,13 @@ std::optional<Vector4D> TransformMatrix3D::computePerspective() const {
   perspectiveMatrix.transpose();
 
   // rhs is the right hand side of the equation we are trying to solve
-  const Vector4D rhs(
-      matrix_[0][3], matrix_[1][3], matrix_[2][3], matrix_[3][3]);
+  const Vector4D rhs(matrix_[3], matrix_[7], matrix_[11], matrix_[15]);
   // Solve the equation
   return rhs * perspectiveMatrix;
 }
 
 Vector3D TransformMatrix3D::getTranslation() const {
-  return Vector3D(matrix_[3][0], matrix_[3][1], matrix_[3][2]);
+  return Vector3D(matrix_[12], matrix_[13], matrix_[14]);
 }
 
 std::pair<Vector3D, Vector3D> TransformMatrix3D::computeScaleAndSkew(

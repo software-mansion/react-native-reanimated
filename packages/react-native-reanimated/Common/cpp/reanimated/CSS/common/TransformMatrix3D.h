@@ -28,8 +28,7 @@ class TransformMatrix3D {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  explicit TransformMatrix3D(const Vec16Array &matrix);
-  explicit TransformMatrix3D(const Matrix4x4 &matrix);
+  explicit TransformMatrix3D(Vec16Array matrix);
   explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
   explicit TransformMatrix3D(const folly::dynamic &value);
 
@@ -46,8 +45,8 @@ class TransformMatrix3D {
   static TransformMatrix3D SkewX(double value);
   static TransformMatrix3D SkewY(double value);
 
-  std::array<double, 4> &operator[](size_t rowIdx);
-  const std::array<double, 4> &operator[](size_t rowIdx) const;
+  double &operator[](size_t index);
+  const double &operator[](size_t index) const;
   bool operator==(const TransformMatrix3D &other) const;
   TransformMatrix3D operator*(const TransformMatrix3D &rhs) const;
   TransformMatrix3D operator*=(const TransformMatrix3D &rhs);
@@ -75,7 +74,7 @@ class TransformMatrix3D {
   static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:
-  Matrix4x4 matrix_;
+  Vec16Array matrix_;
 
   std::optional<Vector4D> computePerspective() const;
 
