@@ -10,26 +10,24 @@
 
 namespace reanimated::css {
 
-struct DecomposedTransformMatrix {
-  Vector3D scale;
-  Vector3D skew;
-  Quaternion quaternion;
-  Vector3D translation;
-  Vector4D perspective;
-
-#ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const DecomposedTransformMatrix &decomposed);
-#endif // NDEBUG
-
-  DecomposedTransformMatrix interpolate(
-      double progress,
-      const DecomposedTransformMatrix &other) const;
-};
-
 class TransformMatrix3D {
  public:
+  struct Decomposed {
+    Vector3D scale;
+    Vector3D skew;
+    Quaternion quaternion;
+    Vector3D translation;
+    Vector4D perspective;
+
+#ifndef NDEBUG
+    friend std::ostream &operator<<(
+        std::ostream &os,
+        const Decomposed &decomposed);
+#endif // NDEBUG
+
+    Decomposed interpolate(double progress, const Decomposed &other) const;
+  };
+
   explicit TransformMatrix3D(const Vec16Array &matrix);
   explicit TransformMatrix3D(const Matrix4x4 &matrix);
   explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
@@ -72,9 +70,8 @@ class TransformMatrix3D {
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
 
-  std::optional<DecomposedTransformMatrix> decompose() const;
-  static TransformMatrix3D recompose(
-      const DecomposedTransformMatrix &decomposed);
+  std::optional<Decomposed> decompose() const;
+  static TransformMatrix3D recompose(const Decomposed &decomposed);
   static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:

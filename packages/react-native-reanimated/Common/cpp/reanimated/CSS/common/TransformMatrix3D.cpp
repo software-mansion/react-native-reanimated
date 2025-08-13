@@ -2,9 +2,9 @@
 
 namespace reanimated::css {
 
-DecomposedTransformMatrix DecomposedTransformMatrix::interpolate(
+TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
     const double progress,
-    const DecomposedTransformMatrix &other) const {
+    const TransformMatrix3D::Decomposed &other) const {
   return {
       .scale = scale.interpolate(progress, other.scale),
       .skew = skew.interpolate(progress, other.skew),
@@ -17,7 +17,7 @@ DecomposedTransformMatrix DecomposedTransformMatrix::interpolate(
 
 std::ostream &operator<<(
     std::ostream &os,
-    const DecomposedTransformMatrix &decomposed) {
+    const TransformMatrix3D::Decomposed &decomposed) {
   os << "DecomposedTransformMatrix(scale=" << decomposed.scale
      << ", skew=" << decomposed.skew << ", quaternion=" << decomposed.quaternion
      << ", translation=" << decomposed.translation
@@ -63,10 +63,10 @@ TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array) {
 
 TransformMatrix3D TransformMatrix3D::Identity() {
   return TransformMatrix3D({{// clang-format off
-      {1, 0, 0, 0},
-      {0, 1, 0, 0},
-      {0, 0, 1, 0},
-      {0, 0, 0, 1}
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
   }}); // clang-format on
 }
 
@@ -162,23 +162,23 @@ TransformMatrix3D TransformMatrix3D::TranslateY(const double v) {
 }
 
 TransformMatrix3D TransformMatrix3D::SkewX(const double v) {
-  const auto tan = std::tan(v);
+  const auto tanVal = std::tan(v);
   return TransformMatrix3D({{// clang-format off
-    {  1, 0, 0, 0},
-    {tan, 1, 0, 0},
-    {  0, 0, 1, 0},
-    {  0, 0, 0, 1}
+    {     1, 0, 0, 0},
+    {tanVal, 1, 0, 0},
+    {     0, 0, 1, 0},
+    {     0, 0, 0, 1}
   }}); // clang-format on
 }
 
 TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
-  const auto tan = std::tan(v);
+  const auto tanVal = std::tan(v);
   return TransformMatrix3D({{// clang-format off
-    {1, tan, 0, 0},
-    {0,   1, 0, 0},
-    {0,   0, 1, 0},
-    {0,   0, 0, 1}
-  }}); // clang-format on
+    {1, tanVal, 0, 0},
+    {0,      1, 0, 0},
+    {0,      0, 1, 0},
+    {0,      0, 0, 1}
+  }}); // cl ang-format on
 }
 
 std::array<double, 4> &TransformMatrix3D::operator[](const size_t rowIdx) {
@@ -402,7 +402,8 @@ void TransformMatrix3D::scale3d(const Vector3D &scale) {
   }
 }
 
-std::optional<DecomposedTransformMatrix> TransformMatrix3D::decompose() const {
+std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
+    const {
   auto matrixCp = *this;
 
   if (!matrixCp.normalize()) {
@@ -434,7 +435,7 @@ std::optional<DecomposedTransformMatrix> TransformMatrix3D::decompose() const {
   }
   const auto rotation = computeQuaternion(rows);
 
-  return DecomposedTransformMatrix{
+  return TransformMatrix3D::Decomposed{
       .scale = scale,
       .skew = skew,
       .quaternion = rotation,
@@ -443,7 +444,7 @@ std::optional<DecomposedTransformMatrix> TransformMatrix3D::decompose() const {
 }
 
 TransformMatrix3D TransformMatrix3D::recompose(
-    const DecomposedTransformMatrix &decomposed) {
+    const TransformMatrix3D::Decomposed &decomposed) {
   auto result = TransformMatrix3D::Identity();
 
   // Start from applying perspective
