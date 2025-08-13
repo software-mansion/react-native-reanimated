@@ -33,7 +33,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
  public:
   EventLoop(
       const std::string &name,
-      const std::weak_ptr<jsi::Runtime> runtime,
+      const std::shared_ptr<jsi::Runtime> runtime,
       const std::shared_ptr<AsyncQueue> &queue);
   ~EventLoop();
   void run();
@@ -41,7 +41,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
 
  private:
-  const std::weak_ptr<jsi::Runtime> runtime_;
+  const std::shared_ptr<jsi::Runtime> runtime_;
   const std::shared_ptr<AsyncQueue> queue_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
