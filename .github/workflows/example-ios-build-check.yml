@@ -50,9 +50,6 @@ jobs:
       group: ios-${{ github.ref }}-${{ inputs.bundleMode }}
       cancel-in-progress: true
     steps:
-      - name: Set Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
-
       - name: Check out Git repository
         uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
