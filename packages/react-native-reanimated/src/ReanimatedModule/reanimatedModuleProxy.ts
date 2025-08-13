@@ -1,6 +1,6 @@
 'use strict';
 
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
   LayoutAnimationBatchItem,
@@ -8,6 +8,7 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -18,7 +19,7 @@ import type {
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
   registerEventHandler<T>(
-    eventHandler: ShareableRef<T>,
+    eventHandler: SerializableRef<T>,
     eventName: string,
     emitterReactTag: number
   ): number;
@@ -35,7 +36,7 @@ export interface ReanimatedModuleProxy {
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ): number;
 
   unregisterSensor(sensorId: number): void;
@@ -43,7 +44,7 @@ export interface ReanimatedModuleProxy {
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<WorkletFunction>,
+    handler: SerializableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ): number;
@@ -94,7 +95,7 @@ export interface IReanimatedModule
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined,
+    component: WrapperRef | null,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

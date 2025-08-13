@@ -1,5 +1,6 @@
 'use strict';
-import React, { useRef } from 'react';
+import type { RefObject } from 'react';
+import { useMemo, useRef } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -25,10 +26,8 @@ interface CellRendererComponentProps<ItemT = any> {
 }
 
 const createCellRendererComponent = (
-  itemLayoutAnimationRef?: React.MutableRefObject<
-    ILayoutAnimationBuilder | undefined
-  >,
-  cellRendererComponentStyleRef?: React.MutableRefObject<
+  itemLayoutAnimationRef?: RefObject<ILayoutAnimationBuilder | undefined>,
+  cellRendererComponentStyleRef?: RefObject<
     ReanimatedFlatListPropsWithLayout<any>['CellRendererComponentStyle']
   >
 ) => {
@@ -122,7 +121,7 @@ const FlatListRender = function <Item = any>(
   const cellRendererComponentStyleRef = useRef(CellRendererComponentStyle);
   cellRendererComponentStyleRef.current = CellRendererComponentStyle;
 
-  const CellRendererComponent = React.useMemo(
+  const CellRendererComponent = useMemo(
     () =>
       createCellRendererComponent(
         itemLayoutAnimationRef,

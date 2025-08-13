@@ -6,9 +6,9 @@ import {
   TurboModuleRegistry,
   View,
 } from 'react-native';
-import { makeShareableCloneRecursive } from 'react-native-reanimated';
+import { createSerializable } from 'react-native-worklets';
 
-export default function FreezingShareables() {
+export default function SerializableFreezingExample() {
   return (
     <View style={styles.container}>
       <View style={styles.textAndButton}>
@@ -80,14 +80,14 @@ export default function FreezingShareables() {
 
 function tryModifyConvertedArray() {
   const obj = [1, 2, 3];
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   obj[0] = 2; // should warn because it's frozen
 }
 
 function tryModifyConvertedRemoteFunction() {
   const obj = () => {};
   obj.prop = 1;
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   obj.prop = 2; // should warn because it's frozen
 }
 
@@ -97,7 +97,7 @@ function tryModifyConvertedHostObject() {
     console.warn('No host object found.');
     return;
   }
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
@@ -106,13 +106,13 @@ function tryModifyConvertedPlainObject() {
   const obj = {
     prop: 1,
   };
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   obj.prop = 2; // should warn because it's frozen
 }
 
 function tryModifyConvertedRegExpLiteral() {
   const obj = /a/;
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
@@ -120,21 +120,21 @@ function tryModifyConvertedRegExpLiteral() {
 function tryModifyConvertedRegExpInstance() {
   // eslint-disable-next-line prefer-regex-literals
   const obj = new RegExp('a');
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
 function tryModifyConvertedArrayBuffer() {
   const obj = new ArrayBuffer(8);
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
 function tryModifyConvertedInt32Array() {
   const obj = new Int32Array(2);
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
   obj[1] = 2; // shouldn't warn because it's not frozen
 }
 
@@ -146,7 +146,7 @@ function tryModifyUnconfigurableObject() {
     enumerable: true,
     configurable: false,
   });
-  makeShareableCloneRecursive(obj);
+  createSerializable(obj);
 }
 
 const styles = StyleSheet.create({

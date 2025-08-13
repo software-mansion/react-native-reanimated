@@ -1,17 +1,18 @@
 'use strict';
 /* eslint-disable reanimated/use-global-this */
+import type { RuntimeKind } from './runtimeKind';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { getRuntimeKind } from './runtimeKind';
+
 export {};
 
 declare global {
   /**
-   * This global variable is a diagnostic/development tool.
+   * @deprecated Use {@link __RUNTIME_KIND} instead.
    *
-   * It is `true` on the UI thread and `false` on the JS thread.
+   *   This global variable is a diagnostic/development tool.
    *
-   * It used to be necessary in the past for some of the functionalities of
-   * react-native-reanimated to work properly but it's no longer the case. Your
-   * code shouldn't depend on it, we keep it here mainly for backward
-   * compatibility for our users.
+   *   It's `true` on Worklet Runtimes and `false` on React Native Runtime.
    */
   var _WORKLET: boolean | undefined;
 
@@ -23,4 +24,16 @@ declare global {
 
   /** @deprecated Don't use. */
   var _IS_FABRIC: boolean | undefined;
+
+  /**
+   * This global variable is used to determine the kind of the current runtime.
+   * You can use it directly to differentiate between runtimes. However, the
+   * recommended way for differentiating is to use the {@link getRuntimeKind}
+   * function.
+   *
+   * - Value _1_: React Native Runtime
+   * - Value _2_: UI Worklet Runtime
+   * - Value _3_: Worker Worklet Runtime
+   */
+  var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
 }

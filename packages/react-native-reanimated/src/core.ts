@@ -4,6 +4,7 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -14,10 +15,10 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import { makeShareableCloneRecursive } from './workletFunctions';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
@@ -48,7 +49,7 @@ export const isConfigured = isReanimated3;
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
-  component?: React.Component // required on Fabric
+  component?: WrapperRef | null // required on Fabric
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(
@@ -63,7 +64,7 @@ export function getViewProp<T>(
       propName,
       component,
       (result: T) => {
-        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+        if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           reject(result);
         } else {
@@ -95,9 +96,7 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -132,9 +131,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -156,7 +153,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler as WorkletFunction)
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
 

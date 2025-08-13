@@ -1,0 +1,19 @@
+name: Worklets Bundle Mode build check [Nightly]
+on:
+  schedule:
+    - cron: '37 19 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/worklets-bundle-mode-build-check-nightly.yml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/worklets-bundle-mode-build-check-nightly.yml
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  worklets-bundle-mode-build-check-nightly:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/worklets-bundle-mode-build-check.yml
