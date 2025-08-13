@@ -10,7 +10,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
-import deprecation from 'eslint-plugin-deprecation';
 import { fixupPluginRules } from '@eslint/compat';
 import { globalIgnores } from 'eslint/config';
 
@@ -286,11 +285,7 @@ export default tsEslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      deprecation: fixupPluginRules(deprecation),
-    },
     rules: {
-      'deprecation/deprecation': 'error',
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',

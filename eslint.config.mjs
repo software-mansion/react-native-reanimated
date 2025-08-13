@@ -12,7 +12,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
 import nodePlugin from 'eslint-plugin-n';
 import pluginPromise from 'eslint-plugin-promise';
-import deprecation from 'eslint-plugin-deprecation';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import { fixupPluginRules } from '@eslint/compat';
@@ -27,7 +26,6 @@ const tsRules = {
   '@typescript-eslint/no-explicit-any': 'warn',
   '@typescript-eslint/no-empty-object-type': 'warn',
   '@typescript-eslint/unbound-method': 'error',
-  'deprecation/deprecation': 'error',
 
   '@typescript-eslint/ban-ts-comment': [
     'error',
@@ -139,7 +137,6 @@ const config = tsEslint.config(
     plugins: {
       'react-native': fixupPluginRules(reactNative),
       jest,
-      deprecation: fixupPluginRules(deprecation),
     },
     settings: {
       'import/resolver': {

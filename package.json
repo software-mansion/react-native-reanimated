@@ -34,7 +34,6 @@
     "@types/shelljs": "^0.8.15",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-deprecation": "^3.0.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^28.14.0",
     "eslint-plugin-jsdoc": "^50.7.1",
