@@ -14,12 +14,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { runOnUI } from 'react-native-worklets';
 
 import { colors, radius, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
 
 import Text from '../core/Text';
-import { runOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxxs;
 
