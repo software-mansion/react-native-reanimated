@@ -63,7 +63,7 @@ describe('Test mixed scheduling scenarios', () => {
         <DispatchTestComponent
           worklet={() => {
             'worklet';
-            const nameToMethod: any = {
+            const nameToMethod = {
               setTimeout,
               setImmediate,
               requestAnimationFrame,
@@ -75,9 +75,9 @@ describe('Test mixed scheduling scenarios', () => {
                 });
               },
             };
-
-            nameToMethod[firstMethodName](() => order(firstMethodOrder, notification1));
-            nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
+            type MethodsName = keyof typeof nameToMethod;
+            nameToMethod[firstMethodName as MethodsName](() => order(firstMethodOrder, notification1));
+            nameToMethod[secondMethodName as MethodsName](() => order(secondMethodOrder, notification2));
           }}
           runtimeType={runtimeType}
         />,
