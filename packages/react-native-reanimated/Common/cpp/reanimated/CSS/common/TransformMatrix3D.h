@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/Quaternion.h>
-#include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/vectors.h>
 
 #include <folly/dynamic.h>
@@ -10,7 +10,11 @@
 
 namespace reanimated::css {
 
-class TransformMatrix3D {
+namespace {
+static constexpr size_t SIZE = 16;
+}
+
+class TransformMatrix3D : public TransformMatrixBase<SIZE> {
  public:
   struct Decomposed {
     Vector3D scale;
@@ -28,9 +32,7 @@ class TransformMatrix3D {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  explicit TransformMatrix3D(Vec16Array matrix);
-  explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
-  explicit TransformMatrix3D(const folly::dynamic &value);
+  using TransformMatrixBase<SIZE>::TransformMatrixBase;
 
   static TransformMatrix3D Identity();
   static TransformMatrix3D Perspective(double value);
@@ -74,8 +76,6 @@ class TransformMatrix3D {
   static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:
-  Vec16Array matrix_;
-
   std::optional<Vector4D> computePerspective() const;
 
   Vector3D getTranslation() const;

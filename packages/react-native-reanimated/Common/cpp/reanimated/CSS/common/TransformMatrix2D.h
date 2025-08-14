@@ -1,13 +1,17 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/vectors.h>
 
 #include <folly/dynamic.h>
 
 namespace reanimated::css {
 
-class TransformMatrix2D {
+namespace {
+static constexpr size_t SIZE = 9;
+}
+
+class TransformMatrix2D : public TransformMatrixBase<SIZE> {
  public:
   struct Decomposed {
     Vector2D scale;
@@ -24,9 +28,7 @@ class TransformMatrix2D {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  explicit TransformMatrix2D(Vec9Array matrix);
-  explicit TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value);
-  explicit TransformMatrix2D(const folly::dynamic &value);
+  using TransformMatrixBase<SIZE>::TransformMatrixBase;
 
   static TransformMatrix2D Identity();
   static TransformMatrix2D Rotate(double value);
@@ -41,9 +43,6 @@ class TransformMatrix2D {
   bool operator==(const TransformMatrix2D &other) const;
   TransformMatrix2D operator*(const TransformMatrix2D &rhs) const;
   TransformMatrix2D operator*=(const TransformMatrix2D &rhs);
-
- private:
-  Vec9Array matrix_;
 };
 
 } // namespace reanimated::css
