@@ -26,6 +26,7 @@ export {
   runOnJS,
   runOnUI,
   runOnUIAsync,
+  runOnUISync,
   scheduleOnRN,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
