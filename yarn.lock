@@ -9994,7 +9994,7 @@ __metadata:
     react-native-pager-view: "npm:6.8.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.5.2"
-    react-native-screens: "npm:4.14.0"
+    react-native-screens: "npm:4.14.1"
     react-native-svg: "patch:react-native-svg@npm%3A15.12.0#~/.yarn/patches/react-native-svg-npm-15.12.0-f663d699a9.patch"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
@@ -20410,9 +20410,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.14.0":
-  version: 4.14.0
-  resolution: "react-native-screens@npm:4.14.0"
+"react-native-screens@npm:4.14.1":
+  version: 4.14.1
+  resolution: "react-native-screens@npm:4.14.1"
   dependencies:
     react-freeze: "npm:^1.0.0"
     react-native-is-edge-to-edge: "npm:^1.2.1"
@@ -20420,7 +20420,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/e7c0185a63d9b3c974f6e856ff9cf2b4dfb6887e6cff8881622e1dbc5cab9e9896ba423de04848696b7953e01cba771721f33d09bdd2fbbe2a69b38d5ab6daf5
+  checksum: 10/e6774f7db39fbdf403be119a33d51c274d2d0e5464240d4804a9c05f43f49334ab9df484d07e856043b7e5ce7be95ee5e93df9b2f8c6c20656995beb10965ef4
   languageName: node
   linkType: hard
 
