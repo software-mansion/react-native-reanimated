@@ -18,6 +18,7 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
@@ -254,7 +255,7 @@ class JSReanimated implements IReanimatedModule {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
-    _component?: React.Component,
+    _component?: WrapperRef | null,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');

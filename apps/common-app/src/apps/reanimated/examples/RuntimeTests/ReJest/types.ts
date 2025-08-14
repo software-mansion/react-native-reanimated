@@ -1,4 +1,4 @@
-import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
+import type { Component, Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import type { AnimatedStyle, LayoutAnimationStartFunction, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
@@ -22,7 +22,7 @@ export type SharedValueSnapshot<TValue extends TestValue> = {
   onUI: TValue;
 };
 
-export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
+export type ComponentRef = RefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
 export enum DescribeDecorator {
   ONLY = 'only',

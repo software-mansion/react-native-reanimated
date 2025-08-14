@@ -1,14 +1,20 @@
 'use strict';
-
+import type { ComponentRef } from 'react';
 import type {
   ImageStyle,
+  NativeMethods,
+  ScrollResponderMixin,
+  ScrollViewComponent,
   TextStyle,
   TransformsStyle,
+  View,
   ViewStyle,
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
+import type { Maybe } from './common/types';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { AnyRecord } from './css/types';
 import type { EasingFunctionFactory } from './Easing';
 
 type LayoutAnimationOptions =
@@ -441,3 +447,27 @@ export type AnimatedStyle<Style = DefaultStyle> =
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
+
+type NativeScrollRef = Maybe<
+  (
+    | ComponentRef<typeof View>
+    | ComponentRef<typeof ScrollViewComponent>
+    | NativeMethods
+  ) & {
+    __internalInstanceHandle?: AnyRecord;
+  }
+>;
+
+type InstanceMethods = {
+  getScrollResponder?: () => Maybe<
+    (ScrollResponderMixin | React.JSX.Element) & {
+      getNativeScrollRef?: () => NativeScrollRef;
+    }
+  >;
+  getNativeScrollRef?: () => NativeScrollRef;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: () => any;
+  __internalInstanceHandle?: AnyRecord;
+};
+
+export type WrapperRef = (React.Component & InstanceMethods) | InstanceMethods;

@@ -2,12 +2,12 @@ import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   measure,
-  runOnUI,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
 
 export default function MeasureExample() {
   const aref = useAnimatedRef<Animated.View>();

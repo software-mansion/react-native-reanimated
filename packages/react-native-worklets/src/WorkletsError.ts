@@ -1,5 +1,7 @@
 'use strict';
 
+import { RuntimeKind } from './runtimeKind';
+
 function WorkletsErrorConstructor(message?: string): WorkletsError {
   'worklet';
   const prefix = '[Worklets]';
@@ -16,7 +18,7 @@ function WorkletsErrorConstructor(message?: string): WorkletsError {
  */
 export function registerWorkletsError() {
   'worklet';
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     globalThis.WorkletsError =
       WorkletsErrorConstructor as IWorkletsErrorConstructor;
   }
