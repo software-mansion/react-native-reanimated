@@ -19,6 +19,7 @@ import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import JSPropsExample from './CircularSliderExample';
 import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
@@ -125,6 +126,7 @@ import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
+import UseSharedArrayExample from './UseSharedArrayExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -186,6 +188,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
+  },
+  UseSharedArrayExample: {
+    icon: '🔄',
+    title: 'Use shared array',
+    screen: UseSharedArrayExample,
+  },
+  JSPropsExample: {
+    icon: '🟨',
+    title: 'JS props',
+    screen: JSPropsExample,
   },
   CircularSliderExample: {
     icon: '🔘',
