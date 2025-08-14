@@ -11,6 +11,10 @@
 
 namespace reanimated::css {
 
+struct Vector2D {
+  std::array<double, 2> vec;
+};
+
 struct Vector3D {
   std::array<double, 3> vec;
 
