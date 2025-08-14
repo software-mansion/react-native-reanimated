@@ -69,13 +69,15 @@ export class TestRunner {
 
   public useTestValue<T = DefaultValue>(
     defaultValue: T | DefaultValue,
-    setterCondition?: (prev: T, current: T) => boolean,
+    customSetter?: (prev: T, current: T) => T,
   ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
     const state: ValueWrapper<T> = {
       value: defaultValue,
     };
     const jsSetter = (value: T | DefaultValue = 'ok', notificationName?: string) => {
-      if (!setterCondition || setterCondition(state.value as T, value as T)) {
+      if (customSetter) {
+        state.value = customSetter(state.value as T, value as T);
+      } else {
         state.value = value;
       }
       if (notificationName) {
@@ -93,7 +95,12 @@ export class TestRunner {
     'worklet';
     return this.useTestValue<number>(0, (prev: number, current: number) => {
       'worklet';
-      return prev == current - 1;
+      if (prev == current - 1) {
+        return current;
+      } else if (prev == 0) {
+        return -1;
+      }
+      return prev;
     });
   }
 
