@@ -31,14 +31,14 @@ class TransformMatrix2D : public TransformMatrixBase<SIZE> {
   using TransformMatrixBase<SIZE>::TransformMatrixBase;
 
   static TransformMatrix2D Identity();
-  static TransformMatrix2D Rotate(double value);
-  static TransformMatrix2D Scale(double value);
-  static TransformMatrix2D ScaleX(double value);
-  static TransformMatrix2D ScaleY(double value);
-  static TransformMatrix2D TranslateX(double value);
-  static TransformMatrix2D TranslateY(double value);
-  static TransformMatrix2D SkewX(double value);
-  static TransformMatrix2D SkewY(double value);
+  static TransformMatrix2D Rotate(double v);
+  static TransformMatrix2D Scale(double v);
+  static TransformMatrix2D ScaleX(double v);
+  static TransformMatrix2D ScaleY(double v);
+  static TransformMatrix2D TranslateX(double v);
+  static TransformMatrix2D TranslateY(double v);
+  static TransformMatrix2D SkewX(double v);
+  static TransformMatrix2D SkewY(double v);
 
   bool operator==(const TransformMatrix2D &other) const;
   TransformMatrix2D operator*(const TransformMatrix2D &rhs) const;
