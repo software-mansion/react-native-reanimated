@@ -3,6 +3,7 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
@@ -56,6 +57,8 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
+  let animationQueuePollingRate: number;
+  let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -65,6 +68,10 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
+    animationQueuePollingRate = Math.round(
+      nameOrConfig?.animationQueuePollingRate ?? 16
+    );
+    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -80,10 +87,14 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
+      if (enableEventLoop) {
+        setupRunLoop(animationQueuePollingRate);
+      }
       initializerFn?.();
     }),
     useDefaultQueue,
-    customQueue
+    customQueue,
+    enableEventLoop
   );
 }
 
@@ -119,6 +130,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       createSerializable(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks();
       })
     );
 }
@@ -132,6 +144,19 @@ export type WorkletRuntimeConfig = {
    * before any other worklets.
    */
   initializer?: () => void;
+  /**
+   * Time interval in milliseconds between polling of frame callbacks scheduled
+   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
+   */
+  animationQueuePollingRate?: number;
+  /**
+   * Determines whether to enable the default Event Loop or not. The Event Loop
+   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
+   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
+   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
+   * defaults to `true`.
+   */
+  enableEventLoop?: true;
 } & (
   | {
       /**
