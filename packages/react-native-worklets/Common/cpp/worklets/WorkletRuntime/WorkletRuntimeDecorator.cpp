@@ -279,7 +279,7 @@ void WorkletRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       rt,
       "_scheduleTimeoutCallback",
-      [eventLoop](
+      [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop)](
           jsi::Runtime &rt,
           const jsi::Value &delayJs,
           const jsi::Value &handlerIdJs) -> jsi::Value {
@@ -290,7 +290,9 @@ void WorkletRuntimeDecorator::decorate(
               .getPropertyAsFunction(rt, "__runTimeoutCallback")
               .call(rt, handlerId);
         };
-        eventLoop->pushTimeout(job, delay);
+        if (auto strongEventLoop = weakEventLoop.lock()) {
+          strongEventLoop->pushTimeout(job, delay);
+        }
         return jsi::Value::undefined();
       });
 }

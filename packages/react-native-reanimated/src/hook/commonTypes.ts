@@ -1,5 +1,5 @@
 'use strict';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -101,8 +101,8 @@ export interface JestAnimatedStyleHandle<
   Style extends DefaultStyle | AnimatedProps = DefaultStyle,
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedValues:
-    | MutableRefObject<AnimatedStyle<Style>>
-    | MutableRefObject<AnimatedProps>;
+    | RefObject<AnimatedStyle<Style>>
+    | RefObject<AnimatedProps>;
   toJSON: () => string;
 }
 

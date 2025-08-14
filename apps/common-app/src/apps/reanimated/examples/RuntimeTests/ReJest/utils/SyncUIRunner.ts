@@ -1,5 +1,4 @@
-import { runOnJS, runOnUI } from 'react-native-reanimated';
-
+import { runOnJS, runOnUI } from 'react-native-worklets';
 import type { LockObject } from '../types';
 
 class WaitForUnlock {

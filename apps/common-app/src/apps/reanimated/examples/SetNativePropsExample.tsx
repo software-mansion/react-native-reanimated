@@ -7,10 +7,10 @@ import {
   TextInput,
 } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
   setNativeProps,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
