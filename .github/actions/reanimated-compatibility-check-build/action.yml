@@ -1,0 +1,67 @@
+name: Reanimated compatibility check build
+description: Check React Native Reanimated compatibility with different React Native versions
+inputs:
+  react-native-versions:
+    description: Array of React Native versions
+    required: true
+  platform:
+    description: Platform to test (iOS or Android)
+    required: true
+  mode:
+    description: Build mode (Debug or Release)
+    required: true
+  github-sha:
+    description: GitHub SHA to use for installing packages
+    required: true
+  app-name:
+    description: Name of the test app
+    default: 'app'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Yarn
+      shell: bash
+      run: corepack enable && yarn init
+    - name: Install React Native CLI
+      shell: bash
+      run: yarn add @react-native-community/cli
+    - name: Create app
+      shell: bash
+      run: yarn rnc-cli init ${{inputs.app-name}} --version ${{ inputs.react-native-versions }} --skip-install --install-pods 0 --skip-git-init
+    - name: Setup Yarn Modern in app
+      # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: |
+        touch yarn.lock
+        yarn set version berry
+        yarn config set nodeLinker node-modules
+    - name: Install Reanimated
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+    - name: Install Worklets
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
+    - name: Select Xcode (iOS)
+      if: ${{ inputs.platform == 'iOS' }}
+      shell: bash
+      run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+    - name: Install Pods (iOS)
+      if: ${{ inputs.platform == 'iOS' }}
+      working-directory: ${{ inputs.app-name }}/ios
+      shell: bash
+      run: bundle install && bundle exec pod update
+    - name: Build app (iOS)
+      if: ${{ inputs.platform == 'iOS' }}
+      working-directory: ${{ inputs.app-name }}/ios
+      shell: bash
+      run: xcodebuild -workspace ${{inputs.app-name}}.xcworkspace -configuration ${{inputs.mode}} -scheme ${{inputs.app-name}} -destination "generic/platform=iOS Simulator" -quiet
+    - name: Build app (Android)
+      if: ${{ inputs.platform == 'Android' }}
+      working-directory: ${{ inputs.app-name }}/android
+      shell: bash
+      run: ./gradlew assemble${{ inputs.mode }} --console=plain
