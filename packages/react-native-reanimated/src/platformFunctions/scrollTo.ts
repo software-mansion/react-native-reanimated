@@ -1,11 +1,11 @@
 'use strict';
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { WrapperRef } from '../commonTypes';
+import type { ComponentWithInstanceMethods } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>,
+type ScrollTo = <TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent>,
   x: number,
   y: number,
   animated: boolean
@@ -24,8 +24,8 @@ type ScrollTo = <TRef extends WrapperRef>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToNative<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>,
+function scrollToNative<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent>,
   x: number,
   y: number,
   animated: boolean

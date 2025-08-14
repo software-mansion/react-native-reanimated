@@ -518,7 +518,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
   },
   LogExample: {
     icon: '⌨',

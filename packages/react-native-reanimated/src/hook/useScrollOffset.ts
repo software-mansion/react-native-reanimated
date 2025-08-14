@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { IS_WEB, logger } from '../common';
-import type { SharedValue, WrapperRef } from '../commonTypes';
+import type { ComponentWithInstanceMethods, SharedValue } from '../commonTypes';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -37,8 +37,8 @@ export const useScrollOffset = IS_WEB
   ? useScrollOffsetWeb
   : useScrollOffsetNative;
 
-function useScrollOffsetWeb<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef> | null,
+function useScrollOffsetWeb<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -77,8 +77,8 @@ function useScrollOffsetWeb<TRef extends WrapperRef>(
   return offset;
 }
 
-function useScrollOffsetNative<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef> | null,
+function useScrollOffsetNative<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -118,6 +118,8 @@ function useScrollOffsetNative<TRef extends WrapperRef>(
   return offset;
 }
 
-function getWebScrollableElement(scrollComponent: WrapperRef): HTMLElement {
+function getWebScrollableElement(
+  scrollComponent: ComponentWithInstanceMethods
+): HTMLElement {
   return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
 }

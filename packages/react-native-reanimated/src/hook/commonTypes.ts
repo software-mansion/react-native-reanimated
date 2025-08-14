@@ -12,8 +12,8 @@ import type { WorkletFunction } from 'react-native-worklets';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
+  ComponentWithInstanceMethods,
   ShadowNodeWrapper,
-  WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
@@ -30,17 +30,18 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<TRef extends WrapperRef> = {
-  (ref?: TRef | null):
+export type AnimatedRef<TComponent extends ComponentWithInstanceMethods> = {
+  (ref?: TComponent | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: TRef | null;
+  current: TComponent | null;
   observe: (observer: AnimatedRefObserver) => void;
+  getViewProp: <T = unknown>(propName: string) => Promise<T>;
   getTag?: () => number | null;
 };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<WrapperRef>;
+export type AnimatedRefOnJS = AnimatedRef<ComponentWithInstanceMethods>;
 
 /**
  * `AnimatedRef` is mapped to this type on the UI thread via a serializable
