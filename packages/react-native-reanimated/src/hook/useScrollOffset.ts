@@ -119,7 +119,7 @@ function useScrollOffsetNative<TComponent extends ComponentWithInstanceMethods>(
 }
 
 function getWebScrollableElement(
-  scrollComponent: ComponentWithInstanceMethods
+  component: ComponentWithInstanceMethods
 ): HTMLElement {
-  return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
+  return component?.getScrollableNode?.() ?? component;
 }

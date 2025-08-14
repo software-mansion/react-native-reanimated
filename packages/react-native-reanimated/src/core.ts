@@ -47,10 +47,10 @@ export const isReanimated3 = () => {
 export const isConfigured = isReanimated3;
 
 export function getViewPropImpl<T = unknown>(
-  ref: ComponentWithInstanceMethods | null,
+  component: ComponentWithInstanceMethods | null,
   propName: string
 ): Promise<T> {
-  if (!ref) {
+  if (!component) {
     throw new ReanimatedError(
       'Function `getViewProp` requires a component to be passed as an argument.'
     );
@@ -58,7 +58,7 @@ export function getViewPropImpl<T = unknown>(
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
-    return ReanimatedModule.getViewProp(ref, propName, (result: T) => {
+    return ReanimatedModule.getViewProp(component, propName, (result: T) => {
       if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
         // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         reject(result);
@@ -72,9 +72,9 @@ export function getViewPropImpl<T = unknown>(
 export function getViewProp<T = unknown>(
   _viewTag: number,
   propName: string,
-  ref: ComponentWithInstanceMethods | null
+  component: ComponentWithInstanceMethods | null
 ): Promise<T> {
-  return getViewPropImpl(ref, propName);
+  return getViewPropImpl(component, propName);
 }
 
 function getSensorContainer(): SensorContainer {

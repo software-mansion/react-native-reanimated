@@ -12,7 +12,7 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: ComponentWithInstanceMethods,
+  component: ComponentWithInstanceMethods,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
@@ -28,15 +28,15 @@ export function getShadowNodeWrapperFromRef(
     }
   }
 
-  const resolvedRef =
-    ref.getScrollResponder?.()?.getNativeScrollRef?.() ??
-    ref.getNativeScrollRef?.() ??
-    ref;
+  const resolvedComponent =
+    component.getScrollResponder?.()?.getNativeScrollRef?.() ??
+    component.getNativeScrollRef?.() ??
+    component;
 
   const resolvedInstance =
-    ref?.__internalInstanceHandle ??
+    component?.__internalInstanceHandle ??
     getInternalInstanceHandleFromPublicInstance(
-      hostInstance ?? findHostInstance(resolvedRef)
+      hostInstance ?? findHostInstance(resolvedComponent)
     );
 
   return resolvedInstance?.stateNode?.node;

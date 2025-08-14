@@ -21,12 +21,16 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-function getComponentOrScrollable(ref: ComponentWithInstanceMethods) {
-  return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
+function getComponentOrScrollable(component: ComponentWithInstanceMethods) {
+  return (
+    component.getNativeScrollRef?.() ??
+    component.getScrollableNode?.() ??
+    component
+  );
 }
 
 function useAnimatedRefBase<TComponent extends ComponentWithInstanceMethods>(
-  getWrapper: (ref: TComponent) => ShadowNodeWrapper
+  getWrapper: (component: TComponent) => ShadowNodeWrapper
 ): AnimatedRef<TComponent> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
@@ -35,13 +39,13 @@ function useAnimatedRefBase<TComponent extends ComponentWithInstanceMethods>(
   const resultRef = useRef<AnimatedRef<TComponent> | null>(null);
 
   if (!resultRef.current) {
-    const fun = <AnimatedRef<TComponent>>((ref) => {
-      if (ref) {
-        shadowNodeWrapperRef.current = getWrapper(ref);
+    const fun = <AnimatedRef<TComponent>>((component) => {
+      if (component) {
+        shadowNodeWrapperRef.current = getWrapper(component);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
-        fun.current = ref;
+        fun.getTag = () => findNodeHandle(getComponentOrScrollable(component));
+        fun.current = component;
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -87,9 +91,9 @@ function useAnimatedRefNative<
     makeMutable<ShadowNodeWrapper | null>(null)
   );
 
-  const resultRef = useAnimatedRefBase<TComponent>((ref) => {
+  const resultRef = useAnimatedRefBase<TComponent>((component) => {
     const currentWrapper = getShadowNodeWrapperFromRef(
-      getComponentOrScrollable(ref)
+      getComponentOrScrollable(component)
     );
 
     sharedWrapper.value = currentWrapper;
@@ -113,7 +117,9 @@ function useAnimatedRefNative<
 function useAnimatedRefWeb<
   TComponent extends ComponentWithInstanceMethods = React.Component,
 >(): AnimatedRef<TComponent> {
-  return useAnimatedRefBase<TComponent>((ref) => getComponentOrScrollable(ref));
+  return useAnimatedRefBase<TComponent>((component) =>
+    getComponentOrScrollable(component)
+  );
 }
 
 /**

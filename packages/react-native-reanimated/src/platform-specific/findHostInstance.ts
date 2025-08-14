@@ -46,11 +46,11 @@ function resolveFindHostInstance_DEPRECATED() {
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  ref: IAnimatedComponentInternalBase | ComponentWithInstanceMethods
+  component: IAnimatedComponentInternalBase | ComponentWithInstanceMethods
 ): HostInstance {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(
-    (ref as IAnimatedComponentInternalBase)._componentRef as HostInstance
+    (component as IAnimatedComponentInternalBase)._componentRef as HostInstance
   );
   if (hostInstance !== undefined) {
     return hostInstance;
@@ -64,8 +64,8 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    (ref as IAnimatedComponentInternalBase)._hasAnimatedRef
-      ? (ref as IAnimatedComponentInternalBase)._componentRef
-      : ref
+    (component as IAnimatedComponentInternalBase)._hasAnimatedRef
+      ? (component as IAnimatedComponentInternalBase)._componentRef
+      : component
   );
 }

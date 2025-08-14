@@ -253,7 +253,7 @@ class JSReanimated implements IReanimatedModule {
   }
 
   getViewProp<T>(
-    _ref: ComponentWithInstanceMethods,
+    _component: ComponentWithInstanceMethods,
     _propName: string,
     _callback?: (result: T) => void
   ): Promise<T> {

@@ -133,11 +133,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   getViewProp<T>(
-    ref: ComponentWithInstanceMethods, // required on Fabric
+    component: ComponentWithInstanceMethods,
     propName: string,
     callback?: (result: T) => void
   ) {
-    const shadowNodeWrapper = getShadowNodeWrapperFromRef(ref);
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     return this.#reanimatedModuleProxy.getViewProp(
       shadowNodeWrapper,
       propName,

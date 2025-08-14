@@ -93,7 +93,7 @@ export interface ReanimatedModuleProxy {
 export interface IReanimatedModule
   extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
   getViewProp<TValue>(
-    ref: ComponentWithInstanceMethods | null,
+    component: ComponentWithInstanceMethods | null,
     propName: string,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
