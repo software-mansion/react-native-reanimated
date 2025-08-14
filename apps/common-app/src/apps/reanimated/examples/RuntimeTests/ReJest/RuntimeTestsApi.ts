@@ -3,7 +3,7 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import type { MaybeAsync, TestConfiguration, TestValue } from './types';
+import type { DefaultValue, MaybeAsync, TestConfiguration, TestValue } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -142,12 +142,20 @@ export async function waitForNotify(name: string) {
   return notificationRegistry.waitForNotify(name);
 }
 
+export async function waitForNotifications(names: string[]) {
+  return notificationRegistry.waitForNotifications(names);
+}
+
 export function expect(value: TestValue) {
   return testRunner.expect(value);
 }
 
 export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
+}
+
+export function useTestValue<T = DefaultValue>(defaultValue: T) {
+  return testRunner.useTestValue<T>(defaultValue);
 }
 
 export async function mockAnimationTimer() {
@@ -172,4 +180,8 @@ export async function recordAnimationUpdates() {
 
 export async function stopRecordingAnimationUpdates() {
   await animationRecorder.stopRecordingAnimationUpdates();
+}
+
+export function useOrderConstraint() {
+  return testRunner.useOrderConstraint();
 }
