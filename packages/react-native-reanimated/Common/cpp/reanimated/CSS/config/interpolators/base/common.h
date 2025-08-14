@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix.h>
+#include <reanimated/CSS/common/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
@@ -127,7 +127,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
           {"matrix",
-           transformOp<MatrixOperation>(TransformMatrix::Identity())}})},
+           transformOp<MatrixOperation>(TransformMatrix3D::Identity())}})},
 };
 
 } // namespace reanimated::css
