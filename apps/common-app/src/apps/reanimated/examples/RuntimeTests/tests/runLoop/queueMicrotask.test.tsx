@@ -10,10 +10,11 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './TestComponent';
+import { DispatchTestComponent } from './DispatchTestComponent';
+import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test queueMicrotask', () => {
-  test.each(['ui', 'worklet'])('executes single microtask, runtime: **%s**', async runtimeType => {
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single microtask, runtime: **%s**', async runtimeKind => {
     // Arrange
     const notification = 'callback';
     const [flag, setFlag] = useTestValue('not_ok');
@@ -25,7 +26,7 @@ describe('Test queueMicrotask', () => {
           'worklet';
           queueMicrotask(() => setFlag('ok', notification));
         }}
-        runtimeType={runtimeType}
+        runtimeKind={runtimeKind}
       />,
     );
 
@@ -33,7 +34,7 @@ describe('Test queueMicrotask', () => {
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('nested microtasks, runtime: **%s**', async runtimeType => {
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])('nested microtasks, runtime: **%s**', async runtimeKind => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [confirmedOrder, order] = useOrderConstraint();
@@ -50,7 +51,7 @@ describe('Test queueMicrotask', () => {
             order(1, notification1);
           });
         }}
-        runtimeType={runtimeType}
+        runtimeKind={runtimeKind}
       />,
     );
 
@@ -59,65 +60,71 @@ describe('Test queueMicrotask', () => {
     expect(confirmedOrder.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('microtasks order of execution, same time, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [confirmedOrder, order] = useOrderConstraint();
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'microtasks order of execution, same time, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [confirmedOrder, order] = useOrderConstraint();
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          queueMicrotask(() => {
-            order(1, notification1);
-          });
-          queueMicrotask(() => {
-            order(2, notification2);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
-
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(confirmedOrder.value).toBe(2);
-  });
-
-  test.each(['ui', 'worklet'])('microtasks order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [confirmedOrder, order] = useOrderConstraint();
-
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          queueMicrotask(() => {
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
             queueMicrotask(() => {
-              order(3, notification2);
+              order(1, notification1);
             });
-            order(1, notification1);
-          });
+            queueMicrotask(() => {
+              order(2, notification2);
+            });
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-          queueMicrotask(() => {
-            order(2, notification3);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(confirmedOrder.value).toBe(2);
+    },
+  );
 
-    // Assert
-    await waitForNotifications([notification1, notification2, notification3]);
-    expect(confirmedOrder.value).toBe(3);
-  });
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'microtasks order of execution, nested timeouts, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+      const [confirmedOrder, order] = useOrderConstraint();
 
-  test.each(['ui', 'worklet'])(
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            queueMicrotask(() => {
+              queueMicrotask(() => {
+                order(3, notification2);
+              });
+              order(1, notification1);
+            });
+
+            queueMicrotask(() => {
+              order(2, notification3);
+            });
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
+
+      // Assert
+      await waitForNotifications([notification1, notification2, notification3]);
+      expect(confirmedOrder.value).toBe(3);
+    },
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'microtasks order of execution, asynchronous scheduling, runtime: **%s**',
-    async runtimeType => {
+    async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = useOrderConstraint();
@@ -132,7 +139,7 @@ describe('Test queueMicrotask', () => {
             });
             order(1, notification1);
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 

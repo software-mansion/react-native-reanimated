@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { describe, expect, useOrderConstraint, render, test, waitForNotifications } from '../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './TestComponent';
+import { DispatchTestComponent } from './DispatchTestComponent';
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
@@ -15,7 +15,7 @@ describe('Test mixed order of execution', () => {
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',
     async config => {
       // Arrange
-      const [firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder, runtimeType] = config;
+      const [firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder, runtimeKind] = config;
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = useOrderConstraint();
       // Act
@@ -27,7 +27,7 @@ describe('Test mixed order of execution', () => {
             nameToMethod[firstMethodName](() => order(firstMethodOrder, notification1));
             nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 
@@ -72,7 +72,7 @@ describe('Test mixed order of execution', () => {
         secondMethodOrder,
         thirdMethodName,
         thirdMethodOrder,
-        runtimeType,
+        runtimeKind,
       ] = config;
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
       const [confirmedOrder, order] = useOrderConstraint();
@@ -86,7 +86,7 @@ describe('Test mixed order of execution', () => {
             nameToMethod[secondMethodName](() => order(secondMethodOrder, notification2));
             nameToMethod[thirdMethodName](() => order(thirdMethodOrder, notification3));
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 
@@ -106,7 +106,7 @@ describe('Test mixed order of execution', () => {
         secondMethodOrder,
         thirdMethodName,
         thirdMethodOrder,
-        runtimeType,
+        runtimeKind,
       ] = config;
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
       const [confirmedOrder, order] = useOrderConstraint();
@@ -122,7 +122,7 @@ describe('Test mixed order of execution', () => {
             });
             nameToMethod[thirdMethodName](() => order(thirdMethodOrder, notification3));
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 

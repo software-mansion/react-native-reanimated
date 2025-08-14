@@ -1,3 +1,5 @@
+import { RuntimeKind } from 'react-native-worklets';
+
 export function getMethodMap() {
   'worklet';
   return {
@@ -16,8 +18,8 @@ export function getMethodMap() {
 }
 
 export type MethodsName = keyof ReturnType<typeof getMethodMap>;
-export type TwoMethodsConfig = [MethodsName, number, MethodsName, number, string];
-export type ThreeMethodsConfig = [MethodsName, number, MethodsName, number, MethodsName, number, string];
+export type TwoMethodsConfig = [MethodsName, number, MethodsName, number, RuntimeKind];
+export type ThreeMethodsConfig = [MethodsName, number, MethodsName, number, MethodsName, number, RuntimeKind];
 
 /**
  * Wrapping data with the `incorrect` decorator indicates that the test configuration

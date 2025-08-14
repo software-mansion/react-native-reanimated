@@ -11,10 +11,11 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './TestComponent';
+import { DispatchTestComponent } from './DispatchTestComponent';
+import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test setTimeout', () => {
-  test.each(['ui', 'worklet'])('executes single callback, runtime: **%s**', async runtimeType => {
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single callback, runtime: **%s**', async runtimeKind => {
     // Arrange
     const notification = 'callback';
     const [flag, setFlag] = useTestValue('not_ok');
@@ -26,7 +27,7 @@ describe('Test setTimeout', () => {
           'worklet';
           setTimeout(() => setFlag('ok', notification));
         }}
-        runtimeType={runtimeType}
+        runtimeKind={runtimeKind}
       />,
     );
 
@@ -34,7 +35,7 @@ describe('Test setTimeout', () => {
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('passes parameters, runtime: **%s**', async runtimeType => {
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])('passes parameters, runtime: **%s**', async runtimeKind => {
     // Arrange
     const notification = 'callback';
     const argValue = 42;
@@ -56,7 +57,7 @@ describe('Test setTimeout', () => {
             argValue,
           );
         }}
-        runtimeType={runtimeType}
+        runtimeKind={runtimeKind}
       />,
     );
 
@@ -64,61 +65,67 @@ describe('Test setTimeout', () => {
     expect(flag.value).toBe('ok');
   });
 
-  test.each(['ui', 'worklet'])('increments handle on each request, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue('not_ok');
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'increments handle on each request, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestValue('not_ok');
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          const handle1 = setTimeout(() => notify(notification1)) as unknown as number;
-          const handle2 = setTimeout(() => notify(notification2)) as unknown as number;
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            const handle1 = setTimeout(() => notify(notification1)) as unknown as number;
+            const handle2 = setTimeout(() => notify(notification2)) as unknown as number;
 
-          if (handle1 + 1 === handle2) {
-            setFlag('ok');
-          }
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
-
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe('ok');
-  });
-
-  test.each(['ui', 'worklet'])('executes after requested delay, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const notification = 'callback';
-    const delay = 128;
-    const [flag, setFlag] = useTestValue('not_ok');
-
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          const startTime = performance.now();
-          setTimeout(() => {
-            if (performance.now() - startTime >= delay) {
-              setFlag();
+            if (handle1 + 1 === handle2) {
+              setFlag('ok');
             }
-            notify(notification);
-          }, delay);
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotify(notification);
-    expect(flag.value).toBe('ok');
-  });
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(flag.value).toBe('ok');
+    },
+  );
 
-  test.each(['ui', 'worklet'])('nested timeouts, runtime: **%s**', async runtimeType => {
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'executes after requested delay, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const notification = 'callback';
+      const delay = 128;
+      const [flag, setFlag] = useTestValue('not_ok');
+
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            const startTime = performance.now();
+            setTimeout(() => {
+              if (performance.now() - startTime >= delay) {
+                setFlag();
+              }
+              notify(notification);
+            }, delay);
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
+
+      // Assert
+      await waitForNotify(notification);
+      expect(flag.value).toBe('ok');
+    },
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])('nested timeouts, runtime: **%s**', async runtimeKind => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
     const [confirmedOrder, order] = useOrderConstraint();
@@ -135,7 +142,7 @@ describe('Test setTimeout', () => {
             order(1, notification1);
           });
         }}
-        runtimeType={runtimeType}
+        runtimeKind={runtimeKind}
       />,
     );
 
@@ -144,61 +151,67 @@ describe('Test setTimeout', () => {
     expect(confirmedOrder.value).toBe(2);
   });
 
-  test.each(['ui', 'worklet'])('timeouts order of execution, same time, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [confirmedOrder, order] = useOrderConstraint();
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'timeouts order of execution, same time, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [confirmedOrder, order] = useOrderConstraint();
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          setTimeout(() => {
-            order(1, notification1);
-          });
-          setTimeout(() => {
-            order(2, notification2);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            setTimeout(() => {
+              order(1, notification1);
+            });
+            setTimeout(() => {
+              order(2, notification2);
+            });
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(confirmedOrder.value).toBe(2);
-  });
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(confirmedOrder.value).toBe(2);
+    },
+  );
 
-  test.each(['ui', 'worklet'])('timeouts order of execution, different times, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [confirmedOrder, order] = useOrderConstraint();
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'timeouts order of execution, different times, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [confirmedOrder, order] = useOrderConstraint();
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          setTimeout(() => {
-            order(1, notification1);
-          }, 50);
-          setTimeout(() => {
-            order(2, notification2);
-          }, 70);
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            setTimeout(() => {
+              order(1, notification1);
+            }, 50);
+            setTimeout(() => {
+              order(2, notification2);
+            }, 70);
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(confirmedOrder.value).toBe(2);
-  });
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(confirmedOrder.value).toBe(2);
+    },
+  );
 
-  test.each(['ui', 'worklet'])(
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'timeouts order of execution, inverted scheduled order, runtime: **%s**',
-    async runtimeType => {
+    async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = useOrderConstraint();
@@ -215,7 +228,7 @@ describe('Test setTimeout', () => {
               order(1, notification1);
             }, 50);
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 
@@ -225,39 +238,42 @@ describe('Test setTimeout', () => {
     },
   );
 
-  test.each(['ui', 'worklet'])('timeouts order of execution, nested timeouts, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-    const [confirmedOrder, order] = useOrderConstraint();
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'timeouts order of execution, nested timeouts, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
+      const [confirmedOrder, order] = useOrderConstraint();
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          setTimeout(() => {
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
             setTimeout(() => {
-              order(2, notification2);
+              setTimeout(() => {
+                order(2, notification2);
+              }, 20);
+              order(1, notification1);
             }, 20);
-            order(1, notification1);
-          }, 20);
 
-          setTimeout(() => {
-            order(3, notification3);
-          }, 100);
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+            setTimeout(() => {
+              order(3, notification3);
+            }, 100);
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotifications([notification1, notification2, notification3]);
-    expect(confirmedOrder.value).toBe(3);
-  });
+      // Assert
+      await waitForNotifications([notification1, notification2, notification3]);
+      expect(confirmedOrder.value).toBe(3);
+    },
+  );
 
-  test.each(['ui', 'worklet'])(
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'timeouts order of execution, asynchronous scheduling, runtime: **%s**',
-    async runtimeType => {
+    async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
       const [confirmedOrder, order] = useOrderConstraint();
@@ -272,7 +288,7 @@ describe('Test setTimeout', () => {
             });
             order(1, notification1);
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 

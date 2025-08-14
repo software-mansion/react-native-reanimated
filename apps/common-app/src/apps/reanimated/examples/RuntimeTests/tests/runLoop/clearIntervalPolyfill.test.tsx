@@ -10,35 +10,39 @@ import {
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { DispatchTestComponent } from './TestComponent';
+import { DispatchTestComponent } from './DispatchTestComponent';
+import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test clearInterval', () => {
-  test.each(['ui', 'worklet'])('does nothing on invalid handle, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const notification = 'callback';
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'does nothing on invalid handle, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const notification = 'callback';
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          clearInterval(2137);
-          const handle = setInterval(() => {
-            clearInterval(handle);
-            notify(notification);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            clearInterval(2137);
+            const handle = setInterval(() => {
+              clearInterval(handle);
+              notify(notification);
+            });
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotify(notification);
-  });
+      // Assert
+      await waitForNotify(notification);
+    },
+  );
 
-  test.each(['ui', 'worklet'])(
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'cancels scheduled callback outside of execution loop, runtime: **%s**',
-    async runtimeType => {
+    async runtimeKind => {
       // Arrange
       const notification = 'callback2';
       const [flag, setFlag] = useTestValue('ok');
@@ -58,7 +62,7 @@ describe('Test clearInterval', () => {
             });
             clearInterval(testHandle);
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 
@@ -68,43 +72,46 @@ describe('Test clearInterval', () => {
     },
   );
 
-  test.each(['ui', 'worklet'])('cancels flushed callback within execution loop, runtime: **%s**', async runtimeType => {
-    // Arrange
-    const [notification1, notification2] = ['callback1', 'callback2'];
-    const [flag, setFlag] = useTestValue('ok');
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'cancels flushed callback within execution loop, runtime: **%s**',
+    async runtimeKind => {
+      // Arrange
+      const [notification1, notification2] = ['callback1', 'callback2'];
+      const [flag, setFlag] = useTestValue('ok');
 
-    // Act
-    await render(
-      <DispatchTestComponent
-        worklet={() => {
-          'worklet';
-          let testHandle = 0;
-          const handle1 = setInterval(() => {
-            clearInterval(testHandle);
-            clearInterval(handle1);
-            notify(notification1);
-          }) as unknown as number;
-          testHandle = setInterval(() => {
-            setFlag('not_ok');
-            clearInterval(testHandle);
-          }) as unknown as number;
-          const handle2 = setInterval(() => {
-            clearInterval(handle2);
-            notify(notification2);
-          });
-        }}
-        runtimeType={runtimeType}
-      />,
-    );
+      // Act
+      await render(
+        <DispatchTestComponent
+          worklet={() => {
+            'worklet';
+            let testHandle = 0;
+            const handle1 = setInterval(() => {
+              clearInterval(testHandle);
+              clearInterval(handle1);
+              notify(notification1);
+            }) as unknown as number;
+            testHandle = setInterval(() => {
+              setFlag('not_ok');
+              clearInterval(testHandle);
+            }) as unknown as number;
+            const handle2 = setInterval(() => {
+              clearInterval(handle2);
+              notify(notification2);
+            });
+          }}
+          runtimeKind={runtimeKind}
+        />,
+      );
 
-    // Assert
-    await waitForNotifications([notification1, notification2]);
-    expect(flag.value).toBe('ok');
-  });
+      // Assert
+      await waitForNotifications([notification1, notification2]);
+      expect(flag.value).toBe('ok');
+    },
+  );
 
-  test.each(['ui', 'worklet'])(
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'cancels scheduled callback within execution loop, runtime: **%s**',
-    async runtimeType => {
+    async runtimeKind => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
       const [flag, setFlag] = useTestValue('ok');
@@ -133,7 +140,7 @@ describe('Test clearInterval', () => {
               notify(notification2);
             });
           }}
-          runtimeType={runtimeType}
+          runtimeKind={runtimeKind}
         />,
       );
 
