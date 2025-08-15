@@ -7,19 +7,23 @@ export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
     return [array];
   }
-  const resultArr: T[] = [];
 
-  const _flattenArray = (arr: NestedArray<T>[]): void => {
-    arr.forEach((item) => {
-      if (Array.isArray(item)) {
-        _flattenArray(item);
-      } else {
-        resultArr.push(item);
+  const result: T[] = [];
+  const stack: NestedArray<T>[] = [array]; // explicitly typed
+
+  while (stack.length > 0) {
+    const value = stack.pop()!;
+
+    if (Array.isArray(value)) {
+      for (let i = value.length - 1; i >= 0; i--) {
+        stack.push(value[i]);
       }
-    });
-  };
-  _flattenArray(array);
-  return resultArr;
+    } else {
+      result.push(value);
+    }
+  }
+
+  return result
 }
 
 export const has = <K extends string>(
