@@ -3,7 +3,7 @@
 import { IS_JEST } from '../PlatformChecker';
 import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef } from '../workletTypes';
+import type { SerializableRef } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
@@ -19,111 +19,109 @@ const requestAnimationFrameImpl =
     : globalThis.requestAnimationFrame;
 
 class JSWorklets implements IWorkletsModule {
-  makeShareableClone(): never {
+  createSerializable(): never {
     throw new WorkletsError(
-      'makeShareableClone should never be called in JSWorklets.'
+      'createSerializable should never be called in JSWorklets.'
     );
   }
 
-  makeShareableString(): ShareableRef<string> {
+  createSerializableString(): never {
     throw new WorkletsError(
-      'makeShareableString should never be called in JSWorklets.'
+      'createSerializableString should never be called in JSWorklets.'
     );
   }
 
-  makeShareableNumber(): ShareableRef<number> {
+  createSerializableNumber(): never {
     throw new WorkletsError(
-      'makeShareableNumber should never be called in JSWorklets.'
+      'createSerializableNumber should never be called in JSWorklets.'
     );
   }
 
-  makeShareableBoolean(): ShareableRef<boolean> {
+  createSerializableBoolean(): never {
     throw new WorkletsError(
-      'makeShareableBoolean should never be called in JSWorklets.'
+      'createSerializableBoolean should never be called in JSWorklets.'
     );
   }
 
-  makeShareableBigInt(): ShareableRef<bigint> {
+  createSerializableBigInt(): never {
     throw new WorkletsError(
-      'makeShareableBigInt should never be called in JSWorklets.'
+      'createSerializableBigInt should never be called in JSWorklets.'
     );
   }
 
-  makeShareableUndefined(): ShareableRef<undefined> {
+  createSerializableUndefined(): never {
     throw new WorkletsError(
-      'makeShareableUndefined should never be called in JSWorklets.'
+      'createSerializableUndefined should never be called in JSWorklets.'
     );
   }
 
-  makeShareableNull(): ShareableRef<null> {
+  createSerializableNull(): never {
     throw new WorkletsError(
-      'makeShareableNull should never be called in JSWorklets.'
+      'createSerializableNull should never be called in JSWorklets.'
     );
   }
 
-  makeShareableTurboModuleLike<T extends object>(): ShareableRef<T> {
+  createSerializableTurboModuleLike(): never {
     throw new WorkletsError(
-      'makeShareableTurboModuleLike should never be called in JSWorklets.'
+      'createSerializableTurboModuleLike should never be called in JSWorklets.'
     );
   }
 
-  makeShareableObject<T extends object>(): ShareableRef<T> {
+  createSerializableObject(): never {
     throw new WorkletsError(
-      'makeShareableObject should never be called in JSWorklets.'
+      'createSerializableObject should never be called in JSWorklets.'
     );
   }
 
-  makeShareableMap(): never {
+  createSerializableMap(): never {
     throw new WorkletsError(
-      'makeShareableMap should never be called in JSWorklets.'
+      'createSerializableMap should never be called in JSWorklets.'
     );
   }
 
-  makeShareableSet(): never {
+  createSerializableSet(): never {
     throw new WorkletsError(
-      'makeShareableSet should never be called in JSWorklets.'
+      'createSerializableSet should never be called in JSWorklets.'
     );
   }
 
-  makeShareableImport(): never {
+  createSerializableImport(): never {
     throw new WorkletsError(
-      'makeShareableImport should never be called in JSWorklets.'
+      'createSerializableImport should never be called in JSWorklets.'
     );
   }
 
-  makeShareableHostObject<T extends object>(): ShareableRef<T> {
+  createSerializableHostObject(): never {
     throw new WorkletsError(
-      'makeShareableHostObject should never be called in JSWorklets.'
+      'createSerializableHostObject should never be called in JSWorklets.'
     );
   }
 
-  makeShareableArray(): ShareableRef<unknown[]> {
+  createSerializableArray(): never {
     throw new WorkletsError(
-      'makeShareableArray should never be called in JSWorklets.'
+      'createSerializableArray should never be called in JSWorklets.'
     );
   }
 
-  makeShareableInitializer(): ShareableRef<object> {
+  createSerializableInitializer(): never {
     throw new WorkletsError(
-      'makeShareableInitializer should never be called in JSWorklets.'
+      'createSerializableInitializer should never be called in JSWorklets.'
     );
   }
 
-  makeShareableFunction<TArgs extends unknown[], TReturn>(
-    _func: (...args: TArgs) => TReturn
-  ): ShareableRef<TReturn> {
+  createSerializableFunction(): never {
     throw new WorkletsError(
-      'makeShareableRemoteFunction should never be called in JSWorklets.'
+      'createSerializableFunction should never be called in JSWorklets.'
     );
   }
 
-  makeShareableWorklet(): ShareableRef<object> {
+  createSerializableWorklet(): never {
     throw new WorkletsError(
-      'makeShareableWorklet should never be called in JSWorklets.'
+      'createSerializableWorklet should never be called in JSWorklets.'
     );
   }
 
-  scheduleOnUI<TValue>(worklet: ShareableRef<TValue>) {
+  scheduleOnUI<TValue>(worklet: SerializableRef<TValue>) {
     // TODO: `requestAnimationFrame` should be used exclusively in Reanimated
 
     // @ts-ignore web implementation has still not been updated after the rewrite,
@@ -149,21 +147,39 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  makeSynchronizable(): never {
+  createSynchronizable(): never {
     throw new WorkletsError(
-      'makeSynchronizable should never be called in JSWorklets.'
+      'createSynchronizable should never be called in JSWorklets.'
     );
   }
 
-  makeSynchronizableBoolRef(): never {
+  synchronizableGetDirty(): never {
     throw new WorkletsError(
-      'makeSynchronizableBoolRef should never be called in JSWorklets.'
+      'synchronizableGetDirty should never be called in JSWorklets.'
     );
   }
 
-  makeSynchronizableNumberRef(): never {
+  synchronizableGetBlocking(): never {
     throw new WorkletsError(
-      'makeSynchronizableNumberRef should never be called in JSWorklets.'
+      'synchronizableGetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableSetBlocking(): never {
+    throw new WorkletsError(
+      'synchronizableSetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableLock(): never {
+    throw new WorkletsError(
+      'synchronizableLock should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableUnlock(): never {
+    throw new WorkletsError(
+      'synchronizableUnlock should never be called in JSWorklets.'
     );
   }
 

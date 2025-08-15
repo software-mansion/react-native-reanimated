@@ -9,39 +9,15 @@
  * this field is not actually defined nor should be used for anything else as
  * assigning any data to those objects will throw an error.
  */
-export type ShareableRef<T = unknown> = {
-  __shareableRef: true;
-  __nativeStateShareableJSRef: T;
+export type SerializableRef<T = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: T;
 };
-
-export interface HostSynchronizableRef<TValue = unknown> {
-  // TODO: TSDOC with links to documentation.
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setDirty(value: TValue): void;
-  setBlocking(value: TValue): void;
-  // TODO: Consider allowing `lock` and `unlock` in public API.
-  lock(): void;
-  unlock(): void;
-}
-
-export interface Synchronizable<TValue = unknown> {
-  // TODO: consider removing
-  // extends Omit<HostSynchronizableRef<TValue>, 'lock' | 'unlock'>
-  // TODO: TSDOC with links to documentation.
-  __synchronizableRef: true;
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setDirty(value: TValue | ((prev: TValue) => TValue)): void;
-  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-  lock(): void;
-  unlock(): void;
-}
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
-export type FlatShareableRef<T> =
-  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
+export type FlatSerializableRef<T> =
+  T extends SerializableRef<infer U> ? SerializableRef<U> : SerializableRef<T>;
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;

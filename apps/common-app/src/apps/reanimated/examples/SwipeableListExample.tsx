@@ -1,19 +1,25 @@
 import React, { useMemo } from 'react';
-import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   FlatList,
   Gesture,
   GestureDetector,
-  TouchableOpacity,
 } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;

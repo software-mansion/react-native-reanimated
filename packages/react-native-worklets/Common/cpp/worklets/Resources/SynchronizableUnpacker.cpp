@@ -2,40 +2,48 @@
 // `packages/react-native-worklets/scripts/export-unpackers.js`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/SynchronizableUnpacker.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
-    R"__DELIMITER__(function __synchronizableUnpacker(hostSynchronizableRef) {
-  var synchronizableRef = {
-    __synchronizableRef: true,
-    getDirty: hostSynchronizableRef.getDirty.bind(hostSynchronizableRef),
-    getBlocking: hostSynchronizableRef.getBlocking.bind(hostSynchronizableRef),
-    setDirty: function setDirty(valueOrFunction) {
+    R"DELIMITER__((function () {
+  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
+    return (0, _serializable.createSerializable)(value);
+  } : globalThis._createSerializable;
+  function synchronizableUnpacker(synchronizableRef) {
+    var synchronizable = synchronizableRef;
+    var proxy = globalThis.__workletsModuleProxy;
+    synchronizable.__synchronizableRef = true;
+    synchronizable.getDirty = function () {
+      return proxy.synchronizableGetDirty(synchronizable);
+    };
+    synchronizable.getBlocking = function () {
+      return proxy.synchronizableGetBlocking(synchronizable);
+    };
+    synchronizable.setBlocking = function (valueOrFunction) {
+      var newValue;
       if (typeof valueOrFunction === 'function') {
         var func = valueOrFunction;
-        hostSynchronizableRef.setDirty(func(hostSynchronizableRef.getDirty()));
+        synchronizable.lock();
+        var prev = synchronizable.getBlocking();
+        newValue = func(prev);
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+        synchronizable.unlock();
       } else {
         var value = valueOrFunction;
-        hostSynchronizableRef.setDirty(value);
+        newValue = value;
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
       }
-    },
-    setBlocking: function setBlocking(valueOrFunction) {
-      if (typeof valueOrFunction === 'function') {
-        var func = valueOrFunction;
-        hostSynchronizableRef.lock();
-        hostSynchronizableRef.setBlocking(func(hostSynchronizableRef.getBlocking()));
-        hostSynchronizableRef.unlock();
-      } else {
-        var value = valueOrFunction;
-        hostSynchronizableRef.setBlocking(value);
-      }
-    },
-    lock: hostSynchronizableRef.lock.bind(hostSynchronizableRef),
-    unlock: hostSynchronizableRef.unlock.bind(hostSynchronizableRef)
-  };
-  Object.setPrototypeOf(synchronizableRef, hostSynchronizableRef);
-  return synchronizableRef;
-})__DELIMITER__";
+    };
+    synchronizable.lock = function () {
+      proxy.synchronizableLock(synchronizable);
+    };
+    synchronizable.unlock = function () {
+      proxy.synchronizableUnlock(synchronizable);
+    };
+    return synchronizable;
+  }
+  globalThis.__synchronizableUnpacker = synchronizableUnpacker;
+})();)DELIMITER__";
 } // namespace worklets

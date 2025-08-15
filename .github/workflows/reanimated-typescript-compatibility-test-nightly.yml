@@ -11,13 +11,27 @@ on:
   workflow_dispatch:
 
 jobs:
+  read-compatibility-json:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    outputs:
+      react-native-versions-with-nightly: ${{ steps.set-outputs.outputs.react-native-versions-with-nightly }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read compatibility.json
+        run: node .github/workflows/helper/read-compatibility.js
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          cat /tmp/react-native-versions-with-nightly.json >> $GITHUB_OUTPUT
+
   reanimated-typescript-compatibility-test-nightly:
+    needs: read-compatibility-json
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # TODO: Fetch versions from common source.
-        react-native-version: ['0.78', 'nightly']
+        react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions-with-nightly) }}
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -32,22 +46,17 @@ jobs:
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
-      - name: Install monorepo node dependencies
-        run: yarn install
-      - name: Build Reanimated
-        run: yarn workspace react-native-reanimated build
-      - name: Install react-native ${{ matrix.react-native-version }}
-        run: yarn up react-native@${{ matrix.react-native-version }}
+      - name: Check if react-native version exists
+        id: check-react-native-version
+        run: |
+          if ! npm view react-native@${{ matrix.react-native-version }} dist-tags ; then 
+            echo "React Native version ${{ matrix.react-native-version }} does not exist - Skipping..."
+            echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Check source types
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:src
-      - name: Check plugin types
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:plugin
-      - name: Check API
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:app
-      - name: Run common type tests
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:common
+      - name: Run TypeScript Compatibility Check
+        if: ${{ steps.check-react-native-version.outputs.SKIP_BUILD != 'true' }}
+        uses: ./.github/actions/reanimated-typescript-compatibility-check
+        with:
+          react-native-version: ${{ matrix.react-native-version }}
+          working-directory: '.'

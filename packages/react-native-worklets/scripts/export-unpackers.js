@@ -1,25 +1,25 @@
 const { transformFileSync, traverse } = require('@babel/core');
-const { program } = require('@babel/types');
+const {
+  program,
+  expressionStatement,
+  callExpression,
+  functionExpression,
+} = require('@babel/types');
 const generate = require('@babel/generator').default;
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
 
-exportToCpp('valueUnpacker.ts', 'ValueUnpacker', 'ValueUnpackerCode');
-exportToCpp(
-  'synchronizableUnpacker.ts',
-  'SynchronizableUnpacker',
-  'SynchronizableUnpackerCode'
-);
+exportToCpp('valueUnpacker.ts', 'ValueUnpacker');
+exportToCpp('synchronizableUnpacker.ts', 'SynchronizableUnpacker');
 
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to
  *   transform.
- * @param {string} outputFilePath - The path where the generated C++ file should
- *   be written, without extension.
- * @param {string} cstrName - The name of the C++ string to be generated.
+ * @param {string} outputFilename - The filename (without extension) to use for
+ *   the generated C++ file.
  */
-function exportToCpp(sourceFilePath, outputFilePath, cstrName) {
+function exportToCpp(sourceFilePath, outputFilename) {
   const transformed = transformFileSync(
     path.resolve(__dirname, `../src/${sourceFilePath}`),
     {
@@ -39,37 +39,42 @@ function exportToCpp(sourceFilePath, outputFilePath, cstrName) {
     'Transformation failed or AST not generated.'
   );
 
-  let unpacker;
+  let unpackerBody;
 
   traverse(transformed.ast, {
     FunctionDeclaration(path) {
-      if (path.node?.id?.name.includes('Unpacker')) {
-        unpacker = path.node;
+      if (path.node?.id?.name === '__installUnpacker') {
+        unpackerBody = path.node.body;
       }
     },
   });
 
-  assert(unpacker, 'Value unpacker function not found in the AST.');
+  assert(unpackerBody, 'Value unpacker function not found in the AST.');
 
-  const prog = program([unpacker]);
+  const iife = expressionStatement(
+    callExpression(functionExpression(null, [], unpackerBody), [])
+  );
+
+  const prog = program([iife]);
 
   const transformFrom = generate(prog, {
     comments: false,
     compact: false,
   });
 
-  const delimiter = '__DELIMITER__';
+  const delimiter = 'DELIMITER__';
 
+  const cstrName = `${outputFilename}Code`;
   fs.writeFileSync(
     path.resolve(
       __dirname,
-      `../Common/cpp/worklets/Resources/${outputFilePath}.cpp`
+      `../Common/cpp/worklets/Resources/${outputFilename}.cpp`
     ),
     `// This file was generated with
 // \`packages/react-native-worklets/scripts/export-unpackers.js\`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/${outputFilePath}.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 

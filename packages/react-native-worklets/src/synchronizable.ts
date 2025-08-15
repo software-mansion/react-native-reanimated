@@ -1,24 +1,32 @@
 'use strict';
 
-import { __synchronizableUnpacker } from './synchronizableUnpacker';
+import { createSerializable } from './serializable';
 import { WorkletsModule } from './WorkletsModule';
-import type { Synchronizable } from './workletTypes';
+import type { SerializableRef } from './workletTypes';
 
-export function makeSynchronizable<TValue>(
+export function createSynchronizable<TValue>(
   initialValue: TValue
 ): Synchronizable<TValue> {
-  const hostSynchronizableRef = WorkletsModule.makeSynchronizable(initialValue);
-
-  return __synchronizableUnpacker(hostSynchronizableRef);
-}
-
-export function isSynchronizableRef<TValue>(
-  value: unknown
-): value is Synchronizable<TValue> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    '__synchronizableRef' in value &&
-    value.__synchronizableRef === true
+  const synchronizableRef = WorkletsModule.createSynchronizable(
+    createSerializable(initialValue)
   );
+
+  return globalThis.__synchronizableUnpacker(
+    synchronizableRef
+  ) as unknown as Synchronizable<TValue>;
 }
+
+export type SynchronizableRef<TValue = unknown> = {
+  __synchronizableRef: true;
+  __nativeStateSynchronizableJSRef: TValue;
+};
+
+export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
+  SynchronizableRef<TValue> & {
+    __synchronizableRef: true;
+    getDirty(): TValue;
+    getBlocking(): TValue;
+    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+    lock(): void;
+    unlock(): void;
+  };

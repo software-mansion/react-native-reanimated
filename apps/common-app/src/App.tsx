@@ -109,7 +109,7 @@ function Navigator() {
           borderRadius: radius.lg,
         },
         drawerLabelStyle: text.heading4,
-        drawerPosition: 'right',
+        drawerPosition: IS_WEB ? 'left' : 'right',
         drawerStyle: {
           backgroundColor: colors.background1,
         },

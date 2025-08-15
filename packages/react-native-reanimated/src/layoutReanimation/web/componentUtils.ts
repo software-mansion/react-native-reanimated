@@ -1,6 +1,7 @@
 'use strict';
 import { logger } from '../../common';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
@@ -14,13 +15,18 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  EasingType,
   KeyframeDefinitions,
 } from './config';
 import { Animations, TransitionType } from './config';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import type { WebEasingsNames } from './Easing.web';
-import { getEasingByName, WebEasings } from './Easing.web';
+import {
+  getEasingByName,
+  maybeGetBezierEasing,
+  WebEasings,
+} from './Easing.web';
 import { prepareCurvedTransition } from './transition/Curved.web';
 
 function getEasingFromConfig(config: CustomConfig): string {
@@ -28,15 +34,25 @@ function getEasingFromConfig(config: CustomConfig): string {
     return getEasingByName('linear');
   }
 
-  const easingName = config.easingV[EasingNameSymbol];
+  const easingName = (config.easingV as EasingType)[EasingNameSymbol];
 
-  if (!(easingName in WebEasings)) {
-    logger.warn(`Selected easing is not currently supported on web.`);
+  if (easingName in WebEasings) {
+    return getEasingByName(easingName as WebEasingsNames);
+  }
+
+  const bezierEasing = maybeGetBezierEasing(
+    config.easingV as EasingFunctionFactory
+  );
+
+  if (!bezierEasing) {
+    logger.warn(
+      `Selected easing is not currently supported on web. Using linear easing instead.`
+    );
 
     return getEasingByName('linear');
   }
 
-  return getEasingByName(easingName as WebEasingsNames);
+  return bezierEasing;
 }
 
 function getRandomDelay(maxDelay = 1000) {
@@ -173,27 +189,35 @@ export function setElementAnimation(
     configureAnimation();
   }
 
+  const maybeRemoveElement = () => {
+    if (element.reanimatedDummy && parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+  };
+
+  let wasCallbackCalled = false;
+  const maybeCallCallback = (finished: boolean) => {
+    if (!wasCallbackCalled && animationConfig.callback) {
+      animationConfig.callback(finished);
+      wasCallbackCalled = true;
+    }
+  };
+
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
     }
 
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(true);
 
-    animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    animationConfig.callback?.(false);
-
-    if (parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
-    }
+    maybeRemoveElement();
+    maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -212,6 +236,9 @@ export function setElementAnimation(
       if (shouldSavePosition) {
         setElementPosition(element, snapshots.get(element)!);
       }
+
+      maybeRemoveElement();
+      maybeCallCallback(false);
     });
   }
 }
@@ -301,6 +328,20 @@ export function handleExitingAnimation(
   element.style.animationName = '';
   dummy.style.animationName = '';
 
+  // Moving elements in DOM resets their scroll positions
+  // so we memorize them here and restore after
+  const scrollPositions = new Map<Element, { top: number; left: number }>();
+  const saveScrollPosition = (node: Element) => {
+    scrollPositions.set(node, {
+      top: node.scrollTop,
+      left: node.scrollLeft,
+    });
+    for (const child of Array.from(node.children)) {
+      saveScrollPosition(child);
+    }
+  };
+  saveScrollPosition(element);
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -311,6 +352,18 @@ export function handleExitingAnimation(
   }
 
   parent?.appendChild(dummy);
+
+  const restoreScrollPosition = (node: Element) => {
+    const scrollPosition = scrollPositions.get(node === dummy ? element : node);
+    if (scrollPosition) {
+      node.scrollTop = scrollPosition.top;
+      node.scrollLeft = scrollPosition.left;
+    }
+    for (const child of Array.from(node.children)) {
+      restoreScrollPosition(child);
+    }
+  };
+  restoreScrollPosition(dummy);
 
   const snapshot = snapshots.get(element)!;
 

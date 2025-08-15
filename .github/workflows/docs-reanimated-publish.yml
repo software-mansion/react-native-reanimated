@@ -8,10 +8,11 @@ on:
     paths:
       - packages/docs-reanimated/**
       - packages/docs-worklets/**
+      - packages/react-native-reanimated/compatibility.json
   workflow_dispatch:
 
 jobs:
-  publish:
+  docs-reanimated-publish:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:

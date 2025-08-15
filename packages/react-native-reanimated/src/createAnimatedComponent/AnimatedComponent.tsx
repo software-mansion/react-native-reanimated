@@ -5,7 +5,7 @@ import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB } from '../common';
+import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -307,9 +307,28 @@ export default class AnimatedComponent
     this._prevAnimatedProps = this._animatedProps;
     this._animatedProps = filteredAnimatedProps.animatedStyles;
 
-    this._cssStyle = filteredStyles.cssStyle;
-  }
+    if (filteredAnimatedProps.cssStyle) {
+      if (__DEV__ && filteredStyles.cssStyle) {
+        logger.warn(
+          'AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from the style object.'
+        );
+        this._cssStyle = filteredStyles.cssStyle;
+        return;
+      }
 
+      // Add all remaining props to cssStyle object
+      // (e.g. SVG components are styled via top level props, not via style object)
+      const mergedProps = {
+        ...props,
+        ...filteredAnimatedProps.cssStyle,
+      };
+      delete mergedProps.style;
+      delete mergedProps.animatedProps;
+      this._cssStyle = mergedProps;
+    } else {
+      this._cssStyle = filteredStyles.cssStyle ?? {};
+    }
+  }
   _configureLayoutAnimation(
     type: LayoutAnimationType,
     currentConfig: LayoutAnimationOrBuilder | undefined,

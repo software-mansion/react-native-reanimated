@@ -1,41 +1,67 @@
 'use strict';
 
-import type { HostSynchronizableRef, Synchronizable } from './workletTypes';
+import { createSerializable } from './serializable';
+import type { Synchronizable, SynchronizableRef } from './synchronizable';
 
-export function __synchronizableUnpacker<TValue>(
-  hostSynchronizableRef: HostSynchronizableRef<TValue>
-): Synchronizable<TValue> {
-  const synchronizableRef = {
-    __synchronizableRef: true as const,
-    getDirty: hostSynchronizableRef.getDirty.bind(hostSynchronizableRef),
-    getBlocking: hostSynchronizableRef.getBlocking.bind(hostSynchronizableRef),
-    setDirty(valueOrFunction: TValue | ((prev: TValue) => TValue)) {
+export function __installUnpacker() {
+  // TODO: Add cache for synchronizables.
+  const serializer =
+    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
+      ? (value: unknown, _: unknown) => createSerializable(value)
+      : globalThis._createSerializable;
+
+  function synchronizableUnpacker<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): Synchronizable<TValue> {
+    const synchronizable =
+      synchronizableRef as unknown as Synchronizable<TValue>;
+    const proxy = globalThis.__workletsModuleProxy!;
+
+    synchronizable.__synchronizableRef = true;
+    synchronizable.getDirty = () => {
+      return proxy.synchronizableGetDirty(synchronizable);
+    };
+    synchronizable.getBlocking = () => {
+      return proxy.synchronizableGetBlocking(synchronizable);
+    };
+    synchronizable.setBlocking = (
+      valueOrFunction: TValue | ((prev: TValue) => TValue)
+    ) => {
+      let newValue: TValue;
       if (typeof valueOrFunction === 'function') {
         const func = valueOrFunction as (prev: TValue) => TValue;
-        hostSynchronizableRef.setDirty(func(hostSynchronizableRef.getDirty()));
-      } else {
-        const value = valueOrFunction;
-        hostSynchronizableRef.setDirty(value);
-      }
-    },
-    setBlocking(valueOrFunction: TValue | ((prev: TValue) => TValue)) {
-      if (typeof valueOrFunction === 'function') {
-        const func = valueOrFunction as (prev: TValue) => TValue;
-        hostSynchronizableRef.lock();
-        hostSynchronizableRef.setBlocking(
-          func(hostSynchronizableRef.getBlocking())
+        synchronizable.lock();
+        const prev = synchronizable.getBlocking();
+        newValue = func(prev);
+
+        proxy.synchronizableSetBlocking(
+          synchronizable,
+          serializer(newValue, undefined)
         );
-        hostSynchronizableRef.unlock();
+
+        synchronizable.unlock();
       } else {
         const value = valueOrFunction;
-        hostSynchronizableRef.setBlocking(value);
+        newValue = value;
+        proxy.synchronizableSetBlocking(
+          synchronizable,
+          serializer(newValue, undefined)
+        );
       }
-    },
-    lock: hostSynchronizableRef.lock.bind(hostSynchronizableRef),
-    unlock: hostSynchronizableRef.unlock.bind(hostSynchronizableRef),
-  };
+    };
+    synchronizable.lock = () => {
+      proxy.synchronizableLock(synchronizable);
+    };
+    synchronizable.unlock = () => {
+      proxy.synchronizableUnlock(synchronizable);
+    };
 
-  Object.setPrototypeOf(synchronizableRef, hostSynchronizableRef);
+    return synchronizable;
+  }
 
-  return synchronizableRef;
+  globalThis.__synchronizableUnpacker = synchronizableUnpacker;
 }
+
+export type SynchronizableUnpacker = <TValue>(
+  synchronizableRef: SynchronizableRef<TValue>
+) => Synchronizable<TValue>;

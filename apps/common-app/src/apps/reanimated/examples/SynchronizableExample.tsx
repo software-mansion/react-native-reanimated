@@ -1,67 +1,83 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { makeSynchronizable, runOnJS, runOnUI } from 'react-native-worklets';
+import {
+  createSynchronizable,
+  runOnJS,
+  runOnUI,
+  createWorkletRuntime,
+  runOnRuntime,
+} from 'react-native-worklets';
 
 const initialValue = 0;
 
 const targetValue = 200000;
 
-export default function SynchronizableExample() {
+export default function SynchronizablePerformanceExample() {
   const [valueRN, setValueRN] = React.useState(initialValue);
   const [durationRNMS, setDurationRNMS] = React.useState(0);
   const [valueUI, setValueUI] = React.useState(initialValue);
   const [durationUIMS, setDurationUIMS] = React.useState(0);
-  const [isRunning, setIsRunning] = React.useState(false);
+  const [valueBG, setValueBG] = React.useState(initialValue);
+  const [durationBGMS, setDurationBGMS] = React.useState(0);
+  const [runningRuntimes, setRunningRuntimes] = React.useState(0);
 
-  const synchronizable = makeSynchronizable(initialValue);
+  const synchronizable = createSynchronizable(initialValue);
 
-  function setUiValueRemote(value: number, durationMS: number) {
+  const runtime = createWorkletRuntime({ name: 'SynchronizableExample' });
+
+  function setUIValueRemote(value: number, durationMS: number) {
     setValueUI(value);
     setDurationUIMS(durationMS);
   }
 
+  function setBGValueRemote(value: number, durationMS: number) {
+    setValueBG(value);
+    setDurationBGMS(durationMS);
+  }
+
+  const decrementRuntimes = () => setRunningRuntimes((prev) => prev - 1);
+
   function setValueAndDuration(value: number, durationMS: number) {
     'worklet';
-    if (globalThis._WORKLET) {
-      runOnJS(setUiValueRemote)(value, durationMS);
-    } else {
+    if (!globalThis._WORKLET) {
       setValueRN(value);
       setDurationRNMS(durationMS);
+      decrementRuntimes();
+      return;
     }
+
+    if ((globalThis as Record<string, unknown>)._LABEL === 'UI') {
+      runOnJS(setUIValueRemote)(value, durationMS);
+    } else {
+      runOnJS(setBGValueRemote)(value, durationMS);
+    }
+
+    runOnJS(decrementRuntimes)();
   }
 
   function resetState() {
+    setRunningRuntimes(0);
     setValueRN(initialValue);
     setDurationRNMS(0);
     setValueUI(initialValue);
     setDurationUIMS(0);
+    setValueBG(initialValue);
+    setDurationBGMS(0);
   }
 
-  function dirtyReadDirtyWrite() {
+  function getDirtySetBlocking() {
     'worklet';
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       const value = synchronizable.getDirty();
-      synchronizable.setDirty(value + 1);
+      synchronizable.setBlocking(value + 1);
     }
     const end = performance.now();
     const durationMS = end - start;
     setValueAndDuration(synchronizable.getBlocking(), durationMS);
   }
 
-  function blockingReadDirtyWrite() {
-    'worklet';
-    const start = performance.now();
-    for (let i = 0; i < targetValue; i++) {
-      const value = synchronizable.getBlocking();
-      synchronizable.setDirty(value + 1);
-    }
-    const end = performance.now();
-    const durationMS = end - start;
-    setValueAndDuration(synchronizable.getBlocking(), durationMS);
-  }
-
-  function blockingReadBlockingWrite() {
+  function getBlockingSetBlocking() {
     'worklet';
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
@@ -73,7 +89,7 @@ export default function SynchronizableExample() {
     setValueAndDuration(synchronizable.getBlocking(), durationMS);
   }
 
-  function blockingReadBlockingWriteTransaction() {
+  function setBlockingSetBlockingTransaction() {
     'worklet';
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
@@ -98,12 +114,6 @@ export default function SynchronizableExample() {
     setValueAndDuration(synchronizable.getBlocking(), durationMS);
   }
 
-  useEffect(() => {
-    if (isRunning && durationRNMS && durationUIMS) {
-      setIsRunning(false);
-    }
-  }, [isRunning, durationRNMS, durationUIMS]);
-
   return (
     <View style={styles.container}>
       <View style={styles.table}>
@@ -112,54 +122,47 @@ export default function SynchronizableExample() {
           <Text>Target value:</Text>
           <Text>Value read when RN finished:</Text>
           <Text>Value read when UI finished:</Text>
+          <Text>Value read when BG finished:</Text>
           <Text>Duration on RN:</Text>
           <Text>Duration on UI:</Text>
+          <Text>Duration on BG:</Text>
         </View>
         <View style={styles.rightColumn}>
           <Text>{initialValue}</Text>
-          <Text>{targetValue * 2}</Text>
+          <Text>{targetValue * 3}</Text>
           <Text>{valueRN}</Text>
           <Text>{valueUI}</Text>
+          <Text>{valueBG}</Text>
           <Text>{(durationRNMS / 1000).toFixed(2)}s</Text>
           <Text>{(durationUIMS / 1000).toFixed(2)}s</Text>
+          <Text>{(durationBGMS / 1000).toFixed(2)}s</Text>
         </View>
       </View>
-      <View style={{ opacity: isRunning ? 1 : 0 }}>
-        {/* TODO: Call these on another Worklet Runtime instead of UI Runtime and use an animating indicator here. */}
+      <View style={{ opacity: runningRuntimes >= 1 ? 1 : 0 }}>
         <Text>Please wait...</Text>
       </View>
       <Button
         onPress={() => {
           resetState();
-          setIsRunning(true);
+          setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(dirtyReadDirtyWrite)();
-            queueMicrotask(dirtyReadDirtyWrite);
+            runOnUI(getDirtySetBlocking)();
+            runOnRuntime(runtime, getDirtySetBlocking)();
+            queueMicrotask(getDirtySetBlocking);
           }, 50);
         }}
-        title=".getDirty() & .setDirty() on two threads"
+        title=".getDirty() & .setBlocking() on two threads"
       />
       <Button
         onPress={() => {
           resetState();
-          setIsRunning(true);
+          setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(blockingReadDirtyWrite)();
-            queueMicrotask(blockingReadDirtyWrite);
-          }, 50);
-        }}
-        title=".getBlocking() & .setDirty() on two threads"
-      />
-      <Button
-        onPress={() => {
-          resetState();
-          setIsRunning(true);
-
-          setTimeout(() => {
-            runOnUI(blockingReadBlockingWrite)();
-            queueMicrotask(blockingReadBlockingWrite);
+            runOnRuntime(runtime, getBlockingSetBlocking)();
+            runOnUI(getBlockingSetBlocking)();
+            queueMicrotask(getBlockingSetBlocking);
           }, 50);
         }}
         title=".getBlocking() & .setBlocking() on two threads"
@@ -167,11 +170,12 @@ export default function SynchronizableExample() {
       <Button
         onPress={() => {
           resetState();
-          setIsRunning(true);
+          setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(blockingReadBlockingWriteTransaction)();
-            queueMicrotask(blockingReadBlockingWriteTransaction);
+            runOnUI(setBlockingSetBlockingTransaction)();
+            runOnRuntime(runtime, setBlockingSetBlockingTransaction)();
+            queueMicrotask(setBlockingSetBlockingTransaction);
           }, 50);
         }}
         title=".setBlocking() with setter on two threads - transaction"
@@ -179,10 +183,11 @@ export default function SynchronizableExample() {
       <Button
         onPress={() => {
           resetState();
-          setIsRunning(true);
+          setRunningRuntimes(3);
 
           setTimeout(() => {
             runOnUI(imperativeLocking)();
+            runOnRuntime(runtime, imperativeLocking)();
             queueMicrotask(imperativeLocking);
           }, 50);
         }}
@@ -203,6 +208,7 @@ const styles = StyleSheet.create({
     flex: 0.25,
     flexDirection: 'row',
     gap: 10,
+    marginBottom: 120,
   },
   leftColumn: {
     flexDirection: 'column',

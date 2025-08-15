@@ -22,7 +22,8 @@ import {
 } from '@/apps/css/assets';
 import { Screen } from '@/apps/css/components';
 import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
-import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { colors, flex, radius, sizes, spacing, style } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -223,9 +224,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: spacing.sm,
-    marginHorizontal: 'auto',
-    maxWidth: '100%',
     padding: spacing.md,
-    width: 600,
+    ...(IS_WEB && style.webContainer),
   },
 });

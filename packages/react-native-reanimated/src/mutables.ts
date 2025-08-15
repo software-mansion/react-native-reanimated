@@ -1,11 +1,11 @@
 'use strict';
 import type { Synchronizable } from 'react-native-worklets';
 import {
+  createSerializable,
+  createSynchronizable,
   executeOnUIRuntimeSync,
-  makeShareableCloneRecursive,
-  makeSynchronizable,
   runOnUI,
-  shareableMappingCache,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
@@ -96,16 +96,21 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   });
 }
 
-export function makeMutableUI<Value>(
+const useExperimentalMutableOptimization = false;
+
+// eslint-disable-next-line camelcase
+function makeMutableUI_EXPERIMENTAL_OPTIMIZATION<Value>(
   initial: Value,
-  isDirtySynchronizable?: Synchronizable<boolean>
+  dirtyFlag: Synchronizable<boolean>
 ): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
   let isDirty = false;
 
-  const mutable: PartialMutable<Value> = {
+  const mutable: PartialMutable<Value> & {
+    resetDirtyFlag?(): void;
+  } = {
     get value() {
       return value;
     },
@@ -116,14 +121,18 @@ export function makeMutableUI<Value>(
       return value;
     },
     set _value(newValue: Value) {
+      if (!isDirty) {
+        dirtyFlag.setBlocking(true);
+        isDirty = true;
+      }
       value = newValue;
       listeners.forEach((listener) => {
         listener(newValue);
       });
-      if (isDirtySynchronizable && !isDirty && value !== initial) {
-        isDirty = true;
-        isDirtySynchronizable.setBlocking(true);
-      }
+    },
+    resetDirtyFlag() {
+      dirtyFlag.setBlocking(false);
+      isDirty = false;
     },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
@@ -149,27 +158,104 @@ export function makeMutableUI<Value>(
   return mutable as Mutable<Value>;
 }
 
-function makeMutableNative<Value>(initial: Value): Mutable<Value> {
-  const isDirtySynchronizable = makeSynchronizable(false);
+function makeMutableUI_<Value>(initial: Value): Mutable<Value> {
+  'worklet';
+  const listeners = new Map<number, Listener<Value>>();
+  let value = initial;
 
-  const handle = makeShareableCloneRecursive({
+  const mutable: PartialMutable<Value> = {
+    get value() {
+      return value;
+    },
+    set value(newValue) {
+      valueSetter(mutable as Mutable<Value>, newValue);
+    },
+    get _value(): Value {
+      return value;
+    },
+    set _value(newValue: Value) {
+      value = newValue;
+      listeners.forEach((listener) => {
+        listener(newValue);
+      });
+    },
+    modify: (modifier, forceUpdate = true) => {
+      valueSetter(
+        mutable as Mutable<Value>,
+        modifier !== undefined ? modifier(value) : value,
+        forceUpdate
+      );
+    },
+    addListener: (id: number, listener: Listener<Value>) => {
+      listeners.set(id, listener);
+    },
+    removeListener: (id: number) => {
+      listeners.delete(id);
+    },
+
+    _animation: null,
+    _isReanimatedSharedValue: true,
+  };
+
+  hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
+
+  return mutable as Mutable<Value>;
+}
+
+export const makeMutableUI = useExperimentalMutableOptimization
+  ? // eslint-disable-next-line camelcase
+    makeMutableUI_EXPERIMENTAL_OPTIMIZATION
+  : makeMutableUI_;
+
+declare global {
+  var __LOOKUPTIME_MS: number;
+  var __LOOKUPS: number;
+}
+
+globalThis.__LOOKUPTIME_MS = 0;
+globalThis.__LOOKUPS = 0;
+
+// eslint-disable-next-line camelcase
+function makeMutableNative_EXPERIMENTAL_OPTIMIZATION<Value>(
+  initial: Value
+): Mutable<Value> {
+  const dirtyFlag = createSynchronizable(false);
+  let latest = initial;
+
+  const handle = createSerializable({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial, isDirtySynchronizable);
+      return makeMutableUI(initial, dirtyFlag);
     },
   });
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
-      if (isDirtySynchronizable.getBlocking()) {
+      let result: Value;
+      const now = performance.now();
+      if (dirtyFlag.getBlocking()) {
+        // if (true) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+          // @ts-expect-error www
+          sv.resetDirtyFlag();
           return sv.value;
         });
-        return uiValueGetter(mutable as Mutable<Value>);
+        result = uiValueGetter(mutable as Mutable<Value>);
+        latest = result;
       } else {
-        return initial;
+        result = latest;
       }
+      const end = performance.now();
+      globalThis.__LOOKUPTIME_MS += end - now;
+      globalThis.__LOOKUPS += 1;
+      if (globalThis.__LOOKUPS % 1024 === 0) {
+        console.log(
+          `Average lookup time: ${globalThis.__LOOKUPTIME_MS / globalThis.__LOOKUPS} ms`
+        );
+      }
+      return result;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
@@ -211,7 +297,77 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  shareableMappingCache.set(mutable, handle);
+  serializableMappingCache.set(mutable, handle);
+  return mutable as Mutable<Value>;
+}
+
+function makeMutableNative<Value>(initial: Value): Mutable<Value> {
+  const handle = createSerializable({
+    __init: () => {
+      'worklet';
+      return makeMutableUI_(initial);
+    },
+  });
+
+  const mutable: PartialMutable<Value> = {
+    get value(): Value {
+      checkInvalidReadDuringRender();
+      const now = performance.now();
+      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+        return sv.value;
+      });
+      const result = uiValueGetter(mutable as Mutable<Value>);
+      const end = performance.now();
+      globalThis.__LOOKUPTIME_MS += end - now;
+      globalThis.__LOOKUPS += 1;
+      if (globalThis.__LOOKUPS % 1024 === 0) {
+        console.log(
+          `Average lookup time: ${globalThis.__LOOKUPTIME_MS / globalThis.__LOOKUPS} ms`
+        );
+      }
+      return result;
+    },
+    set value(newValue) {
+      checkInvalidWriteDuringRender();
+      runOnUI(() => {
+        mutable.value = newValue;
+      })();
+    },
+
+    get _value(): Value {
+      throw new ReanimatedError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      );
+    },
+    set _value(_newValue: Value) {
+      throw new ReanimatedError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      );
+    },
+
+    modify: (modifier, forceUpdate = true) => {
+      runOnUI(() => {
+        mutable.modify(modifier, forceUpdate);
+      })();
+    },
+    addListener: () => {
+      throw new ReanimatedError(
+        'Adding listeners is only possible on the UI runtime.'
+      );
+    },
+    removeListener: () => {
+      throw new ReanimatedError(
+        'Removing listeners is only possible on the UI runtime.'
+      );
+    },
+
+    _isReanimatedSharedValue: true,
+  };
+
+  hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
+
+  serializableMappingCache.set(mutable, handle);
   return mutable as Mutable<Value>;
 }
 
@@ -272,7 +428,10 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
 export const makeMutable = SHOULD_BE_USE_WEB
   ? makeMutableWeb
-  : makeMutableNative;
+  : useExperimentalMutableOptimization
+    ? // eslint-disable-next-line camelcase
+      makeMutableNative_EXPERIMENTAL_OPTIMIZATION
+    : makeMutableNative;
 
 interface JestMutable<TValue> extends Mutable<TValue> {
   toJSON: () => string;

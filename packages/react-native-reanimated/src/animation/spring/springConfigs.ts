@@ -57,8 +57,8 @@ export const SnappySpringConfigWithDuration = {
  *   spring will come to rest faster. Defaults to 120.
  * @param stiffness - How bouncy the spring is. Defaults to 900.
  * @param duration - Perceptual duration of the animation in milliseconds.
- *   Actual duration is 1.5 times higher. Defaults to 550ms if `dampingRatio` is
- *   provided.
+ *   Actual duration is 1.5 times the value of perceptual duration. Defaults to
+ *   550ms if `dampingRatio` is provided.
  * @param dampingRatio - How damped the spring is. Value `1` means the spring is
  *   critically damped, value `<1` means the spring is underdamped and value
  *   `>1` means the spring is overdamped. Defaults to 1 if `duration` is
@@ -75,21 +75,21 @@ export const SnappySpringConfigWithDuration = {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
 export type SpringConfig = {
-  stiffness?: number;
+  mass?: number;
   overshootClamping?: boolean;
   energyThreshold?: number;
   velocity?: number;
   reduceMotion?: ReduceMotion;
 } & (
   | {
-      mass?: number;
+      stiffness?: number;
       damping?: number;
       duration?: never;
       dampingRatio?: never;
       clamp?: never;
     }
   | {
-      mass?: never;
+      stiffness?: never;
       damping?: never;
       duration?: number;
       dampingRatio?: number;
