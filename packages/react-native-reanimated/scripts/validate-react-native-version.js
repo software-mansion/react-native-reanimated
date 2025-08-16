@@ -9,18 +9,10 @@ const reanimatedVersion = packageJson.version;
 const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
-
 const supportedRNVersions = [];
 
 for (const key in compatibilityFile) {
-  if (key.includes('–')) {
-    let min = key.split(' –')[0];
-    let max = key.split(' –')[1];
-    if (semverSatisfies(reanimatedVersion, `>=${min} <=${max}`)) {
-      // @ts-ignore
-      supportedRNVersions.push(...compatibilityFile[key]['react-native']);
-    }
-  } else if (semverSatisfies(reanimatedVersion, key)) {
+ if (semverSatisfies(reanimatedVersion, key)) {
     // @ts-ignore
     supportedRNVersions.push(...compatibilityFile[key]['react-native']);
   }
