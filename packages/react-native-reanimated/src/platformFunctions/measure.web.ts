@@ -1,10 +1,13 @@
 'use strict';
 import { logger } from '../common';
-import type { MeasuredDimensions, WrapperRef } from '../commonTypes';
+import type {
+  ComponentWithInstanceMethods,
+  MeasuredDimensions,
+} from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function measure<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>
+export function measure<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent>
 ): MeasuredDimensions | null {
   const element = animatedRef() as HTMLElement | null;
 

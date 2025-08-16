@@ -1,5 +1,5 @@
 'use strict';
-import type { WrapperRef } from '../commonTypes';
+import type { ComponentWithInstanceMethods } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import { measure } from './measure';
 
@@ -21,8 +21,10 @@ export interface ComponentCoords {
  *   {@link ComponentCoords}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/getRelativeCoords
  */
-export function getRelativeCoords<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>,
+export function getRelativeCoords<
+  TComponent extends ComponentWithInstanceMethods,
+>(
+  animatedRef: AnimatedRef<TComponent>,
   absoluteX: number,
   absoluteY: number
 ): ComponentCoords | null {

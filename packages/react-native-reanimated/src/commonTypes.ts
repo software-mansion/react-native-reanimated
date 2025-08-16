@@ -470,4 +470,6 @@ type InstanceMethods = {
   __internalInstanceHandle?: AnyRecord;
 };
 
-export type WrapperRef = (React.Component & InstanceMethods) | InstanceMethods;
+export type ComponentWithInstanceMethods =
+  | (React.Component & InstanceMethods)
+  | InstanceMethods;
