@@ -1,0 +1,26 @@
+diff --git a/android/src/main/jni/cpp-adapter.cpp b/android/src/main/jni/cpp-adapter.cpp
+index cd2dfa72ff8a3dd4c0c64d64b0ec2a409fe5bf25..f7086e55595805235f66ed9e1534d8541e157d20 100644
+--- a/android/src/main/jni/cpp-adapter.cpp
++++ b/android/src/main/jni/cpp-adapter.cpp
+@@ -19,7 +19,7 @@ void decorateRuntime(jsi::Runtime &runtime) {
+                     return jsi::Value::null();
+                 }
+ 
+-                auto shadowNode = shadowNodeFromValue(runtime, arguments[0]);
++                auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(runtime, arguments[0]);
+                 bool isViewFlatteningDisabled = shadowNode->getTraits().check(
+                         ShadowNodeTraits::FormsStackingContext);
+ 
+diff --git a/apple/RNGestureHandlerModule.mm b/apple/RNGestureHandlerModule.mm
+index 594eba35a1c514166bbe008b7107a507e1c4a001..d555a27b3168a3cfde3b3301fc168d7232a4108a 100644
+--- a/apple/RNGestureHandlerModule.mm
++++ b/apple/RNGestureHandlerModule.mm
+@@ -101,7 +101,7 @@ void decorateRuntime(jsi::Runtime &runtime)
+         if (!arguments[0].isObject()) {
+           return jsi::Value::null();
+         }
+-        auto shadowNode = shadowNodeFromValue(runtime, arguments[0]);
++        auto shadowNode = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(runtime, arguments[0]);
+ 
+         if (dynamic_pointer_cast<const ParagraphShadowNode>(shadowNode)) {
+           return jsi::Value(true);
