@@ -18,8 +18,11 @@ class TransformMatrix {
   virtual double &operator[](size_t index) = 0;
   virtual const double &operator[](size_t index) const = 0;
   virtual bool operator==(const TransformMatrix &other) const = 0;
+  virtual std::unique_ptr<TransformMatrix> operator*(
+      const TransformMatrix &other) const = 0;
 
   virtual size_t getDimension() const = 0;
+  virtual std::unique_ptr<TransformMatrix> expand(size_t dimension) const = 0;
 
   virtual std::string toString() const = 0;
   virtual folly::dynamic toDynamic() const = 0;
@@ -69,15 +72,6 @@ class TransformMatrixBase : public TransformMatrix {
     return matrix_[index];
   }
 
-  TDerived operator*(const TDerived &rhs) const {
-    return TDerived(multiply(rhs));
-  }
-
-  TDerived &operator*=(const TDerived &rhs) {
-    matrix_ = multiply(rhs);
-    return static_cast<TDerived &>(*this);
-  }
-
   bool operator==(const TransformMatrix &other) const override {
     if (other.getDimension() != TDimension) {
       return false;
@@ -85,6 +79,29 @@ class TransformMatrixBase : public TransformMatrix {
 
     auto rhs = static_cast<const TDerived *>(&other);
     return matrix_ == rhs->matrix_;
+  }
+
+  std::unique_ptr<TransformMatrix> operator*(
+      const TransformMatrix &other) override {
+    const auto otherDimension = other.getDimension();
+
+    if (TDimension == otherDimension) {
+      return std::make_unique<TDerived>(
+          multiply(static_cast<const TDerived &>(other)));
+    }
+
+    if (TDimension > otherDimension) {
+      // Expand the other transform matrix to have the same dimensions
+    }
+  }
+
+  TDerived operator*(const TDerived &rhs) const {
+    return TDerived(multiply(rhs));
+  }
+
+  TDerived &operator*=(const TDerived &rhs) {
+    matrix_ = multiply(rhs);
+    return static_cast<TDerived &>(*this);
   }
 
   std::string toString() const override {
@@ -109,6 +126,13 @@ class TransformMatrixBase : public TransformMatrix {
 
   size_t getDimension() const override {
     return TDimension;
+  }
+
+  std::unique_ptr<TransformMatrix> expand(size_t dimension) const override {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot expand transform matrix of dimension " +
+        std::to_string(TDimension) + " to dimension " +
+        std::to_string(dimension));
   }
 
   bool isSingular() const {

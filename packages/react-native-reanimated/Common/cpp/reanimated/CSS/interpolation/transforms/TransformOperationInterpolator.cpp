@@ -23,6 +23,7 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     const TransformInterpolatorUpdateContext &context) const {
   const auto fromMatrix = matrixFromOperation(from, context);
   const auto toMatrix = matrixFromOperation(to, context);
+
   // TODO
   //  const auto decomposedFrom = fromMatrix.decompose();
   //  const auto decomposedTo = toMatrix.decompose();

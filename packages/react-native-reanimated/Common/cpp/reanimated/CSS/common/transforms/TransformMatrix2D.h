@@ -53,6 +53,8 @@ class TransformMatrix2D
   std::optional<Decomposed> decompose() const;
   static TransformMatrix2D recompose(const Decomposed &decomposed);
 
+  std::unique_ptr<TransformMatrix> expand(size_t dimension) const override;
+
  private:
   Vector2D getTranslation() const;
   static std::pair<Vector2D, double> computeScaleAndSkew(

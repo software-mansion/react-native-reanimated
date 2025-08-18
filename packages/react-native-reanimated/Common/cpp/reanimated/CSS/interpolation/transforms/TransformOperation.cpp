@@ -480,12 +480,12 @@ simplifyOperations(const TransformOperations &operations) {
     if (!operation->isRelative()) {
       // If the operation is not relative, it can be simplified (converted to
       // the matrix and multiplied)
+
+      // TODO - improve (make multiplication in place)
       auto operationMatrix = operation->toMatrix();
-      if (hasSimplifications) {
-        *simplifiedMatrix *= *operationMatrix;
-      } else {
-        simplifiedMatrix = std::move(operationMatrix);
-      }
+      simplifiedMatrix = hasSimplifications
+          ? (*simplifiedMatrix * *operationMatrix)
+          : std::move(operationMatrix);
       hasSimplifications = true;
     } else {
       // If the current operation is relative, we need to add the current
