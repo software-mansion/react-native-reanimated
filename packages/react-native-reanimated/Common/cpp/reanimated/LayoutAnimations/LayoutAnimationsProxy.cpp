@@ -424,6 +424,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
 
     auto &layoutAnimation = layoutAnimationIt->second;
+    layoutAnimation.opacity.reset();
 
     auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
     newView->props = updateValues.newProps;
@@ -853,7 +854,6 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(
         uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.opacity.reset();
   }
 }
 
