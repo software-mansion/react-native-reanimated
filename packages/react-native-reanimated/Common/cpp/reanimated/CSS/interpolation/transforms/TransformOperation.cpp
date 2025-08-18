@@ -455,7 +455,7 @@ simplifyOperations(const TransformOperations &operations) {
   // Initialize the stack with the reversed list of operations
   std::vector<std::shared_ptr<TransformOperation>> operationsStack(
       operations.begin(), operations.end());
-  TransformOperations reversedOperations;
+  TransformOperations simplifiedOperations;
   std::unique_ptr<TransformMatrix> simplifiedMatrix =
       std::make_unique<TransformMatrix2D>(TransformMatrix2D::Identity());
   bool hasSimplifications = false;
@@ -470,52 +470,48 @@ simplifyOperations(const TransformOperations &operations) {
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
         // If the current operation is a matrix created from other operations,
         // add all of these operations to the stack
-        for (auto &op : std::get<TransformOperations>(matrixOperation->value)) {
-          operationsStack.push_back(op);
-        }
+        const auto &operations =
+            std::get<TransformOperations>(matrixOperation->value);
+        operationsStack.insert(
+            operationsStack.end(), operations.begin(), operations.end());
         continue;
       }
     }
 
-    if (!operation->isRelative()) {
-      // If the operation is not relative, it can be simplified (converted to
-      // the matrix and multiplied)
-
-      // TODO - improve (make multiplication in place)
-      auto operationMatrix = operation->toMatrix();
-      simplifiedMatrix = hasSimplifications
-          ? (*simplifiedMatrix * *operationMatrix)
-          : std::move(operationMatrix);
-      hasSimplifications = true;
-    } else {
+    if (operation->isRelative()) {
       // If the current operation is relative, we need to add the current
       // simplified matrix to the list of operations before adding the
-      // relative operation
+      // relative operation, which cannot be multiplied into the matrix
       if (hasSimplifications) {
-        reversedOperations.emplace_back(
+        simplifiedOperations.emplace_back(
             std::make_shared<MatrixOperation>(simplifiedMatrix));
         simplifiedMatrix =
             std::make_unique<TransformMatrix2D>(TransformMatrix2D::Identity());
         hasSimplifications = false;
       }
-      reversedOperations.emplace_back(operation);
+      simplifiedOperations.emplace_back(operation);
+      continue;
     }
+
+    // TODO - improve (make multiplication in place)
+    auto operationMatrix = operation->toMatrix();
+    simplifiedMatrix = hasSimplifications
+        ? (*simplifiedMatrix * *operationMatrix)
+        : std::move(operationMatrix);
+    hasSimplifications = true;
   }
 
   if (hasSimplifications) {
-    // We can return just a single matrix if there are no operations or the
-    // only operation is a simplified matrix (when hasSimplifications is true)
-    if (reversedOperations.size() <= 1) {
+    if (simplifiedOperations.empty()) {
       return simplifiedMatrix;
     }
-    // Otherwise, add the last simplified matrix to the list of operations
-    reversedOperations.emplace_back(
+    simplifiedOperations.emplace_back(
         std::make_shared<MatrixOperation>(simplifiedMatrix));
   }
 
-  // Reverse the list of operations to maintain the order
-  std::reverse(reversedOperations.begin(), reversedOperations.end());
-  return reversedOperations;
+  // Reverse the list of operations to maintain the correct order
+  std::reverse(simplifiedOperations.begin(), simplifiedOperations.end());
+  return simplifiedOperations;
 }
 
 MatrixOperation::MatrixOperation(std::unique_ptr<TransformMatrix> value)
