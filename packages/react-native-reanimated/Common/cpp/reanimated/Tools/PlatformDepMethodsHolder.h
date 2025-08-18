@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 using namespace facebook;
 using namespace react;
