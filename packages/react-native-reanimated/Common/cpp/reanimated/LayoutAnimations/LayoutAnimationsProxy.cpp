@@ -394,26 +394,27 @@ void LayoutAnimationsProxy::addOngoingAnimations(
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
   std::vector<int> tags;
-    for (auto &[tag, updateValues] : updateMap) {
-        tags.push_back(tag);
-    }
+  for (auto &[tag, updateValues] : updateMap) {
+    tags.push_back(tag);
+  }
 
-    auto maybeCorrectedTags = hasView_(tags);
-    if (!maybeCorrectedTags.has_value()){
-        return;
-    }
+  auto maybeCorrectedTags = hasView_(tags);
+  if (!maybeCorrectedTags.has_value()) {
+    return;
+  }
 
-    auto correctedTags = maybeCorrectedTags->get();
+  auto correctedTags = maybeCorrectedTags->get();
 
-    // since the map is not updated, we can assume that the ordering of tags in correctedTags matches the iterator
-    int i = -1;
+  // since the map is not updated, we can assume that the ordering of tags in
+  // correctedTags matches the iterator
+  int i = -1;
 #endif
   for (auto &[tag, updateValues] : updateMap) {
 #ifdef ANDROID
-      i++;
-      if (correctedTags[i] == -1){
-          continue;
-      }
+    i++;
+    if (correctedTags[i] == -1) {
+      continue;
+    }
 #endif
 
     auto layoutAnimationIt = layoutAnimations_.find(tag);

@@ -1312,9 +1312,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
         workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-        ,hasViewFunction_
+            ,
+        hasViewFunction_
 #endif
-);
+    );
   }
 }
 

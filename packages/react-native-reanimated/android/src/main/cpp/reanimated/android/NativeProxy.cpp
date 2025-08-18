@@ -174,21 +174,23 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
-std::optional<std::unique_ptr<int[]>> NativeProxy::hasView(std::vector<int> &tags) {
-    if (tags.empty()){
-        return {};
-    }
+std::optional<std::unique_ptr<int[]>> NativeProxy::hasView(
+    std::vector<int> &tags) {
+  if (tags.empty()) {
+    return {};
+  }
 
-  static const auto method = getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>("hasView");
-    auto jArrayInt = jni::JArrayInt::newArray(tags.size());
-    jArrayInt->setRegion(0, tags.size(), tags.data());
+  static const auto method =
+      getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>("hasView");
+  auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+  jArrayInt->setRegion(0, tags.size(), tags.data());
 
-    if (!method(javaPart_.get(), jArrayInt)){
-        return {};
-    }
+  if (!method(javaPart_.get(), jArrayInt)) {
+    return {};
+  }
 
-    auto region = jArrayInt->getRegion(0, tags.size());
-    return region;
+  auto region = jArrayInt->getRegion(0, tags.size());
+  return region;
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(

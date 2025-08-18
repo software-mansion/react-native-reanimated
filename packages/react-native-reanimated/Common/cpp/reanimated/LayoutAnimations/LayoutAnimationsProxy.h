@@ -54,18 +54,21 @@ struct LayoutAnimationsProxy
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler
 #ifdef ANDROID
-      ,HasViewFunction hasView
+      ,
+      HasViewFunction hasView
 #endif
-)
+      )
       : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler)
 #ifdef ANDROID
-        ,hasView_(hasView)
+        ,
+        hasView_(hasView)
 #endif
-{}
+  {
+  }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
       const;

@@ -290,13 +290,13 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  public boolean hasView(int[] tags){
-    if (!UiThreadUtil.isOnUiThread()){
+  public boolean hasView(int[] tags) {
+    if (!UiThreadUtil.isOnUiThread()) {
       return false;
     }
 
-    for (int i=0; i<tags.length; i++){
-      if (mFabricUIManager.resolveView(tags[i]) == null){
+    for (int i = 0; i < tags.length; i++) {
+      if (mFabricUIManager.resolveView(tags[i]) == null) {
         tags[i] = -1;
       }
     }
