@@ -1,7 +1,29 @@
 #include <reanimated/CSS/common/TransformMatrix2D.h>
-#include <reanimated/CSS/common/TransformMatrix3D.h>
 
 namespace reanimated::css {
+
+TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
+    const double progress,
+    const TransformMatrix2D::Decomposed &other) const {
+  return {
+      .scale = scale.interpolate(progress, other.scale),
+      .skew = skew + (other.skew - skew) * progress,
+      .rotation = rotation + (other.rotation - rotation) * progress,
+      .translation = translation.interpolate(progress, other.translation)};
+}
+
+#ifndef NDEBUG
+
+std::ostream &operator<<(
+    std::ostream &os,
+    const TransformMatrix2D::Decomposed &decomposed) {
+  os << "TransformMatrix2D::Decomposed(scale=" << decomposed.scale
+     << ", skew=" << decomposed.skew << ", rotation=" << decomposed.rotation
+     << ", translation=" << decomposed.translation << ")";
+  return os;
+}
+
+#endif // NDEBUG
 
 TransformMatrix2D TransformMatrix2D::Identity() {
   // clang-format off
@@ -97,6 +119,10 @@ TransformMatrix2D TransformMatrix2D::SkewY(double v) {
   // clang-format on
 }
 
+bool TransformMatrix2D::operator==(const TransformMatrix2D &other) const {
+  return matrix_ == other.matrix_;
+}
+
 double TransformMatrix2D::determinant() const {
   return (matrix_[0] * matrix_[4] * matrix_[8]) +
       (matrix_[1] * matrix_[5] * matrix_[6]) +
@@ -106,27 +132,109 @@ double TransformMatrix2D::determinant() const {
       (matrix_[0] * matrix_[5] * matrix_[7]);
 }
 
-std::unique_ptr<TransformMatrix> TransformMatrix2D::expand(
-    size_t targetDimension) const {
-  if (targetDimension == 3) {
-    return std::make_unique<TransformMatrix2D>(*this);
-  } else if (targetDimension == 4) {
-    std::array<double, 16> matrix4x4{};
+void TransformMatrix2D::translate2d(const Vector2D &translation) {
+  for (size_t i = 0; i < 3; ++i) {
+    matrix_[6 + i] +=
+        translation[0] * matrix_[i] + translation[1] * matrix_[3 + i];
+  }
+}
 
-    for (size_t i = 0; i < 3; ++i) {
-      for (size_t j = 0; j < 3; ++j) {
-        matrix4x4[i * 4 + j] = matrix_[i * 3 + j];
-      }
-    }
+void TransformMatrix2D::scale2d(const Vector2D &scale) {
+  for (size_t i = 0; i < 3; ++i) {
+    matrix_[i] *= scale[0];
+    matrix_[3 + i] *= scale[1];
+  }
+}
 
-    matrix4x4[15] = 1;
+std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
+    const {
+  auto matrixCp = *this;
 
-    return std::make_unique<TransformMatrix3D>(matrix4x4);
+  if (!matrixCp.normalize()) {
+    return std::nullopt;
   }
 
-  throw std::invalid_argument(
-      "[Reanimated] Cannot convert 2D matrix to dimension " +
-      std::to_string(targetDimension));
+  const auto translation = matrixCp.getTranslation();
+
+  // Take the 2×2 linear part into two column vectors (col-major)
+  std::array<Vector2D, 2> rows;
+  for (size_t i = 0; i < 2; ++i) {
+    rows[i] = Vector2D(matrixCp[i * 3], matrixCp[i * 3 + 1]);
+  }
+
+  auto [scale, skew] = computeScaleAndSkew(rows);
+
+  // Handle reflection (negative determinant)
+  if (rows[0].cross(rows[1]) < 0) {
+    for (size_t i = 0; i < 2; ++i) {
+      scale[i] *= -1;
+      rows[i] *= -1;
+    }
+  }
+
+  const auto rotation = computeRotation(rows);
+
+  return TransformMatrix2D::Decomposed{
+      .scale = scale,
+      .skew = skew,
+      .rotation = rotation,
+      .translation = translation};
+}
+
+TransformMatrix2D TransformMatrix2D::recompose(
+    const TransformMatrix2D::Decomposed &decomposed) {
+  auto result = TransformMatrix2D::Identity();
+
+  // Apply Translation
+  result.translate2d(decomposed.translation);
+
+  // Apply Rotation
+  result = TransformMatrix2D::Rotate(decomposed.rotation) * result;
+
+  // Apply XY shear
+  if (decomposed.skew != 0) {
+    auto tmp = TransformMatrix2D::Identity();
+    tmp[3] = decomposed.skew;
+    result = tmp * result;
+  }
+
+  // Apply Scale
+  result.scale2d(decomposed.scale);
+
+  return result;
+}
+
+Vector2D TransformMatrix2D::getTranslation() const {
+  return Vector2D(matrix_[6], matrix_[7]);
+}
+
+std::pair<Vector2D, double> TransformMatrix2D::computeScaleAndSkew(
+    std::array<Vector2D, 2> &rows) {
+  Vector2D scale;
+
+  // Compute X scale and normalize first row
+  scale[0] = rows[0].length();
+  rows[0].normalize();
+
+  // Compute XY shear and orthogonalize second row against first
+  double skew = rows[0].dot(rows[1]);
+  rows[1] = rows[1].addScaled(rows[0], -skew);
+
+  // Now, compute Y scale and normalize second row
+  scale[1] = rows[1].length();
+  rows[1].normalize();
+
+  // Next, Normalize shear by Y scale
+  skew /= scale[1];
+
+  return {scale, skew};
+}
+
+double TransformMatrix2D::computeRotation(std::array<Vector2D, 2> &rows) {
+  // For 2D, we can compute rotation directly from the orthonormal matrix
+  // The rotation angle is atan2(m10, m00) where m10 is rows[1][0] and m00 is
+  // rows[0][0]
+  return std::atan2(rows[1][0], rows[0][0]);
 }
 
 } // namespace reanimated::css

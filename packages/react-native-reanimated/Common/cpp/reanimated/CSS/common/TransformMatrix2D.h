@@ -16,7 +16,7 @@ class TransformMatrix2D
  public:
   struct Decomposed {
     Vector2D scale;
-    Vector2D skew;
+    double skew;
     double rotation;
     Vector2D translation;
 
@@ -42,13 +42,20 @@ class TransformMatrix2D
   static TransformMatrix2D SkewX(double v);
   static TransformMatrix2D SkewY(double v);
 
+  bool operator==(const TransformMatrix2D &other) const override;
+
   double determinant() const override;
+  void translate2d(const Vector2D &translation);
+  void scale2d(const Vector2D &scale);
 
   std::optional<Decomposed> decompose() const;
   static TransformMatrix2D recompose(const Decomposed &decomposed);
 
-  std::unique_ptr<TransformMatrix> expand(
-      size_t targetDimension) const override;
+ private:
+  Vector2D getTranslation() const;
+  static std::pair<Vector2D, double> computeScaleAndSkew(
+      std::array<Vector2D, 2> &rows);
+  static double computeRotation(std::array<Vector2D, 2> &rows);
 };
 
 } // namespace reanimated::css

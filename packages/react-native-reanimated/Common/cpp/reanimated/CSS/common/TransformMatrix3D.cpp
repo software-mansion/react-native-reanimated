@@ -1,4 +1,3 @@
-#include <reanimated/CSS/common/TransformMatrix2D.h>
 #include <reanimated/CSS/common/TransformMatrix3D.h>
 
 namespace reanimated::css {
@@ -19,7 +18,7 @@ TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
 std::ostream &operator<<(
     std::ostream &os,
     const TransformMatrix3D::Decomposed &decomposed) {
-  os << "DecomposedTransformMatrix(scale=" << decomposed.scale
+  os << "TransformMatrix3D::Decomposed(scale=" << decomposed.scale
      << ", skew=" << decomposed.skew << ", quaternion=" << decomposed.quaternion
      << ", translation=" << decomposed.translation
      << ", perspective=" << decomposed.perspective << ")";
@@ -172,6 +171,10 @@ TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
   // clang-format on
 }
 
+bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
+  return matrix_ == other.matrix_;
+}
+
 Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
   Vector4D result;
 
@@ -295,14 +298,6 @@ bool TransformMatrix3D::invert() {
   return true;
 }
 
-void TransformMatrix3D::transpose() {
-  for (size_t i = 0; i < 4; ++i) {
-    for (size_t j = i + 1; j < 4; ++j) {
-      std::swap(matrix_[i * 4 + j], matrix_[j * 4 + i]);
-    }
-  }
-}
-
 void TransformMatrix3D::translate3d(const Vector3D &translation) {
   for (size_t i = 0; i < 4; ++i) {
     matrix_[12 + i] += translation[0] * matrix_[i] +
@@ -387,12 +382,10 @@ TransformMatrix3D TransformMatrix3D::recompose(
       result = tmp * result;
     }
     if (hasSkewXZ) { // XZ
-      tmp[9] = 0;
       tmp[8] = decomposed.skew[1];
       result = tmp * result;
     }
     if (hasSkewXY) { // XY
-      tmp[8] = 0;
       tmp[4] = decomposed.skew[0];
       result = tmp * result;
     }
@@ -557,17 +550,6 @@ double TransformMatrix3D::determinant3x3(
     const double i) {
   return (a * e * i) + (b * f * g) + (c * d * h) - (c * e * g) - (b * d * i) -
       (a * f * h);
-}
-
-std::unique_ptr<TransformMatrix> TransformMatrix3D::expand(
-    size_t targetDimension) const {
-  if (targetDimension == 4) {
-    return std::make_unique<TransformMatrix3D>(*this);
-  }
-
-  throw std::invalid_argument(
-      "[Reanimated] Cannot convert 3D matrix to dimension " +
-      std::to_string(targetDimension));
 }
 
 } // namespace reanimated::css

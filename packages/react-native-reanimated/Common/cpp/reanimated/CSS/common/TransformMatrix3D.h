@@ -49,9 +49,7 @@ class TransformMatrix3D
   static TransformMatrix3D SkewX(double value);
   static TransformMatrix3D SkewY(double value);
 
-  const bool operator==(const TransformMatrix3D &other) const {
-    return matrix_ == other.matrix_;
-  }
+  bool operator==(const TransformMatrix3D &other) const override;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(
@@ -60,15 +58,10 @@ class TransformMatrix3D
 #endif // NDEBUG
 
   double determinant() const override;
-
   void adjugate();
   bool invert();
-  void transpose();
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
-
-  std::unique_ptr<TransformMatrix> expand(
-      size_t targetDimension) const override;
 
   std::optional<Decomposed> decompose() const;
   static TransformMatrix3D recompose(const Decomposed &decomposed);

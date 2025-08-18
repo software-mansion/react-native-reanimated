@@ -16,8 +16,6 @@ class TransformMatrix {
   virtual double &operator[](size_t index) = 0;
   virtual const double &operator[](size_t index) const = 0;
 
-  virtual std::unique_ptr<TransformMatrix> expand(
-      size_t targetDimension) const = 0;
   virtual size_t getDimension() const = 0;
 
   virtual std::string toString() const = 0;
@@ -58,6 +56,8 @@ class TransformMatrixBase : public TransformMatrix {
     }
   }
 
+  virtual bool operator==(const TDerived &other) const = 0;
+
   double &operator[](size_t index) override {
     return matrix_[index];
   }
@@ -74,29 +74,6 @@ class TransformMatrixBase : public TransformMatrix {
     matrix_ = multiply(rhs);
     return static_cast<TDerived &>(*this);
   }
-
-  // std::unique_ptr<TransformMatrix> operator*(
-  //     const TransformMatrix &rhs) override {
-  //   if (TDimension < rhs.getDimension()) {
-  //     // Will call multiplication operator with equal dimensions matrices
-  //     return expand(rhs.getDimension())->operator*(rhs);
-  //   } else if (TDimension > rhs.getDimension()) {
-  //     // Will call multiplication operator with equal dimensions matrices
-  //     return operator*(*rhs.expand(TDimension));
-  //   }
-
-  //   std::array<double, SIZE> result{};
-  //   for (size_t i = 0; i < TDimension; ++i) {
-  //     for (size_t j = 0; j < TDimension; ++j) {
-  //       for (size_t k = 0; k < TDimension; ++k) {
-  //         result[i * TDimension + j] +=
-  //             matrix_[i * TDimension + k] * rhs[k * TDimension + j];
-  //       }
-  //     }
-  //   }
-
-  //   return std::make_unique<TDerived>(result);
-  // }
 
   std::string toString() const override {
     std::string result = "[";
@@ -139,6 +116,14 @@ class TransformMatrixBase : public TransformMatrix {
       matrix_[i] /= last;
     }
     return true;
+  }
+
+  void transpose() {
+    for (size_t i = 0; i < TDimension; ++i) {
+      for (size_t j = i + 1; j < TDimension; ++j) {
+        std::swap(matrix_[i * TDimension + j], matrix_[j * TDimension + i]);
+      }
+    }
   }
 
  protected:
