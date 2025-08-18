@@ -141,7 +141,18 @@ if (__DEV__) {
 
 /**
  * Lets you run a function synchronously on the [UI
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ * from the [RN
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+ * Passed function and args are automatically
+ * [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
+ * and ready to be run on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
+ *
+ * Remarks:
+ *
+ * - This function cannot be called from the [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
  *
  * @param fun - A reference to a function you want to execute on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
