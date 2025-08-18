@@ -1,0 +1,29 @@
+---
+sidebar_position: 2
+---
+
+# isSerializableRef
+
+`isSerializableRef` checks if a value is a serializable reference.
+
+## Reference
+
+```javascript
+import { isSerializableRef, createSerializable } from 'react-native-worklets';
+
+const object = {
+  a: 1,
+};
+
+const serializableRef = createSerializable(object);
+
+console.log(isSerializableRef(serializableRef)); // true
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function isSerializableRef(value: unknown): value is SerializableRef
+```
+</details>

@@ -182,7 +182,7 @@ describe('Matrix util functions', () => {
         [1, 1, 1, 1],
         [1, 1, 1, 0],
       ];
-      expect(() => decomposeMatrix(incorrectMatrix)).toThrowError();
+      expect(() => decomposeMatrix(incorrectMatrix)).toThrow();
     });
 
     it('Decompose identity into identities', () => {

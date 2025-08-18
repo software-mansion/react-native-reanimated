@@ -9,7 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Circle, Path, Polygon, Rect, Svg } from 'react-native-svg';
+import { Circle, G, Path, Polygon, Rect, Svg } from 'react-native-svg';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -131,21 +131,24 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
         Both components use the same animated props, but only the shape of the
         left one is animated, because the &apos;points&apos; property is a JS
         prop and only this component specified &apos;points&apos; as the JS
-        prop.
+        prop. (both examples work on web)
       </Text>
       <Svg height="200" width="200">
         <AnimatedPolygonJSProps
           fill="lime"
-          x={0}
           strokeWidth={10}
           animatedProps={animatedProps}
         />
-        <AnimatedPolygonNoJSProps
-          fill="red"
-          x={100}
-          strokeWidth={10}
-          animatedProps={animatedProps}
-        />
+        {/* For some reason the `x` prop doesn't work on web when set on the circle component.
+        To fix this, we can wrap the component in a `G` component and set the `x` prop on the `G` component. */}
+        <G x={100}>
+          <AnimatedPolygonNoJSProps
+            fill="red"
+            x={100}
+            strokeWidth={10}
+            animatedProps={animatedProps}
+          />
+        </G>
       </Svg>
     </View>
   );

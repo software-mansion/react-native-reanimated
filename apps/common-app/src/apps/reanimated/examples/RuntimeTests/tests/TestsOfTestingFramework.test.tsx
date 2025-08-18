@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Animated, { FadeIn, runOnUI, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import {
   callTracker,
@@ -11,10 +11,8 @@ import {
   getRegisteredValue,
   getTestComponent,
   getTrackerCallCount,
-  mockAnimationTimer,
   notify,
   Presets,
-  recordAnimationUpdates,
   registerValue,
   render,
   test,
@@ -24,6 +22,7 @@ import {
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
+import { runOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);

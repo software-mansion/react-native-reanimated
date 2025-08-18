@@ -1,7 +1,8 @@
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -108,6 +109,9 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Object &&jsiWorkletsModuleProxy) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
+
+  rt.global().setProperty(
+      rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
@@ -252,6 +256,14 @@ void WorkletRuntimeDecorator::decorate(
       "_createSerializableFunction",
       [](jsi::Runtime &rt, const jsi::Value &value) {
         return makeSerializableFunction(rt, value.asObject(rt).asFunction(rt));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_createSerializableSynchronizable",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return SerializableJSRef::newNativeStateObject(
+            rt, extractSerializableOrThrow(rt, value));
       });
 
   jsi_utils::installJsiFunction(

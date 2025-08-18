@@ -3,7 +3,7 @@
 namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
-    std::make_shared<MatrixOperation>(TransformMatrix::Identity())};
+    std::make_shared<MatrixOperation>(TransformMatrix3D::Identity())};
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,

@@ -12,12 +12,17 @@ import {
   View,
 } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
-import { useReducedMotion } from 'react-native-reanimated';
+import {
+  useReducedMotion,
+  setDynamicFeatureFlag,
+} from 'react-native-reanimated';
 
 import { BackButton, DrawerButton } from '@/components';
 import { createStack, IS_MACOS } from '@/utils';
 
 import { EXAMPLES } from './examples';
+
+setDynamicFeatureFlag('EXPERIMENTAL_MUTABLE_OPTIMIZATION', true);
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;

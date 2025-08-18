@@ -16,15 +16,20 @@ export {
   shareableMappingCache,
 } from './deprecated';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { isSynchronizable } from './isSynchronizable';
+export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { serializableMappingCache } from './shareableMappingCache';
-export { createSerializable, isSerializableRef } from './shareables';
+export { createSerializable, isSerializableRef } from './serializable';
+export { serializableMappingCache } from './serializableMappingCache';
+export type { Synchronizable } from './synchronizable';
+export { createSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
   runOnUIAsync,
+  scheduleOnRN,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
