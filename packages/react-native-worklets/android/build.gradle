@@ -42,6 +42,13 @@ def resolveReactNativeDirectory() {
     )
 }
 
+def getReactNativeVersion() {
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def reactProperties = new Properties()
+    file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+    return reactProperties.getProperty("VERSION_NAME")
+}
+
 def getReactNativeMinorVersion() {
     def reactNativeRootDir = resolveReactNativeDirectory()
     def reactProperties = new Properties()
@@ -92,6 +99,7 @@ if (isNewArchitectureEnabled()) {
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
+def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
@@ -287,12 +295,17 @@ android {
     }
 }
 
+def validateReactNativeVersionResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-react-native-version.js", REACT_NATIVE_VERSION.toString())
+    ignoreExitValue = true
+}
+
 task assertMinimalReactNativeVersionTask {
-    // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 78
-    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Worklets] Unsupported React Native version. Please use React Native 0.$minimalReactNativeVersion or newer.")
+        if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 

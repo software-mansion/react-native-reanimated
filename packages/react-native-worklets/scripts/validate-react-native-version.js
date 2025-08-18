@@ -5,15 +5,15 @@ const { validateReactNativeVersion } = require('../../../scripts/version-utils')
 
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const packageJson = require(packageJsonPath);
-const reanimatedVersion = packageJson.version;
+const workletsVersion = packageJson.version;
 const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
 
-if (validateReactNativeVersion(reanimatedVersion, reactNativeVersion, compatibilityFile)) {
+if (validateReactNativeVersion(workletsVersion, reactNativeVersion, compatibilityFile)) {
   process.exit(0);
 }
 
 // eslint-disable-next-line reanimated/use-logger
-console.error(`[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`);
+console.error(`[Worklets] React Native ${reactNativeVersion} version is not compatible with Worklets ${workletsVersion}`);
 process.exit(1);

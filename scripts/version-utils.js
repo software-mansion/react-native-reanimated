@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const semverSatisfies = require('semver/functions/satisfies');
 
 /**
  * Updates the package.json version and jsVersion file
@@ -46,7 +47,40 @@ function updatePeerDependency(packageJsonPath, dependencyName, newVersion) {
   fs.writeFileSync(packageJsonPath, newPackageJson, 'utf-8');
 }
 
+/**
+ * Validates React Native version compatibility
+ *
+ * @param {string} packageVersion - Version of the package
+ * @param {string} reactNativeVersion - React Native version to validate
+ * @param {Object} compatibilityJSON - Compatibility configuration object
+ * @returns {boolean}
+ */
+function validateReactNativeVersion(packageVersion, reactNativeVersion, compatibilityJSON) {
+  const supportedRNVersions = [];
+
+  for (const key in compatibilityJSON) {
+    if (semverSatisfies(packageVersion, key)) {
+      // @ts-ignore
+      supportedRNVersions.push(...compatibilityJSON[key]['react-native']);
+    }
+  }
+
+  // If user uses a version that is not listed in the compatibility file, we skip the check
+  if (supportedRNVersions.length === 0) {
+    return true;
+  }
+
+  for (const version of supportedRNVersions) {
+    if (semverSatisfies(reactNativeVersion, `${version}.x`)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 module.exports = {
   updateVersion,
   updatePeerDependency,
+  validateReactNativeVersion,
 };
