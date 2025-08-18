@@ -120,14 +120,16 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"scale", transformOp<ScaleOperation>(1)},
           {"scaleX", transformOp<ScaleXOperation>(1)},
           {"scaleY", transformOp<ScaleYOperation>(1)},
-          {"translateX",
-           transformOp<TranslateXOperation>(RelativeTo::Self, "width", 0)},
-          {"translateY",
-           transformOp<TranslateYOperation>(RelativeTo::Self, "height", 0)},
+          //   {"translateX",
+          //    transformOp<TranslateXOperation>(RelativeTo::Self, "width", 0)},
+          //   {"translateY",
+          //    transformOp<TranslateYOperation>(RelativeTo::Self, "height",
+          //    0)},
           {"skewX", transformOp<SkewXOperation>("0deg")},
-          {"skewY", transformOp<SkewYOperation>("0deg")},
-          {"matrix",
-           transformOp<MatrixOperation>(TransformMatrix3D::Identity())}})},
+          {"skewY", transformOp<SkewYOperation>("0deg")}})},
+    //   TODO - fix factory method
+    //   {"matrix",
+    //    transformOp<MatrixOperation>(TransformMatrix2D::Identity())}})},
 };
 
 } // namespace reanimated::css

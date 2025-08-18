@@ -65,7 +65,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolatorUpdateContext &context) const override;
 
  private:
-  TransformMatrix3D matrixFromOperation(
+  std::unique_ptr<TransformMatrix> matrixFromOperation(
       const MatrixOperation &matrixOperation,
       const TransformInterpolatorUpdateContext &context) const;
 };

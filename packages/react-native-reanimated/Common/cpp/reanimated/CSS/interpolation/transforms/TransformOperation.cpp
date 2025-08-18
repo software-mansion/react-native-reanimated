@@ -153,8 +153,9 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
       return std::make_shared<SkewYOperation>(
           propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::Matrix:
+      // TODO - create either 2d or 3d transform matrix depending on the value
       return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(rt, propertyValue));
+          std::make_unique<TransformMatrix3D>(rt, propertyValue));
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -213,8 +214,9 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
     case TransformOperationType::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOperationType::Matrix:
+      // TODO - create either 2d or 3d transform matrix depending on the value
       return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(propertyValue));
+          std::make_unique<TransformMatrix3D>(propertyValue));
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -227,8 +229,8 @@ folly::dynamic TransformOperation::toDynamic() const {
 }
 
 template <typename TValue>
-TransformOperationBase<TValue>::TransformOperationBase(const TValue &value)
-    : TransformOperation(), value(value) {}
+TransformOperationBase<TValue>::TransformOperationBase(TValue value)
+    : TransformOperation(), value(std::move(value)) {}
 
 template <typename TValue>
 bool TransformOperationBase<TValue>::operator==(
@@ -252,11 +254,11 @@ std::string TransformOperationBase<TValue>::getOperationValue() const {
 
 template <>
 std::string TransformOperationBase<
-    std::variant<TransformMatrix3D, TransformOperations>>::getOperationValue()
-    const {
-  if (std::holds_alternative<TransformMatrix3D>(value)) {
+    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>::
+    getOperationValue() const {
+  if (std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
     std::ostringstream ss;
-    ss << std::get<TransformMatrix3D>(value);
+    ss << std::get<std::unique_ptr<TransformMatrix>>(value);
     return ss.str();
   }
 
@@ -285,35 +287,39 @@ folly::dynamic PerspectiveOperation::valueToDynamic() const {
   // Perspective cannot be 0, so we return undefined in this case
   return value.value != 0 ? value.toDynamic() : folly::dynamic();
 }
-TransformMatrix3D PerspectiveOperation::toMatrix() const {
-  return TransformMatrix3D::Perspective(value.value);
+std::unique_ptr<TransformMatrix> PerspectiveOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix3D>(
+      TransformMatrix3D::Perspective(value.value));
 }
 
 // Rotate
-RotateOperation::RotateOperation(const std::string &value)
-    : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
+RotateOperation::RotateOperation(std::string value)
+    : TransformOperationBase<CSSAngle>(CSSAngle(std::move(value))) {}
 TransformOperationType RotateOperation::type() const {
   return TransformOperationType::Rotate;
 }
 folly::dynamic RotateOperation::valueToDynamic() const {
   return value.toDynamic();
 }
-TransformMatrix3D RotateOperation::toMatrix() const {
-  return TransformMatrix3D::RotateZ(value.value);
+std::unique_ptr<TransformMatrix> RotateOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::Rotate(value.value));
 }
 
 TransformOperationType RotateXOperation::type() const {
   return TransformOperationType::RotateX;
 }
-TransformMatrix3D RotateXOperation::toMatrix() const {
-  return TransformMatrix3D::RotateX(value.value);
+std::unique_ptr<TransformMatrix> RotateXOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix3D>(
+      TransformMatrix3D::RotateX(value.value));
 }
 
 TransformOperationType RotateYOperation::type() const {
   return TransformOperationType::RotateY;
 }
-TransformMatrix3D RotateYOperation::toMatrix() const {
-  return TransformMatrix3D::RotateY(value.value);
+std::unique_ptr<TransformMatrix> RotateYOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix3D>(
+      TransformMatrix3D::RotateY(value.value));
 }
 
 TransformOperationType RotateZOperation::type() const {
@@ -327,8 +333,9 @@ TransformOperations RotateZOperation::convertTo(
   assertCanConvertTo(type);
   return {std::make_shared<RotateOperation>(value)};
 }
-TransformMatrix3D RotateZOperation::toMatrix() const {
-  return TransformMatrix3D::RotateZ(value.value);
+std::unique_ptr<TransformMatrix> RotateZOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::Rotate(value.value));
 }
 
 // Scale
@@ -357,64 +364,71 @@ TransformOperations ScaleOperation::convertTo(
         std::make_shared<ScaleXOperation>(value)};
   }
 }
-TransformMatrix3D ScaleOperation::toMatrix() const {
-  return TransformMatrix3D::Scale(value.value);
+std::unique_ptr<TransformMatrix> ScaleOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::Scale(value.value));
 }
 
 TransformOperationType ScaleXOperation::type() const {
   return TransformOperationType::ScaleX;
 }
-TransformMatrix3D ScaleXOperation::toMatrix() const {
-  return TransformMatrix3D::ScaleX(value.value);
+std::unique_ptr<TransformMatrix> ScaleXOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::ScaleX(value.value));
 }
 
 TransformOperationType ScaleYOperation::type() const {
   return TransformOperationType::ScaleY;
 }
-TransformMatrix3D ScaleYOperation::toMatrix() const {
-  return TransformMatrix3D::ScaleY(value.value);
+std::unique_ptr<TransformMatrix> ScaleYOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::ScaleY(value.value));
 }
 
 // Translate
-TranslateOperation::TranslateOperation(const double value)
+TranslateOperation::TranslateOperation(double value)
     : TransformOperationBase<CSSLength>(CSSLength(value)) {}
-TranslateOperation::TranslateOperation(const std::string &value)
-    : TransformOperationBase<CSSLength>(CSSLength(value)) {}
+TranslateOperation::TranslateOperation(std::string value)
+    : TransformOperationBase<CSSLength>(CSSLength(std::move(value))) {}
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
 folly::dynamic TranslateOperation::valueToDynamic() const {
   return value.toDynamic();
 }
-TransformMatrix3D TranslateOperation::toMatrix() const {
+std::unique_ptr<TransformMatrix> TranslateOperation::toMatrix() const {
   return toMatrix(value.value);
 }
 
 TransformOperationType TranslateXOperation::type() const {
   return TransformOperationType::TranslateX;
 }
-TransformMatrix3D TranslateXOperation::toMatrix(double resolvedValue) const {
+std::unique_ptr<TransformMatrix> TranslateXOperation::toMatrix(
+    double resolvedValue) const {
   if (value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateX to the matrix.");
   }
-  return TransformMatrix3D::TranslateX(resolvedValue);
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::TranslateX(resolvedValue));
 }
 
 TransformOperationType TranslateYOperation::type() const {
   return TransformOperationType::TranslateY;
 }
-TransformMatrix3D TranslateYOperation::toMatrix(double resolvedValue) const {
+std::unique_ptr<TransformMatrix> TranslateYOperation::toMatrix(
+    double resolvedValue) const {
   if (value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateY to the matrix.");
   }
-  return TransformMatrix3D::TranslateY(resolvedValue);
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::TranslateY(resolvedValue));
 }
 
 // Skew
-SkewOperation::SkewOperation(const std::string &value)
-    : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
+SkewOperation::SkewOperation(std::string value)
+    : TransformOperationBase<CSSAngle>(CSSAngle(std::move(value))) {}
 folly::dynamic SkewOperation::valueToDynamic() const {
   return value.toDynamic();
 }
@@ -422,25 +436,28 @@ folly::dynamic SkewOperation::valueToDynamic() const {
 TransformOperationType SkewXOperation::type() const {
   return TransformOperationType::SkewX;
 }
-TransformMatrix3D SkewXOperation::toMatrix() const {
-  return TransformMatrix3D::SkewX(value.value);
+std::unique_ptr<TransformMatrix> SkewXOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::SkewX(value.value));
 }
 
 TransformOperationType SkewYOperation::type() const {
   return TransformOperationType::SkewY;
 }
-TransformMatrix3D SkewYOperation::toMatrix() const {
-  return TransformMatrix3D::SkewY(value.value);
+std::unique_ptr<TransformMatrix> SkewYOperation::toMatrix() const {
+  return std::make_unique<TransformMatrix2D>(
+      TransformMatrix2D::SkewY(value.value));
 }
 
 // Matrix
-std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
-    const TransformOperations &operations) {
+std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>
+simplifyOperations(const TransformOperations &operations) {
   // Initialize the stack with the reversed list of operations
   std::vector<std::shared_ptr<TransformOperation>> operationsStack(
       operations.begin(), operations.end());
   TransformOperations reversedOperations;
-  TransformMatrix3D simplifiedMatrix = TransformMatrix3D::Identity();
+  std::unique_ptr<TransformMatrix> simplifiedMatrix =
+      std::make_unique<TransformMatrix2D>(TransformMatrix2D::Identity());
   bool hasSimplifications = false;
 
   while (!operationsStack.empty()) {
@@ -463,10 +480,12 @@ std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
     if (!operation->isRelative()) {
       // If the operation is not relative, it can be simplified (converted to
       // the matrix and multiplied)
-      const auto operationMatrix = operation->toMatrix();
-      simplifiedMatrix = hasSimplifications
-          ? (simplifiedMatrix * operationMatrix)
-          : operationMatrix;
+      auto operationMatrix = operation->toMatrix();
+      if (hasSimplifications) {
+        *simplifiedMatrix *= *operationMatrix;
+      } else {
+        simplifiedMatrix = std::move(operationMatrix);
+      }
       hasSimplifications = true;
     } else {
       // If the current operation is relative, we need to add the current
@@ -475,7 +494,8 @@ std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
       if (hasSimplifications) {
         reversedOperations.emplace_back(
             std::make_shared<MatrixOperation>(simplifiedMatrix));
-        simplifiedMatrix = TransformMatrix3D::Identity();
+        simplifiedMatrix =
+            std::make_unique<TransformMatrix2D>(TransformMatrix2D::Identity());
         hasSimplifications = false;
       }
       reversedOperations.emplace_back(operation);
@@ -498,18 +518,32 @@ std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
   return reversedOperations;
 }
 
-MatrixOperation::MatrixOperation(const TransformMatrix3D &value)
+MatrixOperation::MatrixOperation(std::unique_ptr<TransformMatrix> value)
     : TransformOperationBase<
-          std::variant<TransformMatrix3D, TransformOperations>>(value) {}
+          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
+          std::move(value)) {}
+
 MatrixOperation::MatrixOperation(const TransformOperations &operations)
     // Simplify operations to reduce the number of matrix multiplications
     // during matrix keyframe interpolation
     : TransformOperationBase<
-          std::variant<TransformMatrix3D, TransformOperations>>(
+          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
           simplifyOperations(operations)) {}
+
+MatrixOperation::MatrixOperation(TransformMatrix2D value)
+    : TransformOperationBase<
+          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
+          std::make_unique<TransformMatrix2D>(value)) {}
+
+MatrixOperation::MatrixOperation(TransformMatrix3D value)
+    : TransformOperationBase<
+          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
+          std::make_unique<TransformMatrix3D>(value)) {}
+
 TransformOperationType MatrixOperation::type() const {
   return TransformOperationType::Matrix;
 }
+
 bool MatrixOperation::operator==(const TransformOperation &other) const {
   if (type() != other.type()) {
     return false;
@@ -528,8 +562,8 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
     return false;
   }
   if (!hasOperations) {
-    return std::get<TransformMatrix3D>(value) ==
-        std::get<TransformMatrix3D>(otherOperation->value);
+    return std::get<std::unique_ptr<TransformMatrix>>(value) ==
+        std::get<std::unique_ptr<TransformMatrix>>(otherOperation->value);
   }
 
   const auto &operations = std::get<TransformOperations>(value);
@@ -548,25 +582,27 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 }
 
 folly::dynamic MatrixOperation::valueToDynamic() const {
-  if (!std::holds_alternative<TransformMatrix3D>(value)) {
+  if (!std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert unprocessed transform operations to the dynamic value.");
   }
-  return std::get<TransformMatrix3D>(value).toDynamic();
+  return std::get<std::unique_ptr<TransformMatrix>>(value)->toDynamic();
 }
 
-TransformMatrix3D MatrixOperation::toMatrix() const {
-  if (!std::holds_alternative<TransformMatrix3D>(value)) {
+std::unique_ptr<TransformMatrix> MatrixOperation::toMatrix() const {
+  if (!std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
   }
-  return std::get<TransformMatrix3D>(value);
+  // Return a copy of a matrix stored in the variant
+  const auto &matrix = std::get<std::unique_ptr<TransformMatrix>>(value);
+  return std::make_unique<TransformMatrix>(*matrix);
 }
 
 template struct TransformOperationBase<CSSDouble>;
 template struct TransformOperationBase<CSSAngle>;
 template struct TransformOperationBase<CSSLength>;
 template struct TransformOperationBase<
-    std::variant<TransformMatrix3D, TransformOperations>>;
+    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>;
 
 } // namespace reanimated::css

@@ -41,14 +41,6 @@ class TransformMatrix3D
   static TransformMatrix3D Perspective(double value);
   static TransformMatrix3D RotateX(double value);
   static TransformMatrix3D RotateY(double value);
-  static TransformMatrix3D RotateZ(double value);
-  static TransformMatrix3D Scale(double value);
-  static TransformMatrix3D ScaleX(double value);
-  static TransformMatrix3D ScaleY(double value);
-  static TransformMatrix3D TranslateX(double value);
-  static TransformMatrix3D TranslateY(double value);
-  static TransformMatrix3D SkewX(double value);
-  static TransformMatrix3D SkewY(double value);
 
   bool operator==(const TransformMatrix3D &other) const override;
 

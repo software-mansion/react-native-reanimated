@@ -17,6 +17,7 @@ class TransformMatrix {
 
   virtual double &operator[](size_t index) = 0;
   virtual const double &operator[](size_t index) const = 0;
+  virtual bool operator==(const TransformMatrix &other) const = 0;
 
   virtual size_t getDimension() const = 0;
 
@@ -75,6 +76,15 @@ class TransformMatrixBase : public TransformMatrix {
   TDerived &operator*=(const TDerived &rhs) {
     matrix_ = multiply(rhs);
     return static_cast<TDerived &>(*this);
+  }
+
+  bool operator==(const TransformMatrix &other) const override {
+    if (other.getDimension() != TDimension) {
+      return false;
+    }
+
+    auto rhs = static_cast<const TDerived *>(&other);
+    return matrix_ == rhs->matrix_;
   }
 
   std::string toString() const override {

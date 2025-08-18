@@ -316,10 +316,8 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   // Convert all operations to matrices if matrix interpolation is required
   if (shouldInterpolateMatrices) {
     return std::make_pair(
-        TransformOperations{
-            std::make_shared<MatrixOperation>(MatrixOperation(fromOperations))},
-        TransformOperations{
-            std::make_shared<MatrixOperation>(MatrixOperation(toOperations))});
+        TransformOperations{std::make_shared<MatrixOperation>(fromOperations)},
+        TransformOperations{std::make_shared<MatrixOperation>(toOperations)});
   }
 
   // Add remaining operations with default values

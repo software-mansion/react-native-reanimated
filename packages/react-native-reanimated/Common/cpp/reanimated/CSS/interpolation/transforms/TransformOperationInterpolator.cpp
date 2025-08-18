@@ -23,42 +23,46 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     const TransformInterpolatorUpdateContext &context) const {
   const auto fromMatrix = matrixFromOperation(from, context);
   const auto toMatrix = matrixFromOperation(to, context);
-  const auto decomposedFrom = fromMatrix.decompose();
-  const auto decomposedTo = toMatrix.decompose();
+  // TODO
+  //  const auto decomposedFrom = fromMatrix.decompose();
+  //  const auto decomposedTo = toMatrix.decompose();
+  //
+  //  if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
+  //    return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
+  //  }
+  //
+  //  return MatrixOperation(TransformMatrix3D::recompose(
+  //      decomposedFrom->interpolate(progress, decomposedTo.value())));
+  //}
+  //
+  // std::unique_ptr<TransformMatrix>
+  // TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
+  //    const MatrixOperation &matrixOperation,
+  //    const TransformInterpolatorUpdateContext &context) const {
+  //  if (std::holds_alternative<TransformOperations>(matrixOperation.value)) {
+  //    const auto &operations =
+  //        std::get<TransformOperations>(matrixOperation.value);
+  //
+  //    TransformMatrix3D matrix = TransformMatrix3D::Identity();
+  //
+  //    for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
+  //      auto operation = operations[i];
+  //
+  //      if (operation->isRelative()) {
+  //        const auto &interpolator =
+  //        context.interpolators->at(operation->type()); operation =
+  //        interpolator->resolveOperation(operation, context);
+  //      }
+  //
+  //      matrix *= operation->toMatrix();
+  //    }
 
-  if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-    return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
-  }
+  //    return matrix;
+  //  }
 
-  return MatrixOperation(TransformMatrix3D::recompose(
-      decomposedFrom->interpolate(progress, decomposedTo.value())));
-}
+  //  return std::get<std::unique_ptr<TransformMatrix>>(matrixOperation.value);
 
-TransformMatrix3D
-TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
-    const MatrixOperation &matrixOperation,
-    const TransformInterpolatorUpdateContext &context) const {
-  if (std::holds_alternative<TransformOperations>(matrixOperation.value)) {
-    const auto &operations =
-        std::get<TransformOperations>(matrixOperation.value);
-
-    TransformMatrix3D matrix = TransformMatrix3D::Identity();
-
-    for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
-      auto operation = operations[i];
-
-      if (operation->isRelative()) {
-        const auto &interpolator = context.interpolators->at(operation->type());
-        operation = interpolator->resolveOperation(operation, context);
-      }
-
-      matrix *= operation->toMatrix();
-    }
-
-    return matrix;
-  }
-
-  return std::get<TransformMatrix3D>(matrixOperation.value);
+  return MatrixOperation(TransformMatrix2D::Identity());
 }
 
 } // namespace reanimated::css
