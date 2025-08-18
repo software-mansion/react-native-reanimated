@@ -55,6 +55,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/runtimes/createWorkletRuntime.test');
             require('./tests/runtimes/scheduleOnRN.test');
+            require('./tests/runtimes/runOnUISync.test');
           },
         },
         {

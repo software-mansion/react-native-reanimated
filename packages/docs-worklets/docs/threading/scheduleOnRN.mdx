@@ -4,7 +4,7 @@ sidebar_position: 9
 
 # scheduleOnRN
 
-`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) from any [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime).
+`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) from any [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 To learn more about the different runtime kinds, check [Runtime Kinds](/docs/fundamentals/runtimeKinds).
 
@@ -82,4 +82,4 @@ runOnUI(() => {
   to the `JSScheduler`. The `JSScheduler` then uses the RN `CallInvoker` to schedule
   the function asynchronously on the JavaScript thread by calling
   `jsCallInvoker_->invokeAsync()`.
-- When called from a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-worklet-runtime---worker-runtime), it uses the same JSScheduler mechanism.
+- When called from a [Worker Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime), it uses the same JSScheduler mechanism.

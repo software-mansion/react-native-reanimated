@@ -46,7 +46,7 @@ To convert a JavaScript function into a serializable object which can be copied 
 
 Functions marked with `"worklet";` directive are automatically picked up and workletized by the Reanimated Babel plugin.
 
-## Worklet Runtime
+## Worker Worklet Runtime - Worker Runtime
 
 A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets.
 
@@ -56,7 +56,7 @@ You can learn more about different runtime types by reading the [Runtime kinds](
 
 ## UI Runtime
 
-A unique [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime) that is tailored to efficiently offload work from the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) and to allow for synchronous access to native events and the native rendering layer.
+A unique [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime) that is tailored to efficiently offload work from the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) and to allow for synchronous access to native events and the native rendering layer.
 
 ## React Native Runtime (RN Runtime)
 
@@ -99,7 +99,7 @@ You can learn the details by reading the [Reanimated Babel plugin README](https:
 
 ## Serializable
 
-A Serializable is an object that represents a JavaScript value that can be copied between [Worklet Runtimes](/docs/fundamentals/glossary/#worklet-runtime). JavaScript values cannot be passed to other runtimes without prior serialization.
+A Serializable is an object that represents a JavaScript value that can be copied between [Worklet Runtimes](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime). JavaScript values cannot be passed to other runtimes without prior serialization.
 
 ## SerializableRef
 
