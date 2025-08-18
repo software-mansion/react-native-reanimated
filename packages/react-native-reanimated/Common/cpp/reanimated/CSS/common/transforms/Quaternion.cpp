@@ -1,4 +1,4 @@
-#include <reanimated/CSS/common/Quaternion.h>
+#include <reanimated/CSS/common/transforms/Quaternion.h>
 
 namespace reanimated::css {
 

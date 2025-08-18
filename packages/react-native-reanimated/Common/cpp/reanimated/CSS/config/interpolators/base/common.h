@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
