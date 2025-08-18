@@ -8,10 +8,11 @@
 namespace reanimated::css {
 
 namespace {
-static constexpr size_t SIZE = 9;
+static constexpr size_t MATRIX_2D_DIMENSION = 3; // 3x3 matrix
 }
 
-class TransformMatrix2D : public TransformMatrixBase<SIZE> {
+class TransformMatrix2D
+    : public TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION> {
  public:
   struct Decomposed {
     Vector2D scale;
@@ -28,7 +29,8 @@ class TransformMatrix2D : public TransformMatrixBase<SIZE> {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  using TransformMatrixBase<SIZE>::TransformMatrixBase;
+  using TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>::
+      TransformMatrixBase;
 
   static TransformMatrix2D Identity();
   static TransformMatrix2D Rotate(double v);
@@ -40,9 +42,13 @@ class TransformMatrix2D : public TransformMatrixBase<SIZE> {
   static TransformMatrix2D SkewX(double v);
   static TransformMatrix2D SkewY(double v);
 
-  bool operator==(const TransformMatrix2D &other) const;
-  TransformMatrix2D operator*(const TransformMatrix2D &rhs) const;
-  TransformMatrix2D operator*=(const TransformMatrix2D &rhs);
+  double determinant() const override;
+
+  std::optional<Decomposed> decompose() const;
+  static TransformMatrix2D recompose(const Decomposed &decomposed);
+
+  std::unique_ptr<TransformMatrix> expand(
+      size_t targetDimension) const override;
 };
 
 } // namespace reanimated::css

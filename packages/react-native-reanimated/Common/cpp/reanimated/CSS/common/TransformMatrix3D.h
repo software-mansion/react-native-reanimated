@@ -11,10 +11,11 @@
 namespace reanimated::css {
 
 namespace {
-static constexpr size_t SIZE = 16;
+static constexpr size_t MATRIX_3D_DIMENSION = 4; // 4x4 matrix
 }
 
-class TransformMatrix3D : public TransformMatrixBase<SIZE> {
+class TransformMatrix3D
+    : public TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION> {
  public:
   struct Decomposed {
     Vector3D scale;
@@ -32,7 +33,8 @@ class TransformMatrix3D : public TransformMatrixBase<SIZE> {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  using TransformMatrixBase<SIZE>::TransformMatrixBase;
+  using TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>::
+      TransformMatrixBase;
 
   static TransformMatrix3D Identity();
   static TransformMatrix3D Perspective(double value);
@@ -47,11 +49,9 @@ class TransformMatrix3D : public TransformMatrixBase<SIZE> {
   static TransformMatrix3D SkewX(double value);
   static TransformMatrix3D SkewY(double value);
 
-  double &operator[](size_t index);
-  const double &operator[](size_t index) const;
-  bool operator==(const TransformMatrix3D &other) const;
-  TransformMatrix3D operator*(const TransformMatrix3D &rhs) const;
-  TransformMatrix3D operator*=(const TransformMatrix3D &rhs);
+  const bool operator==(const TransformMatrix3D &other) const {
+    return matrix_ == other.matrix_;
+  }
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(
@@ -59,17 +59,16 @@ class TransformMatrix3D : public TransformMatrixBase<SIZE> {
       const TransformMatrix3D &matrix);
 #endif // NDEBUG
 
-  std::string toString() const;
-  folly::dynamic toDynamic() const;
+  double determinant() const override;
 
-  bool isSingular() const;
-  bool normalize();
-  double determinant() const;
   void adjugate();
   bool invert();
   void transpose();
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
+
+  std::unique_ptr<TransformMatrix> expand(
+      size_t targetDimension) const override;
 
   std::optional<Decomposed> decompose() const;
   static TransformMatrix3D recompose(const Decomposed &decomposed);

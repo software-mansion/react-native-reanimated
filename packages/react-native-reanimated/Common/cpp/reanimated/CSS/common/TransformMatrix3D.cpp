@@ -1,3 +1,4 @@
+#include <reanimated/CSS/common/TransformMatrix2D.h>
 #include <reanimated/CSS/common/TransformMatrix3D.h>
 
 namespace reanimated::css {
@@ -171,40 +172,6 @@ TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
   // clang-format on
 }
 
-double &TransformMatrix3D::operator[](const size_t index) {
-  return matrix_[index];
-}
-
-const double &TransformMatrix3D::operator[](const size_t index) const {
-  return matrix_[index];
-}
-
-bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
-  return matrix_ == other.matrix_;
-}
-
-TransformMatrix3D TransformMatrix3D::operator*(
-    const TransformMatrix3D &rhs) const {
-  const auto &a = matrix_;
-  const auto &b = rhs.matrix_;
-
-  std::array<double, 16> result{};
-  for (size_t i = 0; i < 4; ++i) {
-    for (size_t j = 0; j < 4; ++j) {
-      for (size_t k = 0; k < 4; ++k) {
-        result[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
-      }
-    }
-  }
-
-  return TransformMatrix3D(result);
-}
-
-TransformMatrix3D TransformMatrix3D::operator*=(const TransformMatrix3D &rhs) {
-  *this = *this * rhs;
-  return *this;
-}
-
 Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
   Vector4D result;
 
@@ -232,42 +199,6 @@ std::ostream &operator<<(std::ostream &os, const TransformMatrix3D &matrix) {
 }
 
 #endif // NDEBUG
-
-std::string TransformMatrix3D::toString() const {
-  std::string result = "[";
-  for (size_t i = 0; i < 16; ++i) {
-    result += std::to_string(matrix_[i]);
-    if (i < 15) {
-      result += ", ";
-    }
-  }
-  result += "]";
-  return result;
-}
-
-folly::dynamic TransformMatrix3D::toDynamic() const {
-  folly::dynamic result = folly::dynamic::array;
-  for (size_t i = 0; i < 16; ++i) {
-    result.push_back(matrix_[i]);
-  }
-  return result;
-}
-
-bool TransformMatrix3D::isSingular() const {
-  return determinant() == 0;
-}
-
-bool TransformMatrix3D::normalize() {
-  if (matrix_[15] == 0) {
-    return false;
-  }
-
-  for (size_t i = 0; i < 16; ++i) {
-    matrix_[i] /= matrix_[15];
-  }
-
-  return true;
-}
 
 /**
  * Calculates the determinant of the 4x4 matrix using the minor (Laplace
@@ -412,7 +343,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
 
   // At this point, the matrix (in rows) is orthonormal.
   // Check for a coordinate system flip. If the determinant
-  // is -1, then negate the matrix and the scaling factors.
+  // is negative, then negate the matrix and the scaling factors.
   if (rows[0].dot(rows[1].cross(rows[2])) < 0) {
     for (size_t i = 0; i < 3; ++i) {
       scale[i] *= -1;
@@ -626,6 +557,17 @@ double TransformMatrix3D::determinant3x3(
     const double i) {
   return (a * e * i) + (b * f * g) + (c * d * h) - (c * e * g) - (b * d * i) -
       (a * f * h);
+}
+
+std::unique_ptr<TransformMatrix> TransformMatrix3D::expand(
+    size_t targetDimension) const {
+  if (targetDimension == 4) {
+    return std::make_unique<TransformMatrix3D>(*this);
+  }
+
+  throw std::invalid_argument(
+      "[Reanimated] Cannot convert 3D matrix to dimension " +
+      std::to_string(targetDimension));
 }
 
 } // namespace reanimated::css
