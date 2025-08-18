@@ -22,7 +22,7 @@ import { createStack, IS_MACOS } from '@/utils';
 
 import { EXAMPLES } from './examples';
 
-setDynamicFeatureFlag('ENABLE_MUTABLE_OPTIMIZATION', true);
+setDynamicFeatureFlag('EXPERIMENTAL_MUTABLE_OPTIMIZATION', true);
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
