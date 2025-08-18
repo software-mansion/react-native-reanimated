@@ -52,7 +52,7 @@ function updatePeerDependency(packageJsonPath, dependencyName, newVersion) {
  *
  * @param {string} packageVersion - Version of the package
  * @param {string} reactNativeVersion - React Native version to validate
- * @param {Object} compatibilityJSON - Compatibility configuration object
+ * @param {object} compatibilityJSON - Compatibility configuration object
  * @returns {boolean}
  */
 function validateReactNativeVersion(packageVersion, reactNativeVersion, compatibilityJSON) {
