@@ -68,7 +68,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
-      hasViewFunction_(platformDepMethodsHolder.hasViewFunction),
+      getMountedTagsFunction_(platformDepMethodsHolder.getMountedTagsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -1313,7 +1313,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
             ,
-        hasViewFunction_
+        getMountedTagsFunction_
 #endif
     );
   }

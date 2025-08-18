@@ -290,7 +290,7 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  public boolean hasView(int[] tags) {
+  public boolean getMountedTags(int[] tags) {
     if (!UiThreadUtil.isOnUiThread()) {
       return false;
     }
