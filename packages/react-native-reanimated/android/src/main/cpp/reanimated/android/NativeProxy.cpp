@@ -174,6 +174,23 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
+std::optional<std::unique_ptr<int[]>> NativeProxy::hasView(std::vector<int> &tags) {
+    if (tags.empty()){
+        return {};
+    }
+
+  static const auto method = getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>("hasView");
+    auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+    jArrayInt->setRegion(0, tags.size(), tags.data());
+
+    if (!method(javaPart_.get(), jArrayInt)){
+        return {};
+    }
+
+    auto region = jArrayInt->getRegion(0, tags.size());
+    return region;
+}
+
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
@@ -281,6 +298,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
+  auto hasView = bindThis(&NativeProxy::hasView);
+
   auto synchronouslyUpdateUIPropsFunction =
       bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
@@ -301,6 +320,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   return {
       requestRender,
+      hasView,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

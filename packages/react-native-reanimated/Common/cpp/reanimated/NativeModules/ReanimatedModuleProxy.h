@@ -244,6 +244,7 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
+  const HasViewFunction hasViewFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
