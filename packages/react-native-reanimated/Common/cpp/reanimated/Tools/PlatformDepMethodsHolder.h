@@ -31,7 +31,7 @@ using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(const std::vector<int> &, const std::vector<double> &)>;
-using GetMountedTagsFunction =
+using FilterUnmountedTagsFunction =
     std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
@@ -51,7 +51,7 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
-  GetMountedTagsFunction getMountedTagsFunction;
+  FilterUnmountedTagsFunction filterUnmountedTagsFunction;
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
   GetAnimationTimestampFunction getAnimationTimestamp;

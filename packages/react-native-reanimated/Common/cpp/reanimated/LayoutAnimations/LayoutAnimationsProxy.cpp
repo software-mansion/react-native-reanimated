@@ -398,7 +398,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     tags.push_back(tag);
   }
 
-  auto maybeCorrectedTags = getMountedTags_(tags);
+  auto maybeCorrectedTags = filterUnmountedTags_(tags);
   if (!maybeCorrectedTags.has_value()) {
     return;
   }
