@@ -45,7 +45,7 @@ struct LayoutAnimationsProxy
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
-  FilterUnmountedTagsFunction filterUnmountedTags_;
+  PreserveMountedTagsFunction preserveMountedTags_;
 
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
@@ -55,7 +55,7 @@ struct LayoutAnimationsProxy
       const std::shared_ptr<UIScheduler> uiScheduler
 #ifdef ANDROID
       ,
-      FilterUnmountedTagsFunction filterUnmountedTagsFunction
+      PreserveMountedTagsFunction filterUnmountedTagsFunction
 #endif
       )
       : layoutAnimationsManager_(layoutAnimationsManager),
@@ -65,7 +65,7 @@ struct LayoutAnimationsProxy
         uiScheduler_(uiScheduler)
 #ifdef ANDROID
         ,
-        filterUnmountedTags_(filterUnmountedTagsFunction)
+        preserveMountedTags_(filterUnmountedTagsFunction)
 #endif
   {
   }

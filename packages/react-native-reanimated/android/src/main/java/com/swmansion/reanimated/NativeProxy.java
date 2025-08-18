@@ -290,7 +290,7 @@ public class NativeProxy {
   }
 
   @DoNotStrip
-  public boolean filterUnmountedTags(int[] tags) {
+  public boolean preserveMountedTags(int[] tags) {
     if (!UiThreadUtil.isOnUiThread()) {
       return false;
     }
