@@ -22,26 +22,24 @@ const TestComponent = ({ runFrom }: { runFrom: 'ui' | 'js' | 'workletRuntime' })
   registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
   useEffect(() => {
+    const callback = (num: number) => {
+      sharedValue.value = num;
+      notify(NOTIFICATION_NAME);
+    };
     if (runFrom === 'ui') {
       runOnUI(() => {
-        scheduleOnRN((num: number) => {
-          sharedValue.value = num;
-        }, 100);
+        scheduleOnRN(callback, 100);
       })();
     } else if (runFrom === 'js') {
-      scheduleOnRN((num: number) => {
-        sharedValue.value = num;
-      }, 100);
+      scheduleOnRN(callback, 100);
     } else if (runFrom === 'workletRuntime') {
       const workletRuntime = createWorkletRuntime();
       runOnRuntime(workletRuntime, () => {
-        scheduleOnRN((num: number) => {
-          sharedValue.value = num;
-        }, 100);
-      });
+        'worklet';
+        scheduleOnRN(callback, 100);
+      })();
     }
-    notify(NOTIFICATION_NAME);
-  }, []);
+  }, [runFrom, sharedValue]);
 
   return <View />;
 };
