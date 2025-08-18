@@ -5,6 +5,7 @@
 #include <reanimated/CSS/common/vectors.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <utility>
 
