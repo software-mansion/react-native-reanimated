@@ -151,6 +151,8 @@ if (__DEV__) {
  *
  * Remarks:
  *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
  * - This function cannot be called from the [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
  *
