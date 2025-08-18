@@ -99,7 +99,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
 
 export function makeMutableUI<Value>(
   initial: Value,
-  isDirtySynchronizable?: Synchronizable<boolean> | null
+  dirtyFlag?: Synchronizable<boolean>
 ): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -121,9 +121,9 @@ export function makeMutableUI<Value>(
       listeners.forEach((listener) => {
         listener(newValue);
       });
-      if (isDirtySynchronizable != null && !isDirty && value !== initial) {
+      if (dirtyFlag && !isDirty && value !== initial) {
         isDirty = true;
-        isDirtySynchronizable.setBlocking(true);
+        dirtyFlag.setBlocking(true);
       }
     },
     modify: (modifier, forceUpdate = true) => {
@@ -151,23 +151,21 @@ export function makeMutableUI<Value>(
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
-  const isDirtySynchronizable = DynamicFlags.ENABLE_MUTABLE_OPTIMIZATION
-    ? createSynchronizable(false)
-    : null;
+  const dirtyFlag: Synchronizable<boolean> | undefined =
+    DynamicFlags.EXPERIMENTAL_MUTABLE_OPTIMIZATION
+      ? createSynchronizable(false)
+      : undefined;
   const handle = createSerializable({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial, isDirtySynchronizable);
+      return makeMutableUI(initial, dirtyFlag);
     },
   });
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
-      if (
-        isDirtySynchronizable == null ||
-        isDirtySynchronizable.getBlocking()
-      ) {
+      if (!dirtyFlag || dirtyFlag.getBlocking()) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
           return sv.value;
         });

@@ -3,7 +3,7 @@ import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
 
 type DynamicFlagsType = {
-  ENABLE_MUTABLE_OPTIMIZATION: boolean;
+  EXPERIMENTAL_MUTABLE_OPTIMIZATION: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
 };
@@ -11,7 +11,7 @@ type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
 /** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
-  ENABLE_MUTABLE_OPTIMIZATION: false,
+  EXPERIMENTAL_MUTABLE_OPTIMIZATION: false,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {
