@@ -146,14 +146,11 @@ if (__DEV__) {
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
  * Passed function and args are automatically
  * [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
- * and ready to be run on the [UI
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
- *
- * Remarks:
+ * and serialized.
  *
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
- * - This function cannot be called from the [Worker
+ * - This function cannot be called from a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
  *
  * @param fun - A reference to a function you want to execute on the [UI
