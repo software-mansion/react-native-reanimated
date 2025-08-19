@@ -413,6 +413,11 @@ void LayoutAnimationsProxy::addOngoingAnimations(
 #ifdef ANDROID
     i++;
     if (correctedTags[i] == -1) {
+      // skip views that have not been mounted yet
+      // on Android we start entering animations from the JS thread
+      // so it might happen, that the first frame of the animation goes through
+      // before the view is first mounted
+      // https://github.com/software-mansion/react-native-reanimated/issues/7493
       continue;
     }
 #endif
