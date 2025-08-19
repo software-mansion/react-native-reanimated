@@ -32,11 +32,11 @@ Feature flags available in `react-native-worklets` are listed [on this page](htt
 
 ### `DISABLE_COMMIT_PAUSING_MECHANISM`
 
-When enabled, this feature flag is supposed to eliminate jittering of animated components like sticky header while scrolling. This feature flag is safe to enable only if `preventShadowTreeCommitExhaustion` feature flag from `react-native` (available since React Native 0.81) is also enabled. In all other cases it can lead to the app being unresponsive due to the starvation of React commits. For more details, see [PR #7852](https://github.com/software-mansion/react-native-reanimated/pull/7852).
+When enabled, this feature flag is supposed to eliminate jittering of animated components like sticky header while scrolling. This feature flag is safe to enable only if `preventShadowTreeCommitExhaustion` feature flag from `react-native` (available since React Native 0.81) is also enabled. In all other cases it can lead to unresponsiveness of the app due to the starvation of React commits. For more details, see [PR #7852](https://github.com/software-mansion/react-native-reanimated/pull/7852).
 
 ### `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles of animated components will be applied using the `synchronouslyUpdateViewOnUIThread` method instead of than `ShadowTree::commit` method (which requires layout recalculation). In a benchmark, it can lead to up to 4x increase of frames per second. However, there are some side effects:
+When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artifical benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations. However, there are some unwanted side effects that one needs to take into account and properly compensate for:
 
 1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. In that case, it's advisable to use `Pressable` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`.
 
@@ -48,15 +48,15 @@ This feature flag works only on Android and has no effect on iOS. For more detai
 
 ### `UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
 
-When enabled, CSS animations and transitions will also work for selected props of selected components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
+When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
 
 ### `IOS_DYNAMIC_FRAMERATE_ENABLED`
 
-This feature flags is supposed to improve the visual perception of computationally expensive animations, e.g. when multiple components are animated at the same time. When enabled, the frame rate will be automatically adjusted. For instance, if the device fails to run animations in 120 fps, which often results in frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
+This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 
 ### `EXPERIMENTAL_MUTABLE_OPTIMIZATION`
 
-This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the foundation of shared values) use `Synchronizable` instead of `Shareable` to store current value of the mutable. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` instead of `Shareable` to store current value of the mutable. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
 
 ## Static feature flags
 
