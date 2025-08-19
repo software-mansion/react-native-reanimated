@@ -393,12 +393,12 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
-  std::vector<int> tags;
+  std::vector<int> tagsToUpdate;
   for (auto &[tag, updateValues] : updateMap) {
-    tags.push_back(tag);
+    tagsToUpdate.push_back(tag);
   }
 
-  auto maybeCorrectedTags = preserveMountedTags_(tags);
+  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
   if (!maybeCorrectedTags.has_value()) {
     return;
   }
