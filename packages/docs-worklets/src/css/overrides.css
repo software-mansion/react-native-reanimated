@@ -137,3 +137,18 @@ button[class*='DocSearch-Button'] {
 [class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
   background-color: transparent;
 }
+
+.footer .footer__copyright {
+  justify-content: center;
+}
+
+.navbar .navbar__title {
+  margin-left: 0;
+  display: flex;
+}
+
+@media (max-width: 996px) {
+  .navbar .navbar__title {
+    display: none;
+  }
+}

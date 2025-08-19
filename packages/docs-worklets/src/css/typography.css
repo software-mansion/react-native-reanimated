@@ -32,6 +32,7 @@
   --ifm-font-family-bold: var(--swm-body-font);
 
   /* Heading */
+  --swm-heading-font-size-xl: 64px;
   --swm-h1-font-size: 42px;
   --swm-h2-font-size: 32px;
   --swm-h3-font-size: 22px;

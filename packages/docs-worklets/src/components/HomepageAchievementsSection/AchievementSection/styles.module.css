@@ -1,0 +1,28 @@
+.achievementSection {
+  padding: 32px 32px 48px 32px;
+  background-color: var(--swm-blue-light-20);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  flex: 1 0 0;
+
+  .achievementSectionContent {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    align-self: stretch;
+
+    div, h3 {
+      flex: 1;
+      width: 100%;
+    }
+  }
+
+  svg {
+    width: 48px;
+    height: 48px;
+    padding: 8px;
+    background-color: var(--swm-blue-light-60);
+  }
+}

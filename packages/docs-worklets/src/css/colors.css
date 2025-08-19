@@ -85,7 +85,7 @@
   --swm-yellow-dark-40: #fff9db;
 
   /* Black & White palette, mainly for background settings */
-  --swm-off-white: #f8f9ff;
+  --swm-off-white: var(--swm-navy-light-100);
   --swm-white: #fcfcff;
   --swm-white-transparent-light: #fcfcff40;
   --swm-white-transparent-dark: #fcfcff80;
@@ -114,9 +114,9 @@
   --swm-color-mode-enabled: var(--swm-navy-light-20);
   --swm-color-mode-disabled-color: var(--swm-navy-light-20);
 
-  --swm-color-mode-enabled-landing: var(--swm-off-white);
-  --swm-color-mode-enabled-color-landing: var(--ifm-font-color-base);
-  --swm-color-mode-disabled-color-landing: var(--swm-off-white);
+  --swm-color-mode-enabled-landing: var(--swm-navy-light-100);
+  --swm-color-mode-enabled-color-landing: var(--swm-white);
+  --swm-color-mode-disabled-color-landing: var(--swm-navy-light-100);
 
   /* Typography */
   --ifm-heading-color: var(--ifm-color-primary);
@@ -237,7 +237,7 @@
 
   --swm-landing-horse: var(--swm-navy-light-100);
 
-  --swm-landing-button-purple: var(--swm-purple-light-100);
+  --swm-landing-button: var(--swm-blue-light-100);
 
   --swm-landing-feature-item: var(--swm-purple-light-40);
   --swm-landing-feature-item-shadow: var(--swm-purple-light-100);
@@ -299,6 +299,8 @@
 }
 
 :root[data-theme='dark'] {
+  --swm-off-white: var(--swm-white);
+
   /* Infima main colors */
   --ifm-color-primary: var(--swm-navy-light-10);
 
@@ -313,6 +315,9 @@
   --swm-color-mode-enabled: var(--swm-off-navy);
   --swm-color-mode-enabled-color-landing: var(--swm-purple-dark-120);
   --swm-color-mode-disabled-color: var(--swm-navy-light-40);
+
+  --swm-color-mode-disabled-color-landing: var(--swm-white);
+  --swm-color-mode-enabled-landing: var(--swm-white);
 
   /* Typography */
   --ifm-font-color-base: var(--swm-navy-light-10);
@@ -423,7 +428,7 @@
 
   --swm-landing-horse: var(--swm-off-white);
 
-  --swm-landing-button-purple: var(--swm-purple-dark-100);
+  --swm-landing-button: var(--swm-blue-dark-100);
 
   --swm-landing-feature-item: var(--swm-purple-dark-100);
   --swm-landing-feature-item-shadow: var(--swm-purple-dark-140);

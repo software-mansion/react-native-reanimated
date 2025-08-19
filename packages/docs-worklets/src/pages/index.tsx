@@ -1,6 +1,18 @@
-import React from 'react';
-import { Redirect } from '@docusaurus/router';
+import HomepageMainSection from '@site/src/components/HomepageMainSection';
+import HomepageAboutSection from '@site/src/components/HomepageAboutSection';
+import HomepageAchievementsSection from '@site/src/components/HomepageAchievementsSection';
+import Layout from '@theme/Layout';
 
-export default function Home() {
-  return <Redirect to="/react-native-worklets/docs/" />;
+import styles from './styles.module.css';
+
+export default function Homepage() {
+  return (
+    <Layout>
+      <div className={styles.content}>
+        <HomepageMainSection />
+        <HomepageAboutSection />
+        <HomepageAchievementsSection />
+      </div>
+    </Layout>
+  );
 }
