@@ -3,7 +3,8 @@
   flex-direction: column;
   justify-content: center;
   gap: 48px;
-  width: 936px;
+  width: 80%;
+  max-width: 936px;
 
   .header {
     display: flex;
@@ -19,16 +20,30 @@
 
     h2 {
       font-weight: 400;
-      width: 696px;
+      max-width: 696px;
     }
   }
-  
+
   .buttons {
     display: flex;
     gap: 24px;
     margin-top: 32px;
     a {
       width: 192px;
+    }
+  }
+}
+
+@media (max-width: 936px) {
+  .headerSection {
+    .header {
+      h1 {
+        font-size: var(--swm-h1-font-size-mobile);
+      }
+
+      h1:last-child {
+        margin-left: 4px;
+      }
     }
   }
 }

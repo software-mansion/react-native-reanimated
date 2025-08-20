@@ -3,6 +3,13 @@
     padding-top: 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: 120px;
+    width: 100%;
+
+    @media (max-width: 936px) {
+        margin-top: 100px;
+        gap: 60px;
+    }
 }

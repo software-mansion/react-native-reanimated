@@ -3,24 +3,44 @@
   flex-direction: column;
   justify-content: center;
   gap: 24px;
-  width: 936px;
+  width: 80%;
+  max-width: 936px;
 
   h2 {
     font-weight: 500;
   }
 
-  .achievementsDescription {
-    width: 696px;
+  .description {
+    max-width: 696px;
     font-size: 20px;
     font-weight: 400;
     line-height: 160%;
   }
 
-  .achievementSection {
+  .achievementsList,
+  .footer,
+  .header {
     display: flex;
-padding: 32px 32px 48px 32px;
-justify-content: space-between;
-align-items: flex-start;
-align-self: stretch;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .achievementsList,
+  .footer {
+    margin-top: 56px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 56px;
+    flex-direction: row;
+
+    .footerTitle {
+      font-size: 24px;
+      font-weight: 500;
+    }
   }
 }

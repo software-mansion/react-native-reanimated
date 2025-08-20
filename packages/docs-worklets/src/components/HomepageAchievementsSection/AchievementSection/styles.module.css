@@ -14,6 +14,7 @@
     align-self: stretch;
 
     div, h3 {
+      color: var(--swm-navy-light-100);
       flex: 1;
       width: 100%;
     }
@@ -24,5 +25,28 @@
     height: 48px;
     padding: 8px;
     background-color: var(--swm-blue-light-60);
+  }
+}
+
+[data-theme='dark'] .achievementSection {
+  background-color: var(--swm-blue-dark-140);
+  color: var(--swm-off-white);
+
+  .achievementSectionContent {
+    div, h3 {
+      color: var(--swm-off-white);
+    }
+  }
+
+  svg {
+    background-color: var(--swm-blue-dark-100);
+  }
+}
+
+@media (max-width: 936px) {
+  .achievementSection {
+    .achievementSectionContent {
+      flex-direction: column;
+    }
   }
 }

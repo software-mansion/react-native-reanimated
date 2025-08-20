@@ -5,6 +5,7 @@ import SettingsIcon from '@site/static/img/settings-icon.svg';
 import SoundWaveIcon from '@site/static/img/sound-wave-icon.svg';
 import TaskCheckIcon from '@site/static/img/task-check-icon.svg';
 
+import HomepageButton, { ButtonStyling } from '../HomepageButton';
 import AchievementSection from './AchievementSection';
 import styles from './styles.module.css';
 
@@ -50,20 +51,34 @@ const achievements = [
 export default function HomepageAchievementsSection(): JSX.Element {
   return (
     <div className={styles.achievementsSection}>
-      <h2>What can you achieve with Worklets?</h2>
-      <div className={styles.achievementsDescription}>
-        React Native Worklets provide you with numerous functionalities. We’ve
-        listed some of the use cases below, but it all really comes down to your
-        imagination.
+      <div className={styles.header}>
+        <h2>What can you achieve with Worklets?</h2>
+        <div className={styles.description}>
+          React Native Worklets provide you with numerous functionalities. We’ve
+          listed some of the use cases below, but it all really comes down to
+          your imagination.
+        </div>
       </div>
-      {achievements.map((achievement) => (
-        <AchievementSection
-          key={achievement.title}
-          title={achievement.title}
-          description={achievement.description}
-          svg={achievement.svg}
+      <div className={styles.achievementsList}>
+        {achievements.map((achievement) => (
+          <AchievementSection
+            key={achievement.title}
+            title={achievement.title}
+            description={achievement.description}
+            svg={achievement.svg}
+          />
+        ))}
+      </div>
+      <div className={styles.footer}>
+        <div className={styles.footerTitle}>
+          Read more about React Native Worklets
+        </div>
+        <HomepageButton
+          title="See blog post"
+          href="/react-native-worklets/docs/"
+          backgroundStyling={ButtonStyling.TO_BLUE}
         />
-      ))}
+      </div>
     </div>
   );
 }
