@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <memory>
 
@@ -17,32 +17,35 @@ struct ScaleOperationBase
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-// Scale
+using ScaleXOperation = ScaleOperationBase<TransformOp::ScaleX>;
+
+using ScaleYOperation = ScaleOperationBase<TransformOp::ScaleY>;
 
 struct ScaleOperation final : public ScaleOperationBase<TransformOp::Scale> {
   using ScaleOperationBase<TransformOp::Scale>::ScaleOperationBase;
 
-  bool canConvertTo(TransformOp type) const override;
-  TransformOperations convertTo(TransformOp type) const override;
-  TransformMatrix3D toMatrix() const override;
-};
+  bool canConvertTo(TransformOp type) const override {
+    return type == TransformOp::ScaleX || type == TransformOp::ScaleY;
+  }
 
-// ScaleX
-
-struct ScaleXOperation final : public ScaleOperationBase<TransformOp::ScaleX> {
-  using ScaleOperationBase<TransformOp::ScaleX>::ScaleOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
-
-// ScaleY
-
-struct ScaleYOperation final : public ScaleOperationBase<TransformOp::ScaleY> {
-  using ScaleOperationBase<TransformOp::ScaleY>::ScaleOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
+  TransformOperations convertTo(TransformOp type) const override {
+    assertCanConvertTo(type);
+    if (type == TransformOp::ScaleX) {
+      return {
+          std::make_shared<ScaleXOperation>(value),
+          std::make_shared<ScaleYOperation>(value)};
+    } else {
+      return {
+          std::make_shared<ScaleYOperation>(value),
+          std::make_shared<ScaleXOperation>(value)};
+    }
+  }
 };
 
 } // namespace reanimated::css

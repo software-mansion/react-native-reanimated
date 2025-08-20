@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>
 
@@ -16,22 +16,14 @@ struct SkewOperationBase : public TransformOperationBase<TOperation, CSSAngle> {
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-// SkewX
+using SkewXOperation = SkewOperationBase<TransformOp::SkewX>;
 
-struct SkewXOperation final : public SkewOperationBase<TransformOp::SkewX> {
-  using SkewOperationBase<TransformOp::SkewX>::SkewOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
-
-// SkewY
-
-struct SkewYOperation final : public SkewOperationBase<TransformOp::SkewY> {
-  using SkewOperationBase<TransformOp::SkewY>::SkewOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
+using SkewYOperation = SkewOperationBase<TransformOp::SkewY>;
 
 } // namespace reanimated::css

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <memory>
 #include <string>
@@ -18,43 +18,30 @@ struct RotateOperationBase
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-// Rotate
+using RotateOperation = RotateOperationBase<TransformOp::Rotate>;
 
-struct RotateOperation final : public RotateOperationBase<TransformOp::Rotate> {
-  using RotateOperationBase<TransformOp::Rotate>::RotateOperationBase;
+using RotateXOperation = RotateOperationBase<TransformOp::RotateX>;
 
-  TransformMatrix3D toMatrix() const override;
-};
-
-// RotateX
-
-struct RotateXOperation final
-    : public RotateOperationBase<TransformOp::RotateX> {
-  using RotateOperationBase<TransformOp::RotateX>::RotateOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
-
-// RotateY
-
-struct RotateYOperation final
-    : public RotateOperationBase<TransformOp::RotateY> {
-  using RotateOperationBase<TransformOp::RotateY>::RotateOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
-
-// RotateZ
+using RotateYOperation = RotateOperationBase<TransformOp::RotateY>;
 
 struct RotateZOperation final
     : public RotateOperationBase<TransformOp::RotateZ> {
   using RotateOperationBase<TransformOp::RotateZ>::RotateOperationBase;
 
-  TransformMatrix3D toMatrix() const override;
-  bool canConvertTo(TransformOp type) const override;
-  TransformOperations convertTo(TransformOp type) const override;
+  bool canConvertTo(TransformOp type) const override {
+    return type == TransformOp::Rotate;
+  }
+
+  TransformOperations convertTo(TransformOp type) const override {
+    assertCanConvertTo(type);
+    return {std::make_shared<RotateOperation>(value)};
+  }
 };
 
 } // namespace reanimated::css

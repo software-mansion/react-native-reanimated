@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
@@ -23,22 +24,6 @@ namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
-
-enum class TransformOp {
-  Perspective,
-  Rotate,
-  RotateX,
-  RotateY,
-  RotateZ,
-  Scale,
-  ScaleX,
-  ScaleY,
-  TranslateX,
-  TranslateY,
-  SkewX,
-  SkewY,
-  Matrix,
-};
 
 TransformOp getTransformOperationType(const std::string &property);
 std::string getOperationNameFromType(TransformOp type);

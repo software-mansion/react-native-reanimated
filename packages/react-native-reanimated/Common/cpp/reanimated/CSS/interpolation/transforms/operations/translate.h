@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>
 
@@ -23,20 +23,18 @@ struct TranslateOperationBase
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
+
+  TransformMatrix3D toMatrix() const override {
+    if (this->value.isRelative) {
+      throw std::invalid_argument(
+          "[Reanimated] Cannot convert relative translate to the matrix.");
+    }
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-struct TranslateXOperation final
-    : public TranslateOperationBase<TransformOp::TranslateX> {
-  using TranslateOperationBase<TransformOp::TranslateX>::TranslateOperationBase;
+using TranslateXOperation = TranslateOperationBase<TransformOp::TranslateX>;
 
-  TransformMatrix3D toMatrix() const override;
-};
-
-struct TranslateYOperation final
-    : public TranslateOperationBase<TransformOp::TranslateY> {
-  using TranslateOperationBase<TransformOp::TranslateY>::TranslateOperationBase;
-
-  TransformMatrix3D toMatrix() const override;
-};
+using TranslateYOperation = TranslateOperationBase<TransformOp::TranslateY>;
 
 } // namespace reanimated::css
