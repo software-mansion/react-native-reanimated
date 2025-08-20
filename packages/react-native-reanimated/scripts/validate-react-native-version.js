@@ -1,6 +1,7 @@
 'use strict';
 
 const semverSatisfies = require('semver/functions/satisfies');
+const semverPrerelease = require('semver/functions/prerelease');
 const path = require('path');
 
 const packageJsonPath = path.resolve(__dirname, '../package.json');
@@ -10,6 +11,12 @@ const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
 const supportedRNVersions = [];
+
+if (semverPrerelease(reactNativeVersion)) {
+  // Don't perform any checks for pre-release versions, like nightlies or
+  // feature previews. The user knows what they're doing.
+  process.exit(0);
+}
 
 for (const key in compatibilityFile) {
  if (semverSatisfies(reanimatedVersion, key)) {
