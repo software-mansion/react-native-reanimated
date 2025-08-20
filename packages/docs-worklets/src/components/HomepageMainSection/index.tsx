@@ -5,8 +5,9 @@ export default function HomepageMainSection(): JSX.Element {
   return (
     <div className={styles.headerSection}>
       <div className={styles.header}>
-        <h1>React Native</h1>
-        <h1>Worklets</h1>
+        <h1>
+          React Native <span className={styles.headerHighlight}>Worklets</span>
+        </h1>
       </div>
       <h2>
         Powerful multithreading engine. For your React Native apps and

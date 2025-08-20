@@ -13,8 +13,7 @@
       font-size: var(--swm-heading-font-size-xl);
     }
 
-    h1:last-child {
-      margin-left: 12px;
+    .headerHighlight {
       color: var(--swm-blue-light-100);
     }
 
@@ -40,9 +39,13 @@
       h1 {
         font-size: var(--swm-h1-font-size-mobile);
       }
+    }
 
-      h1:last-child {
-        margin-left: 4px;
+    .buttons {
+      flex-direction: column;
+      gap: 16px;
+      a {
+        width: 100%;
       }
     }
   }

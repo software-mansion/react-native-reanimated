@@ -30,18 +30,20 @@ const useCases = [
 
 export default function HomepageUseCasesSection(): JSX.Element {
   return (
-    <div className={styles.useCasesSection}>
-      <h2>Who else is using Worklets?</h2>
-      <div className={styles.description}>
-        React Native Worklets can help you power up your apps, but they also
-        serve as the foundation for other popular libraries. Here are some of
-        our favorites.
+    <>
+      <div className={styles.useCasesSection}>
+        <h2>Who else is using Worklets?</h2>
+        <div className={styles.description}>
+          React Native Worklets can help you power up your apps, but they also
+          serve as the foundation for other popular libraries. Here are some of
+          our favorites.
+        </div>
+        <div className={styles.useCasesGrid}>
+          {useCases.map((useCase) => (
+            <UseCase key={useCase.title} {...useCase} />
+          ))}
+        </div>
       </div>
-      <div className={styles.useCasesGrid}>
-        {useCases.map((useCase) => (
-          <UseCase key={useCase.title} {...useCase} />
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
