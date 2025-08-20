@@ -31,5 +31,18 @@
   "installConfig": {
     "hoistingLimits": "workspaces",
     "selfReferences": false
+  },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "DISABLE_COMMIT_PAUSING_MECHANISM": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
+      "EXPERIMENTAL_MUTABLE_OPTIMIZATION": true
+    }
+  },
+  "worklets": {
+    "staticFeatureFlags": {
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+    }
   }
 }
