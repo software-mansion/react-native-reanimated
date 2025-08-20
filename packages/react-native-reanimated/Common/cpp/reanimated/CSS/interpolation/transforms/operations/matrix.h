@@ -10,8 +10,10 @@ namespace reanimated::css {
 // Matrix
 struct MatrixOperation final
     : public TransformOperationBase<
+          TransformOp::Matrix,
           std::variant<TransformMatrix3D, TransformOperations>> {
   using TransformOperationBase<
+      TransformOp::Matrix,
       std::variant<TransformMatrix3D, TransformOperations>>::
       TransformOperationBase;
 
@@ -20,7 +22,6 @@ struct MatrixOperation final
 
   bool operator==(const TransformOperation &other) const override;
 
-  TransformOperationType type() const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix3D toMatrix() const override;
 };

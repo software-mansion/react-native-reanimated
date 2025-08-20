@@ -6,31 +6,37 @@
 
 namespace reanimated::css {
 
-// Translate
-struct TranslateOperation : public TransformOperationBase<CSSLength> {
-  using TransformOperationBase<CSSLength>::TransformOperationBase;
+template <TransformOp TOperation>
+struct TranslateOperationBase
+    : public TransformOperationBase<TOperation, CSSLength> {
+  using TransformOperationBase<TOperation, CSSLength>::TransformOperationBase;
 
-  explicit TranslateOperation(double value);
-  explicit TranslateOperation(const std::string &value);
+  explicit TranslateOperationBase(double value)
+      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
+  explicit TranslateOperationBase(const std::string &value)
+      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
-  bool isRelative() const override;
-  folly::dynamic valueToDynamic() const override;
-  virtual TransformMatrix3D toMatrix(double resolvedValue) const = 0;
+  bool isRelative() const override {
+    return this->value.isRelative;
+  }
+
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+};
+
+struct TranslateXOperation final
+    : public TranslateOperationBase<TransformOp::TranslateX> {
+  using TranslateOperationBase<TransformOp::TranslateX>::TranslateOperationBase;
+
   TransformMatrix3D toMatrix() const override;
 };
 
-struct TranslateXOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
+struct TranslateYOperation final
+    : public TranslateOperationBase<TransformOp::TranslateY> {
+  using TranslateOperationBase<TransformOp::TranslateY>::TranslateOperationBase;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix(double resolvedValue) const override;
-};
-
-struct TranslateYOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
-
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix(double resolvedValue) const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 } // namespace reanimated::css

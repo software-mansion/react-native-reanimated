@@ -2,13 +2,6 @@
 
 namespace reanimated::css {
 
-PerspectiveOperation::PerspectiveOperation(const double value)
-    : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
-
-TransformOperationType PerspectiveOperation::type() const {
-  return TransformOperationType::Perspective;
-}
-
 folly::dynamic PerspectiveOperation::valueToDynamic() const {
   // Perspective cannot be 0, so we return undefined in this case
   return value.value != 0 ? value.toDynamic() : folly::dynamic();

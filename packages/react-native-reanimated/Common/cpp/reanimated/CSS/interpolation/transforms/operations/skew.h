@@ -5,26 +5,32 @@
 #include <string>
 
 namespace reanimated::css {
-// Skew
-struct SkewOperation : public TransformOperationBase<CSSAngle> {
-  using TransformOperationBase<CSSAngle>::TransformOperationBase;
 
-  explicit SkewOperation(const std::string &value);
+template <TransformOp TOperation>
+struct SkewOperationBase : public TransformOperationBase<TOperation, CSSAngle> {
+  using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  folly::dynamic valueToDynamic() const override;
+  explicit SkewOperationBase(const std::string &value)
+      : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
+
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
 };
 
-struct SkewXOperation final : public SkewOperation {
-  using SkewOperation::SkewOperation;
+// SkewX
 
-  TransformOperationType type() const override;
+struct SkewXOperation final : public SkewOperationBase<TransformOp::SkewX> {
+  using SkewOperationBase<TransformOp::SkewX>::SkewOperationBase;
+
   TransformMatrix3D toMatrix() const override;
 };
 
-struct SkewYOperation final : public SkewOperation {
-  using SkewOperation::SkewOperation;
+// SkewY
 
-  TransformOperationType type() const override;
+struct SkewYOperation final : public SkewOperationBase<TransformOp::SkewY> {
+  using SkewOperationBase<TransformOp::SkewY>::SkewOperationBase;
+
   TransformMatrix3D toMatrix() const override;
 };
 

@@ -2,16 +2,7 @@
 
 namespace reanimated::css {
 
-RotateOperation::RotateOperation(const std::string &value)
-    : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
-
-TransformOperationType RotateOperation::type() const {
-  return TransformOperationType::Rotate;
-}
-
-folly::dynamic RotateOperation::valueToDynamic() const {
-  return value.toDynamic();
-}
+// Rotate
 
 TransformMatrix3D RotateOperation::toMatrix() const {
   return TransformMatrix3D::RotateZ(value.value);
@@ -19,19 +10,11 @@ TransformMatrix3D RotateOperation::toMatrix() const {
 
 // RotateX
 
-TransformOperationType RotateXOperation::type() const {
-  return TransformOperationType::RotateX;
-}
-
 TransformMatrix3D RotateXOperation::toMatrix() const {
   return TransformMatrix3D::RotateX(value.value);
 }
 
 // RotateY
-
-TransformOperationType RotateYOperation::type() const {
-  return TransformOperationType::RotateY;
-}
 
 TransformMatrix3D RotateYOperation::toMatrix() const {
   return TransformMatrix3D::RotateY(value.value);
@@ -39,16 +22,11 @@ TransformMatrix3D RotateYOperation::toMatrix() const {
 
 // RotateZ
 
-TransformOperationType RotateZOperation::type() const {
-  return TransformOperationType::RotateZ;
+bool RotateZOperation::canConvertTo(TransformOp type) const {
+  return type == TransformOp::Rotate;
 }
 
-bool RotateZOperation::canConvertTo(TransformOperationType type) const {
-  return type == TransformOperationType::Rotate;
-}
-
-TransformOperations RotateZOperation::convertTo(
-    TransformOperationType type) const {
+TransformOperations RotateZOperation::convertTo(TransformOp type) const {
   assertCanConvertTo(type);
   return {std::make_shared<RotateOperation>(value)};
 }

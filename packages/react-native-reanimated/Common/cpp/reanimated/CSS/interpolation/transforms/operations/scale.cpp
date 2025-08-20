@@ -4,26 +4,13 @@ namespace reanimated::css {
 
 // Scale
 
-ScaleOperation::ScaleOperation(const double value)
-    : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
-
-TransformOperationType ScaleOperation::type() const {
-  return TransformOperationType::Scale;
+bool ScaleOperation::canConvertTo(TransformOp type) const {
+  return type == TransformOp::ScaleX || type == TransformOp::ScaleY;
 }
 
-folly::dynamic ScaleOperation::valueToDynamic() const {
-  return value.toDynamic();
-}
-
-bool ScaleOperation::canConvertTo(TransformOperationType type) const {
-  return type == TransformOperationType::ScaleX ||
-      type == TransformOperationType::ScaleY;
-}
-
-TransformOperations ScaleOperation::convertTo(
-    TransformOperationType type) const {
+TransformOperations ScaleOperation::convertTo(TransformOp type) const {
   assertCanConvertTo(type);
-  if (type == TransformOperationType::ScaleX) {
+  if (type == TransformOp::ScaleX) {
     return {
         std::make_shared<ScaleXOperation>(value),
         std::make_shared<ScaleYOperation>(value)};
@@ -40,19 +27,11 @@ TransformMatrix3D ScaleOperation::toMatrix() const {
 
 // ScaleX
 
-TransformOperationType ScaleXOperation::type() const {
-  return TransformOperationType::ScaleX;
-}
-
 TransformMatrix3D ScaleXOperation::toMatrix() const {
   return TransformMatrix3D::ScaleX(value.value);
 }
 
 // ScaleY
-
-TransformOperationType ScaleYOperation::type() const {
-  return TransformOperationType::ScaleY;
-}
 
 TransformMatrix3D ScaleYOperation::toMatrix() const {
   return TransformMatrix3D::ScaleY(value.value);

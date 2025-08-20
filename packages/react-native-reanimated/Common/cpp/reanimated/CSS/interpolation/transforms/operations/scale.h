@@ -6,29 +6,42 @@
 
 namespace reanimated::css {
 
-struct ScaleOperation : public TransformOperationBase<CSSDouble> {
-  using TransformOperationBase<CSSDouble>::TransformOperationBase;
+template <TransformOp TOperation>
+struct ScaleOperationBase
+    : public TransformOperationBase<TOperation, CSSDouble> {
+  using TransformOperationBase<TOperation, CSSDouble>::TransformOperationBase;
 
-  explicit ScaleOperation(double value);
+  explicit ScaleOperationBase(const double value)
+      : TransformOperationBase<TOperation, CSSDouble>(CSSDouble(value)) {}
 
-  TransformOperationType type() const override;
-  folly::dynamic valueToDynamic() const override;
-  bool canConvertTo(TransformOperationType type) const override;
-  TransformOperations convertTo(TransformOperationType type) const override;
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+};
+
+// Scale
+
+struct ScaleOperation final : public ScaleOperationBase<TransformOp::Scale> {
+  using ScaleOperationBase<TransformOp::Scale>::ScaleOperationBase;
+
+  bool canConvertTo(TransformOp type) const override;
+  TransformOperations convertTo(TransformOp type) const override;
   TransformMatrix3D toMatrix() const override;
 };
 
-struct ScaleXOperation final : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
+// ScaleX
 
-  TransformOperationType type() const override;
+struct ScaleXOperation final : public ScaleOperationBase<TransformOp::ScaleX> {
+  using ScaleOperationBase<TransformOp::ScaleX>::ScaleOperationBase;
+
   TransformMatrix3D toMatrix() const override;
 };
 
-struct ScaleYOperation final : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
+// ScaleY
 
-  TransformOperationType type() const override;
+struct ScaleYOperation final : public ScaleOperationBase<TransformOp::ScaleY> {
+  using ScaleOperationBase<TransformOp::ScaleY>::ScaleOperationBase;
+
   TransformMatrix3D toMatrix() const override;
 };
 
