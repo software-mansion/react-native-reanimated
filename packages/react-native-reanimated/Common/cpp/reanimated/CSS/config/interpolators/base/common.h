@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix3D.h>
 #include <reanimated/CSS/config/interpolators/constants.h>
 #include <reanimated/CSS/config/interpolators/utils.h>
+
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
@@ -11,6 +11,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>

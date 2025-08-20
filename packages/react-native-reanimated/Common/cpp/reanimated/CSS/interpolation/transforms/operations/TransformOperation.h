@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix3D.h>
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>

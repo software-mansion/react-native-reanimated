@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/common/Quaternion.h>
-#include <reanimated/CSS/common/TransformMatrix.h>
-#include <reanimated/CSS/common/vectors.h>
+#include <reanimated/CSS/common/transforms/Quaternion.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/transforms/vectors.h>
 
 #include <folly/dynamic.h>
 #include <memory>
