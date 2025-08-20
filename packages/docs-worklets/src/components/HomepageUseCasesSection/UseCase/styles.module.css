@@ -34,6 +34,27 @@
     display: flex;
     justify-content: center;
     align-items: center;
+
+    img {
+      width: 80%;
+    }
   }
 }
 
+@media (max-width: 936px) {
+  .useCase {
+    .header {
+      .title {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+[data-theme='dark'] .useCase {
+  background-color: var(--swm-blue-dark-140);
+
+  .link {
+    background-color: var(--swm-blue-dark-100);
+  }
+}

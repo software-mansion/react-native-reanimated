@@ -16,11 +16,10 @@
     .headerHighlight {
       color: var(--swm-blue-light-100);
     }
-
-    h2 {
-      font-weight: 400;
-      max-width: 696px;
-    }
+  }
+  h2 {
+    font-weight: 400;
+    max-width: 696px;
   }
 
   .buttons {
@@ -35,6 +34,8 @@
 
 @media (max-width: 936px) {
   .headerSection {
+    gap: 16px;
+
     .header {
       h1 {
         font-size: var(--swm-h1-font-size-mobile);
@@ -44,6 +45,7 @@
     .buttons {
       flex-direction: column;
       gap: 16px;
+      margin-top: 16px;
       a {
         width: 100%;
       }

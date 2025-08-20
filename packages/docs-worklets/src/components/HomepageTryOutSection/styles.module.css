@@ -17,3 +17,11 @@
     }
   }
 }
+
+@media (max-width: 936px) {
+  .tryOutSection {
+    .title {
+      font-size: 26px;
+    }
+  }
+}

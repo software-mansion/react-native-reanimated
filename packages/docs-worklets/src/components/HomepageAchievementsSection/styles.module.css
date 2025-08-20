@@ -35,12 +35,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 56px;
     flex-direction: row;
 
     .footerTitle {
       font-size: 24px;
       font-weight: 500;
+    }
+  }
+}
+
+@media (max-width: 936px) {
+  .achievementsSection {
+    gap: 16px;
+
+    .achievementsList {
+      gap: 16px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      flex-direction: column;
     }
   }
 }

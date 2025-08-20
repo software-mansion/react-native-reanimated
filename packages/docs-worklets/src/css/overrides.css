@@ -140,6 +140,9 @@ button[class*='DocSearch-Button'] {
 
 .footer .footer__copyright {
   justify-content: center;
+  flex-direction: column-reverse;
+  gap: 60px;
+  margin-bottom: 28px;
 }
 
 .navbar .navbar__title {
@@ -150,5 +153,14 @@ button[class*='DocSearch-Button'] {
 @media (max-width: 996px) {
   .navbar .navbar__title {
     display: none;
+  }
+
+  .footer .footer__copyright {
+    gap: 30px;
+    margin-bottom: 0;
+    align-items: center;
+    p {
+      text-align: center;
+    }
   }
 }

@@ -25,3 +25,14 @@
   margin-top: 40px;
   background-color: var(--swm-blue-light-100);
 }
+
+@media (max-width: 936px) {
+  .aboutSection {
+    gap: 16px;
+  }
+
+  .videoPlaceholder {
+    height: 200px;
+    margin-top: 24px;
+  }
+}

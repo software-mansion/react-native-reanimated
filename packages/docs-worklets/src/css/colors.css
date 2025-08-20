@@ -85,8 +85,8 @@
   --swm-yellow-dark-40: #fff9db;
 
   /* Black & White palette, mainly for background settings */
-  --swm-off-white: var(--swm-navy-light-100);
   --swm-white: #fcfcff;
+  --swm-off-white: #f8f9ff;
   --swm-white-transparent-light: #fcfcff40;
   --swm-white-transparent-dark: #fcfcff80;
 
@@ -124,8 +124,8 @@
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-20);
-  --swm-tab-hover: var(--swm-yellow-dark-100);
-  --swm-tab-active: var(--swm-yellow-dark-120);
+  --swm-tab-hover: var(--swm-blue-light-100);
+  --swm-tab-active: var(--swm-blue-light-80);
 
   /* Table of Contents */
   --ifm-toc-border-color: transparent;
@@ -323,9 +323,9 @@
   --ifm-font-color-base: var(--swm-navy-light-10);
 
   /* Tabs */
-  --swm-tab: var(--swm-navy-light-60);
-  --swm-tab-hover: var(--swm-yellow-light-60);
-  --swm-tab-active: var(--swm-yellow-light-80);
+  --swm-tab: var(--swm-navy-dark-60);
+  --swm-tab-hover: var(--swm-blue-dark-60);
+  --swm-tab-active: var(--swm-blue-dark-80);
 
   /* Table of Contents */
   --ifm-toc-border-color: transparent;

@@ -48,8 +48,21 @@
 
 @media (max-width: 936px) {
   .homepageFooter {
+    .contactUs {
+      .title {
+        font-size: 26px;
+      }
+    }
+
+
     .links {
       grid-template-columns: repeat(1, 1fr);
     }
+  }
+}
+
+[data-theme='dark'] .homepageFooter {
+  .links {
+    background-color: var(--swm-blue-dark-140);
   }
 }

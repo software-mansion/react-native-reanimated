@@ -12,10 +12,14 @@
   .useCasesGrid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    gap: 32px;
   }
 
   @media (max-width: 936px) {
+    .useCasesSection {
+      gap: 16px;
+    }
+
     .useCasesGrid {
       grid-template-columns: repeat(1, 1fr);
     }
