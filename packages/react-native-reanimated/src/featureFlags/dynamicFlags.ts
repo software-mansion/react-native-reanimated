@@ -9,7 +9,6 @@ type DynamicFlagsType = {
 };
 type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
-/** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
   EXPERIMENTAL_MUTABLE_OPTIMIZATION: false,
 

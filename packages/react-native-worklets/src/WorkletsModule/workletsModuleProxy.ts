@@ -117,6 +117,8 @@ export interface WorkletsModuleProxy {
     synchronizableRef: SynchronizableRef<TValue>
   ): void;
 
+  getStaticFeatureFlag(name: string): boolean;
+
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }
 
