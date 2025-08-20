@@ -144,10 +144,10 @@ template <>
 TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateX>(double v) {
   // clang-format off
   return TransformMatrix3D({
-    1, 0, 0, v,
+    1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    0, 0, 0, 1
+    v, 0, 0, 1
   });
   // clang-format on
 }
@@ -157,9 +157,9 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateY>(double v) {
   // clang-format off
   return TransformMatrix3D({
     1, 0, 0, 0,
-    0, 1, 0, v,
+    0, 1, 0, 0,
     0, 0, 1, 0,
-    0, 0, 0, 1
+    0, v, 0, 1
   });
   // clang-format on
 }
@@ -169,10 +169,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewX>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix3D({
-    1, tanVal, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
+         1, 0, 0, 0,
+    tanVal, 1, 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1
   });
   // clang-format on
 }
@@ -182,10 +182,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix3D({
-    1, 0, 0, 0,
-    tanVal, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
+    1, tanVal, 0, 0,
+    0,      1, 0, 0,
+    0,      0, 1, 0,
+    0,      0, 0, 1
   });
   // clang-format on
 }
