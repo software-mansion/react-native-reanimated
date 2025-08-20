@@ -7,11 +7,10 @@ import {
   runOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
-// TODO:
-import { getStaticFlag } from 'the future';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
+import { getStaticFeatureFlag } from './featureFlags';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
 
@@ -99,7 +98,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
 }
 
 // eslint-disable-next-line camelcase
-function makeMutableUI_EXPERIMENTAL_OPTIMIZATION<Value>(
+function experimental_makeMutableUIOptimized<Value>(
   initial: Value,
   dirtyFlag: Synchronizable<boolean>
 ): Mutable<Value> {
@@ -203,13 +202,13 @@ function makeMutableUI_<Value>(initial: Value): Mutable<Value> {
   return mutable as Mutable<Value>;
 }
 
-const experimentalMutableOptimization = getStaticFlag(
-  'experimentalMutableOptimization'
-) as boolean;
+const useSynchronizableForMutables = getStaticFeatureFlag(
+  'USE_SYNCHRONIZABLE_FOR_MUTABLES'
+);
 
-export const makeMutableUI = experimentalMutableOptimization
+export const makeMutableUI = useSynchronizableForMutables
   ? // eslint-disable-next-line camelcase
-    makeMutableUI_EXPERIMENTAL_OPTIMIZATION
+    (experimental_makeMutableUIOptimized as typeof makeMutableUI_)
   : makeMutableUI_;
 
 declare global {
@@ -230,7 +229,7 @@ function makeMutableNative_EXPERIMENTAL_OPTIMIZATION<Value>(
   const handle = createSerializable({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial, dirtyFlag);
+      return experimental_makeMutableUIOptimized(initial, dirtyFlag);
     },
   });
 
@@ -409,7 +408,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
 export const makeMutable = SHOULD_BE_USE_WEB
   ? makeMutableWeb
-  : experimentalMutableOptimization
+  : useSynchronizableForMutables
     ? // eslint-disable-next-line camelcase
       makeMutableNative_EXPERIMENTAL_OPTIMIZATION
     : makeMutableNative;
