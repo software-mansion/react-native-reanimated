@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 struct ScaleOperation : public TransformOperationBase<CSSDouble> {

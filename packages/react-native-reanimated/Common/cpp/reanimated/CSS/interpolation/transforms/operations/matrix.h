@@ -2,6 +2,9 @@
 
 #include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
+#include <memory>
+#include <vector>
+
 namespace reanimated::css {
 
 // Matrix

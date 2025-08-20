@@ -2,8 +2,9 @@
 
 #include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
-namespace reanimated::css {
+#include <string>
 
+namespace reanimated::css {
 // Skew
 struct SkewOperation : public TransformOperationBase<CSSAngle> {
   using TransformOperationBase<CSSAngle>::TransformOperationBase;

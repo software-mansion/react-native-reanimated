@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 // Translate
