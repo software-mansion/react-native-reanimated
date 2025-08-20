@@ -103,8 +103,8 @@ export class NativeEventsManager implements INativeEventsManager {
       // On the first render of a component, we may already receive a resolved view tag.
       return this.#managedComponent.getComponentViewTag();
     }
-    if (componentAnimatedRef.__nativeTag) {
-      return componentAnimatedRef.__nativeTag ?? -1;
+    if (componentAnimatedRef?.__nativeTag) {
+      return componentAnimatedRef?.__nativeTag ?? -1;
     }
     /*
       When a component is updated, a child could potentially change and have a different 
