@@ -31,5 +31,15 @@
   "installConfig": {
     "hoistingLimits": "workspaces",
     "selfReferences": false
+  },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true
+    }
+  },
+  "worklets": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true
+    }
   }
 }

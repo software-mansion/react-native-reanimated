@@ -141,6 +141,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
             require('./tests/advancedAPI/measure.test');
+            require('./tests/advancedAPI/staticFeatureFlags.test');
           },
         },
         {
