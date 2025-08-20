@@ -18,9 +18,9 @@ Feature flags are available since Reanimated 4.
 | ------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
 | [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                     |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)           |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#unstable_css_animations_for_svg_components) |  [static](#static-feature-flags)  | nightly  |  &ndash;   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)                           |  [static](#static-feature-flags)  | nightly  |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                   | [dynamic](#dynamic-feature-flags) | nightly  |  &ndash;   |    `false`    |
+| [`UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#unstable_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)                           |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                   | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 
 :::info
 
