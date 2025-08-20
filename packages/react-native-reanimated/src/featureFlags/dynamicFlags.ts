@@ -3,14 +3,15 @@ import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
 
 type DynamicFlagsType = {
-  EXPERIMENTAL_MUTABLE_OPTIMIZATION: boolean;
+  EXAMPLE_DYNAMIC_FLAG: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
 };
 type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
+/** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
-  EXPERIMENTAL_MUTABLE_OPTIMIZATION: false,
+  EXAMPLE_DYNAMIC_FLAG: false,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {
