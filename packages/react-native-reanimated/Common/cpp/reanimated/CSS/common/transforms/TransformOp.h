@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+#include <string>
+#include <unordered_map>
+
 namespace reanimated::css {
 
 enum class TransformOp {
@@ -17,5 +21,9 @@ enum class TransformOp {
   SkewY,
   Matrix,
 };
+
+TransformOp getTransformOperationType(const std::string &property);
+
+std::string getOperationNameFromType(const TransformOp type);
 
 } // namespace reanimated::css

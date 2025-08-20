@@ -25,9 +25,6 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
-TransformOp getTransformOperationType(const std::string &property);
-std::string getOperationNameFromType(TransformOp type);
-
 // Base struct for TransformOperation
 struct TransformOperation {
   virtual bool operator==(const TransformOperation &other) const = 0;
@@ -61,6 +58,7 @@ struct TransformOperation {
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
+// Template overload to inherit from in final operation structs
 template <TransformOp TOperation, typename TValue>
 struct TransformOperationBase : public TransformOperation {
   const TValue value;

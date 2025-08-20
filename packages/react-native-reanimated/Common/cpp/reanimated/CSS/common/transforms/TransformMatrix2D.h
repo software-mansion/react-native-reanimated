@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/transforms/TransformOp.h>
 #include <reanimated/CSS/common/transforms/vectors.h>
 
 #include <folly/dynamic.h>
@@ -35,14 +36,9 @@ class TransformMatrix2D
       TransformMatrixBase;
 
   static TransformMatrix2D Identity();
-  static TransformMatrix2D Rotate(double v);
-  static TransformMatrix2D Scale(double v);
-  static TransformMatrix2D ScaleX(double v);
-  static TransformMatrix2D ScaleY(double v);
-  static TransformMatrix2D TranslateX(double v);
-  static TransformMatrix2D TranslateY(double v);
-  static TransformMatrix2D SkewX(double v);
-  static TransformMatrix2D SkewY(double v);
+
+  template <TransformOp TOperation>
+  static TransformMatrix2D create(double value);
 
   bool operator==(const TransformMatrix2D &other) const override;
 

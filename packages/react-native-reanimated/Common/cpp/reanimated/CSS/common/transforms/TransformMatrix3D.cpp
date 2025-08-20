@@ -190,6 +190,13 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
   // clang-format on
 }
 
+template <TransformOp TOperation>
+TransformMatrix3D TransformMatrix3D::create(double value) {
+  throw std::invalid_argument(
+      "[Reanimated] Cannot create TransformMatrix3D from: " +
+      getOperationNameFromType(TOperation));
+}
+
 bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
   return matrix_ == other.matrix_;
 }

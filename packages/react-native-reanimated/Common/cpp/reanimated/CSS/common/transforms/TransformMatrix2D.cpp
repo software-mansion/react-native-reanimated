@@ -35,7 +35,8 @@ TransformMatrix2D TransformMatrix2D::Identity() {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::Rotate(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::Rotate>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
@@ -47,7 +48,8 @@ TransformMatrix2D TransformMatrix2D::Rotate(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::Scale(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::Scale>(double v) {
   // clang-format off
   return TransformMatrix2D({
     v, 0, 0,
@@ -57,7 +59,8 @@ TransformMatrix2D TransformMatrix2D::Scale(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::ScaleX(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::ScaleX>(double v) {
   // clang-format off
   return TransformMatrix2D({
     v, 0, 0,
@@ -67,7 +70,8 @@ TransformMatrix2D TransformMatrix2D::ScaleX(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::ScaleY(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::ScaleY>(double v) {
   // clang-format off
   return TransformMatrix2D({
     1, 0, 0,
@@ -77,7 +81,8 @@ TransformMatrix2D TransformMatrix2D::ScaleY(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::TranslateX(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::TranslateX>(double v) {
   // clang-format off
   return TransformMatrix2D({
     1, 0, 0,
@@ -87,7 +92,8 @@ TransformMatrix2D TransformMatrix2D::TranslateX(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::TranslateY(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::TranslateY>(double v) {
   // clang-format off
   return TransformMatrix2D({
     1, 0, 0,
@@ -97,7 +103,8 @@ TransformMatrix2D TransformMatrix2D::TranslateY(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::SkewX(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewX>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix2D({
@@ -108,7 +115,8 @@ TransformMatrix2D TransformMatrix2D::SkewX(double v) {
   // clang-format on
 }
 
-TransformMatrix2D TransformMatrix2D::SkewY(double v) {
+template <>
+TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix2D({
@@ -117,6 +125,13 @@ TransformMatrix2D TransformMatrix2D::SkewY(double v) {
     0,      0, 1
   });
   // clang-format on
+}
+
+template <TransformOp TOperation>
+TransformMatrix2D TransformMatrix2D::create(double value) {
+  throw std::invalid_argument(
+      "[Reanimated] Cannot create TransformMatrix2D from: " +
+      getOperationNameFromType(TOperation));
 }
 
 bool TransformMatrix2D::operator==(const TransformMatrix2D &other) const {
@@ -191,7 +206,9 @@ TransformMatrix2D TransformMatrix2D::recompose(
   result.translate2d(decomposed.translation);
 
   // Apply Rotation
-  result = TransformMatrix2D::Rotate(decomposed.rotation) * result;
+  const auto rotationMatrix =
+      TransformMatrix2D::create<TransformOp::Rotate>(decomposed.rotation);
+  result = rotationMatrix * result;
 
   // Apply XY shear
   if (decomposed.skew != 0) {
