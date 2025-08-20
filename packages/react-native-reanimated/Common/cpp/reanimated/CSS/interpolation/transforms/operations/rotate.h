@@ -2,6 +2,9 @@
 
 #include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated::css {
 
 // Rotate
