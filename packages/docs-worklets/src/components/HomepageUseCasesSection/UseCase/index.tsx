@@ -7,12 +7,14 @@ interface UseCaseProps {
   title: string;
   url: string;
   description: string;
+  mp4: string;
 }
 
 export default function UseCase({
   title,
   url,
   description,
+  mp4,
 }: UseCaseProps): JSX.Element {
   return (
     <div className={styles.useCase}>
@@ -26,6 +28,7 @@ export default function UseCase({
       </div>
       <div className={styles.content}>
         <img src={PhoneImage} alt="Phone" />
+        <video className={styles.video} src={mp4} autoPlay muted loop />
       </div>
       <div className={styles.description}>{description}</div>
     </div>

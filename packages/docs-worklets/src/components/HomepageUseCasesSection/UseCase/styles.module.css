@@ -34,9 +34,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 
     img {
       width: 80%;
+    }
+
+    .video {
+      border-radius: 48px;
+      width: 74%;
+      position: absolute;
     }
   }
 }

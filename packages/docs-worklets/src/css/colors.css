@@ -238,6 +238,7 @@
   --swm-landing-horse: var(--swm-navy-light-100);
 
   --swm-landing-button: var(--swm-blue-light-100);
+  --swm-landing-button-navy: var(--swm-navy-light-100);
 
   --swm-landing-feature-item: var(--swm-purple-light-40);
   --swm-landing-feature-item-shadow: var(--swm-purple-light-100);
@@ -429,6 +430,7 @@
   --swm-landing-horse: var(--swm-off-white);
 
   --swm-landing-button: var(--swm-blue-dark-100);
+  --swm-landing-button-navy: var(--swm-off-white);
 
   --swm-landing-feature-item: var(--swm-purple-dark-100);
   --swm-landing-feature-item-shadow: var(--swm-purple-dark-140);
