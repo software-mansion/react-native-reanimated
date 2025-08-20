@@ -27,12 +27,14 @@
       "DISABLE_COMMIT_PAUSING_MECHANISM": true,
       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
-      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true
+      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
+      "RUNTIME_TEST_FLAG": true
     }
   },
   "worklets": {
     "staticFeatureFlags": {
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "RUNTIME_TEST_FLAG": true
     }
   }
 }
