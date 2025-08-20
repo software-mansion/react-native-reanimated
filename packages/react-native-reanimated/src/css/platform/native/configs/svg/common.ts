@@ -41,7 +41,7 @@ const fillProps: StyleBuilderConfig<FillProps> = {
   },
 };
 
-const stokeProps: StyleBuilderConfig<StrokeProps> = {
+const strokeProps: StyleBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
   strokeOpacity: { process: processOpacity },
@@ -134,7 +134,7 @@ export type SvgStyleBuilderConfig<T> = StyleBuilderConfig<
 export const commonSvgProps = {
   ...colorProps,
   ...fillProps,
-  ...stokeProps,
+  ...strokeProps,
   ...clipProps,
   ...transformProps,
   ...responderProps,
