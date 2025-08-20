@@ -80,10 +80,13 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name)
+      override;
   jsi::Value setDynamicFeatureFlag(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &value) override;
+
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;

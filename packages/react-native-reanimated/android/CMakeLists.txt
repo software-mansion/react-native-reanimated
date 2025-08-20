@@ -18,16 +18,6 @@ string(
     -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
     -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
-
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
-  include(
-    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
-  target_compile_reactnative_options(reanimated PUBLIC)
-else()
-  string(APPEND CMAKE_CXX_FLAGS
-         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
-endif()
-
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
 if(${IS_REANIMATED_EXAMPLE_APP})
@@ -52,6 +42,15 @@ find_package(ReactAndroid REQUIRED CONFIG)
 
 add_library(reanimated SHARED ${REANIMATED_COMMON_CPP_SOURCES}
                               ${REANIMATED_ANDROID_CPP_SOURCES})
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
+  include(
+    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  target_compile_reactnative_options(reanimated PUBLIC)
+else()
+  string(APPEND CMAKE_CXX_FLAGS
+         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+endif()
 
 target_include_directories(
   reanimated

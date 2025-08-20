@@ -308,11 +308,18 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   return jsi::Value::undefined();
 }
 
+jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(
+    jsi::Runtime &rt,
+    const jsi::Value &name) {
+  return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
+}
+
 jsi::Value ReanimatedModuleProxy::setDynamicFeatureFlag(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &value) {
-  DynamicFeatureFlags::setFlag(name.asString(rt).utf8(rt), value.asBool());
+  reanimated::DynamicFeatureFlags::setFlag(
+      name.asString(rt).utf8(rt), value.asBool());
   return jsi::Value::undefined();
 }
 
