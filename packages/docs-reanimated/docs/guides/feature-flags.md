@@ -56,7 +56,7 @@ This feature flags is supposed to improve the visual perception and perceived sm
 
 ### `EXPERIMENTAL_MUTABLE_OPTIMIZATION`
 
-This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` instead of `Shareable` to store current value of the mutable. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
 
 ## Static feature flags
 
