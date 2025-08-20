@@ -232,4 +232,42 @@ folly::dynamic TransformOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
 
+// Specialization for the matrix operation
+#ifndef NDEBUG
+
+template <typename TValue>
+std::string TransformOperationBase<TValue>::stringifyOperationValue() const {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
+
+template <>
+std::string
+TransformOperationBase<std::variant<TransformMatrix3D, TransformOperations>>::
+    stringifyOperationValue() const {
+  std::ostringstream ss;
+
+  if (std::holds_alternative<TransformMatrix3D>(value)) {
+    ss << std::get<TransformMatrix3D>(value);
+  } else {
+    const auto &operations = std::get<TransformOperations>(value);
+    std::ostringstream ss;
+    for (const auto &operation : operations) {
+      ss << operation->getOperationName() << "("
+         << operation->stringifyOperationValue() << "), ";
+    }
+  }
+
+  return ss.str();
+}
+
+#endif // NDEBUG
+
+template struct TransformOperationBase<CSSDouble>;
+template struct TransformOperationBase<CSSAngle>;
+template struct TransformOperationBase<CSSLength>;
+template struct TransformOperationBase<
+    std::variant<TransformMatrix3D, TransformOperations>>;
+
 } // namespace reanimated::css

@@ -93,34 +93,8 @@ struct TransformOperationBase : public TransformOperation {
   }
 
 #ifndef NDEBUG
-  std::string stringifyOperationValue() const override {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-  }
+  std::string stringifyOperationValue() const override;
 #endif // NDEBUG
 };
-
-// Specialization for the matrix operation
-#ifndef NDEBUG
-template <>
-std::string
-TransformOperationBase<std::variant<TransformMatrix3D, TransformOperations>>::
-    stringifyOperationValue() const {
-  if (std::holds_alternative<TransformMatrix3D>(value)) {
-    std::ostringstream ss;
-    ss << std::get<TransformMatrix3D>(value);
-    return ss.str();
-  }
-
-  const auto &operations = std::get<TransformOperations>(value);
-  std::ostringstream ss;
-  for (const auto &operation : operations) {
-    ss << operation->getOperationName() << "("
-       << operation->stringifyOperationValue() << "), ";
-  }
-  return ss.str();
-}
-#endif // NDEBUG
 
 } // namespace reanimated::css
