@@ -10,6 +10,7 @@ import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
 import { RuntimeKind } from './runtimeKind';
+import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -111,6 +112,7 @@ function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
+  installSynchronizableUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */

@@ -40,30 +40,35 @@ export default function ExamplesScreen<
   S extends AnyRecord = PlainStyle,
 >(props: ExamplesScreenProps<P, S>) {
   if ('tabs' in props) {
+    const renderTab = (
+      name: string,
+      { buildAnimation, renderExample, ...rest }: ExamplesListProps<P, S>
+    ) => {
+      return (
+        <TabView.Tab name={name}>
+          <ExamplesList
+            {...props}
+            {...rest}
+            buildAnimation={
+              buildAnimation ??
+              ('buildAnimation' in props
+                ? props.buildAnimation
+                : () => ({ animationName: {} }))
+            }
+            renderExample={
+              renderExample ??
+              ('renderExample' in props ? props.renderExample : () => <></>)
+            }
+          />
+        </TabView.Tab>
+      );
+    };
+
     return (
       <Screen>
         <TabView>
-          {props.tabs.map(
-            ({ buildAnimation, name, renderExample, ...rest }) => (
-              <TabView.Tab key={name} name={name}>
-                <ExamplesList
-                  {...props}
-                  {...rest}
-                  buildAnimation={
-                    buildAnimation ??
-                    ('buildAnimation' in props
-                      ? props.buildAnimation
-                      : () => ({ animationName: {} }))
-                  }
-                  renderExample={
-                    renderExample ??
-                    ('renderExample' in props
-                      ? props.renderExample
-                      : () => <></>)
-                  }
-                />
-              </TabView.Tab>
-            )
+          {props.tabs.map(({ name, ...rest }) =>
+            renderTab(name, rest as ExamplesListProps<P, S>)
           )}
         </TabView>
       </Screen>
