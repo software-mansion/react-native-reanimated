@@ -18,12 +18,30 @@ const transitionStyles: Array<ViewStyle> = [
       { skewX: '45deg' },
       { rotateX: '45deg' },
     ],
+    boxShadow:
+      '0 4px 8px rgba(34, 197, 94, 0.3), 0 8px 16px #ff6b35, 0 16px 32px rgba(59, 130, 246, 0.4)',
   },
   {
     backgroundColor: 'blue',
     borderRadius: 100,
     opacity: 0.5,
     transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
+    boxShadow: [
+      {
+        color: 'rgba(34, 197, 94, 0.8)',
+        offsetX: 0,
+        offsetY: 8,
+        blurRadius: 12,
+        spreadDistance: 0,
+      },
+      {
+        color: '#dc2626',
+        offsetX: 4,
+        offsetY: 4,
+        blurRadius: 8,
+        spreadDistance: 2,
+      },
+    ],
   },
   {
     backgroundColor: 'green',
