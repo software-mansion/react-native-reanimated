@@ -138,12 +138,12 @@ export function notify(name: string) {
   return testRunnerNotifyFn(name);
 }
 
-export async function waitForNotify(name: string) {
-  return notificationRegistry.waitForNotify(name);
+export async function waitForNotify(name: string, timeout: number | undefined = 10_000) {
+  return notificationRegistry.waitForNotify(name, timeout);
 }
 
-export async function waitForNotifications(names: string[]) {
-  return notificationRegistry.waitForNotifications(names);
+export async function waitForNotifications(names: string[], timeout: number | undefined = 10_000) {
+  return notificationRegistry.waitForNotifications(names, timeout);
 }
 
 export function expect(value: TestValue) {
