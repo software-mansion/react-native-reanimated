@@ -14,11 +14,7 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { CSSManager } from '../managers';
-import {
-  markNodeAsRemovable,
-  unmarkNodeAsRemovable,
-} from '../platforms/native';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 

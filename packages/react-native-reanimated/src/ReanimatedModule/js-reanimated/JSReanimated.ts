@@ -25,7 +25,7 @@ import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../../css/platforms/native';
+} from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
