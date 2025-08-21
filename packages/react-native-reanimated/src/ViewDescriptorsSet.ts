@@ -5,7 +5,7 @@ import type { Descriptor } from './hook/commonTypes';
 
 export interface ViewDescriptorsSet {
   shareableViewDescriptors: SharedValue<Descriptor[]>;
-  add: (item: Descriptor, forceUpdateCounter?: ForceUpdateContainer) => void;
+  add: (item: Descriptor, forceUpdateContainer?: ForceUpdateContainer) => void;
   remove: (viewTag: number) => void;
 }
 
