@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const semverSatisfies = require('semver/functions/satisfies');
+const semverPrerelease = require('semver/functions/prerelease');
 
 /**
  * Updates the package.json version and jsVersion file
@@ -67,6 +68,12 @@ function validateReactNativeVersion(
       // @ts-ignore
       supportedRNVersions.push(...compatibilityJSON[key]['react-native']);
     }
+  }
+
+  if (semverPrerelease(reactNativeVersion)) {
+    // Don't perform any checks for pre-release versions, like nightlies or
+    // feature previews. The user knows what they're doing.
+    return true;
   }
 
   // If user uses a version that is not listed in the compatibility file, we skip the check
