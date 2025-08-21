@@ -93,25 +93,35 @@ class ValueInterpolator : public PropertyInterpolator {
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,
       const folly::dynamic &lastUpdateValue) override {
+    LOG(INFO) << " [0] oldStyleValue: " << oldStyleValue
+              << " newStyleValue: " << newStyleValue
+              << " lastUpdateValue: " << lastUpdateValue;
     KeyframeType firstKeyframe, lastKeyframe;
 
     if (oldStyleValue.isNull()) {
+      LOG(INFO) << " [1] oldStyleValue is null";
       reversingAdjustedStartValue_ = std::nullopt;
     } else {
+      LOG(INFO) << " [1] oldStyleValue is not null";
       reversingAdjustedStartValue_ = ValueType(oldStyleValue);
     }
 
     if (!lastUpdateValue.isNull()) {
+      LOG(INFO) << " [2] lastUpdateValue is not null";
       firstKeyframe = {0, ValueType(lastUpdateValue)};
     } else if (!oldStyleValue.isNull()) {
+      LOG(INFO) << " [2] lastUpdateValue is null, oldStyleValue is not null";
       firstKeyframe = {0, ValueType(oldStyleValue)};
     } else {
+      LOG(INFO) << " [2] lastUpdateValue is null, oldStyleValue is null";
       firstKeyframe = {0, defaultStyleValue_};
     }
 
     if (newStyleValue.isNull()) {
+      LOG(INFO) << " [3] newStyleValue is null";
       lastKeyframe = {1, defaultStyleValue_};
     } else {
+      LOG(INFO) << " [3] newStyleValue is not null";
       lastKeyframe = {1, ValueType(newStyleValue)};
     }
 
