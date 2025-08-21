@@ -24,15 +24,15 @@ const Links = [
   },
   {
     title: 'React Native Audio API',
-    url: 'https://github.com/react-native-audio/react-native-audio',
+    url: 'https://docs.swmansion.com/react-native-audio-api',
   },
   {
     title: 'React Native ExecuTorch',
-    url: 'https://github.com/react-native-torch/react-native-torch',
+    url: 'https://docs.swmansion.com/react-native-executorch/',
   },
   {
     title: 'TypeGPU',
-    url: 'https://github.com/react-native-typegpu/react-native-typegpu',
+    url: 'https://docs.swmansion.com/TypeGPU/integration/react-native/',
   },
   {
     title: 'Radon IDE',
