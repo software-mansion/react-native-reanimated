@@ -5,18 +5,17 @@ import type {
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
+  ICSSAnimationsManager,
 } from '../../types';
-import type { ICSSAnimationsManager } from '../../types/interfaces';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../../utils';
+import { processKeyframeDefinitions } from '../animationParser';
 import {
   configureWebCSSAnimations,
   insertCSSAnimation,
-  maybeAddSuffixes,
-  parseTimingFunction,
-  processKeyframeDefinitions,
   removeCSSAnimation,
-} from '..';
-import CSSKeyframesRuleImpl from '../CSSKeyframesRule';
+} from '../domUtils';
+import { CSSKeyframesRuleImpl } from '../keyframes';
+import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']

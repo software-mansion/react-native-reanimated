@@ -1,16 +1,18 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
-import type { CSSTransitionProperties } from '../../types';
-import type { ICSSTransitionsManager } from '../../types/interfaces';
-import {
-  registerCSSTransition,
-  unregisterCSSTransition,
-  updateCSSTransition,
-} from '../native';
+import type {
+  CSSTransitionProperties,
+  ICSSTransitionsManager,
+} from '../../types';
 import {
   getNormalizedCSSTransitionConfigUpdates,
   normalizeCSSTransitionProperties,
 } from '../normalization';
+import {
+  registerCSSTransition,
+  unregisterCSSTransition,
+  updateCSSTransition,
+} from '../proxy';
 import type { NormalizedCSSTransitionConfig } from '../types';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {

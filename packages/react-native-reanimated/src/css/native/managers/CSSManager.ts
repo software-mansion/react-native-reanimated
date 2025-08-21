@@ -4,9 +4,9 @@ import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { AnyRecord, CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
-import { setViewStyle } from '../native';
+import { setViewStyle } from '../proxy';
+import { getStyleBuilder } from '../registry';
 import type { StyleBuilder } from '../style';
-import { getStyleBuilder } from '../styleBuilder';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 

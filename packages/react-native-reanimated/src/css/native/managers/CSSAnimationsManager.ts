@@ -3,16 +3,15 @@ import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
+  ICSSAnimationsManager,
 } from '../../types';
-import type { ICSSAnimationsManager } from '../../types/interfaces';
-import CSSKeyframesRuleImpl from '../CSSKeyframesRule';
-import { applyCSSAnimations, unregisterCSSAnimations } from '../native';
+import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from '../keyframes';
 import {
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
 } from '../normalization';
-import { cssKeyframesRegistry } from '../registries';
+import { applyCSSAnimations, unregisterCSSAnimations } from '../proxy';
 import type {
   CSSAnimationUpdates,
   NormalizedSingleCSSAnimationSettings,

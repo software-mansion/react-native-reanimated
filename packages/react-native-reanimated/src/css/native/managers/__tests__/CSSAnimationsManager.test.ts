@@ -1,22 +1,22 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
-import CSSKeyframesRuleBase from '../../../models/CSSKeyframesRuleBase';
+import { CSSKeyframesRuleBase } from '../../../models';
 import { css } from '../../../stylesheet';
 import type { CSSAnimationProperties } from '../../../types';
-import { normalizeSingleCSSAnimationSettings } from '../..';
+import { cssKeyframesRegistry } from '../../keyframes';
+import { normalizeSingleCSSAnimationSettings } from '../../normalization';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
-} from '../../native';
-import { cssKeyframesRegistry } from '../../registries';
+} from '../../proxy';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
 const VIEW_NAME = 'ViewName';
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
-jest.mock('../../platforms/native/native.ts', () => ({
+jest.mock('../../proxy.ts', () => ({
   applyCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   registerCSSKeyframes: jest.fn(),

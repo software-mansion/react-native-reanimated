@@ -1,15 +1,15 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSTransitionProperties } from '../../../types';
-import { normalizeCSSTransitionProperties } from '../..';
+import { normalizeCSSTransitionProperties } from '../../normalization';
 import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../../native';
+} from '../../proxy';
 import CSSTransitionsManager from '../CSSTransitionsManager';
 
-jest.mock('../../native.ts', () => ({
+jest.mock('../../proxy.ts', () => ({
   registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
   updateCSSTransition: jest.fn(),

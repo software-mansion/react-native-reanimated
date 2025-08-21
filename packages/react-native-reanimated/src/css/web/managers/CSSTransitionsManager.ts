@@ -1,13 +1,12 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import type { CSSTransitionProperties } from '../../types';
-import type { ICSSTransitionsManager } from '../../types/interfaces';
+import type {
+  CSSTransitionProperties,
+  ICSSTransitionsManager,
+} from '../../types';
 import { kebabizeCamelCase } from '../../utils';
-import {
-  maybeAddSuffixes,
-  normalizeCSSTransitionProperties,
-  parseTimingFunction,
-} from '..';
+import { normalizeCSSTransitionProperties } from '../normalization';
+import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly element: ReanimatedHTMLElement;

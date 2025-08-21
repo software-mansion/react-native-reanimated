@@ -1,6 +1,8 @@
 'use strict';
-export * from './native';
+export * from './keyframes';
+export * from './managers';
 export * from './normalization';
-export type { StyleBuilder } from './style';
-export * from './styleBuilder';
+export * from './proxy';
+export * from './registry';
+export * from './style';
 export type * from './types';
