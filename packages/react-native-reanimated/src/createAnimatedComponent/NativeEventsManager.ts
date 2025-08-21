@@ -104,7 +104,7 @@ export class NativeEventsManager implements INativeEventsManager {
       return this.#managedComponent.getComponentViewTag();
     }
     if (componentAnimatedRef?.__nativeTag) {
-      return componentAnimatedRef?.__nativeTag ?? -1;
+      return componentAnimatedRef.__nativeTag ?? -1;
     }
     /*
       When a component is updated, a child could potentially change and have a different 
