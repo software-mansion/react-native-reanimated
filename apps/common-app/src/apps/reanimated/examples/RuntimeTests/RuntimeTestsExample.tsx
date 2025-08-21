@@ -69,6 +69,8 @@ export default function RuntimeTestsExample() {
             require('./tests/runLoop/clearImmediatePolyfill.test');
             require('./tests/runLoop/setIntervalPolyfill.test');
             require('./tests/runLoop/clearIntervalPolyfill.test');
+            require('./tests/runLoop/queueMicrotask.test');
+            require('./tests/runLoop/executionOrder.test');
           },
         },
         {

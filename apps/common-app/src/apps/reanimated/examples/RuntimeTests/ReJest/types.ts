@@ -120,6 +120,9 @@ export type Mismatch = {
   capturedSnapshot: OperationUpdate;
 };
 
+export type DefaultValue = 'not_ok' | 'ok';
+export type ValueWrapper<T> = { value: T | DefaultValue };
+
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
