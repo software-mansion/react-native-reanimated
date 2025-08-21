@@ -17,7 +17,7 @@ import {
 import { CSSKeyframesRuleImpl } from '../keyframes';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 
-export const isCSSKeyframesRuleImpl = (
+const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']
 ): keyframes is CSSKeyframesRuleImpl =>
   typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
