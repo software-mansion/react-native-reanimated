@@ -2,13 +2,13 @@
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../constants';
 import CSSKeyframesRuleBase from '../../models/CSSKeyframesRuleBase';
-import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
+import { normalizeSingleCSSAnimationSettings } from '../../platforms/native';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
-} from '../../platform/native/native';
-import { cssKeyframesRegistry } from '../../registry';
+} from '../../platforms/native/native';
+import { cssKeyframesRegistry } from '../../registries';
 import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';

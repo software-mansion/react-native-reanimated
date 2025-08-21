@@ -4,7 +4,7 @@ import {
   maybeAddSuffixes,
   normalizeCSSTransitionProperties,
   parseTimingFunction,
-} from '../platform/web';
+} from '../platforms/web';
 import type { CSSTransitionProperties } from '../types';
 import type { ICSSTransitionsManager } from '../types/interfaces';
 import { kebabizeCamelCase } from '../utils';

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/config/interpolators/registry.h>
+#include <reanimated/CSS/configs/interpolators/registry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>

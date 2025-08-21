@@ -1,5 +1,5 @@
 'use strict';
-import { processKeyframeDefinitions } from '../platform/web';
+import { processKeyframeDefinitions } from '../platforms/web';
 import type { CSSAnimationKeyframes, PlainStyle } from '../types';
 import CSSKeyframesRuleBase from './CSSKeyframesRuleBase';
 

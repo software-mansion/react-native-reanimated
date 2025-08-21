@@ -4,15 +4,15 @@ import { CSSKeyframesRuleImpl } from '../models';
 import type {
   CSSAnimationUpdates,
   NormalizedSingleCSSAnimationSettings,
-} from '../platform/native';
+} from '../platforms/native';
 import {
   applyCSSAnimations,
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
   unregisterCSSAnimations,
-} from '../platform/native';
-import { cssKeyframesRegistry } from '../registry';
+} from '../platforms/native';
+import { cssKeyframesRegistry } from '../registries';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,

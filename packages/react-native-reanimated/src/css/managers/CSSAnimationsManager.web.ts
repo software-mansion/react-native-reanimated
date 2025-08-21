@@ -8,7 +8,7 @@ import {
   parseTimingFunction,
   processKeyframeDefinitions,
   removeCSSAnimation,
-} from '../platform/web';
+} from '../platforms/web';
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
