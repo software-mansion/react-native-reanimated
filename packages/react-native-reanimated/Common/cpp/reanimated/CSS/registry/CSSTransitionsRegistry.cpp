@@ -136,7 +136,6 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates =
           strongThis->getUpdatesFromRegistry(shadowNode->getTag());
-
       const auto &transitionStartStyle = transition->run(
           changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
