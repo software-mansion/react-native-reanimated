@@ -1719,7 +1719,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-pager-view (6.8.1):
+  - react-native-pager-view (6.9.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -1747,7 +1747,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context (5.5.2):
+  - react-native-safe-area-context (5.6.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -1765,8 +1765,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.5.2)
-    - react-native-safe-area-context/fabric (= 5.5.2)
+    - react-native-safe-area-context/common (= 5.6.0)
+    - react-native-safe-area-context/fabric (= 5.6.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1777,7 +1777,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/common (5.5.2):
+  - react-native-safe-area-context/common (5.6.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -1805,7 +1805,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/fabric (5.5.2):
+  - react-native-safe-area-context/fabric (5.6.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2338,7 +2338,7 @@ PODS:
     - React-perflogger (= 0.81.0)
     - React-utils (= 0.81.0)
     - SocketRocket
-  - RNCAsyncStorage (2.1.0):
+  - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2422,7 +2422,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.26.0):
+  - RNGestureHandler (2.28.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2601,7 +2601,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNSVG (15.12.0):
+  - RNSVG (15.12.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2627,10 +2627,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.12.0)
+    - RNSVG/common (= 15.12.1)
     - SocketRocket
     - Yoga
-  - RNSVG/common (15.12.0):
+  - RNSVG/common (15.12.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -3042,8 +3042,8 @@ SPEC CHECKSUMS:
   React-logger: 04ce9229cb57db2c2a8164eaec1105f89da7fb22
   React-Mapbuffer: e402e7a0535b2213c50727553621480fe8cd8ade
   React-microtasksnativemodule: a63ce5595016996a9bac1f10c70a7a7fe6506649
-  react-native-pager-view: f8f63370fc0f4174f7510863b4812b8e034d2d0d
-  react-native-safe-area-context: 84a754cad3fbb25117482cde6b8defca6c6f6a53
+  react-native-pager-view: a0516effb17ca5120ac2113bfd21b91130ad5748
+  react-native-safe-area-context: a72764e0eb5d6b79b7450e5d0ae919eb1a4567b4
   React-NativeModulesApple: b3766e1f87b08064ebc459b9e1538da2447ca874
   React-oscompat: 34f3d3c06cadcbc470bc4509c717fb9b919eaa8b
   React-perflogger: a1edb025fd5d44f61bf09307e248f7608d7b2dcf
@@ -3064,7 +3064,7 @@ SPEC CHECKSUMS:
   React-rendererconsistency: c2cb23365f4a7b511893748fe8cad1830bbae637
   React-renderercss: 0c1472d6572c05e493aee476598c3ed6234b6c33
   React-rendererdebug: d6335da9730fa5a151537aa976a16d48de6135e2
-  React-RuntimeApple: 63ccbee710b61904e2b4d7ed4d31f21294167ed3
+  React-RuntimeApple: 5684c2a5d8768e5728a5817c21e5dba798d54c58
   React-RuntimeCore: 52428a1b48fb3c50ddf4dd5eee494486e4ecffc6
   React-runtimeexecutor: 1b4e99e5c27d2cb8bdeca9773ff5f1a8eac7709c
   React-RuntimeHermes: a688639233a3ea44b4f8e4d448f51943d7e00815
@@ -3074,13 +3074,13 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: c91900fa724baee992f01c05eeb4c9e01a807f78
   ReactCodegen: 8125d6ee06ea06f48f156cbddec5c2ca576d62e6
   ReactCommon: 116d6ee71679243698620d8cd9a9042541e44aa6
-  RNCAsyncStorage: 6757c835a7c3368c3506dd50606d21f34ec28d7c
+  RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
-  RNGestureHandler: 6922ca28d7a014e0019893c32b422b0d5d5ba8b8
+  RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
   RNReanimated: 0484dc80969fe10907aaceb2606000767e3dcd7d
   RNScreens: 6ced6ae8a526512a6eef6e28c2286e1fc2d378c3
-  RNSVG: d6b2fc2f4058b36a2fcbde615ef859f2913cdee4
+  RNSVG: 6f39605a4c4d200b11435c35bd077553c6b5963a
   RNWorklets: f928b6ff86463bbdcfbc62043a6cf411d6cf9e70
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 00013dd9cde63a2d98e8002fcc4f5ddb66c10782
