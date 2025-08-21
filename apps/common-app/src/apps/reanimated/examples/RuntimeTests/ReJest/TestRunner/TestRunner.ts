@@ -21,7 +21,7 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
@@ -86,7 +86,7 @@ export class TestRunner {
     };
     const setter = (value?: T | DefaultValue, notificationName?: string) => {
       'worklet';
-      runOnJS(jsSetter)(value, notificationName);
+      scheduleOnRN(jsSetter, value, notificationName);
     };
     return [state, setter];
   }

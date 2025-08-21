@@ -1,4 +1,4 @@
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, runOnUI } from 'react-native-worklets';
 import type { LockObject } from '../types';
 
 class WaitForUnlock {
@@ -33,7 +33,7 @@ export class SyncUIRunner extends WaitForUnlock {
     runOnUI(() => {
       'worklet';
       worklet();
-      runOnJS(unlock)();
+      scheduleOnRN(unlock);
     })();
     await this._waitForUnlock(maxWaitTime);
   }

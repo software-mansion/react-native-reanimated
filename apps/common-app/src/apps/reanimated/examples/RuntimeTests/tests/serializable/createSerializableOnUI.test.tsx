@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from 'react-native';
-import { executeOnUIRuntimeSync } from 'react-native-reanimated';
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
