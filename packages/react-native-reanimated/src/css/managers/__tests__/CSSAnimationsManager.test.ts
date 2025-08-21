@@ -16,7 +16,7 @@ import CSSAnimationsManager from '../CSSAnimationsManager';
 const VIEW_NAME = 'ViewName';
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
-jest.mock('../../platform/native/native.ts', () => ({
+jest.mock('../../platforms/native/native.ts', () => ({
   applyCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   registerCSSKeyframes: jest.fn(),

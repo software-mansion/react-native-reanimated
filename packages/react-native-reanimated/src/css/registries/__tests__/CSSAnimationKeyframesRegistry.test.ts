@@ -8,7 +8,7 @@ import cssKeyframesRegistry from '../CSSKeyframesRegistry';
 
 const VIEW_NAME = 'ViewName';
 
-jest.mock('../../platform/native/native.ts', () => ({
+jest.mock('../../platforms/native/native.ts', () => ({
   registerCSSKeyframes: jest.fn(),
   unregisterCSSKeyframes: jest.fn(),
 }));
