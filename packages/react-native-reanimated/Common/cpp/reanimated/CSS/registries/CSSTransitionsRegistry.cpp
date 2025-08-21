@@ -1,4 +1,4 @@
-#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
 namespace reanimated::css {
 

@@ -1,4 +1,4 @@
-#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
+#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 
 namespace reanimated::css {
 

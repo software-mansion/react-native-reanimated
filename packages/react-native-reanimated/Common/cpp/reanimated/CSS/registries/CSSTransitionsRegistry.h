@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/core/CSSTransition.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
