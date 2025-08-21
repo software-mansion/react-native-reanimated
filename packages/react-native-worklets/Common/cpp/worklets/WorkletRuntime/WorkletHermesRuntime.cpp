@@ -63,7 +63,6 @@ WorkletHermesRuntime::WorkletHermesRuntime(
 #if HERMES_ENABLE_DEBUGGER
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
-  debugToken_ = chrome::enableDebugging(std::move(adapter), name);
 #endif // HERMES_ENABLE_DEBUGGER
 
 #ifndef NDEBUG
@@ -94,13 +93,6 @@ WorkletHermesRuntime::WorkletHermesRuntime(
   runtime_->global().setProperty(
       *runtime_, "evalWithSourceMap", evalWithSourceMap);
 #endif // NDEBUG
-}
-
-WorkletHermesRuntime::~WorkletHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER
-  // We have to disable debugging before the runtime is destroyed.
-  chrome::disableDebugging(debugToken_);
-#endif // HERMES_ENABLE_DEBUGGER
 }
 
 } // namespace worklets
