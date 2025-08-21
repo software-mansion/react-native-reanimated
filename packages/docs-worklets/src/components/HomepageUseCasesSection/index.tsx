@@ -11,7 +11,7 @@ const useCases = [
     title: 'React Native Reanimated',
     url: 'https://docs.swmansion.com/react-native-reanimated',
     description:
-      'Core library, used by 87% of React Native developers. It uses Worklets to make sure that animations run smoothly, even when business logic is especially heavy.',
+      'Core library, used by almost 90% of React Native developers. It uses Worklets to make sure that animations run smoothly, even when business logic is especially heavy.',
     mp4: ReanimatedVideo,
   },
   {
