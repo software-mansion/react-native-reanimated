@@ -81,7 +81,7 @@ WorkletRuntime::WorkletRuntime(
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  if (enableEventLoop) {
+  if (enableEventLoop && name != uiRuntimeName) {
     eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
     eventLoop_->run();
   }
