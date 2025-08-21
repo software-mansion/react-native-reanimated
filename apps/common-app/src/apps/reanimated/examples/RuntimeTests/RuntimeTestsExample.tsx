@@ -44,9 +44,10 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'serializable',
           importTest: () => {
-            require('./tests/serializable/createSerializable.test');
-            require('./tests/serializable/createSerializableOnUI.test');
-            require('./tests/serializable/isSerializableRef.test');
+            require('./tests/memory/createSerializable.test');
+            require('./tests/memory/createSerializableOnUI.test');
+            require('./tests/memory/isSerializableRef.test');
+            require('./tests/memory/synchronizable.test');
           },
         },
         {
@@ -54,6 +55,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/runtimes/createWorkletRuntime.test');
             require('./tests/runtimes/scheduleOnRN.test');
+            require('./tests/runtimes/runOnUISync.test');
           },
         },
         {

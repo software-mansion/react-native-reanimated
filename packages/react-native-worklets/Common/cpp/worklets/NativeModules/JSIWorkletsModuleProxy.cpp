@@ -4,6 +4,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
@@ -12,6 +13,8 @@
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
+
+#include <utility>
 
 using namespace facebook;
 
@@ -207,6 +210,19 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "createSynchronizable"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableGetDirty"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableGetBlocking"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableSetBlocking"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableLock"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -544,6 +560,97 @@ jsi::Value JSIWorkletsModuleProxy::get(
               /* stack */ args[1].asString(rt).utf8(rt),
               /* name */ args[2].asString(rt).utf8(rt),
               /* jsEngine */ args[3].asString(rt).utf8(rt));
+        });
+  }
+
+  if (name == "createSynchronizable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto initial = extractSerializableOrThrow(
+              rt, args[0], "[Worklets] Value must be a Serializable.");
+          auto synchronizable = std::make_shared<Synchronizable>(initial);
+          return SerializableJSRef::newNativeStateObject(rt, synchronizable);
+        });
+  }
+
+  if (name == "synchronizableGetDirty") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          return synchronizable->getDirty()->toJSValue(rt);
+        });
+  }
+
+  if (name == "synchronizableGetBlocking") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          return synchronizable->getBlocking()->toJSValue(rt);
+        });
+  }
+
+  if (name == "synchronizableSetBlocking") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          auto newValue = extractSerializableOrThrow(
+              rt, args[1], "[Worklets] Value must be a Serializable.");
+          synchronizable->setBlocking(std::move(newValue));
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "synchronizableLock") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          synchronizable->lock();
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "synchronizableUnlock") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
+          synchronizable->unlock();
+          return jsi::Value::undefined();
         });
   }
 

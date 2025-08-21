@@ -89,8 +89,8 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
-  static TransformMatrix &getIdentityMatrix() {
-    static TransformMatrix identityMatrix = TransformMatrix::Identity();
+  static TransformMatrix3D &getIdentityMatrix() {
+    static TransformMatrix3D identityMatrix = TransformMatrix3D::Identity();
     return identityMatrix;
   }
 

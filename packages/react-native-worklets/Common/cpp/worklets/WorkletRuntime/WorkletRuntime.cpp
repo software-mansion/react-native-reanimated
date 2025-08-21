@@ -135,6 +135,10 @@ void WorkletRuntime::init(
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+
+  auto synchronizableUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
+  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
 }
 

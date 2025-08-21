@@ -80,7 +80,7 @@ export default function useSpringPlayground() {
     withSpring(sv.value, {
       ${
         isPhysicsBased
-          ? `stifness: ${stiffness},
+          ? `stiffness: ${stiffness},
       damping: ${damping},`
           : `duration: ${duration},
       dampingRatio: ${dampingRatio},`

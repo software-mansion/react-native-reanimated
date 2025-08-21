@@ -19,55 +19,55 @@ const requestAnimationFrameImpl =
     : globalThis.requestAnimationFrame;
 
 class JSWorklets implements IWorkletsModule {
-  createSerializable<TValue>(): SerializableRef<TValue> {
+  createSerializable(): never {
     throw new WorkletsError(
       'createSerializable should never be called in JSWorklets.'
     );
   }
 
-  createSerializableString(): SerializableRef<string> {
+  createSerializableString(): never {
     throw new WorkletsError(
       'createSerializableString should never be called in JSWorklets.'
     );
   }
 
-  createSerializableNumber(): SerializableRef<number> {
+  createSerializableNumber(): never {
     throw new WorkletsError(
       'createSerializableNumber should never be called in JSWorklets.'
     );
   }
 
-  createSerializableBoolean(): SerializableRef<boolean> {
+  createSerializableBoolean(): never {
     throw new WorkletsError(
       'createSerializableBoolean should never be called in JSWorklets.'
     );
   }
 
-  createSerializableBigInt(): SerializableRef<bigint> {
+  createSerializableBigInt(): never {
     throw new WorkletsError(
       'createSerializableBigInt should never be called in JSWorklets.'
     );
   }
 
-  createSerializableUndefined(): SerializableRef<undefined> {
+  createSerializableUndefined(): never {
     throw new WorkletsError(
       'createSerializableUndefined should never be called in JSWorklets.'
     );
   }
 
-  createSerializableNull(): SerializableRef<null> {
+  createSerializableNull(): never {
     throw new WorkletsError(
       'createSerializableNull should never be called in JSWorklets.'
     );
   }
 
-  createSerializableTurboModuleLike<T extends object>(): SerializableRef<T> {
+  createSerializableTurboModuleLike(): never {
     throw new WorkletsError(
       'createSerializableTurboModuleLike should never be called in JSWorklets.'
     );
   }
 
-  createSerializableObject<T extends object>(): SerializableRef<T> {
+  createSerializableObject(): never {
     throw new WorkletsError(
       'createSerializableObject should never be called in JSWorklets.'
     );
@@ -91,33 +91,31 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  createSerializableHostObject<T extends object>(): SerializableRef<T> {
+  createSerializableHostObject(): never {
     throw new WorkletsError(
       'createSerializableHostObject should never be called in JSWorklets.'
     );
   }
 
-  createSerializableArray(): SerializableRef<unknown[]> {
+  createSerializableArray(): never {
     throw new WorkletsError(
       'createSerializableArray should never be called in JSWorklets.'
     );
   }
 
-  createSerializableInitializer(): SerializableRef<object> {
+  createSerializableInitializer(): never {
     throw new WorkletsError(
       'createSerializableInitializer should never be called in JSWorklets.'
     );
   }
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
-    _func: (...args: TArgs) => TReturn
-  ): SerializableRef<TReturn> {
+  createSerializableFunction(): never {
     throw new WorkletsError(
       'createSerializableFunction should never be called in JSWorklets.'
     );
   }
 
-  createSerializableWorklet(): SerializableRef<object> {
+  createSerializableWorklet(): never {
     throw new WorkletsError(
       'createSerializableWorklet should never be called in JSWorklets.'
     );
@@ -131,7 +129,7 @@ class JSWorklets implements IWorkletsModule {
     requestAnimationFrameImpl(worklet);
   }
 
-  executeOnUIRuntimeSync<T, R>(_serializable: SerializableRef<T>): R {
+  executeOnUIRuntimeSync(): never {
     throw new WorkletsError(
       '`executeOnUIRuntimeSync` is not available in JSWorklets.'
     );
@@ -143,9 +141,45 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  scheduleOnRuntime() {
+  scheduleOnRuntime(): never {
     throw new WorkletsError(
       'scheduleOnRuntime is not available in JSWorklets.'
+    );
+  }
+
+  createSynchronizable(): never {
+    throw new WorkletsError(
+      'createSynchronizable should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableGetDirty(): never {
+    throw new WorkletsError(
+      'synchronizableGetDirty should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableGetBlocking(): never {
+    throw new WorkletsError(
+      'synchronizableGetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableSetBlocking(): never {
+    throw new WorkletsError(
+      'synchronizableSetBlocking should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableLock(): never {
+    throw new WorkletsError(
+      'synchronizableLock should never be called in JSWorklets.'
+    );
+  }
+
+  synchronizableUnlock(): never {
+    throw new WorkletsError(
+      'synchronizableUnlock should never be called in JSWorklets.'
     );
   }
 

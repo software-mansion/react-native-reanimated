@@ -59,4 +59,3 @@ jobs:
         uses: ./.github/actions/reanimated-typescript-compatibility-check
         with:
           react-native-version: ${{ matrix.react-native-version }}
-          working-directory: '.'

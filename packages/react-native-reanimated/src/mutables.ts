@@ -1,6 +1,8 @@
 'use strict';
+import type { Synchronizable } from 'react-native-worklets';
 import {
   createSerializable,
+  createSynchronizable,
   executeOnUIRuntimeSync,
   runOnUI,
   serializableMappingCache,
@@ -8,6 +10,7 @@ import {
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
+import { DynamicFlags } from './featureFlags/dynamicFlags';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
 
@@ -94,10 +97,14 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   });
 }
 
-export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
+export function makeMutableUI<Value>(
+  initial: Value,
+  dirtyFlag?: Synchronizable<boolean>
+): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
+  let isDirty = false;
 
   const mutable: PartialMutable<Value> = {
     get value() {
@@ -114,6 +121,10 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
       listeners.forEach((listener) => {
         listener(newValue);
       });
+      if (dirtyFlag && !isDirty && value !== initial) {
+        isDirty = true;
+        dirtyFlag.setBlocking(true);
+      }
     },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
@@ -140,20 +151,28 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
+  const dirtyFlag: Synchronizable<boolean> | undefined =
+    DynamicFlags.EXPERIMENTAL_MUTABLE_OPTIMIZATION
+      ? createSynchronizable(false)
+      : undefined;
   const handle = createSerializable({
     __init: () => {
       'worklet';
-      return makeMutableUI(initial);
+      return makeMutableUI(initial, dirtyFlag);
     },
   });
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
-      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        return sv.value;
-      });
-      return uiValueGetter(mutable as Mutable<Value>);
+      if (!dirtyFlag || dirtyFlag.getBlocking()) {
+        const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+          return sv.value;
+        });
+        return uiValueGetter(mutable as Mutable<Value>);
+      } else {
+        return initial;
+      }
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();

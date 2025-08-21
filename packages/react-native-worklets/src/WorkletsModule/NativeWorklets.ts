@@ -2,6 +2,7 @@
 
 import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
+import type { SynchronizableRef } from '../synchronizable';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
@@ -189,6 +190,46 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       workletRuntime,
       serializableWorklet
     );
+  }
+
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizable(value);
+  }
+
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetDirty(synchronizableRef);
+  }
+
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetBlocking(
+      synchronizableRef
+    );
+  }
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableLock(synchronizableRef);
+  }
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
   reportFatalErrorOnJS(

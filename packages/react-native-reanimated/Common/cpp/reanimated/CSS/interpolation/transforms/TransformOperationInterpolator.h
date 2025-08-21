@@ -65,7 +65,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolatorUpdateContext &context) const override;
 
  private:
-  TransformMatrix matrixFromOperation(
+  TransformMatrix3D matrixFromOperation(
       const MatrixOperation &matrixOperation,
       const TransformInterpolatorUpdateContext &context) const;
 };
