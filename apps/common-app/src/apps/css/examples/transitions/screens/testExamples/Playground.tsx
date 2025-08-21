@@ -19,7 +19,7 @@ const transitionStyles: Array<ViewStyle> = [
       { rotateX: '45deg' },
     ],
     boxShadow:
-      '0 4px 8px rgba(34, 197, 94, 0.3), 0 8px 16px #ff6b35, 0 16px 32px rgba(59, 130, 246, 0.4)',
+      'inset 0 0 20px 10px rgba(34, 197, 94, 0.3), 0 8px 16px #ff6b35, 0 16px 32px rgba(59, 130, 246, 0.4)',
   },
   {
     backgroundColor: 'blue',
@@ -36,6 +36,7 @@ const transitionStyles: Array<ViewStyle> = [
       },
       {
         color: '#dc2626',
+        inset: true,
         offsetX: 4,
         offsetY: 4,
         blurRadius: 8,
