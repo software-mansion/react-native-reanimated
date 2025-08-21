@@ -100,6 +100,7 @@
     "bundleMode/index.js",
     "bundleMode/index.d.ts",
     "scripts/worklets_utils.rb",
+    "scripts/validate-react-native-version.js",
     "plugin/index.js",
     "*.podspec",
     "react-native.config.js",
