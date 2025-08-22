@@ -3,6 +3,11 @@ import { ReanimatedError } from '../../common';
 import type { StyleBuilder, StyleBuilderConfig } from './style';
 import { BASE_PROPERTIES_CONFIG, createStyleBuilder } from './style';
 
+export const ERROR_MESSAGES = {
+  styleBuilderNotFound: (componentName: string) =>
+    `CSS style builder for component ${componentName} was not found`,
+};
+
 const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
   separatelyInterpolatedArrayProperties: ['transformOrigin', 'boxShadow'],
 });
@@ -25,9 +30,7 @@ export function getStyleBuilder(componentName: string): StyleBuilder {
     return baseStyleBuilder;
   }
 
-  throw new ReanimatedError(
-    `CSS style builder for component ${componentName} was not found`
-  );
+  throw new ReanimatedError(ERROR_MESSAGES.styleBuilderNotFound(componentName));
 }
 
 export function registerComponentStyleBuilder(

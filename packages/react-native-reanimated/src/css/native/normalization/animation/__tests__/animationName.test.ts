@@ -5,7 +5,7 @@ import { getStyleBuilder } from '../../../registry';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
 describe(normalizeAnimationKeyframes, () => {
-  const styleBuilder = getStyleBuilder('base');
+  const styleBuilder = getStyleBuilder('RCTView'); // Must be a valid view name
 
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
