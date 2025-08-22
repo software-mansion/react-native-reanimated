@@ -41,7 +41,7 @@ export default class CSSManager implements ICSSManager {
 
     if (!this.styleBuilder && (animationProperties || transitionProperties)) {
       throw new ReanimatedError(
-        `Tried to apply CSS animations or transitions to ${this.viewName} which is not supported`
+        `Tried to apply CSS animations to ${this.viewName} which is not supported`
       );
     }
 
