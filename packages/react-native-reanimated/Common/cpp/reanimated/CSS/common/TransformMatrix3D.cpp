@@ -340,9 +340,9 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
   // Check for a coordinate system flip. If the determinant
   // is negative, then negate the matrix and the scaling factors.
   if (rows[0].dot(rows[1].cross(rows[2])) < 0) {
-    for (size_t i = 0; i < 3; ++i) {
-      scale[i] *= -1;
-      rows[i] *= -1;
+    scale *= -1;
+    for (auto &row : rows) {
+      row *= -1;
     }
   }
   const auto rotation = computeQuaternion(rows);

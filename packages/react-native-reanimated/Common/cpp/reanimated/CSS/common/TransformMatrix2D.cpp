@@ -164,10 +164,14 @@ std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
 
   auto [scale, skew] = computeScaleAndSkew(rows);
 
-  // Handle reflection (negative determinant)
+  // At this point, the matrix (in rows) is orthonormal.
+  // Check for a coordinate system flip. If the determinant
+  // is negative, then negate the matrix and the scaling factors.
   if (rows[0].cross(rows[1]) < 0) {
     scale *= -1;
-    rows *= -1;
+    for (auto &row : rows) {
+      row *= -1;
+    }
   }
 
   const auto rotation = computeRotation(rows);
