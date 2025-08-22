@@ -1,21 +1,36 @@
 'use strict';
+import { ReanimatedError } from '../../common';
 import type { StyleBuilder, StyleBuilderConfig } from './style';
 import { BASE_PROPERTIES_CONFIG, createStyleBuilder } from './style';
 
-const STYLE_BUILDERS: Record<string, StyleBuilder> = {
-  // react-native / fallback
-  base: createStyleBuilder(BASE_PROPERTIES_CONFIG, {
-    separatelyInterpolatedArrayProperties: ['transformOrigin', 'boxShadow'],
-  }),
+export const ERROR_MESSAGES = {
+  styleBuilderNotFound: (componentName: string) =>
+    `CSS style builder for component ${componentName} was not found`,
 };
 
-export function getStyleBuilder(componentName = 'base'): StyleBuilder {
-  return (
-    STYLE_BUILDERS[componentName] ??
-    // We use this as a fallback and for all react-native components as there
-    // is no point in separating this config for different component types.
-    STYLE_BUILDERS.base
-  );
+const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
+  separatelyInterpolatedArrayProperties: ['transformOrigin', 'boxShadow'],
+});
+
+const STYLE_BUILDERS: Record<string, StyleBuilder> = {};
+
+export function hasStyleBuilder(componentName: string): boolean {
+  return !!STYLE_BUILDERS[componentName] || componentName.startsWith('RCT');
+}
+
+export function getStyleBuilder(componentName: string): StyleBuilder {
+  const styleBuilder = STYLE_BUILDERS[componentName];
+
+  if (styleBuilder) {
+    return styleBuilder;
+  }
+
+  // This captures all React Native components
+  if (componentName.startsWith('RCT')) {
+    return baseStyleBuilder;
+  }
+
+  throw new ReanimatedError(ERROR_MESSAGES.styleBuilderNotFound(componentName));
 }
 
 export function registerComponentStyleBuilder(

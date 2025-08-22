@@ -13,7 +13,8 @@ import {
 } from '../../proxy';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
-const VIEW_NAME = 'ViewName';
+const VIEW_NAME = 'RCTView'; // Must be a valid view name
+
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
 jest.mock('../../proxy.ts', () => ({

@@ -3,7 +3,7 @@ import { registerCSSKeyframes, unregisterCSSKeyframes } from '../../proxy';
 import cssKeyframesRegistry from '../CSSKeyframesRegistry';
 import CSSKeyframesRuleImpl from '../CSSKeyframesRuleImpl';
 
-const VIEW_NAME = 'ViewName';
+const VIEW_NAME = 'RCTView'; // Must be a valid view name
 
 jest.mock('../../proxy.ts', () => ({
   registerCSSKeyframes: jest.fn(),
