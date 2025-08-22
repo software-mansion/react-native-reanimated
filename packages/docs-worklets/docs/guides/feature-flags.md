@@ -8,10 +8,9 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                         |               Type                | Added in | Removed in | Default value |
-| ------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)         |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `true`     |
-| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization) | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| Feature flag name                                                 |              Type               | Added in | Removed in | Default value |
+| ----------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `true`     |
 
 :::info
 
@@ -48,6 +47,8 @@ Static flags are intended to be resolved during code compilation and cannot be c
 
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
+
+To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
 
 ## Dynamic feature flags
 
