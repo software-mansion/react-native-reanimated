@@ -4,7 +4,7 @@ title: Feature flags
 sidebar_label: Feature flags
 ---
 
-Feature flags allow developers to opt-in for experimental changes. They serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic. By default, all feature flags are disabled and they can be enabled individually.
+Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
 
 :::info
 
@@ -100,8 +100,10 @@ setDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG', true);
 
 ## Remarks for contributors
 
-- All feature flags are supposed to be disabled by default, allowing users to opt-in for the experimental behavior.
+- Feature flags should switch the implementation to the new experimental behavior only when enabled.
+- Initially, the default value should be false, allowing users to opt-in for the experimental behavior when desired.
+- When the experimental behavior is considered stable, the default value should be set to true, while still allowing users to opt-out if needed.
+- After some period, the feature flag which is enabled by default should be removed from the codebase.
 - Both static and dynamic feature flags should follow upper snake case, i.e. `EXAMPLE_FEATURE_FLAG`.
 - The name of the feature flag should not contain the expression `FEATURE_FLAG` itself.
 - It is recommended to explicitly use `ENABLE_` or `DISABLE_` prefix for feature flags that enable or disable certain parts of the code for the sake of clarity.
-- Once the experimental behavior becomes the default, the feature flag should be removed from the codebase.
