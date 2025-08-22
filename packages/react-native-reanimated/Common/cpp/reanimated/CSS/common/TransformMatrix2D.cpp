@@ -166,10 +166,8 @@ std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
 
   // Handle reflection (negative determinant)
   if (rows[0].cross(rows[1]) < 0) {
-    for (size_t i = 0; i < 2; ++i) {
-      scale[i] *= -1;
-      rows[i] *= -1;
-    }
+    scale *= -1;
+    rows *= -1;
   }
 
   const auto rotation = computeRotation(rows);
