@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "react-native-reanimated": ["../../packages/react-native-reanimated/src"]
     }
   },
   "include": ["src", "index.ts"]
