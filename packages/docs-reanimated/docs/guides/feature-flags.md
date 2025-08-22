@@ -14,13 +14,13 @@ Feature flags are available since Reanimated 4.
 
 ## Summary of available feature flags
 
-| Feature flag name                                                                           |               Type                | Added in | Removed in | Default value |
-| ------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
-| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                     |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)           |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#unstable_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)                           |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                   | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| Feature flag name                                                                                   |               Type                | Added in | Removed in | Default value |
+| --------------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)                                   |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `true`     |
+| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                           | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -46,7 +46,7 @@ Currently, only the following styles can be updated using the fast path: `opacit
 
 This feature flag works only on Android and has no effect on iOS. For more details, see [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
 
-### `UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
+### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
 
 When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
 
