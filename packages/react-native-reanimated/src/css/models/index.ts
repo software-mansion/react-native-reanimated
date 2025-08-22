@@ -1,2 +1,2 @@
 'use strict';
-export { default as CSSKeyframesRuleImpl } from './CSSKeyframesRule';
+export { default as CSSKeyframesRuleBase } from './CSSKeyframesRuleBase';

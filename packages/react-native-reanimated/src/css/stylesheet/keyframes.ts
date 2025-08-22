@@ -1,5 +1,5 @@
 'use strict';
-import { CSSKeyframesRuleImpl } from '../models';
+import { CSSKeyframesRuleImpl } from '../platform';
 import type {
   CSSAnimationKeyframes,
   CSSKeyframesRule,
