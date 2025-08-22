@@ -42,6 +42,12 @@ Pod::Spec.new do |s|
   # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
   install_modules_dependencies(s)
 
+  s.dependency 'React-jsi'
+  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+  if using_hermes && !$config[:is_tvos_target]
+    s.dependency 'React-hermes'
+  end
+
   # React Native doesn't expose these flags, but not having them
   # can lead to runtime errors due to ABI mismatches.
   # There's also
