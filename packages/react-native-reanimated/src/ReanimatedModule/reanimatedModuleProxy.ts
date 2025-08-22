@@ -41,6 +41,8 @@ export interface ReanimatedModuleProxy {
 
   unregisterSensor(sensorId: number): void;
 
+  getStaticFeatureFlag(name: string): boolean;
+
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
   subscribeForKeyboardEvents(

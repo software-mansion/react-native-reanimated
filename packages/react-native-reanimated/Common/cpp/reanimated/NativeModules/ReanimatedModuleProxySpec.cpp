@@ -62,6 +62,15 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value REANIMATED_SPEC_PREFIX(getStaticFeatureFlag)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->getStaticFeatureFlag(rt, std::move(args[0]));
+}
+
 static jsi::Value REANIMATED_SPEC_PREFIX(setDynamicFeatureFlag)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -224,6 +233,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{3, REANIMATED_SPEC_PREFIX(getViewProp)};
   methodMap_["registerSensor"] =
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerSensor)};
+  methodMap_["getStaticFeatureFlag"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(getStaticFeatureFlag)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterSensor)};
   methodMap_["setDynamicFeatureFlag"] =

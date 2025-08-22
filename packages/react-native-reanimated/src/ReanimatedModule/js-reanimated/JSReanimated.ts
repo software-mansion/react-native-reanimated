@@ -261,7 +261,12 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  setDynamicFeatureFlag(_name: string, _value: boolean): void {
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag(): void {
     // noop
   }
 

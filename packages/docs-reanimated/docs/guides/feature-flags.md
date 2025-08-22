@@ -14,11 +14,12 @@ Feature flags are available since Reanimated 4.
 
 ## Summary of available feature flags
 
-| Feature flag name                                                                                   |              Type               | Added in | Removed in | Default value |
-| --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
-| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| Feature flag name                                                                                   |               Type                | Added in | Removed in | Default value |
+| --------------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                           | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -67,6 +68,8 @@ Static flags are intended to be resolved during code compilation and cannot be c
 
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
+
+To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
 
 ## Dynamic feature flags
 

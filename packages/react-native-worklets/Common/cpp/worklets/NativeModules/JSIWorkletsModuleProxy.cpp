@@ -207,6 +207,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "getStaticFeatureFlag"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
 
@@ -669,6 +672,20 @@ jsi::Value JSIWorkletsModuleProxy::get(
   }
 #endif // WORKLETS_BUNDLE_MODE
 
+  if (name == "getStaticFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return worklets::StaticFeatureFlags::getFlag(
+              /* name */ args[0].asString(rt).utf8(rt));
+        });
+  }
+
   if (name == "setDynamicFeatureFlag") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -678,7 +695,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          DynamicFeatureFlags::setFlag(
+          worklets::DynamicFeatureFlags::setFlag(
               /* name */ args[0].asString(rt).utf8(rt),
               /* value */ args[1].asBool());
           return jsi::Value::undefined();

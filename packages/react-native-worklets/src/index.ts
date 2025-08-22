@@ -15,7 +15,7 @@ export {
   makeShareableCloneRecursive,
   shareableMappingCache,
 } from './deprecated';
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
 export { isSynchronizable } from './isSynchronizable';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
