@@ -1,8 +1,8 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import type { StyleBuilder } from '../platform/native';
-import { getStyleBuilder, setViewStyle } from '../platform/native';
+import type { StyleBuilder } from '../platforms/native';
+import { getStyleBuilder, setViewStyle } from '../platforms/native';
 import type { AnyRecord, CSSStyle } from '../types';
 import type { ICSSManager } from '../types/interfaces';
 import { filterCSSAndStyleProperties } from '../utils';
