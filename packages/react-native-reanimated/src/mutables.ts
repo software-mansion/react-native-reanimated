@@ -107,51 +107,43 @@ function experimental_makeMutableUI<Value>(
   let value = initial;
   let isDirty = false;
 
-  const mutable: PartialMutable<Value> =
-    //  & {
-    //   resetDirtyFlag?(): void;
-    // }
-    {
-      get value() {
-        return value;
-      },
-      set value(newValue) {
-        valueSetter(mutable as Mutable<Value>, newValue);
-      },
-      get _value(): Value {
-        return value;
-      },
-      set _value(newValue: Value) {
-        if (!isDirty) {
-          dirtyFlag.setBlocking(true);
-          isDirty = true;
-        }
-        value = newValue;
-        listeners.forEach((listener) => {
-          listener(newValue);
-        });
-      },
-      // resetDirtyFlag() {
-      //   dirtyFlag.setBlocking(false);
-      //   isDirty = false;
-      // },
-      modify: (modifier, forceUpdate = true) => {
-        valueSetter(
-          mutable as Mutable<Value>,
-          modifier !== undefined ? modifier(value) : value,
-          forceUpdate
-        );
-      },
-      addListener: (id: number, listener: Listener<Value>) => {
-        listeners.set(id, listener);
-      },
-      removeListener: (id: number) => {
-        listeners.delete(id);
-      },
+  const mutable: PartialMutable<Value> = {
+    get value() {
+      return value;
+    },
+    set value(newValue) {
+      valueSetter(mutable as Mutable<Value>, newValue);
+    },
+    get _value(): Value {
+      return value;
+    },
+    set _value(newValue: Value) {
+      if (!isDirty) {
+        dirtyFlag.setBlocking(true);
+        isDirty = true;
+      }
+      value = newValue;
+      listeners.forEach((listener) => {
+        listener(newValue);
+      });
+    },
+    modify: (modifier, forceUpdate = true) => {
+      valueSetter(
+        mutable as Mutable<Value>,
+        modifier !== undefined ? modifier(value) : value,
+        forceUpdate
+      );
+    },
+    addListener: (id: number, listener: Listener<Value>) => {
+      listeners.set(id, listener);
+    },
+    removeListener: (id: number) => {
+      listeners.delete(id);
+    },
 
-      _animation: null,
-      _isReanimatedSharedValue: true,
-    };
+    _animation: null,
+    _isReanimatedSharedValue: true,
+  };
 
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
@@ -213,19 +205,9 @@ export const makeMutableUI = USE_SYNCHRONIZABLE_FOR_MUTABLES
     (experimental_makeMutableUI as typeof makeMutableUI_)
   : makeMutableUI_;
 
-// declare global {
-//   var __LOOKUPTIME_MS: number;
-//   var __LOOKUPS: number;
-// }
-
-// globalThis.__LOOKUPTIME_MS = 0;
-// globalThis.__LOOKUPS = 0;
-
 // eslint-disable-next-line camelcase
 function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const dirtyFlag = createSynchronizable(false);
-  let latest = initial;
-
   const handle = createSerializable({
     __init: () => {
       'worklet';
@@ -238,14 +220,12 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
       checkInvalidReadDuringRender();
       if (dirtyFlag.getBlocking()) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-          // (
-          //   sv as Mutable<Value> & { resetDirtyFlag: () => void }
-          // ).resetDirtyFlag();
           return sv.value;
         });
-        latest = uiValueGetter(mutable as Mutable<Value>);
+        return uiValueGetter(mutable as Mutable<Value>);
+      } else {
+        return initial;
       }
-      return latest;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
