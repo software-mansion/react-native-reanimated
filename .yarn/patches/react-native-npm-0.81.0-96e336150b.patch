@@ -1,39 +1,3 @@
-diff --git a/Libraries/AppDelegate/RCTAppSetupUtils.mm b/Libraries/AppDelegate/RCTAppSetupUtils.mm
-index 2ffbbd03e58..253292aeda5 100644
---- a/Libraries/AppDelegate/RCTAppSetupUtils.mm
-+++ b/Libraries/AppDelegate/RCTAppSetupUtils.mm
-@@ -19,6 +19,7 @@
- #import <React/RCTHTTPRequestHandler.h>
- #import <React/RCTImageLoader.h>
- #import <React/RCTNetworking.h>
-+#import <React/RCTBundleConsumer.h>
- 
- // Fabric
- #import <React/RCTFabricSurface.h>
-@@ -73,7 +74,9 @@ void RCTAppSetupPrepareApp(UIApplication *application, BOOL turboModuleEnabled)
-           classNames = dependencyProvider ? dependencyProvider.imageDataDecoderClassNames : @[];
-         } else if (protocol == @protocol(RCTURLRequestHandler)) {
-           classNames = dependencyProvider ? dependencyProvider.URLRequestHandlerClassNames : @[];
--        }
-+        } else if (protocol == @protocol(RCTBundleConsumer)) {
-+          classNames = dependencyProvider ? dependencyProvider.bundleConsumerClassNames : @[];
-+        } 
- 
-         NSMutableArray *modules = [NSMutableArray new];
- 
-diff --git a/Libraries/AppDelegate/RCTDependencyProvider.h b/Libraries/AppDelegate/RCTDependencyProvider.h
-index ddc412b0f71..18c9c188be3 100644
---- a/Libraries/AppDelegate/RCTDependencyProvider.h
-+++ b/Libraries/AppDelegate/RCTDependencyProvider.h
-@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
- 
- - (NSArray<NSString *> *)URLRequestHandlerClassNames;
- 
-+- (NSArray<NSString *> *)bundleConsumerClassNames;
-+
- - (NSArray<NSString *> *)unstableModulesRequiringMainQueueSetup;
- 
- - (NSDictionary<NSString *, Class<RCTComponentViewProtocol>> *)thirdPartyFabricComponents;
 diff --git a/React/Base/RCTBundleConsumer.h b/React/Base/RCTBundleConsumer.h
 new file mode 100644
 index 00000000000..8f1eb972424
@@ -124,36 +88,6 @@ index 00000000000..20ec1a93bc7
 +}
 +
 +@end
-diff --git a/ReactAndroid/src/main/java/com/facebook/react/ReactPackageTurboModuleManagerDelegate.kt b/ReactAndroid/src/main/java/com/facebook/react/ReactPackageTurboModuleManagerDelegate.kt
-index d13a565d6e0..2daf35a2d19 100644
---- a/ReactAndroid/src/main/java/com/facebook/react/ReactPackageTurboModuleManagerDelegate.kt
-+++ b/ReactAndroid/src/main/java/com/facebook/react/ReactPackageTurboModuleManagerDelegate.kt
-@@ -151,6 +151,25 @@ public abstract class ReactPackageTurboModuleManagerDelegate : TurboModuleManage
-     return resolvedModule as TurboModule
-   }
- 
-+  override fun <TInterface> getModulesConformingToInterfaceNames(clazz: Class<TInterface>): List<String> {
-+    val moduleNames = mutableListOf<String>()
-+
-+    for (moduleProvider in moduleProviders) {
-+      val moduleInfos = packageModuleInfos[moduleProvider]?.values ?: continue
-+      for (moduleInfo in moduleInfos) {
-+        if (moduleInfo.name != "WorkletsModule") {
-+          continue
-+        }
-+        val module = moduleProvider.getModule(moduleInfo.name)
-+        if (clazz.isInstance(module)) {
-+          moduleNames.add(moduleInfo.name)
-+        }
-+      }
-+    }
-+    return moduleNames
-+  }
-+
-+
-   override fun unstable_isModuleRegistered(moduleName: String): Boolean {
-     for (moduleProvider in moduleProviders) {
-       val moduleInfo: ReactModuleInfo? = packageModuleInfos[moduleProvider]?.get(moduleName)
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/BundleConsumer.kt b/ReactAndroid/src/main/java/com/facebook/react/bridge/BundleConsumer.kt
 new file mode 100644
 index 00000000000..a9f4656e0d9
@@ -217,51 +151,11 @@ index 00000000000..1d41653271a
 +          assetURL: String
 +  ): HybridData
 +}
-diff --git a/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManager.kt b/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManager.kt
-index 71ebba6e7cb..471428fd2e1 100644
---- a/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManager.kt
-+++ b/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManager.kt
-@@ -209,6 +209,12 @@ public class TurboModuleManager(
-     return module
-   }
- 
-+  public fun <TInterface> getModulesConformingToInterfaceNames(
-+          clazz: Class<TInterface>
-+  ): List<String> {
-+    return delegate?.getModulesConformingToInterfaceNames(clazz) ?: emptyList()
-+  }
-+
-   /**
-    * Given a ModuleHolder, and the TurboModule's moduleName, return the TurboModule instance.
-    *
-diff --git a/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManagerDelegate.kt b/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManagerDelegate.kt
-index 202e8aecb60..3584b1f8485 100644
---- a/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManagerDelegate.kt
-+++ b/ReactAndroid/src/main/java/com/facebook/react/internal/turbomodule/core/TurboModuleManagerDelegate.kt
-@@ -36,6 +36,10 @@ public abstract class TurboModuleManagerDelegate {
-    */
-   public abstract fun getModule(moduleName: String): TurboModule?
- 
-+  public abstract fun <TInterface> getModulesConformingToInterfaceNames(
-+          clazz: Class<TInterface>
-+  ): List<String>
-+
-   public abstract fun unstable_isModuleRegistered(moduleName: String): Boolean
- 
-   /**
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
-index ff0cdb1d5ac..584a789734f 100644
+index ff0cdb1d5ac..0842f3879b6 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
-@@ -20,6 +20,7 @@ import com.facebook.react.DebugCorePackage
- import com.facebook.react.ReactPackage
- import com.facebook.react.ViewManagerOnDemandReactPackage
- import com.facebook.react.bridge.Arguments
-+import com.facebook.react.bridge.BundleConsumer
- import com.facebook.react.bridge.JSBundleLoader
- import com.facebook.react.bridge.JSBundleLoaderDelegate
- import com.facebook.react.bridge.JavaScriptContextHolder
-@@ -43,6 +44,7 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
+@@ -43,6 +43,7 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
  import com.facebook.react.devsupport.InspectorFlags.getIsProfilingBuild
  import com.facebook.react.devsupport.StackTraceHelper
  import com.facebook.react.devsupport.interfaces.DevSupportManager
@@ -269,23 +163,26 @@ index ff0cdb1d5ac..584a789734f 100644
  import com.facebook.react.fabric.ComponentFactory
  import com.facebook.react.fabric.FabricUIManager
  import com.facebook.react.fabric.FabricUIManagerBinding
-@@ -288,6 +290,15 @@ internal class ReactInstance(
+@@ -288,6 +289,18 @@ internal class ReactInstance(
      }
    }
  
 +  fun beforeLoad(scriptWrapper: BigStringBufferWrapper, sourceURL: String){
-+    val bundleConsumers = turboModuleManager.getModulesConformingToInterfaceNames(BundleConsumer::class.java)
-+    for(name in bundleConsumers) {
-+      val module = turboModuleManager.getModule(name) as BundleConsumer
-+      module.setScriptWrapper(scriptWrapper);
-+      module.setSourceURL(sourceURL);
++    val workletsModule = turboModuleManager.getModule("WorkletsModule")
++    if (workletsModule != null) {
++      val setScriptWrapperMethod = workletsModule::class.java.methods.find { it.name == "setScriptWrapper" }
++      val setSourceURLMethod = workletsModule::class.java.methods.find { it.name == "setSourceURL" }
++      if (setScriptWrapperMethod != null && setSourceURLMethod != null) {
++      setScriptWrapperMethod.invoke(workletsModule, scriptWrapper)
++      setSourceURLMethod.invoke(workletsModule, sourceURL)
++      }
 +    }
 +  }
 +
    fun loadJSBundle(bundleLoader: JSBundleLoader) {
      Systrace.beginSection(Systrace.TRACE_TAG_REACT, "ReactInstance.loadJSBundle")
      bundleLoader.loadScript(
-@@ -298,11 +309,18 @@ internal class ReactInstance(
+@@ -298,11 +311,18 @@ internal class ReactInstance(
                loadSynchronously: Boolean
            ) {
              context.setSourceURL(sourceURL)
@@ -306,7 +203,7 @@ index ff0cdb1d5ac..584a789734f 100644
            }
  
            override fun loadScriptFromAssets(
-@@ -311,7 +329,12 @@ internal class ReactInstance(
+@@ -311,7 +331,12 @@ internal class ReactInstance(
                loadSynchronously: Boolean
            ) {
              context.setSourceURL(assetURL)
@@ -320,7 +217,7 @@ index ff0cdb1d5ac..584a789734f 100644
            }
  
            override fun setSourceURLs(deviceURL: String, remoteURL: String) {
-@@ -423,7 +446,7 @@ internal class ReactInstance(
+@@ -423,7 +448,7 @@ internal class ReactInstance(
        reactHostInspectorTarget: ReactHostInspectorTarget?
    ): HybridData
  
@@ -603,33 +500,8 @@ index 0221ce1f55d..6cd0f105e3a 100644
        const std::string& sourceURL,
        std::function<void(jsi::Runtime& runtime)>&& beforeLoad = nullptr,
        std::function<void(jsi::Runtime& runtime)>&& afterLoad = nullptr);
-diff --git a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
-index c40bcd43d51..c70d9425845 100644
---- a/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
-+++ b/ReactCommon/react/runtime/platform/ios/React-RuntimeApple.podspec
-@@ -16,6 +16,8 @@ else
-   source[:tag] = "v#{version}"
- end
- 
-+bundle_mode_flag = ENV["WORKLETS_BUNDLE_MODE"] == "1" ? 'WORKLETS_BUNDLE_MODE=1' : ''
-+
- header_search_paths = [
-   "$(PODS_ROOT)/Headers/Private/React-Core",
-   "$(PODS_TARGET_SRCROOT)/../../../..",
-@@ -36,7 +38,10 @@ Pod::Spec.new do |s|
-   s.pod_target_xcconfig    = { "HEADER_SEARCH_PATHS" => header_search_paths,
-                                 "USE_HEADERMAP" => "YES",
-                                 "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
--                                "GCC_WARN_PEDANTIC" => "YES" }
-+                                "GCC_WARN_PEDANTIC" => "YES",
-+                                "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{bundle_mode_flag}",
-+                                "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{bundle_mode_flag}",
-+                               }
- 
-   if ENV['USE_FRAMEWORKS'] && ReactNativeCoreUtils.build_rncore_from_source()
-     s.header_mappings_dir     = './'
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-index 029c4cf7964..9faf78aa23f 100644
+index 029c4cf7964..cafc303ab11 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 @@ -11,6 +11,7 @@
@@ -648,15 +520,7 @@ index 029c4cf7964..9faf78aa23f 100644
  #import <React/RCTComponentViewFactory.h>
  #import <React/RCTConstants.h>
  #import <React/RCTCxxUtils.h>
-@@ -43,6 +45,7 @@
- #import <react/utils/ContextContainer.h>
- #import <react/utils/FollyConvert.h>
- #import <react/utils/ManagedObjectWrapper.h>
-+#import <ReactCodegen/RCTModulesConformingToProtocolsProvider.h>
- 
- #import "ObjCTimerRegistry.h"
- #import "RCTJSThreadManager.h"
-@@ -571,9 +574,19 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+@@ -571,9 +573,19 @@ - (void)_loadScriptFromSource:(RCTSource *)source
    }
  
    auto script = std::make_unique<NSDataBigString>(source.data);
@@ -665,19 +529,19 @@ index 029c4cf7964..9faf78aa23f 100644
  
 -  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
 +  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete, turboModuleManager = self->_turboModuleManager, scriptBuffer, url](jsi::Runtime &_) {
-+    #ifdef WORKLETS_BUNDLE_MODE
-+    auto bundleConsumerNames = [RCTModulesConformingToProtocolsProvider bundleConsumerClassNames];
-+    for (id name in bundleConsumerNames) {
-+      id<RCTBundleConsumer> module = (id<RCTBundleConsumer>)[turboModuleManager moduleForName:[name UTF8String]];
-+      module.scriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
-+      module.sourceURL = @(url);
++    @try {
++      id workletsModule = [turboModuleManager moduleForName:@"WorkletsModule".UTF8String];
++      if ([workletsModule respondsToSelector:@selector(setScriptBuffer:)] && [workletsModule respondsToSelector:@selector(setSourceURL:)]) {
++        [workletsModule setScriptBuffer:[[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer]];
++        [workletsModule setSourceURL:@(url)];
++      }
++    } @catch (NSException *exception) {
 +    }
-+    #endif // WORKLETS_BUNDLE_MODE
 +    
      if (waitUntilModuleSetupComplete) {
        waitUntilModuleSetupComplete();
      }
-@@ -581,7 +594,8 @@ - (void)_loadScriptFromSource:(RCTSource *)source
+@@ -581,7 +593,8 @@ - (void)_loadScriptFromSource:(RCTSource *)source
    auto afterLoad = [](jsi::Runtime &_) {
      [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTInstanceDidLoadBundle" object:nil];
    };
@@ -687,89 +551,3 @@ index 029c4cf7964..9faf78aa23f 100644
  }
  
  - (void)_handleJSError:(const JsErrorHandler::ProcessedError &)error withRuntime:(jsi::Runtime &)runtime
-diff --git a/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js b/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js
-index a81c00faaa1..b4b443a9970 100644
---- a/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js
-+++ b/scripts/codegen/generate-artifacts-executor/generateCustomURLHandlers.js
-@@ -34,6 +34,7 @@ function generateCustomURLHandlers(
-   const imageURLLoaderModules = new Set /*::<string>*/();
-   const imageDataDecoderModules = new Set /*::<string>*/();
-   const urlRequestHandlersModules = new Set /*::<string>*/();
-+  const bundleConsumerModules = new Set /*::<string>*/();
- 
-   // $FlowFixMe[missing-local-annot]]
-   const wrapInArrayIfNecessary = value =>
-@@ -61,6 +62,11 @@ function generateCustomURLHandlers(
-     )?.forEach(moduleName => {
-       urlRequestHandlersModules.add(moduleName);
-     });
-+    wrapInArrayIfNecessary(
-+      modulesConformingToProtocol.RCTBundleConsumer,
-+    )?.forEach(moduleName => {
-+      bundleConsumerModules.add(moduleName);
-+    });
-   }
- 
-   // New API
-@@ -82,6 +88,9 @@ function generateCustomURLHandlers(
-       if (conformsToProtocols.includes('RCTURLRequestHandler')) {
-         urlRequestHandlersModules.add(moduleName);
-       }
-+      if (conformsToProtocols.includes('RCTBundleConsumer')) {
-+        bundleConsumerModules.add(moduleName);
-+      }
-     }
-   }
- 
-@@ -97,11 +106,16 @@ function generateCustomURLHandlers(
-     .map(className => `@"${className}"`)
-     .join(',\n\t\t');
- 
-+  const customBundleConsumerClasses = Array.from(bundleConsumerModules)
-+    .map(className => `@"${className}"`)
-+    .join(',\n\t\t');
-+
-   const template = fs.readFileSync(MODULES_PROTOCOLS_MM_TEMPLATE_PATH, 'utf8');
-   const finalMMFile = template
-     .replace(/{imageURLLoaderClassNames}/, customImageURLLoaderClasses)
-     .replace(/{imageDataDecoderClassNames}/, customImageDataDecoderClasses)
--    .replace(/{requestHandlersClassNames}/, customURLHandlerClasses);
-+    .replace(/{requestHandlersClassNames}/, customURLHandlerClasses)
-+    .replace(/{bundleConsumerClassNames}/, customBundleConsumerClasses);
- 
-   fs.mkdirSync(outputDir, {recursive: true});
- 
-diff --git a/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderH.template b/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderH.template
-index 10eb8489175..6190c8da333 100644
---- a/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderH.template
-+++ b/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderH.template
-@@ -15,4 +15,6 @@
- 
- +(NSArray<NSString *> *)URLRequestHandlerClassNames;
- 
-++(NSArray<NSString *> *)bundleConsumerClassNames;
-+
- @end
-diff --git a/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderMM.template b/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderMM.template
-index 7a432b968ca..1e9cf8d7fe2 100644
---- a/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderMM.template
-+++ b/scripts/codegen/templates/RCTModulesConformingToProtocolsProviderMM.template
-@@ -51,4 +51,18 @@
-   return classNames;
- }
- 
-++(NSArray<NSString *> *)bundleConsumerClassNames
-+{
-+  static NSArray<NSString *> *classNames = nil;
-+  static dispatch_once_t onceToken;
-+  
-+  dispatch_once(&onceToken, ^{
-+    classNames = @[
-+      {bundleConsumerClassNames}
-+    ];
-+  });
-+  
-+  return classNames;
-+}
-+
- @end

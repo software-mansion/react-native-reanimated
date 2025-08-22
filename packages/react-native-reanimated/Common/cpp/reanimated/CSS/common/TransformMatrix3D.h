@@ -1,16 +1,22 @@
 #pragma once
 
 #include <reanimated/CSS/common/Quaternion.h>
-#include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/vectors.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <utility>
 
 namespace reanimated::css {
 
-class TransformMatrix3D {
+namespace {
+static constexpr size_t MATRIX_3D_DIMENSION = 4; // 4x4 matrix
+}
+
+class TransformMatrix3D
+    : public TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION> {
  public:
   struct Decomposed {
     Vector3D scale;
@@ -28,9 +34,8 @@ class TransformMatrix3D {
     Decomposed interpolate(double progress, const Decomposed &other) const;
   };
 
-  explicit TransformMatrix3D(Vec16Array matrix);
-  explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
-  explicit TransformMatrix3D(const folly::dynamic &value);
+  using TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>::
+      TransformMatrixBase;
 
   static TransformMatrix3D Identity();
   static TransformMatrix3D Perspective(double value);
@@ -45,11 +50,7 @@ class TransformMatrix3D {
   static TransformMatrix3D SkewX(double value);
   static TransformMatrix3D SkewY(double value);
 
-  double &operator[](size_t index);
-  const double &operator[](size_t index) const;
-  bool operator==(const TransformMatrix3D &other) const;
-  TransformMatrix3D operator*(const TransformMatrix3D &rhs) const;
-  TransformMatrix3D operator*=(const TransformMatrix3D &rhs);
+  bool operator==(const TransformMatrix3D &other) const override;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(
@@ -57,15 +58,9 @@ class TransformMatrix3D {
       const TransformMatrix3D &matrix);
 #endif // NDEBUG
 
-  std::string toString() const;
-  folly::dynamic toDynamic() const;
-
-  bool isSingular() const;
-  bool normalize();
-  double determinant() const;
+  double determinant() const override;
   void adjugate();
   bool invert();
-  void transpose();
   void translate3d(const Vector3D &translation);
   void scale3d(const Vector3D &scale);
 
@@ -74,8 +69,6 @@ class TransformMatrix3D {
   static TransformMatrix3D fromQuaternion(const Quaternion &q);
 
  private:
-  Vec16Array matrix_;
-
   std::optional<Vector4D> computePerspective() const;
 
   Vector3D getTranslation() const;
