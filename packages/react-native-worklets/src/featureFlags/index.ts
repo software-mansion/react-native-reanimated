@@ -50,8 +50,8 @@ export function setDynamicFeatureFlag(
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DefaultStaticFeatureFlags = {
-  IOS_DYNAMIC_FRAMERATE_ENABLED: false,
   RUNTIME_TEST_FLAG: false,
+  IOS_DYNAMIC_FRAMERATE_ENABLED: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {
