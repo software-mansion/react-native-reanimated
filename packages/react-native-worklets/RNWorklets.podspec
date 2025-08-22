@@ -42,6 +42,9 @@ Pod::Spec.new do |s|
   # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
   install_modules_dependencies(s)
 
+  # To be able to call Hermes APIs when USE_FRAMEWORKS=dynamic we need an explicit dependency on React-Hermes
+  add_dependency(s, "React-hermes")
+
   # React Native doesn't expose these flags, but not having them
   # can lead to runtime errors due to ABI mismatches.
   # There's also
