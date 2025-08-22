@@ -40,7 +40,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
   // ...
   "worklets": {
     "staticFeatureFlags": {
-      "EXAMPLE_STATIC_FLAG": false
+      "EXAMPLE_STATIC_FLAG": true
     }
   }
 }
