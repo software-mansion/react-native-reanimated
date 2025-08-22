@@ -212,8 +212,6 @@ export const makeMutableUI = USE_SYNCHRONIZABLE_FOR_MUTABLES
 // eslint-disable-next-line camelcase
 function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const dirtyFlag = createSynchronizable(false);
-  let latest = initial;
-
   const handle = createSerializable({
     __init: () => {
       'worklet';
@@ -229,9 +227,10 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
           sv.resetDirtyFlag!();
           return sv.value;
         });
-        latest = uiValueGetter(mutable as Mutable<Value>);
+        return uiValueGetter(mutable as Mutable<Value>);
+      } else {
+        return initial;
       }
-      return latest;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
