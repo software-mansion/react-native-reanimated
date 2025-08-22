@@ -14,7 +14,7 @@ import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {

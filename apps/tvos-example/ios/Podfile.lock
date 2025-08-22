@@ -2104,8 +2104,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 29fb2827ec6c6c8ee9ee9108e838b4e0e4e1b730
   ReactCodegen: 3a01f76123e04b8b945d43e5ffccae6f90f4a26e
   ReactCommon: 59e7bd3cf331ba77a96a75e6b603abf05883b102
-  RNReanimated: 4e7fb9acca641e2bed32e300c9dddbd350f5210d
-  RNWorklets: 9d4d5a0ef70d5e6385cbd28bfa4e91dd6e18c97e
+  RNReanimated: 72d815b95ba0f8703c4b47acc58877c7c35ee0dd
+  RNWorklets: 7f0681f2328f76943ca7f185d71a698eaceb6ce8
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 770a077e3a222f162c2e0c8a95e7e997b7682a8e
 

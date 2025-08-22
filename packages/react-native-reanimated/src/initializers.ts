@@ -7,11 +7,16 @@ import {
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
 } from './common';
+import { initSvgCssSupport } from './css/svg';
+import { EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS } from './featureFlags/staticFlags.json';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(
   ReanimatedModule: IReanimatedModule
 ) {
+  if (EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS) {
+    initSvgCssSupport();
+  }
   if (IS_WEB) {
     return;
   }

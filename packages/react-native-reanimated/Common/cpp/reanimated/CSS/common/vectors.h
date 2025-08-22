@@ -11,6 +11,30 @@
 
 namespace reanimated::css {
 
+struct Vector2D {
+  std::array<double, 2> vec;
+
+  Vector2D() : vec({0, 0}) {}
+  explicit Vector2D(double x, double y) : vec({x, y}) {}
+  explicit Vector2D(std::array<double, 2> vec) : vec(vec) {}
+
+  double &operator[](size_t idx);
+  const double &operator[](size_t idx) const;
+  Vector2D &operator*=(double scalar);
+
+#ifndef NDEBUG
+  friend std::ostream &operator<<(std::ostream &os, const Vector2D &vector);
+#endif // NDEBUG
+
+  double length() const;
+  void scaleToLength(double targetLength);
+  void normalize();
+  double dot(const Vector2D &other) const;
+  double cross(const Vector2D &other) const;
+  Vector2D addScaled(const Vector2D &other, double scale) const;
+  Vector2D interpolate(double progress, const Vector2D &other) const;
+};
+
 struct Vector3D {
   std::array<double, 3> vec;
 

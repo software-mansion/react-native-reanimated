@@ -52,11 +52,11 @@ export function setDynamicFeatureFlag(
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DefaultStaticFeatureFlags = {
+  RUNTIME_TEST_FLAG: false,
   DISABLE_COMMIT_PAUSING_MECHANISM: false,
   ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false,
-  UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
+  EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
   USE_SYNCHRONIZABLE_FOR_MUTABLES: false,
-  RUNTIME_TEST_FLAG: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {
