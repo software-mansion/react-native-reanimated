@@ -21,12 +21,12 @@
     .titleHighlight {
       color: var(--swm-blue-light-100);
     }
-  
+
     .description {
       max-width: 600px;
       text-align: center;
     }
-  
+
     .hireUsButton {
       margin-top: 24px;
     }
@@ -53,7 +53,6 @@
         font-size: 26px;
       }
     }
-
 
     .links {
       grid-template-columns: repeat(1, 1fr);
