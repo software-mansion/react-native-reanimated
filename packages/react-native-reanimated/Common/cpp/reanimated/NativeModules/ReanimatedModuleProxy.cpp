@@ -74,7 +74,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   if constexpr (StaticFeatureFlags::getFlag(
-                    "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+                    "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     css::initSvgCssSupport();
   }
 

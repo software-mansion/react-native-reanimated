@@ -56,6 +56,7 @@
     "scripts/validate-worklets-version.js",
     "scripts/worklets-version.json",
     "scripts/validate-react-native-version.js",
+    "compatibility.json",
     "mock.js",
     "plugin/index.js",
     "metro-config",
