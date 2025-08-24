@@ -60,18 +60,18 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
 
 /**
  * Lets you schedule a function to be executed on the [UI
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ * from the [RN
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
  *
- * This method does not schedule the work immediately but instead waits for
- * other worklets to be scheduled within the same JS loop. It uses
- * queueMicrotask to schedule all the worklets at once making sure they will run
- * within the same frame boundaries on the [UI
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
- *
- * Passed function and args are automatically
- * [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
- * and serialized.
- *
+ * - This method does not schedule the work immediately but instead waits for
+ *   other worklets to be scheduled within the same JS loop. It uses
+ *   `queueMicrotask` to schedule all the worklets at once making sure they will
+ *   run within the same frame boundaries on the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
+ * - Passed function and args are automatically
+ *   [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
+ *   and serialized.
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
  * - This function cannot be called from a [Worker
