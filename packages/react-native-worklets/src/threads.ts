@@ -108,6 +108,8 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
  *   first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI
  */
+
+/** @deprecated Use `scheduleOnUI` instead. */
 // @ts-expect-error This overload is correct since it's what user sees in his code
 // before it's transformed by Reanimated Babel plugin.
 export function runOnUI<Args extends unknown[], ReturnValue>(
