@@ -1,7 +1,6 @@
 'use strict';
-import type { ComponentProps, Ref } from 'react';
+import type { ComponentProps } from 'react';
 import { Component } from 'react';
-import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
@@ -16,20 +15,13 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
-import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import type { AnyComponent, AnyRecord, CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
-
-export type AnimatedComponentProps = Record<string, unknown> & {
-  ref?: Ref<Component>;
-  style?: StyleProp<PlainStyle>;
-};
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
-export default class AnimatedComponent<
-    P extends AnyRecord = AnimatedComponentProps,
-  >
+export default class AnimatedComponent<P extends AnyRecord = AnyRecord>
   extends Component<P>
   implements IAnimatedComponentInternalBase
 {

@@ -8,8 +8,8 @@ import type {
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
+import type { AnimatedComponentProps } from '../../createAnimatedComponent/commonTypes';
 import type { CSSProps } from '../types';
-import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 
 // Don't change the order of overloads, since such a change breaks current behavior
@@ -45,7 +45,7 @@ export default function createAnimatedComponent<P extends object>(
       Component.displayName || Component.name || 'Component'
     })`;
 
-    constructor(props: AnimatedComponentProps) {
+    constructor(props: AnimatedComponentProps<P>) {
       super(Component, props);
     }
   }

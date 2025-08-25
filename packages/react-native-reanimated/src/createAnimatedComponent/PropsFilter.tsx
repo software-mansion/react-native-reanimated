@@ -62,16 +62,12 @@ export class PropsFilter implements IPropsFilter {
           Partial<AnimatedComponentProps>
         >(animatedPropsProp ?? []);
 
-        animatedPropsArray.forEach((animatedProps) => {
+        // TODO - remove any
+        animatedPropsArray.forEach((animatedProps: any) => {
           if (animatedProps?.viewDescriptors && animatedProps.initial) {
-            // TODO
-            Object.keys(animatedProps.initial as any).forEach(
-              (initialValueKey) => {
-                props[initialValueKey] = (animatedProps.initial as any)[
-                  initialValueKey
-                ];
-              }
-            );
+            Object.keys(animatedProps.initial).forEach((initialValueKey) => {
+              props[initialValueKey] = animatedProps.initial[initialValueKey];
+            });
           }
         });
       } else if (

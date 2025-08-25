@@ -9,6 +9,7 @@ import type {
   StyleProps,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import type { AnyRecord, PlainStyle } from '../css/types';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 
 export interface ViewInfo {
@@ -67,9 +68,7 @@ export type LayoutAnimationStaticContext = {
   presetName: string;
 };
 
-export type AnimatedComponentProps<
-  P extends Record<string, unknown> = Record<string, unknown>,
-> = P & {
+export type AnimatedComponentProps<P extends AnyRecord = PlainStyle> = P & {
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps>;
