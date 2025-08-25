@@ -8,6 +8,117 @@ import TabItem from '@theme/TabItem';
 
 # Getting started
 
+The goal of the _Fundamentals_ section is to help you gain a strong foundation on the core concepts of _Worklets_ and give you the confidence to explore more advanced use cases on your own. This section is packed with interactive examples, code snippets and explanations. Are you ready? Let's dive in!
+
+## What is React Native Worklets?
+
 React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
 
 While the library is in transitional period where we hone the API, all its features are functionally stable and ready to use in production.
+
+## Prerequisites
+
+:::info
+Worklets aren't tested on the Legacy Architecture (Paper). We highly recommend migrating to the New Architecture (Fabric)[https://reactnative.dev/architecture/landing-page] prior to using Worklets.
+:::
+
+## Installation
+
+### Step 1: Install the package
+
+Install `react-native-worklets` package from npm:
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+    ```bash
+    npm install react-native-worklets
+    ```
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+    ```bash
+    yarn add react-native-worklets
+    ```
+
+  </TabItem>
+</Tabs>
+
+### Step 2: Rebuild native dependencies
+
+Run prebuild to update the native code in the `ios` and `android` directories.
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+    ```bash
+    npx expo prebuild
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+    ```bash
+    yarn expo prebuild
+    ```
+  </TabItem>
+</Tabs>
+
+And that's it! Worklets is now configured in your Expo project.
+
+### React Native Community CLI
+
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
+
+```js {7}
+  module.exports = {
+    presets: [
+      ... // don't add it here :)
+    ],
+    plugins: [
+      ...
+      'react-native-worklets/plugin',
+    ],
+  };
+```
+
+:::caution
+
+`react-native-worklets/plugin` has to be listed last.
+
+:::
+
+<details>
+<summary>Why do I need this?</summary>
+
+In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+
+Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets babel plugin by default.
+
+To learn more about the plugin head onto to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
+
+</details>
+
+#### Clear Metro bundler cache (recommended)
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+    ```bash
+    npm start -- --reset-cache
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+    ```bash
+    yarn start --reset-cache
+    ```
+  </TabItem>
+</Tabs>
+
+
+#### Android
+
+No additional steps are necessary.
+
+#### iOS
+
+While developing for iOS, make sure to install [pods](https://cocoapods.org/) first before running the app:
+
+```bash
+cd ios && pod install && cd ..
+```
