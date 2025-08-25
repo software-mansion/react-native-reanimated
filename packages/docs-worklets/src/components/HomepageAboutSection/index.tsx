@@ -9,7 +9,7 @@ export default function HomepageAboutSection(): JSX.Element {
         run multiple processes concurrently, without any delays, and using pure
         JavaScript.
       </h1>
-      <div className={styles.videoPlaceholder} />
+      {/* <div className={styles.videoPlaceholder} /> */}
     </div>
   );
 }

@@ -44,6 +44,8 @@
       border-radius: 48px;
       width: 74%;
       position: absolute;
+      height: 100%;
+      object-fit: cover;
     }
   }
 }

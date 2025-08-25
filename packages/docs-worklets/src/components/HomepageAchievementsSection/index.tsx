@@ -69,7 +69,7 @@ export default function HomepageAchievementsSection(): JSX.Element {
           />
         ))}
       </div>
-      <div className={styles.footer}>
+      {/* <div className={styles.footer}>
         <div className={styles.footerTitle}>
           Read more about React Native Worklets
         </div>
@@ -78,7 +78,7 @@ export default function HomepageAchievementsSection(): JSX.Element {
           href="/react-native-worklets/docs/"
           backgroundStyling={ButtonStyling.TO_BLUE}
         />
-      </div>
+      </div> */}
     </div>
   );
 }

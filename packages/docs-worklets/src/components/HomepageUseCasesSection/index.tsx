@@ -1,5 +1,5 @@
 import GestureHandlerVideo from '@site/static/recordings/gest.mp4';
-import LiveMarkdownVideo from '@site/static/recordings/markdown.MOV';
+import LiveMarkdownVideo from '@site/static/recordings/markdown.mp4';
 import ReanimatedVideo from '@site/static/recordings/rea.mp4';
 import SkiaVideo from '@site/static/recordings/skia.mp4';
 

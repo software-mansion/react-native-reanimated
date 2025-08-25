@@ -19,12 +19,12 @@ export default function HomepageMainSection(): JSX.Element {
           title="Get started"
           href="/react-native-worklets/docs/"
         />
-        <HomepageButton
+        {/* <HomepageButton
           hideArrow
           title="See examples"
           href="/react-native-worklets/docs/"
           backgroundStyling={ButtonStyling.TO_BLUE}
-        />
+        /> */}
       </div>
     </div>
   );
