@@ -30,7 +30,13 @@ interface CompatibilityItem {
 }
 
 export function WorkletsCompatibility() {
-  const reactNativeVersions = ['0.78', '0.79', '0.80', '0.81'];
+  const reactNativeVersions = Array.from(
+    new Set(
+      Object.keys(compatibilityData).flatMap(
+        (version) => compatibilityData[version]['react-native']
+      )
+    )
+  ).sort();
 
   const isVersionSupported = (supportedVersions: string[], version: string) =>
     supportedVersions.includes(version);
