@@ -1,13 +1,9 @@
 'use strict';
-import type { ComponentRef } from 'react';
 import type {
+  HostInstance,
   ImageStyle,
-  NativeMethods,
-  ScrollResponderMixin,
-  ScrollViewComponent,
   TextStyle,
   TransformsStyle,
-  View,
   ViewStyle,
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
@@ -448,26 +444,18 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-type NativeScrollRef = Maybe<
-  (
-    | ComponentRef<typeof View>
-    | ComponentRef<typeof ScrollViewComponent>
-    | NativeMethods
-  ) & {
-    __internalInstanceHandle?: AnyRecord;
-  }
->;
+type InternalHostInstance = HostInstance & {
+  __internalInstanceHandle?: AnyRecord;
+};
 
 type InstanceMethods = {
-  getScrollResponder?: () => Maybe<
-    (ScrollResponderMixin | React.JSX.Element) & {
-      getNativeScrollRef?: () => NativeScrollRef;
-    }
-  >;
-  getNativeScrollRef?: () => NativeScrollRef;
+  getScrollResponder?: () => Maybe<{
+    getNativeScrollRef?: () => Maybe<InternalHostInstance>;
+  }>;
+  getNativeScrollRef?: () => Maybe<InternalHostInstance>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getScrollableNode?: () => any;
   __internalInstanceHandle?: AnyRecord;
 };
 
-export type WrapperRef = (React.Component & InstanceMethods) | InstanceMethods;
+export type WrapperRef = InstanceMethods;
