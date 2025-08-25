@@ -14,12 +14,12 @@ Feature flags are available since Reanimated 4.
 
 ## Summary of available feature flags
 
-| Feature flag name                                                                                   |               Type                | Added in | Removed in | Default value |
-| --------------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
-| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_MUTABLE_OPTIMIZATION`](#experimental_mutable_optimization)                           | [dynamic](#dynamic-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| Feature flag name                                                                                   |              Type               | Added in | Removed in | Default value |
+| --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -49,7 +49,7 @@ This feature flag works only on Android and has no effect on iOS. For more detai
 
 When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
 
-### `EXPERIMENTAL_MUTABLE_OPTIMIZATION`
+### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
 This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
 
