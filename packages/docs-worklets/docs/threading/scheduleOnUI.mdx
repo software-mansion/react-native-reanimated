@@ -1,0 +1,53 @@
+---
+sidebar_position: 11
+---
+
+# scheduleOnUI
+
+`scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime) from [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+
+## Reference
+
+```javascript
+import { scheduleOnUI } from 'react-native-worklets';
+
+const myFunction = (): void => {
+  'worklet';
+  console.log('Hello from the UI Runtime!');
+};
+
+scheduleOnUI(myFunction); // Hello from the UI Runtime!
+```
+
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function scheduleOnUI<Args extends unknown[], ReturnValue>(
+  fun: (...args: Args) => ReturnValue,
+  ...args: Args
+): void
+```
+
+</details>
+
+### Arguments
+
+#### fun
+
+A reference to a function you want to schedule on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime).
+
+#### args
+
+Arguments to pass to the function.
+
+## Remarks
+
+- This method does not schedule the work immediately but instead waits for other worklets to be scheduled within the same JS loop. It uses `queueMicrotask` to schedule all the worklets at once making sure they will run within the same frame boundaries on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime).
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime).
+
+- Make sure not to execute `scheduleOnUI` on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime) or [Worker Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime) as this will result in an error.
+
+- In browsers there's no separate UI Runtime available. Because of that, on the Web, `scheduleOnUI` behaves similarly to `requestAnimationFrame`. It creates a function that, when called, will be scheduled to run with given arguments on next animation frame.
