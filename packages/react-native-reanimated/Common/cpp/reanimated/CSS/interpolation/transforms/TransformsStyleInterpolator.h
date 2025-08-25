@@ -77,7 +77,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       TransformOperations &sourceResult,
       TransformOperations &targetResult) const;
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
-      TransformOperationType type) const;
+      TransformOp type) const;
 
   size_t getIndexOfCurrentKeyframe(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;

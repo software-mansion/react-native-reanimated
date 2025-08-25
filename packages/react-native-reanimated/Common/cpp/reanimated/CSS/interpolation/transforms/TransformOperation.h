@@ -1,7 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix3D.h>
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
@@ -24,25 +25,6 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
-enum class TransformOperationType {
-  Perspective,
-  Rotate,
-  RotateX,
-  RotateY,
-  RotateZ,
-  Scale,
-  ScaleX,
-  ScaleY,
-  TranslateX,
-  TranslateY,
-  SkewX,
-  SkewY,
-  Matrix,
-};
-
-TransformOperationType getTransformOperationType(const std::string &property);
-std::string getOperationNameFromType(TransformOperationType type);
-
 // Base struct for TransformOperation
 struct TransformOperation {
   virtual bool operator==(const TransformOperation &other) const = 0;
@@ -55,7 +37,7 @@ struct TransformOperation {
 #endif // NDEBUG
 
   std::string getOperationName() const;
-  virtual TransformOperationType type() const = 0;
+  virtual TransformOp type() const = 0;
   virtual bool isRelative() const;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(
@@ -66,29 +48,34 @@ struct TransformOperation {
   folly::dynamic toDynamic() const;
   virtual folly::dynamic valueToDynamic() const = 0;
 
-  virtual bool canConvertTo(TransformOperationType type) const;
+  virtual bool canConvertTo(TransformOp type) const;
   virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
-      TransformOperationType type) const;
+      TransformOp type) const;
 
   virtual TransformMatrix3D toMatrix() const = 0;
-  void assertCanConvertTo(TransformOperationType type) const;
+  void assertCanConvertTo(TransformOp type) const;
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
-template <typename TValue>
+// Template overload to inherit from in final operation structs
+template <TransformOp TOperation, typename TValue>
 struct TransformOperationBase : public TransformOperation {
   const TValue value;
 
   explicit TransformOperationBase(const TValue &value) : value(value) {}
   virtual ~TransformOperationBase() = default;
 
+  TransformOp type() const override {
+    return TOperation;
+  }
+
   bool operator==(const TransformOperation &other) const override {
     if (type() != other.type()) {
       return false;
     }
     const auto &otherOperation =
-        static_cast<const TransformOperationBase<TValue> &>(other);
+        static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
     return value == otherOperation.value;
   }
 

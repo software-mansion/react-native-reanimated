@@ -1,4 +1,5 @@
-#include <reanimated/CSS/common/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 namespace reanimated::css {
 
@@ -38,7 +39,10 @@ TransformMatrix3D TransformMatrix3D::Identity() {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::Perspective(const double v) {
+// Template specializations for TransformMatrix3D::create
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
+    double v) {
   if (v == 0) {
     // Ignore perspective if it is invalid
     return TransformMatrix3D::Identity();
@@ -53,7 +57,8 @@ TransformMatrix3D TransformMatrix3D::Perspective(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::RotateX(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateX>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
@@ -66,7 +71,8 @@ TransformMatrix3D TransformMatrix3D::RotateX(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::RotateY(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateY>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
@@ -79,7 +85,8 @@ TransformMatrix3D TransformMatrix3D::RotateY(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::RotateZ(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateZ>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
@@ -92,7 +99,13 @@ TransformMatrix3D TransformMatrix3D::RotateZ(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::Scale(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::Rotate>(double v) {
+  return TransformMatrix3D::create<TransformOp::RotateZ>(v);
+}
+
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::Scale>(double v) {
   // clang-format off
   return TransformMatrix3D({
     v, 0, 0, 0,
@@ -103,7 +116,8 @@ TransformMatrix3D TransformMatrix3D::Scale(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::ScaleX(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleX>(double v) {
   // clang-format off
   return TransformMatrix3D({
     v, 0, 0, 0,
@@ -114,7 +128,8 @@ TransformMatrix3D TransformMatrix3D::ScaleX(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::ScaleY(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleY>(double v) {
   // clang-format off
   return TransformMatrix3D({
     1, 0, 0, 0,
@@ -125,7 +140,8 @@ TransformMatrix3D TransformMatrix3D::ScaleY(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::TranslateX(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateX>(double v) {
   // clang-format off
   return TransformMatrix3D({
     1, 0, 0, 0,
@@ -136,7 +152,8 @@ TransformMatrix3D TransformMatrix3D::TranslateX(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::TranslateY(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateY>(double v) {
   // clang-format off
   return TransformMatrix3D({
     1, 0, 0, 0,
@@ -147,7 +164,8 @@ TransformMatrix3D TransformMatrix3D::TranslateY(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::SkewX(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewX>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix3D({
@@ -159,7 +177,8 @@ TransformMatrix3D TransformMatrix3D::SkewX(const double v) {
   // clang-format on
 }
 
-TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
+template <>
+TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
   return TransformMatrix3D({
@@ -169,6 +188,13 @@ TransformMatrix3D TransformMatrix3D::SkewY(const double v) {
     0,      0, 0, 1
   });
   // clang-format on
+}
+
+template <TransformOp TOperation>
+TransformMatrix3D TransformMatrix3D::create(double value) {
+  throw std::invalid_argument(
+      "[Reanimated] Cannot create TransformMatrix3D from: " +
+      getOperationNameFromType(TOperation));
 }
 
 bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {

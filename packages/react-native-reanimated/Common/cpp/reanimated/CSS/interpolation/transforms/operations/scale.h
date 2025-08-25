@@ -1,35 +1,51 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <memory>
 
 namespace reanimated::css {
 
-struct ScaleOperation : public TransformOperationBase<CSSDouble> {
-  using TransformOperationBase<CSSDouble>::TransformOperationBase;
+template <TransformOp TOperation>
+struct ScaleOperationBase
+    : public TransformOperationBase<TOperation, CSSDouble> {
+  using TransformOperationBase<TOperation, CSSDouble>::TransformOperationBase;
 
-  explicit ScaleOperation(double value);
+  explicit ScaleOperationBase(const double value)
+      : TransformOperationBase<TOperation, CSSDouble>(CSSDouble(value)) {}
 
-  TransformOperationType type() const override;
-  folly::dynamic valueToDynamic() const override;
-  bool canConvertTo(TransformOperationType type) const override;
-  TransformOperations convertTo(TransformOperationType type) const override;
-  TransformMatrix3D toMatrix() const override;
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-struct ScaleXOperation final : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
+using ScaleXOperation = ScaleOperationBase<TransformOp::ScaleX>;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-};
+using ScaleYOperation = ScaleOperationBase<TransformOp::ScaleY>;
 
-struct ScaleYOperation final : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
+struct ScaleOperation final : public ScaleOperationBase<TransformOp::Scale> {
+  using ScaleOperationBase<TransformOp::Scale>::ScaleOperationBase;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
+  bool canConvertTo(TransformOp type) const override {
+    return type == TransformOp::ScaleX || type == TransformOp::ScaleY;
+  }
+
+  TransformOperations convertTo(TransformOp type) const override {
+    assertCanConvertTo(type);
+    if (type == TransformOp::ScaleX) {
+      return {
+          std::make_shared<ScaleXOperation>(value),
+          std::make_shared<ScaleYOperation>(value)};
+    } else {
+      return {
+          std::make_shared<ScaleYOperation>(value),
+          std::make_shared<ScaleXOperation>(value)};
+    }
+  }
 };
 
 } // namespace reanimated::css
