@@ -9,13 +9,13 @@ import { createSerializable } from 'react-native-worklets';
 import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
+  ComponentWithInstanceMethods,
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
@@ -46,33 +46,35 @@ export const isReanimated3 = () => {
  */
 export const isConfigured = isReanimated3;
 
-export function getViewProp<T>(
-  viewTag: number,
-  propName: string,
-  component?: WrapperRef | null // required on Fabric
+export function getViewPropImpl<T = unknown>(
+  component: ComponentWithInstanceMethods | null,
+  propName: string
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(
-      'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+      'Function `getViewProp` requires a component to be passed as an argument.'
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
-    return ReanimatedModule.getViewProp(
-      viewTag,
-      propName,
-      component,
-      (result: T) => {
-        if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-          reject(result);
-        } else {
-          resolve(result);
-        }
+    return ReanimatedModule.getViewProp(component, propName, (result: T) => {
+      if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        reject(result);
+      } else {
+        resolve(result);
       }
-    );
+    });
   });
+}
+
+export function getViewProp<T = unknown>(
+  _viewTag: number,
+  propName: string,
+  component: ComponentWithInstanceMethods | null
+): Promise<T> {
+  return getViewPropImpl(component, propName);
 }
 
 function getSensorContainer(): SensorContainer {

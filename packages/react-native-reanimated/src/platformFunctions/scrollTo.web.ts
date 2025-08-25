@@ -1,11 +1,11 @@
 'use strict';
 import type { ScrollView } from 'react-native';
 
-import type { WrapperRef } from '../commonTypes';
+import type { ComponentWithInstanceMethods } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function scrollTo<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>,
+export function scrollTo<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent>,
   x: number,
   y: number,
   animated: boolean

@@ -1,11 +1,11 @@
 'use strict';
-import type { StyleProps, WrapperRef } from '../commonTypes';
+import type { ComponentWithInstanceMethods, StyleProps } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
-export function setNativeProps<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef>,
+export function setNativeProps<TComponent extends ComponentWithInstanceMethods>(
+  animatedRef: AnimatedRef<TComponent>,
   updates: StyleProps
 ) {
   const component = animatedRef() as ReanimatedHTMLElement;

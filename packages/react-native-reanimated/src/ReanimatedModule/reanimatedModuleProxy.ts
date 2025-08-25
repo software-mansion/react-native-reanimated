@@ -3,12 +3,12 @@
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
+  ComponentWithInstanceMethods,
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -95,9 +95,8 @@ export interface ReanimatedModuleProxy {
 export interface IReanimatedModule
   extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
   getViewProp<TValue>(
-    viewTag: number,
+    component: ComponentWithInstanceMethods | null,
     propName: string,
-    component: WrapperRef | null,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

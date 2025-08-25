@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  getViewProp,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
@@ -25,9 +24,7 @@ export default function GetViewPropExample() {
   });
 
   const handlePress = async () => {
-    // @ts-ignore this is fine
-    const viewTag = animatedRef() as number;
-    const result = await getViewProp(viewTag, 'opacity');
+    const result = await animatedRef.getViewProp<number>('opacity');
     console.log(result);
   };
 

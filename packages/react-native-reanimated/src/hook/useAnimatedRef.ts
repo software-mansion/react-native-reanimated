@@ -6,7 +6,11 @@ import {
 } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common/constants';
-import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
+import type {
+  ComponentWithInstanceMethods,
+  ShadowNodeWrapper,
+} from '../commonTypes';
+import { getViewPropImpl } from '../core';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
@@ -17,27 +21,31 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-function getComponentOrScrollable(ref: WrapperRef) {
-  return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
+function getComponentOrScrollable(component: ComponentWithInstanceMethods) {
+  return (
+    component.getNativeScrollRef?.() ??
+    component.getScrollableNode?.() ??
+    component
+  );
 }
 
-function useAnimatedRefBase<TRef extends WrapperRef>(
-  getWrapper: (ref: TRef) => ShadowNodeWrapper
-): AnimatedRef<TRef> {
+function useAnimatedRefBase<TComponent extends ComponentWithInstanceMethods>(
+  getWrapper: (component: TComponent) => ShadowNodeWrapper
+): AnimatedRef<TComponent> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
   ).current;
-  const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
-  const resultRef = useRef<AnimatedRef<TRef> | null>(null);
+  const shadowNodeWrapperRef = useRef<ShadowNodeWrapper | null>(null);
+  const resultRef = useRef<AnimatedRef<TComponent> | null>(null);
 
   if (!resultRef.current) {
-    const fun = <AnimatedRef<TRef>>((ref) => {
-      if (ref) {
-        wrapperRef.current = getWrapper(ref);
+    const fun = <AnimatedRef<TComponent>>((component) => {
+      if (component) {
+        shadowNodeWrapperRef.current = getWrapper(component);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
-        fun.current = ref;
+        fun.getTag = () => findNodeHandle(getComponentOrScrollable(component));
+        fun.current = component;
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -52,7 +60,7 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
         }
       }
 
-      return wrapperRef.current;
+      return shadowNodeWrapperRef.current;
     });
 
     fun.observe = (observer: AnimatedRefObserver) => {
@@ -66,6 +74,9 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
       };
     };
 
+    fun.getViewProp = (propName: string) =>
+      getViewPropImpl(fun.current, propName);
+
     fun.current = null;
     resultRef.current = fun;
   }
@@ -74,15 +85,15 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  TRef extends WrapperRef = React.Component,
->(): AnimatedRef<TRef> {
+  TComponent extends ComponentWithInstanceMethods = React.Component,
+>(): AnimatedRef<TComponent> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
   );
 
-  const resultRef = useAnimatedRefBase<TRef>((ref) => {
+  const resultRef = useAnimatedRefBase<TComponent>((component) => {
     const currentWrapper = getShadowNodeWrapperFromRef(
-      getComponentOrScrollable(ref)
+      getComponentOrScrollable(component)
     );
 
     sharedWrapper.value = currentWrapper;
@@ -104,9 +115,11 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends WrapperRef = React.Component,
->(): AnimatedRef<TRef> {
-  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
+  TComponent extends ComponentWithInstanceMethods = React.Component,
+>(): AnimatedRef<TComponent> {
+  return useAnimatedRefBase<TComponent>((component) =>
+    getComponentOrScrollable(component)
+  );
 }
 
 /**
