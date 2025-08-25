@@ -294,6 +294,7 @@ function styleUpdater(
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
+
     if (!shallowEqual(oldValues, newValues) || forceUpdate) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
     }
