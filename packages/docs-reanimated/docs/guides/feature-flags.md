@@ -49,6 +49,10 @@ This feature flag works only on Android and has no effect on iOS. For more detai
 
 When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
 
+### `EXPERIMENTAL_MUTABLE_OPTIMIZATION`
+
+This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+
 ## Static feature flags
 
 Static flags are intended to be resolved during code compilation and cannot be changed during application runtime. To enable a static feature flag, you need to:
