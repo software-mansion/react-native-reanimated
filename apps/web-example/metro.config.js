@@ -4,26 +4,9 @@ const {
 } = require('react-native-reanimated/metro-config');
 
 const path = require('path');
+// @ts-expect-error deep import
+const exclusionList = require('metro-config/private/defaults/exclusionList');
 const escape = require('escape-string-regexp');
-
-var list = [/\/__tests__\/.*/];
-function escapeRegExp(/** @type {any} */ pattern) {
-  if (Object.prototype.toString.call(pattern) === '[object RegExp]') {
-    return pattern.source.replace(/\/|\\\//g, '\\' + path.sep);
-  } else if (typeof pattern === 'string') {
-    var escaped = pattern.replace(/[\-\[\]\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
-    return escaped.replaceAll('/', '\\' + path.sep);
-  } else {
-    throw new Error('Unexpected exclusion pattern: ' + pattern);
-  }
-}
-function exclusionList(/** @type {any} */ additionalExclusions) {
-  return new RegExp(
-    '(' +
-      (additionalExclusions || []).concat(list).map(escapeRegExp).join('|') +
-      ')$'
-  );
-}
 
 // Find the project and workspace directories
 const projectRoot = __dirname;
@@ -32,7 +15,7 @@ const monorepoRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 // 1. Watch all files within the monorepo
-// @ts-expect-error TODO:
+// @ts-expect-error TODO: overhaul this config at some point
 config.watchFolders = [monorepoRoot];
 // 2. Let Metro know where to resolve packages and in what order
 // @ts-expect-error
