@@ -16,7 +16,7 @@ import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
+import type { RNScreensTurboModuleType } from './types/screenTransition';
 import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
 

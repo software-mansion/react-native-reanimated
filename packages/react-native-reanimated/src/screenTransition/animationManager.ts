@@ -1,6 +1,9 @@
 'use strict';
 
-import type { LockAxis, ScreenTransitionConfig } from './commonTypes';
+import type {
+  LockAxis,
+  ScreenTransitionConfig,
+} from '../types/screenTransition';
 import { applyStyle } from './styleUpdater';
 import { getSwipeSimulator } from './swipeSimulator';
 

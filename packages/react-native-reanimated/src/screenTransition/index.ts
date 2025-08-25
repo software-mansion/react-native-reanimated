@@ -8,5 +8,5 @@ export type {
   AnimatedScreenTransition,
   GoBackGesture,
   ScreenTransitionConfig,
-} from './commonTypes';
+} from '../types/screenTransition';
 export { ScreenTransition } from './presets';

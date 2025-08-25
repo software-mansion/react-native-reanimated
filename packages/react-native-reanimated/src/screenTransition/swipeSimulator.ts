@@ -3,7 +3,7 @@ import type {
   LockAxis,
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
-} from './commonTypes';
+} from '../types/screenTransition';
 import { RNScreensTurboModule } from './RNScreensTurboModule';
 import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 

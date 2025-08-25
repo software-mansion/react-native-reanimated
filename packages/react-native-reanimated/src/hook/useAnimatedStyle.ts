@@ -1,32 +1,16 @@
 'use strict';
-import type { RefObject } from 'react';
+import type { DependencyList, RefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
-import type {
-  AnimatedPropsAdapterFunction,
-  AnimatedPropsAdapterWorklet,
-  AnimatedStyle,
-  AnimationObject,
-  NestedObjectValues,
-  SharedValue,
-  StyleProps,
-  Timestamp,
-} from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
+import type { AnimatedStyleHandle, DefaultStyle } from '../types';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type {
-  AnimatedStyleHandle,
-  DefaultStyle,
-  DependencyList,
-  Descriptor,
-  JestAnimatedStyleHandle,
-} from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
@@ -444,15 +428,15 @@ function checkSharedValueUsage(
  */
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
 // @ts-expect-error This overload is required by our API.
-export function useAnimatedStyle<Style extends DefaultStyle>(
-  updater: () => Style,
+export function useAnimatedStyle<TStyle extends DefaultStyle>(
+  updater: () => TStyle,
   dependencies?: DependencyList | null
-): Style;
+): AnimatedStyleHandle<TStyle>;
 
-export function useAnimatedStyle<Style extends DefaultStyle>(
+export function useAnimatedStyle<TStyle extends DefaultStyle>(
   updater:
-    | WorkletFunction<[], Style>
-    | ((() => Style) & Record<string, unknown>),
+    | WorkletFunction<[], TStyle>
+    | ((() => TStyle) & Record<string, unknown>),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false

@@ -5,7 +5,7 @@ import { updateProps } from '../updateProps';
 import type {
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
-} from './commonTypes';
+} from '../types/screenTransition';
 
 function createViewDescriptor(screenId: number | ShadowNodeWrapper) {
   'worklet';

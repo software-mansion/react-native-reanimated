@@ -1,6 +1,6 @@
 'use strict';
 
-import type { AnimatedScreenTransition } from './commonTypes';
+import type { AnimatedScreenTransition } from '../types/screenTransition';
 
 const SwipeRight: AnimatedScreenTransition = {
   topScreenStyle: (event) => {

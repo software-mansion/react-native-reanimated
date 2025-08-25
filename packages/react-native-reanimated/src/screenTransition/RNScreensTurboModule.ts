@@ -1,7 +1,7 @@
 'use strict';
 
 import { logger } from '../common';
-import type { RNScreensTurboModuleType } from './commonTypes';
+import type { RNScreensTurboModuleType } from '../types/screenTransition';
 
 function noopFactory<T>(defaultReturnValue?: T): () => T {
   return () => {
