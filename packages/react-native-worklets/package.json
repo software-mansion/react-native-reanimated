@@ -64,7 +64,8 @@
     "@babel/plugin-transform-template-literals": "^7.0.0-0",
     "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
-    "convert-source-map": "^2.0.0"
+    "convert-source-map": "^2.0.0",
+    "semver": "7.7.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",
@@ -97,6 +98,7 @@
     "android",
     "apple",
     "Common",
+    "compatibility.json",
     "bundleMode/index.js",
     "bundleMode/index.d.ts",
     "scripts/worklets_utils.rb",
