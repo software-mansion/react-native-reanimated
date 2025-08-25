@@ -19,7 +19,7 @@ if (semverPrerelease(reactNativeVersion)) {
 }
 
 for (const key in compatibilityFile) {
- if (semverSatisfies(reanimatedVersion, key)) {
+  if (semverSatisfies(reanimatedVersion, key)) {
     // @ts-ignore
     supportedRNVersions.push(...compatibilityFile[key]['react-native']);
   }
@@ -37,5 +37,7 @@ for (const version of supportedRNVersions) {
 }
 
 // eslint-disable-next-line reanimated/use-logger
-console.error(`[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`);
+console.error(
+  `[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`
+);
 process.exit(1);

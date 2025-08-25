@@ -68,7 +68,8 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
-    const std::shared_ptr<AsyncQueue> &queue) {
+    const std::shared_ptr<AsyncQueue> &queue,
+    bool enableEventLoop) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
       jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
@@ -499,7 +500,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        4,
+        5,
         [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -518,6 +519,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
             asyncQueue = extractAsyncQueue(rt, args[3]);
           }
 
+          const auto enableEventLoop = args[4].asBool();
+
           return createWorkletRuntime(
               rt,
               clone->getRuntimeManager(),
@@ -525,7 +528,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone,
               name,
               serializableInitializer,
-              asyncQueue);
+              asyncQueue,
+              enableEventLoop);
         });
   }
 
