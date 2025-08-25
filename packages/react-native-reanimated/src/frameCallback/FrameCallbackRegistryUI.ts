@@ -36,10 +36,23 @@ export const prepareUIRegistry = runOnUI(() => {
     nextCallId: 0,
 
     runCallbacks(callId) {
-      const loop = (timestamp: number) => {
+      const loop = (timestamp: number, isEventReaction?: boolean) => {
         if (callId !== this.nextCallId) {
           return;
         }
+
+        if (isEventReaction) {
+          /**
+           * In Reanimated, when handling events, all queued callbacks are
+           * flushed with the event's timestamp instead of the frame target
+           * timestamp. As a result, frame callbacks can execute more than once
+           * per frame, leading to negative values for
+           * `timeSincePreviousFrame`.
+           */
+          requestAnimationFrame(loop);
+          return;
+        }
+
         if (this.previousFrameTimestamp === null) {
           this.previousFrameTimestamp = timestamp;
         }
