@@ -1,11 +1,11 @@
 'use strict';
-import type { ForceUpdateContainer, SharedValue } from './commonTypes';
+import type { SharedValue, StyleUpdaterContainer } from './commonTypes';
 import { makeMutable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 
 export interface ViewDescriptorsSet {
   shareableViewDescriptors: SharedValue<Descriptor[]>;
-  add: (item: Descriptor, forceUpdateContainer?: ForceUpdateContainer) => void;
+  add: (item: Descriptor, updaterContainer?: StyleUpdaterContainer) => void;
   remove: (viewTag: number) => void;
 }
 
@@ -13,8 +13,8 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const shareableViewDescriptors = makeMutable<Descriptor[]>([]);
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
-    add: (item: Descriptor, forceUpdateContainer?: ForceUpdateContainer) => {
-      const forceUpdate = forceUpdateContainer?.current;
+    add: (item: Descriptor, updaterContainer?: StyleUpdaterContainer) => {
+      const updater = updaterContainer?.current;
       shareableViewDescriptors.modify((descriptors) => {
         'worklet';
         const index = descriptors.findIndex(
@@ -25,7 +25,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
         } else {
           descriptors.push(item);
         }
-        forceUpdate?.(true);
+        updater?.(true);
         return descriptors;
       }, false);
     },

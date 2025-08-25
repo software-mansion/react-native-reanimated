@@ -225,14 +225,13 @@ export default class AnimatedComponent
         }
       }
     }
-
     newStyles.forEach((style) => {
       style.viewDescriptors.add(
         {
           tag: viewTag,
           shadowNodeWrapper,
         },
-        style.forceUpdateContainer
+        style.styleUpdaterContainer
       );
       if (IS_JEST) {
         /**

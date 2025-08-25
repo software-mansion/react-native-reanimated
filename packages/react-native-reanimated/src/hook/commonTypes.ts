@@ -12,8 +12,8 @@ import type { WorkletFunction } from 'react-native-worklets';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
-  ForceUpdateContainer,
   ShadowNodeWrapper,
+  StyleUpdaterContainer,
   WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
@@ -96,7 +96,7 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
-  forceUpdateContainer: ForceUpdateContainer;
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 export interface JestAnimatedStyleHandle<

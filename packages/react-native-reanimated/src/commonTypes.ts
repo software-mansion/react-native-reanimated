@@ -449,7 +449,7 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-export type ForceUpdateContainer = RefObject<
+export type StyleUpdaterContainer = RefObject<
   ((forceUpdate: boolean) => void) | undefined
 >;
 

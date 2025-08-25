@@ -4,11 +4,11 @@ import type { Component, Ref, RefObject } from 'react';
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
-  ForceUpdateContainer,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
@@ -17,7 +17,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
-  forceUpdateContainer?: ForceUpdateContainer;
+  styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
 export interface ViewInfo {

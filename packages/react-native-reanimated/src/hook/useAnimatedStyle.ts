@@ -11,10 +11,10 @@ import type {
   AnimatedPropsAdapterWorklet,
   AnimatedStyle,
   AnimationObject,
-  ForceUpdateContainer,
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
   Timestamp,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
@@ -51,7 +51,7 @@ interface AnimatedUpdaterData {
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
-  forceUpdateContainer: ForceUpdateContainer;
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 function prepareAnimation(
@@ -521,7 +521,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationRunning: false,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
-      forceUpdateContainer: { current: undefined },
+      styleUpdaterContainer: { current: undefined },
     };
   }
 
@@ -571,7 +571,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       };
     }
     if (animatedUpdaterData.current) {
-      animatedUpdaterData.current.forceUpdateContainer.current = fun;
+      animatedUpdaterData.current.styleUpdaterContainer.current = fun;
     }
     const mapperId = startMapper(fun, inputs);
     return () => {
@@ -598,17 +598,17 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
-    const forceUpdateContainer =
-      animatedUpdaterData.current.forceUpdateContainer;
+    const styleUpdaterContainer =
+      animatedUpdaterData.current.styleUpdaterContainer;
     animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,
           jestAnimatedValues,
           toJSON: animatedStyleHandleToJSON,
-          forceUpdateContainer,
+          styleUpdaterContainer,
         }
-      : { viewDescriptors, initial, forceUpdateContainer };
+      : { viewDescriptors, initial, styleUpdaterContainer };
   }
 
   return animatedStyleHandle.current;
