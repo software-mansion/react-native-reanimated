@@ -1,5 +1,5 @@
 'use strict';
-import { CSSKeyframesRuleImpl } from '../models';
+import { CSSKeyframesRuleImpl } from '../platform';
 import type { CSSStyle } from '../types';
 import { isCSSKeyframesRule } from '../utils';
 

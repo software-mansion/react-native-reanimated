@@ -189,7 +189,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  setDynamicFeatureFlag(_name: string, _value: boolean) {
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag() {
     // noop
   }
 }

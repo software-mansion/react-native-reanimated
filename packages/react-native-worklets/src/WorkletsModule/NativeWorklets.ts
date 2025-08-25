@@ -244,6 +244,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#workletsModuleProxy.getStaticFeatureFlag(name);
+  }
+
   setDynamicFeatureFlag(name: string, value: boolean) {
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
