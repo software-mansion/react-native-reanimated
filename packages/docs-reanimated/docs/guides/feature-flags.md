@@ -36,7 +36,7 @@ When enabled, this feature flag is supposed to eliminate jittering of animated c
 In React Native, `preventShadowTreeCommitExhaustion` feature flag can be enabled by setting experimental release level. For Android, you need to add the following lines in `MainApplication.kt` of your app:
 
 ```kt
-package com.fabricexample
+package com.helloworld
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -49,7 +49,6 @@ import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
-import com.facebook.react.common.assets.ReactFontManager
 // highlight-next-line
 import com.facebook.react.common.ReleaseLevel
 
