@@ -24,6 +24,7 @@
   },
   "reanimated": {
     "staticFeatureFlags": {
+      "DISABLE_COMMIT_PAUSING_MECHANISM": true,
       "RUNTIME_TEST_FLAG": true
     }
   },
