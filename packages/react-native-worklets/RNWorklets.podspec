@@ -10,7 +10,7 @@ worklets_assert_new_architecture_enabled($new_arch_enabled)
 
 ios_min_version = '13.4'
 
-feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
+feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{worklets_get_static_feature_flags()}\""
 version_flags = "-DWORKLETS_VERSION=#{package['version']}"
 
 Pod::Spec.new do |s|
