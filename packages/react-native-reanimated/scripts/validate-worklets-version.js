@@ -2,7 +2,13 @@
 
 const semverSatisfies = require('semver/functions/satisfies');
 const semverPrerelease = require('semver/functions/prerelease');
+const path = require('path');
 const expectedVersion = require('./worklets-version.json');
+const compatibilityFile = require('../compatibility.json');
+
+const packageJsonPath = path.resolve(__dirname, '../package.json');
+const packageJson = require(packageJsonPath);
+const reanimatedVersion = packageJson.version;
 
 /** @returns {{ ok: boolean; message?: string }} */
 function validateVersion() {
@@ -19,7 +25,7 @@ function validateVersion() {
         expectedVersion.min +
         ' and ' +
         expectedVersion.max +
-        ' to use Reanimated 4.',
+        ' to use Reanimated ' + reanimatedVersion + '.',
     };
   }
 
@@ -31,17 +37,28 @@ function validateVersion() {
     return { ok: true };
   }
 
-  const acceptedRange = `${expectedVersion.min} - ${expectedVersion.max}`;
+  const supportedWorkletsVersions = [];
 
-  if (!semverSatisfies(workletsVersion, acceptedRange)) {
-    return {
-      ok: false,
-      message: `Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${acceptedRange}". Please install a compatible version of \`react-native-worklets\`.`,
-    };
+  for (const key in compatibilityFile) {
+    if (semverSatisfies(reanimatedVersion, key)) {
+      // @ts-ignore
+      supportedWorkletsVersions.push(...compatibilityFile[key]['react-native-worklets']);
+    }
+  }
+
+  if (supportedWorkletsVersions.length === 0) {
+    return { ok: true };
+  }
+
+  for (const version of supportedWorkletsVersions) {
+    if (semverSatisfies(workletsVersion, version)) {
+      return { ok: true };
+    }
   }
 
   return {
-    ok: true,
+    ok: false,
+    message: `Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${supportedWorkletsVersions.join(', ')}". Please install a compatible version of \`react-native-worklets\`.`,
   };
 }
 

@@ -1,31 +1,29 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>
 
 namespace reanimated::css {
-// Skew
-struct SkewOperation : public TransformOperationBase<CSSAngle> {
-  using TransformOperationBase<CSSAngle>::TransformOperationBase;
 
-  explicit SkewOperation(const std::string &value);
+template <TransformOp TOperation>
+struct SkewOperationBase : public TransformOperationBase<TOperation, CSSAngle> {
+  using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  folly::dynamic valueToDynamic() const override;
+  explicit SkewOperationBase(const std::string &value)
+      : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
+
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-struct SkewXOperation final : public SkewOperation {
-  using SkewOperation::SkewOperation;
+using SkewXOperation = SkewOperationBase<TransformOp::SkewX>;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-};
-
-struct SkewYOperation final : public SkewOperation {
-  using SkewOperation::SkewOperation;
-
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-};
+using SkewYOperation = SkewOperationBase<TransformOp::SkewY>;
 
 } // namespace reanimated::css

@@ -4,14 +4,15 @@ import { ReanimatedModule } from '../ReanimatedModule';
 import type StaticFeatureFlagsJSON from './staticFlags.json';
 
 type DynamicFlagsType = {
-  EXPERIMENTAL_MUTABLE_OPTIMIZATION: boolean;
+  EXAMPLE_DYNAMIC_FLAG: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
 };
 type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
 
+/** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
-  EXPERIMENTAL_MUTABLE_OPTIMIZATION: false,
+  EXAMPLE_DYNAMIC_FLAG: false,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {
@@ -55,6 +56,7 @@ const DefaultStaticFeatureFlags = {
   DISABLE_COMMIT_PAUSING_MECHANISM: false,
   ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false,
   EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
+  USE_SYNCHRONIZABLE_FOR_MUTABLES: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {
