@@ -1,6 +1,7 @@
 'use strict';
 import { useCallback, useEffect, useRef } from 'react';
 
+import type { Maybe } from '../common';
 import { IS_WEB, logger } from '../common';
 import type { SharedValue, WrapperRef } from '../commonTypes';
 import type {
@@ -38,7 +39,7 @@ export const useScrollOffset = IS_WEB
   : useScrollOffsetNative;
 
 function useScrollOffsetWeb<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef> | null,
+  animatedRef: Maybe<AnimatedRef<TRef>>,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -78,7 +79,7 @@ function useScrollOffsetWeb<TRef extends WrapperRef>(
 }
 
 function useScrollOffsetNative<TRef extends WrapperRef>(
-  animatedRef: AnimatedRef<TRef> | null,
+  animatedRef: Maybe<AnimatedRef<TRef>>,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);

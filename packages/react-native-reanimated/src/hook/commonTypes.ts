@@ -9,6 +9,7 @@ import type {
 } from 'react-native';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import type { Maybe } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
@@ -37,7 +38,7 @@ export type AnimatedRef<TRef extends WrapperRef> = {
     | HTMLElement; // web
   current: TRef | null;
   observe: (observer: AnimatedRefObserver) => void;
-  getTag?: () => number | null;
+  getTag?: () => Maybe<number>;
 };
 
 // Might make that type generic if it's ever needed.

@@ -1,5 +1,5 @@
 'use strict';
-import type { Ref } from 'react';
+import type { ComponentRef } from 'react';
 import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
@@ -13,7 +13,7 @@ import { useAnimatedRef, useScrollOffset } from '../hook';
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
-  ref?: Ref<AnimatedScrollView> | null;
+  ref?: AnimatedRef<ComponentRef<typeof ScrollView>> | null;
 }
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
@@ -32,8 +32,8 @@ export function AnimatedScrollView({
   const animatedRef =
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useAnimatedRef<ScrollView>()
-      : (ref as AnimatedRef<ScrollView>);
+        useAnimatedRef<ComponentRef<typeof ScrollView>>()
+      : ref;
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -48,7 +48,7 @@ export function AnimatedScrollView({
     restProps.scrollEventThrottle = 1;
   }
 
-  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+  return <AnimatedScrollViewComponent ref={animatedRef} />;
 }
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &
