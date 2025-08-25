@@ -87,9 +87,10 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     const auto &newValue = newPropsObj.getDefault(propertyName, empty);
     // Pass lastValue only if the interpolator is updated (no new interpolator
     // was created), otherwise pass an empty value
-    const auto &lastValue = !shouldCreateInterpolator
-        ? lastUpdateValue.getDefault(propertyName, empty)
-        : empty;
+    const auto &lastValue =
+        (shouldCreateInterpolator || lastUpdateValue.empty())
+        ? empty
+        : lastUpdateValue.getDefault(propertyName, empty);
 
     it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
   }
