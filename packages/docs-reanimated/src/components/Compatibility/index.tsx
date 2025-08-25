@@ -30,20 +30,13 @@ interface CompatibilityItem {
 }
 
 export function ReanimatedCompatibility() {
-  const reactNativeVersions = [
-    '0.70',
-    '0.71',
-    '0.72',
-    '0.73',
-    '0.74',
-    '0.75',
-    '0.76',
-    '0.77',
-    '0.78',
-    '0.79',
-    '0.80',
-    '0.81',
-  ];
+  const reactNativeVersions = Array.from(
+    new Set(
+      Object.keys(compatibilityData).flatMap(
+        (version) => compatibilityData[version]['react-native']
+      )
+    )
+  ).sort();
 
   const isVersionSupported = (supportedVersions: string[], version: string) =>
     supportedVersions.includes(version);

@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const semverSatisfies = require('semver/functions/satisfies');
+const semverPrerelease = require('semver/functions/prerelease');
 
 /**
  * Updates the package.json version and jsVersion file
