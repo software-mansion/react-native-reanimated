@@ -74,7 +74,7 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  TRef extends WrapperRef = React.Component,
+  TRef extends WrapperRef = WrapperRef,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
@@ -104,7 +104,7 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends WrapperRef = React.Component,
+  TRef extends WrapperRef = WrapperRef,
 >(): AnimatedRef<TRef> {
   return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
 }
