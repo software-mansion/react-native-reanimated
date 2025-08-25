@@ -4,7 +4,7 @@ import { ComparisonMode } from '../../ReJest/types';
 
 const NOTIFICATION_NAME = 'NOTIFICATION_NAME';
 
-describe('scheduleOnRN', () => {
+describe('scheduleOnRuntime', () => {
   // For now there is no way to schedule a function on the Worker Runtime from the UI Runtime
   //   test('should schedule a function on the RN runtime from UI', async () => {
   //     // Arrange
