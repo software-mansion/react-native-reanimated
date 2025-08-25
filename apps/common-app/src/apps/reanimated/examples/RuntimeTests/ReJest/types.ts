@@ -135,7 +135,7 @@ declare global {
   var _updateProps: (operations: Operation[]) => void;
   var _notifyAboutProgress: (tag: number, value: Record<string, unknown>) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
-  var __flushAnimationFrame: (frameTimestamp: number) => void;
+  var __flushAnimationFrame: (frameTimestamp: number, isEventReaction?: boolean) => void;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;

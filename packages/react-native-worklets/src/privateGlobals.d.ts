@@ -61,7 +61,10 @@ declare global {
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
-  var __flushAnimationFrame: (timestamp: number) => void;
+  var __flushAnimationFrame: (
+    timestamp: number,
+    isEventReaction?: boolean
+  ) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
   var _getAnimationTimestamp: () => number;
