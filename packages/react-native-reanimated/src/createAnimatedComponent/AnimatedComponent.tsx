@@ -225,12 +225,14 @@ export default class AnimatedComponent
         }
       }
     }
-
     newStyles.forEach((style) => {
-      style.viewDescriptors.add({
-        tag: viewTag,
-        shadowNodeWrapper,
-      });
+      style.viewDescriptors.add(
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
+        style.styleUpdaterContainer
+      );
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
