@@ -127,6 +127,10 @@ function experimental_makeMutableUI<Value>(
         listener(newValue);
       });
     },
+    resetDirtyFlag() {
+      dirtyFlag.setBlocking(false);
+      isDirty = false;
+    },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
         mutable as Mutable<Value>,
@@ -220,6 +224,7 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
       checkInvalidReadDuringRender();
       if (dirtyFlag.getBlocking()) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+          sv.resetDirtyFlag!();
           return sv.value;
         });
         return uiValueGetter(mutable as Mutable<Value>);
