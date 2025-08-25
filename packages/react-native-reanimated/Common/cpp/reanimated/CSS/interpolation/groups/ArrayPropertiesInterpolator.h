@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
-#include <reanimated/CSS/util/interpolators.h>
+#include <reanimated/CSS/utils/interpolators.h>
 
 #include <algorithm>
 #include <memory>
@@ -19,7 +19,7 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
   bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const override;
 
-  void updateKeyframes(const folly::dynamic &keyframes) override;
+  void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,

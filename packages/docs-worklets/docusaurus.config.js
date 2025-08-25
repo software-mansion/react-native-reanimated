@@ -48,7 +48,7 @@ const config = {
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-worklets',
           versions: {
             current: {
-              label: '1.x',
+              label: '0.x',
             },
           },
         },
@@ -182,6 +182,10 @@ const config = {
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
+                },
+                {
+                  test: /\.js$/,
                   use: 'babel-loader',
                 },
               ],

@@ -2,20 +2,21 @@
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../constants';
 import CSSKeyframesRuleBase from '../../models/CSSKeyframesRuleBase';
-import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
+import { normalizeSingleCSSAnimationSettings } from '../../platforms/native';
 import {
   applyCSSAnimations,
   unregisterCSSAnimations,
   unregisterCSSKeyframes,
-} from '../../platform/native/native';
-import { cssKeyframesRegistry } from '../../registry';
+} from '../../platforms/native/native';
+import { cssKeyframesRegistry } from '../../registries';
 import { css } from '../../stylesheet';
 import type { CSSAnimationProperties } from '../../types';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
+const VIEW_NAME = 'ViewName';
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
-jest.mock('../../platform/native/native.ts', () => ({
+jest.mock('../../platforms/native/native.ts', () => ({
   applyCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   registerCSSKeyframes: jest.fn(),
@@ -29,7 +30,7 @@ describe('CSSAnimationsManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSAnimationsManager(shadowNodeWrapper, viewTag);
+    manager = new CSSAnimationsManager(shadowNodeWrapper, VIEW_NAME, viewTag);
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
     cssKeyframesRegistry.clear();
@@ -175,11 +176,13 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(2);
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           1,
-          attachedAnimations[0].keyframesRule.name
+          attachedAnimations[0].keyframesRule.name,
+          VIEW_NAME
         );
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           2,
-          attachedAnimations[1].keyframesRule.name
+          attachedAnimations[1].keyframesRule.name,
+          VIEW_NAME
         );
 
         // Animations should be still attached because call to unmountCleanup

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
+#include <reanimated/CSS/configs/interpolators/registry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
@@ -15,13 +15,14 @@ namespace reanimated::css {
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
+      const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   std::unordered_set<std::string> getReversedPropertyNames(
       const folly::dynamic &newPropertyValues) const;
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const TransitionProgressProvider &transitionProgressProvider) const;
 
   void discardFinishedInterpolators(
@@ -37,6 +38,7 @@ class TransitionStyleInterpolator {
       const std::shared_ptr<PropertyInterpolator> &,
       const std::shared_ptr<KeyframeProgressProvider> &)>;
 
+  const std::string componentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;

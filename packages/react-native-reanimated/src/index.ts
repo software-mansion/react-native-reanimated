@@ -27,6 +27,14 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+  Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
+  SnappySpringConfig,
+  SnappySpringConfigWithDuration,
+  WigglySpringConfig,
+  WigglySpringConfigWithDuration,
   withClamp,
   withDecay,
   withDelay,
@@ -46,7 +54,6 @@ export type {
   AnimatedSensor,
   AnimatedStyle,
   AnimatedTransform,
-  AnimateStyle,
   Animation,
   AnimationCallback,
   AnimationObject,
@@ -67,7 +74,6 @@ export type {
   SensorConfig,
   SharedValue,
   StyleProps,
-  StylesOrDefault,
   TransformArrayItem,
   Value3D,
   ValueRotation,
@@ -87,43 +93,24 @@ export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
-  createWorkletRuntime,
   enableLayoutAnimations,
-  executeOnUIRuntimeSync,
   getViewProp,
   isConfigured,
   isReanimated3,
   makeMutable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
 } from './core';
 export * from './css';
-export type {
-  EasingFactoryFn,
-  EasingFn,
-  EasingFunctionFactory,
-} from './Easing';
+export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
 export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
 export type { FrameInfo } from './frameCallback';
-export type {
-  Adaptable,
-  AdaptTransforms,
-  AnimatedProps,
-  AnimatedStyleProp,
-  AnimateProps,
-  EntryOrExitLayoutType,
-  TransformStyleTypes,
-} from './helperTypes';
+export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
   AnimatedRef,
   DerivedValue,
   EventHandler,
   EventHandlerProcessed,
   FrameCallback,
-  GestureHandlers,
   ReanimatedEvent,
   ScrollEvent,
   ScrollHandler,
@@ -132,7 +119,6 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
-  useAnimatedGestureHandler,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,
@@ -299,5 +285,13 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export type { WorkletRuntime } from 'react-native-worklets';
-export { isWorkletFunction } from 'react-native-worklets';
+export type { WorkletRuntime } from './workletFunctions';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  isWorkletFunction,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './workletFunctions';

@@ -35,6 +35,7 @@ jobs:
     env:
       PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
       WORKLETS_DIR: packages/react-native-worklets
+      WORKLETS_VERSION: PLACEHOLDER # Will be reassigned later on.
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -51,6 +52,13 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Strip monorepo pre-release tag
+        run: echo "WORKLETS_VERSION=$(jq -r '.version' ${{ env.WORKLETS_DIR }}/package.json | sed 's/-.*//')" >> $GITHUB_ENV
+
+      - name: Set stripped version
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: node ./scripts/set-worklets-version.js ${{ env.WORKLETS_VERSION }}
 
       - name: Build package
         working-directory: ${{ env.WORKLETS_DIR }}

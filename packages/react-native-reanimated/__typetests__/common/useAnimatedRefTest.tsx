@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import type { FlashListRef } from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 import type { Ref } from 'react';
 import React, { useRef } from 'react';
 import type { ImageProps, ViewProps } from 'react-native';
@@ -494,6 +496,49 @@ function UseAnimatedRefTest() {
         <CreatedAnimatedCustomClassComponent ref={plainRefCreatedComponent} />
         <CreatedAnimatedCustomClassComponent
           ref={animatedRefCreatedComponent}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlashListNoType() {
+    const CreatedAnimatedFlashList =
+      Animated.createAnimatedComponent(FlashList);
+    const plainRef = useRef<FlashListRef<unknown>>(null);
+    const animatedRef = useAnimatedRef<FlashListRef<unknown>>();
+
+    return (
+      <>
+        <FlashList ref={plainRef} data={[]} renderItem={null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+
+        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={animatedRef}
+          data={[]}
+          renderItem={null}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlashListWithType() {
+    const CreatedAnimatedFlashList = Animated.createAnimatedComponent(
+      FlashList<number>
+    );
+    const plainRef = useRef<FlashListRef<number>>(null);
+    const animatedRef = useAnimatedRef<FlashListRef<number>>();
+
+    return (
+      <>
+        <FlashList ref={plainRef} data={[]} renderItem={null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+
+        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={animatedRef}
+          data={[]}
+          renderItem={null}
         />
       </>
     );

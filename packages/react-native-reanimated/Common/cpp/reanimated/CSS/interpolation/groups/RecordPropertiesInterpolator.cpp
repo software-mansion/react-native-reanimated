@@ -20,15 +20,23 @@ bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
 }
 
 void RecordPropertiesInterpolator::updateKeyframes(
-    const folly::dynamic &keyframes) {
-  // TODO - maybe add a possibility to remove interpolators that are no
-  // longer used  (for now, for simplicity, we only add new ones)
-  for (const auto &item : keyframes.items()) {
-    const auto &propName = item.first.getString();
-    const auto &propValue = item.second;
+    jsi::Runtime &rt,
+    const jsi::Value &keyframes) {
+  // TODO - maybe add a possibility to remove interpolators that are no longer
+  // used (for now, for simplicity, we only add new ones)
+  const jsi::Object keyframesObject = keyframes.asObject(rt);
 
-    maybeCreateInterpolator(propName);
-    interpolators_[propName]->updateKeyframes(propValue);
+  jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
+  size_t propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const std::string propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const jsi::Value &propertyKeyframes = keyframesObject.getProperty(
+        rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    maybeCreateInterpolator(propertyName);
+    interpolators_[propertyName]->updateKeyframes(rt, propertyKeyframes);
   }
 }
 
@@ -37,14 +45,16 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
-  // used  (for now, for simplicity, we only add new ones)
-  const folly::dynamic empty = folly::dynamic::object();
-  const folly::dynamic &oldStyleObject =
-      !oldStyleValue.empty() ? oldStyleValue : empty;
-  const folly::dynamic &newStyleObject =
-      !newStyleValue.empty() ? newStyleValue : empty;
-  const folly::dynamic &lastUpdateObject =
-      !lastUpdateValue.empty() ? lastUpdateValue : empty;
+  // used (for now, for simplicity, we only add new ones)
+  const folly::dynamic emptyObject = folly::dynamic::object();
+  const auto null = folly::dynamic();
+
+  const auto &oldStyleObject =
+      oldStyleValue.empty() ? emptyObject : oldStyleValue;
+  const auto &newStyleObject =
+      newStyleValue.empty() ? emptyObject : newStyleValue;
+  const auto &lastUpdateObject =
+      lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
 
   std::unordered_set<std::string> propertyNamesSet;
   for (const auto &key : oldStyleObject.keys()) {
@@ -57,9 +67,9 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
     interpolators_[propertyName]->updateKeyframesFromStyleChange(
-        oldStyleObject.getDefault(propertyName, empty),
-        newStyleObject.getDefault(propertyName, empty),
-        lastUpdateObject.getDefault(propertyName, empty));
+        oldStyleObject.getDefault(propertyName, null),
+        newStyleObject.getDefault(propertyName, null),
+        lastUpdateObject.getDefault(propertyName, null));
   }
 }
 

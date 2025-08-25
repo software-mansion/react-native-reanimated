@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
 import {
+  createSerializable,
   isWorkletFunction,
-  makeShareableCloneRecursive,
   runOnUI,
-  shareableMappingCache,
+  RuntimeKind,
+  serializableMappingCache,
 } from 'react-native-worklets';
 
 import type { ParsedColorArray } from '../Colors';
@@ -51,8 +52,8 @@ import {
  * object to prevent from freezing it in development.
  */
 const IN_STYLE_UPDATER = { current: false };
-const IN_STYLE_UPDATER_UI = makeShareableCloneRecursive({ current: false });
-shareableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
+const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
+serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
 
 const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   originX: true,
@@ -64,6 +65,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   globalOriginY: true,
   opacity: true,
   transform: true,
+  backgroundColor: true,
 };
 
 type LayoutAnimationProp = keyof typeof LAYOUT_ANIMATION_SUPPORTED_PROPS;
@@ -83,7 +85,7 @@ export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory
 ): void {
   'worklet';
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     // If this is called on UI (for example from gesture handler with worklets), we don't get easing,
     // but its bound copy, which is not a worklet. We don't want to throw any error then.
     return;
@@ -293,6 +295,8 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    animation.unroundedCurrent = res;
+
     // We need to clamp the res values to make sure they are in the correct RGBA range
     clampRGBA(res as ParsedColorArray);
 
@@ -305,11 +309,11 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
     animation: Animation<AnimationObject>,
     timestamp: Timestamp
   ): boolean => {
-    const RGBACurrent = toLinearSpace(convertToRGBA(animation.current));
     const res: Array<number> = [];
     let finished = true;
-    tab.forEach((i, index) => {
-      animation[i].current = RGBACurrent[index];
+    // We must restore nonscale current to ever end the animation.
+    animation.current = animation.nonscaledCurrent;
+    tab.forEach((i) => {
       const result = animation[i].onFrame(animation[i], timestamp);
       // We really need to assign this value to result, instead of passing it directly - otherwise once "finished" is false, onFrame won't be called
       finished = finished && result;
@@ -318,7 +322,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
     // We need to clamp the res values to make sure they are in the correct RGBA range
     clampRGBA(res as ParsedColorArray);
-
+    animation.nonscaledCurrent = res;
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -550,7 +554,10 @@ export function defineAnimation<
   U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
-  if (!globalThis._WORKLET && IN_STYLE_UPDATER.current) {
+  if (
+    globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative &&
+    IN_STYLE_UPDATER.current
+  ) {
     return starting as unknown as T;
   }
   const create = () => {
@@ -560,7 +567,10 @@ export function defineAnimation<
     return animation;
   };
 
-  if (globalThis._WORKLET || SHOULD_BE_USE_WEB) {
+  if (
+    globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative ||
+    SHOULD_BE_USE_WEB
+  ) {
     return create();
   }
   create.__isAnimationDefinition = true;
@@ -572,7 +582,7 @@ export function defineAnimation<
 function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
     runOnUI(() => {

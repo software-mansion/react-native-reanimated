@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -14,6 +14,7 @@ import type {
   AnimatedStyle,
   ForceUpdateContainer,
   ShadowNodeWrapper,
+  WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
@@ -30,19 +31,22 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<T extends Component> = {
-  (component?: T):
+export type AnimatedRef<TRef extends WrapperRef> = {
+  (ref?: TRef | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: T | null;
+  current: TRef | null;
   observe: (observer: AnimatedRefObserver) => void;
   getTag?: () => number | null;
 };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<Component>;
+export type AnimatedRefOnJS = AnimatedRef<WrapperRef>;
 
-/** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
+/**
+ * `AnimatedRef` is mapped to this type on the UI thread via a serializable
+ * handle.
+ */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
 };
@@ -68,10 +72,6 @@ export type EventPayload<Event extends object> = Event extends {
 }
   ? NativeEvent
   : Omit<Event, 'eventName'>;
-
-export type NativeEventWrapper<Event extends object> = {
-  nativeEvent: Event;
-};
 
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 
@@ -103,8 +103,8 @@ export interface JestAnimatedStyleHandle<
   Style extends DefaultStyle | AnimatedProps = DefaultStyle,
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedValues:
-    | MutableRefObject<AnimatedStyle<Style>>
-    | MutableRefObject<AnimatedProps>;
+    | RefObject<AnimatedStyle<Style>>
+    | RefObject<AnimatedProps>;
   toJSON: () => string;
 }
 

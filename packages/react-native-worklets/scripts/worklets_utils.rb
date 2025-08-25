@@ -54,9 +54,9 @@ end
 
 def worklets_assert_minimal_react_native_version(config)
       # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 75
+  minimalReactNativeVersion = 78
   if config[:react_native_minor_version] < minimalReactNativeVersion
-    raise "[Worklets] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
+    raise "[Worklets] Unsupported React Native version. Please use React Native 0.#{minimalReactNativeVersion} or newer."
   end
 end
 
@@ -64,4 +64,30 @@ def worklets_assert_new_architecture_enabled(new_arch_enabled)
   if !new_arch_enabled
     raise "[Worklets] Worklets require the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
   end
+end
+
+def get_static_feature_flags()
+  feature_flags = {}
+
+  static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
+  if !File.exist?(static_feature_flags_path)
+    raise "[Worklets] Feature flags file not found at #{static_feature_flags_path}."
+  end
+  static_feature_flags_json = JSON.parse(File.read(static_feature_flags_path))
+  static_feature_flags_json.each do |key, value|
+    feature_flags[key] = value.to_s
+  end
+
+  package_json_path = File.join(Pod::Config.instance.installation_root.to_s, '..', 'package.json')
+  if File.exist?(package_json_path)
+    package_json = JSON.parse(File.read(package_json_path))
+    if package_json['worklets'] && package_json['worklets']['staticFeatureFlags']
+      feature_flags_json = package_json['worklets']['staticFeatureFlags']
+      feature_flags_json.each do |key, value|
+        feature_flags[key] = value.to_s
+      end
+    end
+  end
+
+  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end

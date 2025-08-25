@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.4.0",
+  "version": "0.5.0-main",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
@@ -9,8 +9,8 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:valueUnpacker",
-    "build:valueUnpacker": "node ./scripts/export-value-unpacker.js",
+    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
+    "build:unpackers": "node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -31,10 +31,11 @@
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
     "test": "jest",
-    "type:check": "yarn type:check:src && yarn type:check:plugin && yarn type:check:app",
+    "type:check": "yarn type:check:src && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
+    "type:check:tests": "../../scripts/test-ts.sh __typetests__",
     "use-strict-check": "node ../../scripts/validate-use-strict.js"
   },
   "repository": {
@@ -47,7 +48,7 @@
   "bugs": {
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://docs.swmansion.com/react-native-reanimated",
+  "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
     "react": "*",
@@ -68,8 +69,8 @@
   "devDependencies": {
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.25.2",
-    "@react-native-community/cli": "19.0.0",
-    "@react-native/eslint-config": "0.80.0",
+    "@react-native-community/cli": "20.0.0",
+    "@react-native/eslint-config": "0.81.0",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.1.0",
     "babel-plugin-worklets": "workspace:*",
@@ -81,9 +82,9 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.1.0",
-    "react-native": "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch",
+    "react-native": "patch:react-native@npm%3A0.81.0#~/.yarn/patches/react-native-npm-0.81.0-96e336150b.patch",
     "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
-    "typescript": "~5.3.0"
+    "typescript": "5.8.3"
   },
   "main": "./lib/module/index",
   "module": "./lib/module/index",

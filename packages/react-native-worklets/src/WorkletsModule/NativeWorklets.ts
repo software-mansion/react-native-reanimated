@@ -1,8 +1,12 @@
 'use strict';
 
+import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
+import type { SynchronizableRef } from '../synchronizable';
+import { checkCppVersion } from '../utils/checkCppVersion';
+import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, WorkletRuntime } from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -14,150 +18,216 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
-  #shareableUndefined: ShareableRef<undefined>;
-  #shareableNull: ShareableRef<null>;
-  #shareableTrue: ShareableRef<boolean>;
-  #shareableFalse: ShareableRef<boolean>;
+  #serializableUndefined: SerializableRef<undefined>;
+  #serializableNull: SerializableRef<null>;
+  #serializableTrue: SerializableRef<boolean>;
+  #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
-    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
+    globalThis._WORKLETS_VERSION_JS = jsVersion;
+    if (
+      global.__workletsModuleProxy === undefined &&
+      globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
+    ) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
         `Native part of Worklets doesn't seem to be initialized.
-See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
+    if (__DEV__) {
+      checkCppVersion();
+    }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
-    this.#shareableNull = this.#workletsModuleProxy.makeShareableNull();
-    this.#shareableUndefined =
-      this.#workletsModuleProxy.makeShareableUndefined();
-    this.#shareableTrue = this.#workletsModuleProxy.makeShareableBoolean(true);
-    this.#shareableFalse =
-      this.#workletsModuleProxy.makeShareableBoolean(false);
+    this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
+    this.#serializableUndefined =
+      this.#workletsModuleProxy.createSerializableUndefined();
+    this.#serializableTrue =
+      this.#workletsModuleProxy.createSerializableBoolean(true);
+    this.#serializableFalse =
+      this.#workletsModuleProxy.createSerializableBoolean(false);
   }
 
-  makeShareableClone<TValue>(
+  createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
-    return this.#workletsModuleProxy.makeShareableClone(
+    return this.#workletsModuleProxy.createSerializable(
       value,
       shouldPersistRemote,
       nativeStateSource
     );
   }
 
-  makeShareableImport<TValue>(from: string, to: string): ShareableRef<TValue> {
-    return this.#workletsModuleProxy.makeShareableImport(from, to);
+  createSerializableImport<TValue>(
+    from: string,
+    to: string
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createSerializableImport(from, to);
   }
 
-  makeShareableString(str: string) {
-    return this.#workletsModuleProxy.makeShareableString(str);
+  createSerializableString(str: string) {
+    return this.#workletsModuleProxy.createSerializableString(str);
   }
 
-  makeShareableNumber(num: number) {
-    return this.#workletsModuleProxy.makeShareableNumber(num);
+  createSerializableNumber(num: number) {
+    return this.#workletsModuleProxy.createSerializableNumber(num);
   }
 
-  makeShareableBoolean(bool: boolean) {
-    return bool ? this.#shareableTrue : this.#shareableFalse;
+  createSerializableBoolean(bool: boolean) {
+    return bool ? this.#serializableTrue : this.#serializableFalse;
   }
 
-  makeShareableBigInt(bigInt: bigint) {
-    return this.#workletsModuleProxy.makeShareableBigInt(bigInt);
+  createSerializableBigInt(bigInt: bigint) {
+    return this.#workletsModuleProxy.createSerializableBigInt(bigInt);
   }
 
-  makeShareableUndefined() {
-    return this.#shareableUndefined;
+  createSerializableUndefined() {
+    return this.#serializableUndefined;
   }
 
-  makeShareableNull() {
-    return this.#shareableNull;
+  createSerializableNull() {
+    return this.#serializableNull;
   }
 
-  makeShareableTurboModuleLike<TProps extends object, TProto extends object>(
-    props: TProps,
-    proto: TProto
-  ): ShareableRef<TProps> {
-    return this.#workletsModuleProxy.makeShareableTurboModuleLike(props, proto);
+  createSerializableTurboModuleLike<
+    TProps extends object,
+    TProto extends object,
+  >(props: TProps, proto: TProto): SerializableRef<TProps> {
+    return this.#workletsModuleProxy.createSerializableTurboModuleLike(
+      props,
+      proto
+    );
   }
 
-  makeShareableObject<T extends object>(
+  createSerializableObject<T extends object>(
     obj: T,
     shouldRetainRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<T> {
-    return this.#workletsModuleProxy.makeShareableObject(
+  ): SerializableRef<T> {
+    return this.#workletsModuleProxy.createSerializableObject(
       obj,
       shouldRetainRemote,
       nativeStateSource
     );
   }
 
-  makeShareableHostObject<T extends object>(obj: T) {
-    return this.#workletsModuleProxy.makeShareableHostObject(obj);
+  createSerializableHostObject<T extends object>(obj: T) {
+    return this.#workletsModuleProxy.createSerializableHostObject(obj);
   }
 
-  makeShareableArray(array: unknown[], shouldRetainRemote: boolean) {
-    return this.#workletsModuleProxy.makeShareableArray(
+  createSerializableArray(array: unknown[], shouldRetainRemote: boolean) {
+    return this.#workletsModuleProxy.createSerializableArray(
       array,
       shouldRetainRemote
     );
   }
 
-  makeShareableMap<TKey, TValue>(
+  createSerializableMap<TKey, TValue>(
     keys: TKey[],
     values: TValue[]
-  ): ShareableRef<Map<TKey, TValue>> {
-    return this.#workletsModuleProxy.makeShareableMap(keys, values);
+  ): SerializableRef<Map<TKey, TValue>> {
+    return this.#workletsModuleProxy.createSerializableMap(keys, values);
   }
 
-  makeShareableSet<TValues>(values: TValues[]): ShareableRef<Set<TValues>> {
-    return this.#workletsModuleProxy.makeShareableSet(values);
+  createSerializableSet<TValues>(
+    values: TValues[]
+  ): SerializableRef<Set<TValues>> {
+    return this.#workletsModuleProxy.createSerializableSet(values);
   }
 
-  makeShareableInitializer(obj: object) {
-    return this.#workletsModuleProxy.makeShareableInitializer(obj);
+  createSerializableInitializer(obj: object) {
+    return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  makeShareableFunction<TArgs extends unknown[], TReturn>(
+  createSerializableFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
   ) {
-    return this.#workletsModuleProxy.makeShareableFunction(func);
+    return this.#workletsModuleProxy.createSerializableFunction(func);
   }
 
-  makeShareableWorklet(worklet: object, shouldPersistRemote: boolean) {
-    return this.#workletsModuleProxy.makeShareableWorklet(
+  createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
+    return this.#workletsModuleProxy.createSerializableWorklet(
       worklet,
       shouldPersistRemote
     );
   }
 
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(shareable);
+  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: ShareableRef<TValue>
+    serializable: SerializableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
+    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
   }
 
-  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.#workletsModuleProxy.createWorkletRuntime(name, initializer);
+  createWorkletRuntime(
+    name: string,
+    initializer: SerializableRef<() => void>,
+    useDefaultQueue: boolean,
+    customQueue: object | undefined
+  ) {
+    return this.#workletsModuleProxy.createWorkletRuntime(
+      name,
+      initializer,
+      useDefaultQueue,
+      customQueue
+    );
   }
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<T>
+    serializableWorklet: SerializableRef<T>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      shareableWorklet
+      serializableWorklet
     );
+  }
+
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizable(value);
+  }
+
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetDirty(synchronizableRef);
+  }
+
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetBlocking(
+      synchronizableRef
+    );
+  }
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableLock(synchronizableRef);
+  }
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
   reportFatalErrorOnJS(
@@ -172,5 +242,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       name,
       jsEngine
     );
+  }
+
+  setDynamicFeatureFlag(name: string, value: boolean) {
+    this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 }

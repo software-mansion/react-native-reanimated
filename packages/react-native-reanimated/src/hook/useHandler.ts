@@ -27,7 +27,7 @@ type GeneralHandlers<
 type GeneralWorkletHandlers<
   Event extends object,
   Context extends Record<string, unknown>,
-> = Record<string, GeneralWorkletHandler<Event, Context> | undefined>;
+> = Record<string, GeneralWorkletHandler<Event, Context>>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
   context: Context;
@@ -86,14 +86,14 @@ export function useHandler<
   for (const handlerName in handlers) {
     if (!isWorkletFunction(handlers[handlerName])) {
       throw new ReanimatedError(
-        'Passed a function is not a worklet. Please provide a worklet function.'
+        'Passed a function that is not a worklet. Please provide a worklet function.'
       );
     }
   }
 
   dependencies = buildDependencies(
     dependencies,
-    handlers as Record<string, WorkletFunction | undefined>
+    handlers as Record<string, WorkletFunction>
   );
 
   const doDependenciesDiffer = !areDependenciesEqual(

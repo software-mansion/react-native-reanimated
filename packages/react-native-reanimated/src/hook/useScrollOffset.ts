@@ -1,10 +1,8 @@
 'use strict';
-import type { Component } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-import type { ScrollView, ScrollViewProps } from 'react-native';
 
 import { IS_WEB, logger } from '../common';
-import type { SharedValue } from '../commonTypes';
+import type { SharedValue, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   ReanimatedScrollEvent,
@@ -15,7 +13,7 @@ import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
-  'animatedRef is not initialized in useScrollViewOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
+  'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 
 const NATIVE_SCROLL_EVENT_NAMES = [
   'onScroll',
@@ -24,11 +22,6 @@ const NATIVE_SCROLL_EVENT_NAMES = [
   'onMomentumScrollBegin',
   'onMomentumScrollEnd',
 ] as const;
-
-type ScrollableComponent = Component<
-  Pick<ScrollViewProps, (typeof NATIVE_SCROLL_EVENT_NAMES)[number]>
-> &
-  Pick<ScrollView, 'getScrollableNode'>;
 
 /**
  * Lets you synchronously get the current offset of a scrollable component.
@@ -44,8 +37,8 @@ export const useScrollOffset = IS_WEB
   ? useScrollOffsetWeb
   : useScrollOffsetNative;
 
-function useScrollOffsetWeb<C extends ScrollableComponent>(
-  animatedRef: AnimatedRef<C> | null,
+function useScrollOffsetWeb<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -53,7 +46,7 @@ function useScrollOffsetWeb<C extends ScrollableComponent>(
 
   const eventHandler = useCallback(() => {
     'worklet';
-    if (animatedRef) {
+    if (animatedRef?.current) {
       const element = getWebScrollableElement(animatedRef.current);
       // scrollLeft is the X axis scrolled offset, works properly also with RTL layout
       offset.value =
@@ -67,7 +60,7 @@ function useScrollOffsetWeb<C extends ScrollableComponent>(
     }
 
     return animatedRef.observe((tag) => {
-      if (!tag) {
+      if (!animatedRef.current || !tag) {
         logger.warn(NOT_INITIALIZED_WARNING);
         return;
       }
@@ -84,8 +77,8 @@ function useScrollOffsetWeb<C extends ScrollableComponent>(
   return offset;
 }
 
-function useScrollOffsetNative<C extends ScrollableComponent>(
-  animatedRef: AnimatedRef<C> | null,
+function useScrollOffsetNative<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef> | null,
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
@@ -125,11 +118,6 @@ function useScrollOffsetNative<C extends ScrollableComponent>(
   return offset;
 }
 
-function getWebScrollableElement(
-  scrollComponent: ScrollableComponent | null
-): HTMLElement {
-  return (
-    (scrollComponent?.getScrollableNode() as unknown as HTMLElement) ??
-    scrollComponent
-  );
+function getWebScrollableElement(scrollComponent: WrapperRef): HTMLElement {
+  return scrollComponent?.getScrollableNode?.() ?? scrollComponent;
 }

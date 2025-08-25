@@ -11,12 +11,14 @@ set(CMAKE_CXX_STANDARD 20)
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")
 add_compile_options(${folly_FLAGS})
 
-string(APPEND CMAKE_CXX_FLAGS
-       " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}")
+string(
+  APPEND
+  CMAKE_CXX_FLAGS
+  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
+         -DWORKLETS_VERSION=${WORKLETS_VERSION}\
+         -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
-string(APPEND CMAKE_CXX_FLAGS
-       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
-  -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
@@ -56,6 +58,15 @@ endif()
 
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
+  include(
+    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  target_compile_reactnative_options(worklets PUBLIC)
+else()
+  string(APPEND CMAKE_CXX_FLAGS
+         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+endif()
 
 # includes
 target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"

@@ -1,8 +1,8 @@
 'use strict';
-import type { MutableRefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import type { RefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { isWorkletFunction } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
@@ -17,7 +17,7 @@ import type {
   StyleProps,
   Timestamp,
 } from '../commonTypes';
-import { makeMutable, makeShareable, startMapper, stopMapper } from '../core';
+import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -29,6 +29,7 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
+import { useSharedValue } from './useSharedValue';
 import {
   buildWorkletsHash,
   isAnimated,
@@ -305,7 +306,7 @@ function jestStyleUpdater(
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[],
   forceUpdate?: boolean
 ): void {
@@ -487,7 +488,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
       : [adapters]
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
-  const [areAnimationsActive] = useState(() => makeMutable(true));
+  const areAnimationsActive = useSharedValue<boolean>(true);
   const jestAnimatedValues = useRef<Style | AnimatedProps>(
     {} as Style | AnimatedProps
   );
@@ -579,6 +580,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }, dependencies);
 
   useEffect(() => {
+    areAnimationsActive.value = true;
     return () => {
       areAnimationsActive.value = false;
     };

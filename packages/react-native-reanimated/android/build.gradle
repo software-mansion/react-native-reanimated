@@ -42,6 +42,35 @@ def resolveReactNativeDirectory() {
     )
 }
 
+def resolveReactNativeWorkletsDirectory() {
+    def reactNativeWorkletsLocation = safeAppExtGet("REACT_NATIVE_WORKLETS_NODE_MODULES_DIR", null)
+    if (reactNativeWorkletsLocation != null) {
+        return file(reactNativeWorkletsLocation)
+    }
+
+    // Fallback to node resolver for custom directory structures like monorepos.
+    def reactNativeWorkletsPackage = file(
+        providers.exec {
+            workingDir(rootDir)
+            commandLine("node", "--print", "require.resolve('react-native-worklets/package.json')")
+        }.standardOutput.asText.get().trim()
+    )
+    if (reactNativeWorkletsPackage.exists()) {
+        return reactNativeWorkletsPackage.parentFile
+    }
+
+    throw new GradleException(
+        "[Reanimated] Unable to resolve react-native-worklets location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_WORKLETS_NODE_MODULES_DIR` with the path to react-native-worklets in node_modules."
+    )
+}
+
+def getReactNativeVersion() {
+    def reactNativeRootDir = resolveReactNativeDirectory()
+    def reactProperties = new Properties()
+    file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+    return reactProperties.getProperty("VERSION_NAME")
+}
+
 def getReactNativeMinorVersion() {
     def reactNativeRootDir = resolveReactNativeDirectory()
     def reactProperties = new Properties()
@@ -61,18 +90,6 @@ def toPlatformFileString(String path) {
       path = path.replace(File.separatorChar, '/' as char)
   }
   return path
-}
-
-def validateWorkletsVersion() {
-    def result = providers.exec {
-        workingDir(projectDir.path)
-        commandLine("node", "./../scripts/validate-worklets-version.js")
-        ignoreExitValue = true
-    }
-
-    if (result.getResult().get().exitValue != 0) {
-        throw new GradleException(result.getStandardError().getAsText().get().trim())
-    }
 }
 
 def getReanimatedStaticFeatureFlags() {
@@ -101,8 +118,11 @@ if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
 
+def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
+def reactNativeWorkletsRootDir = resolveReactNativeWorkletsDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
+def REACT_NATIVE_VERSION = getReactNativeVersion()
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
@@ -181,6 +201,7 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
+                        "-DREACT_NATIVE_WORKLETS_DIR=${toPlatformFileString(reactNativeWorkletsRootDir.path)}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
@@ -237,8 +258,8 @@ android {
         ]
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     tasks.withType(ExternalNativeBuildJsonTask) {
         compileTask ->
@@ -246,7 +267,6 @@ android {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
-                def packageDir = new File("${project.projectDir}/..")
 
                 def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
                 def output = new File("${packageDir}/compile_commands.json")
@@ -258,12 +278,17 @@ android {
     }
 }
 
+def validateReactNativeVersionResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-react-native-version.js", REACT_NATIVE_VERSION.toString())
+    ignoreExitValue = true
+}
+
 task assertMinimalReactNativeVersionTask {
-    // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 75
-    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
+        if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 
@@ -278,9 +303,17 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
+def validateWorkletsBuildResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-worklets-build.js")
+    ignoreExitValue = true
+}
+
 task assertWorkletsVersionTask {
     doFirst {
-        validateWorkletsVersion()
+        if (validateWorkletsBuildResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateWorkletsBuildResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 
@@ -324,3 +357,12 @@ dependencies {
 }
 
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
+
+if (project != rootProject) {
+    evaluationDependsOn(":react-native-worklets")
+
+    afterEvaluate {
+        tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
+        tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
+    }
+}

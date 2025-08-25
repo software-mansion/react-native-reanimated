@@ -8,7 +8,7 @@ GroupPropertiesInterpolator::GroupPropertiesInterpolator(
     : PropertyInterpolator(propertyPath, viewStylesRepository) {}
 
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
         return interpolator.getStyleValue(shadowNode);
@@ -16,7 +16,7 @@ folly::dynamic GroupPropertiesInterpolator::getStyleValue(
 }
 
 folly::dynamic GroupPropertiesInterpolator::getResetStyle(
-    const ShadowNode::Shared &shadowNode) const {
+    const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
         return interpolator.getResetStyle(shadowNode);
@@ -38,7 +38,7 @@ folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
 }
 
 folly::dynamic GroupPropertiesInterpolator::interpolate(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {

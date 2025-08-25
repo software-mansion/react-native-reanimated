@@ -17,6 +17,9 @@ const config = tsEslint.config(
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
+      'n/no-unpublished-import': ['warn', {
+        "ignoreTypeImport": true
+      }],
     },
   },
   {
@@ -37,7 +40,14 @@ const config = tsEslint.config(
       'no-unused-expressions': 'error',
       'camelcase': 'error',
     },
-  }
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+      'jest/unbound-method': 'error',
+    },
+  },
 );
 
 export default config;

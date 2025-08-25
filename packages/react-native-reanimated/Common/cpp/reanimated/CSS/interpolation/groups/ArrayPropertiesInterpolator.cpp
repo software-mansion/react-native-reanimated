@@ -31,13 +31,16 @@ bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(
 }
 
 void ArrayPropertiesInterpolator::updateKeyframes(
-    const folly::dynamic &keyframes) {
-  const size_t valuesCount = keyframes.size();
+    jsi::Runtime &rt,
+    const jsi::Value &keyframes) {
+  const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
+  const size_t valuesCount = keyframesArray.size(rt);
 
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    interpolators_[i]->updateKeyframes(keyframes[i]);
+    interpolators_[i]->updateKeyframes(
+        rt, keyframesArray.getValueAtIndex(rt, i));
   }
 }
 
@@ -45,14 +48,19 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
-  const folly::dynamic empty = folly::dynamic::array();
-  const auto oldStyleArray = !oldStyleValue.empty() ? oldStyleValue : empty;
-  const auto newStyleArray = !newStyleValue.empty() ? newStyleValue : empty;
-  const auto lastUpdateArray =
-      !lastUpdateValue.empty() ? lastUpdateValue : empty;
+  const auto emptyArray = folly::dynamic::array();
+  const auto null = folly::dynamic();
+
+  const auto &oldStyleArray =
+      oldStyleValue.empty() ? emptyArray : oldStyleValue;
+  const auto &newStyleArray =
+      newStyleValue.empty() ? emptyArray : newStyleValue;
+  const auto &lastUpdateArray =
+      lastUpdateValue.empty() ? emptyArray : lastUpdateValue;
 
   const size_t oldSize = oldStyleArray.size();
   const size_t newSize = newStyleArray.size();
+  const size_t lastSize = lastUpdateArray.size();
   const size_t valuesCount = std::max(oldSize, newSize);
 
   resizeInterpolators(valuesCount);
@@ -61,9 +69,9 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
     interpolators_[i]->updateKeyframesFromStyleChange(
-        i < oldSize ? oldStyleArray[i] : empty,
-        i < newSize ? newStyleArray[i] : empty,
-        i < valuesCount ? lastUpdateArray[i] : empty);
+        i < oldSize ? oldStyleArray[i] : null,
+        i < newSize ? newStyleArray[i] : null,
+        i < lastSize ? lastUpdateArray[i] : null);
   }
 }
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 # runOnRuntime
@@ -9,7 +9,7 @@ sidebar_position: 3
 ## Reference
 
 ```javascript
-import { createWorkletRuntime, runOnRuntime } from 'react-native-reanimated';
+import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
 const workletRuntime = createWorkletRuntime('background');
 
@@ -64,7 +64,3 @@ Don't forget to call the function returned from `runOnRuntime`.
 - You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
 
 - The function passed to `runOnRuntime` will be added to an execution queue on a separate thread and executed asynchronously on the specified worklet runtime. The functions will be executed in the order they were added to the queue.
-
-## Platform compatibility
-
-<PlatformCompatibility android ios />

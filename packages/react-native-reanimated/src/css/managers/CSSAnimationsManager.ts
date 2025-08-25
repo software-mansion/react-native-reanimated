@@ -4,15 +4,15 @@ import { CSSKeyframesRuleImpl } from '../models';
 import type {
   CSSAnimationUpdates,
   NormalizedSingleCSSAnimationSettings,
-} from '../platform/native';
+} from '../platforms/native';
 import {
   applyCSSAnimations,
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
   unregisterCSSAnimations,
-} from '../platform/native';
-import { cssKeyframesRegistry } from '../registry';
+} from '../platforms/native';
+import { cssKeyframesRegistry } from '../registries';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
@@ -25,14 +25,20 @@ type ProcessedAnimation = {
 };
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
-  private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
+  private readonly viewName: string;
+  private readonly viewTag: number;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
-  constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
-    this.viewTag = viewTag;
+  constructor(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    viewName: string,
+    viewTag: number
+  ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
+    this.viewName = viewName;
+    this.viewTag = viewTag;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -77,7 +83,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      cssKeyframesRegistry.add(keyframesRule, this.viewTag);
+      cssKeyframesRegistry.add(keyframesRule, this.viewName, this.viewTag);
       newAnimationNames.add(keyframesRule.name);
     });
 
@@ -85,7 +91,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // to the view
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
       if (!newAnimationNames.has(name)) {
-        cssKeyframesRegistry.remove(name, this.viewTag);
+        cssKeyframesRegistry.remove(name, this.viewName, this.viewTag);
       }
     });
   }
@@ -94,7 +100,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // Unregister keyframes usage by the view (it is necessary to clean up
     // keyframes from the CPP registry once all views that use them are unmounted)
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-      cssKeyframesRegistry.remove(name, this.viewTag);
+      cssKeyframesRegistry.remove(name, this.viewName, this.viewTag);
     });
   }
 

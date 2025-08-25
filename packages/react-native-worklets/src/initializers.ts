@@ -1,11 +1,16 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
-import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { mockedRequestAnimationFrame } from './runLoop/mockedRequestAnimationFrame';
+import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
+import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/setIntervalPolyfill';
+import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { RuntimeKind } from './runtimeKind';
+import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -80,13 +85,19 @@ export function init() {
   }
   initialized = true;
 
+  if (globalThis.__RUNTIME_KIND === undefined) {
+    // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+    // is the RN Runtime. We must set it as soon as possible.
+    globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+  }
+
   initializeRuntime();
 
   if (SHOULD_BE_USE_WEB) {
     initializeRuntimeOnWeb();
   }
 
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     initializeWorkletRuntime();
   } else {
     initializeRNRuntime();
@@ -101,6 +112,7 @@ function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
+  installSynchronizableUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -123,6 +135,69 @@ function initializeRNRuntime() {
 function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     setupCallGuard();
+
+    if (__DEV__) {
+      /*
+       * Temporary workaround for Metro bundler. We must implement a dummy
+       * Refresh module to prevent Metro from throwing irrelevant errors.
+       */
+      const Refresh = new Proxy(
+        {},
+        {
+          get() {
+            return () => {};
+          },
+        }
+      );
+
+      globalThis.__r.Refresh = Refresh;
+
+      /* Gracefully handle unwanted imports from React Native. */
+      // @ts-expect-error type not exposed by Metro
+      const modules = require.getModules();
+      // @ts-expect-error type not exposed by Metro
+      const ReactNativeModuleId = require.resolveWeak('react-native');
+
+      const factory = function (
+        _global: unknown,
+        _require: unknown,
+        _importDefault: unknown,
+        _importAll: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports = new Proxy(
+          {},
+          {
+            get: function get(_target, prop) {
+              globalThis.console.warn(
+                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
+              );
+              return {
+                get() {
+                  return undefined;
+                },
+              };
+            },
+          }
+        );
+      };
+
+      const mod = {
+        dependencyMap: [],
+        factory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(ReactNativeModuleId, mod);
+    }
   }
 }
 
@@ -180,5 +255,8 @@ function installRNBindingsOnUIRuntime() {
      */
     setupMicrotasks();
     setupRequestAnimationFrame();
+    setupSetTimeout();
+    setupSetImmediate();
+    setupSetInterval();
   })();
 }

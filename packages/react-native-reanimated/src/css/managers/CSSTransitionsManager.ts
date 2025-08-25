@@ -1,15 +1,15 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
-import type { NormalizedCSSTransitionConfig } from '../platform/native';
+import type { NormalizedCSSTransitionConfig } from '../platforms/native';
 import {
   getNormalizedCSSTransitionConfigUpdates,
   normalizeCSSTransitionProperties,
-} from '../platform/native';
+} from '../platforms/native';
 import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../platform/native/native';
+} from '../platforms/native/native';
 import type { CSSTransitionProperties } from '../types';
 import type { ICSSTransitionsManager } from '../types/interfaces';
 

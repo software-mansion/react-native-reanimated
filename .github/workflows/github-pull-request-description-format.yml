@@ -1,11 +1,11 @@
 name: GitHub Pull Request description format
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
 
 jobs:
-  format-pull-request-description:
+  github-pull-request-description-format:
     runs-on: ubuntu-latest
     steps:
       - name: Update PR Description

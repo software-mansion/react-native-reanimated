@@ -31,7 +31,7 @@ def find_config()
     raise '[Reanimated] Unable to recognize your `react-native` version. Please set environmental variable with `react-native` location: `export REACT_NATIVE_NODE_MODULES_DIR="<path to react-native>" && pod install`.'
   end
 
-  validate_worklets_script = File.expand_path(File.join(__dir__, 'validate-worklets-version.js'))
+  validate_worklets_script = File.expand_path(File.join(__dir__, 'validate-worklets-build.js'))
   unless system("node \"#{validate_worklets_script}\"")
     abort("[Reanimated] Failed to validate worklets version")
   end
@@ -64,10 +64,9 @@ def find_config()
 end
 
 def assert_minimal_react_native_version(config)
-      # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 75
-  if config[:react_native_minor_version] < minimalReactNativeVersion
-    raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
+  validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
+  unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
+    raise "[Reanimated] React Native version is not compatible with Reanimated"
   end
 end
 

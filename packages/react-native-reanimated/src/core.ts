@@ -4,7 +4,7 @@ import {
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareableCloneRecursive } from 'react-native-worklets';
+import { createSerializable } from 'react-native-worklets';
 
 import { logger, ReanimatedError } from './common';
 import type {
@@ -15,27 +15,20 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-export {
-  createWorkletRuntime,
-  executeOnUIRuntimeSync,
-  makeShareable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
-} from 'react-native-worklets';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 
 /**
  * @deprecated Please use the exported variable `reanimatedVersion` instead.
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
  */
 export const isReanimated3 = () => {
   logger.warn(
@@ -47,17 +40,16 @@ export const isReanimated3 = () => {
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
 /**
- * @deprecated This function was superseded by other checks. We keep it here for
- *   backward compatibility reasons. If you need to check if you are using
- *   Reanimated 3 or Reanimated 2 please use `isReanimated3` function instead.
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
+ * @deprecated Please use the exported variable `reanimatedVersion` instead.
+ * @returns `false` in Reanimated 4, `true` in Reanimated 3, doesn't exist in
+ *   Reanimated 2 or 1
  */
 export const isConfigured = isReanimated3;
 
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
-  component?: React.Component // required on Fabric
+  component?: WrapperRef | null // required on Fabric
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(
@@ -72,7 +64,7 @@ export function getViewProp<T>(
       propName,
       component,
       (result: T) => {
-        if (typeof result === 'string' && result.substr(0, 6) === 'error:') {
+        if (typeof result === 'string' && result.slice(0, 6) === 'error:') {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
           reject(result);
         } else {
@@ -97,15 +89,14 @@ export function registerEventHandler<T>(
 ): number {
   function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
     global.__flushAnimationFrame(eventTimestamp);
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -123,6 +114,7 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
+    // TODO: Fix this and don't call `__flushAnimationFrame` here.
     const now = global._getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);
@@ -139,9 +131,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(
-      handleAndFlushAnimationFrame as WorkletFunction
-    ),
+    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
@@ -163,7 +153,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler as WorkletFunction)
+    createSerializable(eventHandler as WorkletFunction)
   );
 }
 

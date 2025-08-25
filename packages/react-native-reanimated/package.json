@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.0.0-beta.5",
+  "version": "4.1.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -26,10 +26,10 @@
     "format:android:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/format-cmake.sh",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "find-unused-code:js": "knip",
-    "type:check": "yarn type:check:src && yarn type:check:app && ./scripts/test-ts.sh __typetests__/common",
+    "type:check": "yarn type:check:src && yarn type:check:app && yarn type:check:tests:common",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
-    "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
+    "type:check:tests:common": "../../scripts/test-ts.sh __typetests__/common",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "use-strict-check": "node ../../scripts/validate-use-strict.js",
@@ -52,8 +52,11 @@
     "apple/",
     "RNReanimated.podspec",
     "scripts/reanimated_utils.rb",
+    "scripts/validate-worklets-build.js",
     "scripts/validate-worklets-version.js",
     "scripts/worklets-version.json",
+    "scripts/validate-react-native-version.js",
+    "compatibility.json",
     "mock.js",
     "plugin/index.js",
     "metro-config",
@@ -85,8 +88,8 @@
   },
   "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
-    "react-native-is-edge-to-edge": "1.1.7",
-    "semver": "^7.7.1"
+    "react-native-is-edge-to-edge": "^1.2.1",
+    "semver": "7.7.2"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
@@ -99,10 +102,11 @@
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/types": "^7.20.0",
-    "@react-native/babel-preset": "0.80.0",
-    "@react-native/eslint-config": "0.80.0",
-    "@react-native/metro-config": "0.80.0",
-    "@react-native/typescript-config": "0.80.0",
+    "@react-native/babel-preset": "0.81.0",
+    "@react-native/eslint-config": "0.81.0",
+    "@react-native/metro-config": "0.81.0",
+    "@react-native/typescript-config": "0.81.0",
+    "@shopify/flash-list": "2.0.2",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^13.0.1",
@@ -140,14 +144,15 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.1.0",
-    "react-native": "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch",
+    "react-native": "patch:react-native@npm%3A0.81.0#~/.yarn/patches/react-native-npm-0.81.0-96e336150b.patch",
     "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
-    "react-native-gesture-handler": "2.26.0",
+    "react-native-gesture-handler": "2.28.0",
+    "react-native-svg": "15.12.1",
     "react-native-web": "0.20.0",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.1.0",
     "shelljs": "^0.8.5",
-    "typescript": "~5.3.0"
+    "typescript": "5.8.3"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -165,15 +170,10 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "all",
+    "type": "modules",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
-    },
-    "ios": {
-      "componentProvider": {
-        "ReanimatedView": "ReanimatedView"
-      }
     }
   },
   "sideEffects": [

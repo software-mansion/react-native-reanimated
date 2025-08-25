@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
-import type React from 'react';
 import type {
   IWorkletsModule,
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
 import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
@@ -19,12 +18,13 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/platforms/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -102,7 +102,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) {
     return this.#reanimatedModuleProxy.registerSensor(
       sensorType,
@@ -117,7 +117,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   registerEventHandler<T>(
-    eventHandler: ShareableRef<T>,
+    eventHandler: SerializableRef<T>,
     eventName: string,
     emitterReactTag: number
   ) {
@@ -135,12 +135,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined, // required on Fabric
+    component: WrapperRef, // required on Fabric
     callback?: (result: T) => void
   ) {
-    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
-      component as React.Component
-    );
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     return this.#reanimatedModuleProxy.getViewProp(
       shadowNodeWrapper,
       propName,
@@ -168,7 +166,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<WorkletFunction>,
+    handler: SerializableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ) {
@@ -197,16 +195,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSKeyframes(
     animationName: string,
+    viewName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
+      viewName,
       keyframesConfig
     );
   }
 
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  unregisterCSSKeyframes(animationName: string, viewName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName, viewName);
   }
 
   applyCSSAnimations(

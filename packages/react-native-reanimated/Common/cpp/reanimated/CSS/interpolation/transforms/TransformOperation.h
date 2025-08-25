@@ -1,14 +1,13 @@
 #pragma once
 
-#include <reanimated/CSS/common/TransformMatrix.h>
+#include <reanimated/CSS/common/TransformMatrix3D.h>
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
-#include <folly/dynamic.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -58,6 +57,9 @@ struct TransformOperation {
   virtual TransformOperationType type() const = 0;
   virtual bool isRelative() const;
 
+  static std::shared_ptr<TransformOperation> fromJSIValue(
+      jsi::Runtime &rt,
+      const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(
       const folly::dynamic &value);
   folly::dynamic toDynamic() const;
@@ -67,7 +69,7 @@ struct TransformOperation {
   virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
       TransformOperationType type) const;
 
-  virtual TransformMatrix toMatrix() const = 0;
+  virtual TransformMatrix3D toMatrix() const = 0;
   void assertCanConvertTo(TransformOperationType type) const;
 };
 
@@ -96,7 +98,7 @@ struct PerspectiveOperation final : public TransformOperationBase<CSSDouble> {
   explicit PerspectiveOperation(double value);
   TransformOperationType type() const override;
   folly::dynamic valueToDynamic() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 // Rotate
@@ -105,25 +107,25 @@ struct RotateOperation : public TransformOperationBase<CSSAngle> {
   explicit RotateOperation(const std::string &value);
   TransformOperationType type() const override;
   folly::dynamic valueToDynamic() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct RotateXOperation final : public RotateOperation {
   using RotateOperation::RotateOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct RotateYOperation final : public RotateOperation {
   using RotateOperation::RotateOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct RotateZOperation final : public RotateOperation {
   using RotateOperation::RotateOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
   bool canConvertTo(TransformOperationType type) const override;
   TransformOperations convertTo(TransformOperationType type) const override;
 };
@@ -136,42 +138,42 @@ struct ScaleOperation : public TransformOperationBase<CSSDouble> {
   folly::dynamic valueToDynamic() const override;
   bool canConvertTo(TransformOperationType type) const override;
   TransformOperations convertTo(TransformOperationType type) const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct ScaleXOperation final : public ScaleOperation {
   using ScaleOperation::ScaleOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct ScaleYOperation final : public ScaleOperation {
   using ScaleOperation::ScaleOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 // Translate
-struct TranslateOperation : public TransformOperationBase<CSSDimension> {
-  using TransformOperationBase<CSSDimension>::TransformOperationBase;
+struct TranslateOperation : public TransformOperationBase<CSSLength> {
+  using TransformOperationBase<CSSLength>::TransformOperationBase;
   explicit TranslateOperation(double value);
   explicit TranslateOperation(const std::string &value);
   bool isRelative() const override;
   folly::dynamic valueToDynamic() const override;
-  virtual TransformMatrix toMatrix(double resolvedValue) const = 0;
-  TransformMatrix toMatrix() const override;
+  virtual TransformMatrix3D toMatrix(double resolvedValue) const = 0;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct TranslateXOperation final : public TranslateOperation {
   using TranslateOperation::TranslateOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix(double resolvedValue) const override;
+  TransformMatrix3D toMatrix(double resolvedValue) const override;
 };
 
 struct TranslateYOperation final : public TranslateOperation {
   using TranslateOperation::TranslateOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix(double resolvedValue) const override;
+  TransformMatrix3D toMatrix(double resolvedValue) const override;
 };
 
 // Skew
@@ -184,30 +186,30 @@ struct SkewOperation : public TransformOperationBase<CSSAngle> {
 struct SkewXOperation final : public SkewOperation {
   using SkewOperation::SkewOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 struct SkewYOperation final : public SkewOperation {
   using SkewOperation::SkewOperation;
   TransformOperationType type() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 // Matrix
 struct MatrixOperation final
     : public TransformOperationBase<
-          std::variant<TransformMatrix, TransformOperations>> {
+          std::variant<TransformMatrix3D, TransformOperations>> {
   using TransformOperationBase<
-      std::variant<TransformMatrix, TransformOperations>>::
+      std::variant<TransformMatrix3D, TransformOperations>>::
       TransformOperationBase;
-  explicit MatrixOperation(const TransformMatrix &value);
+  explicit MatrixOperation(const TransformMatrix3D &value);
   explicit MatrixOperation(const TransformOperations &operations);
 
   bool operator==(const TransformOperation &other) const override;
 
   TransformOperationType type() const override;
   folly::dynamic valueToDynamic() const override;
-  TransformMatrix toMatrix() const override;
+  TransformMatrix3D toMatrix() const override;
 };
 
 } // namespace reanimated::css

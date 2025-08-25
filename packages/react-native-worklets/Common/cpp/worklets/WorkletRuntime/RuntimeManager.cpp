@@ -5,8 +5,6 @@
 
 namespace worklets {
 
-const std::string uiRuntimeName{"UI"};
-
 std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   std::shared_lock lock(weakRuntimesMutex_);
   if (weakRuntimes_.contains(runtimeId)) {
@@ -23,6 +21,17 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
   }
   return nullptr;
 }
+
+#ifdef WORKLETS_BUNDLE_MODE
+std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(
+    jsi::Runtime *runtime) {
+  std::shared_lock lock(weakRuntimesMutex_);
+  if (runtimeAddressToRuntimeId_.contains(runtime)) {
+    return getRuntime(runtimeAddressToRuntimeId_.at(runtime));
+  }
+  return nullptr;
+}
+#endif // WORKLETS_BUNDLE_MODE
 
 std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
   std::shared_lock lock(weakRuntimesMutex_);
@@ -45,65 +54,51 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
-    const bool supportsLocking,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl,
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
+    const std::string &name,
+    std::shared_ptr<SerializableWorklet> initializer,
+    const std::shared_ptr<AsyncQueue> &queue) {
   const auto runtimeId = getNextRuntimeId();
+  const auto jsQueue = jsiWorkletsModuleProxy->getJSQueue();
 
-  auto workletRuntime = std::make_shared<WorkletRuntime>(
-      runtimeId,
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
-      jsScheduler,
-      name.asString(rt).utf8(rt),
-      true /* supportsLocking */,
-      isDevBundle,
-      script,
-      sourceUrl);
+  auto workletRuntime =
+      std::make_shared<WorkletRuntime>(runtimeId, jsQueue, name, queue);
 
-  if (!initializer.isUndefined()) {
-    auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-        rt, initializer, "[Worklets] Initializer must be a worklet.");
-    workletRuntime->runGuarded(initializerShareable);
+  workletRuntime->init(std::move(jsiWorkletsModuleProxy));
+
+  if (initializer) {
+    workletRuntime->runGuarded(initializer);
   }
 
-  std::unique_lock lock(weakRuntimesMutex_);
-  weakRuntimes_[runtimeId] = workletRuntime;
-  nameToRuntimeId_[name.asString(rt).utf8(rt)] = runtimeId;
+  registerRuntime(runtimeId, name, workletRuntime);
 
   return workletRuntime;
 }
 
-std::shared_ptr<WorkletRuntime> RuntimeManager::createUIRuntime(
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
+std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl) {
+    const std::shared_ptr<AsyncQueue> &uiAsyncQueue) {
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
-      uiRuntimeId,
-      std::move(jsiWorkletsModuleProxy),
-      jsQueue,
-      jsScheduler,
-      uiRuntimeName,
-      true /* supportsLocking */,
-      isDevBundle,
-      script,
-      sourceUrl);
-  std::unique_lock lock(weakRuntimesMutex_);
-  weakRuntimes_[uiRuntimeId] = uiRuntime;
+      uiRuntimeId, jsQueue, uiRuntimeName, uiAsyncQueue);
+
+  registerRuntime(uiRuntimeId, uiRuntimeName, uiRuntime);
+
   return uiRuntime;
 }
 
 uint64_t RuntimeManager::getNextRuntimeId() {
   return nextRuntimeId_.fetch_add(1, std::memory_order_relaxed);
+}
+
+void RuntimeManager::registerRuntime(
+    const uint64_t runtimeId,
+    const std::string &name,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  std::unique_lock lock(weakRuntimesMutex_);
+  weakRuntimes_[runtimeId] = workletRuntime;
+  nameToRuntimeId_[name] = runtimeId;
+#ifdef WORKLETS_BUNDLE_MODE
+  runtimeAddressToRuntimeId_[&workletRuntime->getJSIRuntime()] = runtimeId;
+#endif // WORKLETS_BUNDLE_MODE
 }
 
 } // namespace worklets
