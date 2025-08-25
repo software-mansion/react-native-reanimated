@@ -66,7 +66,7 @@ def worklets_assert_new_architecture_enabled(new_arch_enabled)
   end
 end
 
-def get_static_feature_flags()
+def worklets_get_static_feature_flags()
   feature_flags = {}
 
   static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')
