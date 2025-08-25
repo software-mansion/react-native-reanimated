@@ -6,7 +6,6 @@ import type { ReactTestInstance } from 'react-test-renderer';
 import { IS_JEST, logger, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
-  AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
@@ -52,7 +51,7 @@ type JestInlineStyle =
 
 const getCurrentProps = (
   component: TestComponent
-): Partial<AnimatedComponentProps<AnimatedProps>> => {
+): Partial<AnimatedComponentProps> => {
   const propsObject = component.props.jestAnimatedProps?.value;
 
   return propsObject ? { ...propsObject } : {};
@@ -134,8 +133,8 @@ const checkEqual = <Value>(current: Value, expected: Value) => {
 };
 
 const findStyleDiff = (
-  current: DefaultStyle | Partial<AnimatedComponentProps<AnimatedProps>>,
-  expected: DefaultStyle | Partial<AnimatedComponentProps<AnimatedProps>>,
+  current: DefaultStyle | Partial<AnimatedComponentProps>,
+  expected: DefaultStyle | Partial<AnimatedComponentProps>,
   shouldMatchAllProps?: boolean
 ) => {
   const diffs = [];
@@ -174,8 +173,8 @@ const findStyleDiff = (
 };
 
 const compareAndFormatDifferences = (
-  currentValues: Partial<AnimatedComponentProps<AnimatedProps>> | DefaultStyle,
-  expectedValues: Partial<AnimatedComponentProps<AnimatedProps>> | DefaultStyle,
+  currentValues: Partial<AnimatedComponentProps> | DefaultStyle,
+  expectedValues: Partial<AnimatedComponentProps> | DefaultStyle,
   shouldMatchAllProps: boolean = false
 ): { message: () => string; pass: boolean } => {
   const { isEqual, diffs } = findStyleDiff(
@@ -206,7 +205,7 @@ const compareAndFormatDifferences = (
 
 const compareProps = (
   component: TestComponent,
-  expectedProps: Partial<AnimatedComponentProps<AnimatedProps>>
+  expectedProps: Partial<AnimatedComponentProps>
 ) => {
   if (
     component.props.jestAnimatedProps &&
@@ -317,7 +316,7 @@ export const setUpTests = (userFramerateConfig = {}) => {
         AnimatedComponentProps<InitialComponentProps>
       > &
         IAnimatedComponentInternal,
-      expectedProps: Partial<AnimatedComponentProps<AnimatedProps>>
+      expectedProps: Partial<AnimatedComponentProps>
     ) {
       return compareProps(component, expectedProps);
     },
@@ -341,7 +340,7 @@ type TestComponent = React.Component<
   AnimatedComponentProps<InitialComponentProps> & {
     jestAnimatedStyle?: { value: DefaultStyle };
     jestAnimatedProps?: {
-      value: Partial<AnimatedComponentProps<AnimatedProps>>;
+      value: Partial<AnimatedComponentProps>;
     };
   }
 >;

@@ -8,7 +8,6 @@ import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   AnimatedComponentProps,
   AnimatedComponentType,
-  AnimatedProps,
   InitialComponentProps,
   IPropsFilter,
 } from './commonTypes';
@@ -60,15 +59,17 @@ export class PropsFilter implements IPropsFilter {
       } else if (key === 'animatedProps') {
         const animatedPropsProp = inputProps.animatedProps;
         const animatedPropsArray = flattenArray<
-          Partial<AnimatedComponentProps<AnimatedProps>>
+          Partial<AnimatedComponentProps>
         >(animatedPropsProp ?? []);
 
         animatedPropsArray.forEach((animatedProps) => {
           if (animatedProps?.viewDescriptors && animatedProps.initial) {
-            Object.keys(animatedProps.initial.value).forEach(
+            // TODO
+            Object.keys(animatedProps.initial as any).forEach(
               (initialValueKey) => {
-                props[initialValueKey] =
-                  animatedProps.initial?.value[initialValueKey];
+                props[initialValueKey] = (animatedProps.initial as any)[
+                  initialValueKey
+                ];
               }
             );
           }

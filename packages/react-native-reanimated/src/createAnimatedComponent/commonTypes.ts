@@ -6,17 +6,10 @@ import type {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
-  SharedValue,
   StyleProps,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-
-export interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
-  initial?: SharedValue<StyleProps>;
-}
 
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
@@ -79,8 +72,8 @@ export type AnimatedComponentProps<
 > = P & {
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  jestAnimatedValues?: RefObject<AnimatedProps>;
+  animatedProps?: Partial<AnimatedComponentProps>;
+  jestAnimatedValues?: RefObject<Partial<AnimatedComponentProps>>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder
@@ -138,12 +131,12 @@ export interface IAnimatedComponentInternal
   extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
-  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
-  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _animatedProps: Partial<AnimatedComponentProps>[];
+  _prevAnimatedProps: Partial<AnimatedComponentProps>[];
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
-  jestAnimatedProps: { value: AnimatedProps };
+  jestAnimatedProps: { value: Partial<AnimatedComponentProps> };
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */

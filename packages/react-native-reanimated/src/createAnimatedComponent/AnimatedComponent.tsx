@@ -25,7 +25,6 @@ import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
   AnimatedComponentRef,
-  AnimatedProps,
   AnyComponent,
   IAnimatedComponentInternal,
   INativeEventsManager,
@@ -60,12 +59,12 @@ export default class AnimatedComponent
   _displayName: string;
   _animatedStyles: StyleProps[] = [];
   _prevAnimatedStyles: StyleProps[] = [];
-  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
-  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[] = [];
+  _animatedProps: Partial<AnimatedComponentProps>[] = [];
+  _prevAnimatedProps: Partial<AnimatedComponentProps>[] = [];
   _isFirstRender = true;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps } = { value: {} };
-  jestAnimatedProps: { value: AnimatedProps } = { value: {} };
+  jestAnimatedProps: { value: Partial<AnimatedComponentProps> } = { value: {} };
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
@@ -184,7 +183,8 @@ export default class AnimatedComponent
         style.viewDescriptors.remove(viewTag);
       }
       if (this.props.animatedProps?.viewDescriptors) {
-        this.props.animatedProps.viewDescriptors.remove(viewTag);
+        // TODO
+        (this.props.animatedProps.viewDescriptors as any).remove(viewTag);
       }
     }
   }

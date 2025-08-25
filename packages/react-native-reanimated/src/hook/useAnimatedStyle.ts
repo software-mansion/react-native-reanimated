@@ -17,7 +17,6 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
@@ -450,16 +449,14 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
   dependencies?: DependencyList | null
 ): Style;
 
-export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
+export function useAnimatedStyle<Style extends DefaultStyle>(
   updater:
     | WorkletFunction<[], Style>
     | ((() => Style) & Record<string, unknown>),
   dependencies?: DependencyList | null,
   adapters?: AnimatedPropsAdapterWorklet | AnimatedPropsAdapterWorklet[] | null,
   isAnimatedProps = false
-):
-  | AnimatedStyleHandle<Style | AnimatedProps>
-  | JestAnimatedStyleHandle<Style | AnimatedProps> {
+): AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> {
   const animatedUpdaterData = useRef<AnimatedUpdaterData | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
   if (SHOULD_BE_USE_WEB) {
@@ -486,9 +483,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const areAnimationsActive = useSharedValue<boolean>(true);
-  const jestAnimatedValues = useRef<Style | AnimatedProps>(
-    {} as Style | AnimatedProps
-  );
+  const jestAnimatedValues = useRef<Style>({} as Style);
 
   // build dependencies
   if (!dependencies) {
@@ -582,9 +577,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   }
 
   const animatedStyleHandle = useRef<
-    | AnimatedStyleHandle<Style | AnimatedProps>
-    | JestAnimatedStyleHandle<Style | AnimatedProps>
-    | null
+    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
   >(null);
 
   if (!animatedStyleHandle.current) {
