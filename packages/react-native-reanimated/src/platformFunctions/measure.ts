@@ -1,16 +1,20 @@
 'use strict';
-import type { Component } from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
+import type {
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  WrapperRef,
+} from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <T extends Component>(
-  animatedRef: AnimatedRef<T>
+type Measure = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 
 /**
@@ -28,7 +32,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return null;
   }
 

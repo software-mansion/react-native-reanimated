@@ -1,14 +1,12 @@
 'use strict';
-import type { Component } from 'react';
 import { useRef, useState } from 'react';
-import type { FlatList } from 'react-native';
 import {
-  makeShareableCloneRecursive,
+  createSerializable,
   serializableMappingCache,
 } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common/constants';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
@@ -19,42 +17,27 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-interface MaybeScrollableComponent extends Component {
-  getNativeScrollRef?: FlatList['getNativeScrollRef'];
-  getScrollableNode?: FlatList['getScrollableNode'];
+function getComponentOrScrollable(ref: WrapperRef) {
+  return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
 }
 
-function getComponentOrScrollable(component: MaybeScrollableComponent) {
-  if (component.getNativeScrollRef) {
-    return component.getNativeScrollRef();
-  }
-  if (component.getScrollableNode) {
-    return component.getScrollableNode();
-  }
-  return component;
-}
-
-function useAnimatedRefBase<TComponent extends Component>(
-  getWrapper: (component: TComponent) => ShadowNodeWrapper
-): AnimatedRef<TComponent> {
+function useAnimatedRefBase<TRef extends WrapperRef>(
+  getWrapper: (ref: TRef) => ShadowNodeWrapper
+): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
   ).current;
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
+  const resultRef = useRef<AnimatedRef<TRef> | null>(null);
 
-  const ref = useRef<AnimatedRef<TComponent> | null>(null);
-
-  if (!ref.current) {
-    const fun: AnimatedRef<TComponent> = <AnimatedRef<TComponent>>((
-      component
-    ) => {
-      if (component) {
-        wrapperRef.current = getWrapper(component);
+  if (!resultRef.current) {
+    const fun = <AnimatedRef<TRef>>((ref) => {
+      if (ref) {
+        wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () =>
-          findNodeHandle(getComponentOrScrollable(component) as Component)!;
-        fun.current = component;
+        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
+        fun.current = ref;
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -84,22 +67,22 @@ function useAnimatedRefBase<TComponent extends Component>(
     };
 
     fun.current = null;
-    ref.current = fun;
+    resultRef.current = fun;
   }
 
-  return ref.current;
+  return resultRef.current;
 }
 
 function useAnimatedRefNative<
-  TComponent extends Component,
->(): AnimatedRef<TComponent> {
+  TRef extends WrapperRef = React.Component,
+>(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
   );
 
-  const ref = useAnimatedRefBase<TComponent>((component) => {
+  const resultRef = useAnimatedRefBase<TRef>((ref) => {
     const currentWrapper = getShadowNodeWrapperFromRef(
-      getComponentOrScrollable(component) as Component
+      getComponentOrScrollable(ref)
     );
 
     sharedWrapper.value = currentWrapper;
@@ -107,32 +90,30 @@ function useAnimatedRefNative<
     return currentWrapper;
   });
 
-  if (!serializableMappingCache.get(ref)) {
-    const animatedRefShareableHandle = makeShareableCloneRecursive({
+  if (!serializableMappingCache.get(resultRef)) {
+    const animatedRefSerializableHandle = createSerializable({
       __init: (): AnimatedRefOnUI => {
         'worklet';
         return () => sharedWrapper.value;
       },
     });
-    serializableMappingCache.set(ref, animatedRefShareableHandle);
+    serializableMappingCache.set(resultRef, animatedRefSerializableHandle);
   }
 
-  return ref;
+  return resultRef;
 }
 
 function useAnimatedRefWeb<
-  TComponent extends Component,
->(): AnimatedRef<TComponent> {
-  return useAnimatedRefBase<TComponent>((component) =>
-    getComponentOrScrollable(component)
-  );
+  TRef extends WrapperRef = React.Component,
+>(): AnimatedRef<TRef> {
+  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
 }
 
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
  *
- * @returns An object with a `.current` property which contains an instance of a
- *   component.
+ * @returns An object with a `.current` property which contains an instance of
+ *   the reference object.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export const useAnimatedRef = SHOULD_BE_USE_WEB

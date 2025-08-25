@@ -1,103 +1,148 @@
 #pragma once
 
-#include <reanimated/CSS/common/Quaternion.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/common/vectors.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <utility>
 
 namespace reanimated::css {
 
-struct DecomposedTransformMatrix {
-  Vector3D scale;
-  Vector3D skew;
-  Quaternion quaternion;
-  Vector3D translation;
-  Vector4D perspective;
-
-#ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const DecomposedTransformMatrix &decomposed);
-#endif // NDEBUG
-
-  DecomposedTransformMatrix interpolate(
-      double progress,
-      const DecomposedTransformMatrix &other) const;
-};
-
 class TransformMatrix {
  public:
-  explicit TransformMatrix(const Vec16Array &matrix);
-  explicit TransformMatrix(const Matrix4x4 &matrix);
-  explicit TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
-  explicit TransformMatrix(const folly::dynamic &value);
+  virtual ~TransformMatrix() = default;
 
-  static TransformMatrix Identity();
-  static TransformMatrix Perspective(double value);
-  static TransformMatrix RotateX(double value);
-  static TransformMatrix RotateY(double value);
-  static TransformMatrix RotateZ(double value);
-  static TransformMatrix Scale(double value);
-  static TransformMatrix ScaleX(double value);
-  static TransformMatrix ScaleY(double value);
-  static TransformMatrix TranslateX(double value);
-  static TransformMatrix TranslateY(double value);
-  static TransformMatrix SkewX(double value);
-  static TransformMatrix SkewY(double value);
+  virtual double determinant() const = 0;
 
-  std::array<double, 4> &operator[](size_t rowIdx);
-  const std::array<double, 4> &operator[](size_t rowIdx) const;
-  bool operator==(const TransformMatrix &other) const;
-  TransformMatrix operator*(const TransformMatrix &rhs) const;
-  TransformMatrix operator*=(const TransformMatrix &rhs);
+  virtual double &operator[](size_t index) = 0;
+  virtual const double &operator[](size_t index) const = 0;
 
-#ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const TransformMatrix &matrix);
-#endif // NDEBUG
+  virtual size_t getDimension() const = 0;
 
-  std::string toString() const;
-  folly::dynamic toDynamic() const;
-
-  bool isSingular() const;
-  bool normalize();
-  double determinant() const;
-  void adjugate();
-  bool invert();
-  void transpose();
-  void translate3d(const Vector3D &translation);
-  void scale3d(const Vector3D &scale);
-
-  std::optional<DecomposedTransformMatrix> decompose() const;
-  static TransformMatrix recompose(const DecomposedTransformMatrix &decomposed);
-  static TransformMatrix fromQuaternion(const Quaternion &q);
-
- private:
-  Matrix4x4 matrix_;
-
-  std::optional<Vector4D> computePerspective() const;
-
-  Vector3D getTranslation() const;
-  static std::pair<Vector3D, Vector3D> computeScaleAndSkew(
-      std::array<Vector3D, 3> &rows);
-  static Quaternion computeQuaternion(std::array<Vector3D, 3> &columns);
-
-  inline static double determinant3x3(
-      double a,
-      double b,
-      double c,
-      double d,
-      double e,
-      double f,
-      double g,
-      double h,
-      double i);
+  virtual std::string toString() const = 0;
+  virtual folly::dynamic toDynamic() const = 0;
 };
 
-Vector4D operator*(const Vector4D &v, const TransformMatrix &m);
+template <typename TDerived, size_t TDimension>
+class TransformMatrixBase : public TransformMatrix {
+ public:
+  static constexpr size_t SIZE = TDimension * TDimension;
+  using MatrixArray = std::array<double, SIZE>;
+
+  explicit TransformMatrixBase(MatrixArray matrix)
+      : matrix_(std::move(matrix)) {}
+
+  explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value) {
+    const auto array = value.asObject(rt).asArray(rt);
+    if (array.size(rt) != SIZE) {
+      throw std::invalid_argument(
+          "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
+          " elements");
+    }
+
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
+    }
+  }
+
+  explicit TransformMatrixBase(const folly::dynamic &array) {
+    if (!array.isArray() || array.size() != SIZE) {
+      throw std::invalid_argument(
+          "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
+          " elements");
+    }
+
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array[i].asDouble();
+    }
+  }
+
+  virtual bool operator==(const TDerived &other) const = 0;
+
+  double &operator[](size_t index) override {
+    return matrix_[index];
+  }
+
+  const double &operator[](size_t index) const override {
+    return matrix_[index];
+  }
+
+  TDerived operator*(const TDerived &rhs) const {
+    return TDerived(multiply(rhs));
+  }
+
+  TDerived &operator*=(const TDerived &rhs) {
+    matrix_ = multiply(rhs);
+    return static_cast<TDerived &>(*this);
+  }
+
+  std::string toString() const override {
+    std::string result = "[";
+    for (size_t i = 0; i < SIZE; ++i) {
+      result += std::to_string(matrix_[i]);
+      if (i < SIZE - 1) {
+        result += ", ";
+      }
+    }
+    result += "]";
+    return result;
+  }
+
+  folly::dynamic toDynamic() const override {
+    folly::dynamic result = folly::dynamic::array;
+    for (size_t i = 0; i < SIZE; ++i) {
+      result.push_back(matrix_[i]);
+    }
+    return result;
+  }
+
+  size_t getDimension() const override {
+    return TDimension;
+  }
+
+  bool isSingular() const {
+    return determinant() == 0;
+  }
+
+  bool normalize() {
+    const auto last = matrix_[SIZE - 1];
+    if (last == 0) {
+      return false;
+    }
+    if (last == 1) {
+      return true;
+    }
+
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] /= last;
+    }
+    return true;
+  }
+
+  void transpose() {
+    for (size_t i = 0; i < TDimension; ++i) {
+      for (size_t j = i + 1; j < TDimension; ++j) {
+        std::swap(matrix_[i * TDimension + j], matrix_[j * TDimension + i]);
+      }
+    }
+  }
+
+ protected:
+  std::array<double, SIZE> matrix_;
+
+  MatrixArray multiply(const TDerived &rhs) const {
+    std::array<double, SIZE> result{};
+    for (size_t i = 0; i < TDimension; ++i) {
+      for (size_t j = 0; j < TDimension; ++j) {
+        for (size_t k = 0; k < TDimension; ++k) {
+          result[i * TDimension + j] +=
+              matrix_[i * TDimension + k] * rhs[k * TDimension + j];
+        }
+      }
+    }
+    return result;
+  }
+};
 
 } // namespace reanimated::css

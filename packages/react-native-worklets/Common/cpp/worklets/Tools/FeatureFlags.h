@@ -14,7 +14,7 @@ class StaticFeatureFlags {
 // itself instead of the flag value
 #define TOSTRING(x) XTOSTRING(x)
 
-  static consteval bool getFlag(const std::string_view &name) {
+  static constexpr bool getFlag(const std::string_view &name) {
     std::string nameStr = name.data();
     std::string featureFlags = TOSTRING(WORKLETS_FEATURE_FLAGS);
     if (featureFlags.find("[" + nameStr + ":") == std::string::npos) {
@@ -25,7 +25,7 @@ class StaticFeatureFlags {
 
 #else
 
-  static consteval bool getFlag(const std::string_view &) {
+  static constexpr bool getFlag(const std::string_view &) {
     return false;
   }
 

@@ -25,7 +25,7 @@ import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
-import CopyShareablesPerformanceTest from './CopyShareablesPerformanceTest';
+import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
@@ -112,7 +112,7 @@ import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
-import FreezingShareablesExample from './ShareableFreezingExample';
+import SerializableFreezingExample from './SerializableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringComparisonExample from './SpringComparisonExample';
 import SpringPresetsExample from './SpringPresetsExample';
@@ -120,6 +120,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronizablePerformanceExample from './SynchronizableExample';
 import SynchronousPropsExample from './SynchronousPropsExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
@@ -162,6 +163,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
   },
+  Synchronizable: {
+    icon: '🔄',
+    title: 'Synchronizable performance',
+    screen: SynchronizablePerformanceExample,
+  },
   ReactFreeze: {
     icon: '❄️',
     title: 'React freeze',
@@ -192,10 +198,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Memo',
     screen: MemoExample,
   },
-  FreezingShareablesExample: {
+  SerializableFreezingExample: {
     icon: '🥶',
-    title: 'Freezing shareables',
-    screen: FreezingShareablesExample,
+    title: 'Serializable freezing',
+    screen: SerializableFreezingExample,
   },
   InvalidReadWriteExample: {
     icon: '🔒',
@@ -207,15 +213,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Bottom sheet',
     screen: BottomSheetExample,
   },
+  CopySerializablePerformanceTest: {
+    icon: '🔄',
+    title: 'Copy serializable performance test',
+    screen: CopySerializablePerformanceTest,
+  },
   FlatListWithLayoutAnimations: {
     icon: '🎻',
     title: 'FlatList with layout animations',
     screen: FlatListWithLayoutAnimations,
-  },
-  CopyShareablesPerformanceTest: {
-    icon: '🔄',
-    title: 'Copy shareables performance test',
-    screen: CopyShareablesPerformanceTest,
   },
 
   // About

@@ -1,4 +1,4 @@
-import type { Component, MutableRefObject, ReactElement } from 'react';
+import type { Component, ReactElement, RefObject } from 'react';
 import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
@@ -78,7 +78,7 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public useTestRef(name: string): MutableRefObject<Component | null> {
+  public useTestRef(name: string): RefObject<Component | null> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const ref = useRef(null);
     assertTestCase(this._currentTestCase);

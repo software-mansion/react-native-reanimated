@@ -9,6 +9,8 @@ import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
 import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/setIntervalPolyfill';
 import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { RuntimeKind } from './runtimeKind';
+import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
@@ -83,13 +85,19 @@ export function init() {
   }
   initialized = true;
 
+  if (globalThis.__RUNTIME_KIND === undefined) {
+    // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+    // is the RN Runtime. We must set it as soon as possible.
+    globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+  }
+
   initializeRuntime();
 
   if (SHOULD_BE_USE_WEB) {
     initializeRuntimeOnWeb();
   }
 
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     initializeWorkletRuntime();
   } else {
     initializeRNRuntime();
@@ -104,6 +112,7 @@ function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
+  installSynchronizableUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */

@@ -1,4 +1,4 @@
-import { runOnJS } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 let notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {

@@ -6,7 +6,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
@@ -74,7 +74,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   if constexpr (StaticFeatureFlags::getFlag(
-                    "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+                    "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     css::initSvgCssSupport();
   }
 
@@ -308,11 +308,18 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   return jsi::Value::undefined();
 }
 
+jsi::Value ReanimatedModuleProxy::getStaticFeatureFlag(
+    jsi::Runtime &rt,
+    const jsi::Value &name) {
+  return reanimated::StaticFeatureFlags::getFlag(name.asString(rt).utf8(rt));
+}
+
 jsi::Value ReanimatedModuleProxy::setDynamicFeatureFlag(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &value) {
-  DynamicFeatureFlags::setFlag(name.asString(rt).utf8(rt), value.asBool());
+  reanimated::DynamicFeatureFlags::setFlag(
+      name.asString(rt).utf8(rt), value.asBool());
   return jsi::Value::undefined();
 }
 

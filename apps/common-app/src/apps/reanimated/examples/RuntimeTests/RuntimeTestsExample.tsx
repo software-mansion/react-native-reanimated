@@ -42,17 +42,20 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'shareables',
+          testSuiteName: 'serializable',
           importTest: () => {
-            require('./tests/shareables/makeShareableClone.test');
-            require('./tests/shareables/makeShareableCloneOnUI.test');
-            require('./tests/shareables/isShareableRef.test');
+            require('./tests/memory/createSerializable.test');
+            require('./tests/memory/createSerializableOnUI.test');
+            require('./tests/memory/isSerializableRef.test');
+            require('./tests/memory/synchronizable.test');
           },
         },
         {
           testSuiteName: 'runtimes',
           importTest: () => {
             require('./tests/runtimes/createWorkletRuntime.test');
+            require('./tests/runtimes/scheduleOnRN.test');
+            require('./tests/runtimes/runOnUISync.test');
           },
         },
         {
@@ -138,6 +141,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
             require('./tests/advancedAPI/measure.test');
+            require('./tests/advancedAPI/staticFeatureFlags.test');
           },
         },
         {

@@ -3,10 +3,11 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from './shareables';
+} from './serializable';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -19,7 +20,7 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 // @ts-expect-error Public API overload.
 export function createWorkletRuntime(
@@ -38,7 +39,7 @@ export function createWorkletRuntime(
  *   the same thread immediately after the runtime is created.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 export function createWorkletRuntime(
   name?: string,
@@ -102,7 +103,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `runOnRuntime` is not a worklet.'
     );
   }
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return (...args) =>
       globalThis._scheduleOnRuntime(
         workletRuntime,

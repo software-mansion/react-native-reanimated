@@ -2,7 +2,8 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
+#include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
 #include <memory>
 #include <string>
@@ -65,7 +66,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolatorUpdateContext &context) const override;
 
  private:
-  TransformMatrix matrixFromOperation(
+  TransformMatrix3D matrixFromOperation(
       const MatrixOperation &matrixOperation,
       const TransformInterpolatorUpdateContext &context) const;
 };

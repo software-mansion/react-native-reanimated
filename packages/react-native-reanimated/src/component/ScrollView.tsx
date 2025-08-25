@@ -29,12 +29,11 @@ export function AnimatedScrollView({
   ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const animatedRef = (
+  const animatedRef =
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
         useAnimatedRef<ScrollView>()
-      : ref
-  ) as AnimatedRef<AnimatedScrollView>;
+      : (ref as AnimatedRef<ScrollView>);
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks

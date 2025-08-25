@@ -1,6 +1,8 @@
 'use strict';
 
+import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
+import type { SynchronizableRef } from '../synchronizable';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
@@ -16,14 +18,17 @@ export function createNativeWorkletsModule(): IWorkletsModule {
 
 class NativeWorklets implements IWorkletsModule {
   #workletsModuleProxy: WorkletsModuleProxy;
-  #shareableUndefined: SerializableRef<undefined>;
-  #shareableNull: SerializableRef<null>;
+  #serializableUndefined: SerializableRef<undefined>;
+  #serializableNull: SerializableRef<null>;
   #serializableTrue: SerializableRef<boolean>;
   #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
     globalThis._WORKLETS_VERSION_JS = jsVersion;
-    if (global.__workletsModuleProxy === undefined && !globalThis._WORKLET) {
+    if (
+      global.__workletsModuleProxy === undefined &&
+      globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
+    ) {
       WorkletsTurboModule?.installTurboModule();
     }
     if (global.__workletsModuleProxy === undefined) {
@@ -36,8 +41,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
-    this.#shareableNull = this.#workletsModuleProxy.createSerializableNull();
-    this.#shareableUndefined =
+    this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
+    this.#serializableUndefined =
       this.#workletsModuleProxy.createSerializableUndefined();
     this.#serializableTrue =
       this.#workletsModuleProxy.createSerializableBoolean(true);
@@ -81,11 +86,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableUndefined() {
-    return this.#shareableUndefined;
+    return this.#serializableUndefined;
   }
 
   createSerializableNull() {
-    return this.#shareableNull;
+    return this.#serializableNull;
   }
 
   createSerializableTurboModuleLike<
@@ -151,14 +156,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnUI<TValue>(shareable: SerializableRef<TValue>) {
-    return this.#workletsModuleProxy.scheduleOnUI(shareable);
+  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
+    return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: SerializableRef<TValue>
+    serializable: SerializableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
+    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
   }
 
   createWorkletRuntime(
@@ -177,12 +182,52 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
-    shareableWorklet: SerializableRef<T>
+    serializableWorklet: SerializableRef<T>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      shareableWorklet
+      serializableWorklet
     );
+  }
+
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
+    return this.#workletsModuleProxy.createSynchronizable(value);
+  }
+
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetDirty(synchronizableRef);
+  }
+
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue {
+    return this.#workletsModuleProxy.synchronizableGetBlocking(
+      synchronizableRef
+    );
+  }
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.synchronizableSetBlocking(
+      synchronizableRef,
+      value
+    );
+  }
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableLock(synchronizableRef);
+  }
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void {
+    return this.#workletsModuleProxy.synchronizableUnlock(synchronizableRef);
   }
 
   reportFatalErrorOnJS(
@@ -197,6 +242,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       name,
       jsEngine
     );
+  }
+
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#workletsModuleProxy.getStaticFeatureFlag(name);
   }
 
   setDynamicFeatureFlag(name: string, value: boolean) {

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import { useSharedValue, SharedValue } from 'react-native-reanimated';
 
 import {
   describe,
@@ -10,10 +10,9 @@ import {
   registerValue,
   render,
   test,
-  wait,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
-import { s } from 'react-strict-dom/dist/dom/html';
+import { runOnUI } from 'react-native-worklets';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
