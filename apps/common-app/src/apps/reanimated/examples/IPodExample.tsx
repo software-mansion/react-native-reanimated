@@ -1,5 +1,5 @@
-import React, { ComponentRef } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
@@ -39,7 +39,7 @@ const INNER_BALL_SIZE = BIG_BALL_SIZE - SMALL_BALL_SIZE * 2;
 
 export default function IPodExample() {
   const position = useSharedValue(0);
-  const animatedRef = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
+  const animatedRef = useAnimatedRef<Animated.ScrollView>();
 
   const itemTotalSize = ITEM_SIZE.size + ITEM_SIZE.margin * 2;
   const borderMargin = SCREEN_WIDTH / 2 - itemTotalSize / 2 + ITEM_SIZE.margin;

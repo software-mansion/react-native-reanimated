@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import type { ComponentRef, PropsWithChildren, ReactNode } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
@@ -92,7 +92,7 @@ export default function ActionSheetDropdown({
   styleOptions,
   ...contentProps
 }: ActionSheetDropdownProps): JSX.Element {
-  const containerRef = useRef<ComponentRef<typeof View>>(null);
+  const containerRef = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const [{ isOpen, toggleMeasurements }, setState] = useState<DropdownState>({
     isOpen: false,
@@ -207,7 +207,7 @@ function DropdownContent({
 
     if (alignment === 'left') {
       const maxWidth =
-        flattenedStyle?.maxWidth ??
+        flattenedStyle.maxWidth ??
         windowDimensions.width - toggleMeasurements.x - spacing.sm;
       const calculatedPosition = toggleMeasurements.x + offsetX;
 
@@ -227,7 +227,7 @@ function DropdownContent({
     }
 
     const maxWidth =
-      flattenedStyle?.maxWidth ??
+      flattenedStyle.maxWidth ??
       toggleMeasurements.x + toggleMeasurements.width - spacing.sm;
     const calculatedPosition =
       toggleMeasurements.x +
@@ -253,9 +253,7 @@ function DropdownContent({
     top: toggleMeasurements.y + toggleMeasurements.height + offsetY,
   };
 
-  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(
-    flattenedStyle ?? {}
-  );
+  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(flattenedStyle);
 
   return (
     <Animated.View style={[dropdownStyle, animatedDropdownStyle]}>

@@ -121,9 +121,10 @@ function Section({
       />
       <View>
         {React.Children.map(children, (element) =>
-          React.cloneElement(element as ReactElement<{ ref: AnimatedRef }>, {
-            ref: aref,
-          })
+          React.cloneElement(
+            element as ReactElement<{ ref: AnimatedRef<React.Component> }>,
+            { ref: aref }
+          )
         )}
       </View>
     </Animated.View>
@@ -138,7 +139,9 @@ type MeasuredDimensions = {
   pageX: number;
   pageY: number;
 };
-function asyncMeasure(animatedRef: AnimatedRef): Promise<MeasuredDimensions> {
+function asyncMeasure(
+  animatedRef: AnimatedRef<React.Component>
+): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
       animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
@@ -152,7 +155,7 @@ function asyncMeasure(animatedRef: AnimatedRef): Promise<MeasuredDimensions> {
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: AnimatedRef;
+  animatedRef: AnimatedRef<React.Component>;
   contentHeight: SharedValue<number>;
   show: boolean;
 };

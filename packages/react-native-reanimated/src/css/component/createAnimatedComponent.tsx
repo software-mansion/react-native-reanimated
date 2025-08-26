@@ -1,45 +1,64 @@
 'use strict';
-import type {
-  ComponentClass,
-  ComponentType,
-  FunctionComponent,
-  Ref,
-} from 'react';
-import React from 'react';
+import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
+import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import type { CSSProps } from '../types';
+import type { InitialComponentProps } from '../../createAnimatedComponent/commonTypes';
+import type { AnimatedProps } from '../../helperTypes';
+import type { AnimatedRef } from '../../hook';
+import type { AnyRecord } from '../types';
 import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 
-// Don't change the order of overloads, since such a change breaks current behavior
-export default function createAnimatedComponent<P extends object>(
-  Component: FunctionComponent<P>
-): FunctionComponent<CSSProps<P>>;
-
-export default function createAnimatedComponent<P extends object>(
-  Component: ComponentClass<P>
-): ComponentClass<CSSProps<P>>;
-
-export default function createAnimatedComponent<P extends object>(
-  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
-  // since some external components (like FastImage) are typed just as ComponentType
-  Component: ComponentType<P>
-): FunctionComponent<CSSProps<P>> | ComponentClass<CSSProps<P>>;
+export type AnimatedComponentType<
+  Props extends AnyRecord = object,
+  Instance = unknown,
+> = (
+  props: Omit<AnimatedProps<Props>, 'ref'> & {
+    // Accept untyped AnimatedRef as well to allow passing a reference created
+    // with the useAnimatedRef hook call without specifying the type
+    ref?: Ref<Instance> | AnimatedRef;
+  }
+) => ReactNode;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
-// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-export default function createAnimatedComponent(
-  Component: typeof FlatList<unknown>
-): ComponentClass<CSSProps<FlatListProps<unknown>>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAnimatedComponent<T = any>(
+  Component: typeof FlatList<T>
+): AnimatedComponentType<
+  Readonly<FlatListProps<T>>,
+  ComponentRef<typeof FlatList<T>>
+>;
 
-export default function createAnimatedComponent<P extends object>(
-  Component: ComponentType<P>
+/**
+ * Lets you create an Animated version of any React Native component.
+ *
+ * @param Component - The component you want to make animatable.
+ * @returns A component that Reanimated is capable of animating.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
+ */
+export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any {
+  TInstance extends ComponentType<any>,
+>(
+  Component: TInstance
+): AnimatedComponentType<
+  Readonly<React.ComponentProps<TInstance>>,
+  ComponentRef<TInstance>
+>;
+
+export function createAnimatedComponent<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TInstance extends ComponentType<any>,
+>(
+  Component: TInstance
+): AnimatedComponentType<
+  Readonly<React.ComponentProps<TInstance>>,
+  ComponentRef<TInstance>
+> {
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
@@ -51,7 +70,9 @@ export default function createAnimatedComponent<P extends object>(
   }
 
   const animatedComponent = (
-    props: AnimatedComponentProps & { ref: Ref<AnimatedComponent> }
+    props: AnimatedProps<InitialComponentProps> & {
+      ref?: Ref<ComponentRef<TInstance>> | AnimatedRef;
+    }
   ) => {
     return (
       <AnimatedComponent

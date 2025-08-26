@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, ReactNode, Ref, RefObject } from 'react';
+import type { Component, Ref, RefObject } from 'react';
 
 import type {
   AnimatedStyle,

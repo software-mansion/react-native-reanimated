@@ -11,10 +11,12 @@ import type { AnimatedProps } from '../helperTypes';
 import { useAnimatedRef, useScrollOffset } from '../hook';
 import { isAnimatedRef } from '../hook/useAnimatedRef';
 
+type ScrollViewInstance = ComponentRef<typeof ScrollView>;
+
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
-  ref?: Ref<ComponentRef<AnimatedScrollView>> | null;
+  ref?: Ref<ScrollViewInstance> | null;
 }
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
@@ -30,11 +32,11 @@ export function AnimatedScrollView({
   ref: refProp,
   ...restProps
 }: AnimatedScrollViewProps) {
-  let ref = refProp;
+  let ref: Ref<ScrollViewInstance> | undefined = refProp;
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    ref ??= useAnimatedRef<ComponentRef<typeof ScrollView>>();
+    ref ??= useAnimatedRef<ScrollViewInstance>();
 
     if (!isAnimatedRef(ref)) {
       throw new ReanimatedError(

@@ -1,53 +1,18 @@
-import React, { useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, {
-  useAnimatedRef,
-  useAnimatedReaction,
-  useScrollOffset,
-  useSharedValue,
-} from 'react-native-reanimated';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function EmptyExample() {
-  const aref = useAnimatedRef();
-  const ref = useRef(null);
-  const sv = useSharedValue(0);
-
-  // const offset = useScrollOffset(ref);
-
-  useAnimatedReaction(
-    () => sv.value,
-    (value) => {
-      console.log(value);
-    }
-  );
-
   return (
-    <Animated.ScrollView
-      ref={ref}
-      contentContainerStyle={styles.content}
-      scrollViewOffset={sv}>
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-      <View style={styles.box} />
-    </Animated.ScrollView>
+    <View style={styles.container}>
+      <Text>Hello world!</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'red',
-  },
-  content: {
-    gap: 10,
-    padding: 10,
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

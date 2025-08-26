@@ -9,7 +9,6 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import type { ComponentRef } from 'react';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];
@@ -63,7 +62,7 @@ type DigitProps = {
 
 function Digit({ number, index }: DigitProps) {
   const digit = useDigit(number, index);
-  const aref = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
+  const aref = useAnimatedRef<Animated.ScrollView>();
 
   useDerivedValue(() => {
     if (Platform.OS === 'web') {

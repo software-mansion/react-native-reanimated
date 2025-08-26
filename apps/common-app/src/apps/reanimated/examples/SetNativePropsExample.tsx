@@ -1,9 +1,10 @@
 import React from 'react';
-import { Button, StyleSheet, TextInput } from 'react-native';
+import { Button, StyleSheet } from 'react-native';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
+  TextInput,
 } from 'react-native-gesture-handler';
 import Animated, {
   setNativeProps,

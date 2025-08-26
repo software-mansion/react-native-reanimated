@@ -3,7 +3,6 @@ import {
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import type { ComponentRef } from 'react';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -35,7 +34,7 @@ function TabSelector<T extends string>({
   selectedTab,
   tabs,
 }: TabSelectorProps<T>) {
-  const scrollViewRef = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
 
   const containerWidth = useSharedValue(0);
   const tabWidths = useSharedValue<Array<number>>([]);
