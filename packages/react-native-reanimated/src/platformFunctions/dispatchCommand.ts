@@ -2,14 +2,14 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper, InternalHostInstance } from '../commonTypes';
+import type { ShadowNodeWrapper, InstanceOrElement } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <TRef extends InternalHostInstance>(
+type DispatchCommand = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   commandName: string,
   args?: unknown[]

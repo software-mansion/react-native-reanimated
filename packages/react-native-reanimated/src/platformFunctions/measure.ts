@@ -5,7 +5,7 @@ import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import type {
   MeasuredDimensions,
   ShadowNodeWrapper,
-  InternalHostInstance,
+  InstanceOrElement,
 } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -13,7 +13,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <TRef extends InternalHostInstance>(
+type Measure = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 

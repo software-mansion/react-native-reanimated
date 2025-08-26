@@ -1,11 +1,14 @@
 'use strict';
-import type { RefObject, Component, ElementType } from 'react';
+import type { RefObject, Component, ComponentRef, ElementType } from 'react';
 import type {
+  FlatList,
   HostInstance,
   ImageStyle,
   ScrollView,
+  SectionList,
   TextStyle,
   TransformsStyle,
+  View,
   ViewStyle,
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
@@ -454,16 +457,26 @@ export type StyleUpdaterContainer = RefObject<
   ((forceUpdate: boolean) => void) | undefined
 >;
 
+type GetProp<T, K extends PropertyKey> = K extends keyof T ? T[K] : undefined;
+
+type ScrollResponderType = Partial<
+  InternalHostInstance &
+    ReturnType<
+      NonNullable<
+        | GetProp<ScrollView, 'getScrollResponder'>
+        | GetProp<FlatList, 'getScrollResponder'>
+        | GetProp<SectionList, 'getScrollResponder'>
+      >
+    > &
+    JSX.Element
+>;
+
 export type InternalHostInstance = Partial<
   HostInstance & {
-    getScrollResponder: () => Maybe<
-      Partial<
-        ReturnType<ScrollView['getScrollResponder']> &
-          InternalHostInstance &
-          JSX.Element
-      >
+    getScrollResponder: () => Maybe<ScrollResponderType>;
+    getNativeScrollRef: () => Maybe<
+      Partial<InternalHostInstance & typeof ScrollView>
     >;
-    getNativeScrollRef: () => Maybe<InternalHostInstance | ScrollView>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getScrollableNode: () => any;
     __internalInstanceHandle: AnyRecord;

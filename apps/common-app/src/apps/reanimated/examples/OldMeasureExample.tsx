@@ -4,11 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import type {
-  AnimatedRef,
-  ComponentRef,
-  SharedValue,
-} from 'react-native-reanimated';
+import type { AnimatedRef, SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   measure,
@@ -125,10 +121,9 @@ function Section({
       />
       <View>
         {React.Children.map(children, (element) =>
-          React.cloneElement(
-            element as ReactElement<{ ref: AnimatedRef<React.Component> }>,
-            { ref: aref }
-          )
+          React.cloneElement(element as ReactElement<{ ref: AnimatedRef }>, {
+            ref: aref,
+          })
         )}
       </View>
     </Animated.View>
@@ -157,7 +152,7 @@ function asyncMeasure(animatedRef: AnimatedRef): Promise<MeasuredDimensions> {
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: AnimatedRef<ComponentRef<React.Component>>;
+  animatedRef: AnimatedRef;
   contentHeight: SharedValue<number>;
   show: boolean;
 };

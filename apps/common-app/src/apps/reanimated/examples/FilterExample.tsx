@@ -39,7 +39,6 @@ export default function FilterExample() {
     return { filter: [{ contrast: sv.value * 3 }] };
   });
 
-  // @ts-expect-error TODO: call processColor automatically
   const dropShadow = useAnimatedStyle(() => {
     return {
       filter: [
@@ -90,7 +89,6 @@ export default function FilterExample() {
       <Text>brightness</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={brightness}
         width={80}
         height={80}
@@ -99,7 +97,6 @@ export default function FilterExample() {
       <Text>opacity</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={opacity}
         width={80}
         height={80}
@@ -108,7 +105,6 @@ export default function FilterExample() {
       <Text>blur (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={blur}
         width={80}
         height={80}
@@ -117,7 +113,6 @@ export default function FilterExample() {
       <Text>contrast (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={contrast}
         width={80}
         height={80}
@@ -126,7 +121,6 @@ export default function FilterExample() {
       <Text>dropShadow (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={dropShadow}
         width={80}
         height={80}
@@ -135,7 +129,6 @@ export default function FilterExample() {
       <Text>grayscale (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={grayscale}
         width={80}
         height={80}
@@ -144,7 +137,6 @@ export default function FilterExample() {
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={hueRotate}
         width={80}
         height={80}
@@ -153,7 +145,6 @@ export default function FilterExample() {
       <Text>invert (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={invert}
         width={80}
         height={80}
@@ -162,7 +153,6 @@ export default function FilterExample() {
       <Text>sepia (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={sepia}
         width={80}
         height={80}
@@ -171,7 +161,6 @@ export default function FilterExample() {
       <Text>saturate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error TODO: fix types
         style={saturate}
         width={80}
         height={80}

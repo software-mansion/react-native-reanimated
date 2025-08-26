@@ -1,10 +1,10 @@
 'use strict';
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { InternalHostInstance } from '../commonTypes';
+import type { InstanceOrElement } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <TRef extends InternalHostInstance>(
+type ScrollTo = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
@@ -24,7 +24,7 @@ type ScrollTo = <TRef extends InternalHostInstance>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToNative<TRef extends InternalHostInstance>(
+function scrollToNative<TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,

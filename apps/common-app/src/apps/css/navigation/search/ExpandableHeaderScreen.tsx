@@ -1,4 +1,4 @@
-import type { Component } from 'react';
+import type { ComponentRef } from 'react';
 import { isValidElement, useEffect, useMemo } from 'react';
 import type {
   ScrollView,
@@ -40,9 +40,6 @@ export enum ExpandMode {
   AUTO = 'AUTO',
 }
 
-type ScrollableComponent = Component<Pick<ScrollViewProps, 'onScroll'>> &
-  Pick<ScrollView, 'getScrollableNode'>;
-
 type ExpandableHeaderScreenProps = {
   HeaderComponent: // eslint-disable-next-line @typescript-eslint/no-explicit-any
   React.ComponentType<any> | React.ReactElement | null | undefined;
@@ -66,7 +63,7 @@ export default function ExpandableHeaderScreen({
   onHeaderShowProgressChange,
   children,
 }: ExpandableHeaderScreenProps) {
-  const scrollableRef = useAnimatedRef<ScrollableComponent>();
+  const scrollableRef = useAnimatedRef<ComponentRef<typeof ScrollView>>();
   const offsetY = useSharedValue(0);
   const headerHeight = useSharedValue(IS_WEB ? 72 : 0);
   const translateY = useSharedValue(IS_WEB ? 72 : 0);

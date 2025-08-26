@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentRef } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   measure,
@@ -10,7 +10,7 @@ import Animated, {
 import { runOnUI } from 'react-native-worklets';
 
 export default function MeasureExample() {
-  const aref = useAnimatedRef<Animated.View>();
+  const aref = useAnimatedRef<ComponentRef<Animated.View>>();
 
   const ref = React.useRef(0);
 

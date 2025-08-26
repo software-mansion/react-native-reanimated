@@ -10,7 +10,7 @@ import {
 import type {
   ShadowNodeWrapper,
   StyleProps,
-  InternalHostInstance,
+  InstanceOrElement,
 } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -18,7 +18,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <TRef extends InternalHostInstance>(
+type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
