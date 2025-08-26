@@ -10,7 +10,9 @@ import styles from './styles.module.css';
 
 export default function Homepage() {
   return (
-    <Layout>
+    <Layout
+      title="React Native Worklets: Multithreading engine for your apps and libraries"
+      description="Run concurrent processes to boost your app’s performance. Used by Reanimated, Gesture Handler, Skia and more.">
       <div className={styles.content}>
         <HomepageMainSection />
         <HomepageAboutSection />
