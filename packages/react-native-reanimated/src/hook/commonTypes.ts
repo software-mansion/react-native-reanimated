@@ -7,15 +7,17 @@ import type {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import type { WorkletFunction } from 'react-native-worklets';
 
 import type {
-  AnimatedPropsAdapterFunction,
-  AnimatedStyle,
+  AnimatableValue,
+  AnimationObject,
+  AnimationsRecord,
+  NestedObject,
+  NestedObjectValues,
   ShadowNodeWrapper,
   WrapperRef,
 } from '../commonTypes';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type { AnyRecord, UnknownRecord } from '../css/types';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -87,31 +89,27 @@ export interface IWorkletEventHandler<Event extends object> {
   unregisterFromEvents: (viewTag: number) => void;
 }
 
-export interface AnimatedStyleHandle<
-  Style extends DefaultStyle | AnimatedProps = DefaultStyle,
-> {
+export type AnimatedValuesUpdate = NestedObject<
+  AnimationObject | AnimatableValue
+>;
+
+export type AnimatedUpdaterHandle<TValues extends object = UnknownRecord> = {
   viewDescriptors: ViewDescriptorsSet;
   initial: {
-    value: AnimatedStyle<Style>;
-    updater: () => AnimatedStyle<Style>;
+    value: TValues;
+    updater: () => AnimatedValuesUpdate;
   };
-}
+};
 
-export interface JestAnimatedStyleHandle<
-  Style extends DefaultStyle | AnimatedProps = DefaultStyle,
-> extends AnimatedStyleHandle<Style> {
-  jestAnimatedValues:
-    | RefObject<AnimatedStyle<Style>>
-    | RefObject<AnimatedProps>;
+export type AnimatedStyleHandle<TStyle extends DefaultStyle = DefaultStyle> =
+  AnimatedUpdaterHandle<TStyle>;
+
+export type AnimatedPropsHandle<TProps extends object = UnknownRecord> =
+  AnimatedUpdaterHandle<TProps>;
+
+export type JestAnimatedUpdaterHandle<
+  TValues extends AnyRecord = UnknownRecord,
+> = AnimatedUpdaterHandle<TValues> & {
+  jestAnimatedValues: RefObject<TValues>;
   toJSON: () => string;
-}
-
-export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
-  updater: WorkletFunction<[], Style> | (() => Style),
-  dependencies?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null,
-  isAnimatedProps?: boolean
-) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;
+};

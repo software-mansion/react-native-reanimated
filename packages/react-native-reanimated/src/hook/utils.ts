@@ -3,6 +3,8 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
 import { ReanimatedError } from '../common';
+import type { AnimationObject, NestedObjectValues } from '../commonTypes';
+import type { AnyRecord } from '../css/types';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
@@ -97,7 +99,9 @@ export function areDependenciesEqual(
   return areHookInputsEqual(nextDependencies, prevDependencies);
 }
 
-export function isAnimated(prop: unknown) {
+export function isAnimated(
+  prop: unknown
+): prop is NestedObjectValues<AnimationObject> {
   'worklet';
   if (Array.isArray(prop)) {
     return prop.some(isAnimated);
@@ -114,9 +118,7 @@ export function isAnimated(prop: unknown) {
 // This function works because `Object.keys`
 // return empty array of primitives and on arrays
 // it returns array of its indices.
-export function shallowEqual<
-  T extends Record<string | number | symbol, unknown>,
->(a: T, b: T) {
+export function shallowEqual<T extends AnyRecord>(a: T, b: T) {
   'worklet';
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);

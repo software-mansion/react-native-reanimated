@@ -29,6 +29,7 @@ import type {
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
+import type { AnimatedUpdate } from '../hook/commonTypes';
 import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
@@ -106,7 +107,7 @@ export function assertEasingIsWorklet(
   }
 }
 
-export function initialUpdaterRun<T>(updater: () => T) {
+export function initialUpdaterRun<TResult>(updater: () => TResult): TResult {
   IN_STYLE_UPDATER.current = true;
   const result = updater();
   IN_STYLE_UPDATER.current = false;

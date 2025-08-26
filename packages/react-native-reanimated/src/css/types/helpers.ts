@@ -3,6 +3,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyRecord = Record<string, any>;
 
+export type UnknownRecord = Record<string, unknown>;
+
 type NoUndef<T> = T extends undefined ? never : T;
 
 export type Repeat<

@@ -44,7 +44,7 @@ export class PropsFilter implements IPropsFilter {
               this._initialPropsMap.set(handle, {
                 ...handle.initial.value,
                 ...initialUpdaterRun(handle.initial.updater),
-              } as StyleProps);
+              });
             }
 
             return this._initialPropsMap.get(handle) ?? {};

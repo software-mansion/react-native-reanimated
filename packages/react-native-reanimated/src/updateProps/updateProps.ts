@@ -64,8 +64,7 @@ if (SHOULD_BE_USE_WEB) {
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
-  animatedValues: RefObject<AnimatedStyle<any>>,
-  adapters: ((updates: AnimatedStyle<any>) => void)[]
+  animatedValues: RefObject<AnimatedStyle<any>>
 ): void => {
   adapters.forEach((adapter) => {
     adapter(updates);

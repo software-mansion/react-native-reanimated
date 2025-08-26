@@ -15,7 +15,7 @@ export type {
 } from './useAnimatedScrollHandler';
 export { useAnimatedScrollHandler } from './useAnimatedScrollHandler';
 export { useAnimatedSensor } from './useAnimatedSensor';
-export { useAnimatedStyle } from './useAnimatedStyle';
+export { useAnimatedStyle } from './useAnimatedUpdaterInternal';
 export { useComposedEventHandler } from './useComposedEventHandler';
 export type { DerivedValue } from './useDerivedValue';
 export { useDerivedValue } from './useDerivedValue';
