@@ -1,6 +1,7 @@
 'use strict';
 import type { ComponentRef, ElementType, RefObject } from 'react';
 import type {
+  HostInstance,
   ImageStyle,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -19,6 +20,7 @@ import type {
   StyleUpdaterContainer,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type { AnimatedComponentType } from '../css/component';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -37,17 +39,20 @@ export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 // react-native-strict-api types to align with the useRef type. For now, we need to support
 // the old useAnimatedRef API as well, in which uses the ElementType as the type of the ref.
 export type AnimatedRefCurrent<TRef extends InstanceOrElement> =
-  TRef extends ElementType ? ComponentRef<TRef> : TRef;
+  TRef extends AnimatedComponentType<any, infer Instance>
+    ? Instance
+    : TRef extends ElementType
+      ? ComponentRef<TRef>
+      : TRef;
 
-export type AnimatedRef<TRef extends InstanceOrElement = InternalHostInstance> =
-  {
-    (ref?: AnimatedRefCurrent<TRef> | null):
-      | ShadowNodeWrapper // Native
-      | HTMLElement; // web
-    current: AnimatedRefCurrent<TRef> | null;
-    observe: (observer: AnimatedRefObserver) => void;
-    getTag?: () => Maybe<number>;
-  };
+export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
+  (ref?: AnimatedRefCurrent<TRef> | null):
+    | ShadowNodeWrapper // Native
+    | HTMLElement; // web
+  current: AnimatedRefCurrent<TRef> | null;
+  observe: (observer: AnimatedRefObserver) => void;
+  getTag?: () => Maybe<number>;
+};
 
 // Might make that type generic if it's ever needed.
 export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;

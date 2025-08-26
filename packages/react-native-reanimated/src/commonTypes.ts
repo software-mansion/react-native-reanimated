@@ -1,5 +1,5 @@
 'use strict';
-import type { RefObject, Component, ComponentRef, ElementType } from 'react';
+import type { RefObject, ElementType } from 'react';
 import type {
   FlatList,
   HostInstance,
@@ -8,7 +8,6 @@ import type {
   SectionList,
   TextStyle,
   TransformsStyle,
-  View,
   ViewStyle,
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';

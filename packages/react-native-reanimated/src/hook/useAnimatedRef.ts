@@ -1,6 +1,7 @@
 'use strict';
 import type { Ref } from 'react';
 import { useRef, useState } from 'react';
+import type { HostInstance } from 'react-native';
 import {
   createSerializable,
   serializableMappingCache,
@@ -80,7 +81,7 @@ function useAnimatedRefBase<TRef extends InstanceOrElement>(
 }
 
 function useAnimatedRefNative<
-  TRef extends InstanceOrElement = InternalHostInstance,
+  TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
@@ -110,7 +111,7 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends InstanceOrElement = InternalHostInstance,
+  TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
   return useAnimatedRefBase(getComponentOrScrollable);
 }
