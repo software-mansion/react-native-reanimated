@@ -19,8 +19,10 @@ import type {
   ShadowNodeWrapper,
   StyleUpdaterContainer,
 } from '../commonTypes';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
-import type { AnimatedComponentType } from '../css/component';
+import type {
+  AnimatedComponentType,
+  AnimatedProps,
+} from '../createAnimatedComponent';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 

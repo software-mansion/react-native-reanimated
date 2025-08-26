@@ -1,9 +1,9 @@
 'use strict';
-import type { ComponentRef, ComponentType, Ref } from 'react';
+import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
 import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import type { AnimatedComponentType } from '../css/component';
+import type { AnyRecord } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { Options } from './AnimatedComponent';
@@ -12,6 +12,17 @@ import type {
   AnimatedComponentProps,
   InitialComponentProps,
 } from './commonTypes';
+
+export type AnimatedComponentType<
+  Props extends AnyRecord = object,
+  Instance = unknown,
+> = (
+  props: Omit<AnimatedProps<Props>, 'ref'> & {
+    // Accept untyped AnimatedRef as well to allow passing a reference created
+    // with the useAnimatedRef hook call without specifying the type
+    ref?: Ref<Instance> | AnimatedRef;
+  }
+) => ReactNode;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {

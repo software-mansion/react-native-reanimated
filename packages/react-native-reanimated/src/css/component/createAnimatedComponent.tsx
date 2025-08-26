@@ -6,15 +6,15 @@ import type { FlatList, FlatListProps } from 'react-native';
 import type { InitialComponentProps } from '../../createAnimatedComponent/commonTypes';
 import type { AnimatedProps } from '../../helperTypes';
 import type { AnimatedRef } from '../../hook';
-import type { AnyRecord } from '../types';
+import type { AnyRecord, CSSProps } from '../types';
 import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 
-export type AnimatedComponentType<
+type AnimatedComponentType<
   Props extends AnyRecord = object,
   Instance = unknown,
 > = (
-  props: Omit<AnimatedProps<Props>, 'ref'> & {
+  props: Omit<CSSProps<Props>, 'ref'> & {
     // Accept untyped AnimatedRef as well to allow passing a reference created
     // with the useAnimatedRef hook call without specifying the type
     ref?: Ref<Instance> | AnimatedRef;
