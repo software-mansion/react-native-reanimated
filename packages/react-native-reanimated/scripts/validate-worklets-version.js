@@ -2,18 +2,12 @@
 
 const semverSatisfies = require('semver/functions/satisfies');
 const semverPrerelease = require('semver/functions/prerelease');
-const path = require('path');
 const expectedVersion = require('./worklets-version.json');
 const compatibilityFile = require('../compatibility.json');
 
-const packageJsonPath = path.resolve(__dirname, '../package.json');
-const packageJson = require(packageJsonPath);
-const reanimatedVersion = packageJson.version;
-
 /** @returns {{ ok: boolean; message?: string }} */
-function validateVersion() {
+function validateVersion(reanimatedVersion) {
   let workletsVersion;
-
   try {
     const { version } = require('react-native-worklets/package.json');
     workletsVersion = version;
@@ -25,7 +19,9 @@ function validateVersion() {
         expectedVersion.min +
         ' and ' +
         expectedVersion.max +
-        ' to use Reanimated ' + reanimatedVersion + '.',
+        ' to use Reanimated ' +
+        reanimatedVersion +
+        '.',
     };
   }
 
@@ -42,7 +38,9 @@ function validateVersion() {
   for (const key in compatibilityFile) {
     if (semverSatisfies(reanimatedVersion, key)) {
       // @ts-ignore
-      supportedWorkletsVersions.push(...compatibilityFile[key]['react-native-worklets']);
+      supportedWorkletsVersions.push(
+        ...compatibilityFile[key]['react-native-worklets']
+      );
     }
   }
 
