@@ -25,7 +25,9 @@ function validateVersion() {
         expectedVersion.min +
         ' and ' +
         expectedVersion.max +
-        ' to use Reanimated ' + reanimatedVersion + '.',
+        ' to use Reanimated ' +
+        reanimatedVersion +
+        '.',
     };
   }
 
@@ -42,7 +44,9 @@ function validateVersion() {
   for (const key in compatibilityFile) {
     if (semverSatisfies(reanimatedVersion, key)) {
       // @ts-ignore
-      supportedWorkletsVersions.push(...compatibilityFile[key]['react-native-worklets']);
+      supportedWorkletsVersions.push(
+        ...compatibilityFile[key]['react-native-worklets']
+      );
     }
   }
 
