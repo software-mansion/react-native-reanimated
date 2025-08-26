@@ -55,7 +55,7 @@ describe('getRelativeCoords', () => {
     ['flex-end', 'flex-start', 0, 100],
     ['flex-end', 'center', 50, 100],
     ['flex-end', 'flex-end', 100, 100],
-  ] as Array<[FlexStyle['justifyContent'], FlexStyle['alignItems'], number, number]>)(
+  ] as Array<[ViewStyle['justifyContent'], ViewStyle['alignItems'], number, number]>)(
     'getCoords %s',
     async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
       await render(<CoordsComponent justifyContent={justifyContent} alignItems={alignItems} />);

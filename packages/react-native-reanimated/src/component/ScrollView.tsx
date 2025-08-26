@@ -1,19 +1,20 @@
 'use strict';
-import type { ComponentRef } from 'react';
+import type { ComponentRef, Ref } from 'react';
 import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
+import { ReanimatedError } from '../common';
 import type { SharedValue } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
-import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
+import { isAnimatedRef } from '../hook/useAnimatedRef';
 
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
-  ref?: AnimatedRef<ComponentRef<typeof ScrollView>> | null;
+  ref?: Ref<ComponentRef<AnimatedScrollView>> | null;
 }
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
@@ -26,18 +27,23 @@ const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
 export function AnimatedScrollView({
   scrollViewOffset,
-  ref,
+  ref: refProp,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const animatedRef =
-    ref === null
-      ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useAnimatedRef<ComponentRef<typeof ScrollView>>()
-      : ref;
+  let ref = refProp;
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useScrollOffset(animatedRef, scrollViewOffset);
+    ref ??= useAnimatedRef<ComponentRef<typeof ScrollView>>();
+
+    if (!isAnimatedRef(ref)) {
+      throw new ReanimatedError(
+        'Animated.ScrollView with scrollViewOffset requires an animated ref. Please pass an animated ref instead.'
+      );
+    }
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useScrollOffset(ref, scrollViewOffset);
   }
 
   // Set default scrollEventThrottle, because user expects
@@ -48,7 +54,7 @@ export function AnimatedScrollView({
     restProps.scrollEventThrottle = 1;
   }
 
-  return <AnimatedScrollViewComponent ref={animatedRef} />;
+  return <AnimatedScrollViewComponent ref={ref} {...restProps} />;
 }
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &

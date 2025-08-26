@@ -454,21 +454,20 @@ export type StyleUpdaterContainer = RefObject<
   ((forceUpdate: boolean) => void) | undefined
 >;
 
-type InternalHostInstance = HostInstance & {
-  __internalInstanceHandle?: AnyRecord;
-};
+export type InternalHostInstance = Partial<
+  HostInstance & {
+    getScrollResponder: () => Maybe<
+      Partial<
+        ReturnType<ScrollView['getScrollResponder']> &
+          InternalHostInstance &
+          JSX.Element
+      >
+    >;
+    getNativeScrollRef: () => Maybe<InternalHostInstance | ScrollView>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getScrollableNode: () => any;
+    __internalInstanceHandle: AnyRecord;
+  }
+>;
 
-export type InstanceMethods = {
-  getScrollResponder?: () => Maybe<{
-    getNativeScrollRef?: () => Maybe<InternalHostInstance>;
-  }>;
-  getNativeScrollRef?: () => Maybe<InternalHostInstance | typeof ScrollView>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getScrollableNode?: () => any;
-  __internalInstanceHandle?: AnyRecord;
-};
-
-export type WrapperRef =
-  | (Component & InstanceMethods)
-  | (ElementType & InstanceMethods)
-  | InstanceMethods;
+export type InstanceOrElement = InternalHostInstance | ElementType;

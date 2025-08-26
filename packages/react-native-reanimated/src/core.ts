@@ -15,7 +15,7 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
-  WrapperRef,
+  InternalHostInstance,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
@@ -49,7 +49,7 @@ export const isConfigured = isReanimated3;
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
-  component?: WrapperRef | null // required on Fabric
+  component?: InternalHostInstance | null // required on Fabric
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(

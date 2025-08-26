@@ -2,10 +2,10 @@
 import type { ComponentRef } from 'react';
 import type { ScrollView } from 'react-native';
 
-import type { WrapperRef } from '../commonTypes';
+import type { InternalHostInstance } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function scrollTo<TRef extends WrapperRef>(
+export function scrollTo<TRef extends InternalHostInstance>(
   animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,

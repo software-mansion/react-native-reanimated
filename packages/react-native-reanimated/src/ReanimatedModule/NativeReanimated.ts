@@ -18,7 +18,7 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
+  InternalHostInstance,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -135,7 +135,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: WrapperRef, // required on Fabric
+    component: InternalHostInstance, // required on Fabric
     callback?: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);

@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, ComponentRef, ElementType, RefObject } from 'react';
+import type { ComponentRef, ElementType, RefObject } from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -13,9 +13,10 @@ import type { Maybe } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
+  InstanceOrElement,
+  InternalHostInstance,
   ShadowNodeWrapper,
   StyleUpdaterContainer,
-  WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
@@ -32,17 +33,24 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<TRef extends WrapperRef = Component> = {
-  (ref?: TRef | null):
-    | ShadowNodeWrapper // Native
-    | HTMLElement; // web
-  current: TRef | null;
-  observe: (observer: AnimatedRefObserver) => void;
-  getTag?: () => Maybe<number>;
-};
+// TODO - Replace InstanceOrElement with InternalHostInstance once we migrate to the new
+// react-native-strict-api types to align with the useRef type. For now, we need to support
+// the old useAnimatedRef API as well, in which uses the ElementType as the type of the ref.
+export type AnimatedRefCurrent<TRef extends InstanceOrElement> =
+  TRef extends ElementType ? ComponentRef<TRef> : TRef;
+
+export type AnimatedRef<TRef extends InstanceOrElement = InternalHostInstance> =
+  {
+    (ref?: AnimatedRefCurrent<TRef> | null):
+      | ShadowNodeWrapper // Native
+      | HTMLElement; // web
+    current: AnimatedRefCurrent<TRef> | null;
+    observe: (observer: AnimatedRefObserver) => void;
+    getTag?: () => Maybe<number>;
+  };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<WrapperRef>;
+export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
 
 /**
  * `AnimatedRef` is mapped to this type on the UI thread via a serializable

@@ -7,14 +7,18 @@ import {
   processColorsInProps,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import type { ShadowNodeWrapper, StyleProps, WrapperRef } from '../commonTypes';
+import type {
+  ShadowNodeWrapper,
+  StyleProps,
+  InternalHostInstance,
+} from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <TRef extends WrapperRef>(
+type SetNativeProps = <TRef extends InternalHostInstance>(
   animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;

@@ -8,7 +8,7 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
+  InternalHostInstance,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -97,7 +97,7 @@ export interface IReanimatedModule
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
-    component: WrapperRef | null,
+    component: InternalHostInstance | null,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
 }

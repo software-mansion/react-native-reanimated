@@ -1,5 +1,5 @@
 'use strict';
-import type { Component } from 'react';
+import type { Ref } from 'react';
 import { useRef, useState } from 'react';
 import {
   createSerializable,
@@ -7,7 +7,11 @@ import {
 } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common/constants';
-import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
+import type {
+  InstanceOrElement,
+  InternalHostInstance,
+  ShadowNodeWrapper,
+} from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
@@ -18,12 +22,12 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-function getComponentOrScrollable(ref: WrapperRef) {
+function getComponentOrScrollable(ref: InternalHostInstance) {
   return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
 }
 
-function useAnimatedRefBase<TRef extends WrapperRef>(
-  getWrapper: (ref: TRef) => ShadowNodeWrapper
+function useAnimatedRefBase<TRef extends InstanceOrElement>(
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
 ): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
@@ -76,7 +80,7 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  TRef extends WrapperRef = Component,
+  TRef extends InstanceOrElement = InternalHostInstance,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
@@ -106,9 +110,9 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends WrapperRef = Component,
+  TRef extends InstanceOrElement = InternalHostInstance,
 >(): AnimatedRef<TRef> {
-  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
+  return useAnimatedRefBase(getComponentOrScrollable);
 }
 
 /**
@@ -121,3 +125,9 @@ function useAnimatedRefWeb<
 export const useAnimatedRef = SHOULD_BE_USE_WEB
   ? useAnimatedRefWeb
   : useAnimatedRefNative;
+
+export function isAnimatedRef<TRef extends InstanceOrElement>(
+  ref: Ref<TRef> | AnimatedRef<TRef>
+): ref is AnimatedRef<TRef> {
+  return ref !== null && 'observe' in ref;
+}

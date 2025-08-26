@@ -5,7 +5,10 @@ import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
-import type { ShadowNodeWrapper, WrapperRef } from '../../commonTypes';
+import type {
+  ShadowNodeWrapper,
+  InternalHostInstance,
+} from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
@@ -91,7 +94,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag ?? -1;
       viewName = viewInfo.viewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        this as WrapperRef,
+        this as InternalHostInstance,
         hostInstance
       );
     }

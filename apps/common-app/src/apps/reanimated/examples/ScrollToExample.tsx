@@ -3,7 +3,7 @@ import {
   FlashListRef,
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
-import type { ComponentRef, Ref } from 'react';
+import type { Ref } from 'react';
 import React, { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ListRenderItem as FlatListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
@@ -84,7 +84,7 @@ type ExampleProps = {
 };
 
 const ScrollViewExample = ({ animated, ref }: ExampleProps) => {
-  const aref = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
+  const aref = useAnimatedRef<Animated.ScrollView>();
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
