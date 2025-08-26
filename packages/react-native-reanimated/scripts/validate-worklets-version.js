@@ -2,18 +2,12 @@
 
 const semverSatisfies = require('semver/functions/satisfies');
 const semverPrerelease = require('semver/functions/prerelease');
-const path = require('path');
 const expectedVersion = require('./worklets-version.json');
 const compatibilityFile = require('../compatibility.json');
 
-const packageJsonPath = path.resolve(__dirname, '../package.json');
-const packageJson = require(packageJsonPath);
-const reanimatedVersion = packageJson.version;
-
 /** @returns {{ ok: boolean; message?: string }} */
-function validateVersion() {
+function validateVersion(reanimatedVersion) {
   let workletsVersion;
-
   try {
     const { version } = require('react-native-worklets/package.json');
     workletsVersion = version;
