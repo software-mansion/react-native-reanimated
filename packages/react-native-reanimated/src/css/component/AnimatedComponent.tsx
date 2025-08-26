@@ -6,8 +6,8 @@ import { Platform, StyleSheet } from 'react-native';
 
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type {
-  ShadowNodeWrapper,
   InternalHostInstance,
+  ShadowNodeWrapper,
 } from '../../commonTypes';
 import type {
   AnimatedComponentRef,

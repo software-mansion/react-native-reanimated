@@ -39,6 +39,7 @@ export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 // react-native-strict-api types to align with the useRef type. For now, we need to support
 // the old useAnimatedRef API as well, in which uses the ElementType as the type of the ref.
 export type AnimatedRefCurrent<TRef extends InstanceOrElement> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TRef extends AnimatedComponentType<any, infer Instance>
     ? Instance
     : TRef extends ElementType

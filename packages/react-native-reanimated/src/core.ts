@@ -9,13 +9,13 @@ import { createSerializable } from 'react-native-worklets';
 import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
-  InternalHostInstance,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';

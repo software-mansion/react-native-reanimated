@@ -2,7 +2,7 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper, InstanceOrElement } from '../commonTypes';
+import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,

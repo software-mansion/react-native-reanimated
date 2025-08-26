@@ -3,12 +3,12 @@
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
 import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  InternalHostInstance,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,

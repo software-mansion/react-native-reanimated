@@ -1,6 +1,6 @@
 'use strict';
 import { logger } from '../common';
-import type { MeasuredDimensions, InternalHostInstance } from '../commonTypes';
+import type { InternalHostInstance, MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
 export function measure<TRef extends InternalHostInstance>(

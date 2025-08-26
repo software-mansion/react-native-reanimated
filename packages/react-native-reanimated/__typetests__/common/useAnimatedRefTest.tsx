@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { FlashListRef } from '@shopify/flash-list';
 import { FlashList } from '@shopify/flash-list';
-import type { Ref } from 'react';
+import type {
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
+  Ref,
+} from 'react';
 import React, { useRef } from 'react';
 import type { ImageProps, ViewProps } from 'react-native';
 import { FlatList, Image, ScrollView, Text, View } from 'react-native';
@@ -11,8 +16,8 @@ import Animated, { useAnimatedRef } from '../..';
 
 function UseAnimatedRefTest() {
   function UseAnimatedRefTestClassComponent() {
-    const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
     const AnimatedImage = Animated.createAnimatedComponent(Image);
+    const animatedRef = useAnimatedRef<ComponentClass<ImageProps>>();
     return (
       <>
         <AnimatedImage ref={animatedRef} source={{}} />
@@ -27,13 +32,8 @@ function UseAnimatedRefTest() {
     };
     const AnimatedFunctionComponent =
       Animated.createAnimatedComponent(FunctionComponent);
-    const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-    return (
-      <AnimatedFunctionComponent
-        // @ts-expect-error ref is not available on plain function-components
-        ref={animatedRef}
-      />
-    );
+    const animatedRef = useAnimatedRef<FunctionComponent<ViewProps>>();
+    return <AnimatedFunctionComponent ref={animatedRef} />;
   }
 
   function UseAnimatedRefTestComponent() {
@@ -214,9 +214,7 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedScrollView>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedScrollView>();
-      useAnimatedRef<typeof CreatedAnimatedScrollView & ScrollView>();
+      useAnimatedRef<typeof CreatedAnimatedScrollView>();
 
     return (
       <>
@@ -228,15 +226,12 @@ function UseAnimatedRefTest() {
         <ScrollView ref={plainRefCreatedComponent} />
         <ScrollView ref={animatedRefCreatedComponent} />
 
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <Animated.ScrollView ref={plainRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.ScrollView ref={animatedRefPlainComponent} />
         <Animated.ScrollView ref={plainRefAnimatedComponent} />
         <Animated.ScrollView ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <Animated.ScrollView ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.ScrollView ref={animatedRefCreatedComponent} />
 
         <CreatedAnimatedScrollView ref={plainRefPlainComponent} />

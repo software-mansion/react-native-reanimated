@@ -13,12 +13,12 @@ import {
   SHOULD_BE_USE_WEB,
 } from '../common';
 import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  InternalHostInstance,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,

@@ -8,9 +8,9 @@ import {
   SHOULD_BE_USE_WEB,
 } from '../common';
 import type {
+  InstanceOrElement,
   ShadowNodeWrapper,
   StyleProps,
-  InstanceOrElement,
 } from '../commonTypes';
 import type {
   AnimatedRef,

@@ -458,8 +458,8 @@ export type StyleUpdaterContainer = RefObject<
 
 type GetProp<T, K extends PropertyKey> = K extends keyof T ? T[K] : undefined;
 
-type ScrollResponderType = Partial<
-  InternalHostInstance &
+type ScrollResponderType = InternalHostInstance &
+  Partial<
     ReturnType<
       NonNullable<
         | GetProp<ScrollView, 'getScrollResponder'>
@@ -467,8 +467,8 @@ type ScrollResponderType = Partial<
         | GetProp<SectionList, 'getScrollResponder'>
       >
     > &
-    JSX.Element
->;
+      JSX.Element
+  >;
 
 export type InternalHostInstance = Partial<
   HostInstance & {
