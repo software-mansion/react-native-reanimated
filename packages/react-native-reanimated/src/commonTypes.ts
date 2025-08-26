@@ -1,7 +1,9 @@
 'use strict';
-import type { ComponentRef } from 'react';
+
+import type { ComponentRef, RefObject } from 'react';
 import type {
   ImageStyle,
+  NativeMethods,
   ScrollResponderMixin,
   ScrollViewComponent,
   TextStyle,
@@ -225,7 +227,7 @@ export type MapperOutputs = SharedValue[];
 export type MapperRegistry = {
   start: (
     mapperID: number,
-    worklet: () => void,
+    worklet: (forceUpdate?: boolean) => void,
     inputs: MapperRawInputs,
     outputs?: MapperOutputs
   ) => void;
@@ -447,8 +449,16 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
+export type StyleUpdaterContainer = RefObject<
+  ((forceUpdate: boolean) => void) | undefined
+>;
+
 type NativeScrollRef = Maybe<
-  (ComponentRef<typeof View> | ComponentRef<typeof ScrollViewComponent>) & {
+  (
+    | ComponentRef<typeof View>
+    | ComponentRef<typeof ScrollViewComponent>
+    | NativeMethods
+  ) & {
     __internalInstanceHandle?: AnyRecord;
   }
 >;

@@ -26,10 +26,20 @@
     "prettier": "^3.3.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.13.0"
   },
   "installConfig": {
     "hoistingLimits": "workspaces",
     "selfReferences": false
+  },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true
+    }
+  },
+  "worklets": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true
+    }
   }
 }

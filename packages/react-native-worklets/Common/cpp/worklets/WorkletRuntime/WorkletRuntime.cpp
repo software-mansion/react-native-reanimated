@@ -81,7 +81,7 @@ WorkletRuntime::WorkletRuntime(
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  if (enableEventLoop) {
+  if (enableEventLoop && name != uiRuntimeName) {
     eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
     eventLoop_->run();
   }
@@ -135,6 +135,10 @@ void WorkletRuntime::init(
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+
+  auto synchronizableUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
+  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
 }
 
