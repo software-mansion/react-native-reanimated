@@ -4,6 +4,21 @@ print() {
   echo "    [PRECOMMIT]: $1" >&2
 }
 
+check_and_lint_docs() {
+  local staged_files="$1"
+  local docs_path="$2"
+  local docs_name="$3"
+
+  print "Checking for changes in $docs_name docs..."
+  if echo "$staged_files" | grep "^$docs_path/" --silent; then
+    print "Changes spotted. Running $docs_name docs lint..."
+    try cd "$docs_path" && yarn lint
+    print "Success."
+  else
+    print "No changes. Skipping $docs_name docs lint."
+  fi
+}
+
 BRANCH=$(git symbolic-ref HEAD)
 if [ "$BRANCH" = "refs/heads/main" ]; then
   print "You tried to commit to main, which is probably a mistake. Aborting commit."
@@ -27,6 +42,7 @@ try() {
   fi
 }
 
+
 # Some precommit checks can take several seconds. Therefore, we
 # want them to trigger only when relevant files are staged.
 STAGED_FILES=$(git diff-index HEAD --cached --name-only)
@@ -43,6 +59,12 @@ if echo "$STAGED_FILES" | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" --silent;
 else
   print "No changes. Skipping TypeScript checks."
 fi
+
+# Linting docs
+REANIMATED_DOCS_PATH="packages/docs-reanimated"
+check_and_lint_docs "$STAGED_FILES" "$REANIMATED_DOCS_PATH" "Reanimated"
+WORKLETS_DOCS_PATH="packages/docs-worklets"
+check_and_lint_docs "$STAGED_FILES" "$WORKLETS_DOCS_PATH" "Worklets"
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
