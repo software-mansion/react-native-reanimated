@@ -40,7 +40,7 @@ describe('animation of BoxShadow', () => {
     const styleActive = useAnimatedStyle(() => {
       return {
         boxShadow: [boxShadowActiveSV.value],
-      } as DefaultStyle;
+      } as unknown as DefaultStyle;
     });
 
     const stylePassive = useAnimatedStyle(() => {

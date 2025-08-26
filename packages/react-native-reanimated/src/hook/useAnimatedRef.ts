@@ -1,4 +1,5 @@
 'use strict';
+import type { Component } from 'react';
 import { useRef, useState } from 'react';
 import {
   createSerializable,
@@ -36,8 +37,9 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
         wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
-        fun.current = ref;
+        fun.getTag = () =>
+          findNodeHandle(getComponentOrScrollable(ref)) ?? null;
+        fun.current = ref as typeof fun.current;
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
@@ -74,7 +76,7 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  TRef extends WrapperRef = WrapperRef,
+  TRef extends WrapperRef = Component,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
@@ -104,7 +106,7 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends WrapperRef = WrapperRef,
+  TRef extends WrapperRef = Component,
 >(): AnimatedRef<TRef> {
   return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
 }

@@ -1,8 +1,9 @@
 'use strict';
-import type { RefObject } from 'react';
+import type { RefObject, Component, ElementType } from 'react';
 import type {
   HostInstance,
   ImageStyle,
+  ScrollView,
   TextStyle,
   TransformsStyle,
   ViewStyle,
@@ -457,14 +458,17 @@ type InternalHostInstance = HostInstance & {
   __internalInstanceHandle?: AnyRecord;
 };
 
-type InstanceMethods = {
+export type InstanceMethods = {
   getScrollResponder?: () => Maybe<{
     getNativeScrollRef?: () => Maybe<InternalHostInstance>;
   }>;
-  getNativeScrollRef?: () => Maybe<InternalHostInstance>;
+  getNativeScrollRef?: () => Maybe<InternalHostInstance | typeof ScrollView>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getScrollableNode?: () => any;
   __internalInstanceHandle?: AnyRecord;
 };
 
-export type WrapperRef = InstanceMethods;
+export type WrapperRef =
+  | (Component & InstanceMethods)
+  | (ElementType & InstanceMethods)
+  | InstanceMethods;

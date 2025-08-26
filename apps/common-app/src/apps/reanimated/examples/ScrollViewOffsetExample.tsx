@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentRef } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedRef,
@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function ScrollViewOffsetExample() {
-  const aref = useAnimatedRef<Animated.ScrollView>();
+  const aref = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
   const scrollHandler = useSharedValue(0);
 
   useAnimatedStyle(() => {

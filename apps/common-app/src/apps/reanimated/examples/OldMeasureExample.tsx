@@ -4,7 +4,11 @@ import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import type { AnimatedRef, SharedValue } from 'react-native-reanimated';
+import type {
+  AnimatedRef,
+  ComponentRef,
+  SharedValue,
+} from 'react-native-reanimated';
 import Animated, {
   Easing,
   measure,
@@ -139,9 +143,7 @@ type MeasuredDimensions = {
   pageX: number;
   pageY: number;
 };
-function asyncMeasure(
-  animatedRef: AnimatedRef<React.Component>
-): Promise<MeasuredDimensions> {
+function asyncMeasure(animatedRef: AnimatedRef): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
       animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
@@ -155,7 +157,7 @@ function asyncMeasure(
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: AnimatedRef<React.Component>;
+  animatedRef: AnimatedRef<ComponentRef<React.Component>>;
   contentHeight: SharedValue<number>;
   show: boolean;
 };

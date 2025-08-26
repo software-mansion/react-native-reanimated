@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentRef, useRef } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
   Gesture,
@@ -199,7 +199,7 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
 }
 
 function ThrowErrorFromuseScrollOffsetDemo() {
-  const aref = useAnimatedRef<Animated.ScrollView>();
+  const aref = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
 
   const offset = useScrollOffset(aref);
 

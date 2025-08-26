@@ -88,7 +88,9 @@ export enum ComparisonMode {
 
 export type LockObject = { lock: boolean };
 
-export type OperationUpdate = StyleProps | AnimatedStyle<Record<string, unknown>> | Record<string, unknown>;
+type Writeable<T> = { -readonly [K in keyof T]: T[K] };
+
+export type OperationUpdate = Writeable<StyleProps | AnimatedStyle<Record<string, unknown>> | Record<string, unknown>>;
 
 export interface Operation {
   tag?: number;

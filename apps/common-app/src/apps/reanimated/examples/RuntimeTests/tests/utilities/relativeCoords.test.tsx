@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FlexStyle, ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
 import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
@@ -13,8 +13,8 @@ const CoordsComponent = ({
   justifyContent,
   alignItems,
 }: {
-  justifyContent: FlexStyle['justifyContent'];
-  alignItems: FlexStyle['alignItems'];
+  justifyContent: ViewStyle['justifyContent'];
+  alignItems: ViewStyle['alignItems'];
 }) => {
   const coordsSv = useSharedValue<ComponentCoords | null>(null);
   registerValue(REGISTERED_VALUE_KEY, coordsSv);

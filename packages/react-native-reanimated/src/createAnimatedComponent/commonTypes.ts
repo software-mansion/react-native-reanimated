@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, Ref, RefObject } from 'react';
+import type { Component, ReactNode, Ref, RefObject } from 'react';
 
 import type {
   AnimatedStyle,
@@ -40,7 +40,7 @@ export interface IInlinePropManager {
   detachInlineProps(): void;
 }
 
-export type AnimatedComponentType = React.Component<unknown, unknown> &
+export type AnimatedComponentTypeInternal = Component &
   IAnimatedComponentInternal;
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -48,7 +48,7 @@ export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {
   filterNonAnimatedProps: (
-    component: AnimatedComponentType
+    component: AnimatedComponentTypeInternal
   ) => Record<string, unknown>;
 }
 
@@ -59,10 +59,10 @@ export type JSPropsOperation = {
 
 export interface IJSPropsUpdater {
   registerComponent(
-    animatedComponent: AnimatedComponentType,
+    animatedComponent: AnimatedComponentTypeInternal,
     jsProps: string[]
   ): void;
-  unregisterComponent(animatedComponent: AnimatedComponentType): void;
+  unregisterComponent(animatedComponent: AnimatedComponentTypeInternal): void;
   updateProps(operations: JSPropsOperation[]): void;
 }
 

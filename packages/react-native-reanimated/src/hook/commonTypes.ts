@@ -1,5 +1,5 @@
 'use strict';
-import type { RefObject } from 'react';
+import type { Component, ComponentRef, ElementType, RefObject } from 'react';
 import type {
   ImageStyle,
   NativeScrollEvent,
@@ -32,7 +32,7 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<TRef extends WrapperRef> = {
+export type AnimatedRef<TRef extends WrapperRef = Component> = {
   (ref?: TRef | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
