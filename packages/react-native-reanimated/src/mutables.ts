@@ -98,7 +98,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
 }
 
 // eslint-disable-next-line camelcase
-function experimental_makeMutableUIOptimized<Value>(
+function experimental_makeMutableUI<Value>(
   initial: Value,
   dirtyFlag: Synchronizable<boolean>
 ): Mutable<Value> {
@@ -107,9 +107,7 @@ function experimental_makeMutableUIOptimized<Value>(
   let value = initial;
   let isDirty = false;
 
-  const mutable: PartialMutable<Value> & {
-    resetDirtyFlag?(): void;
-  } = {
+  const mutable: PartialMutable<Value> = {
     get value() {
       return value;
     },
@@ -128,10 +126,6 @@ function experimental_makeMutableUIOptimized<Value>(
       listeners.forEach((listener) => {
         listener(newValue);
       });
-    },
-    resetDirtyFlag() {
-      dirtyFlag.setBlocking(false);
-      isDirty = false;
     },
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
@@ -202,34 +196,22 @@ function makeMutableUI_<Value>(initial: Value): Mutable<Value> {
   return mutable as Mutable<Value>;
 }
 
-const useSynchronizableForMutables = getStaticFeatureFlag(
+const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
   'USE_SYNCHRONIZABLE_FOR_MUTABLES'
 );
 
-export const makeMutableUI = useSynchronizableForMutables
+export const makeMutableUI = USE_SYNCHRONIZABLE_FOR_MUTABLES
   ? // eslint-disable-next-line camelcase
-    (experimental_makeMutableUIOptimized as typeof makeMutableUI_)
+    (experimental_makeMutableUI as typeof makeMutableUI_)
   : makeMutableUI_;
 
-declare global {
-  var __LOOKUPTIME_MS: number;
-  var __LOOKUPS: number;
-}
-
-globalThis.__LOOKUPTIME_MS = 0;
-globalThis.__LOOKUPS = 0;
-
 // eslint-disable-next-line camelcase
-function makeMutableNative_EXPERIMENTAL_OPTIMIZATION<Value>(
-  initial: Value
-): Mutable<Value> {
+function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const dirtyFlag = createSynchronizable(false);
-  let latest = initial;
-
   const handle = createSerializable({
     __init: () => {
       'worklet';
-      return experimental_makeMutableUIOptimized(initial, dirtyFlag);
+      return experimental_makeMutableUI(initial, dirtyFlag);
     },
   });
 
@@ -238,14 +220,12 @@ function makeMutableNative_EXPERIMENTAL_OPTIMIZATION<Value>(
       checkInvalidReadDuringRender();
       if (dirtyFlag.getBlocking()) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-          (
-            sv as Mutable<Value> & { resetDirtyFlag: () => void }
-          ).resetDirtyFlag();
           return sv.value;
         });
-        latest = uiValueGetter(mutable as Mutable<Value>);
+        return uiValueGetter(mutable as Mutable<Value>);
+      } else {
+        return initial;
       }
-      return latest;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
@@ -408,9 +388,9 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
 export const makeMutable = SHOULD_BE_USE_WEB
   ? makeMutableWeb
-  : useSynchronizableForMutables
+  : USE_SYNCHRONIZABLE_FOR_MUTABLES
     ? // eslint-disable-next-line camelcase
-      makeMutableNative_EXPERIMENTAL_OPTIMIZATION
+      experimental_makeMutableNative
     : makeMutableNative;
 
 interface JestMutable<TValue> extends Mutable<TValue> {

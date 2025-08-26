@@ -1,5 +1,5 @@
 'use strict';
-import type { PredefinedTimingFunction, StepsModifier } from '../easings';
+import type { PredefinedTimingFunction, StepsModifier } from '../easing';
 import type { CSSAnimationProp, CSSTransitionProp } from '../types';
 
 export const ANIMATION_PROPS: CSSAnimationProp[] = [

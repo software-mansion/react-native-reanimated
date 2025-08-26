@@ -20,6 +20,5 @@ using TransitionProperties = std::optional<PropertyNames>;
 
 using EasingFunction = std::function<double(double)>;
 using ColorChannels = std::array<uint8_t, 4>;
-using Vec16Array = std::array<double, 16>;
 
 } // namespace reanimated::css

@@ -32,11 +32,15 @@
   --ifm-font-family-bold: var(--swm-body-font);
 
   /* Heading */
+  --swm-heading-font-size-xl: 64px;
   --swm-h1-font-size: 42px;
   --swm-h2-font-size: 32px;
   --swm-h3-font-size: 22px;
   --swm-heading-font-size-smaller: 18px;
   --ifm-code-font-size: 90%;
+
+  /* Heading for smaller screens */
+  --swm-h1-font-size-mobile: 26px;
 
   --ifm-heading-font-family: var(--swm-title-font);
   --ifm-heading-margin-bottom: 0;
@@ -128,6 +132,7 @@ h1 {
 @media (max-width: 996px) {
   h1 {
     letter-spacing: var(--swm-heading-letter-spacing-smaller);
+    font-size: var(--swm-h1-font-size-mobile) !important;
   }
 }
 
