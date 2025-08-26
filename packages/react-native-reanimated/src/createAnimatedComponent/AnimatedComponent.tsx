@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
@@ -327,13 +326,6 @@ export default class AnimatedComponent
       return;
     }
 
-    if (this._isReducedMotion(currentConfig)) {
-      if (!previousConfig) {
-        return;
-      }
-      currentConfig = undefined;
-    }
-
     updateLayoutAnimations(
       type === LayoutAnimationType.ENTERING
         ? this.reanimatedID
@@ -348,14 +340,6 @@ export default class AnimatedComponent
           this._displayName
         )
     );
-  }
-
-  _isReducedMotion(config?: LayoutAnimationOrBuilder): boolean {
-    return config &&
-      'getReduceMotion' in config &&
-      typeof config.getReduceMotion === 'function'
-      ? getReduceMotionFromConfig(config.getReduceMotion())
-      : getReduceMotionFromConfig();
   }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.
