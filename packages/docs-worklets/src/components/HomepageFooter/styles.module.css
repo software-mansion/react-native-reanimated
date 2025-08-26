@@ -25,6 +25,9 @@
     .description {
       max-width: 600px;
       text-align: center;
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 160%;
     }
 
     .hireUsButton {

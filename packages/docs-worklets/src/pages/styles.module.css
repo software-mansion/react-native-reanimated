@@ -19,3 +19,7 @@
     gap: 56px;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}

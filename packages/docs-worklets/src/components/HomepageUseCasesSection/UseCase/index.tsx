@@ -19,7 +19,7 @@ export default function UseCase({
   return (
     <div className={styles.useCase}>
       <div className={styles.header}>
-        <div className={styles.title}>{title}</div>
+        <h3 className={styles.title}>{title}</h3>
         <a href={url} target="_blank" rel="noreferrer">
           <div className={styles.link}>
             <LinkIcon />
