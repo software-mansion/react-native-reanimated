@@ -42,7 +42,6 @@ try() {
   fi
 }
 
-
 # Some precommit checks can take several seconds. Therefore, we
 # want them to trigger only when relevant files are staged.
 STAGED_FILES=$(git diff-index HEAD --cached --name-only)
