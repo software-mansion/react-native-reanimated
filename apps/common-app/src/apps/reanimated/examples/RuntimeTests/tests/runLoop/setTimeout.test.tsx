@@ -256,8 +256,6 @@ describe('Test setTimeout', () => {
               }, 20);
               order(1, notification1);
             }, 20);
-            order(1, notification1);
-          }, 20);
 
             setTimeout(() => {
               order(3, notification3);
