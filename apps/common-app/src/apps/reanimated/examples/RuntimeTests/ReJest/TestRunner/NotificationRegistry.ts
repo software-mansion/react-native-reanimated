@@ -8,7 +8,7 @@ function notifyJS(name: string) {
 export class NotificationRegistry {
   public notify(name: string) {
     'worklet';
-    if (_WORKLET) {
+    if (globalThis._WORKLET) {
       runOnJS(notifyJS)(name);
     } else {
       notifyJS(name);
@@ -16,13 +16,26 @@ export class NotificationRegistry {
   }
 
   public async waitForNotify(name: string) {
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (notificationRegistry[name]) {
           clearInterval(interval);
           resolve(true);
         }
-      }, 10);
+      }, defaultPollingRate);
+    });
+  }
+
+  public async waitForNotifications(names: string[]) {
+    const defaultPollingRate = 10;
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        if (names.every(name => notificationRegistry[name])) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, defaultPollingRate);
     });
   }
 

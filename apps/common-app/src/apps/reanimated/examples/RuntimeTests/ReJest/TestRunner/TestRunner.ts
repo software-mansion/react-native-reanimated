@@ -3,7 +3,15 @@ import { useRef } from 'react';
 
 import { Matchers } from '../matchers/Matchers';
 import { TestComponent } from '../TestComponent';
-import type { MaybeAsync, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
+import type {
+  DefaultValue,
+  ValueWrapper,
+  MaybeAsync,
+  TestCase,
+  TestConfiguration,
+  TestSuite,
+  TestValue,
+} from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { assertTestCase, assertTestSuite } from './Asserts';
@@ -13,6 +21,7 @@ import { TestSuiteBuilder } from './TestSuiteBuilder';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { ValueRegistry } from './ValueRegistry';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+import { runOnJS } from 'react-native-worklets';
 
 export { Presets } from '../Presets';
 
@@ -56,6 +65,43 @@ export class TestRunner {
   public configure(config: TestConfiguration) {
     this._renderHook = config.render;
     return this._renderLock;
+  }
+
+  public createTestValue<T = DefaultValue>(
+    defaultValue: T | DefaultValue,
+    customSetter?: (prev: T, current: T) => T,
+  ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
+    const state: ValueWrapper<T> = {
+      value: defaultValue,
+    };
+    const jsSetter = (value: T | DefaultValue = 'ok', notificationName?: string) => {
+      if (customSetter) {
+        state.value = customSetter(state.value as T, value as T);
+      } else {
+        state.value = value;
+      }
+      if (notificationName) {
+        this._notificationRegistry.notify(notificationName);
+      }
+    };
+    const setter = (value?: T | DefaultValue, notificationName?: string) => {
+      'worklet';
+      runOnJS(jsSetter)(value, notificationName);
+    };
+    return [state, setter];
+  }
+
+  public createOrderConstraint() {
+    'worklet';
+    return this.createTestValue<number>(0, (prev: number, current: number) => {
+      'worklet';
+      if (prev == current - 1) {
+        return current;
+      } else if (prev == 0) {
+        return -1;
+      }
+      return prev;
+    });
   }
 
   public async render(component: ReactElement<Component> | null) {
