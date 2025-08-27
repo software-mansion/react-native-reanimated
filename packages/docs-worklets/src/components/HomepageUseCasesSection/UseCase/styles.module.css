@@ -36,13 +36,17 @@
     align-items: center;
     position: relative;
 
-    img {
-      width: 80%;
+    .phone {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .video {
       border-radius: 48px;
-      width: 74%;
+      max-width: 300px;
+      padding: 12px 8px;
       position: absolute;
       height: 100%;
       object-fit: cover;
@@ -55,6 +59,21 @@
     .header {
       .title {
         font-size: 20px;
+      }
+    }
+
+    .content {
+      .phone {
+        svg {
+          max-width: 240px;
+          max-height: 500px;
+        }
+      }
+
+      .video {
+        border-radius: 32px;
+        max-width: 240px;
+        max-height: 500px;
       }
     }
   }
