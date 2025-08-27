@@ -1,13 +1,9 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
-  registerValue,
   render,
   test,
   createTestValue,
@@ -84,7 +80,7 @@ describe('Test cancelAnimationFrame', () => {
               notify(notification1);
             });
             handle = requestAnimationFrame(() => {
-              sharedResult.value = 'not_ok';
+              setFlag('not_ok');
             });
             requestAnimationFrame(() => notify(notification2));
           }}

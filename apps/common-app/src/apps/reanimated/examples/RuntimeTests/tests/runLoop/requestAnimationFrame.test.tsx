@@ -1,11 +1,8 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { runOnUI, useSharedValue, SharedValue } from 'react-native-reanimated';
+import React from 'react';
 
 import {
   describe,
   expect,
-  getRegisteredValue,
   notify,
   render,
   test,
@@ -28,13 +25,14 @@ describe('Test requestAnimationFrame', () => {
       <DispatchTestComponent
         worklet={() => {
           'worklet';
-          requestAnimationFrame(() => notify(notification));
+          requestAnimationFrame(() => setFlag('ok', notification));
         }}
         runtimeKind={runtimeKind}
       />,
     );
 
     await waitForNotify(notification);
+    expect(flag.value).toBe('ok');
   });
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
