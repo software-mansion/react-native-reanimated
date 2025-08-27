@@ -20,8 +20,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   massV?: number;
   stiffnessV?: number;
   overshootClampingV?: number;
-  restDisplacementThresholdV?: number;
-  restSpeedThresholdV?: number;
+  energyThresholdV?: number;
   initialValues?: StyleProps;
 
   static createInstance: <T extends typeof BaseAnimationBuilder>(
@@ -195,45 +194,61 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   }
 
   /**
-   * Lets you adjust the rest displacement threshold of the spring animation.
-   * Can be chained alongside other [layout animation
-   * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
-   *
-   * @param restDisplacementThreshold - The displacement below which the spring
-   *   will snap to the designated position without further oscillations.
+   * @deprecated Use {@link energyThreshold} instead. This method currently does
+   *   nothing and will be removed in the upcoming major version.
    */
   static restDisplacementThreshold<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    restDisplacementThreshold: number
+    _restDisplacementThreshold: number
   ) {
-    const instance = this.createInstance();
-    return instance.restDisplacementThreshold(restDisplacementThreshold);
+    return this.createInstance();
   }
 
-  restDisplacementThreshold(restDisplacementThreshold: number) {
-    this.restDisplacementThresholdV = restDisplacementThreshold;
+  /**
+   * @deprecated Use {@link energyThreshold} instead. This method currently does
+   *   nothing and will be removed in the upcoming major version.
+   */
+  restDisplacementThreshold(_restDisplacementThreshold: number) {
     return this;
   }
 
   /**
-   * Lets you adjust the rest speed threshold of the spring animation. Can be
-   * chained alongside other [layout animation
-   * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
-   *
-   * @param restSpeedThreshold - The speed in pixels per second from which the
-   *   spring will snap to the designated position without further
-   *   oscillations.
+   * @deprecated Use {@link energyThreshold} instead. This method currently does
+   *   nothing and will be removed in a future version.
    */
   static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    restSpeedThreshold: number
+    _restSpeedThreshold: number
   ) {
-    const instance = this.createInstance();
-    return instance.restSpeedThreshold(restSpeedThreshold);
+    return this.createInstance();
   }
 
-  restSpeedThreshold(restSpeedThreshold: number): this {
-    this.restSpeedThresholdV = restSpeedThreshold;
+  /**
+   * @deprecated Use {@link energyThreshold} instead. This method currently does
+   *   nothing and will be removed in a future version.
+   */
+  restSpeedThreshold(_restSpeedThreshold: number): this {
+    return this;
+  }
+
+  /**
+   * Lets you adjust the energy threshold level to stop the spring animation.
+   * Can be chained alongside other [layout animation
+   * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
+   *
+   * @param energyThreshold - Relative energy threshold below which the spring
+   *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
+   */
+  static energyThreshold<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    energyThreshold: number
+  ) {
+    const instance = this.createInstance();
+    return instance.energyThreshold(energyThreshold);
+  }
+
+  energyThreshold(energyThreshold: number): this {
+    this.energyThresholdV = energyThreshold;
     return this;
   }
 
@@ -265,8 +280,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
     const mass = this.massV;
     const stiffness = this.stiffnessV;
     const overshootClamping = this.overshootClampingV;
-    const restDisplacementThreshold = this.restDisplacementThresholdV;
-    const restSpeedThreshold = this.restSpeedThresholdV;
+    const energyThreshold = this.energyThresholdV;
 
     const animation = type;
 
@@ -292,11 +306,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
         { variableName: 'mass', value: mass },
         { variableName: 'stiffness', value: stiffness },
         { variableName: 'overshootClamping', value: overshootClamping },
-        {
-          variableName: 'restDisplacementThreshold',
-          value: restDisplacementThreshold,
-        },
-        { variableName: 'restSpeedThreshold', value: restSpeedThreshold },
+        { variableName: 'energyThreshold', value: energyThreshold },
         { variableName: 'duration', value: duration },
         { variableName: 'rotate', value: rotate },
       ] as const

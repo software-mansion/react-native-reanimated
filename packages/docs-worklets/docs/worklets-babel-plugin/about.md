@@ -158,8 +158,8 @@ import { scheduleOnUI } from 'react-native-worklets';
 const style = scheduleOnUI((greetings: string) => {
   // You don't need to add the 'worklet' directive here,
   // since plugin detects this callback as autoworkletizable.
-  console.log(`${greetings} from UI Runtime`)
-}, "Hello");
+  console.log(`${greetings} from UI Runtime`);
+}, 'Hello');
 ```
 
 This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).

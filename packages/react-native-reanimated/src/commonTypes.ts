@@ -122,8 +122,7 @@ export interface BaseLayoutAnimationConfig {
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
+  energyThreshold?: number;
 }
 
 export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
