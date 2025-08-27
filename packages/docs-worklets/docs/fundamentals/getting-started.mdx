@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 # Getting started
 
-The goal of the _Fundamentals_ section is to help you gain a strong foundation on the core concepts of _Worklets_ and give you the confidence to explore more advanced use cases on your own. This section is packed with interactive examples, code snippets and explanations. Are you ready? Let's dive in!
+{/* The goal of the _Fundamentals_ section is to help you gain a strong foundation on the core concepts of _Worklets_ and give you the confidence to explore more advanced use cases on your own. This section is packed with interactive examples, code snippets and explanations. Are you ready? Let's dive in! */}
 
 ## What is React Native Worklets?
 
@@ -19,7 +19,7 @@ While the library is in transitional period where we hone the API, all its featu
 ## Prerequisites
 
 :::info
-Worklets aren't tested on the Legacy Architecture (Paper). We highly recommend migrating to the New Architecture (Fabric)[https://reactnative.dev/architecture/landing-page] prior to using Worklets.
+Worklets library isn't tested on the Legacy Architecture (Paper). We highly recommend migrating to the [New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page) prior to using Worklets.
 :::
 
 ## Installation
@@ -78,18 +78,12 @@ When using [React Native Community CLI](https://github.com/react-native-communit
   };
 ```
 
-:::caution
-
-`react-native-worklets/plugin` has to be listed last.
-
-:::
-
 <details>
 <summary>Why do I need this?</summary>
 
-In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
 
-Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets babel plugin by default.
+Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default.
 
 To learn more about the plugin head onto to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
 

@@ -8,7 +8,8 @@ sidebar_label: 'About'
 
 ## What is Worklets Babel Plugin?
 
-The Worklets Babel Plugin transforms your code so that it can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
+]. It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
 
 - A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -153,16 +154,16 @@ runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
 To reduce boilerplate code and provide a safer API, Worklets Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
 ```ts
-const style = useAnimatedStyle(() => {
+import { scheduleOnUI } from 'react-native-worklets';
+
+const style = scheduleOnUI((greetings: string) => {
   // You don't need to add the 'worklet' directive here,
   // since plugin detects this callback as autoworkletizable.
-  return {
-    width: 100,
-  };
-});
+  console.log(`${greetings} from UI Runtime`)
+}, "Hello");
 ```
 
-This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `useAnimatedStyle` hook - Worklets Babel Plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
