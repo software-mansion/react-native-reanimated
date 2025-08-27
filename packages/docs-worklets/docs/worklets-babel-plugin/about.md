@@ -8,8 +8,7 @@ sidebar_label: 'About'
 
 ## What is Worklets Babel Plugin?
 
-The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
-]. It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The Worklets Babel Plugin transforms your code so that it can run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
 
 - A function that contains a `'worklet'` directive at its very top, i.e.:
 
