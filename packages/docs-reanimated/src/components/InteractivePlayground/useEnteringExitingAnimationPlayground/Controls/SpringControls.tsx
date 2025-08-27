@@ -59,28 +59,15 @@ const SpringControls = ({
         }}
       />
       <Range
-        label="Displacement threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={type.restDisplacementThreshold}
+        label="Energy threshold"
+        min={1e-12}
+        max={1e-1}
+        step={1e-12}
+        value={type.energyThreshold}
         onChange={(option) => {
           setType((prevState) => ({
             ...prevState,
-            restDisplacementThreshold: option,
-          }));
-        }}
-      />
-      <Range
-        label="Speed threshold"
-        min={0.01}
-        max={150}
-        step={0.01}
-        value={type.restSpeedThreshold}
-        onChange={(option) => {
-          setType((prevState) => ({
-            ...prevState,
-            restSpeedThreshold: option,
+            energyThreshold: option,
           }));
         }}
       />
