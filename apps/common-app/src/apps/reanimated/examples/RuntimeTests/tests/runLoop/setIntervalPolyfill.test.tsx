@@ -6,8 +6,8 @@ import {
   notify,
   render,
   test,
-  useOrderConstraint,
-  useTestValue,
+  createOrderConstraint,
+  createTestValue,
   waitForNotifications,
   waitForNotify,
 } from '../../ReJest/RuntimeTestsApi';
@@ -18,7 +18,7 @@ describe('Test setInterval', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single callback, runtime: **%s**', async runtimeKind => {
     // Arrange
     const [notification1, notification2, notification3] = ['iter1', 'iter2', 'iter3'];
-    const [flag, setFlag] = useTestValue('not_ok');
+    const [flag, setFlag] = createTestValue('not_ok');
 
     // Act
     await render(
@@ -51,7 +51,7 @@ describe('Test setInterval', () => {
     // Arrange
     const notification = 'callback';
     const argValue = 42;
-    const [flag, setFlag] = useTestValue('not_ok');
+    const [flag, setFlag] = createTestValue('not_ok');
 
     // Act
     await render(
@@ -83,7 +83,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue('not_ok');
+      const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
       await render(
@@ -119,7 +119,7 @@ describe('Test setInterval', () => {
       // Arrange
       const [notification1, notification2, notification3] = ['iter1', 'iter2', 'iter3'];
       const delay = 64;
-      const [flag, setFlag] = useTestValue('not_ok');
+      const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
       await render(
@@ -163,7 +163,7 @@ describe('Test setInterval', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('nested intervals, runtime: **%s**', async runtimeKind => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [confirmedOrder, order] = useOrderConstraint();
+    const [confirmedOrder, order] = createOrderConstraint();
 
     // Act
     await render(
@@ -193,7 +193,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -224,7 +224,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -255,7 +255,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -286,7 +286,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -322,7 +322,7 @@ describe('Test setInterval', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(

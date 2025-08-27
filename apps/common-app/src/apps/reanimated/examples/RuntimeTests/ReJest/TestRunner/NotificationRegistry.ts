@@ -16,26 +16,26 @@ export class NotificationRegistry {
   }
 
   public async waitForNotify(name: string) {
-    const polingRate = 10;
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (notificationRegistry[name]) {
           clearInterval(interval);
           resolve(true);
         }
-      }, polingRate);
+      }, defaultPollingRate);
     });
   }
 
   public async waitForNotifications(names: string[]) {
-    const polingRate = 10;
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (names.every(name => notificationRegistry[name])) {
           clearInterval(interval);
           resolve(true);
         }
-      }, polingRate);
+      }, defaultPollingRate);
     });
   }
 

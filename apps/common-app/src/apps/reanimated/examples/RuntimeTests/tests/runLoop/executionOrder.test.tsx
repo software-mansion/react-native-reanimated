@@ -1,6 +1,13 @@
 import React from 'react';
 
-import { describe, expect, useOrderConstraint, render, test, waitForNotifications } from '../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  createOrderConstraint,
+  render,
+  test,
+  waitForNotifications,
+} from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
 import { createWorkletRuntime, runOnRuntime } from 'react-native-worklets';
 
@@ -17,7 +24,7 @@ describe('Test mixed order of execution', () => {
       // Arrange
       const [firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder, runtimeKind] = config;
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
       // Act
       await render(
         <DispatchTestComponent
@@ -41,7 +48,7 @@ describe('Test mixed order of execution', () => {
     async ([firstMethodName, firstMethodOrder, secondMethodName, secondMethodOrder]) => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       const rt = createWorkletRuntime({ name: 'test' });
@@ -75,7 +82,7 @@ describe('Test mixed order of execution', () => {
         runtimeKind,
       ] = config;
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
       // Act
       await render(
         <DispatchTestComponent
@@ -109,7 +116,7 @@ describe('Test mixed order of execution', () => {
         runtimeKind,
       ] = config;
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
       // Act
       await render(
         <DispatchTestComponent
