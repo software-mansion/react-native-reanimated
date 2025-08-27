@@ -214,7 +214,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   /**
    * @deprecated Use {@link energyThreshold} instead. This method currently does
-   *   nothing and will be removed in the upcoming major version.
+   *   nothing and will be removed in a future version.
    */
   static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
     this: T,
@@ -225,7 +225,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
 
   /**
    * @deprecated Use {@link energyThreshold} instead. This method currently does
-   *   nothing and will be removed in the upcoming major version.
+   *   nothing and will be removed in a future version.
    */
   restSpeedThreshold(_restSpeedThreshold: number): this {
     return this;
