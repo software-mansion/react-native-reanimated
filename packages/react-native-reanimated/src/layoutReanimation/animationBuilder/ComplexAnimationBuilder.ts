@@ -232,8 +232,8 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   }
 
   /**
-   * Lets you adjust the energy threshold level to stop the spring
-   * animation. Can be chained alongside other [layout animation
+   * Lets you adjust the energy threshold level to stop the spring animation.
+   * Can be chained alongside other [layout animation
    * modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#layout-animation-modifier).
    *
    * @param energyThreshold - Relative energy threshold below which the spring
