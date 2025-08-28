@@ -435,3 +435,18 @@ function flushUIQueue(): void {
     );
   });
 }
+
+/**
+ * Added temporarily for integration with `react-native-audio-api`. Don't depend
+ * on this API as it may change without notice.
+ */
+// eslint-disable-next-line camelcase
+export function unstable_eventLoopTask<TArgs extends unknown[], TRet>(
+  worklet: (...args: TArgs) => TRet
+) {
+  return (...args: TArgs) => {
+    'worklet';
+    worklet(...args);
+    callMicrotasks();
+  };
+}
