@@ -60,9 +60,7 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
 
 /**
  * Lets you schedule a function to be executed on the [UI
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
- * from the [RN
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
  *
  * - The callback executes asynchronously and doesn't return a value.
  * - Passed function and args are automatically
