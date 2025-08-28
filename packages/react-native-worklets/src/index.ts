@@ -31,6 +31,7 @@ export {
   runOnUIAsync,
   runOnUISync,
   scheduleOnRN,
+  scheduleOnUI,
   // eslint-disable-next-line camelcase
   unstable_eventLoopTask,
 } from './threads';
