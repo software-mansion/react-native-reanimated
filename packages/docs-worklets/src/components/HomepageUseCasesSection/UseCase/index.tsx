@@ -1,5 +1,5 @@
 import LinkIcon from '@site/static/img/link-icon.svg';
-import PhoneImage from '@site/static/img/phone.png';
+import PhoneImage from '@site/static/img/phone.svg';
 
 import styles from './styles.module.css';
 
@@ -19,7 +19,7 @@ export default function UseCase({
   return (
     <div className={styles.useCase}>
       <div className={styles.header}>
-        <div className={styles.title}>{title}</div>
+        <h3 className={styles.title}>{title}</h3>
         <a href={url} target="_blank" rel="noreferrer">
           <div className={styles.link}>
             <LinkIcon />
@@ -27,7 +27,9 @@ export default function UseCase({
         </a>
       </div>
       <div className={styles.content}>
-        <img src={PhoneImage} alt="Phone" />
+        <div className={styles.phone}>
+          <PhoneImage />
+        </div>
         <video className={styles.video} src={mp4} autoPlay muted loop />
       </div>
       <div className={styles.description}>{description}</div>

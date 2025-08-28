@@ -41,7 +41,7 @@ export default function HomepageUseCasesSection(): JSX.Element {
   return (
     <>
       <div className={styles.useCasesSection}>
-        <h2>Who else is using Worklets?</h2>
+        <h2 id="who-else-is-using-worklets">Who else is using Worklets?</h2>
         <div className={styles.description}>
           React Native Worklets can help you power up your apps, but they also
           serve as the foundation for other popular libraries. Here are some of
