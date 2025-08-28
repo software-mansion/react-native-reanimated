@@ -1,4 +1,4 @@
-import { createWorkletRuntime, runOnJS } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRN } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const INITIALIZER_CALLED_NOTIFICATION = 'INITIALIZER_CALLED_NOTIFICATION';
@@ -24,7 +24,7 @@ describe('createWorkletRuntime', () => {
     };
     const initializer = () => {
       'worklet';
-      runOnJS(onJSCallback)();
+      scheduleOnRN(onJSCallback);
     };
 
     // Act

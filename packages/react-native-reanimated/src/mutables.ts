@@ -151,7 +151,8 @@ function experimental_makeMutableUI<Value>(
   return mutable as Mutable<Value>;
 }
 
-function makeMutableUI_<Value>(initial: Value): Mutable<Value> {
+// eslint-disable-next-line camelcase
+export function legacy_makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
@@ -199,11 +200,6 @@ function makeMutableUI_<Value>(initial: Value): Mutable<Value> {
 const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
   'USE_SYNCHRONIZABLE_FOR_MUTABLES'
 );
-
-export const makeMutableUI = USE_SYNCHRONIZABLE_FOR_MUTABLES
-  ? // eslint-disable-next-line camelcase
-    (experimental_makeMutableUI as typeof makeMutableUI_)
-  : makeMutableUI_;
 
 // eslint-disable-next-line camelcase
 function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
@@ -275,7 +271,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const handle = createSerializable({
     __init: () => {
       'worklet';
-      return makeMutableUI_(initial);
+      return legacy_makeMutableUI(initial);
     },
   });
 

@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, notify, render, test, wait, waitForNotification } from '../../ReJest/RuntimeTestsApi';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, runOnUI } from 'react-native-worklets';
 
 interface TestResult {
   height: number;
@@ -38,7 +38,7 @@ const TestComponent = ({ result }: { result: TestResult }) => {
 
   const animatedOnLayout = useEvent(() => {
     'worklet';
-    runOnJS(setAnimatedHandlerCalled)();
+    scheduleOnRN(setAnimatedHandlerCalled);
   }, ['onLayout']);
 
   return (

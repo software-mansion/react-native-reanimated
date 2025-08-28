@@ -54,6 +54,7 @@ export default function HomepageFooter(): JSX.Element {
         </div>
         <HomepageButton
           title="Hire us"
+          target="_blank"
           href="https://swmansion.com/contact/projects"
           className={styles.hireUsButton}
         />
