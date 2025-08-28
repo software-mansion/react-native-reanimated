@@ -151,6 +151,7 @@ function experimental_makeMutableUI<Value>(
   return mutable as Mutable<Value>;
 }
 
+// eslint-disable-next-line camelcase
 export function legacy_makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
