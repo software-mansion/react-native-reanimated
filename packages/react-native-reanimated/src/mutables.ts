@@ -119,8 +119,7 @@ function experimental_makeMutableUI<Value>(
     },
     set _value(newValue: Value) {
       if (!isDirty) {
-        dirtyFlag.setBlocking(true);
-        isDirty = true;
+        this.setDirty!(true);
       }
       value = newValue;
       listeners.forEach((listener) => {
@@ -139,6 +138,10 @@ function experimental_makeMutableUI<Value>(
     },
     removeListener: (id: number) => {
       listeners.delete(id);
+    },
+    setDirty: (dirty: boolean) => {
+      dirtyFlag.setBlocking(dirty);
+      isDirty = dirty;
     },
 
     _animation: null,
@@ -203,6 +206,7 @@ const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
 
 // eslint-disable-next-line camelcase
 function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
+  let latest = initial;
   const dirtyFlag = createSynchronizable(false);
   const handle = createSerializable({
     __init: () => {
@@ -216,12 +220,12 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
       checkInvalidReadDuringRender();
       if (dirtyFlag.getBlocking()) {
         const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
+          sv.setDirty!(false);
           return sv.value;
         });
-        return uiValueGetter(mutable as Mutable<Value>);
-      } else {
-        return initial;
+        latest = uiValueGetter(mutable as Mutable<Value>);
       }
+      return latest;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();

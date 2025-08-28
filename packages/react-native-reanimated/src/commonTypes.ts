@@ -217,6 +217,11 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * method.
    */
   _value: Value;
+  /**
+   * Defined only when enabled with a feature flag
+   * `USE_SYNCHRONIZABLE_FOR_MUTABLES`.
+   */
+  setDirty?: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];
