@@ -19,7 +19,7 @@ if (semverPrerelease(reactNativeVersion)) {
 }
 
 for (const key in compatibilityFile) {
-  if (semverSatisfies(workletsVersion, key)) {
+ if (semverSatisfies(workletsVersion, key)) {
     // @ts-ignore
     supportedRNVersions.push(...compatibilityFile[key]['react-native']);
   }
@@ -37,7 +37,5 @@ for (const version of supportedRNVersions) {
 }
 
 // eslint-disable-next-line reanimated/use-logger
-console.error(
-  `[Worklets] React Native ${reactNativeVersion} version is not compatible with Worklets ${workletsVersion}`
-);
+console.error(`[Worklets] React Native ${reactNativeVersion} version is not compatible with Worklets ${workletsVersion}`);
 process.exit(1);
