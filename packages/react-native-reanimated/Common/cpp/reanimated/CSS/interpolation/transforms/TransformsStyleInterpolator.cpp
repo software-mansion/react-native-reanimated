@@ -3,7 +3,7 @@
 namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
-    std::make_shared<MatrixOperation>(TransformMatrix::Identity())};
+    std::make_shared<MatrixOperation>(TransformMatrix3D::Identity())};
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
@@ -242,10 +242,9 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   bool shouldInterpolateMatrices = false;
 
   // Build index maps and check for matrix operation
-  std::unordered_map<TransformOperationType, size_t> lastIndexInFrom,
-      lastIndexInTo;
+  std::unordered_map<TransformOp, size_t> lastIndexInFrom, lastIndexInTo;
   for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
-    if (fromOperations[idx]->type() == TransformOperationType::Matrix) {
+    if (fromOperations[idx]->type() == TransformOp::Matrix) {
       shouldInterpolateMatrices = true;
       break;
     }
@@ -253,7 +252,7 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   }
   for (size_t idx = 0; idx < toOperations.size() && !shouldInterpolateMatrices;
        ++idx) {
-    if (toOperations[idx]->type() == TransformOperationType::Matrix) {
+    if (toOperations[idx]->type() == TransformOp::Matrix) {
       shouldInterpolateMatrices = true;
       break;
     }
@@ -365,7 +364,7 @@ TransformOperations TransformsStyleInterpolator::getFallbackValue(
 
 std::shared_ptr<TransformOperation>
 TransformsStyleInterpolator::getDefaultOperationOfType(
-    const TransformOperationType type) const {
+    const TransformOp type) const {
   return interpolators_->at(type)->getDefaultOperation();
 }
 

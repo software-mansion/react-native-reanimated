@@ -1,0 +1,27 @@
+.useCasesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 80%;
+  max-width: 936px;
+
+  .description {
+    max-width: 696px;
+  }
+
+  .useCasesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+
+  @media (max-width: 936px) {
+    .useCasesSection {
+      gap: 16px;
+    }
+
+    .useCasesGrid {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+}

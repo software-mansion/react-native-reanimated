@@ -53,10 +53,9 @@ def worklets_find_config()
 end
 
 def worklets_assert_minimal_react_native_version(config)
-      # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 78
-  if config[:react_native_minor_version] < minimalReactNativeVersion
-    raise "[Worklets] Unsupported React Native version. Please use React Native 0.#{minimalReactNativeVersion} or newer."
+  validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
+  unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
+    raise "[Worklets] React Native version is not compatible with Worklets"
   end
 end
 
@@ -66,7 +65,7 @@ def worklets_assert_new_architecture_enabled(new_arch_enabled)
   end
 end
 
-def get_static_feature_flags()
+def worklets_get_static_feature_flags()
   feature_flags = {}
 
   static_feature_flags_path = File.path('./src/featureFlags/staticFlags.json')

@@ -35,6 +35,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
+import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
 import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
@@ -119,6 +120,7 @@ import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronizablePerformanceExample from './SynchronizableExample';
 import SynchronousPropsExample from './SynchronousPropsExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
@@ -160,6 +162,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+  },
+  Synchronizable: {
+    icon: '🔄',
+    title: 'Synchronizable performance',
+    screen: SynchronizablePerformanceExample,
   },
   ReactFreeze: {
     icon: '❄️',
@@ -210,6 +217,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Copy serializable performance test',
     screen: CopySerializablePerformanceTest,
+  },
+  FlatListWithLayoutAnimations: {
+    icon: '🎻',
+    title: 'FlatList with layout animations',
+    screen: FlatListWithLayoutAnimations,
   },
 
   // About

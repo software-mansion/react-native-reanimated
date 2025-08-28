@@ -1,5 +1,6 @@
 'use strict';
 
+import type { SynchronizableRef } from '../synchronizable';
 import type { SerializableRef, WorkletRuntime } from '../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
@@ -93,6 +94,31 @@ export interface WorkletsModuleProxy {
     name: string,
     jsEngine: string
   ): void;
+
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
+
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
+
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: SerializableRef<TValue>
+  ): void;
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
+
+  getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }

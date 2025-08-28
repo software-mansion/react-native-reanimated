@@ -34,10 +34,7 @@ export default function App() {
     ) {
       const newOffset = offset.value + (SIZE + 2 * MARGIN) * -position;
       // highlight-start
-      offset.value = withSpring(newOffset, {
-        restDisplacementThreshold: 5,
-        restSpeedThreshold: 5,
-      });
+      offset.value = withSpring(newOffset);
       // highlight-end
     }
   };

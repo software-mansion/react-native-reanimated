@@ -25,7 +25,7 @@ import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../../css/platform/native';
+} from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
@@ -261,7 +261,12 @@ class JSReanimated implements IReanimatedModule {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  setDynamicFeatureFlag(_name: string, _value: boolean): void {
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag(): void {
     // noop
   }
 

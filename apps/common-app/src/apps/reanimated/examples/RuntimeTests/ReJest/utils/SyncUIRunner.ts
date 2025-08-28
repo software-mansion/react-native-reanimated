@@ -11,7 +11,7 @@ class WaitForUnlock {
   }
 
   _waitForUnlock(maxWaitTime?: number) {
-    const polingRate = 10;
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const startTime = performance.now();
       const interval = setInterval(() => {
@@ -21,7 +21,7 @@ class WaitForUnlock {
           clearInterval(interval);
           resolve(this._lock.lock);
         }
-      }, polingRate);
+      }, defaultPollingRate);
     });
   }
 }
