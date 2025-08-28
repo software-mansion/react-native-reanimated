@@ -11,6 +11,7 @@ const fs = require('fs');
 const assert = require('assert').strict;
 
 exportToCpp('valueUnpacker.ts', 'ValueUnpacker');
+exportToCpp('synchronizableUnpacker.ts', 'SynchronizableUnpacker');
 
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to

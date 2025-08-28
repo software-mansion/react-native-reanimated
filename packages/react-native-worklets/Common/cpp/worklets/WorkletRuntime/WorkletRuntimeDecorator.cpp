@@ -198,6 +198,14 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_createSerializableSynchronizable",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return SerializableJSRef::newNativeStateObject(
+            rt, extractSerializableOrThrow(rt, value));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,

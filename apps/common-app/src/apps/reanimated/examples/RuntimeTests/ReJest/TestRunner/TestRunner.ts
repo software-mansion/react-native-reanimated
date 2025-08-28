@@ -67,7 +67,7 @@ export class TestRunner {
     return this._renderLock;
   }
 
-  public useTestValue<T = DefaultValue>(
+  public createTestValue<T = DefaultValue>(
     defaultValue: T | DefaultValue,
     customSetter?: (prev: T, current: T) => T,
   ): [ValueWrapper<T>, (value?: T | DefaultValue, notificationName?: string) => void] {
@@ -91,9 +91,9 @@ export class TestRunner {
     return [state, setter];
   }
 
-  public useOrderConstraint() {
+  public createOrderConstraint() {
     'worklet';
-    return this.useTestValue<number>(0, (prev: number, current: number) => {
+    return this.createTestValue<number>(0, (prev: number, current: number) => {
       'worklet';
       if (prev == current - 1) {
         return current;

@@ -9,8 +9,8 @@ export default function DocSidebarWrapper(props) {
   };
 
   const heroImages = {
-    logo: useBaseUrl('/img/logo-hero.svg'),
-    title: useBaseUrl('/img/title-hero.svg'),
+    logo: useBaseUrl('/img/logo.svg'),
+    title: useBaseUrl('/img/title.svg'),
   };
 
   const newItems = [];

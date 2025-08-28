@@ -138,8 +138,8 @@ export function notify(name: string) {
   return testRunnerNotifyFn(name);
 }
 
-export async function waitForNotify(name: string, timeout: number | undefined = 10_000) {
-  return notificationRegistry.waitForNotify(name, timeout);
+export async function waitForNotification(name: string, timeout: number | undefined = 10_000) {
+  return notificationRegistry.waitForNotification(name, timeout);
 }
 
 export async function waitForNotifications(names: string[], timeout: number | undefined = 10_000) {
@@ -154,8 +154,8 @@ export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
-export function useTestValue<T = DefaultValue>(defaultValue: T) {
-  return testRunner.useTestValue<T>(defaultValue);
+export function createTestValue<T = DefaultValue>(defaultValue: T) {
+  return testRunner.createTestValue<T>(defaultValue);
 }
 
 export async function mockAnimationTimer() {
@@ -182,6 +182,6 @@ export async function stopRecordingAnimationUpdates() {
   await animationRecorder.stopRecordingAnimationUpdates();
 }
 
-export function useOrderConstraint() {
-  return testRunner.useOrderConstraint();
+export function createOrderConstraint() {
+  return testRunner.createOrderConstraint();
 }

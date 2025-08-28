@@ -15,13 +15,13 @@ export class NotificationRegistry {
     }
   }
 
-  public async waitForNotify(name: string, timeout?: number) {
+  public async waitForNotification(name: string, timeout?: number) {
     return this.waitForNotifications([name], timeout);
   }
 
   public async waitForNotifications(names: string[], timeout?: number) {
     const beginTime = performance.now();
-    const polingRate = 10;
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const interval = setInterval(() => {
         if (names.every(name => notificationRegistry[name])) {
@@ -33,7 +33,7 @@ export class NotificationRegistry {
           clearInterval(interval);
           resolve(false);
         }
-      }, polingRate);
+      }, defaultPollingRate);
     });
   }
 

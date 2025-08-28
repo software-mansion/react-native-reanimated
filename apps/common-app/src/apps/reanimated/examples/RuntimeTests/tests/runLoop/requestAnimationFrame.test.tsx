@@ -6,10 +6,10 @@ import {
   notify,
   render,
   test,
-  useOrderConstraint,
-  useTestValue,
+  createOrderConstraint,
+  createTestValue,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
 import { RuntimeKind } from 'react-native-worklets';
@@ -18,7 +18,7 @@ describe('Test requestAnimationFrame', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('executes single callback, runtime: **%s**', async runtimeKind => {
     // Arrange
     const notification = 'callback1';
-    const [flag, setFlag] = useTestValue('not_ok');
+    const [flag, setFlag] = createTestValue('not_ok');
 
     // Act
     await render(
@@ -31,7 +31,7 @@ describe('Test requestAnimationFrame', () => {
       />,
     );
 
-    await waitForNotify(notification);
+    await waitForNotification(notification);
     expect(flag.value).toBe('ok');
   });
 
@@ -40,7 +40,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue('not_ok');
+      const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
       await render(
@@ -69,7 +69,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue('not_ok');
+      const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
       await render(
@@ -103,7 +103,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [flag, setFlag] = useTestValue('not_ok');
+      const [flag, setFlag] = createTestValue('not_ok');
 
       // Act
       await render(
@@ -136,7 +136,7 @@ describe('Test requestAnimationFrame', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])('nested frames, runtime: **%s**', async runtimeKind => {
     // Arrange
     const [notification1, notification2] = ['callback1', 'callback2'];
-    const [confirmedOrder, order] = useOrderConstraint();
+    const [confirmedOrder, order] = createOrderConstraint();
 
     // Act
     await render(
@@ -164,7 +164,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -193,7 +193,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(
@@ -225,7 +225,7 @@ describe('Test requestAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback2'];
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
       await render(

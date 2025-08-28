@@ -6,9 +6,9 @@ import {
   notify,
   render,
   test,
-  useTestValue,
+  createTestValue,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
 import { RuntimeKind } from 'react-native-worklets';
@@ -31,7 +31,7 @@ describe('Test cancelAnimationFrame', () => {
     );
 
     // Assert
-    await waitForNotify(notification);
+    await waitForNotification(notification);
   });
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
@@ -39,7 +39,7 @@ describe('Test cancelAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const notification = 'callback2';
-      const [flag, setFlag] = useTestValue('ok');
+      const [flag, setFlag] = createTestValue('ok');
 
       // Act
       await render(
@@ -57,7 +57,7 @@ describe('Test cancelAnimationFrame', () => {
       );
 
       // Assert
-      await waitForNotify(notification);
+      await waitForNotification(notification);
       expect(flag.value).toBe('ok');
     },
   );
@@ -67,7 +67,7 @@ describe('Test cancelAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2] = ['callback1', 'callback3'];
-      const [flag, setFlag] = useTestValue('ok');
+      const [flag, setFlag] = createTestValue('ok');
 
       // Act
       await render(
@@ -99,7 +99,7 @@ describe('Test cancelAnimationFrame', () => {
     async runtimeKind => {
       // Arrange
       const [notification1, notification2, notification3] = ['callback1', 'callback2', 'callback3'];
-      const [flag, setFlag] = useTestValue('ok');
+      const [flag, setFlag] = createTestValue('ok');
 
       // Act
       await render(

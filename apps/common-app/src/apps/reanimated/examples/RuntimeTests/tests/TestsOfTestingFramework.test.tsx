@@ -16,12 +16,12 @@ import {
   registerValue,
   render,
   test,
-  useOrderConstraint,
+  createOrderConstraint,
   useTestRef,
-  useTestValue,
+  createTestValue,
   wait,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
@@ -325,8 +325,8 @@ describe('Tests of Test Framework', () => {
   test('withTiming - notify - ✅', async () => {
     await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('BrownComponent');
-    await waitForNotify('notifyJS');
-    await waitForNotify('notifyUI');
+    await waitForNotification('notifyJS');
+    await waitForNotification('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
@@ -393,16 +393,16 @@ describe('Tests of Test Framework', () => {
     });
 
     test('useTestState', async () => {
-      const [state1, setState1] = useTestValue('not_ok');
+      const [state1, setState1] = createTestValue('not_ok');
       setState1('ok');
 
-      const [state2, setState2] = useTestValue('not_ok');
+      const [state2, setState2] = createTestValue('not_ok');
       const notification2 = 'notification2';
       runOnUI(() => {
         setState2('ok', notification2);
       })();
 
-      const [state3, setState3] = useTestValue('not_ok');
+      const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
       const rt = createWorkletRuntime({ name: 'test' });
       runOnRuntime(rt, () => {
@@ -417,11 +417,11 @@ describe('Tests of Test Framework', () => {
     });
 
     test('useOrderConstraint', async () => {
-      const [confirmedOrder, order] = useOrderConstraint();
+      const [confirmedOrder, order] = createOrderConstraint();
       order(1);
       order(2);
       order(3, 'finish');
-      await waitForNotify('finish');
+      await waitForNotification('finish');
       expect(confirmedOrder.value).toBe(3);
     });
   });
