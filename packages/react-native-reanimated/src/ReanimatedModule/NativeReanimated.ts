@@ -135,7 +135,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: InternalHostInstance, // required on Fabric
+    component: InternalHostInstance,
     callback?: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);

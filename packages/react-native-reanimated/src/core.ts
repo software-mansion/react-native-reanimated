@@ -49,7 +49,7 @@ export const isConfigured = isReanimated3;
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
-  component?: InternalHostInstance | null // required on Fabric
+  component?: InternalHostInstance | null
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(

@@ -124,7 +124,6 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public useTestRef(name: string): RefObject<any> {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const ref = useRef(null);

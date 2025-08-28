@@ -4,12 +4,11 @@ import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
-import { ReanimatedError } from '../common';
 import type { SharedValue } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
+import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
-import { isAnimatedRef } from '../hook/useAnimatedRef';
 
 type ScrollViewInstance = ComponentRef<typeof ScrollView>;
 
@@ -29,23 +28,18 @@ const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
 export function AnimatedScrollView({
   scrollViewOffset,
-  ref: refProp,
+  ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  let ref: Ref<ScrollViewInstance> | undefined = refProp;
+  const animatedRef =
+    ref === null
+      ? // eslint-disable-next-line react-hooks/rules-of-hooks
+        useAnimatedRef<ScrollView>()
+      : (ref as AnimatedRef<ScrollView>);
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    ref ??= useAnimatedRef<ScrollViewInstance>();
-
-    if (!isAnimatedRef(ref)) {
-      throw new ReanimatedError(
-        'Animated.ScrollView with scrollViewOffset requires an animated ref. Please pass an animated ref instead.'
-      );
-    }
-
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useScrollOffset(ref, scrollViewOffset);
+    useScrollOffset(animatedRef, scrollViewOffset);
   }
 
   // Set default scrollEventThrottle, because user expects
@@ -56,7 +50,7 @@ export function AnimatedScrollView({
     restProps.scrollEventThrottle = 1;
   }
 
-  return <AnimatedScrollViewComponent ref={ref} {...restProps} />;
+  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
 }
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &

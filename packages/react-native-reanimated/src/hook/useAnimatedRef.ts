@@ -1,5 +1,4 @@
 'use strict';
-import type { Ref } from 'react';
 import { useRef, useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
@@ -126,9 +125,3 @@ function useAnimatedRefWeb<
 export const useAnimatedRef = SHOULD_BE_USE_WEB
   ? useAnimatedRefWeb
   : useAnimatedRefNative;
-
-export function isAnimatedRef<TRef extends InstanceOrElement>(
-  ref: Ref<TRef> | AnimatedRef<TRef>
-): ref is AnimatedRef<TRef> {
-  return ref !== null && 'observe' in ref;
-}
