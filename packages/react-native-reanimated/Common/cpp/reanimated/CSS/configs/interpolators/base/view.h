@@ -69,7 +69,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
              {"blurRadius", value<CSSDouble>(0)},
 #endif
              {"spreadDistance", value<CSSDouble>(0)},
-             {"color", value<CSSColor>(BLACK)},
+             {"color", value<CSSColor>(TRANSPARENT)},
              {"inset", value<CSSBoolean>(false)},
          })})},
         {"mixBlendMode", value<CSSKeyword>("normal")}});
