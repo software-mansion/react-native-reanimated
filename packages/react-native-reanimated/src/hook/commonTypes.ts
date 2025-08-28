@@ -40,12 +40,14 @@ export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 // TODO - Replace InstanceOrElement with InternalHostInstance once we migrate to the new
 // react-native-strict-api types to align with the useRef type. For now, we need to support
 // the old useAnimatedRef API as well, in which uses the ElementType as the type of the ref.
-export type AnimatedRefCurrent<TRef extends InstanceOrElement> =
+type AnimatedRefCurrent<TRef extends InstanceOrElement> =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TRef extends AnimatedComponentType<any, infer Instance>
     ? Instance
     : TRef extends ElementType
-      ? ComponentRef<TRef>
+      ? ComponentRef<TRef> extends never // Ensure that ref type is explicitly defined (is not any)
+        ? TRef
+        : ComponentRef<TRef>
       : TRef;
 
 export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
