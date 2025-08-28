@@ -39,17 +39,7 @@ describe('animation of BoxShadow', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        boxShadow: [
-          withSpring(
-            boxShadowActiveSV.value as unknown as AnimatableValue,
-            {
-              duration: 600,
-            },
-            () => {
-              notify(NOTIFICATION_NAME);
-            },
-          ),
-        ],
+        boxShadow: [boxShadowActiveSV.value],
       } as DefaultStyle;
     });
 
@@ -61,7 +51,15 @@ describe('animation of BoxShadow', () => {
 
     useEffect(() => {
       const timeout = setTimeout(() => {
-        boxShadowActiveSV.value = finalBoxShadow;
+        boxShadowActiveSV.value = withSpring(
+          finalBoxShadow as unknown as AnimatableValue,
+          {
+            duration: 300,
+          },
+          () => {
+            notify(NOTIFICATION_NAME);
+          },
+        ) as unknown as BoxShadowValue;
         boxShadowPassiveSV.value = finalBoxShadow;
       }, 500);
 
