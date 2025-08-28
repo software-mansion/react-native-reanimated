@@ -9,7 +9,7 @@ import {
   createOrderConstraint,
   createTestValue,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
 import { RuntimeKind } from 'react-native-worklets';
@@ -31,7 +31,7 @@ describe('Test requestAnimationFrame', () => {
       />,
     );
 
-    await waitForNotify(notification);
+    await waitForNotification(notification);
     expect(flag.value).toBe('ok');
   });
 

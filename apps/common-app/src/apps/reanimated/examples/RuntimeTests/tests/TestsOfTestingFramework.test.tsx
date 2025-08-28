@@ -21,7 +21,7 @@ import {
   createTestValue,
   wait,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
@@ -325,8 +325,8 @@ describe('Tests of Test Framework', () => {
   test('withTiming - notify - ✅', async () => {
     await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('BrownComponent');
-    await waitForNotify('notifyJS');
-    await waitForNotify('notifyUI');
+    await waitForNotification('notifyJS');
+    await waitForNotification('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
@@ -421,7 +421,7 @@ describe('Tests of Test Framework', () => {
       order(1);
       order(2);
       order(3, 'finish');
-      await waitForNotify('finish');
+      await waitForNotification('finish');
       expect(confirmedOrder.value).toBe(3);
     });
   });
