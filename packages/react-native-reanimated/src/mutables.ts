@@ -100,7 +100,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
 // eslint-disable-next-line camelcase
 function experimental_makeMutableUI<Value>(
   initial: Value,
-  dirtyFlag: Synchronizable<boolean>
+  dirtyFlag?: Synchronizable<boolean>
 ): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -118,7 +118,7 @@ function experimental_makeMutableUI<Value>(
       return value;
     },
     set _value(newValue: Value) {
-      if (!isDirty) {
+      if (!isDirty && dirtyFlag) {
         dirtyFlag.setBlocking(true);
         isDirty = true;
       }
