@@ -13,7 +13,7 @@ import {
   test,
   useTestRef,
   wait,
-  waitForNotify,
+  waitForNotification,
 } from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
 
@@ -112,7 +112,7 @@ describe('animation of BoxShadow', () => {
     expect(activeBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
     expect(passiveBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
 
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
 
     const passiveBoxShadowFinal = JSON.parse(
       await passiveComponent.getAnimatedStyle('boxShadow'),

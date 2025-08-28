@@ -14,7 +14,7 @@ import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -40,6 +40,8 @@ export interface ReanimatedModuleProxy {
   ): number;
 
   unregisterSensor(sensorId: number): void;
+
+  getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 

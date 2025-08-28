@@ -10,7 +10,7 @@ import type {
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
-import { makeMutableUI } from '../mutables';
+import { legacy_makeMutableUI as makeMutableUI } from '../mutables';
 
 const TAG_OFFSET = 1e9;
 

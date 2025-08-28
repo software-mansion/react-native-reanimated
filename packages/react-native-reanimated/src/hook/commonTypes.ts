@@ -13,6 +13,7 @@ import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
   ShadowNodeWrapper,
+  StyleUpdaterContainer,
   WrapperRef,
 } from '../commonTypes';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
@@ -95,6 +96,7 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 export interface JestAnimatedStyleHandle<

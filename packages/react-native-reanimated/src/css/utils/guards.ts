@@ -6,7 +6,7 @@ import {
   VALID_PREDEFINED_TIMING_FUNCTIONS,
   VALID_STEPS_MODIFIERS,
 } from '../constants';
-import type { PredefinedTimingFunction, StepsModifier } from '../easings/types';
+import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
   AnyRecord,
   CSSAnimationKeyframes,

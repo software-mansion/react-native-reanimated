@@ -11,7 +11,7 @@ import {
   render,
   test,
   wait,
-  waitForNotify,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { runOnUI } from 'react-native-worklets';
 
@@ -60,7 +60,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedResult = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -82,7 +82,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -126,7 +126,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -148,7 +148,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -170,7 +170,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -192,7 +192,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -220,7 +220,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -329,7 +329,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -358,7 +358,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -413,7 +413,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -435,7 +435,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -511,7 +511,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -536,7 +536,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -563,7 +563,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -621,7 +621,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -647,7 +647,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -699,7 +699,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -721,7 +721,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
@@ -743,7 +743,7 @@ describe('Test createSerializable', () => {
         }}
       />,
     );
-    await waitForNotify(DONE_NOTIFICATION_NAME);
+    await waitForNotification(DONE_NOTIFICATION_NAME);
 
     // Assert
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);

@@ -35,6 +35,7 @@ import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
+import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
 import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
@@ -216,6 +217,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Copy serializable performance test',
     screen: CopySerializablePerformanceTest,
+  },
+  FlatListWithLayoutAnimations: {
+    icon: '🎻',
+    title: 'FlatList with layout animations',
+    screen: FlatListWithLayoutAnimations,
   },
 
   // About

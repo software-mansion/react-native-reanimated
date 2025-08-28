@@ -199,6 +199,7 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "mass",
       "stiffness",
       "overshootClamping",
+      "energyThreshold",
       "restDisplacementThreshold",
       "restSpeedThreshold",
       "withInitialValues",

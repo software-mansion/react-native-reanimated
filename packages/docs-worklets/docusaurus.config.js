@@ -9,7 +9,7 @@ const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'React Native Worklets',
+  title: 'React Native Worklets: Multithreading engine for your apps and libraries',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here

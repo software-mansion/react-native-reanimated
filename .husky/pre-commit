@@ -4,6 +4,25 @@ print() {
   echo "    [PRECOMMIT]: $1" >&2
 }
 
+check_and_lint_docs() {
+  local staged_files="$1"
+  local docs_path="$2"
+  local docs_name="$3"
+
+  print "Checking for changes in $docs_name docs..."
+  if echo "$staged_files" | grep "^$docs_path/" --silent; then
+    print "Changes spotted. Running $docs_name docs lint..."
+    if [ ! -d "$docs_path/node_modules" ]; then
+      print "Error: node_modules not found in $docs_path. Please run 'yarn' command in the $docs_path directory."
+      exit 1
+    fi
+    try cd "$docs_path" && yarn lint
+    print "Success."
+  else
+    print "No changes. Skipping $docs_name docs lint."
+  fi
+}
+
 BRANCH=$(git symbolic-ref HEAD)
 if [ "$BRANCH" = "refs/heads/main" ]; then
   print "You tried to commit to main, which is probably a mistake. Aborting commit."
@@ -42,6 +61,17 @@ if echo "$STAGED_FILES" | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" --silent;
   print "Success."
 else
   print "No changes. Skipping TypeScript checks."
+fi
+
+# Linting docs
+REANIMATED_DOCS_PATH="packages/docs-reanimated"
+if [ -d "$REANIMATED_DOCS_PATH/node_modules" ]; then
+  check_and_lint_docs "$STAGED_FILES" "$REANIMATED_DOCS_PATH" "Reanimated"
+fi
+
+WORKLETS_DOCS_PATH="packages/docs-worklets"
+if [ -d "$WORKLETS_DOCS_PATH/node_modules" ]; then
+  check_and_lint_docs "$STAGED_FILES" "$WORKLETS_DOCS_PATH" "Worklets"
 fi
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
