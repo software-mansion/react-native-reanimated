@@ -3,7 +3,7 @@ import { createWorkletRuntime, scheduleOnRuntime } from '..';
 
 function scheduleOnRNTypeTests() {
   const workletRuntime = createWorkletRuntime({ name: 'test' });
-  // Correct usage - correct usage
+  // Correct usage
   scheduleOnRuntime(
     workletRuntime,
     (num: number) => {
@@ -13,7 +13,7 @@ function scheduleOnRNTypeTests() {
     0
   );
 
-  // Correct usage - correct usage
+  // Correct usage
   scheduleOnRuntime(
     workletRuntime,
     (obj: Record<string, unknown>) => console.log(obj),

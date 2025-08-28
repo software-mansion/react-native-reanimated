@@ -4,7 +4,7 @@ sidebar_position: 12
 
 # scheduleOnRuntime
 
-`scheduleOnRuntime` lets you schedule a function to be executed on a separate worklet runtime.
+`scheduleOnRuntime` lets you schedule a [worklet](/docs/fundamentals/glossary#worklet) to be executed on a separate [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 ## Reference
 
@@ -48,10 +48,10 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
 ## Remarks
 
 - The worklet is scheduled on the Worker Runtime's [Async
-  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Tools/AsyncQueueImpl.cpp)
+  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
 - The worklet cannot be scheduled on the Worker Runtime from [UI
   Runtime](/docs/fundamentals/glossary#ui-runtime) or another [Worker
-  Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime)
+  Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime), unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
 
 ```javascript
 import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
@@ -61,7 +61,7 @@ const workletRuntime = createWorkletRuntime({ name: 'background' });
 runOnUI(() => {
   scheduleOnRuntime(workletRuntime, (greeting: string) => { 
     console.log(`${greeting} from the background Worklet Runtime`); 
-  }, 'Hello'); // This will throw an error 🚨
+  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });
 ```
 
