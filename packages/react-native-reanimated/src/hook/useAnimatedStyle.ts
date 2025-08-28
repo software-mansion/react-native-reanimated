@@ -14,6 +14,7 @@ import type {
   NestedObjectValues,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
   Timestamp,
 } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
@@ -50,6 +51,7 @@ interface AnimatedUpdaterData {
   };
   remoteState: AnimatedState;
   viewDescriptors: ViewDescriptorsSet;
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 function prepareAnimation(
@@ -197,7 +199,8 @@ function styleUpdater(
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
-  isAnimatedProps = false
+  isAnimatedProps = false,
+  forceUpdate?: boolean
 ): void {
   'worklet';
   const animations = state.animations ?? {};
@@ -292,7 +295,7 @@ function styleUpdater(
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    if (!shallowEqual(oldValues, newValues)) {
+    if (!shallowEqual(oldValues, newValues) || forceUpdate) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
     }
   }
@@ -305,7 +308,8 @@ function jestStyleUpdater(
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
   animatedValues: RefObject<AnimatedStyle<any>>,
-  adapters: AnimatedPropsAdapterFunction[]
+  adapters: AnimatedPropsAdapterFunction[],
+  forceUpdate?: boolean
 ): void {
   'worklet';
   const animations: AnimatedStyle<any> = state.animations ?? {};
@@ -389,7 +393,7 @@ function jestStyleUpdater(
   // calculate diff
   state.last = newValues;
 
-  if (!shallowEqual(oldValues, newValues)) {
+  if (!shallowEqual(oldValues, newValues) || forceUpdate) {
     updatePropsJestWrapper(
       viewDescriptors,
       newValues,
@@ -517,6 +521,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationRunning: false,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
+      styleUpdaterContainer: { current: undefined },
     };
   }
 
@@ -540,7 +545,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     }
 
     if (IS_JEST) {
-      fun = () => {
+      fun = (forceUpdate?: boolean) => {
         'worklet';
         jestStyleUpdater(
           shareableViewDescriptors,
@@ -548,20 +553,25 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           remoteState,
           areAnimationsActive,
           jestAnimatedValues,
-          adaptersArray
+          adaptersArray,
+          forceUpdate
         );
       };
     } else {
-      fun = () => {
+      fun = (forceUpdate?: boolean) => {
         'worklet';
         styleUpdater(
           shareableViewDescriptors,
           updaterFn,
           remoteState,
           areAnimationsActive,
-          isAnimatedProps
+          isAnimatedProps,
+          forceUpdate
         );
       };
+    }
+    if (animatedUpdaterData.current) {
+      animatedUpdaterData.current.styleUpdaterContainer.current = fun;
     }
     const mapperId = startMapper(fun, inputs);
     return () => {
@@ -588,14 +598,17 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   >(null);
 
   if (!animatedStyleHandle.current) {
+    const styleUpdaterContainer =
+      animatedUpdaterData.current.styleUpdaterContainer;
     animatedStyleHandle.current = IS_JEST
       ? {
           viewDescriptors,
           initial,
           jestAnimatedValues,
           toJSON: animatedStyleHandleToJSON,
+          styleUpdaterContainer,
         }
-      : { viewDescriptors, initial };
+      : { viewDescriptors, initial, styleUpdaterContainer };
   }
 
   return animatedStyleHandle.current;

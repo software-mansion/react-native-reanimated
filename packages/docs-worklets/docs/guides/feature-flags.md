@@ -24,10 +24,6 @@ Feature flags available in `react-native-reanimated` are listed [on this page](h
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 
-### `EXPERIMENTAL_MUTABLE_OPTIMIZATION`
-
-This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
-
 ## Static feature flags
 
 Static flags are intended to be resolved during code compilation and cannot be changed during application runtime. To enable a static feature flag, you need to:

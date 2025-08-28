@@ -10,9 +10,8 @@ namespace reanimated::css {
 
 class TransformInterpolator {
  public:
-  using Interpolators = std::unordered_map<
-      TransformOperationType,
-      std::shared_ptr<TransformInterpolator>>;
+  using Interpolators =
+      std::unordered_map<TransformOp, std::shared_ptr<TransformInterpolator>>;
 
   struct UpdateContext {
     const std::shared_ptr<const ShadowNode> &node;

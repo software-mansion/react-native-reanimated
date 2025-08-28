@@ -6,7 +6,7 @@ import {
   registerValue,
   render,
   test,
-  waitForNotify,
+  waitForNotification,
   notify,
 } from '../../ReJest/RuntimeTestsApi';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
@@ -39,7 +39,7 @@ describe('runOnUISync', () => {
     await render(<TestComponent />);
 
     // Assert
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValueOnJS = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValueOnJS.onJS).toBe(100, ComparisonMode.NUMBER);
   });
