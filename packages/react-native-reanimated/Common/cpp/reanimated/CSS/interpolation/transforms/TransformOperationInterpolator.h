@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/values/CSSValue.h>
+#include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
@@ -78,11 +79,10 @@ class TransformOperationInterpolator<TOperation>
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
-      RelativeTo relativeTo,
-      const std::string &relativeProperty)
+      ResolvableValueInterpolatorConfig config)
       : TransformInterpolatorBase<TOperation>(defaultOperation),
-        relativeTo_(relativeTo),
-        relativeProperty_(relativeProperty) {}
+        relativeTo_(config.relativeTo),
+        relativeProperty_(std::move(config.relativeProperty)) {}
 
   TOperation interpolate(
       double progress,

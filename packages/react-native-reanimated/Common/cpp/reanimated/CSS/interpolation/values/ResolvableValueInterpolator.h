@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 #include <memory>
@@ -18,14 +18,13 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      RelativeTo relativeTo,
-      std::string relativeProperty)
+      ResolvableValueInterpolatorConfig config)
       : ValueInterpolator<AllowedTypes...>(
             propertyPath,
             defaultStyleValue,
             viewStylesRepository),
-        relativeTo_(relativeTo),
-        relativeProperty_(std::move(relativeProperty)) {}
+        relativeTo_(config.relativeTo),
+        relativeProperty_(std::move(config.relativeProperty)) {}
   virtual ~ResolvableValueInterpolator() = default;
 
  protected:
