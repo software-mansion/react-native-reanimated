@@ -13,7 +13,7 @@ check_and_lint_docs() {
   if echo "$staged_files" | grep "^$docs_path/" --silent; then
     print "Changes spotted. Running $docs_name docs lint..."
     if [ ! -d "$docs_path/node_modules" ]; then
-      print "Error: node_modules not found in $docs_path. Please run 'yarn install' in the $docs_path directory."
+      print "Error: node_modules not found in $docs_path. Please run 'yarn' command in the $docs_path directory."
       exit 1
     fi
     try cd "$docs_path" && yarn lint
