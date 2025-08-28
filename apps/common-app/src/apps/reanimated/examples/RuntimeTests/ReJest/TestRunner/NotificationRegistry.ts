@@ -15,7 +15,7 @@ export class NotificationRegistry {
     }
   }
 
-  public async waitForNotify(name: string, timeout?: number) {
+  public async waitForNotification(name: string, timeout?: number) {
     return this.waitForNotifications([name], timeout);
   }
 

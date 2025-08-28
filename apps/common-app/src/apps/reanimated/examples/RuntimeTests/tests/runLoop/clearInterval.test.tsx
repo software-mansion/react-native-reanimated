@@ -8,7 +8,7 @@ import {
   test,
   createTestValue,
   waitForNotifications,
-  waitForNotify,
+  waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
 import { DispatchTestComponent } from './DispatchTestComponent';
 import { RuntimeKind } from 'react-native-worklets';
@@ -36,7 +36,7 @@ describe('Test clearInterval', () => {
       );
 
       // Assert
-      await waitForNotify(notification);
+      await waitForNotification(notification);
     },
   );
 
@@ -67,7 +67,7 @@ describe('Test clearInterval', () => {
       );
 
       // Assert
-      await waitForNotify(notification);
+      await waitForNotification(notification);
       expect(flag.value).toBe('ok');
     },
   );
