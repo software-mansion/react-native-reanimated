@@ -1730,7 +1730,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - RNWorklets
     - Yoga
-  - RNWorklets (0.5.0-main):
+  - RNWorklets (0.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1753,9 +1753,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.5.0-main)
+    - RNWorklets/worklets (= 0.5.0)
     - Yoga
-  - RNWorklets/worklets (0.5.0-main):
+  - RNWorklets/worklets (0.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1778,9 +1778,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.5.0-main)
+    - RNWorklets/worklets/apple (= 0.5.0)
     - Yoga
-  - RNWorklets/worklets/apple (0.5.0-main):
+  - RNWorklets/worklets/apple (0.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2105,7 +2105,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 3a01f76123e04b8b945d43e5ffccae6f90f4a26e
   ReactCommon: 59e7bd3cf331ba77a96a75e6b603abf05883b102
   RNReanimated: 49a44d701f3083eaf6d72a2a72044fe2fb0d2ef6
-  RNWorklets: b19793c13493f8e56cd35708b9954257870d0d62
+  RNWorklets: d09b7fb3bc8ac21d869f98ac9ff45fec14216054
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 770a077e3a222f162c2e0c8a95e7e997b7682a8e
 
