@@ -10,6 +10,7 @@ def worklets_find_config()
   result = {
     :bundle_mode => nil,
     :is_reanimated_example_app => nil,
+    :is_tvos_target => nil,
     :react_native_version => nil,
     :react_native_minor_version => nil,
     :react_native_node_modules_dir => nil,
@@ -33,6 +34,7 @@ def worklets_find_config()
   end
 
   result[:is_reanimated_example_app] = ENV["IS_REANIMATED_EXAMPLE_APP"] != nil
+  result[:is_tvos_target] = react_native_json['name'] == 'react-native-tvos'
   result[:react_native_version] = react_native_json['version']
   result[:react_native_minor_version] = react_native_json['version'].split('.')[1].to_i
   if result[:react_native_minor_version] == 0 # nightly
