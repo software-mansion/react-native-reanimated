@@ -8,9 +8,9 @@
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
 
 #include <memory>
 #include <string>

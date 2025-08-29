@@ -8,7 +8,7 @@ import {
   runOnRuntime,
   type Synchronizable,
 } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotify } from '../../ReJest/RuntimeTestsApi';
+import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
 
@@ -46,7 +46,7 @@ describe('Test Synchronizable creation and serialization', () => {
       const value = synchronizable.getBlocking();
       runOnJS(onJSCallback)(value);
     })();
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     // Assert
     expect(readValue).toBe(42);
@@ -79,7 +79,7 @@ describe('Test Synchronizable creation and serialization', () => {
       'worklet';
       runOnJS(onJSCallback)(synchronizable);
     })();
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     const value = synchronizableCopy!.getBlocking();
     expect(value).toBe(42);
@@ -211,7 +211,7 @@ describe('Test Synchronizable access', () => {
 
     dispatch(getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
 
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     expect(valueRN).toBeWithinRange(initialValue + 1, targetValue * 3 - 1);
     expect(valueUI).toBeWithinRange(initialValue + 1, targetValue * 3 - 1);
@@ -246,7 +246,7 @@ describe('Test Synchronizable access', () => {
 
     dispatch(getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
 
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     expect(valueRN).toBeWithinRange(initialValue + 1, targetValue * 3 - 1);
     expect(valueUI).toBeWithinRange(initialValue + 1, targetValue * 3 - 1);
@@ -281,7 +281,7 @@ describe('Test Synchronizable access', () => {
 
     dispatch(transactionGetSet, setValueRN, setValueUI, setValueBG);
 
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     expect(Math.max(valueRN, valueUI, valueBG)).toBe(targetValue * 3);
   });
@@ -314,7 +314,7 @@ describe('Test Synchronizable access', () => {
 
     dispatch(imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
 
-    await waitForNotify(NOTIFICATION);
+    await waitForNotification(NOTIFICATION);
 
     expect(Math.max(valueRN, valueUI, valueBG)).toBe(targetValue * 3);
   });

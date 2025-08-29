@@ -16,7 +16,7 @@ std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
     auto operation = operationsStack.back();
     operationsStack.pop_back();
 
-    if (operation->type() == TransformOperationType::Matrix) {
+    if (operation->type() == TransformOp::Matrix) {
       const auto matrixOperation =
           std::static_pointer_cast<MatrixOperation>(operation);
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
@@ -69,18 +69,16 @@ std::variant<TransformMatrix3D, TransformOperations> simplifyOperations(
 
 MatrixOperation::MatrixOperation(const TransformMatrix3D &value)
     : TransformOperationBase<
+          TransformOp::Matrix,
           std::variant<TransformMatrix3D, TransformOperations>>(value) {}
 
 MatrixOperation::MatrixOperation(const TransformOperations &operations)
     // Simplify operations to reduce the number of matrix multiplications
     // during matrix keyframe interpolation
     : TransformOperationBase<
+          TransformOp::Matrix,
           std::variant<TransformMatrix3D, TransformOperations>>(
           simplifyOperations(operations)) {}
-
-TransformOperationType MatrixOperation::type() const {
-  return TransformOperationType::Matrix;
-}
 
 bool MatrixOperation::operator==(const TransformOperation &other) const {
   if (type() != other.type()) {

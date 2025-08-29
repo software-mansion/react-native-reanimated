@@ -19,7 +19,7 @@ import {
   test,
   useTestRef,
   wait,
-  waitForNotify,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
@@ -173,11 +173,11 @@ describe('WithSequence animation of number', () => {
       await wait(DELAY / 2);
       // TODO The condition below is not fulfilled, decide whether its bug or expected behavior
       // expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
-      await waitForNotify(START_NOTIFICATION_NAME);
+      await waitForNotification(START_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
-      await waitForNotify(MIDDLE_NOTIFICATION_NAME);
+      await waitForNotification(MIDDLE_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
-      await waitForNotify(FINAL_NOTIFICATION_NAME);
+      await waitForNotification(FINAL_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
     },
   );

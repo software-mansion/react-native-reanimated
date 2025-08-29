@@ -8,22 +8,19 @@ import {
   SHOULD_BE_USE_WEB,
 } from './common';
 import { initSvgCssSupport } from './css/svg';
-import { EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS } from './featureFlags/staticFlags.json';
+import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(
   ReanimatedModule: IReanimatedModule
 ) {
-  if (EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS) {
-    initSvgCssSupport();
-  }
-  if (IS_WEB) {
-    return;
-  }
-  if (!ReanimatedModule) {
+  if (!IS_WEB && !ReanimatedModule) {
     throw new ReanimatedError(
       'Tried to initialize Reanimated without a valid ReanimatedModule'
     );
+  }
+  if (getStaticFeatureFlag('EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS')) {
+    initSvgCssSupport();
   }
 }
 

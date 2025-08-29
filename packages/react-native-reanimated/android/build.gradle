@@ -72,10 +72,7 @@ def getReactNativeVersion() {
 }
 
 def getReactNativeMinorVersion() {
-    def reactNativeRootDir = resolveReactNativeDirectory()
-    def reactProperties = new Properties()
-    file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-    def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+    def reactNativeVersion = getReactNativeVersion()
     return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
 }
 
