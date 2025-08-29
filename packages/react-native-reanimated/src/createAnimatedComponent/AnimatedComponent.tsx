@@ -201,26 +201,35 @@ export default class AnimatedComponent
 
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
-    newStyles: StyleProps[],
+    currentStyles: StyleProps[],
     jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
+    const newStyles = new Set<StyleProps>(currentStyles);
 
     // remove old styles
     if (prevStyles) {
       // in most of the cases, views have only a single animated style and it remains unchanged
       const hasOneSameStyle =
-        newStyles.length === 1 &&
+        currentStyles.length === 1 &&
         prevStyles.length === 1 &&
-        newStyles[0] === prevStyles[0];
+        currentStyles[0] === prevStyles[0];
 
-      if (!hasOneSameStyle) {
-        // otherwise, remove each style that is not present in new styles
-        for (const prevStyle of prevStyles) {
-          const isPresent = newStyles.some((style) => style === prevStyle);
-          if (!isPresent) {
-            prevStyle.viewDescriptors.remove(viewTag);
+      if (hasOneSameStyle) {
+        return;
+      }
+
+      // otherwise, remove each style that is not present in new styles
+      for (const prevStyle of prevStyles) {
+        const isPresent = currentStyles.some((style) => {
+          if (style === prevStyle) {
+            newStyles.delete(style);
+            return true;
           }
+          return false;
+        });
+        if (!isPresent) {
+          prevStyle.viewDescriptors.remove(viewTag);
         }
       }
     }
