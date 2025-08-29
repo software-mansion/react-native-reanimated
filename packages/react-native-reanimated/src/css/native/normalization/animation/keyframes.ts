@@ -110,10 +110,7 @@ function processStyleProperties<S extends AnyRecord>(
     }
 
     if (typeof value === 'object') {
-      if (
-        !Array.isArray(value) ||
-        styleBuilder.isSeparatelyInterpolatedArrayProperty(property)
-      ) {
+      if (styleBuilder.isSeparatelyInterpolatedNestedProperty(property)) {
         if (!keyframeStyle[property]) {
           keyframeStyle[property] = Array.isArray(value) ? [] : {};
         }
