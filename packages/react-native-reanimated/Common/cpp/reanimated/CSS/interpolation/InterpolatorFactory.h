@@ -56,7 +56,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
       ResolvableValueInterpolatorConfig config)
       : PropertyInterpolatorFactory(),
         defaultValue_(defaultValue),
-        config_(config) {}
+        config_(std::move(config)) {}
 
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;

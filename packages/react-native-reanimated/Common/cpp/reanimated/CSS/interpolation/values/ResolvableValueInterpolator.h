@@ -18,13 +18,12 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      ResolvableValueInterpolatorConfig config)
+      const ResolvableValueInterpolatorConfig &config)
       : ValueInterpolator<AllowedTypes...>(
             propertyPath,
             defaultStyleValue,
             viewStylesRepository),
-        relativeTo_(config.relativeTo),
-        relativeProperty_(std::move(config.relativeProperty)) {}
+        config_(config) {}
   virtual ~ResolvableValueInterpolator() = default;
 
  protected:
@@ -38,13 +37,12 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
         toValue,
         {.node = context.node,
          .viewStylesRepository = this->viewStylesRepository_,
-         .relativeProperty = relativeProperty_,
-         .relativeTo = relativeTo_});
+         .relativeProperty = config_.relativeProperty,
+         .relativeTo = config_.relativeTo});
   }
 
  private:
-  RelativeTo relativeTo_;
-  std::string relativeProperty_;
+  const ResolvableValueInterpolatorConfig &config_;
 };
 
 } // namespace reanimated::css

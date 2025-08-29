@@ -82,8 +82,7 @@ class TransformOperationInterpolator<TOperation>
       const std::shared_ptr<TOperation> &defaultOperation,
       ResolvableValueInterpolatorConfig config)
       : TransformInterpolatorBase<TOperation>(defaultOperation),
-        relativeTo_(config.relativeTo),
-        relativeProperty_(std::move(config.relativeProperty)) {}
+        config_(std::move(config)) {}
 
   TOperation interpolate(
       double progress,
@@ -108,16 +107,15 @@ class TransformOperationInterpolator<TOperation>
   }
 
  private:
-  const RelativeTo relativeTo_;
-  const std::string relativeProperty_;
+  const ResolvableValueInterpolatorConfig config_;
 
   CSSResolvableValueInterpolationContext getResolvableValueContext(
       const TransformInterpolatorUpdateContext &context) const {
     return {
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
-        .relativeProperty = relativeProperty_,
-        .relativeTo = relativeTo_,
+        .relativeProperty = config_.relativeProperty,
+        .relativeTo = config_.relativeTo,
     };
   }
 };
