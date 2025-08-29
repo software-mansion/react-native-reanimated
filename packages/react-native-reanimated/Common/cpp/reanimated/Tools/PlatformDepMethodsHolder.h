@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +32,8 @@ using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(const std::vector<int> &, const std::vector<double> &)>;
+using PreserveMountedTagsFunction =
+    std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -49,6 +52,7 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
+  PreserveMountedTagsFunction filterUnmountedTagsFunction;
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
   GetAnimationTimestampFunction getAnimationTimestamp;

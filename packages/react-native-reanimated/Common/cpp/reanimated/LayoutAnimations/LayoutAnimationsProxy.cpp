@@ -392,7 +392,36 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+#ifdef ANDROID
+  std::vector<int> tagsToUpdate;
   for (auto &[tag, updateValues] : updateMap) {
+    tagsToUpdate.push_back(tag);
+  }
+
+  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
+  if (!maybeCorrectedTags.has_value()) {
+    return;
+  }
+
+  auto correctedTags = maybeCorrectedTags->get();
+
+  // since the map is not updated, we can assume that the ordering of tags in
+  // correctedTags matches the iterator
+  int i = -1;
+#endif
+  for (auto &[tag, updateValues] : updateMap) {
+#ifdef ANDROID
+    i++;
+    if (correctedTags[i] == -1) {
+      // skip views that have not been mounted yet
+      // on Android we start entering animations from the JS thread
+      // so it might happen, that the first frame of the animation goes through
+      // before the view is first mounted
+      // https://github.com/software-mansion/react-native-reanimated/issues/7493
+      continue;
+    }
+#endif
+
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end()) {
@@ -400,6 +429,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
 
     auto &layoutAnimation = layoutAnimationIt->second;
+    layoutAnimation.opacity.reset();
 
     auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
     newView->props = updateValues.newProps;
@@ -829,7 +859,6 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(
         uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.opacity.reset();
   }
 }
 
