@@ -16,7 +16,7 @@ check_and_lint_docs() {
       print "Error: node_modules not found in $docs_path. Please run 'yarn' command in the $docs_path directory."
       exit 1
     fi
-    try cd "$docs_path" && yarn install && yarn lint
+    try cd "$docs_path" && yarn install --frozen-lockfile && yarn lint
     print "Success."
   else
     print "No changes. Skipping $docs_name docs lint."
