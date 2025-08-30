@@ -4,7 +4,7 @@
   align-items: center;
   gap: 60px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
   margin-bottom: 28px;
 
   .contactUs {
@@ -49,7 +49,7 @@
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .homepageFooter {
     .contactUs {
       .title {

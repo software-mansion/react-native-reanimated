@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 40px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
 
   h2 {
     font-weight: 500;
@@ -26,7 +26,7 @@
   background-color: var(--swm-blue-light-100);
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .aboutSection {
     gap: 16px;
   }

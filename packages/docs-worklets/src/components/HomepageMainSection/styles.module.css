@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 48px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
 
   .header {
     display: flex;
@@ -32,7 +32,7 @@
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .headerSection {
     gap: 16px;
 

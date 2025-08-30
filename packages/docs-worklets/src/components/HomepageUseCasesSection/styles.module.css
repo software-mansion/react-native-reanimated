@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 24px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
 
   .description {
     max-width: 696px;
@@ -18,7 +18,7 @@
     gap: 32px;
   }
 
-  @media (max-width: 936px) {
+  @media (max-width: 996px) {
     .useCasesSection {
       gap: 16px;
     }

@@ -1,5 +1,5 @@
 import LinkIcon from '@site/static/img/link-icon.svg';
-import PhoneImage from '@site/static/img/phone.svg';
+import PhoneImage from '@site/static/img/phone.png';
 
 import styles from './styles.module.css';
 
@@ -28,7 +28,7 @@ export default function UseCase({
       </div>
       <div className={styles.content}>
         <div className={styles.phone}>
-          <PhoneImage />
+          <img src={PhoneImage} alt="Phone" />
         </div>
         <video className={styles.video} src={mp4} autoPlay muted loop />
       </div>
