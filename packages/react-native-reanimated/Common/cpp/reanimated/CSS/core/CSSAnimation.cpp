@@ -59,7 +59,8 @@ bool CSSAnimation::hasBackwardsFillMode() const {
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(
+      shadowNode_, progressProvider_, DEFAULT_INTERPOLATION_PROGRESS);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
@@ -91,7 +92,8 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(
+      shadowNode_, progressProvider_, DEFAULT_INTERPOLATION_PROGRESS);
 }
 
 void CSSAnimation::updateSettings(

@@ -46,6 +46,7 @@ class CSSTransition {
   TransitionProgressProvider progressProvider_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
+  void updateAllowedDiscreteProperties();
   bool isAllowedProperty(const std::string &propertyName) const;
 };
 

@@ -13,7 +13,9 @@ CSSTransition::CSSTransition(
       styleInterpolator_(TransitionStyleInterpolator(
           shadowNode_->getComponentName(),
           viewStylesRepository)),
-      progressProvider_(TransitionProgressProvider()) {}
+      progressProvider_(TransitionProgressProvider()) {
+  updateAllowedDiscreteProperties();
+}
 
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
@@ -82,13 +84,7 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
   if (config.settings.has_value()) {
     settings_ = config.settings.value();
-
-    allowDiscreteProperties_.clear();
-    for (const auto &[propertyName, propertySettings] : settings_) {
-      if (propertySettings.allowDiscrete) {
-        allowDiscreteProperties_.insert(propertyName);
-      }
-    }
+    updateAllowedDiscreteProperties();
   }
 }
 
@@ -133,6 +129,15 @@ void CSSTransition::updateTransitionProperties(
 
   styleInterpolator_.discardIrrelevantInterpolators(transitionPropertyNames);
   progressProvider_.discardIrrelevantProgressProviders(transitionPropertyNames);
+}
+
+void CSSTransition::updateAllowedDiscreteProperties() {
+  allowDiscreteProperties_.clear();
+  for (const auto &[propertyName, propertySettings] : settings_) {
+    if (propertySettings.allowDiscrete) {
+      allowDiscreteProperties_.insert(propertyName);
+    }
+  }
 }
 
 bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
