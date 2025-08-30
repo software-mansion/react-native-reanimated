@@ -38,7 +38,11 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
   explicit CSSBoxShadow(
       CSSDouble offsetX,
       CSSDouble offsetY,
+#ifdef ANDROID
+      CSSShadowRadiusAndroid blurRadius,
+#else
       CSSDouble blurRadius,
+#endif
       CSSDouble spreadDistance,
       CSSColor color,
       std::optional<CSSBoolean> inset);

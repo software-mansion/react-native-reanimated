@@ -5,7 +5,11 @@ namespace reanimated::css {
 CSSBoxShadow::CSSBoxShadow(
     CSSDouble offsetX,
     CSSDouble offsetY,
+#ifdef ANDROID
+    CSSShadowRadiusAndroid blurRadius,
+#else
     CSSDouble blurRadius,
+#endif
     CSSDouble spreadDistance,
     CSSColor color,
     std::optional<CSSBoolean> inset)
@@ -14,7 +18,8 @@ CSSBoxShadow::CSSBoxShadow(
       blurRadius(std::move(blurRadius)),
       spreadDistance(std::move(spreadDistance)),
       color(std::move(color)),
-      inset(std::move(inset)) {}
+      inset(std::move(inset)) {
+}
 
 CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (!canConstruct(rt, jsiValue)) {
@@ -25,8 +30,8 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 
   const auto &obj = jsiValue.asObject(rt);
 
-  // Only assign fields that exist in the object, others keep their default
-  // values
+  // Only assign fields that exist in the object and keep default values for
+  // others
   if (obj.hasProperty(rt, "offsetX")) {
     offsetX = CSSDouble(rt, obj.getProperty(rt, "offsetX"));
   }
@@ -34,7 +39,11 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     offsetY = CSSDouble(rt, obj.getProperty(rt, "offsetY"));
   }
   if (obj.hasProperty(rt, "blurRadius")) {
+#ifdef ANDROID
+    blurRadius = CSSShadowRadiusAndroid(rt, obj.getProperty(rt, "blurRadius"));
+#else
     blurRadius = CSSDouble(rt, obj.getProperty(rt, "blurRadius"));
+#endif
   }
   if (obj.hasProperty(rt, "spreadDistance")) {
     spreadDistance = CSSDouble(rt, obj.getProperty(rt, "spreadDistance"));
@@ -42,7 +51,7 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (obj.hasProperty(rt, "color")) {
     color = CSSColor(rt, obj.getProperty(rt, "color"));
   }
-  // Every non-default (empty) shadow must have an inset
+  // Every non-default (not empty) shadow must have an inset
   inset = CSSBoolean(
       rt, obj.hasProperty(rt, "inset") ? obj.getProperty(rt, "inset") : false);
 }
@@ -53,8 +62,8 @@ CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
         "[Reanimated] CSSBoxShadow: Invalid value: " + folly::toJson(value));
   }
 
-  // Only assign fields that exist in the object, others keep their default
-  // values
+  // Only assign fields that exist in the object and keep default values for
+  // others
   if (value.count("offsetX") > 0) {
     offsetX = CSSDouble(value["offsetX"]);
   }
@@ -62,7 +71,11 @@ CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
     offsetY = CSSDouble(value["offsetY"]);
   }
   if (value.count("blurRadius") > 0) {
+#ifdef ANDROID
+    blurRadius = CSSShadowRadiusAndroid(value["blurRadius"]);
+#else
     blurRadius = CSSDouble(value["blurRadius"]);
+#endif
   }
   if (value.count("spreadDistance") > 0) {
     spreadDistance = CSSDouble(value["spreadDistance"]);
@@ -70,7 +83,7 @@ CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
   if (value.count("color") > 0) {
     color = CSSColor(value["color"]);
   }
-  // Every non-default (empty) shadow must have an inset
+  // Every non-default (not empty) shadow must have an inset
   inset = CSSBoolean(value.count("inset") > 0 ? value["inset"] : false);
 }
 
@@ -123,7 +136,7 @@ folly::dynamic CSSBoxShadow::toDynamic() const {
 }
 
 std::string CSSBoxShadow::toString() const {
-  return (inset.has_value() ? inset->toString() + " " : "") +
+  return (inset.has_value() && inset.value().value ? "inset " : "") +
       offsetX.toString() + " " + offsetY.toString() + " " +
       blurRadius.toString() + " " + spreadDistance.toString() + " " +
       color.toString();

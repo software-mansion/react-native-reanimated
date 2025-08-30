@@ -13,7 +13,7 @@ namespace reanimated::css {
 
 class CSSAnimation {
  public:
-  static constexpr double DEFAULT_INTERPOLATION_PROGRESS = 0.5;
+  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
 
   CSSAnimation(
       jsi::Runtime &rt,
