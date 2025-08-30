@@ -41,8 +41,10 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const override;
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      // The following param can be ignored as every transformation can be
+      // interpolated
+      const double /* fallbackInterpolateThreshold */) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(

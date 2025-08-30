@@ -31,11 +31,12 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
-      const ValueInterpolatorUpdateContext &context) const override {
+      const CSSValueInterpolationContext &context) const override {
     return fromValue.interpolate(
         progress,
         toValue,
         {.node = context.node,
+         .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
          .viewStylesRepository = this->viewStylesRepository_,
          .relativeProperty = config_.relativeProperty,
          .relativeTo = config_.relativeTo});

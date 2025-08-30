@@ -1,4 +1,5 @@
 'use strict';
+
 import type { AnyRecord } from '../../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../../utils';
 import type {
@@ -9,25 +10,25 @@ import type {
 
 type StyleBuilderOptions<P extends AnyRecord> = {
   buildMiddleware?: StyleBuildMiddleware<P>;
-  separatelyInterpolatedArrayProperties?: (keyof P)[];
+  separatelyInterpolatedNestedProperties?: (keyof P)[];
 };
 
 class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   private readonly buildMiddleware: StyleBuildMiddleware<P>;
   private readonly config: StyleBuilderConfig<P>;
-  private readonly separatelyInterpolatedArrayProperties_: (keyof P)[];
+  private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
 
   private processedProps = {} as P;
 
   constructor(config: StyleBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
     this.config = config;
     this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
-    this.separatelyInterpolatedArrayProperties_ =
-      options?.separatelyInterpolatedArrayProperties ?? [];
+    this.separatelyInterpolatedNestedProperties_ =
+      options?.separatelyInterpolatedNestedProperties ?? [];
   }
 
-  isSeparatelyInterpolatedArrayProperty(property: keyof P): boolean {
-    return this.separatelyInterpolatedArrayProperties_.includes(property);
+  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean {
+    return this.separatelyInterpolatedNestedProperties_.includes(property);
   }
 
   add(property: keyof P, value: P[keyof P]): void {

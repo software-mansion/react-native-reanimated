@@ -3,6 +3,7 @@
 #include <reanimated/CSS/configs/interpolators/base/common.h>
 
 #include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
 namespace reanimated::css {
 
@@ -59,22 +60,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
         {"pointerEvents", value<CSSKeyword>("auto")},
         {"isolation", value<CSSKeyword>("auto")},
         {"cursor", value<CSSKeyword>("auto")},
-        {"boxShadow",
-         array({record({
-             {"offsetX", value<CSSDouble>(0)},
-             {"offsetY", value<CSSDouble>(0)},
-#ifdef ANDROID
-             // For some reason Android crashes when blurRadius is smaller
-             // than 1, so we use a custom value type that will never be
-             // smaller than 1
-             {"blurRadius", value<CSSShadowRadiusAndroid>(1)},
-#else
-             {"blurRadius", value<CSSDouble>(0)},
-#endif
-             {"spreadDistance", value<CSSDouble>(0)},
-             {"color", value<CSSColor>(TRANSPARENT)},
-             {"inset", value<CSSBoolean>(false)},
-         })})},
+        {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
         {"mixBlendMode", value<CSSKeyword>("normal")}});
 
 } // namespace reanimated::css

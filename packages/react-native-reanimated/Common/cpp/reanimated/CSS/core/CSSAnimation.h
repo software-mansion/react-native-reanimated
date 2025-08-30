@@ -13,6 +13,8 @@ namespace reanimated::css {
 
 class CSSAnimation {
  public:
+  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
+
   CSSAnimation(
       jsi::Runtime &rt,
       std::shared_ptr<const ShadowNode> shadowNode,
