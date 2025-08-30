@@ -27,7 +27,7 @@ const transformBuilder = createStyleBuilder(
 );
 
 export const processTransform: ValueProcessor<
-  Required<TransformsStyle['transform']>
+  NonNullable<TransformsStyle['transform']>
 > = (value) => {
   if (!value) {
     return;
@@ -38,7 +38,7 @@ export const processTransform: ValueProcessor<
   }
 
   value.forEach((transform) =>
-    Object.entries(transform).forEach(([transformProp, transformValue]) =>
+    Object.entries(transform ?? {}).forEach(([transformProp, transformValue]) =>
       transformBuilder.add(
         transformProp as keyof TransformsStyle['transform'],
         transformValue

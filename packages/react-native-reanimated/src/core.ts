@@ -9,13 +9,13 @@ import { createSerializable } from 'react-native-worklets';
 import { logger, ReanimatedError } from './common';
 import type {
   AnimatedKeyboardOptions,
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
   SharedValue,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
@@ -49,7 +49,7 @@ export const isConfigured = isReanimated3;
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
-  component?: WrapperRef | null // required on Fabric
+  component?: InternalHostInstance | null
 ): Promise<T> {
   if (!component) {
     throw new ReanimatedError(

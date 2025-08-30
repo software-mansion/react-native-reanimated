@@ -2,14 +2,14 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
+import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <TRef extends WrapperRef>(
+type DispatchCommand = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
   commandName: string,
   args?: unknown[]
