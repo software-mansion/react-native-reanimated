@@ -45,7 +45,7 @@
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .achievementSection {
     .achievementSectionContent {
       flex-direction: column;

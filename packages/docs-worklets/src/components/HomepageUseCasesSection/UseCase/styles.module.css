@@ -45,22 +45,16 @@
     }
 
     .video {
-      padding: 62px;
       border-radius: 48px;
-      height: auto;
-      width: auto;
-      max-width: 364px;
-      max-height: 772px;
-      padding: 12px 8px;
       position: absolute;
-      height: 100%;
+      height: 90%;
       object-fit: cover;
       z-index: 1;
     }
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .useCase {
     .header {
       .title {
@@ -68,11 +62,16 @@
       }
     }
 
+    .phone {
+      max-width: 270px;
+      max-height: 572px;
+    }
+
     .content {
       .video {
         border-radius: 32px;
-        max-width: 270px;
-        max-height: 572px;
+        /* max-width: 208px;
+        height: 534px; */
       }
     }
   }

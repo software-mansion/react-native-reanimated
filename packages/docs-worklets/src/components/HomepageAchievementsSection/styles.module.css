@@ -4,7 +4,7 @@
   justify-content: center;
   gap: 24px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
 
   h2 {
     font-weight: 500;
@@ -44,7 +44,7 @@
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .achievementsSection {
     gap: 16px;
 
