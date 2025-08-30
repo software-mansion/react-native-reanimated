@@ -39,6 +39,7 @@ class CSSTransition {
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::unordered_set<std::string> allowDiscreteProperties_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
   TransitionStyleInterpolator styleInterpolator_;

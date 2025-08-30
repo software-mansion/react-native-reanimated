@@ -42,9 +42,9 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (obj.hasProperty(rt, "color")) {
     color = CSSColor(rt, obj.getProperty(rt, "color"));
   }
-  if (obj.hasProperty(rt, "inset")) {
-    inset = CSSBoolean(rt, obj.getProperty(rt, "inset"));
-  }
+  // Every non-default (empty) shadow must have an inset
+  inset = CSSBoolean(
+      rt, obj.hasProperty(rt, "inset") ? obj.getProperty(rt, "inset") : false);
 }
 
 CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
@@ -70,9 +70,8 @@ CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
   if (value.count("color") > 0) {
     color = CSSColor(value["color"]);
   }
-  if (value.count("inset") > 0) {
-    inset = CSSBoolean(value["inset"]);
-  }
+  // Every non-default (empty) shadow must have an inset
+  inset = CSSBoolean(value.count("inset") > 0 ? value["inset"] : false);
 }
 
 bool CSSBoxShadow::canConstruct(const folly::dynamic &value) {
@@ -135,12 +134,6 @@ CSSBoxShadow CSSBoxShadow::interpolate(double progress, const CSSBoxShadow &to)
   const auto &fromInset = inset.value_or(to.inset.value_or(CSSBoolean(false)));
   const auto &toInset = to.inset.value_or(inset.value_or(CSSBoolean(false)));
 
-  if (fromInset != toInset) {
-    // Cannot interpolate between inset and non-inset, fallback to discrete
-    // interpolation
-    return progress < 0.5 ? *this : to;
-  }
-
   return CSSBoxShadow(
       offsetX.interpolate(progress, to.offsetX),
       offsetY.interpolate(progress, to.offsetY),
@@ -148,6 +141,11 @@ CSSBoxShadow CSSBoxShadow::interpolate(double progress, const CSSBoxShadow &to)
       spreadDistance.interpolate(progress, to.spreadDistance),
       color.interpolate(progress, to.color),
       fromInset.interpolate(progress, toInset));
+}
+
+bool CSSBoxShadow::canInterpolateTo(const CSSBoxShadow &to) const {
+  return !inset.has_value() || !to.inset.has_value() ||
+      inset.value() == to.inset.value();
 }
 
 bool CSSBoxShadow::operator==(const CSSBoxShadow &other) const {

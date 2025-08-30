@@ -23,8 +23,8 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const override;
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const double fallbackInterpolateThreshold) const override;
 
  protected:
   virtual folly::dynamic mapInterpolators(

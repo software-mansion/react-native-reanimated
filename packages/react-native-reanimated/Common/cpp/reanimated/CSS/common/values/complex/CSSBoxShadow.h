@@ -51,6 +51,7 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
   std::string toString() const override;
   CSSBoxShadow interpolate(double progress, const CSSBoxShadow &to)
       const override;
+  bool canInterpolateTo(const CSSBoxShadow &to) const override;
 
   bool operator==(const CSSBoxShadow &other) const;
 

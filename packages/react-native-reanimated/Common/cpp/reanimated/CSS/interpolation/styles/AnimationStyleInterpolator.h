@@ -17,13 +17,11 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       jsi::Runtime &rt,
       const jsi::Value &keyframes,
       const std::string &componentName,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : RecordPropertiesInterpolator(
-            getComponentInterpolators(componentName),
-            {},
-            viewStylesRepository) {
-    updateKeyframes(rt, keyframes);
-  }
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+
+  folly::dynamic interpolate(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
 };
 
 } // namespace reanimated::css
