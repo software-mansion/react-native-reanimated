@@ -56,12 +56,6 @@
   overflow: hidden;
 }
 
-.featureCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  border-color: var(--swm-purple-light-100);
-}
-
 .featureIcon {
   margin-bottom: 8px;
   height: 60px;
@@ -92,7 +86,7 @@
   border: 3px solid var(--swm-border);
   border-top-color: var(--swm-purple-light-100);
   border-radius: 50%;
-  animation: spin 2s linear infinite;
+  animation: spin 1.5s linear infinite;
 }
 
 @keyframes spin {
@@ -101,23 +95,26 @@
   }
 }
 
-.featureCard:hover .spinner {
-  animation-duration: 0.5s;
-}
-
 /* CSS Transition - Color changing box */
 .transitionBox {
   width: 40px;
   height: 40px;
   background: var(--swm-purple-light-100);
   border-radius: 8px;
-  transition: all 0.3s ease;
+  animation: colorMorph 800ms ease-in-out infinite alternate;
 }
 
-.featureCard:hover .transitionBox {
-  background: var(--swm-green-light-100);
-  transform: scale(1.1);
-  border-radius: 50%;
+@keyframes colorMorph {
+  0% {
+    background: var(--swm-purple-light-100);
+    border-radius: 8px;
+    transform: scale(1);
+  }
+  100% {
+    background: var(--swm-green-light-100);
+    border-radius: 50%;
+    transform: scale(1.1);
+  }
 }
 
 /* Shared Values - Slider */
@@ -137,11 +134,16 @@
   position: absolute;
   top: -4px;
   left: 0px;
-  transition: left 0.3s ease;
+  animation: slideThumb 1.5s ease-in-out infinite alternate;
 }
 
-.featureCard:hover .sliderThumb {
-  left: calc(100% - 16px);
+@keyframes slideThumb {
+  0% {
+    left: 0px;
+  }
+  100% {
+    left: calc(100% - 16px);
+  }
 }
 
 /* Layout Animations - List items */
@@ -157,29 +159,53 @@
   height: 8px;
   background: var(--swm-purple-light-100);
   border-radius: 4px;
-  transition: all 0.3s ease;
   opacity: 1;
+}
+
+.layoutItem:nth-child(1) {
+  animation: layoutItemMove1 1.5s ease-in-out infinite;
 }
 
 .layoutItem:nth-child(2) {
   width: 35px;
+  animation: layoutItemFade 1.5s ease-in-out infinite;
 }
 
 .layoutItem:nth-child(3) {
   width: 30px;
+  animation: layoutItemMove3 1.5s ease-in-out infinite;
 }
 
-.featureCard:hover .layoutItem:nth-child(1) {
-  transform: translateX(-5px);
+@keyframes layoutItemMove1 {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
 }
 
-.featureCard:hover .layoutItem:nth-child(2) {
-  opacity: 0;
-  transform: scale(0);
+@keyframes layoutItemFade {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(0);
+  }
 }
 
-.featureCard:hover .layoutItem:nth-child(3) {
-  transform: translateX(5px);
+@keyframes layoutItemMove3 {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
 }
 
 .signup {
