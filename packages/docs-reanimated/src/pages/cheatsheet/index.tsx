@@ -29,22 +29,6 @@ export default function CheatSheetPage(): JSX.Element {
     setIsSubmitting(false);
   };
 
-  if (isSubmitted) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.content}>
-          <div className={styles.successMessage}>
-            <h1>Thank you, {formData.name}!</h1>
-            <p>
-              Your Reanimated 4 cheat sheet is on its way to {formData.email}
-            </p>
-            <p>Check your inbox in the next few minutes.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Layout description="A comprehensive cheat sheet for React Native Reanimated 4">
       <div className={styles.container}>
@@ -108,55 +92,68 @@ export default function CheatSheetPage(): JSX.Element {
             </div>
           </section>
 
-          <section className={styles.signup}>
-            <h2>Grab your copy</h2>
-            <p>Enter your details to get the PDF in your inbox.</p>
-
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.formGroup}>
-                <label htmlFor="name">Your name (required)</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className={styles.input}
-                />
+          {isSubmitted ? (
+            <div className={styles.content}>
+              <div className={styles.successMessage}>
+                <h1>Thank you, {formData.name}!</h1>
+                <p>
+                  Your Reanimated 4 cheat sheet is on its way to{' '}
+                  {formData.email}
+                </p>
+                <p>Check your inbox in the next few minutes.</p>
               </div>
+            </div>
+          ) : (
+            <section className={styles.signup}>
+              <h2>Grab your copy</h2>
+              <p>Enter your details to get the PDF in your inbox.</p>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="email">Your email (required)</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className={styles.input}
-                />
-              </div>
+              <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="name">Your name (required)</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className={styles.input}
+                  />
+                </div>
 
-              <p className={styles.disclaimer}>
-                By providing your email address, you agree to receive our
-                marketing emails and product updates. You can unsubscribe at any
-                time.
-              </p>
+                <div className={styles.formGroup}>
+                  <label htmlFor="email">Your email (required)</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className={styles.input}
+                  />
+                </div>
 
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={
-                  isSubmitting ||
-                  !formData.name.trim() ||
-                  !formData.email.trim()
-                }>
-                {isSubmitting ? 'Sending...' : 'Download the cheat sheet'}
-              </button>
-            </form>
-          </section>
+                <p className={styles.disclaimer}>
+                  By providing your email address, you agree to receive our
+                  marketing emails and product updates. You can unsubscribe at
+                  any time.
+                </p>
+
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={
+                    isSubmitting ||
+                    !formData.name.trim() ||
+                    !formData.email.trim()
+                  }>
+                  {isSubmitting ? 'Sending...' : 'Download the cheat sheet'}
+                </button>
+              </form>
+            </section>
+          )}
 
           <section className={styles.links}>
             <h2>Want more?</h2>
