@@ -1,6 +1,6 @@
 .container {
   max-width: 800px;
-  margin: 0 auto;
+  margin: 2rem auto;
   padding: 2rem;
   background: var(--swm-background);
   color: var(--ifm-font-color-base);
@@ -44,28 +44,147 @@
   margin-bottom: 1.5rem;
 }
 
-.featureList {
-  list-style: none;
-  padding: 0;
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.featureCard {
+  background: var(--swm-off-background);
+  border: 1px solid var(--swm-border);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-color: var(--swm-purple-light-100);
+}
+
+.featureIcon {
+  margin-bottom: 1.5rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featureCard h3 {
+  font-family: var(--swm-title-font);
+  font-weight: var(--swm-heading-font-weight);
+  font-size: 1.25rem;
+  color: var(--ifm-heading-color);
+  margin-bottom: 0.75rem;
+}
+
+.featureCard p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--swm-navy-light-60);
   margin: 0;
 }
 
-.featureList li {
-  margin-bottom: 16px;
-  line-height: 1.6;
+/* CSS Animation - Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--swm-border);
+  border-top-color: var(--swm-purple-light-100);
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.featureCard:hover .spinner {
+  animation-duration: 0.5s;
+}
+
+/* CSS Transition - Color changing box */
+.transitionBox {
+  width: 40px;
+  height: 40px;
+  background: var(--swm-purple-light-100);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.featureCard:hover .transitionBox {
+  background: var(--swm-green-light-100);
+  transform: scale(1.1);
+  border-radius: 50%;
+}
+
+/* Shared Values - Slider */
+.slider {
+  width: 50px;
+  height: 8px;
+  background: var(--swm-border);
+  border-radius: 4px;
   position: relative;
 }
 
-.featureList li::before {
-  content: '✓';
+.sliderThumb {
+  width: 16px;
+  height: 16px;
+  background: var(--swm-purple-light-100);
+  border-radius: 50%;
   position: absolute;
-  left: 0.75rem;
-  color: var(--swm-green-light-100);
-  font-weight: bold;
+  top: -4px;
+  left: 2px;
+  transition: left 0.3s ease;
 }
 
-.featureList li {
-  padding-left: 2.5rem;
+.featureCard:hover .sliderThumb {
+  left: calc(100% - 18px);
+}
+
+/* Layout Animations - List items */
+.layoutContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.layoutItem {
+  width: 40px;
+  height: 8px;
+  background: var(--swm-purple-light-100);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  opacity: 1;
+}
+
+.layoutItem:nth-child(2) {
+  width: 35px;
+}
+
+.layoutItem:nth-child(3) {
+  width: 30px;
+}
+
+.featureCard:hover .layoutItem:nth-child(1) {
+  transform: translateX(-5px);
+}
+
+.featureCard:hover .layoutItem:nth-child(2) {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.featureCard:hover .layoutItem:nth-child(3) {
+  transform: translateX(5px);
 }
 
 .signup {
@@ -227,6 +346,15 @@
     font-size: var(--swm-h3-font-size);
   }
 
+  .featureGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .featureCard {
+    padding: 1.5rem 1rem;
+  }
+
   .signup {
     padding: 2rem;
   }
@@ -243,6 +371,15 @@
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .featureCard {
+    padding: 1.25rem;
   }
 
   .signup {

@@ -62,24 +62,47 @@ export default function CheatSheetPage(): JSX.Element {
 
           <section className={styles.features}>
             <h2>What you'll find inside</h2>
-            <ul className={styles.featureList}>
-              <li>
-                CSS animations for spinners, pulsing effects, and standalone UI
-                animations
-              </li>
-              <li>
-                CSS transitions for buttons, modals, or changing container
-                colors
-              </li>
-              <li>
-                Shared values for drag-and-drops, sliders, or gesture-driven
-                interactions
-              </li>
-              <li>
-                Layout animations for adding/removing list items or
-                expanding/collapsing sections
-              </li>
-            </ul>
+            <div className={styles.featureGrid}>
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <div className={styles.spinner}></div>
+                </div>
+                <h3>CSS Animations</h3>
+                <p>Spinners, pulsing effects, and standalone UI animations</p>
+              </div>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <div className={styles.transitionBox}></div>
+                </div>
+                <h3>CSS Transitions</h3>
+                <p>Buttons, modals, or changing container colors</p>
+              </div>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <div className={styles.slider}>
+                    <div className={styles.sliderThumb}></div>
+                  </div>
+                </div>
+                <h3>Shared Values</h3>
+                <p>Drag-and-drops, sliders, or gesture-driven interactions</p>
+              </div>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}>
+                  <div className={styles.layoutContainer}>
+                    <div className={styles.layoutItem}></div>
+                    <div className={styles.layoutItem}></div>
+                    <div className={styles.layoutItem}></div>
+                  </div>
+                </div>
+                <h3>Layout Animations</h3>
+                <p>
+                  Adding/removing list items or expanding/collapsing sections
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className={styles.signup}>
