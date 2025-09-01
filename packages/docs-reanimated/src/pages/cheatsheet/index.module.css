@@ -252,7 +252,7 @@
 
 .signup {
   background: var(--swm-off-background);
-  padding: 2.5rem;
+  padding: 2rem;
   border: 1px solid var(--swm-border);
 }
 
@@ -317,17 +317,19 @@
   padding: 1rem 2rem;
   background: var(--swm-purple-light-100);
   color: var(--swm-off-white);
-  border: none;
+  border: 2px solid transparent;
   font-size: 1.125rem;
   font-weight: 500;
   font-family: var(--swm-title-font);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   align-self: flex-start;
 }
 
 .submitButton:hover:not(:disabled) {
-  background: var(--swm-purple-light-80);
+  color: var(--swm-purple-light-100);
+  border-color: var(--swm-purple-light-100);
+  background-color: var(--swm-off-background);
 }
 
 .submitButton:disabled {
