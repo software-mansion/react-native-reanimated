@@ -37,24 +37,24 @@
     position: relative;
 
     .phone {
-      width: 100%;
+      resize: both;
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 2;
     }
 
     .video {
       border-radius: 48px;
-      max-width: 300px;
-      padding: 12px 8px;
       position: absolute;
-      height: 100%;
+      height: 90%;
       object-fit: cover;
+      z-index: 1;
     }
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .useCase {
     .header {
       .title {
@@ -62,18 +62,16 @@
       }
     }
 
-    .content {
-      .phone {
-        svg {
-          max-width: 240px;
-          max-height: 500px;
-        }
-      }
+    .phone {
+      max-width: 270px;
+      max-height: 572px;
+    }
 
+    .content {
       .video {
         border-radius: 32px;
-        max-width: 240px;
-        max-height: 500px;
+        /* max-width: 208px;
+        height: 534px; */
       }
     }
   }
