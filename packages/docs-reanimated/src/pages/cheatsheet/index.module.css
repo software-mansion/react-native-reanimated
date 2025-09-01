@@ -1,21 +1,17 @@
 .container {
-  max-width: 800px;
+  max-width: 850px;
   margin: 2rem auto;
   padding: 2rem;
   background: var(--swm-background);
   color: var(--ifm-font-color-base);
   font-family: var(--swm-body-font);
+  text-wrap: pretty;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   gap: 3rem;
-}
-
-.header {
-  margin-bottom: 2rem;
-  text-wrap: pretty;
 }
 
 .header h1 {
@@ -46,16 +42,15 @@
 
 .featureGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 }
 
 .featureCard {
   background: var(--swm-off-background);
   border: 1px solid var(--swm-border);
-  padding: 2rem 1.5rem;
+  padding: 12px;
   text-align: center;
-  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -68,7 +63,7 @@
 }
 
 .featureIcon {
-  margin-bottom: 1.5rem;
+  margin-bottom: 8px;
   height: 60px;
   display: flex;
   align-items: center;
@@ -141,12 +136,12 @@
   border-radius: 50%;
   position: absolute;
   top: -4px;
-  left: 2px;
+  left: 0px;
   transition: left 0.3s ease;
 }
 
 .featureCard:hover .sliderThumb {
-  left: calc(100% - 18px);
+  left: calc(100% - 16px);
 }
 
 /* Layout Animations - List items */
@@ -346,13 +341,8 @@
     font-size: var(--swm-h3-font-size);
   }
 
-  .featureGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-
   .featureCard {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
   }
 
   .signup {

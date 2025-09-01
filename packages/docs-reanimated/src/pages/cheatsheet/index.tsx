@@ -53,10 +53,8 @@ export default function CheatSheetPage(): JSX.Element {
             <h1>React Native Reanimated 4 – Cheat Sheet</h1>
             <p className={styles.subtitle}>
               The most useful React Native Reanimated 4 API overviews and code
-              snippets in one place.
-            </p>
-            <p className={styles.subtitle}>
-              Focus on writing animations, not searching the docs.
+              snippets in one place. Focus on writing animations, not searching
+              the docs.
             </p>
           </header>
 
