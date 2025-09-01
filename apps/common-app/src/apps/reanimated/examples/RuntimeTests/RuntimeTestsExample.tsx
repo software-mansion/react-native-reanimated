@@ -56,6 +56,7 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/createWorkletRuntime.test');
             require('./tests/runtimes/scheduleOnRN.test');
             require('./tests/runtimes/runOnUISync.test');
+            require('./tests/runtimes/scheduleOnRuntime.test');
             require('./tests/runtimes/scheduleOnUI.test');
           },
         },
