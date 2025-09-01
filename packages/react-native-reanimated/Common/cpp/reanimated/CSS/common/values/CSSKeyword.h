@@ -2,13 +2,11 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
+#include <folly/json.h>
 #include <string>
+#include <utility>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 template <typename TValue>
 class CSSKeywordBase : public CSSSimpleValue<TValue> {

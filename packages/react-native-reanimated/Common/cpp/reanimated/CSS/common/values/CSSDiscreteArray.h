@@ -2,14 +2,11 @@
 
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
+#include <folly/json.h>
 #include <string>
 #include <vector>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 /*
  * CSSDiscreteArray is used for array interpolation when arrays need to be

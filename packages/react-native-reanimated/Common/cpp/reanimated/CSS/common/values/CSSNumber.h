@@ -2,14 +2,11 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
+#include <folly/json.h>
 #include <algorithm>
 #include <string>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 template <typename TDerived, typename TValue>
 struct CSSNumberBase : public CSSSimpleValue<TDerived> {

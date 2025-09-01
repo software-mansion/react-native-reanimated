@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <folly/json.h>
 #include <iomanip>
 #include <regex>
@@ -13,8 +11,6 @@
 #include <unordered_map>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 struct CSSAngle : public CSSSimpleValue<CSSAngle> {
   double value;

@@ -25,11 +25,8 @@ SVGLength::SVGLength(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (jsiValue.isNumber()) {
     this->value = jsiValue.asNumber();
     this->isPercentage = false;
-  } else if (jsiValue.isString()) {
-    std::string strValue = jsiValue.asString(rt).utf8(rt);
-    *this = SVGLength(strValue); // Delegate to the string constructor
   } else {
-    throw std::runtime_error("[Reanimated] SVGLength: Unsupported value type");
+    *this = SVGLength(jsiValue.asString(rt).utf8(rt));
   }
 }
 
@@ -37,11 +34,8 @@ SVGLength::SVGLength(const folly::dynamic &value) {
   if (value.isNumber()) {
     this->value = value.getDouble();
     this->isPercentage = false;
-  } else if (value.isString()) {
-    std::string strValue = value.getString();
-    *this = SVGLength(strValue.c_str()); // Delegate to the string constructor
   } else {
-    throw std::runtime_error("[Reanimated] SVGLength: Unsupported value type");
+    *this = SVGLength(value.getString());
   }
 }
 
@@ -64,17 +58,11 @@ bool SVGLength::canConstruct(const folly::dynamic &value) {
 }
 
 folly::dynamic SVGLength::toDynamic() const {
-  if (isPercentage) {
-    return std::to_string(value * 100) + "%";
-  }
-  return value;
+  return isPercentage ? (std::to_string(value * 100) + "%") : value;
 }
 
 std::string SVGLength::toString() const {
-  if (isPercentage) {
-    return std::to_string(value * 100) + "%";
-  }
-  return std::to_string(value);
+  return std::to_string(value * (isPercentage ? 100 : 1)) + "%";
 }
 
 SVGLength SVGLength::interpolate(const double progress, const SVGLength &to)

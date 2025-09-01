@@ -3,14 +3,10 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <folly/json.h>
 #include <string>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 enum class ColorType {
   Rgba,
