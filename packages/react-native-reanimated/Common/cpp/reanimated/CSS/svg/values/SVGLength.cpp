@@ -35,7 +35,7 @@ SVGLength::SVGLength(const folly::dynamic &value) {
     this->value = value.getDouble();
     this->isPercentage = false;
   } else {
-    *this = SVGLength(value.getString());
+    *this = SVGLength(value.asString().c_str());
   }
 }
 

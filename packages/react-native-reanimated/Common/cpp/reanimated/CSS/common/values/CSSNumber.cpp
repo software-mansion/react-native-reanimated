@@ -17,7 +17,7 @@ CSSNumberBase<TDerived, TValue>::CSSNumberBase(
 
 template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase(const folly::dynamic &value) {
-  this->value = static_cast<TValue>(value.getDouble());
+  this->value = static_cast<TValue>(value.asDouble());
 }
 
 template <typename TDerived, typename TValue>
