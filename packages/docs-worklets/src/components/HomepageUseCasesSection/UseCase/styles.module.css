@@ -66,13 +66,12 @@
     .phone {
       max-width: 270px;
       max-height: 572px;
+      padding: 0;
     }
 
     .content {
       .video {
         border-radius: 32px;
-        /* max-width: 208px;
-        height: 534px; */
       }
     }
   }
