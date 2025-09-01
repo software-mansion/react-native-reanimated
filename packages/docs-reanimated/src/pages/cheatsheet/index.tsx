@@ -50,7 +50,12 @@ export default function CheatSheetPage(): JSX.Element {
       <div className={styles.container}>
         <div className={styles.content}>
           <header className={styles.header}>
-            <h1>React Native Reanimated 4 – Cheat Sheet</h1>
+            <div className={styles.badge}>
+              <div className={styles.dot} />
+              <div className={`${styles.dot} ${styles.ping}`} />
+              Recently added
+            </div>
+            <h1>Reanimated 4 – Cheat Sheet</h1>
             <p className={styles.subtitle}>
               The most useful React Native Reanimated 4 API overviews and code
               snippets in one place. Focus on writing animations, not searching
