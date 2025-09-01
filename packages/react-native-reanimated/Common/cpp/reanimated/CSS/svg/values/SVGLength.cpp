@@ -58,7 +58,10 @@ bool SVGLength::canConstruct(const folly::dynamic &value) {
 }
 
 folly::dynamic SVGLength::toDynamic() const {
-  return isPercentage ? (std::to_string(value * 100) + "%") : value;
+  if (isPercentage) {
+    return std::to_string(value * 100) + "%";
+  }
+  return value;
 }
 
 std::string SVGLength::toString() const {

@@ -12,7 +12,7 @@ template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
-  value = static_cast<TValue>(jsiValue.asNumber())
+  value = static_cast<TValue>(jsiValue.asNumber());
 }
 
 template <typename TDerived, typename TValue>
