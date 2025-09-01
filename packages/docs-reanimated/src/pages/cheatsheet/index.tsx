@@ -162,8 +162,7 @@ export default function CheatSheetPage(): JSX.Element {
             <h2>Want more?</h2>
             <div className={styles.linkList}>
               <a
-                href="https://docs.swmansion.com/react-native-reanimated/"
-                target="_blank"
+                href="/react-native-reanimated/docs/fundamentals/getting-started"
                 className={styles.link}>
                 Read the full docs →
               </a>
