@@ -6,6 +6,16 @@
   width: 80%;
   max-width: 996px;
 
+  position: relative;
+  .background {
+    position: absolute;
+    right: -400px;
+    z-index: -1;
+    svg {
+      width: 100%;
+    }
+  }
+
   .header {
     display: flex;
 
@@ -36,6 +46,10 @@
   .headerSection {
     gap: 16px;
 
+    .background {
+      display: none;
+    }
+
     .header {
       h1 {
         font-size: var(--swm-h1-font-size-mobile);
@@ -51,4 +65,8 @@
       }
     }
   }
+}
+
+[data-theme='dark'] .headerSection .background {
+  opacity: 0.6;
 }

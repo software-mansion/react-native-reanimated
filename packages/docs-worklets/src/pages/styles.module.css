@@ -24,26 +24,7 @@ html {
   scroll-behavior: smooth;
 }
 
-.background {
-  position: absolute;
-  top: 128px;
-  right: -217px;
-  width: 858px;
-  height: 566px;
-  z-index: -1;
-}
-
-[data-theme='dark'] .background {
-  opacity: 0.6;
-}
-
 .layoutWrapper {
   position: relative;
   overflow: hidden;
-}
-
-@media (max-width: 996px) {
-  .background {
-    display: none;
-  }
 }

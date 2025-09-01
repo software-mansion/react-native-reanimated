@@ -1,9 +1,11 @@
 import HomepageButton, { ButtonStyling } from '../HomepageButton';
 import styles from './styles.module.css';
+import Background from '@site/static/img/background.svg';
 
 export default function HomepageMainSection(): JSX.Element {
   return (
     <div className={styles.headerSection}>
+      <Background width={858} height={566} className={styles.background} />
       <div className={styles.header}>
         <h1>
           React Native <span className={styles.headerHighlight}>Worklets</span>
