@@ -51,7 +51,7 @@ CSSAngle::CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 }
 
 CSSAngle::CSSAngle(const folly::dynamic &value) {
-  *this = CSSAngle(value.asString());
+  *this = CSSAngle(value.asString().c_str());
 }
 
 bool CSSAngle::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {

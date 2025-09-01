@@ -35,7 +35,7 @@ CSSLength::CSSLength(const folly::dynamic &value) {
     this->value = value.getDouble();
     this->isRelative = false;
   } else {
-    *this = CSSLength(value.getString());
+    *this = CSSLength(value.asString().c_str());
   }
 }
 
