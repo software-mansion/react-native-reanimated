@@ -6,7 +6,7 @@ import {
   registerValue,
   render,
   test,
-  waitForNotify,
+  waitForNotification,
   notify,
 } from '../../ReJest/RuntimeTestsApi';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
@@ -50,7 +50,7 @@ describe('scheduleOnRN', () => {
     await render(<TestComponent runFrom="ui" />);
 
     // Assert
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValueOnUI = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValueOnUI.onJS).toBe(100, ComparisonMode.NUMBER);
     expect(sharedValueOnUI.onUI).toBe(100, ComparisonMode.NUMBER);
@@ -61,7 +61,7 @@ describe('scheduleOnRN', () => {
     await render(<TestComponent runFrom="js" />);
 
     // Assert
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValueOnJS = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValueOnJS.onJS).toBe(100, ComparisonMode.NUMBER);
   });
@@ -71,7 +71,7 @@ describe('scheduleOnRN', () => {
     await render(<TestComponent runFrom="workletRuntime" />);
 
     // Assert
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
     const sharedValueOnWorkletRuntime = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValueOnWorkletRuntime.onJS).toBe(100, ComparisonMode.NUMBER);
   });

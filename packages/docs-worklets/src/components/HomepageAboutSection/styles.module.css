@@ -1,0 +1,38 @@
+.aboutSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+  width: 80%;
+  max-width: 936px;
+
+  h2 {
+    font-weight: 500;
+  }
+
+  h3 {
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 110%; /* 52.8px */
+    letter-spacing: 0.96px;
+    align-self: stretch;
+  }
+}
+
+.videoPlaceholder {
+  height: 527px;
+  margin-top: 40px;
+  background-color: var(--swm-blue-light-100);
+}
+
+@media (max-width: 936px) {
+  .aboutSection {
+    gap: 16px;
+  }
+
+  .videoPlaceholder {
+    height: 200px;
+    margin-top: 24px;
+  }
+}

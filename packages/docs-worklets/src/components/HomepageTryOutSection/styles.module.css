@@ -1,0 +1,27 @@
+.tryOutSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 64px;
+  width: 80%;
+  max-width: 936px;
+
+  .title {
+    display: flex;
+    font-size: 48px;
+    font-weight: 700;
+
+    .titleHighlight {
+      color: var(--swm-blue-light-100);
+    }
+  }
+}
+
+@media (max-width: 936px) {
+  .tryOutSection {
+    .title {
+      font-size: 26px;
+    }
+  }
+}

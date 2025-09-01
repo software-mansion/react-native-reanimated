@@ -1,44 +1,47 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <memory>
 #include <string>
 
 namespace reanimated::css {
 
-// Rotate
-struct RotateOperation : public TransformOperationBase<CSSAngle> {
-  using TransformOperationBase<CSSAngle>::TransformOperationBase;
+template <TransformOp TOperation>
+struct RotateOperationBase
+    : public TransformOperationBase<TOperation, CSSAngle> {
+  using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  explicit RotateOperation(const std::string &value);
+  explicit RotateOperationBase(const std::string &value)
+      : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
-  TransformOperationType type() const override;
-  folly::dynamic valueToDynamic() const override;
-  TransformMatrix3D toMatrix() const override;
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+
+  TransformMatrix3D toMatrix() const override {
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-struct RotateXOperation final : public RotateOperation {
-  using RotateOperation::RotateOperation;
+using RotateOperation = RotateOperationBase<TransformOp::Rotate>;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-};
+using RotateXOperation = RotateOperationBase<TransformOp::RotateX>;
 
-struct RotateYOperation final : public RotateOperation {
-  using RotateOperation::RotateOperation;
+using RotateYOperation = RotateOperationBase<TransformOp::RotateY>;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-};
+struct RotateZOperation final
+    : public RotateOperationBase<TransformOp::RotateZ> {
+  using RotateOperationBase<TransformOp::RotateZ>::RotateOperationBase;
 
-struct RotateZOperation final : public RotateOperation {
-  using RotateOperation::RotateOperation;
+  bool canConvertTo(TransformOp type) const override {
+    return type == TransformOp::Rotate;
+  }
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix() const override;
-  bool canConvertTo(TransformOperationType type) const override;
-  TransformOperations convertTo(TransformOperationType type) const override;
+  TransformOperations convertTo(TransformOp type) const override {
+    assertCanConvertTo(type);
+    return {std::make_shared<RotateOperation>(value)};
+  }
 };
 
 } // namespace reanimated::css

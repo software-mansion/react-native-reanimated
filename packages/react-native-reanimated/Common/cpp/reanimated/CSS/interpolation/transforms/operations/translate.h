@@ -1,36 +1,40 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/transforms/operations/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>
 
 namespace reanimated::css {
 
-// Translate
-struct TranslateOperation : public TransformOperationBase<CSSLength> {
-  using TransformOperationBase<CSSLength>::TransformOperationBase;
+template <TransformOp TOperation>
+struct TranslateOperationBase
+    : public TransformOperationBase<TOperation, CSSLength> {
+  using TransformOperationBase<TOperation, CSSLength>::TransformOperationBase;
 
-  explicit TranslateOperation(double value);
-  explicit TranslateOperation(const std::string &value);
+  explicit TranslateOperationBase(double value)
+      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
+  explicit TranslateOperationBase(const std::string &value)
+      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
-  bool isRelative() const override;
-  folly::dynamic valueToDynamic() const override;
-  virtual TransformMatrix3D toMatrix(double resolvedValue) const = 0;
-  TransformMatrix3D toMatrix() const override;
+  bool isRelative() const override {
+    return this->value.isRelative;
+  }
+
+  folly::dynamic valueToDynamic() const override {
+    return this->value.toDynamic();
+  }
+
+  TransformMatrix3D toMatrix() const override {
+    if (this->value.isRelative) {
+      throw std::invalid_argument(
+          "[Reanimated] Cannot convert relative translate to the matrix.");
+    }
+    return TransformMatrix3D::create<TOperation>(this->value.value);
+  }
 };
 
-struct TranslateXOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
+using TranslateXOperation = TranslateOperationBase<TransformOp::TranslateX>;
 
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix(double resolvedValue) const override;
-};
-
-struct TranslateYOperation final : public TranslateOperation {
-  using TranslateOperation::TranslateOperation;
-
-  TransformOperationType type() const override;
-  TransformMatrix3D toMatrix(double resolvedValue) const override;
-};
+using TranslateYOperation = TranslateOperationBase<TransformOp::TranslateY>;
 
 } // namespace reanimated::css

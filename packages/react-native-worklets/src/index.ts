@@ -35,6 +35,9 @@ export {
   runOnUIAsync,
   runOnUISync,
   scheduleOnRN,
+  scheduleOnUI,
+  // eslint-disable-next-line camelcase
+  unstable_eventLoopTask,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';

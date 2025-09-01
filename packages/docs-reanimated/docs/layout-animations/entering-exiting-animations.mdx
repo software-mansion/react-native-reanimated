@@ -135,8 +135,7 @@ FadeInUp.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -144,8 +143,7 @@ FadeInUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -390,8 +388,7 @@ FlipInXUp.springify()
   .mass(3)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -399,8 +396,7 @@ FlipInXUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -519,8 +515,7 @@ LightSpeedInLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -528,8 +523,7 @@ LightSpeedInLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -640,8 +634,7 @@ PinwheelIn.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -649,8 +642,7 @@ PinwheelIn.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -767,8 +759,7 @@ RollInLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -776,8 +767,7 @@ RollInLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -906,8 +896,7 @@ RotateInUpLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -915,8 +904,7 @@ RotateInUpLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1045,8 +1033,7 @@ SlideInUp.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1054,8 +1041,7 @@ SlideInUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1171,8 +1157,7 @@ StretchInX.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1180,8 +1165,7 @@ StretchInX.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1332,8 +1316,7 @@ ZoomInRotate.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(0.1);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1341,8 +1324,7 @@ ZoomInRotate.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 

@@ -1,5 +1,5 @@
 import { createSynchronizable, createWorkletRuntime, runOnJS, scheduleOnRuntime } from 'react-native-worklets';
-import { describe, expect, test, waitForNotify, notify } from '../../ReJest/RuntimeTestsApi';
+import { describe, expect, test, waitForNotification, notify } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
 
 const NOTIFICATION_NAME = 'NOTIFICATION_NAME';
@@ -45,7 +45,7 @@ describe('scheduleOnRuntime', () => {
     });
 
     // Assert
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
     expect(synchronizable.getBlocking()).toBe(100, ComparisonMode.NUMBER);
   });
 

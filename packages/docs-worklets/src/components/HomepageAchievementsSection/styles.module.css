@@ -1,0 +1,60 @@
+.achievementsSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  width: 80%;
+  max-width: 936px;
+
+  h2 {
+    font-weight: 500;
+  }
+
+  .description {
+    max-width: 696px;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 160%;
+  }
+
+  .achievementsList,
+  .footer,
+  .header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .achievementsList,
+  .footer {
+    margin-top: 56px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+
+    .footerTitle {
+      font-size: 24px;
+      font-weight: 500;
+    }
+  }
+}
+
+@media (max-width: 936px) {
+  .achievementsSection {
+    gap: 16px;
+
+    .achievementsList {
+      gap: 16px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      flex-direction: column;
+    }
+  }
+}
