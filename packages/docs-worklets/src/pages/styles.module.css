@@ -24,10 +24,6 @@ html {
   scroll-behavior: smooth;
 }
 
-[data-theme='dark'] .background {
-  opacity: 0.6;
-}
-
 .layoutWrapper {
   position: relative;
   overflow: hidden;
