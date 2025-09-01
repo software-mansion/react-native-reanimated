@@ -1,20 +1,19 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-
-#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
-
+#include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
-
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -53,13 +52,11 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
   explicit ResolvableValueInterpolatorFactory(
-      RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const TValue &defaultValue)
+      const TValue &defaultValue,
+      ResolvableValueInterpolatorConfig config)
       : PropertyInterpolatorFactory(),
-        relativeTo_(relativeTo),
-        relativeProperty_(relativeProperty),
-        defaultValue_(defaultValue) {}
+        defaultValue_(defaultValue),
+        config_(std::move(config)) {}
 
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;
@@ -70,17 +67,12 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const override {
     return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
-        propertyPath,
-        defaultValue_,
-        viewStylesRepository,
-        relativeTo_,
-        relativeProperty_);
+        propertyPath, defaultValue_, viewStylesRepository, config_);
   }
 
  private:
-  const RelativeTo relativeTo_;
-  const std::string relativeProperty_;
   const CSSValueVariant<AllowedTypes...> defaultValue_;
+  ResolvableValueInterpolatorConfig config_;
 };
 
 /**
@@ -95,17 +87,12 @@ auto value(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename... AllowedTypes>
-auto value(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const auto &defaultValue)
+auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config)
     -> std::enable_if_t<
         (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
         std::shared_ptr<PropertyInterpolatorFactory>> {
   return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
-      relativeTo,
-      relativeProperty,
-      CSSValueVariant<AllowedTypes...>(defaultValue));
+      CSSValueVariant<AllowedTypes...>(defaultValue), std::move(config));
 }
 
 /**
@@ -122,16 +109,15 @@ auto transformOp(const auto &defaultValue) -> std::enable_if_t<
 
 template <typename TOperation>
 auto transformOp(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const auto &defaultValue)
+    const auto &defaultValue,
+    ResolvableValueInterpolatorConfig config)
     -> std::enable_if_t<
         std::is_base_of_v<TransformOperation, TOperation> &&
             std::is_constructible_v<TOperation, decltype(defaultValue)> &&
             ResolvableOperation<TOperation>,
         std::shared_ptr<TransformInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
-      std::make_shared<TOperation>(defaultValue), relativeTo, relativeProperty);
+      std::make_shared<TOperation>(defaultValue), std::move(config));
 }
 
 /**

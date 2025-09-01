@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/config/interpolators/registry.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/configs/interpolators/registry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -47,11 +47,13 @@ class UpdatesRegistryManager {
 #endif
 
  private:
+  using RemovableShadowNodes =
+      std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
+
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
-  std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>
-      removableShadowNodes_;
+  RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 

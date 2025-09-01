@@ -1,11 +1,14 @@
 #pragma once
 
 #include <reanimated/CSS/common/values/CSSValue.h>
+#include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
+#include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -65,7 +68,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolatorUpdateContext &context) const override;
 
  private:
-  TransformMatrix matrixFromOperation(
+  TransformMatrix3D matrixFromOperation(
       const MatrixOperation &matrixOperation,
       const TransformInterpolatorUpdateContext &context) const;
 };
@@ -77,11 +80,9 @@ class TransformOperationInterpolator<TOperation>
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
-      RelativeTo relativeTo,
-      const std::string &relativeProperty)
+      ResolvableValueInterpolatorConfig config)
       : TransformInterpolatorBase<TOperation>(defaultOperation),
-        relativeTo_(relativeTo),
-        relativeProperty_(relativeProperty) {}
+        config_(std::move(config)) {}
 
   TOperation interpolate(
       double progress,
@@ -106,16 +107,15 @@ class TransformOperationInterpolator<TOperation>
   }
 
  private:
-  const RelativeTo relativeTo_;
-  const std::string relativeProperty_;
+  const ResolvableValueInterpolatorConfig config_;
 
   CSSResolvableValueInterpolationContext getResolvableValueContext(
       const TransformInterpolatorUpdateContext &context) const {
     return {
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
-        .relativeProperty = relativeProperty_,
-        .relativeTo = relativeTo_,
+        .relativeProperty = config_.relativeProperty,
+        .relativeTo = config_.relativeTo,
     };
   }
 };

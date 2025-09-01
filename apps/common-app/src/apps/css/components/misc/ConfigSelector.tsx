@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React, { memo, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
-import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   LayoutAnimationConfig,

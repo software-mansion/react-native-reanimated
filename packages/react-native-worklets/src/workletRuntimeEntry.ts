@@ -1,6 +1,8 @@
 'use strict';
 
 import { init } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
 import { WorkletsError } from './WorkletsError';
 
 /**
@@ -17,7 +19,10 @@ import { WorkletsError } from './WorkletsError';
  */
 export function bundleModeInit() {
   globalThis._WORKLETS_BUNDLE_MODE = true;
-  if (globalThis._WORKLET) {
+  if (
+    !SHOULD_BE_USE_WEB &&
+    globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative
+  ) {
     /**
      * We shouldn't call `init()` on RN Runtime here, as it would initialize our
      * module before React Native has configured the RN Runtime.

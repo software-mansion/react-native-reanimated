@@ -6,8 +6,9 @@
 #include <react/debug/react_native_assert.h>
 
 #include <worklets/Public/AsyncQueue.h>
-#include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueueImpl.h>
+#include <worklets/RunLoop/AsyncQueueImpl.h>
+#include <worklets/RunLoop/EventLoop.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
@@ -33,7 +34,8 @@ class WorkletRuntime : public jsi::HostObject,
       uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
-      const std::shared_ptr<AsyncQueue> &queue = nullptr);
+      const std::shared_ptr<AsyncQueue> &queue = nullptr,
+      bool enableEventLoop = true);
 
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
@@ -83,6 +85,7 @@ class WorkletRuntime : public jsi::HostObject,
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
+  std::shared_ptr<EventLoop> eventLoop_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
@@ -94,6 +97,6 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    const jsi::Value &serializableWorkletValue);
 
 } // namespace worklets

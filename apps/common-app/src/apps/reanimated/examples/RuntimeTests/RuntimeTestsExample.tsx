@@ -42,17 +42,22 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'shareables',
+          testSuiteName: 'serializable',
           importTest: () => {
-            require('./tests/shareables/makeShareableClone.test');
-            require('./tests/shareables/makeShareableCloneOnUI.test');
-            require('./tests/shareables/isShareableRef.test');
+            require('./tests/memory/createSerializable.test');
+            require('./tests/memory/createSerializableOnUI.test');
+            require('./tests/memory/isSerializableRef.test');
+            require('./tests/memory/synchronizable.test');
           },
         },
         {
           testSuiteName: 'runtimes',
           importTest: () => {
             require('./tests/runtimes/createWorkletRuntime.test');
+            require('./tests/runtimes/scheduleOnRN.test');
+            require('./tests/runtimes/runOnUISync.test');
+            require('./tests/runtimes/scheduleOnRuntime.test');
+            require('./tests/runtimes/scheduleOnUI.test');
           },
         },
         {
@@ -60,12 +65,14 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/runLoop/requestAnimationFrame.test');
             require('./tests/runLoop/cancelAnimationFrame.test');
-            require('./tests/runLoop/setTimeoutPolyfill.test');
-            require('./tests/runLoop/clearTimeoutPolyfill.test');
-            require('./tests/runLoop/setImmediatePolyfill.test');
-            require('./tests/runLoop/clearImmediatePolyfill.test');
-            require('./tests/runLoop/setIntervalPolyfill.test');
-            require('./tests/runLoop/clearIntervalPolyfill.test');
+            require('./tests/runLoop/setTimeout.test');
+            require('./tests/runLoop/clearTimeout.test');
+            require('./tests/runLoop/setImmediate.test');
+            require('./tests/runLoop/clearImmediate.test');
+            require('./tests/runLoop/setInterval.test');
+            require('./tests/runLoop/clearInterval.test');
+            require('./tests/runLoop/queueMicrotask.test');
+            require('./tests/runLoop/executionOrder.test');
           },
         },
         {
@@ -138,6 +145,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
             require('./tests/advancedAPI/measure.test');
+            require('./tests/advancedAPI/staticFeatureFlags.test');
           },
         },
         {

@@ -38,8 +38,7 @@ export interface EnteringExitingConfigProps
 //   mass: 1,
 //   stiffness: 100,
 //   overshootClamping: false,
-//   restDisplacementThreshold: 0.01,
-//   restSpeedThreshold: 2,
+//   energyThreshold: 6e-9,
 // };
 
 const defaultEasingConfig = {
@@ -208,9 +207,7 @@ export default function useEnteringExitingPlayground() {
        // .mass(${entering.mass})
        // .damping(${entering.damping})
        // .stiffness(${entering.stiffness})
-       // .overshootClamping(${entering.overshootClamping})
-       // .restDisplacementThreshold(${entering.restDisplacementThreshold})
-       // .restSpeedThreshold(${entering.restSpeedThreshold}`
+       // .overshootClamping(${entering.overshootClamping})`
        `.duration(${entering.duration})
      .easing(${formatEasing(entering).code})`
      }
@@ -228,9 +225,7 @@ export default function useEnteringExitingPlayground() {
        // .mass(${exiting.mass})
        // .damping(${exiting.damping})
        // .stiffness(${exiting.stiffness})
-       // .overshootClamping(${exiting.overshootClamping})
-       // .restDisplacementThreshold(${exiting.restDisplacementThreshold})
-       // .restSpeedThreshold(${exiting.restSpeedThreshold}`
+       // .overshootClamping(${exiting.overshootClamping})`
        `.duration(${exiting.duration})
      .easing(${formatEasing(exiting).code})`
      }

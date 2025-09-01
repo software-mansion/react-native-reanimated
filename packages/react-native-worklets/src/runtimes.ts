@@ -3,10 +3,12 @@
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
+import { RuntimeKind } from './runtimeKind';
 import {
+  createSerializable,
   makeShareableCloneOnUIRecursive,
-  makeShareableCloneRecursive,
-} from './shareables';
+} from './serializable';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -19,7 +21,7 @@ import type { WorkletFunction, WorkletRuntime } from './workletTypes';
  * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 // @ts-expect-error Public API overload.
 export function createWorkletRuntime(
@@ -38,7 +40,7 @@ export function createWorkletRuntime(
  *   the same thread immediately after the runtime is created.
  * @returns WorkletRuntime which is a
  *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
  */
 export function createWorkletRuntime(
   name?: string,
@@ -55,6 +57,8 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
+  let animationQueuePollingRate: number;
+  let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -64,6 +68,10 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
+    animationQueuePollingRate = Math.round(
+      nameOrConfig?.animationQueuePollingRate ?? 16
+    );
+    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -74,18 +82,23 @@ export function createWorkletRuntime(
 
   return WorkletsModule.createWorkletRuntime(
     name,
-    makeShareableCloneRecursive(() => {
+    createSerializable(() => {
       'worklet';
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
+      if (enableEventLoop) {
+        setupRunLoop(animationQueuePollingRate);
+      }
       initializerFn?.();
     }),
     useDefaultQueue,
-    customQueue
+    customQueue,
+    enableEventLoop
   );
 }
 
+/** @deprecated Use `scheduleOnRuntime` instead. */
 // @ts-expect-error Check `runOnUI` overload.
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
@@ -102,7 +115,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `runOnRuntime` is not a worklet.'
     );
   }
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return (...args) =>
       globalThis._scheduleOnRuntime(
         workletRuntime,
@@ -115,11 +128,46 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   return (...args) =>
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      makeShareableCloneRecursive(() => {
+      createSerializable(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks();
       })
     );
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on the [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ *
+ * Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
+ *
+ * - The worklet is scheduled on the Worker Runtime's [Async
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
+ * - The function cannot be scheduled on the Worker Runtime from [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
+ *   is enabled.
+ *
+ * @param workletRuntime - The runtime to schedule the worklet on.
+ * @param worklet - The worklet to schedule.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void {
+  'worklet';
+  runOnRuntime(workletRuntime, worklet)(...args);
 }
 
 /** Configuration object for creating a worklet runtime. */
@@ -131,6 +179,19 @@ export type WorkletRuntimeConfig = {
    * before any other worklets.
    */
   initializer?: () => void;
+  /**
+   * Time interval in milliseconds between polling of frame callbacks scheduled
+   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
+   */
+  animationQueuePollingRate?: number;
+  /**
+   * Determines whether to enable the default Event Loop or not. The Event Loop
+   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
+   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
+   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
+   * defaults to `true`.
+   */
+  enableEventLoop?: true;
 } & (
   | {
       /**

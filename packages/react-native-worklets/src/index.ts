@@ -7,28 +7,43 @@ import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { shareableMappingCache } from './shareableMappingCache';
-export type { MakeShareableClone } from './shareables';
+export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
   isShareableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
+  shareableMappingCache,
+} from './deprecated';
+export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
+export { isSynchronizable } from './isSynchronizable';
+export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  createWorkletRuntime,
+  runOnRuntime,
+  scheduleOnRuntime,
+} from './runtimes';
+export { createSerializable, isSerializableRef } from './serializable';
+export { serializableMappingCache } from './serializableMappingCache';
+export type { Synchronizable } from './synchronizable';
+export { createSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
   runOnUIAsync,
+  runOnUISync,
+  scheduleOnRN,
+  scheduleOnUI,
+  // eslint-disable-next-line camelcase
+  unstable_eventLoopTask,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,

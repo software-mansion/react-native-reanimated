@@ -4,11 +4,11 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
-#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/CSS/svg/config/init.h>
+#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
+#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/CSS/svg/configs/init.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -80,10 +80,13 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name)
+      override;
   jsi::Value setDynamicFeatureFlag(
       jsi::Runtime &rt,
       const jsi::Value &name,
       const jsi::Value &value) override;
+
   jsi::Value configureLayoutAnimationBatch(
       jsi::Runtime &rt,
       const jsi::Value &layoutAnimationsBatch) override;
