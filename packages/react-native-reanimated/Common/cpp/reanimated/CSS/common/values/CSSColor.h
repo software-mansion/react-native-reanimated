@@ -3,7 +3,6 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <folly/json.h>
 #include <string>
 
 namespace reanimated::css {

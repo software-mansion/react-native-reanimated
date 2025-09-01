@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
-#include <folly/json.h>
 #include <string>
 #include <vector>
 
