@@ -29,6 +29,10 @@
 @media (max-width: 996px) {
   .aboutSection {
     gap: 16px;
+
+    h3 {
+      font-size: 26px;
+    }
   }
 
   .videoPlaceholder {
