@@ -277,6 +277,15 @@
   gap: 1.5rem;
 }
 
+.errorMessage {
+  padding: 1rem;
+  background: var(--swm-red-light-20);
+  border: 1px solid var(--swm-red-light-80);
+  color: var(--swm-red-light-100);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
 .formGroup {
   display: flex;
   flex-direction: column;

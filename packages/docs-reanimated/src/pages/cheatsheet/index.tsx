@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import styles from './index.module.css';
 import Layout from '@theme/Layout';
 
+const API_URL = 'http://localhost:8787/api/reanimated-cheatsheet/signin';
+
 export default function CheatSheetPage(): JSX.Element {
   const [formData, setFormData] = useState({
     name: '',
@@ -9,6 +11,7 @@ export default function CheatSheetPage(): JSX.Element {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -23,10 +26,30 @@ export default function CheatSheetPage(): JSX.Element {
     if (!formData.name.trim() || !formData.email.trim()) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitted(true);
-    setIsSubmitting(false);
+    setError(null);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+      } else {
+        setError('Failed to submit form. Please try again.');
+      }
+    } catch (error) {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -109,6 +132,8 @@ export default function CheatSheetPage(): JSX.Element {
               <p>Enter your details to get the PDF in your inbox.</p>
 
               <form onSubmit={handleSubmit} className={styles.form}>
+                {error && <div className={styles.errorMessage}>{error}</div>}
+
                 <div className={styles.formGroup}>
                   <label htmlFor="name">Your name (required)</label>
                   <input
