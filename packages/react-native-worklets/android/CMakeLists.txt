@@ -91,7 +91,11 @@ target_link_libraries(worklets log ReactAndroid::reactnative ReactAndroid::jsi
                       fbjni::fbjni)
 
 if(${JS_RUNTIME} STREQUAL "hermes")
-  target_link_libraries(worklets hermes-engine::libhermes)
+  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
+    target_link_libraries(worklets hermes-engine::hermesvm)
+  else()
+    target_link_libraries(worklets hermes-engine::libhermes)
+  endif()
 
   if(${HERMES_ENABLE_DEBUGGER})
     string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
