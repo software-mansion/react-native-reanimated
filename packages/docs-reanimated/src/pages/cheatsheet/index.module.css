@@ -14,41 +14,6 @@
   gap: 3rem;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  border: 1px solid var(--swm-border);
-  margin-bottom: 8px;
-  font-weight: 500;
-  position: relative;
-  gap: 8px;
-}
-
-.dot {
-  display: block;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--swm-green-light-100);
-}
-
-.ping {
-  position: absolute;
-  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping {
-  75%,
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
 .header {
   display: flex;
   flex-direction: column;
@@ -321,8 +286,13 @@
   margin: 0;
   line-height: 1.5;
 }
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  margin: 2rem;
+}
 
-.submitButton {
+.button {
   padding: 1rem 2rem;
   background: var(--swm-purple-light-100);
   color: var(--swm-off-white);
@@ -335,13 +305,13 @@
   align-self: flex-start;
 }
 
-.submitButton:hover:not(:disabled) {
+.button:hover:not(:disabled) {
   color: var(--swm-purple-light-100);
   border-color: var(--swm-purple-light-100);
   background-color: var(--swm-off-background);
 }
 
-.submitButton:disabled {
+.button:disabled {
   background: var(--swm-navy-light-60);
   cursor: not-allowed;
   transform: none;
@@ -455,7 +425,7 @@
     padding: 1.5rem;
   }
 
-  .submitButton {
+  .button {
     width: 100%;
     align-self: stretch;
   }

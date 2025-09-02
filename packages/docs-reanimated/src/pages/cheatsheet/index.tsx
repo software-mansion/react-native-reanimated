@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styles from './index.module.css';
 import Layout from '@theme/Layout';
 
@@ -12,6 +12,16 @@ export default function CheatSheetPage(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const signupSectionRef = useRef<HTMLElement>(null);
+
+  const scrollToForm = () => {
+    if (signupSectionRef.current) {
+      signupSectionRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,17 +67,17 @@ export default function CheatSheetPage(): JSX.Element {
       <div className={styles.container}>
         <div className={styles.content}>
           <header className={styles.header}>
-            <div className={styles.badge}>
-              <div className={styles.dot} />
-              <div className={`${styles.dot} ${styles.ping}`} />
-              Recently added
-            </div>
             <h1>Reanimated 4 – Cheat Sheet</h1>
             <p className={styles.subtitle}>
               The most useful React Native Reanimated 4 API overviews and code
               snippets in one place. Focus on writing animations, not searching
               the docs.
             </p>
+            <div className={styles.buttonContainer}>
+              <button onClick={scrollToForm} className={styles.button}>
+                Download the cheat sheet
+              </button>
+            </div>
           </header>
 
           <section className={styles.features}>
@@ -127,7 +137,7 @@ export default function CheatSheetPage(): JSX.Element {
               </div>
             </div>
           ) : (
-            <section className={styles.signup}>
+            <section ref={signupSectionRef} className={styles.signup}>
               <h2>Grab your copy</h2>
               <p>Enter your details to get the PDF in your inbox.</p>
 
@@ -168,7 +178,7 @@ export default function CheatSheetPage(): JSX.Element {
 
                 <button
                   type="submit"
-                  className={styles.submitButton}
+                  className={styles.button}
                   disabled={
                     isSubmitting ||
                     !formData.name.trim() ||
