@@ -12,11 +12,11 @@ const ReanimatedFeatures = () => {
       <ReanimatedFeatureList />
       <div className={styles.featuresLowerContainer}>
         <h4>
-          Learn more about the features in the newest article about Reanimated 3
+          Learn more about the features in the newest article about Reanimated 4
         </h4>
         <HomepageButton
           title="See blog post"
-          href="https://blog.swmansion.com/releasing-reanimated-3-0-17fab4cb2394"
+          href="https://blog.swmansion.com/reanimated-4-stable-release-the-future-of-react-native-animations-ba68210c3713"
           target="_blank"
           backgroundStyling={ButtonStyling.TO_PURPLE}
           enlarged
