@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/transforms/Quaternion.h>
-#include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 #include <reanimated/CSS/common/transforms/vectors.h>
 
@@ -12,9 +12,7 @@
 
 namespace reanimated::css {
 
-namespace {
 static constexpr size_t MATRIX_3D_DIMENSION = 4; // 4x4 matrix
-}
 
 class TransformMatrix3D
     : public TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION> {
@@ -38,12 +36,9 @@ class TransformMatrix3D
   using TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>::
       TransformMatrixBase;
 
-  static TransformMatrix3D Identity();
-
   template <TransformOp TOperation>
-  static TransformMatrix3D create(double value);
-
-  bool operator==(const TransformMatrix3D &other) const override;
+  static std::unique_ptr<TransformMatrix> create(double value);
+  static TransformMatrix3D from2D(const TransformMatrix2D &matrix);
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(

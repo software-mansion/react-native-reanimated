@@ -8,31 +8,38 @@
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct RotateOperationBase
+struct RotateOperationBase2D
     : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  explicit RotateOperationBase(const std::string &value)
+  explicit RotateOperationBase2D(const std::string &value)
       : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
+};
 
-  TransformMatrix3D toMatrix() const override {
+template <TransformOp TOperation>
+struct RotateOperationBase3D : public RotateOperationBase2D<TOperation> {
+  using RotateOperationBase2D<TOperation>::RotateOperationBase2D;
+
+  bool is3D() const override {
+    return true;
+  }
+
+  std::unique_ptr<TransformMatrix> toMatrix(bool /* force3D */) const override {
     return TransformMatrix3D::create<TOperation>(this->value.value);
   }
 };
 
-using RotateOperation = RotateOperationBase<TransformOp::Rotate>;
-
-using RotateXOperation = RotateOperationBase<TransformOp::RotateX>;
-
-using RotateYOperation = RotateOperationBase<TransformOp::RotateY>;
+using RotateOperation = RotateOperationBase2D<TransformOp::Rotate>;
+using RotateXOperation = RotateOperationBase3D<TransformOp::RotateX>;
+using RotateYOperation = RotateOperationBase3D<TransformOp::RotateY>;
 
 struct RotateZOperation final
-    : public RotateOperationBase<TransformOp::RotateZ> {
-  using RotateOperationBase<TransformOp::RotateZ>::RotateOperationBase;
+    : public RotateOperationBase2D<TransformOp::RotateZ> {
+  using RotateOperationBase2D<TransformOp::RotateZ>::RotateOperationBase2D;
 
   bool canConvertTo(TransformOp type) const override {
     return type == TransformOp::Rotate;

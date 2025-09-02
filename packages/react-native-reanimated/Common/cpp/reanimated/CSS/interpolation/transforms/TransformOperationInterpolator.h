@@ -66,11 +66,6 @@ class TransformOperationInterpolator<MatrixOperation>
       const MatrixOperation &from,
       const MatrixOperation &to,
       const TransformInterpolatorUpdateContext &context) const override;
-
- private:
-  TransformMatrix3D matrixFromOperation(
-      const MatrixOperation &matrixOperation,
-      const TransformInterpolatorUpdateContext &context) const;
 };
 
 // Specialization for resolvable operations

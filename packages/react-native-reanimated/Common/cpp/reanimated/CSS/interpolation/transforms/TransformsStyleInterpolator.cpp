@@ -3,11 +3,11 @@
 namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
-    std::make_shared<MatrixOperation>(TransformMatrix3D::Identity())};
+    std::make_shared<MatrixOperation>(TransformMatrix2D())};
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<TransformInterpolators> &interpolators,
+    const std::shared_ptr<TransformOperationInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       interpolators_(interpolators) {}
@@ -376,8 +376,8 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const TransformOperations &toOperations) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
-  const auto transformUpdateContext = TransformInterpolatorUpdateContext{
-      shadowNode, viewStylesRepository_, interpolators_};
+  const auto transformUpdateContext =
+      TransformUpdateContext{shadowNode, viewStylesRepository_, interpolators_};
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];

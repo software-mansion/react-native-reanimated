@@ -21,10 +21,11 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     const MatrixOperation &from,
     const MatrixOperation &to,
     const TransformInterpolatorUpdateContext &context) const {
-  const auto fromMatrix = matrixFromOperation(from, context);
-  const auto toMatrix = matrixFromOperation(to, context);
-  const auto decomposedFrom = fromMatrix.decompose();
-  const auto decomposedTo = toMatrix.decompose();
+  const auto is3D = from.is3D() || to.is3D();
+  const auto fromMatrix = from.toMatrix(is3D, context);
+  const auto toMatrix = to.toMatrix(is3D, context);
+  const auto decomposedFrom = fromMatrix->decompose();
+  const auto decomposedTo = toMatrix->decompose();
 
   if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
     return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
@@ -32,33 +33,6 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
 
   return MatrixOperation(TransformMatrix3D::recompose(
       decomposedFrom->interpolate(progress, decomposedTo.value())));
-}
-
-TransformMatrix3D
-TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
-    const MatrixOperation &matrixOperation,
-    const TransformInterpolatorUpdateContext &context) const {
-  if (std::holds_alternative<TransformOperations>(matrixOperation.value)) {
-    const auto &operations =
-        std::get<TransformOperations>(matrixOperation.value);
-
-    TransformMatrix3D matrix = TransformMatrix3D::Identity();
-
-    for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
-      auto operation = operations[i];
-
-      if (operation->isRelative()) {
-        const auto &interpolator = context.interpolators->at(operation->type());
-        operation = interpolator->resolveOperation(operation, context);
-      }
-
-      matrix *= operation->toMatrix();
-    }
-
-    return matrix;
-  }
-
-  return std::get<TransformMatrix3D>(matrixOperation.value);
 }
 
 } // namespace reanimated::css

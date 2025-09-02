@@ -24,12 +24,29 @@ struct TranslateOperationBase
     return this->value.toDynamic();
   }
 
-  TransformMatrix3D toMatrix() const override {
+  std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const override {
     if (this->value.isRelative) {
       throw std::invalid_argument(
           "[Reanimated] Cannot convert relative translate to the matrix.");
     }
-    return TransformMatrix3D::create<TOperation>(this->value.value);
+    return TransformOperationBase<TOperation, CSSLength>::toMatrix(force3D);
+  }
+
+  std::unique_ptr<TransformMatrix> toMatrix(
+      bool force3D,
+      const TransformUpdateContext &context) const override {
+    const auto resolvedValue = this->value.resolve(context);
+
+    if (!resolvedValue.has_value()) {
+      throw std::invalid_argument(
+          "[Reanimated] Cannot resolve relative translate value: " +
+          this->value.toString());
+    }
+
+    if (force3D) {
+      return TransformMatrix3D::create<TOperation>(resolvedValue.value());
+    }
+    return TransformMatrix2D::create<TOperation>(resolvedValue.value());
   }
 };
 

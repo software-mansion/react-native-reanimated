@@ -27,7 +27,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<TransformInterpolators> &interpolators,
+      const std::shared_ptr<TransformOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getStyleValue(
@@ -53,7 +53,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const folly::dynamic &lastUpdateValue) override;
 
  private:
-  const std::shared_ptr<TransformInterpolators> interpolators_;
+  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
 
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
@@ -93,7 +93,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   static folly::dynamic convertResultToDynamic(
       const TransformOperations &operations);
-  TransformInterpolatorUpdateContext createUpdateContext(
+  TransformUpdateContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };
 

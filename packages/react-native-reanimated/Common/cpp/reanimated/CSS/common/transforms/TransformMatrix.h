@@ -17,6 +17,7 @@ class TransformMatrix {
 
   virtual double &operator[](size_t index) = 0;
   virtual const double &operator[](size_t index) const = 0;
+  virtual bool operator==(const TransformMatrix &other) const = 0;
 
   virtual size_t getDimension() const = 0;
 
@@ -29,6 +30,13 @@ class TransformMatrixBase : public TransformMatrix {
  public:
   static constexpr size_t SIZE = TDimension * TDimension;
   using MatrixArray = std::array<double, SIZE>;
+
+  explicit TransformMatrixBase() {
+    // Create an identity matrix
+    for (size_t i = 0; i < TDimension; ++i) {
+      matrix_[(i + 1) * TDimension] = 1;
+    }
+  }
 
   explicit TransformMatrixBase(MatrixArray matrix)
       : matrix_(std::move(matrix)) {}
@@ -58,7 +66,14 @@ class TransformMatrixBase : public TransformMatrix {
     }
   }
 
-  virtual bool operator==(const TDerived &other) const = 0;
+  bool operator==(const TDerived &other) const {
+    return matrix_ == other.matrix_;
+  }
+
+  bool operator==(const TransformMatrix &other) const override {
+    return TDimension == other.getDimension() &&
+        matrix_ == static_cast<const TDerived &>(other).matrix_;
+  }
 
   double &operator[](size_t index) override {
     return matrix_[index];

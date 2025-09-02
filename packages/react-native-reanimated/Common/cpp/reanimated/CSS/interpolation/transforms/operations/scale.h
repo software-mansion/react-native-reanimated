@@ -17,10 +17,6 @@ struct ScaleOperationBase
   folly::dynamic valueToDynamic() const override {
     return this->value.toDynamic();
   }
-
-  TransformMatrix3D toMatrix() const override {
-    return TransformMatrix3D::create<TOperation>(this->value.value);
-  }
 };
 
 using ScaleXOperation = ScaleOperationBase<TransformOp::ScaleX>;

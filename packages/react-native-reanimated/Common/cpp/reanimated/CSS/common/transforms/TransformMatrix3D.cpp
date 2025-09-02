@@ -28,27 +28,16 @@ std::ostream &operator<<(
 
 #endif // NDEBUG
 
-TransformMatrix3D TransformMatrix3D::Identity() {
-  // clang-format off
-  return TransformMatrix3D({
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  });
-  // clang-format on
-}
-
 // Template specializations for TransformMatrix3D::create
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
-    double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::Perspective>(double v) {
   if (v == 0) {
     // Ignore perspective if it is invalid
-    return TransformMatrix3D::Identity();
+    return std::make_unique<TransformMatrix3D>();
   }
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, -1.0 / v,
@@ -58,11 +47,12 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateX>(double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::RotateX>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1,       0,      0, 0,
     0,  cosVal, sinVal, 0,
     0, -sinVal, cosVal, 0,
@@ -72,11 +62,12 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateX>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateY>(double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::RotateY>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     cosVal, 0, -sinVal, 0,
          0, 1,       0, 0,
     sinVal, 0,  cosVal, 0,
@@ -86,11 +77,12 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateY>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateZ>(double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::RotateZ>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
      cosVal, sinVal, 0, 0,
     -sinVal, cosVal, 0, 0,
           0,      0, 1, 0,
@@ -100,14 +92,16 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::RotateZ>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::Rotate>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::Rotate>(
+    double v) {
   return TransformMatrix3D::create<TransformOp::RotateZ>(v);
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::Scale>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::Scale>(
+    double v) {
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     v, 0, 0, 0,
     0, v, 0, 0,
     0, 0, v, 0,
@@ -117,9 +111,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::Scale>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleX>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::ScaleX>(
+    double v) {
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     v, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -129,9 +124,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleX>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleY>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::ScaleY>(
+    double v) {
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1, 0, 0, 0,
     0, v, 0, 0,
     0, 0, 1, 0,
@@ -141,9 +137,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::ScaleY>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateX>(double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::TranslateX>(double v) {
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -153,9 +150,10 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateX>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateY>(double v) {
+std::unique_ptr<TransformMatrix>
+TransformMatrix3D::create<TransformOp::TranslateY>(double v) {
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -165,10 +163,11 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::TranslateY>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewX>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::SkewX>(
+    double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
          1, 0, 0, 0,
     tanVal, 1, 0, 0,
          0, 0, 1, 0,
@@ -178,10 +177,11 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewX>(double v) {
 }
 
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create<TransformOp::SkewY>(
+    double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
-  return TransformMatrix3D({
+  return std::make_unique<TransformMatrix3D>({
     1, tanVal, 0, 0,
     0,      1, 0, 0,
     0,      0, 1, 0,
@@ -191,14 +191,22 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
 }
 
 template <TransformOp TOperation>
-TransformMatrix3D TransformMatrix3D::create(double value) {
+std::unique_ptr<TransformMatrix> TransformMatrix3D::create(double value) {
   throw std::invalid_argument(
       "[Reanimated] Cannot create TransformMatrix3D from: " +
       getOperationNameFromType(TOperation));
 }
 
-bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
-  return matrix_ == other.matrix_;
+std::unique_ptr<TransformMatrix> TransformMatrix3D::from2D(
+    const TransformMatrix2D &m) {
+  // clang-format off
+  return std::make_unique<TransformMatrix3D>  ({
+    m[0], m[1], m[2], 0,
+    m[3], m[4], m[5], 0,
+    m[6], m[7], m[8], 0, // m[6], m[7], m[8] should always be 0
+    0,    0,    0,    1
+  });
+  // clang-format on
 }
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
@@ -383,7 +391,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
 
 TransformMatrix3D TransformMatrix3D::recompose(
     const TransformMatrix3D::Decomposed &decomposed) {
-  auto result = TransformMatrix3D::Identity();
+  auto result = TransformMatrix3D();
 
   // Start from applying perspective
   for (size_t i = 0; i < 4; ++i) {
@@ -402,7 +410,7 @@ TransformMatrix3D TransformMatrix3D::recompose(
   auto hasSkewXY = decomposed.skew[0] != 0;
 
   if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
-    auto tmp = TransformMatrix3D::Identity();
+    auto tmp = TransformMatrix3D();
     if (hasSkewYZ) { // YZ
       tmp[9] = decomposed.skew[2];
       result = tmp * result;

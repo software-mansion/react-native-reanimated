@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
@@ -39,6 +40,7 @@ struct TransformOperation {
   std::string getOperationName() const;
   virtual TransformOp type() const = 0;
   virtual bool isRelative() const;
+  virtual bool is3D() const;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(
       jsi::Runtime &rt,
@@ -51,31 +53,31 @@ struct TransformOperation {
   virtual bool canConvertTo(TransformOp type) const;
   virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
       TransformOp type) const;
-
-  virtual TransformMatrix3D toMatrix() const = 0;
   void assertCanConvertTo(TransformOp type) const;
+
+  virtual std::unique_ptr<TransformMatrix> toMatrix(
+      bool force3D = false) const = 0;
+  virtual std::unique_ptr<TransformMatrix> toMatrix(
+      bool force3D,
+      const TransformUpdateContext &context) const = 0;
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
-// Template overload to inherit from in final operation structs
-template <TransformOp TOperation, typename TValue>
-struct TransformOperationBase : public TransformOperation {
+// Base class with common functionality
+template <typename TValue>
+struct TransformOperationBaseCommon : public TransformOperation {
   const TValue value;
 
-  explicit TransformOperationBase(const TValue &value) : value(value) {}
-  virtual ~TransformOperationBase() = default;
-
-  TransformOp type() const override {
-    return TOperation;
-  }
+  explicit TransformOperationBaseCommon(const TValue &value) : value(value) {}
+  virtual ~TransformOperationBaseCommon() = default;
 
   bool operator==(const TransformOperation &other) const override {
     if (type() != other.type()) {
       return false;
     }
     const auto &otherOperation =
-        static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
+        static_cast<const TransformOperationBaseCommon<TValue> &>(other);
     return value == otherOperation.value;
   }
 
@@ -83,5 +85,52 @@ struct TransformOperationBase : public TransformOperation {
   std::string stringifyOperationValue() const override;
 #endif // NDEBUG
 };
+
+// Template overload to inherit from in final operation structs
+template <TransformOp TOperation, typename TValue>
+struct TransformOperationBase : public TransformOperationBaseCommon<TValue> {
+  using Base = TransformOperationBaseCommon<TValue>;
+
+  explicit TransformOperationBase(const TValue &value) : Base(value) {}
+
+  TransformOp type() const override {
+    return TOperation;
+  }
+
+  std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const override {
+    if (force3D) {
+      return TransformMatrix3D::create<TOperation>(this->value.value);
+    }
+    return TransformMatrix2D::create<TOperation>(this->value.value);
+  }
+
+  std::unique_ptr<TransformMatrix> toMatrix(
+      bool force3D,
+      const TransformUpdateContext &context) const override {
+    return toMatrix(force3D);
+  }
+};
+
+// Specialization for MatrixOperation to avoid the template implementation
+template <typename TValue>
+struct TransformOperationBase<TransformOp::Matrix, TValue>
+    : public TransformOperationBaseCommon<TValue> {
+  using Base = TransformOperationBaseCommon<TValue>;
+
+  explicit TransformOperationBase(const TValue &value) : Base(value) {}
+
+  TransformOp type() const override {
+    return TransformOp::Matrix;
+  }
+};
+
+template <typename TOperation>
+concept ResolvableOperation = requires(TOperation operation) {
+  {
+    operation.value
+  } -> std::convertible_to<
+      typename std::remove_reference_t<decltype(operation.value)>>;
+  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
+}; // NOLINT(readability/braces)
 
 } // namespace reanimated::css

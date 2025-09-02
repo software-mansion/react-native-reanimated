@@ -49,6 +49,10 @@ bool TransformOperation::isRelative() const {
   return false;
 }
 
+bool TransformOperation::is3D() const {
+  return false;
+}
+
 std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
     jsi::Runtime &rt,
     const jsi::Value &value) {
@@ -113,8 +117,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
       return std::make_shared<SkewYOperation>(
           propertyValue.asString(rt).utf8(rt));
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(rt, propertyValue));
+      return std::make_shared<MatrixOperation>(rt, propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -172,8 +175,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
     case TransformOp::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(propertyValue));
+      return std::make_shared<MatrixOperation>(propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -198,15 +200,14 @@ TransformOperationBase<TOperation, TValue>::stringifyOperationValue() const {
 template <>
 std::string TransformOperationBase<
     TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>::
+    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>::
     stringifyOperationValue() const {
   std::ostringstream ss;
 
-  if (std::holds_alternative<TransformMatrix3D>(value)) {
-    ss << std::get<TransformMatrix3D>(value);
+  if (std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
+    ss << *std::get<std::unique_ptr<TransformMatrix>>(value);
   } else {
     const auto &operations = std::get<TransformOperations>(value);
-    std::ostringstream ss;
     for (const auto &operation : operations) {
       ss << operation->getOperationName() << "("
          << operation->stringifyOperationValue() << "), ";
@@ -220,6 +221,6 @@ std::string TransformOperationBase<
 
 template struct TransformOperationBase<
     TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>;
+    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>;
 
 } // namespace reanimated::css

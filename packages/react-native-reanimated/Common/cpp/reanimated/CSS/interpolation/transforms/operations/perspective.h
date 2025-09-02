@@ -17,7 +17,12 @@ struct PerspectiveOperation final
     return value.value != 0 ? value.toDynamic() : folly::dynamic();
   }
 
-  TransformMatrix3D toMatrix() const override {
+  bool is3D() const override {
+    return true;
+  }
+
+  std::unique_ptr<TransformMatrix> toMatrix(bool /* force3D */) const override {
+    // Perspective is a 3D operation
     return TransformMatrix3D::create<TransformOp::Perspective>(value.value);
   }
 };

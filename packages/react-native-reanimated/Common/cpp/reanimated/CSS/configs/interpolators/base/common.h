@@ -136,8 +136,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
            transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
-          {"matrix",
-           transformOp<MatrixOperation>(TransformMatrix3D::Identity())}})},
+          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 };
 
 } // namespace reanimated::css
