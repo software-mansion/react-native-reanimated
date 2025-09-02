@@ -42,20 +42,20 @@ class TransformMatrixBase : public TransformMatrix {
       : matrix_(std::move(matrix)) {}
 
   explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value) {
-    const auto array = value.asObject(rt).asArray(rt);
-    if (array.size(rt) != SIZE) {
+    if (!canConstruct(rt, value)) {
       throw std::invalid_argument(
           "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
           " elements");
     }
 
+    const auto &array = value.asObject(rt).asArray(rt);
     for (size_t i = 0; i < SIZE; ++i) {
       matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
     }
   }
 
   explicit TransformMatrixBase(const folly::dynamic &array) {
-    if (!array.isArray() || array.size() != SIZE) {
+    if (!canConstruct(array)) {
       throw std::invalid_argument(
           "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
           " elements");
@@ -64,6 +64,21 @@ class TransformMatrixBase : public TransformMatrix {
     for (size_t i = 0; i < SIZE; ++i) {
       matrix_[i] = array[i].asDouble();
     }
+  }
+
+  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
+    if (!value.isObject()) {
+      return false;
+    }
+    const auto &obj = value.asObject(rt);
+    if (!obj.isArray(rt)) {
+      return false;
+    }
+    return obj.asArray(rt).size(rt) == SIZE;
+  }
+
+  static bool canConstruct(const folly::dynamic &array) {
+    return array.isArray() && array.size() == SIZE;
   }
 
   bool operator==(const TDerived &other) const {

@@ -74,7 +74,7 @@ std::string CSSLength::toString() const {
 CSSLength CSSLength::interpolate(
     const double progress,
     const CSSLength &to,
-    const CSSResolvableValueInterpolationContext &context) const {
+    const ResolvableValueInterpolationContext &context) const {
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
   // (also, when one of the values is 0, and the other is relative)
@@ -97,7 +97,7 @@ CSSLength CSSLength::interpolate(
 }
 
 std::optional<double> CSSLength::resolve(
-    const CSSResolvableValueInterpolationContext &context) const {
+    const ResolvableValueInterpolationContext &context) const {
   if (!isRelative) {
     return value;
   }

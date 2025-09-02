@@ -9,18 +9,6 @@
 
 namespace reanimated::css {
 
-#ifndef NDEBUG
-
-std::ostream &operator<<(
-    std::ostream &os,
-    const TransformOperation &operation) {
-  os << operation.getOperationName() << "("
-     << operation.stringifyOperationValue() << ")";
-  return os;
-}
-
-#endif // NDEBUG
-
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
 }
@@ -185,42 +173,5 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
 folly::dynamic TransformOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
-
-// Specialization for the matrix operation
-#ifndef NDEBUG
-
-template <TransformOp TOperation, typename TValue>
-std::string
-TransformOperationBase<TOperation, TValue>::stringifyOperationValue() const {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
-
-template <>
-std::string TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>::
-    stringifyOperationValue() const {
-  std::ostringstream ss;
-
-  if (std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
-    ss << *std::get<std::unique_ptr<TransformMatrix>>(value);
-  } else {
-    const auto &operations = std::get<TransformOperations>(value);
-    for (const auto &operation : operations) {
-      ss << operation->getOperationName() << "("
-         << operation->stringifyOperationValue() << "), ";
-    }
-  }
-
-  return ss.str();
-}
-
-#endif // NDEBUG
-
-template struct TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>;
 
 } // namespace reanimated::css

@@ -29,7 +29,8 @@ struct RotateOperationBase3D : public RotateOperationBase2D<TOperation> {
   }
 
   std::unique_ptr<TransformMatrix> toMatrix(bool /* force3D */) const override {
-    return TransformMatrix3D::create<TOperation>(this->value.value);
+    return std::make_unique<TransformMatrix3D>(
+        TransformMatrix3D::create<TOperation>(this->value.value));
   }
 };
 

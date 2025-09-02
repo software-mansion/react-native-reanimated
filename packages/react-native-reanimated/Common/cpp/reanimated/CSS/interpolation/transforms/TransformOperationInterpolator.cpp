@@ -7,7 +7,7 @@ TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
     const PerspectiveOperation &from,
     const PerspectiveOperation &to,
-    const TransformInterpolatorUpdateContext &context) const {
+    const TransformInterpolationContext &context) const {
   if (to.value.value == 0)
     return PerspectiveOperation(0);
   if (from.value.value == 0)
@@ -20,7 +20,7 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
     const MatrixOperation &from,
     const MatrixOperation &to,
-    const TransformInterpolatorUpdateContext &context) const {
+    const TransformInterpolationContext &context) const {
   const auto is3D = from.is3D() || to.is3D();
   const auto fromMatrix = from.toMatrix(is3D, context);
   const auto toMatrix = to.toMatrix(is3D, context);

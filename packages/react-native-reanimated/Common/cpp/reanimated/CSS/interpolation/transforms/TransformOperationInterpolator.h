@@ -12,15 +12,6 @@
 
 namespace reanimated::css {
 
-template <typename TOperation>
-concept ResolvableOperation = requires(TOperation operation) {
-  {
-    operation.value
-  } -> std::convertible_to<
-      typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
-}; // NOLINT(readability/braces)
-
 // Base implementation for simple operations
 template <typename OperationType>
 class TransformOperationInterpolator
@@ -34,7 +25,7 @@ class TransformOperationInterpolator
       double progress,
       const OperationType &from,
       const OperationType &to,
-      const TransformInterpolatorUpdateContext &context) const override {
+      const TransformInterpolationContext &context) const override {
     return OperationType{from.value.interpolate(progress, to.value)};
   }
 };
@@ -51,7 +42,7 @@ class TransformOperationInterpolator<PerspectiveOperation>
       double progress,
       const PerspectiveOperation &from,
       const PerspectiveOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override;
+      const TransformInterpolationContext &context) const override;
 };
 
 // Specialization for MatrixOperation
@@ -65,7 +56,7 @@ class TransformOperationInterpolator<MatrixOperation>
       double progress,
       const MatrixOperation &from,
       const MatrixOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override;
+      const TransformInterpolationContext &context) const override;
 };
 
 // Specialization for resolvable operations
@@ -83,14 +74,14 @@ class TransformOperationInterpolator<TOperation>
       double progress,
       const TOperation &from,
       const TOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override {
+      const TransformInterpolationContext &context) const override {
     return TOperation{from.value.interpolate(
         progress, to.value, getResolvableValueContext(context))};
   }
 
   TOperation resolveOperation(
       const TOperation &operation,
-      const TransformInterpolatorUpdateContext &context) const override {
+      const TransformInterpolationContext &context) const override {
     const auto &resolved =
         operation.value.resolve(getResolvableValueContext(context));
 
@@ -104,9 +95,9 @@ class TransformOperationInterpolator<TOperation>
  private:
   const ResolvableValueInterpolatorConfig config_;
 
-  CSSResolvableValueInterpolationContext getResolvableValueContext(
-      const TransformInterpolatorUpdateContext &context) const {
-    return CSSResolvableValueInterpolationContext{
+  ResolvableValueInterpolationContext getResolvableValueContext(
+      const TransformInterpolationContext &context) const {
+    return ResolvableValueInterpolationContext{
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
         .relativeProperty = config_.relativeProperty,

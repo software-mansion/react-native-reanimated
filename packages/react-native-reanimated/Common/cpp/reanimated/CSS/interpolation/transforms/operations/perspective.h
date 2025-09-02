@@ -23,7 +23,8 @@ struct PerspectiveOperation final
 
   std::unique_ptr<TransformMatrix> toMatrix(bool /* force3D */) const override {
     // Perspective is a 3D operation
-    return TransformMatrix3D::create<TransformOp::Perspective>(value.value);
+    return std::make_unique<TransformMatrix>(
+        TransformMatrix3D::create<TransformOp::Perspective>(value.value));
   }
 };
 

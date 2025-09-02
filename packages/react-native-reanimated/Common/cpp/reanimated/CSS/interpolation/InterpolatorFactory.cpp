@@ -89,19 +89,16 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
-  static TransformMatrix3D &getIdentityMatrix() {
-    static TransformMatrix3D identityMatrix = TransformMatrix3D::Identity();
-    return identityMatrix;
-  }
-
   // Helper private type just for a default value
   struct EmptyTransformsValue : public CSSValue {
+    static TransformMatrix3D identityMatrix;
+
     folly::dynamic toDynamic() const override {
-      return getIdentityMatrix().toDynamic();
+      return identityMatrix.toDynamic();
     }
 
     std::string toString() const override {
-      return getIdentityMatrix().toString();
+      return identityMatrix.toString();
     }
   };
 

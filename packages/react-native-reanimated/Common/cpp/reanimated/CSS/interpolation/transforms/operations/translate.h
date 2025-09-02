@@ -34,7 +34,7 @@ struct TranslateOperationBase
 
   std::unique_ptr<TransformMatrix> toMatrix(
       bool force3D,
-      const TransformUpdateContext &context) const override {
+      const ResolvableValueInterpolationContext &context) const override {
     const auto resolvedValue = this->value.resolve(context);
 
     if (!resolvedValue.has_value()) {
@@ -44,9 +44,11 @@ struct TranslateOperationBase
     }
 
     if (force3D) {
-      return TransformMatrix3D::create<TOperation>(resolvedValue.value());
+      return std::make_unique<TransformMatrix3D>(
+          TransformMatrix3D::create<TOperation>(resolvedValue.value()));
     }
-    return TransformMatrix2D::create<TOperation>(resolvedValue.value());
+    return std::make_unique<TransformMatrix2D>(
+        TransformMatrix2D::create<TOperation>(resolvedValue.value()));
   }
 };
 

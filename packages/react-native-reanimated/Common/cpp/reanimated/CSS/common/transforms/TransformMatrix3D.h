@@ -37,7 +37,7 @@ class TransformMatrix3D
       TransformMatrixBase;
 
   template <TransformOp TOperation>
-  static std::unique_ptr<TransformMatrix> create(double value);
+  static TransformMatrix3D create(double value);
   static TransformMatrix3D from2D(const TransformMatrix2D &matrix);
 
 #ifndef NDEBUG

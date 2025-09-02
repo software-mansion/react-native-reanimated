@@ -93,7 +93,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   static folly::dynamic convertResultToDynamic(
       const TransformOperations &operations);
-  TransformUpdateContext createUpdateContext(
+  TransformInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };
 

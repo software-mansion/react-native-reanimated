@@ -7,6 +7,7 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
@@ -16,26 +17,19 @@
 #include <variant>
 #include <vector>
 
-#ifndef NDEBUG
-#include <iostream>
-#include <sstream>
-#endif // NDEBUG
-
 namespace reanimated::css {
 
 using namespace facebook;
 using namespace react;
 
+struct TransformInterpolationContext {
+  const std::shared_ptr<const ShadowNode> &node;
+  const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+};
+
 // Base struct for TransformOperation
 struct TransformOperation {
   virtual bool operator==(const TransformOperation &other) const = 0;
-
-#ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const TransformOperation &operation);
-  virtual std::string stringifyOperationValue() const = 0;
-#endif // NDEBUG
 
   std::string getOperationName() const;
   virtual TransformOp type() const = 0;
@@ -55,11 +49,10 @@ struct TransformOperation {
       TransformOp type) const;
   void assertCanConvertTo(TransformOp type) const;
 
-  virtual std::unique_ptr<TransformMatrix> toMatrix(
-      bool force3D = false) const = 0;
+  virtual std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const = 0;
   virtual std::unique_ptr<TransformMatrix> toMatrix(
       bool force3D,
-      const TransformUpdateContext &context) const = 0;
+      const ResolvableValueInterpolationContext &context) const = 0;
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
@@ -80,18 +73,13 @@ struct TransformOperationBaseCommon : public TransformOperation {
         static_cast<const TransformOperationBaseCommon<TValue> &>(other);
     return value == otherOperation.value;
   }
-
-#ifndef NDEBUG
-  std::string stringifyOperationValue() const override;
-#endif // NDEBUG
 };
 
 // Template overload to inherit from in final operation structs
 template <TransformOp TOperation, typename TValue>
 struct TransformOperationBase : public TransformOperationBaseCommon<TValue> {
-  using Base = TransformOperationBaseCommon<TValue>;
-
-  explicit TransformOperationBase(const TValue &value) : Base(value) {}
+  explicit TransformOperationBase(const TValue &value)
+      : TransformOperationBaseCommon<TValue>(value) {}
 
   TransformOp type() const override {
     return TOperation;
@@ -99,14 +87,18 @@ struct TransformOperationBase : public TransformOperationBaseCommon<TValue> {
 
   std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const override {
     if (force3D) {
-      return TransformMatrix3D::create<TOperation>(this->value.value);
+      auto matrix = TransformMatrix3D::create<TOperation>(this->value.value);
+      return std::unique_ptr<TransformMatrix>(
+          new TransformMatrix3D(std::move(matrix)));
     }
-    return TransformMatrix2D::create<TOperation>(this->value.value);
+    auto matrix = TransformMatrix2D::create<TOperation>(this->value.value);
+    return std::unique_ptr<TransformMatrix>(
+        new TransformMatrix2D(std::move(matrix)));
   }
 
   std::unique_ptr<TransformMatrix> toMatrix(
       bool force3D,
-      const TransformUpdateContext &context) const override {
+      const ResolvableValueInterpolationContext &context) const override {
     return toMatrix(force3D);
   }
 };
@@ -122,6 +114,11 @@ struct TransformOperationBase<TransformOp::Matrix, TValue>
   TransformOp type() const override {
     return TransformOp::Matrix;
   }
+
+  std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const override = 0;
+  std::unique_ptr<TransformMatrix> toMatrix(
+      bool force3D,
+      const ResolvableValueInterpolationContext &context) const override = 0;
 };
 
 template <typename TOperation>

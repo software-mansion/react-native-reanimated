@@ -377,7 +377,7 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
   TransformOperations result;
   result.reserve(fromOperations.size());
   const auto transformUpdateContext =
-      TransformUpdateContext{shadowNode, viewStylesRepository_, interpolators_};
+      TransformInterpolationContext{shadowNode, viewStylesRepository_};
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];

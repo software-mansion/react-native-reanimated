@@ -34,7 +34,7 @@ class TransformMatrix2D
       TransformMatrixBase;
 
   template <TransformOp TOperation>
-  static std::unique_ptr<TransformMatrix> create(double value);
+  static TransformMatrix2D create(double value);
 
   double determinant() const override;
   void translate2d(const Vector2D &translation);

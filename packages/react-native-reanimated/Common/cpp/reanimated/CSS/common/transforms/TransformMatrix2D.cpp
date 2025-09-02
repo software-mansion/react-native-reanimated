@@ -26,12 +26,11 @@ std::ostream &operator<<(
 #endif // NDEBUG
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::Rotate>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::Rotate>(double v) {
   const auto cosVal = std::cos(v);
   const auto sinVal = std::sin(v);
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     cosVal, -sinVal, 0,
     sinVal,  cosVal, 0,
         0,        0, 1
@@ -40,10 +39,9 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::Rotate>(
 }
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::Scale>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::Scale>(double v) {
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     v, 0, 0,
     0, v, 0,
     0, 0, 1
@@ -52,10 +50,9 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::Scale>(
 }
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::ScaleX>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::ScaleX>(double v) {
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     v, 0, 0,
     0, 1, 0,
     0, 0, 1
@@ -64,10 +61,9 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::ScaleX>(
 }
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::ScaleY>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::ScaleY>(double v) {
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     1, 0, 0,
     0, v, 0,
     0, 0, 1
@@ -76,10 +72,9 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::ScaleY>(
 }
 
 template <>
-std::unique_ptr<TransformMatrix>
-TransformMatrix2D::create<TransformOp::TranslateX>(double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::TranslateX>(double v) {
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     1, 0, 0,
     0, 1, 0,
     v, 0, 1
@@ -88,10 +83,9 @@ TransformMatrix2D::create<TransformOp::TranslateX>(double v) {
 }
 
 template <>
-std::unique_ptr<TransformMatrix>
-TransformMatrix2D::create<TransformOp::TranslateY>(double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::TranslateY>(double v) {
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     1, 0, 0,
     0, 1, 0,
     0, v, 1
@@ -100,11 +94,10 @@ TransformMatrix2D::create<TransformOp::TranslateY>(double v) {
 }
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::SkewX>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewX>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
         1, 0, 0,
    tanVal, 1, 0,
         0, 0, 1
@@ -113,11 +106,10 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::SkewX>(
 }
 
 template <>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::SkewY>(
-    double v) {
+TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
   const auto tanVal = std::tan(v);
   // clang-format off
-  return std::make_unique<TransformMatrix2D>({
+  return TransformMatrix2D({
     1, tanVal, 0,
     0,      1, 0,
     0,      0, 1
@@ -126,7 +118,7 @@ std::unique_ptr<TransformMatrix> TransformMatrix2D::create<TransformOp::SkewY>(
 }
 
 template <TransformOp TOperation>
-std::unique_ptr<TransformMatrix> TransformMatrix2D::create(double value) {
+TransformMatrix2D TransformMatrix2D::create(double value) {
   throw std::invalid_argument(
       "[Reanimated] Cannot create TransformMatrix2D from: " +
       getOperationNameFromType(TOperation));
