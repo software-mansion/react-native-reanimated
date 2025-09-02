@@ -13,7 +13,6 @@ export default function Homepage() {
     <div className={styles.layoutWrapper}>
       <Layout
         className={styles.layout}
-        title="React Native Worklets: Multithreading engine for your apps and libraries"
         description="Run concurrent processes to boost your app’s performance. Used by Reanimated, Gesture Handler, Skia and more.">
         <div className={styles.content}>
           <HomepageMainSection />
