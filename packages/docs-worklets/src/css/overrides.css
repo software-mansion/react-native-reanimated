@@ -65,7 +65,7 @@ table thead tr {
   mask-size: cover;
   content: '';
 
-  background-color: var(--ifm-navbar-link-color);
+  background-color: var(--ifm-navbar-link-color) !important;
 }
 
 @media (max-height: 768px) {
