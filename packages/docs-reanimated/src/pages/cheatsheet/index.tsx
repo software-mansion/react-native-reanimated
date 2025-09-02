@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import styles from './index.module.css';
 import Layout from '@theme/Layout';
 
-const API_URL = 'http://localhost:8787/api/reanimated-cheatsheet/signin';
+const API_URL = 'https://swmansion.dev/api/reanimated-cheatsheet/signin';
 
 export default function CheatSheetPage(): JSX.Element {
   const [formData, setFormData] = useState({
