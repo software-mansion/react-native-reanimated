@@ -33,7 +33,44 @@ Feature flags available in `react-native-worklets` are listed [on this page](htt
 
 When enabled, this feature flag is supposed to eliminate jittering of animated components like sticky header while scrolling. This feature flag is safe to enable only if `preventShadowTreeCommitExhaustion` feature flag from `react-native` (available since React Native 0.81) is also enabled – see instructions below. In all other cases it can lead to unresponsiveness of the app due to the starvation of React commits. For more details, see [PR #7852](https://github.com/software-mansion/react-native-reanimated/pull/7852).
 
-In React Native 0.81, `preventShadowTreeCommitExhaustion` feature flag can be enabled by setting experimental release level. For Android, you need to add the following lines in `MainApplication.kt` of your app:
+In React Native 0.81, `preventShadowTreeCommitExhaustion` feature flag can be enabled by setting experimental release level. If you're using Expo, you can enable it using [`expo-build-properties`](https://docs.expo.dev/versions/latest/sdk/build-properties/):
+
+```json
+{
+  "expo": {
+    // ...
+    "plugins": [
+      // ...
+      // highlight-start
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "reactNativeReleaseLevel": "experimental"
+          },
+          "ios": {
+            "reactNativeReleaseLevel": "experimental"
+          }
+        }
+      ]
+      // highlight-end
+    ]
+  }
+}
+```
+
+It will add the following lines in `gradle.properties` (Android) and `Info.plist` (iOS):
+
+```gradle
+reactNativeReleaseLevel=experimental
+```
+
+```
+<key>ReactNativeReleaseLevel</key>
+<string>experimental</string>
+```
+
+If you're not using Expo, in order to enable experimental release level on Android, you need to add the following lines in `MainApplication.kt` of your app:
 
 ```kt
 package com.helloworld
