@@ -88,11 +88,11 @@ set_target_properties(
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android
-                      worklets)
-
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-  target_link_libraries(reanimated ReactAndroid::reactnative)
-else()
-  target_link_libraries(reanimated ReactAndroid::react_nativemodule_core)
-endif()
+target_link_libraries(
+  reanimated
+  log
+  ReactAndroid::reactnative
+  ReactAndroid::jsi
+  fbjni::fbjni
+  android
+  worklets)
