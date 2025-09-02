@@ -248,8 +248,6 @@ android {
                 "**/libfolly_runtime.so",
                 "**/libglog.so",
                 "**/libhermes.so",
-                "**/libhermes-executor-debug.so",
-                "**/libhermes_executor.so",
                 "**/libhermestooling.so",
                 "**/libreactnativejni.so",
                 "**/libturbomodulejsijni.so",
