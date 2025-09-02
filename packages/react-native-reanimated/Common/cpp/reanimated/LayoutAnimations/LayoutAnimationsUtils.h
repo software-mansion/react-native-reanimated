@@ -57,10 +57,9 @@ struct Snapshot {
 typedef enum ExitingState {
   UNDEFINED = 1,
   WAITING = 2,
-  ANIMATING = 4,
-  DEAD = 8,
-  MOVED = 16,
-  DELETED = 32,
+  ANIMATING = 3,
+  DEAD = 4,
+  DELETED = 5,
 } ExitingState;
 
 struct MutationNode;
@@ -104,6 +103,39 @@ struct MutationNode : public Node {
   bool isMutationMode() override;
 };
 
+enum TransitionState {
+  NONE = 0,
+  START = 1,
+  ACTIVE = 2,
+  END = 3,
+  CANCELLED = 4
+};
+
+enum Intent {
+  NO_INTENT = 0,
+  TO_MOVE = 1,
+  TO_DELETE = 2,
+};
+
+struct LightNode {
+  using Unshared = std::shared_ptr<LightNode>;
+  Intent intent;
+  ShadowView previous;
+  ShadowView current;
+  ExitingState state = UNDEFINED;
+  std::weak_ptr<LightNode> parent;
+  std::vector<std::shared_ptr<LightNode>> children;
+  int animatedChildrenCount = 0;
+  void removeChild(std::shared_ptr<LightNode> child) {
+    for (int i = children.size() - 1; i >= 0; i--) {
+      if (children[i]->current.tag == child->current.tag) {
+        children.erase(children.begin() + i);
+        break;
+      }
+    }
+  }
+};
+
 struct SurfaceManager {
   mutable std::unordered_map<
       SurfaceId,
@@ -135,12 +167,12 @@ static inline void updateLayoutMetrics(
   }
 }
 
-static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+static inline bool isRNSScreen(std::shared_ptr<LightNode> node) {
   return !std::strcmp(
-             node->mutation.oldChildShadowView.componentName,
+             node->current.componentName,
              "RNSScreenStack") ||
       !std::strcmp(
-          node->mutation.oldChildShadowView.componentName, "RNSScreen");
+          node->current.componentName, "RNSScreen");
 }
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {

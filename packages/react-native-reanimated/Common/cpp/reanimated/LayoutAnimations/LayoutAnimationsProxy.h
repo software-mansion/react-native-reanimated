@@ -22,22 +22,6 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-enum TransitionState {
-  NONE = 0,
-  START = 1,
-  ACTIVE = 2,
-  END = 3,
-  CANCELLED = 4
-};
-
-struct LightNode {
-  using Unshared = std::shared_ptr<LightNode>;
-  ShadowView previous;
-  ShadowView current;
-  std::weak_ptr<LightNode> parent;
-  std::vector<std::shared_ptr<LightNode>> children;
-};
-
 struct LayoutAnimation {
 #if REACT_NATIVE_MINOR_VERSION >= 78
   std::shared_ptr<ShadowView> finalView, currentView, startView;
@@ -57,7 +41,7 @@ struct LayoutAnimationsProxy
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
-  mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+  mutable std::unordered_set<std::shared_ptr<LightNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
         mutable std::unordered_set<Tag> activeTransitions_;
         mutable Tag transitionTag_;
@@ -72,6 +56,7 @@ struct LayoutAnimationsProxy
         mutable TransitionMap transitionMap_;
         mutable Transitions transitions_;
         mutable bool synchronized_ = true;
+        mutable std::vector<LightNode::Unshared> entering_, layout_, exiting_;
         std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
@@ -98,9 +83,9 @@ struct LayoutAnimationsProxy
 
         }
 
-  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
+  void startEnteringAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
-  void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
+  void startExitingAnimation(const int tag, const ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
   void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
@@ -109,7 +94,7 @@ struct LayoutAnimationsProxy
                   const;
         void handleProgressTransition(ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         
-        void updateLightTree(const ShadowViewMutationList &mutations) const;
+        void updateLightTree(const ShadowViewMutationList &mutations, ShadowViewMutationList& filteredMutations) const;
         
         void handleSharedTransitionsStart(const LightNode::Unshared &afterTopScreen, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         
@@ -137,20 +122,10 @@ struct LayoutAnimationsProxy
         
         LayoutMetrics getAbsoluteMetrics(LightNode::Unshared node) const;
 
-  void parseRemoveMutations(
-      std::unordered_map<Tag, ShadowView> &movedViews,
-      ShadowViewMutationList &mutations,
-      std::vector<std::shared_ptr<MutationNode>> &roots) const;
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
-      std::vector<std::shared_ptr<MutationNode>> &roots) const;
+      std::vector<std::shared_ptr<LightNode>> &roots) const;
 
-  void handleUpdatesAndEnterings(
-      ShadowViewMutationList &filteredMutations,
-      const std::unordered_map<Tag, ShadowView> &movedViews,
-      ShadowViewMutationList &mutations,
-      const PropsParserContext &propsParserContext,
-      SurfaceId surfaceId) const;
   void addOngoingAnimations(
       SurfaceId surfaceId,
       ShadowViewMutationList &mutations) const;
@@ -168,31 +143,26 @@ struct LayoutAnimationsProxy
       LayoutAnimation &layoutAnimation,
       const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(
-      facebook::react::ShadowViewMutation &mutation,
-      SurfaceId surfaceId) const;
+      const facebook::react::ShadowViewMutation &mutation) const;
   void createLayoutAnimation(
       const ShadowViewMutation &mutation,
       ShadowView &oldView,
       const SurfaceId &surfaceId,
       const int tag) const;
 
-  void updateIndexForMutation(ShadowViewMutation &mutation) const;
-
-  void removeRecursively(
-      std::shared_ptr<MutationNode> node,
-      ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
+      std::shared_ptr<LightNode> node,
       const bool shouldRemoveSubviewsWithoutAnimations,
       const bool shouldAnimate,
       const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
   void endAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
+      std::shared_ptr<LightNode> node,
+                                int index,
       ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
-      std::shared_ptr<Node> node,
-      std::shared_ptr<MutationNode> child,
+      std::shared_ptr<LightNode> node,
+      std::shared_ptr<LightNode> child,
       ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(

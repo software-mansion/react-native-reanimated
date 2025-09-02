@@ -136,48 +136,4 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   }
 }
 
-//std::optional<ShadowView> SharedTransitionManager::add(const ShadowView& shadowView){
-//  auto& group = groups_[tagToName_[shadowView.tag]];
-//  std::optional<ShadowView> result;
-//  if (!group.stack_.empty()){
-//    result = group.tagToView_[group.stack_.top()];
-//  }
-//  group.stack_.push(shadowView.tag);
-//  group.tagToView_[shadowView.tag] = shadowView;
-//  
-//  return result;
-//}
-//
-//std::optional<std::pair<ShadowView, ShadowView>> SharedTransitionManager::remove(Tag tag){
-//  auto& group = groups_[tagToName_[tag]];
-//  std::optional<std::pair<ShadowView, ShadowView>> result;
-//  if (group.stack_.size()>1){
-//    std::pair<ShadowView, ShadowView> p;
-//    p.first = group.tagToView_[group.stack_.top()];
-//    group.stack_.pop();
-//    p.second = group.tagToView_[group.stack_.top()];
-//    result = p;
-//  } else if (group.stack_.size() == 1){
-//    group.stack_.pop();
-//  }
-//  
-//  return result;
-//}
-//
-//int SharedTransitionManager::createTransitionContainer(SharedTag sharedTag){
-//  containers_.push_back(sharedTag);
-//  return containers_.size();
-//}
-//
-//int SharedTransitionManager::removeTransitionContainer(SharedTag sharedTag){
-//  for (int i=0; i<containers_.size(); i++){
-//    if (containers_[i] == sharedTag){
-//      containers_.erase(containers_.begin() + i);
-//      return i;
-//    }
-//  }
-//  
-//  return -1;
-//}
-
 } // namespace reanimated
