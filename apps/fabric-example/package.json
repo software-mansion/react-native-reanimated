@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react-native": "0.82.0-rc.0"
+    "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch"
   },
   "devDependencies": {
     "prettier": "^3.3.3"
