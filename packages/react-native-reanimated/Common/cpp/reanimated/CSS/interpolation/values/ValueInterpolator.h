@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <optional>
-#include <string>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {
@@ -16,13 +16,19 @@ struct ValueKeyframe {
   std::optional<std::shared_ptr<CSSValue>> value;
 };
 
-class ValueInterpolatorBase : public PropertyInterpolator {
+/**
+ * Base class for CSS value interpolators that provides common functionality
+ * for interpolating CSS values during animations. This class should be extended
+ * by concrete implementations for specific CSS value types to provide
+ * type-specific interpolation logic.
+ */
+class ValueInterpolator : public PropertyInterpolator {
  public:
-  explicit ValueInterpolatorBase(
+  explicit ValueInterpolator(
       const PropertyPath &propertyPath,
       const std::shared_ptr<CSSValue> &defaultValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-  virtual ~ValueInterpolatorBase() = default;
+  virtual ~ValueInterpolator() = default;
 
   folly::dynamic getStyleValue(
       const std::shared_ptr<const ShadowNode> &shadowNode) const override;
@@ -68,46 +74,6 @@ class ValueInterpolatorBase : public PropertyInterpolator {
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
   size_t getToKeyframeIndex(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
-};
-
-template <typename... AllowedTypes>
-class ValueInterpolator : public ValueInterpolatorBase {
-  static_assert(
-      (... && std::is_base_of<CSSValue, AllowedTypes>::value),
-      "[Reanimated] ValueInterpolator: All interpolated types must inherit from CSSValue");
-
- public:
-  using ValueType = CSSValueVariant<AllowedTypes...>;
-
-  explicit ValueInterpolator(
-      const PropertyPath &propertyPath,
-      const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : ValueInterpolatorBase(
-            propertyPath,
-            std::make_shared<ValueType>(defaultStyleValue),
-            viewStylesRepository) {}
-
- protected:
-  std::shared_ptr<CSSValue> createValue(
-      jsi::Runtime &rt,
-      const jsi::Value &value) const override {
-    return std::make_shared<ValueType>(rt, value);
-  }
-  std::shared_ptr<CSSValue> createValue(
-      const folly::dynamic &value) const override {
-    return std::make_shared<ValueType>(value);
-  }
-
-  folly::dynamic interpolateValue(
-      double progress,
-      const std::shared_ptr<CSSValue> &fromValue,
-      const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const override {
-    const auto &from = std::static_pointer_cast<ValueType>(fromValue);
-    const auto &to = std::static_pointer_cast<ValueType>(toValue);
-    return from->interpolate(progress, *to).toDynamic();
-  }
 };
 
 } // namespace reanimated::css

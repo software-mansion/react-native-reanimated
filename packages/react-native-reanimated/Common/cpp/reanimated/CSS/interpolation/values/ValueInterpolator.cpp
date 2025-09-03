@@ -2,7 +2,7 @@
 
 namespace reanimated::css {
 
-ValueInterpolatorBase::ValueInterpolatorBase(
+ValueInterpolator::ValueInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<CSSValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
@@ -10,13 +10,13 @@ ValueInterpolatorBase::ValueInterpolatorBase(
       defaultStyleValue_(defaultValue),
       defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
 
-folly::dynamic ValueInterpolatorBase::getStyleValue(
+folly::dynamic ValueInterpolator::getStyleValue(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
       shadowNode->getTag(), propertyPath_);
 }
 
-folly::dynamic ValueInterpolatorBase::getResetStyle(
+folly::dynamic ValueInterpolator::getResetStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
@@ -27,15 +27,15 @@ folly::dynamic ValueInterpolatorBase::getResetStyle(
   return styleValue;
 }
 
-folly::dynamic ValueInterpolatorBase::getFirstKeyframeValue() const {
+folly::dynamic ValueInterpolator::getFirstKeyframeValue() const {
   return convertOptionalToDynamic(keyframes_.front().value);
 }
 
-folly::dynamic ValueInterpolatorBase::getLastKeyframeValue() const {
+folly::dynamic ValueInterpolator::getLastKeyframeValue() const {
   return convertOptionalToDynamic(keyframes_.back().value);
 }
 
-bool ValueInterpolatorBase::equalsReversingAdjustedStartValue(
+bool ValueInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
   if (reversingAdjustedStartValue_.isNull()) {
     return propertyValue.isNull();
@@ -43,7 +43,7 @@ bool ValueInterpolatorBase::equalsReversingAdjustedStartValue(
   return reversingAdjustedStartValue_ == propertyValue;
 }
 
-void ValueInterpolatorBase::updateKeyframes(
+void ValueInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
   const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
@@ -61,7 +61,7 @@ void ValueInterpolatorBase::updateKeyframes(
   }
 }
 
-void ValueInterpolatorBase::updateKeyframesFromStyleChange(
+void ValueInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
@@ -85,7 +85,7 @@ void ValueInterpolatorBase::updateKeyframesFromStyleChange(
   reversingAdjustedStartValue_ = oldStyleValue;
 }
 
-folly::dynamic interpolate(
+folly::dynamic ValueInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const double fallbackInterpolateThreshold) const override {
@@ -123,18 +123,18 @@ folly::dynamic interpolate(
       .toDynamic();
 }
 
-folly::dynamic ValueInterpolatorBase::convertOptionalToDynamic(
+folly::dynamic ValueInterpolator::convertOptionalToDynamic(
     const std::optional<std::shared_ptr<CSSValue>> &value) const {
   return value ? value.value()->toDynamic() : folly::dynamic();
 }
 
-std::shared_ptr<CSSValue> ValueInterpolatorBase::getFallbackValue(
+std::shared_ptr<CSSValue> ValueInterpolator::getFallbackValue(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
   const auto styleValue = getStyleValue(shadowNode);
   return styleValue.isNull() ? defaultStyleValue_ : createValue(styleValue);
 }
 
-size_t ValueInterpolatorBase::getToKeyframeIndex(
+size_t ValueInterpolator::getToKeyframeIndex(
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto progress = progressProvider->getGlobalProgress();
 

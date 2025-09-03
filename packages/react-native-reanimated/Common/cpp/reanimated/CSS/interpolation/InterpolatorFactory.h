@@ -8,7 +8,7 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/SimpleValueInterpolator.h>
 
 #include <memory>
 #include <string>
@@ -19,10 +19,10 @@ namespace reanimated::css {
 
 // Template class implementations
 template <typename... AllowedTypes>
-class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
+class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
-  explicit ValueInterpolatorFactory(const TValue &defaultValue)
+  explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
 
   bool isDiscreteProperty() const override {
@@ -39,7 +39,7 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const override {
-    return std::make_shared<ValueInterpolator<AllowedTypes...>>(
+    return std::make_shared<SimpleValueInterpolator<AllowedTypes...>>(
         propertyPath, defaultValue_, viewStylesRepository);
   }
 
@@ -82,7 +82,7 @@ template <typename... AllowedTypes>
 auto value(const auto &defaultValue) -> std::enable_if_t<
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
-  return std::make_shared<ValueInterpolatorFactory<AllowedTypes...>>(
+  return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(
       CSSValueVariant<AllowedTypes...>(defaultValue));
 }
 
