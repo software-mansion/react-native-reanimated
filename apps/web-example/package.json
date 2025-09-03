@@ -12,13 +12,13 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "expo": "^54.0.0-preview.6",
-    "react-dom": "19.1.0",
+    "expo": "^54.0.0-preview.13",
+    "react-dom": "19.1.1",
     "react-native": "0.82.0-rc.0",
     "react-native-web": "~0.21.1"
   },
   "devDependencies": {
-    "@expo/metro-runtime": "~6.1.0",
+    "@expo/metro-runtime": "~6.1.1",
     "@stylexjs/babel-plugin": "^0.10.0",
     "prettier": "^3.3.3",
     "serve": "^14.2.3"
