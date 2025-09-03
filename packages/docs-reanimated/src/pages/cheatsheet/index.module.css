@@ -374,12 +374,12 @@
   }
 
   .header h1 {
-    font-size: var(--swm-h2-font-size);
+    font-size: var(--swm-h3-font-size);
     letter-spacing: var(--swm-heading-letter-spacing-smaller);
   }
 
   .subtitle {
-    font-size: 1.125rem;
+    font-size: 16px;
   }
 
   .features h2,

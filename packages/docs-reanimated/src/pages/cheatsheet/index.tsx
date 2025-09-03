@@ -18,7 +18,7 @@ export default function CheatSheetPage(): JSX.Element {
     if (signupSectionRef.current) {
       signupSectionRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'start',
+        block: 'center',
       });
     }
   };
@@ -171,7 +171,7 @@ export default function CheatSheetPage(): JSX.Element {
                 </div>
 
                 <p className={styles.disclaimer}>
-                  By providing your email address, you agree to receive our
+                  *By providing your email address, you agree to receive our
                   marketing emails and product updates. You can unsubscribe at
                   any time.
                 </p>
