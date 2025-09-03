@@ -653,9 +653,9 @@ void LayoutAnimationsProxy::handleRemovals(
     
     if (startAnimationsRecursively(node, true, true, false, filteredMutations)) {
       auto parent = node->parent.lock();
+      filteredMutations.push_back(ShadowViewMutation::InsertMutation(parent->current.tag, node->current, parent->children.size()));
       parent->children.push_back(node);
       parent->animatedChildrenCount++;
-      filteredMutations.push_back(ShadowViewMutation::InsertMutation(parent->current.tag, node->current, parent->children.size()));
     } else {
         maybeCancelAnimation(node->current.tag);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
