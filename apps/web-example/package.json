@@ -14,7 +14,7 @@
     "common-app": "workspace:*",
     "expo": "^54.0.0-preview.6",
     "react-dom": "19.1.0",
-    "react-native": "patch:react-native@npm%3A0.81.0#~/.yarn/patches/react-native-npm-0.81.0-96e336150b.patch",
+    "react-native": "0.82.0-rc.0",
     "react-native-web": "~0.21.1"
   },
   "devDependencies": {

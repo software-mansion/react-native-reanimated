@@ -17,7 +17,7 @@
   "dependencies": {
     "expo": "~48.0.10",
     "next": "latest",
-    "react": "19.1.0",
+    "react": "19.1.1",
     "react-dom": "19.1.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.20.0",
