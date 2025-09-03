@@ -350,10 +350,12 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
         if (node->intent == TO_MOVE && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)){
-          layout_.push_back(node);
+          // TODO: figure out if that's true
+          // we are not starting the animation here because any update will come from the UPDATE mutation
+//          layout_.push_back(node);
           filteredMutations.push_back(mutation);
-          node->previous = node->current;
-          node->current = mutation.newChildShadowView;
+//          node->previous = node->current;
+//          node->current = mutation.newChildShadowView;
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)){
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
