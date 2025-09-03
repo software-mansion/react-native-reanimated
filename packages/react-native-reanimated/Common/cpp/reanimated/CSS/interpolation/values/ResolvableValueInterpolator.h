@@ -27,19 +27,24 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
   virtual ~ResolvableValueInterpolator() = default;
 
  protected:
-  ValueType interpolateValue(
+  folly::dynamic interpolateValue(
       double progress,
-      const ValueType &fromValue,
-      const ValueType &toValue,
+      const std::shared_ptr<CSSValue> &fromValue,
+      const std::shared_ptr<CSSValue> &toValue,
       const CSSValueInterpolationContext &context) const override {
-    return fromValue.interpolate(
-        progress,
-        toValue,
-        {.node = context.node,
-         .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
-         .viewStylesRepository = this->viewStylesRepository_,
-         .relativeProperty = config_.relativeProperty,
-         .relativeTo = config_.relativeTo});
+    const auto &from = std::static_pointer_cast<ValueType>(fromValue);
+    const auto &to = std::static_pointer_cast<ValueType>(toValue);
+    return from
+        ->interpolate(
+            progress,
+            *to,
+            {.node = context.node,
+             .fallbackInterpolateThreshold =
+                 context.fallbackInterpolateThreshold,
+             .viewStylesRepository = this->viewStylesRepository_,
+             .relativeProperty = config_.relativeProperty,
+             .relativeTo = config_.relativeTo})
+        .toDynamic();
   }
 
  private:

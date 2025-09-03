@@ -4,10 +4,11 @@ namespace reanimated::css {
 
 ValueInterpolatorBase::ValueInterpolatorBase(
     const PropertyPath &propertyPath,
-    const CSSValue &defaultValue,
+    const std::shared_ptr<CSSValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
-      defaultStyleValue_(defaultValue) {}
+      defaultStyleValue_(defaultValue),
+      defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
 
 folly::dynamic ValueInterpolatorBase::getStyleValue(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
@@ -20,7 +21,7 @@ folly::dynamic ValueInterpolatorBase::getResetStyle(
   auto styleValue = getStyleValue(shadowNode);
 
   if (styleValue.isNull()) {
-    return defaultStyleValue_.toDynamic();
+    return defaultStyleValueDynamic_;
   }
 
   return styleValue;
@@ -107,10 +108,10 @@ folly::dynamic interpolate(
       fromKeyframe.offset, toKeyframe.offset);
 
   if (keyframeProgress == 1.0) {
-    return toValue.toDynamic();
+    return toValue->toDynamic();
   }
   if (keyframeProgress == 0.0) {
-    return fromValue.toDynamic();
+    return fromValue->toDynamic();
   }
 
   return interpolateValue(
@@ -123,11 +124,11 @@ folly::dynamic interpolate(
 }
 
 folly::dynamic ValueInterpolatorBase::convertOptionalToDynamic(
-    const std::optional<CSSValue> &value) const {
-  return value ? value.value().toDynamic() : folly::dynamic();
+    const std::optional<std::shared_ptr<CSSValue>> &value) const {
+  return value ? value.value()->toDynamic() : folly::dynamic();
 }
 
-CSSValue ValueInterpolatorBase::getFallbackValue(
+std::shared_ptr<CSSValue> ValueInterpolatorBase::getFallbackValue(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
   const auto styleValue = getStyleValue(shadowNode);
   return styleValue.isNull() ? defaultStyleValue_ : createValue(styleValue);
