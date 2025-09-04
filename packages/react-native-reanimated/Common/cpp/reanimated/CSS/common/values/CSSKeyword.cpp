@@ -1,7 +1,4 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
-
-#include <utility>
 
 namespace reanimated::css {
 
@@ -12,24 +9,12 @@ template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
-  if (jsiValue.isString()) {
-    value = jsiValue.getString(rt).utf8(rt);
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSKeywordBase: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
+  value = jsiValue.asString(rt).utf8(rt);
 }
 
 template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(const folly::dynamic &value) {
-  if (value.isString()) {
-    this->value = value.getString();
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSKeywordBase: Invalid value type: " +
-        folly::toJson(value));
-  }
+  this->value = value.asString();
 }
 
 template <typename TValue>
