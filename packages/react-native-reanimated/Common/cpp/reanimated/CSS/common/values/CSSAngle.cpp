@@ -1,5 +1,3 @@
-
-
 #include <reanimated/CSS/common/values/CSSAngle.h>
 
 namespace reanimated::css {
