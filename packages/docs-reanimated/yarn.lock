@@ -4132,10 +4132,10 @@
     fs-extra "^11.1.1"
     tslib "^2.6.0"
 
-"@docusaurus/tsconfig@3.7.0":
-  version "3.7.0"
-  resolved "https://registry.yarnpkg.com/@docusaurus/tsconfig/-/tsconfig-3.7.0.tgz#654dcc524e25b8809af0f1b0b42485c18c047ab5"
-  integrity sha512-vRsyj3yUZCjscgfgcFYjIsTcAru/4h4YH2/XAE8Rs7wWdnng98PgWKvP5ovVc4rmRpRg2WChVW0uOy2xHDvDBQ==
+"@docusaurus/tsconfig@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.yarnpkg.com/@docusaurus/tsconfig/-/tsconfig-3.8.1.tgz#a1f7daadfc93455289200647f4ee10cdca540f7b"
+  integrity sha512-XBWCcqhRHhkhfolnSolNL+N7gj3HVE3CoZVqnVjfsMzCoOsuQw2iCLxVVHtO+rePUUfouVZHURDgmqIySsF66A==
 
 "@docusaurus/types@3.8.1":
   version "3.8.1"
@@ -5261,9 +5261,10 @@
     "@svgr/plugin-jsx" "8.1.0"
     "@svgr/plugin-svgo" "8.1.0"
 
-"@swmansion/t-rex-ui@file:./swmansion-t-rex-ui-1.0.1.tgz":
-  version "1.0.1"
-  resolved "file:./swmansion-t-rex-ui-1.0.1.tgz#6215340b3105dd9c05c4c7acb7dfaf07e6ebd038"
+"@swmansion/t-rex-ui@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@swmansion/t-rex-ui/-/t-rex-ui-1.1.0.tgz#b62a1995cf3e382562405cda0e05e317f7102607"
+  integrity sha512-b7bC/D3w83eyBnIrTla7Q1UMqjJEGAt7/O5AIgo6FSbza0/2w0EKe+QZpG1n5Vlt5sDOJWaQoJFNaLTkOa51Gg==
   dependencies:
     "@docusaurus/core" "^3.8.1"
     "@docusaurus/module-type-aliases" "^3.8.1"
