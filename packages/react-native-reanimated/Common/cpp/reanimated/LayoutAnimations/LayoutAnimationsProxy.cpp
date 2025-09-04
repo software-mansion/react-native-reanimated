@@ -866,10 +866,9 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
     newStyle.setProperty(
         uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
     if (layoutAnimation.isViewAlreadyMounted) {
-      // it is possible that pullTransaction will be called before
-      // progressLayoutAnimation it is possible that progressLayoutAnimation
-      // will be called before native view will be mounted, we want to restoring
-      // opacity untile we are sure that is applied to a view.
+      // We want to reset opacity only when we are sure that this update will be
+      // applied to the native view. Otherwise, we want to update opacity using
+      // the `restoreOpacityInCaseOfFlakyEnteringAnimation` method.
       layoutAnimation.opacity.reset();
     }
   }
