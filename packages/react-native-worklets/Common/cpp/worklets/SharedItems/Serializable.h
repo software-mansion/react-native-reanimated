@@ -88,6 +88,7 @@ class Serializable {
     ArrayBufferType,
     TurboModuleLikeType,
     ImportType,
+    SynchronizableType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}

@@ -3,23 +3,26 @@ import '../types';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
-  ScrollView,
+  Dimensions,
+  Image,
+  Platform,
+  StyleSheet,
   TouchableWithoutFeedback,
-} from 'react-native-gesture-handler';
+  View,
+} from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
   interpolate,
-  runOnJS,
-  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 

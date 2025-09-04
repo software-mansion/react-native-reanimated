@@ -2,6 +2,7 @@
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
@@ -42,9 +43,13 @@ void WorkletRuntimeDecorator::decorate(
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
-    jsi::Object &&jsiWorkletsModuleProxy) {
+    jsi::Object &&jsiWorkletsModuleProxy,
+    const std::shared_ptr<EventLoop> &eventLoop) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
+
+  rt.global().setProperty(
+      rt, runtimeKindBindingName, static_cast<int>(RuntimeKind::Worker));
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
@@ -193,6 +198,14 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
+      "_createSerializableSynchronizable",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return SerializableJSRef::newNativeStateObject(
+            rt, extractSerializableOrThrow(rt, value));
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
@@ -270,6 +283,26 @@ void WorkletRuntimeDecorator::decorate(
              const jsi::Value *args,
              size_t count) { return jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_scheduleTimeoutCallback",
+      [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop)](
+          jsi::Runtime &rt,
+          const jsi::Value &delayJs,
+          const jsi::Value &handlerIdJs) -> jsi::Value {
+        const auto delay = delayJs.asNumber();
+        const auto handlerId = handlerIdJs.asNumber();
+        const auto job = [handlerId](jsi::Runtime &rt) {
+          rt.global()
+              .getPropertyAsFunction(rt, "__runTimeoutCallback")
+              .call(rt, handlerId);
+        };
+        if (auto strongEventLoop = weakEventLoop.lock()) {
+          strongEventLoop->pushTimeout(job, delay);
+        }
+        return jsi::Value::undefined();
+      });
 }
 
 } // namespace worklets

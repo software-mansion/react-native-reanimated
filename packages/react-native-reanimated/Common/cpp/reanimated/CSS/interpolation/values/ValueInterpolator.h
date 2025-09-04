@@ -2,17 +2,13 @@
 
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-#include <reanimated/CSS/util/keyframes.h>
+#include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace reanimated::css {
-
-struct ValueInterpolatorUpdateContext {
-  const std::shared_ptr<const ShadowNode> &node;
-};
 
 template <typename TValue>
 struct is_css_value : std::is_base_of<CSSValue, TValue> {};
@@ -120,39 +116,39 @@ class ValueInterpolator : public PropertyInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      const override {
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const double fallbackInterpolateThreshold) const override {
     const auto toIndex = getToKeyframeIndex(progressProvider);
     const auto fromIndex = toIndex - 1;
 
     const auto &fromKeyframe = keyframes_[fromIndex];
     const auto &toKeyframe = keyframes_[toIndex];
 
-    std::optional<ValueType> fromValue = fromKeyframe.value;
-    std::optional<ValueType> toValue = toKeyframe.value;
-
-    if (!fromValue.has_value()) {
-      fromValue = getFallbackValue(shadowNode);
-    }
-    if (!toValue.has_value()) {
-      toValue = getFallbackValue(shadowNode);
-    }
+    const ValueType &fromValue = fromKeyframe.value
+        ? fromKeyframe.value.value()
+        : getFallbackValue(shadowNode);
+    // clang-format off
+    const ValueType &toValue = toKeyframe.value
+        ? toKeyframe.value.value()
+        : getFallbackValue(shadowNode);
+    // clang-format on
 
     const auto keyframeProgress = progressProvider->getKeyframeProgress(
         fromKeyframe.offset, toKeyframe.offset);
 
     if (keyframeProgress == 1.0) {
-      return toValue.value().toDynamic();
+      return toValue.toDynamic();
     }
     if (keyframeProgress == 0.0) {
-      return fromValue.value().toDynamic();
+      return fromValue.toDynamic();
     }
 
     return interpolateValue(
                keyframeProgress,
-               fromValue.value(),
-               toValue.value(),
-               {.node = shadowNode})
+               fromValue,
+               toValue,
+               {.node = shadowNode,
+                .fallbackInterpolateThreshold = fallbackInterpolateThreshold})
         .toDynamic();
   }
 
@@ -163,8 +159,8 @@ class ValueInterpolator : public PropertyInterpolator {
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
-      const ValueInterpolatorUpdateContext &context) const {
-    return fromValue.interpolate(progress, toValue);
+      const CSSValueInterpolationContext &context) const {
+    return fromValue.interpolate(progress, toValue, context);
   }
 
  private:

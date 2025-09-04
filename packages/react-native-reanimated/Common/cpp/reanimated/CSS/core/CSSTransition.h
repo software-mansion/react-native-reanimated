@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
@@ -39,12 +39,14 @@ class CSSTransition {
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::unordered_set<std::string> allowDiscreteProperties_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
+  void updateAllowedDiscreteProperties();
   bool isAllowedProperty(const std::string &propertyName) const;
 };
 

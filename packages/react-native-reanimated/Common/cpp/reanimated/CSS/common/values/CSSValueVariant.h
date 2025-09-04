@@ -150,10 +150,13 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Interpolate (non-resolvable)
    */
-  CSSValueVariant interpolate(double progress, const CSSValueVariant &to)
-      const {
+  CSSValueVariant interpolate(
+      const double progress,
+      const CSSValueVariant &to,
+      const CSSValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
-      return fallbackInterpolate(progress, to);
+      return fallbackInterpolate(
+          progress, to, context.fallbackInterpolateThreshold);
     }
 
     return std::visit(
@@ -162,11 +165,12 @@ class CSSValueVariant final : public CSSValue {
             if constexpr (Resolvable<L>) {
               throw std::runtime_error(
                   "[Reanimated] Resolvable value cannot be interpolated as non-resolvable");
-            } else {
+            } else if (fromValue.canInterpolateTo(toValue)) {
               return CSSValueVariant(fromValue.interpolate(progress, toValue));
             }
           }
-          return fallbackInterpolate(progress, to);
+          return fallbackInterpolate(
+              progress, to, context.fallbackInterpolateThreshold);
         },
         storage_,
         to.storage_);
@@ -176,25 +180,27 @@ class CSSValueVariant final : public CSSValue {
    * Interpolate (resolvable)
    */
   CSSValueVariant interpolate(
-      double progress,
+      const double progress,
       const CSSValueVariant &to,
       const CSSResolvableValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
-      return fallbackInterpolate(progress, to);
+      return fallbackInterpolate(
+          progress, to, context.fallbackInterpolateThreshold);
     }
 
     return std::visit(
         [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
           REA_IF_SAME_TYPE(fromValue, toValue) {
-            if constexpr (Resolvable<L>) {
-              return CSSValueVariant(
-                  fromValue.interpolate(progress, toValue, context));
-            } else {
+            if constexpr (!Resolvable<L>) {
               throw std::runtime_error(
                   "[Reanimated] Non-resolvable value cannot be interpolated as resolvable");
+            } else if (fromValue.canInterpolateTo(toValue)) {
+              return CSSValueVariant(
+                  fromValue.interpolate(progress, toValue, context));
             }
           }
-          return fallbackInterpolate(progress, to);
+          return fallbackInterpolate(
+              progress, to, context.fallbackInterpolateThreshold);
         },
         storage_,
         to.storage_);
@@ -204,9 +210,10 @@ class CSSValueVariant final : public CSSValue {
   std::variant<AllowedTypes...> storage_;
 
   CSSValueVariant fallbackInterpolate(
-      double progress,
-      const CSSValueVariant &to) const {
-    return (progress < 0.5) ? *this : to;
+      const double progress,
+      const CSSValueVariant &to,
+      const double fallbackInterpolateThreshold) const {
+    return (progress < fallbackInterpolateThreshold) ? *this : to;
   }
 
   /**

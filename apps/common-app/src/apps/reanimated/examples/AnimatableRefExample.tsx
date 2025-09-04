@@ -62,7 +62,7 @@ export default function AnimatableRefExample() {
       <AnimatedSwitch animatedProps={animatedProps} />
       <Button
         onPress={() => {
-          sv.value = withSpring(isUp ? 250 : 0, { damping: 18 });
+          sv.value = withSpring(isUp ? 250 : 0);
           setIsUp(!isUp);
         }}
         title={`Go ${isUp ? 'down' : 'up'}`}

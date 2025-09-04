@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Animated, { FadeIn, runOnUI, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import {
   callTracker,
@@ -11,19 +11,21 @@ import {
   getRegisteredValue,
   getTestComponent,
   getTrackerCallCount,
-  mockAnimationTimer,
   notify,
   Presets,
-  recordAnimationUpdates,
   registerValue,
   render,
   test,
+  createOrderConstraint,
   useTestRef,
+  createTestValue,
   wait,
-  waitForNotify,
+  waitForNotifications,
+  waitForNotification,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
+import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -323,8 +325,8 @@ describe('Tests of Test Framework', () => {
   test('withTiming - notify - ✅', async () => {
     await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('BrownComponent');
-    await waitForNotify('notifyJS');
-    await waitForNotify('notifyUI');
+    await waitForNotification('notifyJS');
+    await waitForNotification('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
@@ -388,6 +390,39 @@ describe('Tests of Test Framework', () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');
+    });
+
+    test('useTestState', async () => {
+      const [state1, setState1] = createTestValue('not_ok');
+      setState1('ok');
+
+      const [state2, setState2] = createTestValue('not_ok');
+      const notification2 = 'notification2';
+      runOnUI(() => {
+        setState2('ok', notification2);
+      })();
+
+      const [state3, setState3] = createTestValue('not_ok');
+      const notification3 = 'notification3';
+      const rt = createWorkletRuntime({ name: 'test' });
+      runOnRuntime(rt, () => {
+        'worklet';
+        setState3('ok', notification3);
+      })();
+
+      await waitForNotifications([notification2, notification3]);
+      expect(state1.value).toBe('ok');
+      expect(state2.value).toBe('ok');
+      expect(state3.value).toBe('ok');
+    });
+
+    test('useOrderConstraint', async () => {
+      const [confirmedOrder, order] = createOrderConstraint();
+      order(1);
+      order(2);
+      order(3, 'finish');
+      await waitForNotification('finish');
+      expect(confirmedOrder.value).toBe(3);
     });
   });
 });

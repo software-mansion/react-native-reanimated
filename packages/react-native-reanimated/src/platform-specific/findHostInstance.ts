@@ -2,7 +2,8 @@
 'use strict';
 
 import { ReanimatedError } from '../common';
-import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
+import type { WrapperRef } from '../commonTypes';
+import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
 
 export type HostInstance = {
   __internalInstanceHandle?: Record<string, unknown>;
@@ -45,11 +46,11 @@ function resolveFindHostInstance_DEPRECATED() {
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  component: IAnimatedComponentInternal | React.Component
+  ref: IAnimatedComponentInternalBase | WrapperRef
 ): HostInstance {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(
-    (component as IAnimatedComponentInternal)._componentRef as HostInstance
+    (ref as IAnimatedComponentInternalBase)._componentRef as HostInstance
   );
   if (hostInstance !== undefined) {
     return hostInstance;
@@ -63,8 +64,8 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    (component as IAnimatedComponentInternal)._hasAnimatedRef
-      ? (component as IAnimatedComponentInternal)._componentRef
-      : component
+    (ref as IAnimatedComponentInternalBase)._hasAnimatedRef
+      ? (ref as IAnimatedComponentInternalBase)._componentRef
+      : ref
   );
 }

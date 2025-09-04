@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, MutableRefObject, Ref } from 'react';
+import type { Component, Ref, RefObject } from 'react';
 
 import type {
   AnimatedStyle,
@@ -8,6 +8,7 @@ import type {
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
@@ -16,6 +17,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
+  styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
 export interface ViewInfo {
@@ -80,7 +82,7 @@ export type AnimatedComponentProps<
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  jestAnimatedValues?: MutableRefObject<AnimatedProps>;
+  jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder
@@ -121,8 +123,21 @@ export interface AnimatedComponentRef extends Component {
   elementRef?: React.RefObject<HTMLElement>;
 }
 
-export interface IAnimatedComponentInternal {
+export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
+  _componentRef: AnimatedComponentRef | HTMLElement | null;
+  _hasAnimatedRef: boolean;
+  _viewInfo?: ViewInfo;
+
+  /**
+   * Used for Layout Animations and Animated Styles. It is not related to event
+   * handling.
+   */
+  getComponentViewTag: () => number;
+}
+
+export interface IAnimatedComponentInternal
+  extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
   _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
@@ -131,19 +146,11 @@ export interface IAnimatedComponentInternal {
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   jestAnimatedProps: { value: AnimatedProps };
-  _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _hasAnimatedRef: boolean;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
-  _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
-  /**
-   * Used for Layout Animations and Animated Styles. It is not related to event
-   * handling.
-   */
-  getComponentViewTag: () => number;
   setNativeProps: (props: StyleProps) => void;
 }
 

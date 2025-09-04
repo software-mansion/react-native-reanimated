@@ -1,11 +1,13 @@
 'use strict';
 import { registerWorkletStackDetails } from './errors';
+import { isSynchronizable } from './isSynchronizable';
 import { logger } from './logger';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
+import type { Synchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -201,6 +203,9 @@ function createSerializableNative<T>(
   }
   if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
     return cloneWorklet(value, shouldPersistRemote, depth);
+  }
+  if (isSynchronizable(value)) {
+    return cloneSynchronizable(value) as SerializableRef<T>;
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
@@ -587,6 +592,13 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
   return handle;
 }
 
+function cloneSynchronizable<TValue>(
+  value: Synchronizable<TValue>
+): SerializableRef<TValue> {
+  serializableMappingCache.set(value);
+  return value;
+}
+
 function cloneImport<TValue extends WorkletImport>(
   value: TValue
 ): SerializableRef<TValue> {
@@ -707,6 +719,11 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       if (Array.isArray(value)) {
         return global._createSerializableArray(
           value.map(cloneRecursive)
+        ) as FlatSerializableRef<T>;
+      }
+      if ((value as Record<string, unknown>).__synchronizableRef) {
+        return global._createSerializableSynchronizable(
+          value
         ) as FlatSerializableRef<T>;
       }
       const toAdapt: Record<string, FlatSerializableRef<T>> = {};
