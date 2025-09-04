@@ -4,8 +4,6 @@
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <folly/json.h>
 #include <functional>
 #include <optional>
@@ -14,8 +12,6 @@
 #include <vector>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
   CSSDouble offsetX;

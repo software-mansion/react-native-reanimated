@@ -22,12 +22,6 @@ CSSBoxShadow::CSSBoxShadow(
 }
 
 CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!canConstruct(rt, jsiValue)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSBoxShadow: Invalid value: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
-
   const auto &obj = jsiValue.asObject(rt);
 
   // Only assign fields that exist in the object and keep default values for
@@ -57,11 +51,6 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 }
 
 CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
-  if (!canConstruct(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSBoxShadow: Invalid value: " + folly::toJson(value));
-  }
-
   // Only assign fields that exist in the object and keep default values for
   // others
   if (value.count("offsetX") > 0) {
