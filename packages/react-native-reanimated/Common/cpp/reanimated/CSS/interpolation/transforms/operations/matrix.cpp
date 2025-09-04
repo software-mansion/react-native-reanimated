@@ -56,19 +56,19 @@ TransformOperations simplifyOperations(const TransformOperations &operations) {
 
   auto addMatrixOperation = [&]() {
     if (is3D) {
-      auto result = TransformMatrix3D();
+      auto simplified = TransformMatrix3D();
       for (const auto &operation : toSimplify) {
         auto matrix = operation->toMatrix(true);
-        result *= static_cast<const TransformMatrix3D &>(*matrix);
+        simplified *= static_cast<const TransformMatrix3D &>(*matrix);
       }
-      result.emplace_back(std::make_shared<MatrixOperation>(result));
+      result.emplace_back(std::make_shared<MatrixOperation>(simplified));
     } else {
-      auto result = TransformMatrix2D();
+      auto simplified = TransformMatrix2D();
       for (const auto &operation : toSimplify) {
         auto matrix = operation->toMatrix(false);
-        result *= static_cast<const TransformMatrix2D &>(*matrix);
+        simplified *= static_cast<const TransformMatrix2D &>(*matrix);
       }
-      result.emplace_back(std::make_shared<MatrixOperation>(result));
+      result.emplace_back(std::make_shared<MatrixOperation>(simplified));
     }
     toSimplify.clear();
   };
@@ -97,53 +97,43 @@ TransformOperations simplifyOperations(const TransformOperations &operations) {
 }
 
 MatrixOperation::MatrixOperation(jsi::Runtime &rt, const jsi::Value &value)
-    : TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
-          [&]() -> std::unique_ptr<TransformMatrix> {
+    : TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>(
+          [&]() -> TransformMatrix::Shared {
             // Try 2D first, then 3D (will throw if neither works)
             if (TransformMatrix2D::canConstruct(rt, value)) {
               is3D_ = false;
-              return std::make_unique<TransformMatrix2D>(rt, value);
+              return std::make_shared<const TransformMatrix2D>(rt, value);
             }
             is3D_ = true;
-            return std::make_unique<TransformMatrix3D>(rt, value);
+            return std::make_shared<const TransformMatrix3D>(rt, value);
           }()) {}
 
 MatrixOperation::MatrixOperation(const folly::dynamic &value)
-    : TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
-          [&]() -> std::unique_ptr<TransformMatrix> {
+    : TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>(
+          [&]() -> TransformMatrix::Shared {
             // Try 2D first, then 3D (will throw if neither works)
             if (TransformMatrix2D::canConstruct(value)) {
               is3D_ = false;
-              return std::make_unique<TransformMatrix2D>(value);
+              return std::make_shared<const TransformMatrix2D>(value);
             }
             is3D_ = true;
-            return std::make_unique<TransformMatrix3D>(value);
+            return std::make_shared<const TransformMatrix3D>(value);
           }()) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix2D matrix)
-    : TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
-          std::make_unique<TransformMatrix2D>(std::move(matrix))),
+    : TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>(
+          std::make_shared<const TransformMatrix2D>(std::move(matrix))),
       is3D_(false) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
-    : TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
-          std::make_unique<TransformMatrix3D>(std::move(matrix))),
+    : TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>(
+          std::make_shared<const TransformMatrix3D>(std::move(matrix))),
       is3D_(true) {}
 
 MatrixOperation::MatrixOperation(TransformOperations operations)
-    // Simplify operations to reduce the number of matrix multiplications
-    // during matrix keyframe interpolation
-    : TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>(
+    // Simplify operations to reduce the number of matrix
+    // multiplications during matrix keyframe interpolation
+    : TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>(
           simplifyOperations(std::move(operations))) {
   const auto &ops = std::get<TransformOperations>(value);
   is3D_ = std::any_of(
@@ -172,75 +162,36 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
   }
 
   // Both hold matrices
-  return *std::get<std::unique_ptr<TransformMatrix>>(value) ==
-      *std::get<std::unique_ptr<TransformMatrix>>(otherOperation->value);
+  return *std::get<TransformMatrix::Shared>(value) ==
+      *std::get<TransformMatrix::Shared>(otherOperation->value);
 }
 
 folly::dynamic MatrixOperation::valueToDynamic() const {
-  if (!std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert unprocessed transform operations to the dynamic value.");
-  }
-  return std::get<std::unique_ptr<TransformMatrix>>(value)->toDynamic();
-}
-
-std::unique_ptr<TransformMatrix> MatrixOperation::toMatrix(bool force3D) const {
-  if (!std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
+  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
   }
+  return std::get<TransformMatrix::Shared>(value)->toDynamic();
+}
+
+TransformMatrix::Shared MatrixOperation::toMatrix(bool force3D) const {
+  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
+  }
+
   return matrixFromVariant(force3D);
 }
 
-std::unique_ptr<TransformMatrix> MatrixOperation::toMatrix(
-    bool force3D,
-    const TransformInterpolationContext &context) const {
-  if (std::holds_alternative<std::unique_ptr<TransformMatrix>>(value)) {
-    return matrixFromVariant(force3D);
-  }
+TransformMatrix::Shared MatrixOperation::matrixFromVariant(bool force3D) const {
+  const auto &storedMatrix = std::get<TransformMatrix::Shared>(value);
 
-  const auto &operations = std::get<TransformOperations>(value);
-
-  std::vector<std::unique_ptr<TransformMatrix>> matrices;
-  matrices.reserve(operations.size());
-
-  const auto is3D = is3D_ || force3D;
-  for (const auto &op : operations) {
-    matrices.emplace_back(op->toMatrix(is3D, context));
-  }
-
-  if (is3D) {
-    auto result = TransformMatrix3D();
-    for (const auto &matrix : matrices) {
-      result *= static_cast<const TransformMatrix3D &>(*matrix);
-    }
-    return std::make_unique<TransformMatrix>(result);
-  }
-
-  auto result = TransformMatrix2D();
-  for (const auto &matrix : matrices) {
-    result *= static_cast<const TransformMatrix2D &>(*matrix);
-  }
-  return std::make_unique<TransformMatrix>(result);
-}
-
-std::unique_ptr<TransformMatrix> MatrixOperation::matrixFromVariant(
-    bool force3D) const {
-  const auto &storedMatrix = std::get<std::unique_ptr<TransformMatrix>>(value);
-
-  // Use the cached is3D_ flag instead of checking dimension at runtime
-  if (is3D_) {
-    // If 3D matrix is stored
-    return std::make_unique<TransformMatrix3D>(*storedMatrix);
-  }
-
-  if (force3D) {
-    // If 2D matrix is stored and we want a 3D matrix
-    return std::make_unique<TransformMatrix3D>(TransformMatrix3D::from2D(
+  if (force3D && !is3D_) {
+    return std::make_shared<const TransformMatrix3D>(TransformMatrix3D::from2D(
         static_cast<const TransformMatrix2D &>(*storedMatrix)));
   }
-  // If 2D matrix is stored and we don't want a 3D matrix
-  return std::make_unique<TransformMatrix2D>(*storedMatrix);
+
+  return storedMatrix;
 }
 
 } // namespace reanimated::css

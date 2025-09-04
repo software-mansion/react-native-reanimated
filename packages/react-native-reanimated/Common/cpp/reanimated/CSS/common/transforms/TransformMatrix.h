@@ -11,6 +11,8 @@ namespace reanimated::css {
 
 class TransformMatrix {
  public:
+  using Shared = std::shared_ptr<const TransformMatrix>;
+
   virtual ~TransformMatrix() = default;
 
   virtual double determinant() const = 0;

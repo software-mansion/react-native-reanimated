@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
-#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <algorithm>
@@ -14,13 +13,12 @@
 
 namespace reanimated::css {
 
+using MatrixOperationValue =
+    std::variant<TransformMatrix::Shared, TransformOperations>;
+
 struct MatrixOperation final
-    : public TransformOperationBase<
-          TransformOp::Matrix,
-          std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>> {
-  using TransformOperationBase<
-      TransformOp::Matrix,
-      std::variant<std::unique_ptr<TransformMatrix>, TransformOperations>>::
+    : public TransformOperationBase<TransformOp::Matrix, MatrixOperationValue> {
+  using TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>::
       TransformOperationBase;
 
   explicit MatrixOperation(jsi::Runtime &rt, const jsi::Value &value);
@@ -35,15 +33,11 @@ struct MatrixOperation final
   bool is3D() const noexcept override {
     return is3D_;
   }
-  std::unique_ptr<TransformMatrix> toMatrix(bool force3D) const override;
-  std::unique_ptr<TransformMatrix> toMatrix(
-      bool force3D,
-      const ResolvableValueInterpolationContext &context) const override;
+  TransformMatrix::Shared toMatrix(bool force3D) const override;
+  TransformMatrix::Shared matrixFromVariant(bool force3D) const;
 
  private:
   bool is3D_;
-
-  std::unique_ptr<TransformMatrix> matrixFromVariant(bool force3D) const;
 };
 
 } // namespace reanimated::css

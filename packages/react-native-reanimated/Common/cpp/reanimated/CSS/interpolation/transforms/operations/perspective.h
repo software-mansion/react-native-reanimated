@@ -21,9 +21,9 @@ struct PerspectiveOperation final
     return true;
   }
 
-  std::unique_ptr<TransformMatrix> toMatrix(bool /* force3D */) const override {
+  TransformMatrix::Shared toMatrix(bool /* force3D */) const override {
     // Perspective is a 3D operation
-    return std::make_unique<TransformMatrix>(
+    return std::make_shared<const TransformMatrix3D>(
         TransformMatrix3D::create<TransformOp::Perspective>(value.value));
   }
 };

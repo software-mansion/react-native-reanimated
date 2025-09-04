@@ -2,97 +2,146 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/interpolation/configs.h>
-#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace reanimated::css {
 
+class TransformInterpolator {
+ public:
+  using Interpolators =
+      std::unordered_map<TransformOp, std::shared_ptr<TransformInterpolator>>;
+
+  struct UpdateContext {
+    const std::shared_ptr<const ShadowNode> &node;
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+    const std::shared_ptr<Interpolators> &interpolators;
+  };
+
+  virtual ~TransformInterpolator() = default;
+
+  virtual std::shared_ptr<TransformOperation> getDefaultOperation() const = 0;
+  virtual std::shared_ptr<TransformOperation> interpolate(
+      double progress,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const = 0;
+};
+
+using TransformOperationInterpolators = TransformInterpolator::Interpolators;
+using TransformInterpolationContext = TransformInterpolator::UpdateContext;
+
 // Base implementation for simple operations
 template <typename OperationType>
-class TransformOperationInterpolator
-    : public TransformInterpolatorBase<OperationType> {
+class TransformOperationInterpolator : public TransformInterpolator {
  public:
   TransformOperationInterpolator(
       std::shared_ptr<OperationType> defaultOperation)
-      : TransformInterpolatorBase<OperationType>(defaultOperation) {}
+      : defaultOperation_(defaultOperation) {}
 
-  OperationType interpolate(
-      double progress,
-      const OperationType &from,
-      const OperationType &to,
-      const TransformInterpolationContext &context) const override {
-    return OperationType{from.value.interpolate(progress, to.value)};
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
+    return defaultOperation_;
   }
+
+  std::shared_ptr<TransformOperation> interpolate(
+      double progress,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const override {
+    const auto &fromOp = *std::static_pointer_cast<OperationType>(from);
+    const auto &toOp = *std::static_pointer_cast<OperationType>(to);
+    return std::make_shared<OperationType>(
+        fromOp.value.interpolate(progress, toOp.value));
+  }
+
+ private:
+  std::shared_ptr<OperationType> defaultOperation_;
 };
 
 // Specialization for PerspectiveOperation
 template <>
 class TransformOperationInterpolator<PerspectiveOperation>
-    : public TransformInterpolatorBase<PerspectiveOperation> {
+    : public TransformInterpolator {
  public:
-  using TransformInterpolatorBase<
-      PerspectiveOperation>::TransformInterpolatorBase;
+  TransformOperationInterpolator(
+      std::shared_ptr<PerspectiveOperation> defaultOperation)
+      : defaultOperation_(defaultOperation) {}
 
-  PerspectiveOperation interpolate(
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
+    return defaultOperation_;
+  }
+
+  std::shared_ptr<TransformOperation> interpolate(
       double progress,
-      const PerspectiveOperation &from,
-      const PerspectiveOperation &to,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
       const TransformInterpolationContext &context) const override;
+
+ private:
+  std::shared_ptr<PerspectiveOperation> defaultOperation_;
 };
 
 // Specialization for MatrixOperation
 template <>
 class TransformOperationInterpolator<MatrixOperation>
-    : public TransformInterpolatorBase<MatrixOperation> {
+    : public TransformInterpolator {
  public:
-  using TransformInterpolatorBase<MatrixOperation>::TransformInterpolatorBase;
+  TransformOperationInterpolator(
+      std::shared_ptr<MatrixOperation> defaultOperation)
+      : defaultOperation_(defaultOperation) {}
 
-  MatrixOperation interpolate(
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
+    return defaultOperation_;
+  }
+
+  std::shared_ptr<TransformOperation> interpolate(
       double progress,
-      const MatrixOperation &from,
-      const MatrixOperation &to,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
       const TransformInterpolationContext &context) const override;
+
+ private:
+  std::shared_ptr<MatrixOperation> defaultOperation_;
+
+  std::shared_ptr<TransformMatrix> resolveMatrix(
+      const std::shared_ptr<TransformMatrix> &matrix,
+      const TransformInterpolationContext &context,
+      bool force3D) const;
 };
 
 // Specialization for resolvable operations
 template <ResolvableOperation TOperation>
 class TransformOperationInterpolator<TOperation>
-    : public TransformInterpolatorBase<TOperation> {
+    : public TransformInterpolator {
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
       ResolvableValueInterpolatorConfig config)
-      : TransformInterpolatorBase<TOperation>(defaultOperation),
-        config_(std::move(config)) {}
+      : defaultOperation_(defaultOperation), config_(std::move(config)) {}
 
-  TOperation interpolate(
-      double progress,
-      const TOperation &from,
-      const TOperation &to,
-      const TransformInterpolationContext &context) const override {
-    return TOperation{from.value.interpolate(
-        progress, to.value, getResolvableValueContext(context))};
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
+    return defaultOperation_;
   }
 
-  TOperation resolveOperation(
-      const TOperation &operation,
+  std::shared_ptr<TransformOperation> interpolate(
+      double progress,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
       const TransformInterpolationContext &context) const override {
-    const auto &resolved =
-        operation.value.resolve(getResolvableValueContext(context));
-
-    if (!resolved.has_value()) {
-      return TOperation{operation.value};
-    }
-
-    return TOperation{resolved.value()};
+    const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
+    const auto &toOp = *std::static_pointer_cast<TOperation>(to);
+    return std::make_shared<TOperation>(fromOp.value.interpolate(
+        progress, toOp.value, getResolvableValueContext(context)));
   }
 
  private:
+  std::shared_ptr<TOperation> defaultOperation_;
   const ResolvableValueInterpolatorConfig config_;
 
   ResolvableValueInterpolationContext getResolvableValueContext(

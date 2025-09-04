@@ -2,37 +2,74 @@
 
 namespace reanimated::css {
 
-PerspectiveOperation
+std::shared_ptr<TransformOperation>
 TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
-    const PerspectiveOperation &from,
-    const PerspectiveOperation &to,
+    const std::shared_ptr<TransformOperation> &from,
+    const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
-  if (to.value.value == 0)
-    return PerspectiveOperation(0);
-  if (from.value.value == 0)
-    return PerspectiveOperation(to.value);
+  const auto &fromOp = *std::static_pointer_cast<PerspectiveOperation>(from);
+  const auto &toOp = *std::static_pointer_cast<PerspectiveOperation>(to);
 
-  return PerspectiveOperation(from.value.interpolate(progress, to.value));
+  if (toOp.value.value == 0)
+    return std::make_shared<PerspectiveOperation>(0);
+  if (fromOp.value.value == 0)
+    return std::make_shared<PerspectiveOperation>(toOp.value);
+
+  return std::make_shared<PerspectiveOperation>(
+      fromOp.value.interpolate(progress, toOp.value));
 }
 
-MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
+std::shared_ptr<TransformOperation>
+TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
-    const MatrixOperation &from,
-    const MatrixOperation &to,
+    const std::shared_ptr<TransformOperation> &from,
+    const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
-  const auto is3D = from.is3D() || to.is3D();
-  const auto fromMatrix = from.toMatrix(is3D, context);
-  const auto toMatrix = to.toMatrix(is3D, context);
+  const auto is3D = from->is3D() || to->is3D();
+  const auto fromMatrix = from->toMatrix(is3D, context);
+  const auto toMatrix = to->toMatrix(is3D, context);
   const auto decomposedFrom = fromMatrix->decompose();
   const auto decomposedTo = toMatrix->decompose();
 
   if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-    return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
+    return progress < 0.5 ? from : to;
   }
 
-  return MatrixOperation(TransformMatrix3D::recompose(
+  return std::make_shared<MatrixOperation>(TransformMatrix3D::recompose(
       decomposedFrom->interpolate(progress, decomposedTo.value())));
+}
+
+std::shared_ptr<TransformMatrix>
+TransformOperationInterpolator<MatrixOperation>::resolveMatrix(
+    const std::shared_ptr<MatrixOperation> &operation,
+    const TransformInterpolationContext &context,
+    const bool force3D) const {
+  if (std::holds_alternative<TransformMatrix::Shared>(operation->value)) {
+    return operation->matrixFromVariant(force3D);
+  }
+
+  std::vector<TransformMatrix::Shared> matrices;
+  matrices.reserve(operations.size());
+
+  const auto is3D = is3D_ || force3D;
+  for (const auto &op : operations) {
+    matrices.emplace_back(op->toMatrix(is3D, context));
+  }
+
+  if (is3D) {
+    auto result = TransformMatrix3D();
+    for (const auto &matrix : matrices) {
+      result *= static_cast<const TransformMatrix3D &>(*matrix);
+    }
+    return std::make_shared<const TransformMatrix3D>(result);
+  }
+
+  auto result = TransformMatrix2D();
+  for (const auto &matrix : matrices) {
+    result *= static_cast<const TransformMatrix2D &>(*matrix);
+  }
+  return std::make_shared<const TransformMatrix2D>(result);
 }
 
 } // namespace reanimated::css

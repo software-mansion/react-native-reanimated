@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/utils/keyframes.h>
 
