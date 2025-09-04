@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDraggable, useDndMonitor } from '@dnd-kit/core';
 import styles from './styles.module.css';
-import Draggable from 'react-draggable';
 
 export enum DraggableId {
   TOP_LEFT,
@@ -53,47 +53,45 @@ const SelectionBox: React.FC<{
   children,
   isInteractive,
 }) => {
-  const touchPosition = { x: 0, y: 0 };
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: draggableIdentifier.toString(),
+  });
 
-  const classList = getClassListByIdentifier(
-    draggableIdentifier,
-    isInteractive
-  );
+  const lastDelta = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!transform || !isInteractive) return;
+
+    const dx = transform.x - lastDelta.current.x;
+    const dy = transform.y - lastDelta.current.y;
+
+    if (dx !== 0 || dy !== 0) {
+      propagationFunction({ x: dx, y: dy }, draggableIdentifier);
+      lastDelta.current = { x: transform.x, y: transform.y };
+    }
+  }, [transform, isInteractive, draggableIdentifier, propagationFunction]);
+
+  useDndMonitor({
+    onDragEnd(event) {
+      if (event.active.id === draggableIdentifier.toString()) {
+        lastDelta.current = { x: 0, y: 0 };
+      }
+    }
+  });
+
+  const classList = getClassListByIdentifier(draggableIdentifier, isInteractive);
+
 
   return (
-    <Draggable
-      onStart={(event: any) => {
-        if (
-          typeof event.movementX === 'number' &&
-          typeof event.movementY === 'number'
-        )
-          return;
-
-        touchPosition.x = event.touches[0].clientX;
-        touchPosition.y = event.touches[0].clientY;
-      }}
-      onDrag={(event: any) => {
-        propagationFunction(
-          {
-            x: event.movementX ?? event.touches[0].clientX - touchPosition.x,
-            y: event.movementY ?? event.touches[0].clientY - touchPosition.y,
-          },
-          draggableIdentifier
-        );
-
-        if (
-          typeof event.movementX === 'number' &&
-          typeof event.movementY === 'number'
-        )
-          return;
-
-        touchPosition.x = event.touches[0].clientX;
-        touchPosition.y = event.touches[0].clientY;
-      }}
-      allowAnyClick={false}
-      axis={'none'}>
-      <div className={classList}>{children}</div>
-    </Draggable>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={classList}
+      style={{ touchAction: "none" }}
+    >
+      {children}
+    </div>
   );
 };
 

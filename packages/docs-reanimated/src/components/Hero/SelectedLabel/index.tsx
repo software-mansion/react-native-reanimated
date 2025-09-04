@@ -9,6 +9,7 @@ import {
   computeSelectionStyles,
   computeTextStyles,
 } from './utils';
+import { DndContext } from '@dnd-kit/core';
 
 const SelectedLabel: React.FC<{
   children: React.ReactNode;
@@ -90,6 +91,7 @@ const SelectedLabel: React.FC<{
 
   return (
     <span ref={selectionRef} className={styles.selection}>
+      <DndContext>
       <div ref={selectionContainerRef} className={styles.selectionContainer}>
         <SelectionBox
           propagationFunction={movementPropagator}
@@ -116,6 +118,7 @@ const SelectedLabel: React.FC<{
           </span>
         </SelectionBox>
       </div>
+      </DndContext>
     </span>
   );
 };

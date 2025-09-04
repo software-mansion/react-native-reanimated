@@ -3,6 +3,7 @@ import styles from './styles.module.css';
 import useScreenSize from '@site/src/hooks/useScreenSize';
 import PlaygroundChartPoint from '@site/src/components/InteractivePlayground/PlaygroundChart/PlaygroundChartPoint';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
+import { DndContext } from '@dnd-kit/core';
 
 export interface HandleMoveHandlerProps {
   x: number;
@@ -165,49 +166,50 @@ const PlaygroundChart: React.FC<{
     bezierDrawLineToPoint(ctx, ctx.canvas.width - rect.x, rect.y, x2, y2);
   };
 
+  const [dragOrigin, setDragOrigin] = React.useState<{
+    x: number;
+    y: number;
+    id: 'L' | 'R';
+  } | null>(null);
+
   return (
     <div className={styles.graph}>
-      <div style={{ width: canvasSize + 2, height: canvasSize + 2 }}>
-        {!isMobile &&
-          (easingFunctionName === 'bezier' ||
-            easingFunctionName === 'bezierFn') && (
-            <>
-              <PlaygroundChartPoint
-                label="L"
-                startingPoint={{
-                  x: 0,
-                  y: 0,
-                }}
-                bounds={{ x: canvasSize, y: canvasSize }}
-                pointMoveHandler={({ x, y }) =>
-                  bezierHandlesMoveHandler.left({ x, y, canvasSize })
-                }
-                pointControls={{
-                  x: x1,
-                  y: y1,
-                }}
-              />
+      <DndContext
+      >
+        <div style={{ width: canvasSize + 2, height: canvasSize + 2, position: 'relative' }}>
+          {!isMobile &&
+            (easingFunctionName === 'bezier' ||
+              easingFunctionName === 'bezierFn') && (
+              <>
+                <PlaygroundChartPoint
+                  label="L"
+                  bounds={{ x: canvasSize, y: canvasSize }}
+                  pointMoveHandler={({ x, y }) =>
+                    bezierHandlesMoveHandler.left({ x, y, canvasSize })
+                  }
+                  pointControls={{
+                    x: x1,
+                    y: y1,
+                  }}
+                />
 
-              <PlaygroundChartPoint
-                label="R"
-                startingPoint={{
-                  x: canvasSize - bezierEasingValues.handleSize,
-                  y: canvasSize - bezierEasingValues.handleSize,
-                }}
-                bounds={{ x: canvasSize, y: canvasSize }}
-                pointMoveHandler={({ x, y }) =>
-                  bezierHandlesMoveHandler.right({ x, y, canvasSize })
-                }
-                pointControls={{
-                  x: x2,
-                  y: y2,
-                }}
-              />
-            </>
-          )}
+                <PlaygroundChartPoint
+                  label="R"
+                  bounds={{ x: canvasSize, y: canvasSize }}
+                  pointMoveHandler={({ x, y }) =>
+                    bezierHandlesMoveHandler.right({ x, y, canvasSize })
+                  }
+                  pointControls={{
+                    x: x2,
+                    y: y2,
+                  }}
+                />
+              </>
+            )}
 
-        <canvas ref={canvasRef} width={canvasSize} height={canvasSize}></canvas>
-      </div>
+          <canvas ref={canvasRef} width={canvasSize} height={canvasSize}></canvas>
+        </div>
+      </DndContext>
     </div>
   );
 };
