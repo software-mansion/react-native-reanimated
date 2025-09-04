@@ -965,7 +965,7 @@ LayoutAnimationsProxy::findInShadowTreeByTag(
     }
   }
   return nullptr;
-};
+}
 #endif // ANDROID
 
 } // namespace reanimated

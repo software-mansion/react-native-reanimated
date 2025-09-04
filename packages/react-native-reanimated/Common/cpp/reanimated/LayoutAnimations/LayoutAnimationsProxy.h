@@ -9,15 +9,14 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
 
 namespace reanimated {
 
