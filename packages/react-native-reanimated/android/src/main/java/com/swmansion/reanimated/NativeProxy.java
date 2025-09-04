@@ -290,6 +290,21 @@ public class NativeProxy {
   }
 
   @DoNotStrip
+  public boolean preserveMountedTags(int[] tags) {
+    if (!UiThreadUtil.isOnUiThread()) {
+      return false;
+    }
+
+    for (int i = 0; i < tags.length; i++) {
+      if (mFabricUIManager.resolveView(tags[i]) == null) {
+        tags[i] = -1;
+      }
+    }
+
+    return true;
+  }
+
+  @DoNotStrip
   public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
     PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
     PrimitiveIterator.OfDouble doubleIterator = Arrays.stream(doubleBuffer).iterator();
