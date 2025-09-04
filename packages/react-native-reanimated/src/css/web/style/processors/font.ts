@@ -14,5 +14,6 @@ export const processFontWeight: ValueProcessor<number | string> = (value) => {
   }
 };
 
-export const processFontVariant: ValueProcessor<FontVariant[]> = (value) =>
-  value.join(', ');
+export const processFontVariant: ValueProcessor<
+  ReadonlyArray<FontVariant> | string
+> = (value) => (typeof value === 'string' ? value : value.join(', '));
