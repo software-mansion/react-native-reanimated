@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import styles from './styles.module.css';
 import { useDraggable, useDndMonitor } from '@dnd-kit/core';
@@ -57,11 +56,10 @@ const PlaygroundChartPoint: React.FC<PlaygroundChartPointProps> = ({
       {...listeners}
       {...attributes}
       style={{
-        position: "absolute",
+        position: 'absolute',
         left: pointControls.x,
         top: pointControls.y,
-      }}
-    >
+      }}>
       <button className={styles.handle}>{label}</button>
     </div>
   );

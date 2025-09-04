@@ -76,11 +76,13 @@ const SelectionBox: React.FC<{
       if (event.active.id === draggableIdentifier.toString()) {
         lastDelta.current = { x: 0, y: 0 };
       }
-    }
+    },
   });
 
-  const classList = getClassListByIdentifier(draggableIdentifier, isInteractive);
-
+  const classList = getClassListByIdentifier(
+    draggableIdentifier,
+    isInteractive
+  );
 
   return (
     <div
@@ -88,8 +90,7 @@ const SelectionBox: React.FC<{
       {...listeners}
       {...attributes}
       className={classList}
-      style={{ touchAction: "none" }}
-    >
+      style={{ touchAction: 'none' }}>
       {children}
     </div>
   );

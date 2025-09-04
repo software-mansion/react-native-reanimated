@@ -174,9 +174,13 @@ const PlaygroundChart: React.FC<{
 
   return (
     <div className={styles.graph}>
-      <DndContext
-      >
-        <div style={{ width: canvasSize + 2, height: canvasSize + 2, position: 'relative' }}>
+      <DndContext>
+        <div
+          style={{
+            width: canvasSize + 2,
+            height: canvasSize + 2,
+            position: 'relative',
+          }}>
           {!isMobile &&
             (easingFunctionName === 'bezier' ||
               easingFunctionName === 'bezierFn') && (
@@ -207,7 +211,10 @@ const PlaygroundChart: React.FC<{
               </>
             )}
 
-          <canvas ref={canvasRef} width={canvasSize} height={canvasSize}></canvas>
+          <canvas
+            ref={canvasRef}
+            width={canvasSize}
+            height={canvasSize}></canvas>
         </div>
       </DndContext>
     </div>
