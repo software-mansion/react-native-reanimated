@@ -88,7 +88,7 @@ void ValueInterpolator::updateKeyframesFromStyleChange(
 folly::dynamic ValueInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-    const double fallbackInterpolateThreshold) const override {
+    const double fallbackInterpolateThreshold) const {
   const auto toIndex = getToKeyframeIndex(progressProvider);
   const auto fromIndex = toIndex - 1;
 
@@ -115,12 +115,11 @@ folly::dynamic ValueInterpolator::interpolate(
   }
 
   return interpolateValue(
-             keyframeProgress,
-             fromValue,
-             toValue,
-             {.node = shadowNode,
-              .fallbackInterpolateThreshold = fallbackInterpolateThreshold})
-      .toDynamic();
+      keyframeProgress,
+      fromValue,
+      toValue,
+      {.node = shadowNode,
+       .fallbackInterpolateThreshold = fallbackInterpolateThreshold});
 }
 
 folly::dynamic ValueInterpolator::convertOptionalToDynamic(

@@ -47,7 +47,7 @@ class SimpleValueInterpolator : public ValueInterpolator {
       const CSSValueInterpolationContext &context) const override {
     const auto &from = std::static_pointer_cast<ValueType>(fromValue);
     const auto &to = std::static_pointer_cast<ValueType>(toValue);
-    return from->interpolate(progress, *to).toDynamic();
+    return from->interpolate(progress, *to, context).toDynamic();
   }
 };
 
