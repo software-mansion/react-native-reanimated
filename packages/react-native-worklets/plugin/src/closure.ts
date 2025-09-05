@@ -22,6 +22,7 @@ export function getClosure(
   const closureVariables = new Array<Identifier>();
   const libraryBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
+  let recrawled = false;
 
   funPath.traverse(
     {
@@ -39,7 +40,19 @@ export function getClosure(
           return;
         }
 
-        const binding = idPath.scope.getBinding(name);
+        let binding = idPath.scope.getBinding(name);
+
+        if (!binding && !recrawled) {
+          /**
+           * Some plugins might add new identifiers but not update the scope
+           * when they should. To prevent errors stemming from this we recrawl
+           * the scope once per closure assembly.
+           */
+          recrawled = true;
+          idPath.scope.crawl();
+          binding = idPath.scope.getBinding(name);
+        }
+
         if (!binding) {
           /**
            * The variable is unbound - it's either a mistake or implicit capture
