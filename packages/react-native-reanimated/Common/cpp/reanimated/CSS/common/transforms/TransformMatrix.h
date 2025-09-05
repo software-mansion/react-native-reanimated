@@ -13,31 +13,23 @@ class TransformMatrix {
  public:
   using Shared = std::shared_ptr<const TransformMatrix>;
 
-  explicit TransformMatrix(size_t dimension);
-  explicit TransformMatrix(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      size_t dimension);
-  explicit TransformMatrix(const folly::dynamic &array, size_t dimension);
-
+  TransformMatrix() = default;
   virtual ~TransformMatrix() = default;
 
-  size_t getDimension() const;
-  bool isSingular() const;
-  bool normalize();
-  void transpose();
+  virtual size_t getDimension() const = 0;
+  virtual size_t getSize() const = 0;
+
+  virtual bool isSingular() const = 0;
+  virtual bool normalize() = 0;
+  virtual void transpose() = 0;
   virtual double determinant() const = 0;
 
-  std::string toString() const;
-  folly::dynamic toDynamic() const;
+  virtual std::string toString() const = 0;
+  virtual folly::dynamic toDynamic() const = 0;
 
   virtual double &operator[](size_t index) = 0;
   virtual const double &operator[](size_t index) const = 0;
   virtual bool operator==(const TransformMatrix &other) const = 0;
-
- protected:
-  const size_t dimension_;
-  const size_t size_;
 };
 
 template <typename TDerived, size_t TDimension>
@@ -46,19 +38,36 @@ class TransformMatrixBase : public TransformMatrix {
   static constexpr size_t SIZE = TDimension * TDimension;
   using MatrixArray = std::array<double, SIZE>;
 
-  TransformMatrixBase() : TransformMatrix(TDimension) {}
+  TransformMatrixBase() : TransformMatrix() {
+    // Create an identity matrix
+    for (size_t i = 0; i < TDimension; ++i) {
+      matrix_[i * (TDimension + 1)] = 1;
+    }
+  }
+
   explicit TransformMatrixBase(MatrixArray matrix)
-      : TransformMatrix(TDimension), matrix_(std::move(matrix)) {}
+      : TransformMatrix(), matrix_(std::move(matrix)) {}
+
   explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value)
-      : TransformMatrix(rt, value, TDimension) {}
+      : TransformMatrix() {
+    const auto &array = value.asObject(rt).asArray(rt);
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
+    }
+  }
+
   explicit TransformMatrixBase(const folly::dynamic &array)
-      : TransformMatrix(array, TDimension) {}
+      : TransformMatrix() {
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array[i].asDouble();
+    }
+  }
 
   TransformMatrixBase(const TransformMatrixBase &other)
-      : TransformMatrix(TDimension), matrix_(other.matrix_) {}
+      : TransformMatrix(), matrix_(other.matrix_) {}
 
   TransformMatrixBase(TransformMatrixBase &&other) noexcept
-      : TransformMatrix(TDimension), matrix_(std::move(other.matrix_)) {}
+      : TransformMatrix(), matrix_(std::move(other.matrix_)) {}
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
     if (!value.isObject()) {
@@ -90,6 +99,61 @@ class TransformMatrixBase : public TransformMatrix {
 
   inline const double &operator[](size_t index) const override {
     return matrix_[index];
+  }
+
+  size_t getDimension() const override {
+    return TDimension;
+  }
+
+  size_t getSize() const override {
+    return SIZE;
+  }
+
+  bool isSingular() const override {
+    return determinant() == 0;
+  }
+
+  bool normalize() override {
+    const auto last = matrix_[SIZE - 1];
+    if (last == 0) {
+      return false;
+    }
+    if (last == 1) {
+      return true;
+    }
+
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] /= last;
+    }
+    return true;
+  }
+
+  void transpose() override {
+    for (size_t i = 0; i < TDimension; ++i) {
+      for (size_t j = 0; j < TDimension; ++j) {
+        matrix_[i * TDimension + j] = matrix_[j * TDimension + i];
+      }
+    }
+  }
+
+  std::string toString() const override {
+    std::string result = "[";
+    for (size_t i = 0; i < SIZE; ++i) {
+      result += std::to_string(matrix_[i]);
+      if (i < SIZE - 1) {
+        result += ", ";
+      }
+    }
+    result += "]";
+    return result;
+  }
+
+  folly::dynamic toDynamic() const override {
+    folly::dynamic result = folly::dynamic::array;
+    for (size_t i = 0; i < SIZE; ++i) {
+      result.push_back(matrix_[i]);
+    }
+    return result;
   }
 
   inline TDerived operator*(const TDerived &rhs) const {
