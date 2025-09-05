@@ -130,8 +130,8 @@ class TransformMatrixBase : public TransformMatrix {
 
   void transpose() override {
     for (size_t i = 0; i < TDimension; ++i) {
-      for (size_t j = 0; j < TDimension; ++j) {
-        matrix_[i * TDimension + j] = matrix_[j * TDimension + i];
+      for (size_t j = i + 1; j < TDimension; ++j) {
+        std::swap(matrix_[i * TDimension + j], matrix_[j * TDimension + i]);
       }
     }
   }

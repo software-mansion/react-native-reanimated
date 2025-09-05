@@ -119,7 +119,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolationContext &context) const override;
 
  protected:
-  TransformMatrix::Shared resolveMatrix(
+  MatrixOperation resolveOperation(
       const std::shared_ptr<TransformOperation> &operation,
       bool shouldBe3D,
       const TransformInterpolationContext &context) const;
