@@ -36,12 +36,17 @@ const reanimatedFunctionHooks = new Set([
   'withSpring',
   'withDecay',
   'withRepeat',
-  // scheduling functions
+  // scheduling
   'runOnUI',
   'executeOnUIRuntimeSync',
+  'scheduleOnUI',
+  'runOnUISync',
+  'runOnUIAsync',
+  'runOnRuntime',
+  'scheduleOnRuntime',
 ]);
 
-const reanimatedFunctionArgsToWorkletize = new Map([
+const functionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
@@ -55,6 +60,11 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['withRepeat', [3]],
   ['runOnUI', [0]],
   ['executeOnUIRuntimeSync', [0]],
+  ['scheduleOnUI', [0]],
+  ['runOnUISync', [0]],
+  ['runOnUIAsync', [0]],
+  ['runOnRuntime', [1]],
+  ['scheduleOnRuntime', [1]],
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
@@ -93,7 +103,7 @@ export function processCalleesAutoworkletizableCallbacks(
   if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
     const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
     const acceptObject = reanimatedObjectHooks.has(name);
-    const argIndices = reanimatedFunctionArgsToWorkletize.get(name)!;
+    const argIndices = functionArgsToWorkletize.get(name)!;
     const args = path
       .get('arguments')
       .filter((_, index) => argIndices.includes(index));

@@ -1163,9 +1163,14 @@ var require_autoworkletization = __commonJS({
       "withDecay",
       "withRepeat",
       "runOnUI",
-      "executeOnUIRuntimeSync"
+      "executeOnUIRuntimeSync",
+      "scheduleOnUI",
+      "runOnUISync",
+      "runOnUIAsync",
+      "runOnRuntime",
+      "scheduleOnRuntime"
     ]);
-    var reanimatedFunctionArgsToWorkletize = new Map([
+    var functionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
       ["useAnimatedStyle", [0]],
       ["useAnimatedProps", [0]],
@@ -1179,6 +1184,11 @@ var require_autoworkletization = __commonJS({
       ["withRepeat", [3]],
       ["runOnUI", [0]],
       ["executeOnUIRuntimeSync", [0]],
+      ["scheduleOnUI", [0]],
+      ["runOnUISync", [0]],
+      ["runOnUIAsync", [0]],
+      ["runOnRuntime", [1]],
+      ["scheduleOnRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);
     function processIfAutoworkletizableCallback(path, state) {
@@ -1197,7 +1207,7 @@ var require_autoworkletization = __commonJS({
       if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
         const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
         const acceptObject = reanimatedObjectHooks.has(name);
-        const argIndices = reanimatedFunctionArgsToWorkletize.get(name);
+        const argIndices = functionArgsToWorkletize.get(name);
         const args = path.get("arguments").filter((_, index) => argIndices.includes(index));
         processArgs(args, state, acceptWorkletizableFunction, acceptObject);
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
