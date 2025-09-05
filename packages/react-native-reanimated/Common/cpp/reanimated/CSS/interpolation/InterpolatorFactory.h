@@ -108,6 +108,15 @@ auto transformOp(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename TOperation>
+concept ResolvableOperation = requires(TOperation operation) {
+  {
+    operation.value
+  } -> std::convertible_to<
+      typename std::remove_reference_t<decltype(operation.value)>>;
+  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
+}; // NOLINT(readability/braces)
+
+template <typename TOperation>
 auto transformOp(
     const auto &defaultValue,
     ResolvableValueInterpolatorConfig config)

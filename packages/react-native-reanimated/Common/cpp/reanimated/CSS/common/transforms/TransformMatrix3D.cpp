@@ -28,24 +28,13 @@ std::ostream &operator<<(
 
 #endif // NDEBUG
 
-TransformMatrix3D TransformMatrix3D::Identity() {
-  // clang-format off
-  return TransformMatrix3D({
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  });
-  // clang-format on
-}
-
 // Template specializations for TransformMatrix3D::create
 template <>
 TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
     double v) {
   if (v == 0) {
     // Ignore perspective if it is invalid
-    return TransformMatrix3D::Identity();
+    return TransformMatrix3D();
   }
   // clang-format off
   return TransformMatrix3D({
@@ -197,8 +186,15 @@ TransformMatrix3D TransformMatrix3D::create(double value) {
       getOperationNameFromType(TOperation));
 }
 
-bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
-  return matrix_ == other.matrix_;
+TransformMatrix3D TransformMatrix3D::from2D(const TransformMatrix2D &m) {
+  // clang-format off
+  return TransformMatrix3D({
+    m[0], m[1], m[2], 0,
+    m[3], m[4], m[5], 0,
+    m[6], m[7], m[8], 0, // m[6], m[7], m[8] should always be 0
+    0,    0,    0,    1
+  });
+  // clang-format on
 }
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
@@ -383,7 +379,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
 
 TransformMatrix3D TransformMatrix3D::recompose(
     const TransformMatrix3D::Decomposed &decomposed) {
-  auto result = TransformMatrix3D::Identity();
+  auto result = TransformMatrix3D();
 
   // Start from applying perspective
   for (size_t i = 0; i < 4; ++i) {
@@ -402,7 +398,7 @@ TransformMatrix3D TransformMatrix3D::recompose(
   auto hasSkewXY = decomposed.skew[0] != 0;
 
   if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
-    auto tmp = TransformMatrix3D::Identity();
+    auto tmp = TransformMatrix3D();
     if (hasSkewYZ) { // YZ
       tmp[9] = decomposed.skew[2];
       result = tmp * result;

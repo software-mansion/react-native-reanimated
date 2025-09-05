@@ -5,10 +5,13 @@ namespace reanimated::css {
 TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
     const TransformMatrix2D::Decomposed &other) const {
+  // Interpolate rotation using shortest path (handle angle wrapping)
+  double rotationDiff = fmod(other.rotation - rotation + M_PI, 2 * M_PI) - M_PI;
+
   return {
       .scale = scale.interpolate(progress, other.scale),
       .skew = skew + (other.skew - skew) * progress,
-      .rotation = rotation + (other.rotation - rotation) * progress,
+      .rotation = rotation + rotationDiff * progress,
       .translation = translation.interpolate(progress, other.translation)};
 }
 
@@ -24,16 +27,6 @@ std::ostream &operator<<(
 }
 
 #endif // NDEBUG
-
-TransformMatrix2D TransformMatrix2D::Identity() {
-  // clang-format off
-  return TransformMatrix2D({
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1
-  });
-  // clang-format on
-}
 
 template <>
 TransformMatrix2D TransformMatrix2D::create<TransformOp::Rotate>(double v) {
@@ -134,10 +127,6 @@ TransformMatrix2D TransformMatrix2D::create(double value) {
       getOperationNameFromType(TOperation));
 }
 
-bool TransformMatrix2D::operator==(const TransformMatrix2D &other) const {
-  return matrix_ == other.matrix_;
-}
-
 double TransformMatrix2D::determinant() const {
   return (matrix_[0] * matrix_[4] * matrix_[8]) +
       (matrix_[1] * matrix_[5] * matrix_[6]) +
@@ -200,7 +189,7 @@ std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
 
 TransformMatrix2D TransformMatrix2D::recompose(
     const TransformMatrix2D::Decomposed &decomposed) {
-  auto result = TransformMatrix2D::Identity();
+  auto result = TransformMatrix2D();
 
   // Apply Translation
   result.translate2d(decomposed.translation);
@@ -212,7 +201,7 @@ TransformMatrix2D TransformMatrix2D::recompose(
 
   // Apply XY shear
   if (decomposed.skew != 0) {
-    auto tmp = TransformMatrix2D::Identity();
+    auto tmp = TransformMatrix2D();
     tmp[3] = decomposed.skew;
     result = tmp * result;
   }
@@ -255,5 +244,16 @@ double TransformMatrix2D::computeRotation(std::array<Vector2D, 2> &rows) {
   // rows[0][0]
   return std::atan2(rows[1][0], rows[0][0]);
 }
+
+// Explicit template instantiations for unsupported operations
+// These will use the fallback template function that throws an error
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::Perspective>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateX>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateY>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateZ>(
+    double);
 
 } // namespace reanimated::css
