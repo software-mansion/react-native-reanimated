@@ -23,19 +23,19 @@ folly::dynamic TransformsStyleInterpolator::getResetStyle(
   auto styleValue = getStyleValue(shadowNode);
 
   if (!styleValue.isArray()) {
-    return convertResultToDynamic(defaultStyleValue_);
+    return convertOperationsToDynamic(defaultStyleValue_);
   }
 
   return styleValue;
 }
 
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
-  return convertResultToDynamic(
+  return convertOperationsToDynamic(
       keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
 
 folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
-  return convertResultToDynamic(
+  return convertOperationsToDynamic(
       keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
@@ -88,14 +88,12 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
   }
 
   // Interpolate the current keyframe
-  const auto result = interpolateOperations(
+  return interpolateOperations(
       shadowNode,
       progressProvider->getKeyframeProgress(
           keyframe->fromOffset, keyframe->toOffset),
       keyframe->fromOperations.value(),
       keyframe->toOperations.value());
-
-  return convertResultToDynamic(result);
 }
 
 void TransformsStyleInterpolator::updateKeyframes(
@@ -219,7 +217,7 @@ void TransformsStyleInterpolator::addConvertedOperations(
     const std::shared_ptr<TransformOperation> &targetOperation,
     TransformOperations &sourceResult,
     TransformOperations &targetResult) const {
-  const auto convertedOps = sourceOperation->convertTo(targetOperation->type());
+  const auto convertedOps = sourceOperation->convertTo(targetOperation->type);
 
   targetResult.emplace_back(targetOperation);
   for (size_t k = 0; k < convertedOps.size(); ++k) {
@@ -229,7 +227,7 @@ void TransformsStyleInterpolator::addConvertedOperations(
     // to pair them with operations of the same type with default values)
     if (k > 0) {
       targetResult.emplace_back(
-          getDefaultOperationOfType(convertedOps[k]->type()));
+          getDefaultOperationOfType(convertedOps[k]->type));
     }
   }
 }
@@ -245,19 +243,19 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   // Build index maps and check for matrix operation
   std::unordered_map<TransformOp, size_t> lastIndexInFrom, lastIndexInTo;
   for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
-    if (fromOperations[idx]->type() == TransformOp::Matrix) {
+    if (fromOperations[idx]->type == TransformOp::Matrix) {
       shouldInterpolateMatrices = true;
       break;
     }
-    lastIndexInFrom[fromOperations[idx]->type()] = idx;
+    lastIndexInFrom[fromOperations[idx]->type] = idx;
   }
   for (size_t idx = 0; idx < toOperations.size() && !shouldInterpolateMatrices;
        ++idx) {
-    if (toOperations[idx]->type() == TransformOp::Matrix) {
+    if (toOperations[idx]->type == TransformOp::Matrix) {
       shouldInterpolateMatrices = true;
       break;
     }
-    lastIndexInTo[toOperations[idx]->type()] = idx;
+    lastIndexInTo[toOperations[idx]->type] = idx;
   }
 
   while (!shouldInterpolateMatrices && i < fromOperations.size() &&
@@ -266,28 +264,28 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
     const auto &toOperation = toOperations[j];
 
     // Case 1: Types match directly
-    if (fromOperation->type() == toOperation->type()) {
+    if (fromOperation->type == toOperation->type) {
       fromOperationsResult.emplace_back(fromOperation);
       toOperationsResult.emplace_back(toOperation);
       i++;
       j++;
-    } else if (fromOperation->canConvertTo(toOperation->type())) {
+    } else if (fromOperation->canConvertTo(toOperation->type)) {
       // Case 2: Operations can be converted to each other's type
       addConvertedOperations(
           fromOperation, toOperation, fromOperationsResult, toOperationsResult);
       i++;
       j++;
-    } else if (toOperation->canConvertTo(fromOperation->type())) {
+    } else if (toOperation->canConvertTo(fromOperation->type)) {
       addConvertedOperations(
           toOperation, fromOperation, toOperationsResult, fromOperationsResult);
       i++;
       j++;
     } else {
       // Case 3: Use default values if no conversion possible
-      bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type()) &&
-          lastIndexInFrom[toOperation->type()] > i;
-      bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type()) &&
-          lastIndexInTo[fromOperation->type()] > j;
+      bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) &&
+          lastIndexInFrom[toOperation->type] > i;
+      bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) &&
+          lastIndexInTo[fromOperation->type] > j;
 
       if (toExistsLaterInFrom == fromExistsLaterInTo) {
         // If neither exists later, or both exist later (were reordered), we
@@ -300,13 +298,13 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
         // interpolate it to the default value
         fromOperationsResult.emplace_back(fromOperation);
         toOperationsResult.emplace_back(
-            getDefaultOperationOfType(fromOperation->type()));
+            getDefaultOperationOfType(fromOperation->type));
         i++;
       } else {
         // If toOperation does not exist later in fromOperations, we can
         // interpolate it from the default value
         fromOperationsResult.emplace_back(
-            getDefaultOperationOfType(toOperation->type()));
+            getDefaultOperationOfType(toOperation->type));
         toOperationsResult.emplace_back(toOperation);
         j++;
       }
@@ -326,11 +324,11 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   for (; i < fromOperations.size(); ++i) {
     fromOperationsResult.emplace_back(fromOperations[i]);
     toOperationsResult.emplace_back(
-        getDefaultOperationOfType(fromOperations[i]->type()));
+        getDefaultOperationOfType(fromOperations[i]->type));
   }
   for (; j < toOperations.size(); ++j) {
     fromOperationsResult.emplace_back(
-        getDefaultOperationOfType(toOperations[j]->type()));
+        getDefaultOperationOfType(toOperations[j]->type));
     toOperationsResult.emplace_back(toOperations[j]);
   }
 
@@ -369,30 +367,31 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
   return interpolators_->at(type)->getDefaultOperation();
 }
 
-TransformOperations TransformsStyleInterpolator::interpolateOperations(
+folly::dynamic TransformsStyleInterpolator::interpolateOperations(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const double keyframeProgress,
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations) const {
-  TransformOperations result;
+  auto result = folly::dynamic::array();
   result.reserve(fromOperations.size());
-  const auto transformUpdateContext =
-      TransformInterpolationContext{shadowNode, viewStylesRepository_};
+
+  const auto transformUpdateContext = TransformInterpolationContext{
+      shadowNode, viewStylesRepository_, interpolators_};
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];
     const auto &toOperation = toOperations[i];
 
     // fromOperation and toOperation have the same type
-    const auto &interpolator = interpolators_->at(fromOperation->type());
-    result.emplace_back(interpolator->interpolate(
+    const auto &interpolator = interpolators_->at(fromOperation->type);
+    result.push_back(interpolator->interpolate(
         keyframeProgress, fromOperation, toOperation, transformUpdateContext));
   }
 
   return result;
 }
 
-folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
+folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
     const TransformOperations &operations) {
   auto result = folly::dynamic::array();
 

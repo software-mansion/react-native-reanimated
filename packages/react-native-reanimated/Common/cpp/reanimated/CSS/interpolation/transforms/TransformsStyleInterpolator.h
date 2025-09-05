@@ -85,13 +85,13 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  TransformOperations interpolateOperations(
+  folly::dynamic interpolateOperations(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static folly::dynamic convertResultToDynamic(
+  static folly::dynamic convertOperationsToDynamic(
       const TransformOperations &operations);
   TransformInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;

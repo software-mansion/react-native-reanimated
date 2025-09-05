@@ -13,13 +13,27 @@
 
 namespace reanimated::css {
 
+// MatrixOperationValue type for matrix operations
 using MatrixOperationValue =
     std::variant<TransformMatrix::Shared, TransformOperations>;
 
-struct MatrixOperation final
-    : public TransformOperationBase<TransformOp::Matrix, MatrixOperationValue> {
-  using TransformOperationBase<TransformOp::Matrix, MatrixOperationValue>::
-      TransformOperationBase;
+/**
+ * Multiplies all the operations in the vector to a single 3D matrix
+ * @param operations - the vector of operations that can be represented in 3D
+ */
+TransformMatrix3D matrixFromOperations3D(TransformOperations &operations);
+
+/**
+ * Multiplies all the operations in the vector to a single 2D matrix
+ * @param operations - the vector of operations that can be represented in 2D
+ */
+TransformMatrix2D matrixFromOperations2D(TransformOperations &operations);
+
+struct MatrixOperation final : public TransformOperation {
+  const MatrixOperationValue value;
+
+  explicit MatrixOperation(MatrixOperationValue value)
+      : TransformOperation(TransformOp::Matrix), value(std::move(value)) {}
 
   explicit MatrixOperation(jsi::Runtime &rt, const jsi::Value &value);
   explicit MatrixOperation(const folly::dynamic &value);
@@ -29,15 +43,17 @@ struct MatrixOperation final
 
   bool operator==(const TransformOperation &other) const override;
 
+  TransformMatrix::Shared toMatrix(bool force3D) const override;
+
   folly::dynamic valueToDynamic() const override;
   bool is3D() const noexcept override {
     return is3D_;
   }
-  TransformMatrix::Shared toMatrix(bool force3D) const override;
-  TransformMatrix::Shared matrixFromVariant(bool force3D) const;
 
  private:
   bool is3D_;
+
+  TransformMatrix::Shared getStoredMatrix(bool force3D) const;
 };
 
 } // namespace reanimated::css

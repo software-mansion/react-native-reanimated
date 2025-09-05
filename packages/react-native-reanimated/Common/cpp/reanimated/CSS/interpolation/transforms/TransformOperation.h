@@ -23,11 +23,15 @@ using namespace react;
 
 // Base struct for TransformOperation
 struct TransformOperation {
+  const TransformOp type;
+
+  explicit TransformOperation(TransformOp value);
+
   virtual bool operator==(const TransformOperation &other) const = 0;
 
   std::string getOperationName() const;
-  virtual TransformOp type() const = 0;
   virtual bool isRelative() const;
+  // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(
@@ -48,66 +52,57 @@ struct TransformOperation {
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
-// Base class with common functionality
-template <typename TValue>
-struct TransformOperationBaseCommon : public TransformOperation {
+// Base implementation for transform operations (except MatrixOperation)
+template <TransformOp TOperation, typename TValue>
+struct TransformOperationBase : public TransformOperation {
   const TValue value;
 
-  explicit TransformOperationBaseCommon(const TValue value)
-      : value(std::move(value)) {}
-  virtual ~TransformOperationBaseCommon() = default;
+  explicit TransformOperationBase(TValue value)
+      : TransformOperation(TOperation), value(std::move(value)) {}
 
   bool operator==(const TransformOperation &other) const override {
-    if (type() != other.type()) {
+    if (type != other.type) {
       return false;
     }
     const auto &otherOperation =
-        static_cast<const TransformOperationBaseCommon<TValue> &>(other);
+        static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
     return value == otherOperation.value;
-  }
-};
-
-// Template overload to inherit from in final operation structs
-template <TransformOp TOperation, typename TValue>
-struct TransformOperationBase : public TransformOperationBaseCommon<TValue> {
-  explicit TransformOperationBase(const TValue value)
-      : TransformOperationBaseCommon<TValue>(std::move(value)) {}
-
-  TransformOp type() const override {
-    return TOperation;
   }
 
   TransformMatrix::Shared toMatrix(bool force3D) const override {
-    if (force3D) {
-      return std::make_shared<const TransformMatrix3D>(
-          TransformMatrix3D::create<TOperation>(this->value.value));
+    if constexpr (Resolvable<TValue>) {
+      // Handle resolvable operations
+      throw std::runtime_error(
+          "[Reanimated] Cannot convert resolvable operation to matrix: " +
+          getOperationName());
+    } else {
+      // Handle regular operations
+      const auto shouldBe3D = this->is3D() || force3D;
+
+      if (cachedMatrix_) {
+        const auto resultDimension =
+            shouldBe3D ? MATRIX_3D_DIMENSION : MATRIX_2D_DIMENSION;
+        if (cachedMatrix_->getDimension() == resultDimension) {
+          return cachedMatrix_;
+        }
+      }
+
+      TransformMatrix::Shared result;
+      if (shouldBe3D) {
+        result = std::make_shared<const TransformMatrix3D>(
+            TransformMatrix3D::create<TOperation>(this->value.value));
+      } else {
+        result = std::make_shared<const TransformMatrix2D>(
+            TransformMatrix2D::create<TOperation>(this->value.value));
+      }
+
+      cachedMatrix_ = result;
+      return result;
     }
-    return std::make_shared<const TransformMatrix2D>(
-        TransformMatrix2D::create<TOperation>(this->value.value));
-  }
-};
-
-// Specialization for MatrixOperation to avoid the template implementation
-template <typename TValue>
-struct TransformOperationBase<TransformOp::Matrix, TValue>
-    : public TransformOperationBaseCommon<TValue> {
-  explicit TransformOperationBase(const TValue value)
-      : TransformOperationBaseCommon<TValue>(std::move(value)) {}
-
-  TransformOp type() const override {
-    return TransformOp::Matrix;
   }
 
-  TransformMatrix::Shared toMatrix(bool force3D) const override = 0;
+ protected:
+  mutable TransformMatrix::Shared cachedMatrix_;
 };
-
-template <typename TOperation>
-concept ResolvableOperation = requires(TOperation operation) {
-  {
-    operation.value
-  } -> std::convertible_to<
-      typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
-}; // NOLINT(readability/braces)
 
 } // namespace reanimated::css

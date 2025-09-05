@@ -89,16 +89,19 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
+  static TransformMatrix2D &getIdentityMatrix() {
+    static TransformMatrix2D identityMatrix = TransformMatrix2D();
+    return identityMatrix;
+  }
+
   // Helper private type just for a default value
   struct EmptyTransformsValue : public CSSValue {
-    static TransformMatrix3D identityMatrix;
-
     folly::dynamic toDynamic() const override {
-      return identityMatrix.toDynamic();
+      return getIdentityMatrix().toDynamic();
     }
 
     std::string toString() const override {
-      return identityMatrix.toString();
+      return getIdentityMatrix().toString();
     }
   };
 
@@ -121,11 +124,12 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
         std::string,
         std::shared_ptr<TransformInterpolator>> &interpolators) {
   TransformOperationInterpolators result;
+  result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result[getTransformOperationType(property)] = interpolator;
+    result.emplace(getTransformOperationType(property), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformOperationInterpolators>(result));
+      std::make_shared<TransformOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

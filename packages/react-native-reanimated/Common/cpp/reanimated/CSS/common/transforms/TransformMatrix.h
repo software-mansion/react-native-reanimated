@@ -22,9 +22,6 @@ class TransformMatrix {
 
   virtual ~TransformMatrix() = default;
 
-  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value);
-  static bool canConstruct(const folly::dynamic &array);
-
   size_t getDimension() const;
   bool isSingular() const;
   bool normalize();
@@ -49,13 +46,34 @@ class TransformMatrixBase : public TransformMatrix {
   static constexpr size_t SIZE = TDimension * TDimension;
   using MatrixArray = std::array<double, SIZE>;
 
-  explicit TransformMatrixBase() : TransformMatrix(TDimension) {};
+  TransformMatrixBase() : TransformMatrix(TDimension) {}
   explicit TransformMatrixBase(MatrixArray matrix)
-      : matrix_(std::move(matrix)) {}
+      : TransformMatrix(TDimension), matrix_(std::move(matrix)) {}
   explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value)
       : TransformMatrix(rt, value, TDimension) {}
   explicit TransformMatrixBase(const folly::dynamic &array)
       : TransformMatrix(array, TDimension) {}
+
+  TransformMatrixBase(const TransformMatrixBase &other)
+      : TransformMatrix(TDimension), matrix_(other.matrix_) {}
+
+  TransformMatrixBase(TransformMatrixBase &&other) noexcept
+      : TransformMatrix(TDimension), matrix_(std::move(other.matrix_)) {}
+
+  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
+    if (!value.isObject()) {
+      return false;
+    }
+    const auto &obj = value.asObject(rt);
+    if (!obj.isArray(rt)) {
+      return false;
+    }
+    return obj.asArray(rt).size(rt) == SIZE;
+  }
+
+  static bool canConstruct(const folly::dynamic &array) {
+    return array.isArray() && array.size() == SIZE;
+  }
 
   inline bool operator==(const TDerived &other) const {
     return matrix_ == other.matrix_;
@@ -83,19 +101,37 @@ class TransformMatrixBase : public TransformMatrix {
     return static_cast<TDerived &>(*this);
   }
 
+  TransformMatrixBase &operator=(const TransformMatrixBase &other) {
+    if (this != &other) {
+      // Note: dimension_ is const, so we can't reassign it
+      // But since all instances have the same dimension, this is fine
+      matrix_ = other.matrix_;
+    }
+    return *this;
+  }
+
+  TransformMatrixBase &operator=(TransformMatrixBase &&other) noexcept {
+    if (this != &other) {
+      matrix_ = std::move(other.matrix_);
+    }
+    return *this;
+  }
+
  protected:
   std::array<double, SIZE> matrix_;
 
   MatrixArray multiply(const TDerived &rhs) const {
-    std::array<double, SIZE> result{};
+    MatrixArray result{};
+
     for (size_t i = 0; i < TDimension; ++i) {
-      for (size_t j = 0; j < TDimension; ++j) {
-        for (size_t k = 0; k < TDimension; ++k) {
-          result[i * TDimension + j] +=
-              matrix_[i * TDimension + k] * rhs[k * TDimension + j];
+      for (size_t k = 0; k < TDimension; ++k) {
+        double temp = matrix_[i * TDimension + k];
+        for (size_t j = 0; j < TDimension; ++j) {
+          result[i * TDimension + j] += temp * rhs[k * TDimension + j];
         }
       }
     }
+
     return result;
   }
 };

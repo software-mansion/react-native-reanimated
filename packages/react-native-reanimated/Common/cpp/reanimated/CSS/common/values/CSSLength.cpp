@@ -65,10 +65,8 @@ folly::dynamic CSSLength::toDynamic() const {
 }
 
 std::string CSSLength::toString() const {
-  if (isRelative) {
-    return std::to_string(value * 100) + "%";
-  }
-  return std::to_string(value);
+  return isRelative ? (std::to_string(value * 100) + "%")
+                    : std::to_string(value);
 }
 
 CSSLength CSSLength::interpolate(

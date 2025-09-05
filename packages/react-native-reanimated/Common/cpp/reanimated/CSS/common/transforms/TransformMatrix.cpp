@@ -28,21 +28,6 @@ TransformMatrix::TransformMatrix(const folly::dynamic &array, size_t dimension)
   }
 }
 
-bool TransformMatrix::canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
-  if (!value.isObject()) {
-    return false;
-  }
-  const auto &obj = value.asObject(rt);
-  if (!obj.isArray(rt)) {
-    return false;
-  }
-  return obj.asArray(rt).size(rt) == size_;
-}
-
-bool TransformMatrix::canConstruct(const folly::dynamic &array) {
-  return array.isArray() && array.size() == size_;
-}
-
 size_t TransformMatrix::getDimension() const {
   return dimension_;
 }

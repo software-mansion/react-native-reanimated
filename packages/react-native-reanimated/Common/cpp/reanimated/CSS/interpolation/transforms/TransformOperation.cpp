@@ -9,6 +9,18 @@
 
 namespace reanimated::css {
 
+namespace {
+std::string createConversionErrorMessage(
+    const TransformOp fromType,
+    const TransformOp toType) {
+  return "[Reanimated] Cannot convert transform operation of type: " +
+      getOperationNameFromType(fromType) +
+      " to type: " + getOperationNameFromType(toType);
+}
+} // namespace
+
+TransformOperation::TransformOperation(TransformOp value) : type(value) {}
+
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
 }
@@ -16,21 +28,17 @@ bool TransformOperation::canConvertTo(const TransformOp targetType) const {
 void TransformOperation::assertCanConvertTo(
     const TransformOp targetType) const {
   if (!canConvertTo(targetType)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert transform operation to type: " +
-        getOperationNameFromType(targetType));
+    throw std::invalid_argument(createConversionErrorMessage(type, targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(
     const TransformOp targetType) const {
-  throw std::invalid_argument(
-      "[Reanimated] Cannot convert transform operation to type: " +
-      getOperationNameFromType(targetType));
+  throw std::invalid_argument(createConversionErrorMessage(type, targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
-  return getOperationNameFromType(type());
+  return getOperationNameFromType(type);
 }
 
 bool TransformOperation::isRelative() const {

@@ -242,4 +242,15 @@ double TransformMatrix2D::computeRotation(std::array<Vector2D, 2> &rows) {
   return std::atan2(rows[1][0], rows[0][0]);
 }
 
+// Explicit template instantiations for unsupported operations
+// These will use the fallback template function that throws an error
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::Perspective>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateX>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateY>(
+    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateZ>(
+    double);
+
 } // namespace reanimated::css

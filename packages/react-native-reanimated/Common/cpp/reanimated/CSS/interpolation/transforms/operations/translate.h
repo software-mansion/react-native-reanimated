@@ -25,30 +25,18 @@ struct TranslateOperationBase
   }
 
   TransformMatrix::Shared toMatrix(bool force3D) const override {
-    if (this->value.isRelative) {
+    if (isRelative()) {
       throw std::invalid_argument(
-          "[Reanimated] Cannot convert relative translate to the matrix.");
-    }
-    return TransformOperationBase<TOperation, CSSLength>::toMatrix(force3D);
-  }
-
-  TransformMatrix::Shared toMatrix(
-      bool force3D,
-      const ResolvableValueInterpolationContext &context) const override {
-    const auto resolvedValue = this->value.resolve(context);
-
-    if (!resolvedValue.has_value()) {
-      throw std::invalid_argument(
-          "[Reanimated] Cannot resolve relative translate value: " +
+          "[Reanimated] Cannot convert unresolved relative translate value to matrix: " +
           this->value.toString());
     }
 
     if (force3D) {
       return std::make_shared<TransformMatrix3D>(
-          TransformMatrix3D::create<TOperation>(resolvedValue.value()));
+          TransformMatrix3D::create<TOperation>(this->value.value));
     }
     return std::make_shared<TransformMatrix2D>(
-        TransformMatrix2D::create<TOperation>(resolvedValue.value()));
+        TransformMatrix2D::create<TOperation>(this->value.value));
   }
 };
 
