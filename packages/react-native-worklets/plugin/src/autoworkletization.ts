@@ -36,7 +36,7 @@ const reanimatedFunctionHooks = new Set([
   'withSpring',
   'withDecay',
   'withRepeat',
-  // scheduling
+  // scheduling functions
   'runOnUI',
   'executeOnUIRuntimeSync',
   'scheduleOnUI',
@@ -46,7 +46,7 @@ const reanimatedFunctionHooks = new Set([
   'scheduleOnRuntime',
 ]);
 
-const functionArgsToWorkletize = new Map([
+const reanimatedFunctionArgsToWorkletize = new Map([
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
@@ -103,7 +103,7 @@ export function processCalleesAutoworkletizableCallbacks(
   if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
     const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
     const acceptObject = reanimatedObjectHooks.has(name);
-    const argIndices = functionArgsToWorkletize.get(name)!;
+    const argIndices = reanimatedFunctionArgsToWorkletize.get(name)!;
     const args = path
       .get('arguments')
       .filter((_, index) => argIndices.includes(index));

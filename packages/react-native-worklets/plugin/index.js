@@ -1170,7 +1170,7 @@ var require_autoworkletization = __commonJS({
       "runOnRuntime",
       "scheduleOnRuntime"
     ]);
-    var functionArgsToWorkletize = new Map([
+    var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
       ["useAnimatedStyle", [0]],
       ["useAnimatedProps", [0]],
@@ -1207,7 +1207,7 @@ var require_autoworkletization = __commonJS({
       if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
         const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
         const acceptObject = reanimatedObjectHooks.has(name);
-        const argIndices = functionArgsToWorkletize.get(name);
+        const argIndices = reanimatedFunctionArgsToWorkletize.get(name);
         const args = path.get("arguments").filter((_, index) => argIndices.includes(index));
         processArgs(args, state, acceptWorkletizableFunction, acceptObject);
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
