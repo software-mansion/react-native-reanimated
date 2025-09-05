@@ -46,7 +46,7 @@ struct MatrixOperation final : public TransformOperation {
   TransformMatrix::Shared toMatrix(bool force3D) const override;
 
   folly::dynamic valueToDynamic() const override;
-  bool is3D() const noexcept override {
+  bool is3D() const override {
     return is3D_;
   }
 

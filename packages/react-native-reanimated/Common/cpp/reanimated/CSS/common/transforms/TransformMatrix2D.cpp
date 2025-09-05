@@ -5,10 +5,13 @@ namespace reanimated::css {
 TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
     const TransformMatrix2D::Decomposed &other) const {
+  // Interpolate rotation using shortest path (handle angle wrapping)
+  double rotationDiff = fmod(other.rotation - rotation + M_PI, 2 * M_PI) - M_PI;
+
   return {
       .scale = scale.interpolate(progress, other.scale),
       .skew = skew + (other.skew - skew) * progress,
-      .rotation = rotation + (other.rotation - rotation) * progress,
+      .rotation = rotation + rotationDiff * progress,
       .translation = translation.interpolate(progress, other.translation)};
 }
 

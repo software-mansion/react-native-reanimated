@@ -31,7 +31,7 @@ std::pair<TransformOperations, bool> flattenAndReverseOperations(
   // Can grow beyond this size but it's still better to reserve at least the
   // minimum space we know that we need
   result.reserve(operations.size());
-  bool is3D = false;
+  bool is3D = true;
 
   while (!unprocessedStack.empty()) {
     const auto operation = unprocessedStack.back();
