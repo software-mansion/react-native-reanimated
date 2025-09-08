@@ -41,7 +41,7 @@ std::string TransformOperation::getOperationName() const {
   return getOperationNameFromType(type);
 }
 
-bool TransformOperation::isRelative() const {
+bool TransformOperation::shouldResolve() const {
   return false;
 }
 

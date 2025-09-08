@@ -33,73 +33,57 @@ folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
     const std::shared_ptr<TransformOperation> &from,
     const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
-  const auto shouldBe3D = from->is3D() || to->is3D();
-  const auto fromOp = resolveOperation(from, shouldBe3D, context);
-  const auto toOp = resolveOperation(to, shouldBe3D, context);
-  const auto &fromMatrix = fromOp.toMatrix(shouldBe3D);
-  const auto &toMatrix = toOp.toMatrix(shouldBe3D);
+  const auto fromMatrix = std::static_pointer_cast<const TransformMatrix3D>(
+      matrixFromOperation(from, true, context));
+  const auto toMatrix = std::static_pointer_cast<const TransformMatrix3D>(
+      matrixFromOperation(to, true, context));
+  const auto decomposedFrom = fromMatrix->decompose();
+  const auto decomposedTo = toMatrix->decompose();
 
-  if (shouldBe3D) {
-    const auto &from3D =
-        std::static_pointer_cast<const TransformMatrix3D>(fromMatrix);
-    const auto &to3D =
-        std::static_pointer_cast<const TransformMatrix3D>(toMatrix);
-
-    const auto decomposedFrom = from3D->decompose();
-    const auto decomposedTo = to3D->decompose();
-
-    if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-      return progress < 0.5 ? fromOp.toDynamic() : toOp.toDynamic();
-    }
-
-    const auto recomposed = TransformMatrix3D::recompose(
-        decomposedFrom->interpolate(progress, decomposedTo.value()));
-    return MatrixOperation(recomposed).toDynamic();
-  } else {
-    const auto &from2D =
-        std::static_pointer_cast<const TransformMatrix2D>(fromMatrix);
-    const auto &to2D =
-        std::static_pointer_cast<const TransformMatrix2D>(toMatrix);
-
-    const auto decomposedFrom = from2D->decompose();
-    const auto decomposedTo = to2D->decompose();
-
-    if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-      return progress < 0.5 ? fromOp.toDynamic() : toOp.toDynamic();
-    }
-
-    const auto recomposed = TransformMatrix2D::recompose(
-        decomposedFrom->interpolate(progress, decomposedTo.value()));
-    return MatrixOperation(recomposed).toDynamic();
+  if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
+    return folly::dynamic::object(
+        from->getOperationName(),
+        (progress < 0.5 ? fromMatrix : toMatrix)->toDynamic());
   }
+
+  return MatrixOperation(
+             TransformMatrix3D::recompose(
+                 decomposedFrom->interpolate(progress, decomposedTo.value())))
+      .toDynamic();
 }
 
-MatrixOperation
-TransformOperationInterpolator<MatrixOperation>::resolveOperation(
+TransformMatrix::Shared
+TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const std::shared_ptr<TransformOperation> &operation,
     const bool shouldBe3D,
     const TransformInterpolationContext &context) const {
   const auto &matrixOp = std::static_pointer_cast<MatrixOperation>(operation);
 
   if (std::holds_alternative<TransformMatrix::Shared>(matrixOp->value)) {
-    return *matrixOp;
+    return std::get<TransformMatrix::Shared>(matrixOp->value);
   }
 
   const auto &operations = std::get<TransformOperations>(matrixOp->value);
 
-  TransformOperations toMultiply;
-  toMultiply.reserve(operations.size());
+  // Map over operations and resolve unresolved ones
+  TransformOperations resolvedOperations;
+  resolvedOperations.reserve(operations.size());
 
-  for (const auto &op : operations) {
-    const auto &interpolator = context.interpolators->at(op->type);
-    toMultiply.emplace_back(interpolator->resolveOperation(op, context));
-  }
+  std::transform(
+      operations.begin(),
+      operations.end(),
+      std::back_inserter(resolvedOperations),
+      [&](const auto &op) -> std::shared_ptr<TransformOperation> {
+        if (op->shouldResolve()) {
+          const auto &interpolator = context.interpolators->at(op->type);
+          return interpolator->resolveOperation(op, context);
+        } else {
+          return op;
+        }
+      });
 
-  if (shouldBe3D) {
-    return MatrixOperation(matrixFromOperations3D(toMultiply));
-  }
-
-  return MatrixOperation(matrixFromOperations2D(toMultiply));
+  return std::make_shared<TransformMatrix3D>(
+      matrixFromOperations3D(resolvedOperations));
 }
 
 } // namespace reanimated::css

@@ -6,6 +6,8 @@
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -119,7 +121,7 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolationContext &context) const override;
 
  protected:
-  MatrixOperation resolveOperation(
+  TransformMatrix::Shared matrixFromOperation(
       const std::shared_ptr<TransformOperation> &operation,
       bool shouldBe3D,
       const TransformInterpolationContext &context) const;

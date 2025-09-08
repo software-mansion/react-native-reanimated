@@ -16,7 +16,7 @@ struct TranslateOperationBase
   explicit TranslateOperationBase(const std::string &value)
       : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
-  bool isRelative() const override {
+  bool shouldResolve() const override {
     return this->value.isRelative;
   }
 
@@ -25,7 +25,7 @@ struct TranslateOperationBase
   }
 
   TransformMatrix::Shared toMatrix(bool force3D) const override {
-    if (isRelative()) {
+    if (shouldResolve()) {
       throw std::invalid_argument(
           "[Reanimated] Cannot convert unresolved relative translate value to matrix: " +
           this->value.toString());

@@ -30,7 +30,7 @@ struct TransformOperation {
   virtual bool operator==(const TransformOperation &other) const = 0;
 
   std::string getOperationName() const;
-  virtual bool isRelative() const;
+  virtual bool shouldResolve() const;
   // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 

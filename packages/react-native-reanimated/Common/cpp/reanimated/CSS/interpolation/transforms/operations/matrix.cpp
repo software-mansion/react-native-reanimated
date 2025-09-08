@@ -7,46 +7,43 @@ namespace reanimated::css {
 
 TransformMatrix3D matrixFromOperations3D(TransformOperations &operations) {
   TransformMatrix3D result;
-  for (const auto &operation : operations) {
+  for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
     result *=
-        static_cast<const TransformMatrix3D &>(*operation->toMatrix(true));
+        static_cast<const TransformMatrix3D &>(*operations[i]->toMatrix(true));
   }
   return result;
 }
 
 TransformMatrix2D matrixFromOperations2D(TransformOperations &operations) {
   TransformMatrix2D result;
-  for (const auto &operation : operations) {
+  for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
     result *=
-        static_cast<const TransformMatrix2D &>(*operation->toMatrix(false));
+        static_cast<const TransformMatrix2D &>(*operations[i]->toMatrix(false));
   }
   return result;
 }
 
 std::pair<TransformOperations, bool> flattenAndReverseOperations(
     const TransformOperations &operations) {
-  std::deque<std::shared_ptr<TransformOperation>> unprocessedStack(
+  std::deque<std::shared_ptr<TransformOperation>> unprocessedQueue(
       operations.begin(), operations.end());
   TransformOperations result;
-  // Can grow beyond this size but it's still better to reserve at least the
-  // minimum space we know that we need
-  result.reserve(operations.size());
   bool is3D = true;
 
-  while (!unprocessedStack.empty()) {
-    const auto operation = unprocessedStack.back();
-    unprocessedStack.pop_back();
+  while (!unprocessedQueue.empty()) {
+    const auto operation = unprocessedQueue.front();
+    unprocessedQueue.pop_front();
 
     if (operation->type == TransformOp::Matrix) {
       const auto matrixOperation =
           std::static_pointer_cast<MatrixOperation>(operation);
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
         // If the current operation is a matrix created from other operations,
-        // add all of these operations to the stack
+        // add all of these operations at the beginning of the queue
         const auto &nestedOps =
             std::get<TransformOperations>(matrixOperation->value);
-        unprocessedStack.insert(
-            unprocessedStack.end(), nestedOps.begin(), nestedOps.end());
+        unprocessedQueue.insert(
+            unprocessedQueue.begin(), nestedOps.begin(), nestedOps.end());
         continue;
       }
     }
@@ -89,7 +86,7 @@ TransformOperations simplifyOperations(const TransformOperations &operations) {
   };
 
   for (const auto &operation : reversedOperations) {
-    if (operation->isRelative()) {
+    if (operation->shouldResolve()) {
       maybeAddMatrixOperation();
       result.emplace_back(operation);
     } else {

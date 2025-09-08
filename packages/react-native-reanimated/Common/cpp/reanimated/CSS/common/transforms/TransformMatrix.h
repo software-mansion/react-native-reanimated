@@ -38,7 +38,7 @@ class TransformMatrixBase : public TransformMatrix {
   static constexpr size_t SIZE = TDimension * TDimension;
   using MatrixArray = std::array<double, SIZE>;
 
-  TransformMatrixBase() : TransformMatrix() {
+  TransformMatrixBase() : TransformMatrix(), matrix_{} {
     // Create an identity matrix
     for (size_t i = 0; i < TDimension; ++i) {
       matrix_[i * (TDimension + 1)] = 1;
