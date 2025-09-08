@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedProps,
   useAnimatedScrollHandler,
 } from 'react-native-reanimated';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -28,6 +29,7 @@ const Content = () => {
 
 export default function ScrollExample() {
   const offsetY = useSharedValue(0);
+  const textColor = useThemedTextStyle();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -53,7 +55,7 @@ export default function ScrollExample() {
       <AnimatedTextInput
         animatedProps={offsetAnimatedProps}
         editable={false}
-        style={styles.header}
+        style={[styles.header, textColor]}
       />
       <Animated.ScrollView onScroll={scrollHandler}>
         <Content />
@@ -68,12 +70,10 @@ const styles = StyleSheet.create({
     height: 350,
   },
   header: {
-    backgroundColor: '#f8f9ff',
     paddingVertical: 16,
     paddingHorizontal: 16,
     textAlign: 'center',
     fontFamily: 'Aeonik',
-    color: '#001a72',
     marginTop: '-1px',
   },
   section: {

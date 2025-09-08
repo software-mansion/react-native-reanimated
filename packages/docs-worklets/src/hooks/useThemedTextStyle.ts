@@ -1,9 +1,9 @@
-import { useColorScheme } from '@mui/material';
+import { useColorMode } from '@docusaurus/theme-common';
 import { StyleSheet, TextStyle } from 'react-native';
 
 const useThemedTextStyle = (): TextStyle => {
-  const { colorScheme } = useColorScheme();
-  return colorScheme === 'light' ? styles.darkText : styles.lightText;
+  const { colorMode } = useColorMode();
+  return colorMode === 'light' ? styles.darkText : styles.lightText;
 };
 
 export default useThemedTextStyle;
