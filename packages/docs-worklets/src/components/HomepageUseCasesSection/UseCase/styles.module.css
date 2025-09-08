@@ -46,7 +46,7 @@
     }
 
     .video {
-      border-radius: 48px;
+      border-radius: 36px;
       position: absolute;
       height: 90%;
       object-fit: cover;
