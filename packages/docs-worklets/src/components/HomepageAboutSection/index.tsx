@@ -9,7 +9,12 @@ export default function HomepageAboutSection(): JSX.Element {
         run multiple processes concurrently, without any delays, and using pure
         JavaScript.
       </h3>
-      {/* <div className={styles.videoPlaceholder} /> */}
+      <div className={styles.videoContainer}>
+        <iframe
+          allowFullScreen
+          src="https://drive.google.com/file/d/1Js57i7_mnN41mqbIRU3NX3DIHGtcUMEU/preview"
+        />
+      </div>
     </div>
   );
 }
