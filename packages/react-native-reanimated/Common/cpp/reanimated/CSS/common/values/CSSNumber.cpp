@@ -1,4 +1,3 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 namespace reanimated::css {
@@ -13,24 +12,12 @@ template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
-  if (jsiValue.isNumber()) {
-    value = static_cast<TValue>(jsiValue.asNumber());
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSNumberBase: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
+  value = static_cast<TValue>(jsiValue.asNumber());
 }
 
 template <typename TDerived, typename TValue>
 CSSNumberBase<TDerived, TValue>::CSSNumberBase(const folly::dynamic &value) {
-  if (value.isInt() || value.isDouble()) {
-    this->value = static_cast<TValue>(value.getDouble());
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSNumberBase: Invalid value type: " +
-        folly::toJson(value));
-  }
+  this->value = static_cast<TValue>(value.asDouble());
 }
 
 template <typename TDerived, typename TValue>
