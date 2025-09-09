@@ -166,12 +166,12 @@ export default class AnimatedComponent
 
     const exiting = this.props.exiting;
 
-    if (
-      IS_WEB &&
-      this._componentDOMRef &&
-      exiting &&
-      !getReducedMotionFromConfig(exiting as CustomConfig)
-    ) {
+    if (IS_WEB && this._componentDOMRef && exiting) {
+      if (getReducedMotionFromConfig(exiting as CustomConfig)) {
+        (exiting as BaseAnimationBuilder).callbackV?.(true);
+        return;
+      }
+
       addHTMLMutationObserver();
 
       startWebLayoutAnimation(
