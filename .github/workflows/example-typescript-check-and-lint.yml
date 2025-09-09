@@ -1,3 +1,4 @@
+eee
 name: Example Typescript check and lint
 env:
   YARN_ENABLE_HARDENED_MODE: 0

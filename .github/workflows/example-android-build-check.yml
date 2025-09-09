@@ -1,16 +1,10 @@
+eee
 name: Example Android build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
-      - .github/workflows/example-android-build-check.yml
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/fabric-example/android/**
   merge_group:
     branches:
       - main
@@ -18,13 +12,6 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/example-android-build-check.yml
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/fabric-example/android/**
   workflow_call:
     inputs:
       bundleMode:

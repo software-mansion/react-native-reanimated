@@ -1,3 +1,4 @@
+eee
 name: NPM Worklets package build
 env:
   YARN_ENABLE_HARDENED_MODE: 0

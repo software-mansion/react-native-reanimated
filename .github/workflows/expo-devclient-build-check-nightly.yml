@@ -1,3 +1,4 @@
+eee
 name: Expo DevClient build check [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0

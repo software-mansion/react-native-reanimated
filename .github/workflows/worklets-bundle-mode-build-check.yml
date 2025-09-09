@@ -1,3 +1,4 @@
+eee
 name: Worklets Bundle Mode build check
 on:
   pull_request:
