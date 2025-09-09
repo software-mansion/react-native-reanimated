@@ -22,14 +22,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  example-android-build-check:
+  example-android-build-check123:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: android-${{ github.ref }}-${{ inputs.bundleMode }}
+      group: android123-${{ github.ref }}-${{ inputs.bundleMode }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
