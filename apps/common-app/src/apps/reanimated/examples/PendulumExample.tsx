@@ -58,8 +58,8 @@ export default function SpringExample() {
 
   const [stiffness, setStiffness] = useState('100');
   const [duration, setDuration] = useState('5000');
-  const [dampingRatio, setDampingRatio] = useState('0.5');
-  const [mass, setMass] = useState('1');
+  const [dampingRatio, setDampingRatio] = useState('0.2');
+  const [mass, setMass] = useState('4');
   const [damping, setDamping] = useState('1');
 
   const config = {
@@ -103,7 +103,7 @@ export default function SpringExample() {
     });
 
   const fields: Array<FieldDefinition> = [
-    { fieldName: 'Stiffness', value: stiffness, setValue: setStiffness },
+    { fieldName: 'Mass', value: mass, setValue: setMass },
     ...(useConfigWithDuration
       ? [
           { fieldName: 'Duration', value: duration, setValue: setDuration },
@@ -114,7 +114,7 @@ export default function SpringExample() {
           },
         ]
       : [
-          { fieldName: 'Mass', value: mass, setValue: setMass },
+          { fieldName: 'Stiffness', value: stiffness, setValue: setStiffness },
           { fieldName: 'Damping', value: damping, setValue: setDamping },
         ]),
   ];

@@ -1,16 +1,16 @@
 'use strict';
-import type { Component } from 'react';
+import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type DispatchCommand = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   commandName: string,
   args?: unknown[]
 ) => void;
@@ -34,7 +34,7 @@ function dispatchCommandNative(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return;
   }
 

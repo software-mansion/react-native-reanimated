@@ -2,6 +2,14 @@
 sidebar_position: 2
 ---
 
+<DeprecatedBanner
+  text={
+    <>
+      This API is deprecated and will be removed in the next major release. Use <a href="/docs/threading/scheduleOnUI">scheduleOnUI</a> instead.
+    </>
+  }
+/>
+
 # runOnUI
 
 `runOnUI` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
@@ -11,7 +19,7 @@ Most commonly used either with an `useEffect` to start an animation on component
 ## Reference
 
 ```javascript
-import { runOnUI } from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
 
 function App() {
   // E.g. in event handler or in an effect
@@ -72,7 +80,3 @@ import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 - Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
 
 - In browsers there's no separate UI thread available. Because of that, on the Web, `runOnUI` behaves similarly to `requestAnimationFrame`. It creates a function that, when called, will be scheduled to run with given arguments on next animation frame.
-
-## Platform compatibility
-
-<PlatformCompatibility android ios web />

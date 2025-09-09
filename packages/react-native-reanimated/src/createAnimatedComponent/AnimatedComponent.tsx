@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
@@ -207,35 +206,46 @@ export default class AnimatedComponent
 
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
-    newStyles: StyleProps[],
+    currentStyles: StyleProps[],
     jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
+    const newStyles = new Set<StyleProps>(currentStyles);
 
     // remove old styles
     if (prevStyles) {
       // in most of the cases, views have only a single animated style and it remains unchanged
       const hasOneSameStyle =
-        newStyles.length === 1 &&
+        currentStyles.length === 1 &&
         prevStyles.length === 1 &&
-        newStyles[0] === prevStyles[0];
+        currentStyles[0] === prevStyles[0];
 
-      if (!hasOneSameStyle) {
-        // otherwise, remove each style that is not present in new styles
-        for (const prevStyle of prevStyles) {
-          const isPresent = newStyles.some((style) => style === prevStyle);
-          if (!isPresent) {
-            prevStyle.viewDescriptors.remove(viewTag);
+      if (hasOneSameStyle) {
+        return;
+      }
+
+      // otherwise, remove each style that is not present in new styles
+      for (const prevStyle of prevStyles) {
+        const isPresent = currentStyles.some((style) => {
+          if (style === prevStyle) {
+            newStyles.delete(style);
+            return true;
           }
+          return false;
+        });
+        if (!isPresent) {
+          prevStyle.viewDescriptors.remove(viewTag);
         }
       }
     }
-
     newStyles.forEach((style) => {
-      style.viewDescriptors.add({
-        tag: viewTag,
-        shadowNodeWrapper,
-      });
+      style.viewDescriptors.add(
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
+        style.styleUpdaterContainer
+      );
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
@@ -344,13 +354,6 @@ export default class AnimatedComponent
       return;
     }
 
-    if (this._isReducedMotion(currentConfig)) {
-      if (!previousConfig) {
-        return;
-      }
-      currentConfig = undefined;
-    }
-
     updateLayoutAnimations(
       type === LayoutAnimationType.ENTERING
         ? this.reanimatedID
@@ -365,14 +368,6 @@ export default class AnimatedComponent
           this._displayName
         )
     );
-  }
-
-  _isReducedMotion(config?: LayoutAnimationOrBuilder): boolean {
-    return config &&
-      'getReduceMotion' in config &&
-      typeof config.getReduceMotion === 'function'
-      ? getReduceMotionFromConfig(config.getReduceMotion())
-      : getReduceMotionFromConfig();
   }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.

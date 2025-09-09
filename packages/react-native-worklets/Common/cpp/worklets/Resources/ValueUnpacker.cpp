@@ -1,13 +1,13 @@
 // This file was generated with
-// `packages/react-native-worklets/scripts/export-value-unpacker.js`.
+// `packages/react-native-worklets/scripts/export-unpackers.js`.
 // Please do not modify it directly.
 
-#include <worklets/Resources/ValueUnpacker.h>
+#include <worklets/Resources/Unpackers.h>
 
 namespace worklets {
 
 const char ValueUnpackerCode[] =
-    R"VALUE_UNPACKER((function () {
+    R"DELIMITER__((function () {
   var workletsCache = new Map();
   var handleCache = new WeakMap();
   function valueUnpacker(objectToUnpack, category, remoteFunctionName) {
@@ -49,5 +49,5 @@ const char ValueUnpackerCode[] =
     }
   }
   globalThis.__valueUnpacker = valueUnpacker;
-})();)VALUE_UNPACKER";
+})();)DELIMITER__";
 } // namespace worklets

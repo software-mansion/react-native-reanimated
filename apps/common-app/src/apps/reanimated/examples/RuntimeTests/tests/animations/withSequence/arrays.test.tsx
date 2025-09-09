@@ -19,7 +19,7 @@ import {
   test,
   useTestRef,
   wait,
-  waitForNotify,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
@@ -139,15 +139,15 @@ describe('withSequence animation of array', () => {
       const componentThree = getTestComponent(COMPONENT_REF.third);
       const margin = 30;
 
-      await waitForNotify(START_NOTIFICATION_NAME);
+      await waitForNotification(START_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.PIXEL);
-      await waitForNotify(MIDDLE_NOTIFICATION_NAME);
+      await waitForNotification(MIDDLE_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.PIXEL);
-      await waitForNotify(FINAL_NOTIFICATION_NAME);
+      await waitForNotification(FINAL_NOTIFICATION_NAME);
       expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.PIXEL);
       expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.PIXEL);
       expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.PIXEL);

@@ -1,8 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 # makeShareableCloneOnUIRecursive
+
+<DeprecatedBanner />
 
 `makeShareableCloneOnUIRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than UI Runtime.
 The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`. 
@@ -49,7 +51,3 @@ function makeShareableCloneOnUIRecursive<T>(
 ```
 
 </details>
-
-## Platform compatibility
-
-<PlatformCompatibility android ios web />

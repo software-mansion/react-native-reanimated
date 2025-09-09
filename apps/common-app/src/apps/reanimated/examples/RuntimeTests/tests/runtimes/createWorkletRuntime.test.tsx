@@ -1,5 +1,5 @@
-import { createWorkletRuntime, runOnJS } from 'react-native-worklets';
-import { describe, expect, notify, test, waitForNotify } from '../../ReJest/RuntimeTestsApi';
+import { createWorkletRuntime, scheduleOnRN } from 'react-native-worklets';
+import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const INITIALIZER_CALLED_NOTIFICATION = 'INITIALIZER_CALLED_NOTIFICATION';
 
@@ -24,7 +24,7 @@ describe('createWorkletRuntime', () => {
     };
     const initializer = () => {
       'worklet';
-      runOnJS(onJSCallback)();
+      scheduleOnRN(onJSCallback);
     };
 
     // Act
@@ -32,7 +32,7 @@ describe('createWorkletRuntime', () => {
       name: 'test',
       initializer,
     });
-    await waitForNotify(INITIALIZER_CALLED_NOTIFICATION);
+    await waitForNotification(INITIALIZER_CALLED_NOTIFICATION);
 
     // Assert
     expect(initializerCalled).toBe(true);
