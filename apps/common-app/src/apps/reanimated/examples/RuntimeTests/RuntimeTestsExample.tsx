@@ -45,8 +45,8 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'serializable',
           importTest: () => {
             require('./tests/serializable/createSerializable.test');
-            require('./tests/serializable/createSerializableOnUI.test');
             require('./tests/serializable/isSerializableRef.test');
+            require('./tests/serializable/makeShareableCloneOnUI.test');
           },
         },
         {
