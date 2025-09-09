@@ -1,5 +1,4 @@
 import React from 'react';
-import { useColorScheme } from '@mui/material';
 import { View, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import {
@@ -12,6 +11,7 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedProps,
 } from 'react-native-reanimated';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const INITIAL_BOX_SIZE = 50;
 const SLIDER_WIDTH = 300;
@@ -19,7 +19,7 @@ const SLIDER_WIDTH = 300;
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const Slider = () => {
-  const { colorScheme } = useColorScheme();
+  const textColor = useThemedTextStyle();
   const offset = useSharedValue(0);
   const boxWidth = useSharedValue(INITIAL_BOX_SIZE);
   const MAX_VALUE = SLIDER_WIDTH - INITIAL_BOX_SIZE;
@@ -50,9 +50,6 @@ const Slider = () => {
     };
   });
 
-  const animatedBoxTextColor = {
-    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  };
 
   const animatedProps = useAnimatedProps(() => {
     return {
@@ -65,7 +62,7 @@ const Slider = () => {
     <GestureHandlerRootView style={styles.container}>
       <AnimatedTextInput
         animatedProps={animatedProps}
-        style={[animatedBoxTextColor, styles.boxWidthText]}
+        style={[textColor, styles.boxWidthText]}
         editable={false}
       />
       <Animated.View style={[styles.box, boxStyle]} />
