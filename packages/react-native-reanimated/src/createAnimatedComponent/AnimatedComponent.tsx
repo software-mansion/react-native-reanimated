@@ -287,12 +287,13 @@ export default class AnimatedComponent
       saveSnapshot(this._componentDOMRef);
     }
 
-    if (
-      IS_WEB &&
-      snapshot &&
-      this.props.layout &&
-      !getReducedMotionFromConfig(this.props.layout as CustomConfig)
-    ) {
+    if (IS_WEB && snapshot && this.props.layout) {
+      if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
+        (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
+
+        return;
+      }
+
       tryActivateLayoutTransition(
         this.props,
         this._componentDOMRef as ReanimatedHTMLElement,
