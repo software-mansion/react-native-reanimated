@@ -354,6 +354,14 @@ export const ColorProperties = [
   'stroke',
 ];
 
+// copied from react-native/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
+export const DynamicColorIOSProperties = [
+  'light',
+  'dark',
+  'highContrastLight',
+  'highContrastDark',
+];
+
 export function normalizeColor(color: unknown): number | null {
   'worklet';
 
