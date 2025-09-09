@@ -1,14 +1,14 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/core/CSSTransition.h>
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
-#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
-#include <reanimated/CSS/registries/StaticPropsRegistry.h>
-#include <reanimated/CSS/svg/configs/init.h>
+//#include <reanimated/CSS/core/CSSAnimation.h>
+//#include <reanimated/CSS/core/CSSTransition.h>
+//#include <reanimated/CSS/misc/ViewStylesRepository.h>
+//#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+//#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
+//#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+//#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+//#include <reanimated/CSS/svg/configs/init.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -42,7 +42,7 @@
 namespace reanimated {
 
 using namespace facebook;
-using namespace css;
+//using namespace css;
 
 using UpdatesBatch =
     std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
@@ -239,12 +239,12 @@ class ReanimatedModuleProxy
   double currentCssTimestamp_{0};
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+//  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
-  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
-  const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+//  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+//  const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
+//  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+//  const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 

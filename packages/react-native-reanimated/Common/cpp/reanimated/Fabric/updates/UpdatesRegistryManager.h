@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/configs/interpolators/registry.h>
-#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+// #include <reanimated/CSS/configs/interpolators/registry.h>
+// #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -13,12 +13,12 @@
 
 namespace reanimated {
 
-using namespace css;
+//using namespace css;
 
 class UpdatesRegistryManager {
  public:
-  explicit UpdatesRegistryManager(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+  // explicit UpdatesRegistryManager(
+  //     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
   std::lock_guard<std::mutex> lock() const;
 
@@ -55,7 +55,7 @@ class UpdatesRegistryManager {
   std::atomic<bool> shouldCommitAfterPause_;
   RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  // const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

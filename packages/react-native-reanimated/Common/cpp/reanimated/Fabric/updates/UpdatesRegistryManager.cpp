@@ -3,9 +3,9 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
+//UpdatesRegistryManager::UpdatesRegistryManager(
+//    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+//    : staticPropsRegistry_(staticPropsRegistry) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
@@ -68,7 +68,7 @@ void UpdatesRegistryManager::handleNodeRemovals(
       for (auto &registry : registries_) {
         registry->remove(tag);
       }
-      staticPropsRegistry_->remove(tag);
+//      staticPropsRegistry_->remove(tag);
     } else {
       remainingShadowNodes.emplace(tag, shadowNode);
     }
@@ -118,36 +118,36 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(
     registry->collectPropsToRevert(propsToRevertMap_);
   }
 
-  for (const auto &[tag, pair] : propsToRevertMap_) {
-    const auto &[shadowNode, props] = pair;
-    const auto &staticStyle = staticPropsRegistry_->get(tag);
-    folly::dynamic filteredStyle = folly::dynamic::object;
-
-    for (const auto &propName : props) {
-      if (!staticStyle.isNull() && staticStyle.count(propName) > 0) {
-        filteredStyle[propName] = staticStyle[propName];
-        continue;
-      }
-
-      const auto &componentName = shadowNode->getComponentName();
-      if (hasInterpolators(componentName)) {
-        const auto &interpolators = getComponentInterpolators(componentName);
-        const auto &it = interpolators.find(propName);
-
-        if (it != interpolators.end()) {
-          filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
-          continue;
-        }
-      }
-
-      filteredStyle[propName] = nullptr;
-    }
-
-    const auto &surfaceId = shadowNode->getSurfaceId();
-    auto &propsMap = propsMapBySurface[surfaceId];
-
-    addToPropsMap(propsMap, shadowNode, filteredStyle);
-  }
+//  for (const auto &[tag, pair] : propsToRevertMap_) {
+//    const auto &[shadowNode, props] = pair;
+//    const auto &staticStyle = staticPropsRegistry_->get(tag);
+//    folly::dynamic filteredStyle = folly::dynamic::object;
+//
+//    for (const auto &propName : props) {
+//      if (!staticStyle.isNull() && staticStyle.count(propName) > 0) {
+//        filteredStyle[propName] = staticStyle[propName];
+//        continue;
+//      }
+//
+//      const auto &componentName = shadowNode->getComponentName();
+//      if (hasInterpolators(componentName)) {
+//        const auto &interpolators = getComponentInterpolators(componentName);
+//        const auto &it = interpolators.find(propName);
+//
+//        if (it != interpolators.end()) {
+//          filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
+//          continue;
+//        }
+//      }
+//
+//      filteredStyle[propName] = nullptr;
+//    }
+//
+//    const auto &surfaceId = shadowNode->getSurfaceId();
+//    auto &propsMap = propsMapBySurface[surfaceId];
+//
+//    addToPropsMap(propsMap, shadowNode, filteredStyle);
+//  }
 }
 
 void UpdatesRegistryManager::clearPropsToRevert(const SurfaceId surfaceId) {

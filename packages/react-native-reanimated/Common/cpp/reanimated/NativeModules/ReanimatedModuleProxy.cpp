@@ -53,18 +53,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      updatesRegistryManager_(
-          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(
-          std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
+//      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+//      updatesRegistryManager_(
+//          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+//      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+//          staticPropsRegistry_,
+//          animatedPropsRegistry_)),
+//      cssAnimationKeyframesRegistry_(
+//          std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
+//      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+//      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+//          staticPropsRegistry_,
+//          getAnimationTimestamp_)),
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -75,7 +75,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   if constexpr (StaticFeatureFlags::getFlag(
                     "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
-    css::initSvgCssSupport();
+//    css::initSvgCssSupport();
   }
 
   auto lock = updatesRegistryManager_->lock();
@@ -83,9 +83,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   // highest)
   // CSS transitions should be overriden by animated style animations;
   // animated style animations should be overriden by CSS animations
-  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+//  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+//  updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 }
 
 void ReanimatedModuleProxy::init(
@@ -412,11 +412,11 @@ void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+//  const auto tag = viewTag.asNumber();
+//  staticPropsRegistry_->set(rt, tag, viewStyle);
+//  if (staticPropsRegistry_->hasObservers(tag)) {
+//    maybeRunCSSLoop();
+//  }
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(
@@ -442,111 +442,111 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
   // Convert react view name to Fabric component name
   const auto componentName =
       componentNameByReactViewName(viewName.asString(rt).utf8(rt));
-  cssAnimationKeyframesRegistry_->set(
-      animationName.asString(rt).utf8(rt),
-      componentName,
-      parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, componentName, viewStylesRepository_));
+//  cssAnimationKeyframesRegistry_->set(
+//      animationName.asString(rt).utf8(rt),
+//      componentName,
+//      parseCSSAnimationKeyframesConfig(
+//          rt, keyframesConfig, componentName, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &viewName) {
-  cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt),
-      componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
+//  cssAnimationKeyframesRegistry_->remove(
+//      animationName.asString(rt).utf8(rt),
+//      componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationUpdates) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto timestamp = getCssTimestamp();
-  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
+//  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+//  const auto timestamp = getCssTimestamp();
+//  const auto updates = parseCSSAnimationUpdates(rt, animationUpdates);
+//
+//  CSSAnimationsMap newAnimations;
 
-  CSSAnimationsMap newAnimations;
-
-  if (!updates.newAnimationSettings.empty()) {
-    // animationNames always exists when newAnimationSettings is not empty
-    const auto animationNames = updates.animationNames.value();
-    const auto animationNamesCount = animationNames.size();
-
-    for (const auto &[index, settings] : updates.newAnimationSettings) {
-      if (index >= animationNamesCount) {
-        throw std::invalid_argument(
-            "[Reanimated] index is out of bounds of animationNames");
-      }
-
-      const auto &animationName = animationNames[index];
-      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(
-          animationName, shadowNode->getComponentName());
-
-      newAnimations.emplace(
-          index,
-          std::make_shared<CSSAnimation>(
-              rt,
-              shadowNode,
-              animationName,
-              keyframesConfig,
-              settings,
-              timestamp));
-    }
-  }
-
-  {
-    auto lock = cssAnimationsRegistry_->lock();
-    cssAnimationsRegistry_->apply(
-        rt,
-        shadowNode,
-        updates.animationNames,
-        std::move(newAnimations),
-        updates.settingsUpdates,
-        timestamp);
-  }
-
-  maybeRunCSSLoop();
+//  if (!updates.newAnimationSettings.empty()) {
+//    // animationNames always exists when newAnimationSettings is not empty
+//    const auto animationNames = updates.animationNames.value();
+//    const auto animationNamesCount = animationNames.size();
+//
+//    for (const auto &[index, settings] : updates.newAnimationSettings) {
+//      if (index >= animationNamesCount) {
+//        throw std::invalid_argument(
+//            "[Reanimated] index is out of bounds of animationNames");
+//      }
+//
+//      const auto &animationName = animationNames[index];
+//      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(
+//          animationName, shadowNode->getComponentName());
+//
+//      newAnimations.emplace(
+//          index,
+//          std::make_shared<CSSAnimation>(
+//              rt,
+//              shadowNode,
+//              animationName,
+//              keyframesConfig,
+//              settings,
+//              timestamp));
+//    }
+//  }
+//
+//  {
+//    auto lock = cssAnimationsRegistry_->lock();
+//    cssAnimationsRegistry_->apply(
+//        rt,
+//        shadowNode,
+//        updates.animationNames,
+//        std::move(newAnimations),
+//        updates.settingsUpdates,
+//        timestamp);
+//  }
+//
+//  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
-  auto lock = cssAnimationsRegistry_->lock();
-  cssAnimationsRegistry_->remove(viewTag.asNumber());
+//  auto lock = cssAnimationsRegistry_->lock();
+//  cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
-  auto transition = std::make_shared<CSSTransition>(
-      std::move(shadowNode),
-      parseCSSTransitionConfig(rt, transitionConfig),
-      viewStylesRepository_);
-
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->add(transition);
-  }
-  maybeRunCSSLoop();
+//  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+//
+//  auto transition = std::make_shared<CSSTransition>(
+//      std::move(shadowNode),
+//      parseCSSTransitionConfig(rt, transitionConfig),
+//      viewStylesRepository_);
+//
+//  {
+//    auto lock = cssTransitionsRegistry_->lock();
+//    cssTransitionsRegistry_->add(transition);
+//  }
+//  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
-  auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->updateSettings(
-      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
-  maybeRunCSSLoop();
+//  auto lock = cssTransitionsRegistry_->lock();
+//  cssTransitionsRegistry_->updateSettings(
+//      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
+//  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
-  auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->remove(viewTag.asNumber());
+//  auto lock = cssTransitionsRegistry_->lock();
+//  cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -608,21 +608,21 @@ bool ReanimatedModuleProxy::handleRawEvent(
 }
 
 void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
-  shouldUpdateCssAnimations_ = true;
-  if (cssAnimationsRegistry_->hasUpdates() ||
-      cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-      || updatesRegistryManager_->hasPropsToRevert()
-#endif // ANDROID
-  ) {
-    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
-      if (auto strongThis = weakThis.lock()) {
-        strongThis->cssLoopCallback(newTimestampMs);
-      }
-    });
-  } else {
-    cssLoopRunning_ = false;
-  }
+//  shouldUpdateCssAnimations_ = true;
+//  if (cssAnimationsRegistry_->hasUpdates() ||
+//      cssTransitionsRegistry_->hasUpdates()
+//#ifdef ANDROID
+//      || updatesRegistryManager_->hasPropsToRevert()
+//#endif // ANDROID
+//  ) {
+//    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
+//      if (auto strongThis = weakThis.lock()) {
+//        strongThis->cssLoopCallback(newTimestampMs);
+//      }
+//    });
+//  } else {
+//    cssLoopRunning_ = false;
+//  }
 }
 
 void ReanimatedModuleProxy::maybeRunCSSLoop() {
@@ -674,26 +674,26 @@ void ReanimatedModuleProxy::performOperations() {
 
     auto lock = updatesRegistryManager_->lock();
 
-    if (shouldUpdateCssAnimations_) {
-      currentCssTimestamp_ = getAnimationTimestamp_();
-      auto lock = cssTransitionsRegistry_->lock();
-      // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
-    }
-
-    {
-      auto lock = animatedPropsRegistry_->lock();
-      // Flush all animated props updates
-      animatedPropsRegistry_->flushUpdates(updatesBatch);
-    }
-
-    if (shouldUpdateCssAnimations_) {
-      auto lock = cssAnimationsRegistry_->lock();
-      // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(updatesBatch);
-    }
+//    if (shouldUpdateCssAnimations_) {
+//      currentCssTimestamp_ = getAnimationTimestamp_();
+//      auto lock = cssTransitionsRegistry_->lock();
+//      // Update CSS transitions and flush updates
+//      cssTransitionsRegistry_->update(currentCssTimestamp_);
+//      cssTransitionsRegistry_->flushUpdates(updatesBatch);
+//    }
+//
+//    {
+//      auto lock = animatedPropsRegistry_->lock();
+//      // Flush all animated props updates
+//      animatedPropsRegistry_->flushUpdates(updatesBatch);
+//    }
+//
+//    if (shouldUpdateCssAnimations_) {
+//      auto lock = cssAnimationsRegistry_->lock();
+//      // Update CSS animations and flush updates
+//      cssAnimationsRegistry_->update(currentCssTimestamp_);
+//      cssAnimationsRegistry_->flushUpdates(updatesBatch);
+//    }
 
     shouldUpdateCssAnimations_ = false;
 
@@ -1124,7 +1124,7 @@ void ReanimatedModuleProxy::performOperations() {
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
   // so we have to clear the entire cache)
-  viewStylesRepository_->clearNodesCache();
+//  viewStylesRepository_->clearNodesCache();
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
@@ -1285,7 +1285,7 @@ jsi::Value ReanimatedModuleProxy::measure(
 void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  viewStylesRepository_->setUIManager(uiManager_);
+//  viewStylesRepository_->setUIManager(uiManager_);
 
   initializeLayoutAnimationsProxy();
 
@@ -1338,14 +1338,14 @@ ReanimatedModuleProxy::createRegistriesLeakCheck() {
 
     std::string result = "";
 
-    result += "AnimatedPropsRegistry: " +
-        format(strongThis->animatedPropsRegistry_->isEmpty());
-    result += "\nCSSAnimationsRegistry: " +
-        format(strongThis->cssAnimationsRegistry_->isEmpty());
-    result += "\nCSSTransitionsRegistry: " +
-        format(strongThis->cssTransitionsRegistry_->isEmpty());
-    result += "\nStaticPropsRegistry: " +
-        format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
+//    result += "AnimatedPropsRegistry: " +
+//        format(strongThis->animatedPropsRegistry_->isEmpty());
+//    result += "\nCSSAnimationsRegistry: " +
+//        format(strongThis->cssAnimationsRegistry_->isEmpty());
+//    result += "\nCSSTransitionsRegistry: " +
+//        format(strongThis->cssTransitionsRegistry_->isEmpty());
+//    result += "\nStaticPropsRegistry: " +
+//        format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
 
     return result;
   };
