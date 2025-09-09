@@ -439,6 +439,7 @@ var require_closure = __commonJS({
       const closureVariables = new Array();
       const libraryBindingsToImport = /* @__PURE__ */ new Set();
       const relativeBindingsToImport = /* @__PURE__ */ new Set();
+      let recrawled = false;
       funPath.traverse({
         "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
           typePath.skip();
@@ -451,7 +452,12 @@ var require_closure = __commonJS({
           if (capturedNames.has(name)) {
             return;
           }
-          const binding = idPath.scope.getBinding(name);
+          let binding = idPath.scope.getBinding(name);
+          if (!binding && !recrawled) {
+            recrawled = true;
+            idPath.scope.crawl();
+            binding = idPath.scope.getBinding(name);
+          }
           if (!binding) {
             if (globals_12.globals.has(name)) {
               return;
