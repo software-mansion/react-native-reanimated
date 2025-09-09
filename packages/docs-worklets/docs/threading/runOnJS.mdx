@@ -2,6 +2,14 @@
 sidebar_position: 1
 ---
 
+<DeprecatedBanner
+  text={
+    <>
+      This API is deprecated and will be removed in the next major release. Use <a href="/docs/threading/scheduleOnRN">scheduleOnRN</a> instead.
+    </>
+  }
+/>
+
 # runOnJS
 
 `runOnJS` lets you asynchronously run non-[workletized](/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
@@ -11,7 +19,7 @@ sidebar_position: 1
 ## Reference
 
 ```javascript
-import { runOnJS } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 function App() {
   // While on the UI thread
@@ -72,7 +80,3 @@ withTiming(0, {}, () => {
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
 
 - It's safe to run functions via `runOnJS` on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread), as this has no effect.
-
-## Platform compatibility
-
-<PlatformCompatibility android ios web />

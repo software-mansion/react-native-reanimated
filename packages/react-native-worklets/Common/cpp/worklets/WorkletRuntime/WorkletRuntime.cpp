@@ -1,5 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Resources/ValueUnpacker.h>
+#include <worklets/Resources/Unpackers.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
@@ -72,7 +72,8 @@ WorkletRuntime::WorkletRuntime(
     uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const std::shared_ptr<AsyncQueue> &queue)
+    const std::shared_ptr<AsyncQueue> &queue,
+    bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
@@ -80,6 +81,10 @@ WorkletRuntime::WorkletRuntime(
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+  if (enableEventLoop && name != uiRuntimeName) {
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_->run();
+  }
 }
 
 void WorkletRuntime::init(
@@ -100,7 +105,8 @@ void WorkletRuntime::init(
       name_,
       jsScheduler,
       isDevBundle,
-      std::move(optimizedJsiWorkletsModuleProxy));
+      std::move(optimizedJsiWorkletsModuleProxy),
+      eventLoop_);
 
 #ifdef WORKLETS_BUNDLE_MODE
   if (!script) {
@@ -129,6 +135,10 @@ void WorkletRuntime::init(
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
+
+  auto synchronizableUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
+  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
 }
 

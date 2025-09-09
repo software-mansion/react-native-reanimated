@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import React, { useRef, useState } from 'react';
-import { useColorScheme } from '@mui/material';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -94,10 +94,11 @@ function debounce(func, timeout = 100) {
   };
 }
 
-const useSelectedStyle = (selectedItem, item) =>
+const useSelectedStyle = (selectedItem, item, borderColor) =>
   useAnimatedStyle(() => ({
     fontWeight: selectedItem.value === item ? '600' : '400',
     borderBottomWidth: selectedItem.value === item ? 1 : 0,
+    borderBottomColor: selectedItem.value === item ? borderColor : 'transparent',
   }));
 
 const TableOfContentsElement = ({
@@ -106,13 +107,10 @@ const TableOfContentsElement = ({
   visibleIndex,
   sectionCardsRef,
 }) => {
-  const { colorScheme } = useColorScheme();
-  const style = useSelectedStyle(visibleIndex, index);
+  const textColor = useThemedTextStyle();
+  const borderColor = textColor.color 
+  const style = useSelectedStyle(visibleIndex, index, borderColor);
 
-  const tableOfContentsElementTextStyle = {
-    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-    borderBottomColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  };
 
   return (
     <Pressable
@@ -125,7 +123,7 @@ const TableOfContentsElement = ({
         style={[
           style,
           sectionListStyles.tableOfContentsElement,
-          tableOfContentsElementTextStyle,
+          textColor,
         ]}>
         {item}
       </Animated.Text>
@@ -211,7 +209,7 @@ const SectionCards = ({
   sectionCardsRef,
   tableOfContentsRef,
 }) => {
-  const { colorScheme } = useColorScheme();
+  const textColor = useThemedTextStyle();
   const heights = sections.map((_) => SECTION_HEIGHT);
 
   const getOffsetStarts = () =>
@@ -237,14 +235,10 @@ const SectionCards = ({
     }
   };
 
-  const sectionNameStyle = useAnimatedStyle(() => ({
-    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-  }));
-
   const renderItem = ({ item }) => {
     return (
       <View>
-        <Animated.Text style={[sectionCardStyles.header, sectionNameStyle]}>
+        <Animated.Text style={[sectionCardStyles.header, textColor]}>
           {item.name}
         </Animated.Text>
         <SectionCardsElement>
@@ -262,6 +256,7 @@ const SectionCards = ({
         estimatedFirstItemOffset={0}
         renderItem={renderItem}
         data={sections}
+        extraData={textColor}
         onScrollBeginDrag={onScroll}
         onScrollEndDrag={onScroll}
         onScroll={debounce(onScroll)}

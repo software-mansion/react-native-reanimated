@@ -1,16 +1,20 @@
+const { getDefaultConfig } = require('@react-native/metro-config');
 const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
 
+const defaults = getDefaultConfig(__dirname);
+
 module.exports = {
   bundleModeMetroConfig: {
     serializer: {
-      getModulesRunBeforeMainModule() {
+      getModulesRunBeforeMainModule(/** @type {string} dirname */ dirname) {
         return [
           require.resolve('react-native-worklets/src/workletRuntimeEntry.ts'),
           require.resolve(
             'react-native-worklets/lib/module/workletRuntimeEntry.js'
           ),
+          ...defaults.serializer.getModulesRunBeforeMainModule(dirname),
         ];
       },
       createModuleIdFactory() {

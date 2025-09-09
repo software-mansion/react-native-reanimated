@@ -63,8 +63,7 @@ LinearTransition.springify()
   .rotate(20)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -74,8 +73,7 @@ LinearTransition.springify()
 - `.rotate(degree: string)` lets you rotate the element.
 - `.stiffness(value: number)` decides how bouncy the spring is - the higher the number, the less bouncy it is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second below which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -93,10 +91,6 @@ LinearTransition.delay(500)
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
-
-### Remarks
-
-- The animation will end if **both** the animation speed is below `restSpeedThreshold` and the distance to its end is less than `restDisplacementThreshold`. Keep in mind that if you haven't set one of the thresholds, its value will be set to the default.
 
 ### Example
 

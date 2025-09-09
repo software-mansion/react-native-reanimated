@@ -5,7 +5,6 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   interpolateColor,
-  runOnUI,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -19,6 +18,7 @@ import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
+import { runOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxs;
 

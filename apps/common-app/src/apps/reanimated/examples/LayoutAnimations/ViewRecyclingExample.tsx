@@ -19,13 +19,13 @@ import Animated, {
   FadeInRight,
   FadeOutLeft,
   interpolate,
-  runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   ZoomIn,
   ZoomOut,
 } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 type Option = {
   key: string;

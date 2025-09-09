@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
-import type React from 'react';
 import type {
   IWorkletsModule,
   SerializableRef,
@@ -19,12 +18,13 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
+  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -135,12 +135,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined, // required on Fabric
+    component: WrapperRef, // required on Fabric
     callback?: (result: T) => void
   ) {
-    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
-      component as React.Component
-    );
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     return this.#reanimatedModuleProxy.getViewProp(
       shadowNodeWrapper,
       propName,
@@ -161,6 +159,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       viewTag,
       shouldAnimate
     );
+  }
+
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#reanimatedModuleProxy.getStaticFeatureFlag(name);
   }
 
   setDynamicFeatureFlag(name: string, value: boolean) {
@@ -250,6 +252,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
+  getStaticFeatureFlag(): boolean {
+    return false;
+  }
   setDynamicFeatureFlag(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;
