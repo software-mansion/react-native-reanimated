@@ -1,3 +1,4 @@
+eee
 name: NPM Reanimated publish [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0

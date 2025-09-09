@@ -1,3 +1,4 @@
+eee
 name: Yarn validation
 env:
   YARN_ENABLE_HARDENED_MODE: 1

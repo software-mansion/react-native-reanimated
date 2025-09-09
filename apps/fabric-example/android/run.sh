@@ -1,0 +1,1 @@
+time ./gradlew :react-native-reanimated:buildCMakeDebug --profile --no-build-cache --no-configuration-cache

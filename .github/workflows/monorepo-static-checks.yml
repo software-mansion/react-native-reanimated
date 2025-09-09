@@ -1,3 +1,4 @@
+eee
 name: Monorepo static checks
 env:
   YARN_ENABLE_HARDENED_MODE: 0

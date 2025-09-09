@@ -132,6 +132,7 @@ version REANIMATED_VERSION
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def reactNativeArchitectures() {
+    return ["arm64-v8a"]
     def value = project.getProperties().get("reactNativeArchitectures")
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }

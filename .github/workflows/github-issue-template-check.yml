@@ -1,3 +1,4 @@
+eee
 name: GitHub issue template check
 env:
   YARN_ENABLE_HARDENED_MODE: 0

@@ -1,3 +1,4 @@
+eee
 name: Reanimated TypeScript compatibility test [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
