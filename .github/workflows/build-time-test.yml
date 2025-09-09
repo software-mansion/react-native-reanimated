@@ -55,7 +55,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
         run: ./run.sh
       - name: Upload Profile Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: profile-report
           path: build/reports/profile/
