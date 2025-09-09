@@ -11,6 +11,7 @@ import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import type { BaseAnimationBuilder } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -125,11 +126,15 @@ export default class AnimatedComponent
         saveSnapshot(this._componentDOMRef);
       }
 
-      if (
-        !this.props.entering ||
-        getReducedMotionFromConfig(this.props.entering as CustomConfig)
-      ) {
+      if (!this.props.entering) {
         this._isFirstRender = false;
+        return;
+      }
+
+      if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+        this._isFirstRender = false;
+
+        (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
         return;
       }
 
