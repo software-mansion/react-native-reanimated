@@ -1,0 +1,56 @@
+name: Build time test
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - *
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - *
+  workflow_call:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+
+jobs:
+  example-android-build-check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      REANIMATED_DIR: packages/react-native-reanimated
+    concurrency:
+      group: android-${{ github.ref }}-${{ inputs.bundleMode }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+      - name: Toggle Bundle Mode
+        if: ${{ inputs.bundleMode }}
+        run: ./scripts/toggle-bundle-mode.sh
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}/android
+        run: ./run.sh
