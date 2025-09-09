@@ -930,7 +930,7 @@ void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
                   const auto *targetShadowNode =
                       self->findInShadowTreeByTag(rootShadowNode, tag);
                   if (targetShadowNode == nullptr) {
-                    return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
+                    continue;
                   }
                   propsMap[&targetShadowNode->getFamily()].emplace_back(
                       folly::dynamic::object("opacity", opacity));
