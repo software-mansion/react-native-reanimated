@@ -35,11 +35,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
-  for (const auto tag : finishedAnimationTags_) {
 #ifdef ANDROID
-    restoreOpacityInCaseOfFlakyEnteringAnimation(
-        layoutAnimations_[tag], tag, surfaceId);
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
+  for (const auto tag : finishedAnimationTags_) {
     auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
     layoutAnimations_.erase(tag);
     updateMap.erase(tag);
@@ -433,9 +432,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
 
     auto &layoutAnimation = layoutAnimationIt->second;
-    if (!layoutAnimation.isViewAlreadyMounted) {
-      layoutAnimation.isViewAlreadyMounted = true;
-    }
+    layoutAnimation.isViewAlreadyMounted = true;
     auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
@@ -897,17 +894,22 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
  * mounting, so the opacity update will execute after the view is mounted.
  */
 void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
-    const LayoutAnimation &currentLayoutAnimation,
-    Tag tag,
     SurfaceId surfaceId) const {
-  if (!currentLayoutAnimation.opacity.has_value()) {
+  std::vector<std::pair<double, Tag>> opacityToRestore;
+  for (const auto tag : finishedAnimationTags_) {
+    const auto &opacity = layoutAnimations_[tag].opacity;
+    if (opacity.has_value()) {
+      opacityToRestore.emplace_back(
+          std::pair<double, Tag>{opacity.value(), tag});
+    }
+  }
+  if (opacityToRestore.empty()) {
     // Animation was successfully finished, and the opacity was restored, so we
     // don't need to do anything. Only the Entering animation has a set opacity
     // value.
     return;
   }
   const auto weakThis = weak_from_this();
-  const auto viewOpacity = currentLayoutAnimation.opacity.value();
   jsInvoker_->invokeAsync([=](jsi::Runtime &runtime) {
     const auto self = weakThis.lock();
     if (!self) {
@@ -923,14 +925,16 @@ void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
                 }
                 const auto &rootShadowNode =
                     static_cast<const ShadowNode &>(oldRootShadowNode);
-                const auto *targetShadowNode =
-                    self->findInShadowTreeByTag(rootShadowNode, tag);
-                if (targetShadowNode == nullptr) {
-                  return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
-                }
                 PropsMap propsMap;
-                propsMap[&targetShadowNode->getFamily()].emplace_back(
-                    folly::dynamic::object("opacity", viewOpacity));
+                for (const auto &[opacity, tag] : opacityToRestore) {
+                  const auto *targetShadowNode =
+                      self->findInShadowTreeByTag(rootShadowNode, tag);
+                  if (targetShadowNode == nullptr) {
+                    return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
+                  }
+                  propsMap[&targetShadowNode->getFamily()].emplace_back(
+                      folly::dynamic::object("opacity", opacity));
+                }
                 return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
               },
               {});
@@ -945,22 +949,7 @@ const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(
     return const_cast<const ShadowNode *>(&node);
   }
   for (auto &child : node.getChildren()) {
-    if (const auto result = findInShadowTreeByTag(child, tag)) {
-      return result.get();
-    }
-  }
-  return nullptr;
-}
-
-const std::shared_ptr<const ShadowNode>
-LayoutAnimationsProxy::findInShadowTreeByTag(
-    const std::shared_ptr<const ShadowNode> &node,
-    Tag tag) const {
-  if (node->getTag() == tag) {
-    return node;
-  }
-  for (auto &child : node->getChildren()) {
-    if (const auto result = findInShadowTreeByTag(child, tag)) {
+    if (const auto result = findInShadowTreeByTag(*child, tag)) {
       return result;
     }
   }

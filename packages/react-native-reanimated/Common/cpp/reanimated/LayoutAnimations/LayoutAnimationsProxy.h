@@ -152,15 +152,9 @@ struct LayoutAnimationsProxy
   const ComponentDescriptor &getComponentDescriptorForShadowView(
       const ShadowView &shadowView) const;
 #ifdef ANDROID
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(
-      const LayoutAnimation &currentLayoutAnimation,
-      Tag tag,
-      SurfaceId surfaceId) const;
+  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
   const ShadowNode *findInShadowTreeByTag(const ShadowNode &node, Tag tag)
       const;
-  const std::shared_ptr<const ShadowNode> findInShadowTreeByTag(
-      const std::shared_ptr<const ShadowNode> &node,
-      Tag tag) const;
 #endif // ANDROID
   // MountingOverrideDelegate
 
