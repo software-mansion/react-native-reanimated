@@ -58,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: profile-report
-          path: build/reports/profile/
+          path: /home/runner/work/react-native-reanimated/react-native-reanimated/apps/fabric-example/android/build/reports/profile/
