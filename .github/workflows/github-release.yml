@@ -107,16 +107,24 @@ jobs:
           }
           EOF
 
+      - name: Verify config file
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: |
+          echo "📋 Verifying config file exists..."
+          ls -la .releaserc.temp.json
+          echo "📄 Config file content:"
+          cat .releaserc.temp.json
+
       - name: Run semantic-release
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
           # Run semantic-release with the temporary config
           if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
-            yarn semantic-release --dry-run --extends .releaserc.temp.json
+            yarn semantic-release --dry-run --extends ./releaserc.temp.json
           else
             echo "🚀 Creating actual release"
-            yarn semantic-release --extends .releaserc.temp.json
+            yarn semantic-release --extends ./releaserc.temp.json
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
