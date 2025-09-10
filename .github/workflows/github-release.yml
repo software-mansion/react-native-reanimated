@@ -99,10 +99,10 @@ jobs:
           # Run semantic-release with the temporary config
           if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
-            yarn semantic-release --dry-run
+            npx semantic-release --dry-run
           else
             echo "🚀 Creating actual release"
-            yarn semantic-release
+            npx semantic-release
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
