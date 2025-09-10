@@ -9,6 +9,7 @@
     "reanimated"
   ],
   "scripts": {
+    "semantic-release": "semantic-release",
     "test": "jest",
     "lint": "yarn lint:js && yarn lint:common && yarn lint:android && yarn lint:apple",
     "lint:js": "eslint src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
@@ -27,7 +28,6 @@
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "find-unused-code:js": "knip",
     "type:check": "yarn type:check:src && yarn type:check:app && yarn type:check:tests:common",
-    "semantic-release": "semantic-release",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "../../scripts/test-ts.sh __typetests__/common",
@@ -151,7 +151,6 @@
     "react-native-svg": "15.12.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.1.1",
-    "semantic-release": "^22.0.12",
     "shelljs": "^0.8.5",
     "typescript": "5.8.3"
   },

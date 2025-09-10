@@ -1,4 +1,5 @@
 {
+  "branches": ["main", "@matipl01/github-release-action"],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
@@ -37,13 +38,12 @@
         }
       }
     ],
+    "semantic-release-yarn",
     [
       "@semantic-release/github",
       {
         "successComment": "🎉 This PR is included in version ${nextRelease.version} of ${name}!\n\n**Release Notes:**\n${nextRelease.notes}",
-        "releasedLabels": [
-          "${nextRelease.version}"
-        ],
+        "releasedLabels": ["${nextRelease.version}"],
         "addReleases": "bottom"
       }
     ]

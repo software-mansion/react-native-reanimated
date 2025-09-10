@@ -9,6 +9,7 @@
     "worklets"
   ],
   "scripts": {
+    "semantic-release": "semantic-release",
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
     "build:unpackers": "node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
@@ -22,7 +23,6 @@
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:js": "prettier --write --list-different src",
     "format:plugin": "yarn workspace babel-plugin-worklets format",
-    "semantic-release": "semantic-release",
     "lint": "yarn lint:js && yarn lint:common && yarn lint:plugin && yarn lint:android && yarn lint:apple",
     "lint:android": "../../scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
     "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
@@ -66,7 +66,6 @@
     "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
-    "semantic-release": "^22.0.12",
     "semver": "7.7.2"
   },
   "devDependencies": {
