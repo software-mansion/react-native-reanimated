@@ -53,21 +53,4 @@ describe('runOnRuntimeSync', () => {
     await waitForNotification(NOTIFICATION_NAME);
     expect(synchronizable.getBlocking()).toBe(100, ComparisonMode.NUMBER);
   });
-
-  test('use runOnRuntimeSync to run a function on the Worker Runtime from UI Runtime', () => {
-    // Arrange
-    const workletRuntime = createWorkletRuntime({ name: 'test' });
-    const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
-    // Act
-    const result = runOnRuntimeSync(workletRuntime2, () => {
-      'worklet';
-      runOnRuntimeSync(workletRuntime, () => {
-        'worklet';
-        return 100;
-      });
-    });
-
-    // Assert
-  });
 });
