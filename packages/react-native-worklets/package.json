@@ -65,6 +65,7 @@
     "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
+    "semantic-release": "^22.0.12",
     "semver": "7.7.2"
   },
   "devDependencies": {

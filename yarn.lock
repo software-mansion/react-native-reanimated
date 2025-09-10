@@ -22824,7 +22824,6 @@ __metadata:
     node-fetch: "npm:^3.3.2"
     prettier: "npm:^3.3.3"
     prettier-plugin-jsdoc: "npm:^1.3.0"
-    semantic-release: "npm:^22.0.12"
     typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft
@@ -22886,6 +22885,7 @@ __metadata:
     react-native-svg: "npm:15.12.1"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.1.1"
+    semantic-release: "npm:^22.0.12"
     semver: "npm:7.7.2"
     shelljs: "npm:^0.8.5"
     typescript: "npm:5.8.3"
@@ -23004,6 +23004,7 @@ __metadata:
     react: "npm:19.1.1"
     react-native: "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch"
     react-native-builder-bob: "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch"
+    semantic-release: "npm:^22.0.12"
     semver: "npm:7.7.2"
     typescript: "npm:5.8.3"
   peerDependencies:

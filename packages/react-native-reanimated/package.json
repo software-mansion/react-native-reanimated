@@ -150,6 +150,7 @@
     "react-native-svg": "15.12.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.1.1",
+    "semantic-release": "^22.0.12",
     "shelljs": "^0.8.5",
     "typescript": "5.8.3"
   },
