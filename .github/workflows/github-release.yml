@@ -66,9 +66,8 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Create temporary semantic-release config
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          cat > .releaserc.temp.json << EOF
+          cat > .releaserc << EOF
           {
             "branches": ["${{ env.BRANCH }}"],
             "tagFormat": "${{ env.PACKAGE }}-${version}",
@@ -108,12 +107,11 @@ jobs:
           EOF
 
       - name: Verify config file
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
           echo "📋 Verifying config file exists..."
-          ls -la .releaserc.temp.json
+          ls -la .releaserc
           echo "📄 Config file content:"
-          cat .releaserc.temp.json
+          cat .releaserc
 
       - name: Run semantic-release
         working-directory: ${{ env.PACKAGE_DIR }}
@@ -121,15 +119,14 @@ jobs:
           # Run semantic-release with the temporary config
           if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
-            yarn semantic-release --dry-run --extends ./releaserc.temp.json
+            yarn semantic-release --dry-run
           else
             echo "🚀 Creating actual release"
-            yarn semantic-release --extends ./releaserc.temp.json
+            yarn semantic-release
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clean up
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          rm -f .releaserc.temp.json
+          rm -f .releaserc
