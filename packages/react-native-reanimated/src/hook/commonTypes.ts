@@ -37,9 +37,10 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-// TODO - Replace InstanceOrElement with InternalHostInstance once we migrate to the new
-// react-native-strict-api types to align with the useRef type. For now, we need to support
-// the old useAnimatedRef API as well, in which uses the ElementType as the type of the ref.
+// TODO - Replace InstanceOrElement with InternalHostInstance once we drop support for the old
+// types and migrate to the new react-native-strict-api types to align with the useRef type.
+// For now, we need to support the old useAnimatedRef API as well, which uses the ElementType
+// as the type of the ref.
 type AnimatedRefCurrent<TRef extends InstanceOrElement> =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TRef extends AnimatedComponentType<any, infer Instance>

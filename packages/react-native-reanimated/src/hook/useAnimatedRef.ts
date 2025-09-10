@@ -41,9 +41,8 @@ function useAnimatedRefBase<TRef extends InstanceOrElement>(
         wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () =>
-          findNodeHandle(getComponentOrScrollable(ref)) ?? null;
-        fun.current = ref as typeof fun.current;
+        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
+        fun.current = ref;
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
