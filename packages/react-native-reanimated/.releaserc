@@ -4,7 +4,8 @@
   ],
   "branches": [
     "main",
-    "[0-9]+\\.[0-9]+-stable"
+    "[0-9]+\\.[0-9]+-stable",
+    "@matipl01/github-release-action"
   ],
   "tagFormat": "reanimated-${version}",
   "name": "React Native Reanimated"

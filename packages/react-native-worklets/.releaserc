@@ -4,7 +4,8 @@
   ],
   "branches": [
     "main",
-    "worklets-[0-9]+\\.[0-9]+-stable"
+    "worklets-[0-9]+\\.[0-9]+-stable",
+    "@matipl01/github-release-action"
   ],
   "tagFormat": "worklets-${version}",
   "name": "React Native Worklets"
