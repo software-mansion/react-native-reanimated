@@ -1,10 +1,7 @@
 {
-  "extends": [
-    "../../.releaserc"
-  ],
+  "extends": ["../../.releaserc.json"],
   "branches": [
     "main",
-    "[0-9]+\\.[0-9]+-stable",
     "@matipl01/github-release-action"
   ],
   "tagFormat": "reanimated-${version}",

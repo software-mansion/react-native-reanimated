@@ -94,15 +94,15 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run semantic-release
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          # Run semantic-release with the local version and explicit config
+          # Run semantic-release using yarn workspace
+          WORKSPACE_NAME="${{ env.PACKAGE == 'reanimated' && 'react-native-reanimated' || 'react-native-worklets' }}"
           if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
-            yarn semantic-release --dry-run
+            yarn workspace $WORKSPACE_NAME semantic-release --dry-run
           else
             echo "🚀 Creating actual release"
-            yarn semantic-release
+            yarn workspace $WORKSPACE_NAME semantic-release
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
