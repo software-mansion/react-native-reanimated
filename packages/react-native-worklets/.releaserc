@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../.releaserc"
+  ],
+  "branches": [
+    "main",
+    "worklets-[0-9]+\\.[0-9]+-stable"
+  ],
+  "tagFormat": "worklets-${version}",
+  "name": "React Native Worklets"
+}

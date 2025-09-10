@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../.releaserc"
+  ],
+  "branches": [
+    "main",
+    "[0-9]+\\.[0-9]+-stable"
+  ],
+  "tagFormat": "reanimated-${version}",
+  "name": "React Native Reanimated"
+}

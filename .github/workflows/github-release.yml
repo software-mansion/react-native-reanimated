@@ -37,11 +37,39 @@ jobs:
     env:
       PACKAGE: ${{ inputs.package || 'reanimated' }}
       VERSION: ${{ inputs.version || 'test-version' }}
-      BRANCH: ${{ inputs.branch || github.ref_name }}
+      BRANCH: ${{ inputs.branch || '4.0-stable' || github.ref_name }}
       DRY_RUN: ${{ inputs.dry_run || 'true' }}
       PACKAGE_DIR: packages/${{ (inputs.package || 'reanimated') == 'reanimated' && 'react-native-reanimated' || 'react-native-worklets' }}
       PACKAGE_NAME: ${{ (inputs.package || 'reanimated') == 'reanimated' && 'React Native Reanimated' || 'React Native Worklets' }}
     steps:
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ inputs.branch }}"
+          PACKAGE="${{ inputs.package }}"
+
+          case "$PACKAGE" in
+            "reanimated")
+              if [[ "$BRANCH" =~ ^(main|[0-9]+\.[0-9]+-stable)$ ]]; then
+                echo "✅ Valid reanimated branch: $BRANCH"
+              else
+                echo "❌ Invalid reanimated branch: $BRANCH (expected: main or X.Y-stable)"
+                exit 1
+              fi
+              ;;
+            "worklets")
+              if [[ "$BRANCH" =~ ^(main|worklets-[0-9]+\.[0-9]+-stable)$ ]]; then
+                echo "✅ Valid worklets branch: $BRANCH"
+              else
+                echo "❌ Invalid worklets branch: $BRANCH (expected: main or worklets-X.Y-stable)"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "❌ Unknown package: $PACKAGE"
+              exit 1
+              ;;
+          esac
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -65,54 +93,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create temporary semantic-release config
-        run: |
-          cat > .releaserc << EOF
-          {
-            "branches": ["${{ env.BRANCH }}"],
-            "tagFormat": "${{ env.PACKAGE }}-\\${version}",
-            "plugins": [
-              [
-                "@semantic-release/commit-analyzer",
-                {
-                  "preset": "conventionalcommits"
-                }
-              ],
-              [
-                "@semantic-release/release-notes-generator",
-                {
-                  "preset": "conventionalcommits",
-                  "presetConfig": {
-                    "types": [
-                      { "type": "feat", "section": "🚀 Features" },
-                      { "type": "fix", "section": "🐛 Bug Fixes" },
-                      { "type": "perf", "section": "⚡ Performance Improvements" },
-                      { "type": "docs", "section": "📚 Documentation" },
-                      { "type": "revert", "section": "🔄 Reverts" }
-                    ],
-                    "other": "📝 Other Changes"
-                  }
-                }
-              ],
-              [
-                "@semantic-release/github",
-                {
-                  "successComment": "🎉 This PR is included in version \${nextRelease.version} of ${{ env.PACKAGE_NAME }}!\n\n**Release Notes:**\n\${nextRelease.notes}",
-                  "releasedLabels": ["${{ env.PACKAGE }} \${nextRelease.version}"],
-                  "addReleases": "bottom"
-                }
-              ]
-            ]
-          }
-          EOF
-
-      - name: Verify config file
-        run: |
-          echo "📋 Verifying config file exists..."
-          ls -la .releaserc
-          echo "📄 Config file content:"
-          cat .releaserc
-
       - name: Run semantic-release
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
@@ -129,4 +109,4 @@ jobs:
 
       - name: Clean up
         run: |
-          rm -f .releaserc
+          echo "✅ Workflow completed successfully"
