@@ -1,6 +1,8 @@
 name: GitHub Release
 
 on:
+  push:
+    branches: ['@matipl01/github-release-action']
   workflow_dispatch:
     inputs:
       package:
@@ -33,13 +35,17 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      PACKAGE_DIR: packages/${{ inputs.package == 'reanimated' && 'react-native-reanimated' || 'react-native-worklets' }}
-      PACKAGE_NAME: ${{ inputs.package == 'reanimated' && 'React Native Reanimated' || 'React Native Worklets' }}
+      PACKAGE: ${{ inputs.package || 'reanimated' }}
+      VERSION: ${{ inputs.version || 'test-version' }}
+      BRANCH: ${{ inputs.branch || github.ref_name }}
+      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      PACKAGE_DIR: packages/${{ (inputs.package || 'reanimated') == 'reanimated' && 'react-native-reanimated' || 'react-native-worklets' }}
+      PACKAGE_NAME: ${{ (inputs.package || 'reanimated') == 'reanimated' && 'React Native Reanimated' || 'React Native Worklets' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ env.BRANCH }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -64,8 +70,8 @@ jobs:
         run: |
           cat > .releaserc.temp.json << EOF
           {
-            "branches": ["${{ inputs.branch }}"],
-            "tagFormat": "${{ inputs.package }}-${version}",
+            "branches": ["${{ env.BRANCH }}"],
+            "tagFormat": "${{ env.PACKAGE }}-${version}",
             "plugins": [
               [
                 "@semantic-release/commit-analyzer",
@@ -93,7 +99,7 @@ jobs:
                 "@semantic-release/github",
                 {
                   "successComment": "🎉 This PR is included in version \${nextRelease.version} of ${{ env.PACKAGE_NAME }}!\n\n**Release Notes:**\n\${nextRelease.notes}",
-                  "releasedLabels": ["${{ inputs.package }} \${nextRelease.version}"],
+                  "releasedLabels": ["${{ env.PACKAGE }} \${nextRelease.version}"],
                   "addReleases": "bottom"
                 }
               ]
@@ -105,7 +111,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
           # Run semantic-release with the temporary config
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
+          if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
             yarn semantic-release --dry-run --extends .releaserc.temp.json
           else
