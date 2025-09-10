@@ -96,13 +96,13 @@ jobs:
       - name: Run semantic-release
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          # Run semantic-release with the temporary config
+          # Run semantic-release with the local version and explicit config
           if [ "${{ env.DRY_RUN }}" = "true" ]; then
             echo "🧪 Running in dry-run mode - no release will be created"
-            npx semantic-release --dry-run
+            yarn semantic-release --dry-run
           else
             echo "🚀 Creating actual release"
-            npx semantic-release
+            yarn semantic-release
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -27,6 +27,7 @@
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "find-unused-code:js": "knip",
     "type:check": "yarn type:check:src && yarn type:check:app && yarn type:check:tests:common",
+    "semantic-release": "semantic-release",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "../../scripts/test-ts.sh __typetests__/common",
