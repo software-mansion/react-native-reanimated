@@ -170,6 +170,58 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   runOnRuntime(workletRuntime, worklet)(...args);
 }
 
+/**
+ * Lets you run a function synchronously on the [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
+ *   is enabled.
+ *
+ * @param workletRuntime - The runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeSync` is not a worklet.'
+    );
+  }
+
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    return WorkletsModule.runOnRuntimeSync(
+      workletRuntime,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        console.log('result', result);
+        return createSerializable(result);
+      })
+    );
+  }
+
+  return WorkletsModule.runOnRuntimeSync(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      console.log('result', result);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
+}
+
 /** Configuration object for creating a worklet runtime. */
 export type WorkletRuntimeConfig = {
   /** The name of the worklet runtime. */

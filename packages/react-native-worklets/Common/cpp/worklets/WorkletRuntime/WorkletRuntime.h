@@ -99,4 +99,8 @@ void scheduleOnRuntime(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
 
+jsi::Value runOnRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue);
 } // namespace worklets

@@ -192,6 +192,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSync(
+      workletRuntime,
+      worklet
+    );
+  }
+
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
     return this.#workletsModuleProxy.createSynchronizable(value);
   }

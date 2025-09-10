@@ -135,6 +135,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  runOnRuntimeSync(): never {
+    throw new WorkletsError(
+      '`runOnRuntimeSync` is not available in JSWorklets.'
+    );
+  }
+
   createWorkletRuntime(): never {
     throw new WorkletsError(
       'createWorkletRuntime is not available in JSWorklets.'

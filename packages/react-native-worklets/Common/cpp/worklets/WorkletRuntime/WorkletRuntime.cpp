@@ -164,11 +164,12 @@ jsi::Value WorkletRuntime::executeSync(
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
-      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
+      "[Worklets] Only worklets can be executed synchronously on Worklet (" +
+          name_ + ") Runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
+  jsi::Runtime &workletRuntime = getJSIRuntime();
   auto result = runGuarded(serializableWorklet);
-  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
+  auto serializableResult = extractSerializableOrThrow(workletRuntime, result);
   lock.unlock();
   return serializableResult->toJSValue(rt);
 }
@@ -241,4 +242,11 @@ void scheduleOnRuntime(
   workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
+jsi::Value runOnRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  return workletRuntime->executeSync(rt, serializableWorkletValue);
+}
 } // namespace worklets
