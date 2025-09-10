@@ -205,7 +205,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       makeShareableCloneOnUIRecursive(() => {
         'worklet';
         const result = worklet(...args);
-        console.log('result', result);
         return createSerializable(result);
       })
     );
@@ -216,7 +215,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       const result = worklet(...args);
-      console.log('result', result);
       return makeShareableCloneOnUIRecursive(result);
     })
   );
