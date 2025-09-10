@@ -44,8 +44,8 @@ jobs:
     steps:
       - name: Validate branch name
         run: |
-          BRANCH="${{ inputs.branch }}"
-          PACKAGE="${{ inputs.package }}"
+          BRANCH="${{ env.BRANCH }}"
+          PACKAGE="${{ env.PACKAGE }}"
 
           case "$PACKAGE" in
             "reanimated")
