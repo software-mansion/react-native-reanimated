@@ -67,10 +67,10 @@ jobs:
 
       - name: Create temporary semantic-release config
         run: |
-          cat > .releaserc << EOF
+          cat > .releaserc << 'EOF'
           {
             "branches": ["${{ env.BRANCH }}"],
-            "tagFormat": "${{ env.PACKAGE }}-\\${version}",
+            "tagFormat": "${{ env.PACKAGE }}-${version}",
             "plugins": [
               [
                 "@semantic-release/commit-analyzer",
