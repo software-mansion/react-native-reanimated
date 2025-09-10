@@ -1,8 +1,6 @@
 name: GitHub Release
 
 on:
-  push:
-    branches: ['@matipl01/github-release-action']
   workflow_dispatch:
     inputs:
       package:
