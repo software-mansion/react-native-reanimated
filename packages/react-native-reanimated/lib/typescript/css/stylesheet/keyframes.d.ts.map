@@ -1,0 +1,1 @@
+{"version":3,"file":"keyframes.d.ts","sourceRoot":"","sources":["../../../../src/css/stylesheet/keyframes.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EACV,qBAAqB,EACrB,gBAAgB,EAChB,UAAU,EACX,MAAM,UAAU,CAAC;AAElB,MAAM,CAAC,OAAO,UAAU,SAAS,CAAC,CAAC,SAAS,UAAU,EAEpD,mBAAmB,EAAE,qBAAqB,CAAC,IAAI,CAAC,CAAC,EAAE,MAAM,UAAU,CAAC,CAAC,GACnE,qBAAqB,CAAC,UAAU,CAAC,GAClC,gBAAgB,CAElB"}

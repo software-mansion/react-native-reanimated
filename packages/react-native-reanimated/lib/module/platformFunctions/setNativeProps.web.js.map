@@ -1,0 +1,1 @@
+{"version":3,"names":["_updatePropsJS","setNativeProps","animatedRef","updates","component"],"sourceRoot":"../../../src","sources":["platformFunctions/setNativeProps.web.ts"],"mappings":"AAAA,YAAY;;AAIZ,SAASA,cAAc,QAAQ,4CAAmC;AAElE,OAAO,SAASC,cAAcA,CAC5BC,WAA8B,EAC9BC,OAAmB,EACnB;EACA,MAAMC,SAAS,GAAGF,WAAW,CAAC,CAA0B;EACxDF,cAAc,CAACG,OAAO,EAAEC,SAAS,CAAC;AACpC","ignoreList":[]}

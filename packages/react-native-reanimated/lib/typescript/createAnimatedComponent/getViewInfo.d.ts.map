@@ -1,0 +1,1 @@
+{"version":3,"file":"getViewInfo.d.ts","sourceRoot":"","sources":["../../../src/createAnimatedComponent/getViewInfo.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,uCAAuC,CAAC;AAE1E,wBAAgB,WAAW,CAAC,OAAO,EAAE,YAAY,GAAG;IAClD,QAAQ,CAAC,EAAE,MAAM,CAAC;IAClB,OAAO,CAAC,EAAE,MAAM,CAAC;CAClB,CAOA"}

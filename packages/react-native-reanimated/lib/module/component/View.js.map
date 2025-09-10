@@ -1,0 +1,1 @@
+{"version":3,"names":["View","createAnimatedComponent","AnimatedView"],"sourceRoot":"../../../src","sources":["component/View.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,IAAI,QAAQ,cAAc;AAEnC,SAASC,uBAAuB,QAAQ,qCAA4B;;AAEpE;AACA;;AAKA,OAAO,MAAMC,YAAY,GAAGD,uBAAuB,CAACD,IAAI,CAAC","ignoreList":[]}

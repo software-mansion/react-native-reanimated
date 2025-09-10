@@ -1,0 +1,1 @@
+{"version":3,"file":"stylesheet.d.ts","sourceRoot":"","sources":["../../../../src/css/stylesheet/stylesheet.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,UAAU,CAAC;AAGzC,KAAK,WAAW,CAAC,CAAC,IAAI;KAAG,CAAC,IAAI,MAAM,CAAC,GAAG,QAAQ;CAAE,CAAC;AAoBnD,eAAO,MAAM,MAAM,GAAI,CAAC,SAAS,WAAW,CAAC,CAAC,CAAC,EAE7C,QAAQ,CAAC,GAAG,WAAW,CAAC,GAAG,CAAC,KAC3B,CAiBF,CAAC"}

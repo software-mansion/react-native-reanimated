@@ -1,0 +1,286 @@
+'use strict';
+
+import "../layoutReanimation/animationsManager.js";
+import { maybeBuild } from "../animationBuilder.js";
+import { IS_JEST, IS_WEB, logger } from "../common/index.js";
+import { LayoutAnimationType } from "../commonTypes.js";
+import { SkipEnteringContext } from "../component/LayoutAnimationConfig.js";
+import ReanimatedAnimatedComponent from "../css/component/AnimatedComponent.js";
+import { configureWebLayoutAnimations, getReducedMotionFromConfig, saveSnapshot, startWebLayoutAnimation, tryActivateLayoutTransition } from "../layoutReanimation/web/index.js";
+import { addHTMLMutationObserver } from "../layoutReanimation/web/domUtils.js";
+import { updateLayoutAnimations } from "../UpdateLayoutAnimations.js";
+import { InlinePropManager } from "./InlinePropManager.js";
+import jsPropsUpdater from "./JSPropsUpdater.js";
+import { NativeEventsManager } from "./NativeEventsManager.js";
+import { PropsFilter } from "./PropsFilter.js";
+import { filterStyles, flattenArray } from "./utils.js";
+let id = 0;
+if (IS_WEB) {
+  configureWebLayoutAnimations();
+}
+export default class AnimatedComponent extends ReanimatedAnimatedComponent {
+  _animatedStyles = [];
+  _prevAnimatedStyles = [];
+  _animatedProps = [];
+  _prevAnimatedProps = [];
+  _isFirstRender = true;
+  jestAnimatedStyle = {
+    value: {}
+  };
+  jestAnimatedProps = {
+    value: {}
+  };
+  _InlinePropManager = new InlinePropManager();
+  _PropsFilter = new PropsFilter();
+  static contextType = SkipEnteringContext;
+  reanimatedID = id++;
+  constructor(ChildComponent, props, displayName, options) {
+    super(ChildComponent, props);
+    this._options = options;
+    this._displayName = displayName;
+    if (IS_JEST) {
+      this.jestAnimatedStyle = {
+        value: {}
+      };
+      this.jestAnimatedProps = {
+        value: {}
+      };
+    }
+    const skipEntering = this.context?.current;
+    if (!skipEntering) {
+      this._configureLayoutAnimation(LayoutAnimationType.ENTERING, this.props.entering);
+    }
+  }
+  componentDidMount() {
+    super.componentDidMount();
+    if (!IS_WEB) {
+      // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
+      this._NativeEventsManager = new NativeEventsManager(this, this._options);
+    }
+    this._NativeEventsManager?.attachEvents();
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.registerComponent(this, this._options.jsProps);
+    }
+    this._configureLayoutAnimation(LayoutAnimationType.LAYOUT, this.props.layout);
+    this._configureLayoutAnimation(LayoutAnimationType.EXITING, this.props.exiting);
+    if (IS_WEB) {
+      if (this.props.exiting && this._componentDOMRef) {
+        saveSnapshot(this._componentDOMRef);
+      }
+      if (!this.props.entering) {
+        this._isFirstRender = false;
+        return;
+      }
+      if (getReducedMotionFromConfig(this.props.entering)) {
+        this._isFirstRender = false;
+        this.props.entering.callbackV?.(true);
+        return;
+      }
+      const skipEntering = this.context?.current;
+      if (!skipEntering) {
+        startWebLayoutAnimation(this.props, this._componentDOMRef, LayoutAnimationType.ENTERING);
+      } else if (this._componentDOMRef) {
+        this._componentDOMRef.style.visibility = 'initial';
+      }
+    }
+    this._isFirstRender = false;
+  }
+  componentWillUnmount() {
+    super.componentWillUnmount();
+    this._NativeEventsManager?.detachEvents();
+    this._detachStyles();
+    this._InlinePropManager.detachInlineProps();
+    if (this._options?.jsProps?.length) {
+      jsPropsUpdater.unregisterComponent(this);
+    }
+    const exiting = this.props.exiting;
+    if (IS_WEB && this._componentDOMRef && exiting) {
+      if (getReducedMotionFromConfig(exiting)) {
+        exiting.callbackV?.(true);
+        return;
+      }
+      addHTMLMutationObserver();
+      startWebLayoutAnimation(this.props, this._componentDOMRef, LayoutAnimationType.EXITING);
+    }
+  }
+  _detachStyles() {
+    const viewTag = this.getComponentViewTag();
+    if (viewTag !== -1) {
+      for (const style of this._animatedStyles) {
+        style.viewDescriptors.remove(viewTag);
+      }
+      if (this.props.animatedProps?.viewDescriptors) {
+        this.props.animatedProps.viewDescriptors.remove(viewTag);
+      }
+    }
+  }
+  setNativeProps(props) {
+    if (this._options?.setNativeProps) {
+      this._options.setNativeProps(this._componentRef, props);
+    } else {
+      this._componentRef?.setNativeProps?.(props);
+    }
+  }
+  _handleAnimatedStylesUpdate(prevStyles, currentStyles, jestAnimatedStyleOrProps) {
+    const {
+      viewTag,
+      shadowNodeWrapper
+    } = this._getViewInfo();
+    const newStyles = new Set(currentStyles);
+
+    // remove old styles
+    if (prevStyles) {
+      // in most of the cases, views have only a single animated style and it remains unchanged
+      const hasOneSameStyle = currentStyles.length === 1 && prevStyles.length === 1 && currentStyles[0] === prevStyles[0];
+      if (hasOneSameStyle) {
+        return;
+      }
+
+      // otherwise, remove each style that is not present in new styles
+      for (const prevStyle of prevStyles) {
+        const isPresent = currentStyles.some(style => {
+          if (style === prevStyle) {
+            newStyles.delete(style);
+            return true;
+          }
+          return false;
+        });
+        if (!isPresent) {
+          prevStyle.viewDescriptors.remove(viewTag);
+        }
+      }
+    }
+    newStyles.forEach(style => {
+      style.viewDescriptors.add({
+        tag: viewTag,
+        shadowNodeWrapper
+      }, style.styleUpdaterContainer);
+      if (IS_JEST) {
+        /**
+         * We need to connect Jest's TestObject instance whose contains just
+         * props object with the updateProps() function where we update the
+         * properties of the component. We can't update props object directly
+         * because TestObject contains a copy of props - look at render
+         * function: const props = this._filterNonAnimatedProps(this.props);
+         */
+        Object.assign(jestAnimatedStyleOrProps.value, style.initial.value);
+        style.jestAnimatedValues.current = jestAnimatedStyleOrProps;
+      }
+    });
+  }
+  _updateAnimatedStylesAndProps() {
+    this._handleAnimatedStylesUpdate(this._prevAnimatedStyles, this._animatedStyles, this.jestAnimatedStyle);
+    this._handleAnimatedStylesUpdate(this._prevAnimatedProps, this._animatedProps, this.jestAnimatedProps);
+  }
+  componentDidUpdate(prevProps, _prevState, snapshot) {
+    this._configureLayoutAnimation(LayoutAnimationType.LAYOUT, this.props.layout, prevProps.layout);
+    this._configureLayoutAnimation(LayoutAnimationType.EXITING, this.props.exiting, prevProps.exiting);
+    this._NativeEventsManager?.updateEvents(prevProps);
+    this._updateAnimatedStylesAndProps();
+    this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+    if (IS_WEB && this.props.exiting && this._componentDOMRef) {
+      saveSnapshot(this._componentDOMRef);
+    }
+    if (IS_WEB && snapshot && this.props.layout) {
+      if (getReducedMotionFromConfig(this.props.layout)) {
+        this.props.layout.callbackV?.(true);
+        return;
+      }
+      tryActivateLayoutTransition(this.props, this._componentDOMRef, snapshot);
+    }
+  }
+  _updateStyles(props) {
+    const filteredStyles = filterStyles(flattenArray(props.style ?? []));
+    this._prevAnimatedStyles = this._animatedStyles;
+    this._animatedStyles = filteredStyles.animatedStyles;
+    const filteredAnimatedProps = filterStyles(flattenArray(props.animatedProps ?? []));
+    this._prevAnimatedProps = this._animatedProps;
+    this._animatedProps = filteredAnimatedProps.animatedStyles;
+    if (filteredAnimatedProps.cssStyle) {
+      if (__DEV__ && filteredStyles.cssStyle) {
+        logger.warn('AnimatedComponent: CSS properties cannot be used in style and animatedProps at the same time. Using properties from the style object.');
+        this._cssStyle = filteredStyles.cssStyle;
+        return;
+      }
+
+      // Add all remaining props to cssStyle object
+      // (e.g. SVG components are styled via top level props, not via style object)
+      const mergedProps = {
+        ...props,
+        ...filteredAnimatedProps.cssStyle
+      };
+      delete mergedProps.style;
+      delete mergedProps.animatedProps;
+      this._cssStyle = mergedProps;
+    } else {
+      this._cssStyle = filteredStyles.cssStyle ?? {};
+    }
+  }
+  _configureLayoutAnimation(type, currentConfig, previousConfig) {
+    if (IS_WEB || currentConfig === previousConfig) {
+      return;
+    }
+    updateLayoutAnimations(type === LayoutAnimationType.ENTERING ? this.reanimatedID : this.getComponentViewTag(), type, currentConfig && maybeBuild(currentConfig, type === LayoutAnimationType.LAYOUT ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */ : this.props?.style, this._displayName));
+  }
+
+  // This is a component lifecycle method from React, therefore we are not calling it directly.
+  // It is called before the component gets rerendered. This way we can access components' position before it changed
+  // and later on, in componentDidUpdate, calculate translation for layout transition.
+  getSnapshotBeforeUpdate() {
+    if (IS_WEB && this.props.layout && this._componentDOMRef?.getBoundingClientRect) {
+      return this._componentDOMRef.getBoundingClientRect();
+    }
+
+    // `getSnapshotBeforeUpdate` has to return value which is not `undefined`.
+    return null;
+  }
+  render() {
+    const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
+    if (IS_JEST) {
+      filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
+      filteredProps.jestAnimatedProps = this.jestAnimatedProps;
+    }
+
+    // Layout animations on web are set inside `componentDidMount` method, which is called after first render.
+    // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
+    // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
+    // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
+    if (this._isFirstRender && IS_WEB && filteredProps.entering && !getReducedMotionFromConfig(filteredProps.entering)) {
+      filteredProps.style = Array.isArray(filteredProps.style) ? filteredProps.style.concat([{
+        visibility: 'hidden'
+      }]) : {
+        ...(filteredProps.style ?? {}),
+        visibility: 'hidden' // Hide component until `componentDidMount` triggers
+      };
+    }
+    const skipEntering = this.context?.current;
+    const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
+    const jestProps = IS_JEST ? {
+      jestInlineStyle: this.props.style && filterOutAnimatedStyles(this.props.style),
+      jestAnimatedStyle: this.jestAnimatedStyle,
+      jestAnimatedProps: this.jestAnimatedProps
+    } : {};
+    return super.render({
+      nativeID,
+      ...filteredProps,
+      ...jestProps
+    });
+  }
+}
+function filterOutAnimatedStyles(style) {
+  if (!style) {
+    return style;
+  }
+  if (!Array.isArray(style)) {
+    return style?.viewDescriptors ? {} : style;
+  }
+  return style.filter(styleElement => !(styleElement && 'viewDescriptors' in styleElement)).map(styleElement => {
+    if (Array.isArray(styleElement)) {
+      return filterOutAnimatedStyles(styleElement);
+    }
+    return styleElement;
+  });
+}
+//# sourceMappingURL=AnimatedComponent.js.map

@@ -1,0 +1,1 @@
+{"version":3,"names":["logger","dispatchCommand","warn"],"sourceRoot":"../../../src","sources":["platformFunctions/dispatchCommand.web.ts"],"mappings":"AAAA,YAAY;;AAEZ,SAASA,MAAM,QAAQ,oBAAW;AAElC,OAAO,SAASC,eAAeA,CAAA,EAAG;EAChCD,MAAM,CAACE,IAAI,CAAC,4CAA4C,CAAC;AAC3D","ignoreList":[]}

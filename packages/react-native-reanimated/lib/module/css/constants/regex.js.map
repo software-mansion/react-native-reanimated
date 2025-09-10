@@ -1,0 +1,1 @@
+{"version":3,"names":["PERCENTAGE_REGEX","MILLISECONDS_REGEX","SECONDS_REGEX"],"sourceRoot":"../../../../src","sources":["css/constants/regex.ts"],"mappings":"AAAA,YAAY;;AACZ,OAAO,MAAMA,gBAAgB,GAAG,kBAAkB;AAClD,OAAO,MAAMC,kBAAkB,GAAG,mBAAmB;AACrD,OAAO,MAAMC,aAAa,GAAG,kBAAkB","ignoreList":[]}

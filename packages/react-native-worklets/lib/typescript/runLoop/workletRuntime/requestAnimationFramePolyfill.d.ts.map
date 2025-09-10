@@ -1,0 +1,1 @@
+{"version":3,"file":"requestAnimationFramePolyfill.d.ts","sourceRoot":"","sources":["../../../../src/runLoop/workletRuntime/requestAnimationFramePolyfill.ts"],"names":[],"mappings":"AAEA,wBAAgB,0BAA0B,CAAC,yBAAyB,EAAE,MAAM,QA0D3E"}
