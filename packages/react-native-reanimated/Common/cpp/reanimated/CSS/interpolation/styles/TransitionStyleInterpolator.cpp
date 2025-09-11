@@ -33,13 +33,25 @@ TransitionStyleInterpolator::getReversedPropertyNames(
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider) const {
-  return mapInterpolators(
-      transitionProgressProvider,
-      [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
-          const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-        return interpolator->interpolate(shadowNode, progressProvider);
-      });
+    const TransitionProgressProvider &transitionProgressProvider,
+    const std::unordered_set<std::string> &allowDiscreteProperties) const {
+  folly::dynamic result = folly::dynamic::object;
+
+  const auto allFallbackInterpolateThreshold =
+      allowDiscreteProperties.contains("all") ? 0.5 : 0;
+
+  for (const auto &[propertyName, progressProvider] :
+       transitionProgressProvider.getPropertyProgressProviders()) {
+    const auto &interpolator = interpolators_.at(propertyName);
+    const auto fallbackInterpolateThreshold =
+        (allowDiscreteProperties.contains(propertyName))
+        ? 0.5
+        : allFallbackInterpolateThreshold;
+    result[propertyName] = interpolator->interpolate(
+        shadowNode, progressProvider, fallbackInterpolateThreshold);
+  }
+
+  return result;
 }
 
 void TransitionStyleInterpolator::discardFinishedInterpolators(
@@ -96,20 +108,6 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
   }
-}
-
-folly::dynamic TransitionStyleInterpolator::mapInterpolators(
-    const TransitionProgressProvider &transitionProgressProvider,
-    const MapInterpolatorsCallback &callback) const {
-  folly::dynamic result = folly::dynamic::object;
-
-  for (const auto &[propertyName, progressProvider] :
-       transitionProgressProvider.getPropertyProgressProviders()) {
-    result[propertyName] =
-        callback(interpolators_.at(propertyName), progressProvider);
-  }
-
-  return result;
 }
 
 } // namespace reanimated::css

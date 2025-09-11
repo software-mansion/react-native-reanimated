@@ -14,7 +14,7 @@
     background-color: var(--swm-blue-light-80);
   }
 
-  @media (max-width: 936px) {
+  @media (max-width: 996px) {
     margin-top: 100px;
     gap: 56px;
   }
@@ -22,4 +22,9 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+.layoutWrapper {
+  position: relative;
+  overflow: hidden;
 }

@@ -4,7 +4,17 @@
   justify-content: center;
   gap: 48px;
   width: 80%;
-  max-width: 936px;
+  max-width: 996px;
+
+  position: relative;
+  .background {
+    position: absolute;
+    right: -400px;
+    z-index: -1;
+    svg {
+      width: 100%;
+    }
+  }
 
   .header {
     display: flex;
@@ -32,9 +42,13 @@
   }
 }
 
-@media (max-width: 936px) {
+@media (max-width: 996px) {
   .headerSection {
     gap: 16px;
+
+    .background {
+      display: none;
+    }
 
     .header {
       h1 {
@@ -51,4 +65,8 @@
       }
     }
   }
+}
+
+[data-theme='dark'] .headerSection .background {
+  opacity: 0.6;
 }

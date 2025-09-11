@@ -69,7 +69,8 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
 
 folly::dynamic TransformsStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const double) const {
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 
   // Get or create the current keyframe
@@ -87,7 +88,7 @@ folly::dynamic TransformsStyleInterpolator::interpolate(
   }
 
   // Interpolate the current keyframe
-  TransformOperations result = interpolateOperations(
+  const auto result = interpolateOperations(
       shadowNode,
       progressProvider->getKeyframeProgress(
           keyframe->fromOffset, keyframe->toOffset),

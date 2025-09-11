@@ -173,7 +173,6 @@ jsi::Value WorkletRuntime::executeSync(
   return serializableResult->toJSValue(rt);
 }
 
-#ifdef WORKLETS_BUNDLE_MODE
 jsi::Value WorkletRuntime::executeSync(
     std::function<jsi::Value(jsi::Runtime &)> &&job) const {
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
@@ -187,7 +186,6 @@ jsi::Value WorkletRuntime::executeSync(
   jsi::Runtime &uiRuntime = getJSIRuntime();
   return job(uiRuntime);
 }
-#endif // WORKLETS_BUNDLE_MODE
 
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,

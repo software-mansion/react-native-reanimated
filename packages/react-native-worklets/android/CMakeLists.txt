@@ -84,41 +84,24 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
 )
 
-if(ReactAndroid_VERSION_MINOR LESS 76)
-  target_link_libraries(
-    worklets ReactAndroid::fabricjni ReactAndroid::react_debug
-    ReactAndroid::react_render_core
-    ReactAndroid::react_render_componentregistry ReactAndroid::rrc_view)
-endif()
-
 # build shared lib
 set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(worklets log ReactAndroid::jsi fbjni::fbjni)
-
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-  target_link_libraries(worklets ReactAndroid::reactnative)
-else()
-  target_link_libraries(
-    worklets ReactAndroid::react_nativemodule_core ReactAndroid::folly_runtime
-    ReactAndroid::glog ReactAndroid::reactnativejni)
-endif()
+target_link_libraries(worklets log ReactAndroid::reactnative ReactAndroid::jsi
+                      fbjni::fbjni)
 
 if(${JS_RUNTIME} STREQUAL "hermes")
-  target_link_libraries(worklets hermes-engine::libhermes)
+  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
+    target_link_libraries(worklets hermes-engine::hermesvm)
+  else()
+    target_link_libraries(worklets hermes-engine::libhermes)
+  endif()
 
   if(${HERMES_ENABLE_DEBUGGER})
     string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
-    if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-      target_link_libraries(worklets ReactAndroid::hermestooling)
-    else()
-      target_link_libraries(worklets ReactAndroid::hermes_executor)
-    endif()
+
+    target_link_libraries(worklets ReactAndroid::hermestooling)
   endif()
 elseif(${JS_RUNTIME} STREQUAL "jsc")
-  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-    target_link_libraries(worklets ReactAndroid::jsctooling)
-  else()
-    target_link_libraries(worklets ReactAndroid::jscexecutor)
-  endif()
+  target_link_libraries(worklets ReactAndroid::jsctooling)
 endif()

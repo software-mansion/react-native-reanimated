@@ -9,6 +9,7 @@ import {
   computeSelectionStyles,
   computeTextStyles,
 } from './utils';
+import { DndContext } from '@dnd-kit/core';
 
 const SelectedLabel: React.FC<{
   children: React.ReactNode;
@@ -90,32 +91,34 @@ const SelectedLabel: React.FC<{
 
   return (
     <span ref={selectionRef} className={styles.selection}>
-      <div ref={selectionContainerRef} className={styles.selectionContainer}>
-        <SelectionBox
-          propagationFunction={movementPropagator}
-          draggableIdentifier={DraggableId.TOP_LEFT}
-          isInteractive={isInteractive}></SelectionBox>
-        <SelectionBox
-          propagationFunction={movementPropagator}
-          draggableIdentifier={DraggableId.TOP_RIGHT}
-          isInteractive={isInteractive}></SelectionBox>
-        <SelectionBox
-          propagationFunction={movementPropagator}
-          draggableIdentifier={DraggableId.BOTTOM_LEFT}
-          isInteractive={isInteractive}></SelectionBox>
-        <SelectionBox
-          propagationFunction={movementPropagator}
-          draggableIdentifier={DraggableId.BOTTOM_RIGHT}
-          isInteractive={isInteractive}></SelectionBox>
-        <SelectionBox
-          propagationFunction={movementPropagator}
-          draggableIdentifier={DraggableId.CENTER}
-          isInteractive={isInteractive}>
-          <span ref={textLabelRef} className={styles.headerText}>
-            {children}
-          </span>
-        </SelectionBox>
-      </div>
+      <DndContext>
+        <div ref={selectionContainerRef} className={styles.selectionContainer}>
+          <SelectionBox
+            propagationFunction={movementPropagator}
+            draggableIdentifier={DraggableId.TOP_LEFT}
+            isInteractive={isInteractive}></SelectionBox>
+          <SelectionBox
+            propagationFunction={movementPropagator}
+            draggableIdentifier={DraggableId.TOP_RIGHT}
+            isInteractive={isInteractive}></SelectionBox>
+          <SelectionBox
+            propagationFunction={movementPropagator}
+            draggableIdentifier={DraggableId.BOTTOM_LEFT}
+            isInteractive={isInteractive}></SelectionBox>
+          <SelectionBox
+            propagationFunction={movementPropagator}
+            draggableIdentifier={DraggableId.BOTTOM_RIGHT}
+            isInteractive={isInteractive}></SelectionBox>
+          <SelectionBox
+            propagationFunction={movementPropagator}
+            draggableIdentifier={DraggableId.CENTER}
+            isInteractive={isInteractive}>
+            <span ref={textLabelRef} className={styles.headerText}>
+              {children}
+            </span>
+          </SelectionBox>
+        </div>
+      </DndContext>
     </span>
   );
 };

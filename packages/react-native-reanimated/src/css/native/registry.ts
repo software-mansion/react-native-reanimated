@@ -9,7 +9,12 @@ export const ERROR_MESSAGES = {
 };
 
 const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
-  separatelyInterpolatedArrayProperties: ['transformOrigin', 'boxShadow'],
+  separatelyInterpolatedNestedProperties: [
+    'boxShadow',
+    'shadowOffset',
+    'textShadowOffset',
+    'transformOrigin',
+  ],
 });
 
 const STYLE_BUILDERS: Record<string, StyleBuilder> = {};

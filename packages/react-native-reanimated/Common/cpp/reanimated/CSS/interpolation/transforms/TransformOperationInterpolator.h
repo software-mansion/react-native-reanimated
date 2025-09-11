@@ -111,12 +111,11 @@ class TransformOperationInterpolator<TOperation>
 
   CSSResolvableValueInterpolationContext getResolvableValueContext(
       const TransformInterpolatorUpdateContext &context) const {
-    return {
+    return CSSResolvableValueInterpolationContext{
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
         .relativeProperty = config_.relativeProperty,
-        .relativeTo = config_.relativeTo,
-    };
+        .relativeTo = config_.relativeTo};
   }
 };
 
