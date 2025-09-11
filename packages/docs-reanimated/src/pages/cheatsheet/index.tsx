@@ -173,7 +173,11 @@ export default function CheatSheetPage(): JSX.Element {
                 <p className={styles.disclaimer}>
                   *By providing your email address, you agree to receive our
                   marketing emails and product updates. You can unsubscribe at
-                  any time.
+                  any time. For details see the{' '}
+                  <a href="/react-native-reanimated/privacy-policy">
+                    Privacy Policy
+                  </a>
+                  .
                 </p>
 
                 <button

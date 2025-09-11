@@ -348,19 +348,15 @@
 .successMessage {
   text-align: center;
   padding: 3rem 2rem;
-  background: var(--swm-green-light-20);
-  border: 1px solid var(--swm-green-light-100);
   margin-top: 2rem;
 }
 
 .successMessage h1 {
-  color: var(--swm-green-light-100);
   margin-bottom: 1rem;
 }
 
 .successMessage p {
   font-size: 1.125rem;
-  color: var(--ifm-font-color-base);
   margin-bottom: 0.75rem;
 }
 
