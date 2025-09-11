@@ -68,6 +68,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      filterUnmountedTagsFunction_(
+          platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -1318,7 +1320,12 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler());
+        workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+            ,
+        filterUnmountedTagsFunction_
+#endif
+    );
   }
 }
 
