@@ -6,6 +6,7 @@ import {
   IS_WEB,
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
+  ReanimatedError,
 } from './common';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
