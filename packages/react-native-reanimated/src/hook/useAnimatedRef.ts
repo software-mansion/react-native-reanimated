@@ -1,12 +1,17 @@
 'use strict';
 import { useRef, useState } from 'react';
+import type { HostInstance } from 'react-native';
 import {
   createSerializable,
   serializableMappingCache,
 } from 'react-native-worklets';
 
 import { SHOULD_BE_USE_WEB } from '../common/constants';
-import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
+import type {
+  InstanceOrElement,
+  InternalHostInstance,
+  ShadowNodeWrapper,
+} from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
@@ -17,12 +22,12 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-function getComponentOrScrollable(ref: WrapperRef) {
+function getComponentOrScrollable(ref: InternalHostInstance) {
   return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
 }
 
-function useAnimatedRefBase<TRef extends WrapperRef>(
-  getWrapper: (ref: TRef) => ShadowNodeWrapper
+function useAnimatedRefBase<TRef extends InstanceOrElement>(
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
 ): AnimatedRef<TRef> {
   const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
     new Map()
@@ -74,7 +79,7 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
 }
 
 function useAnimatedRefNative<
-  TRef extends WrapperRef = React.Component,
+  TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
   const [sharedWrapper] = useState(() =>
     makeMutable<ShadowNodeWrapper | null>(null)
@@ -104,9 +109,9 @@ function useAnimatedRefNative<
 }
 
 function useAnimatedRefWeb<
-  TRef extends WrapperRef = React.Component,
+  TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
-  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
+  return useAnimatedRefBase(getComponentOrScrollable);
 }
 
 /**
