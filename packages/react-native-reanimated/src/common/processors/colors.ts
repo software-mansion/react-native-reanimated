@@ -17,7 +17,18 @@ type DynamicColorIOSTuple = {
   highContrastDark?: ColorValue;
 };
 
-export function DynamicColorIOSAnimated(tuple: DynamicColorIOSTuple) {
+type DynamicColorValue = ColorValue & {
+  dynamic: {
+    light: ColorValue;
+    dark: ColorValue;
+    highContrastLight?: ColorValue;
+    highContrastDark?: ColorValue;
+  };
+};
+
+export function DynamicColorIOSAnimated(
+  tuple: DynamicColorIOSTuple
+): DynamicColorValue {
   'worklet';
   return {
     dynamic: {
@@ -26,7 +37,7 @@ export function DynamicColorIOSAnimated(tuple: DynamicColorIOSTuple) {
       highContrastLight: tuple.highContrastLight,
       highContrastDark: tuple.highContrastDark,
     },
-  };
+  } as DynamicColorValue;
 }
 
 function isDynamicColorObject(value: any): boolean {
