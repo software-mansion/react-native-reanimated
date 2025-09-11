@@ -1,14 +1,11 @@
 'use strict';
 
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
+import './initializers';
 import './publicGlobals';
 
 import * as Animated from './Animated';
-import { initializeReanimatedModule } from './initializers';
-import { ReanimatedModule } from './ReanimatedModule';
-
-// TODO: Specify the initialization pipeline since now there's no
-// universal source of truth for it.
-initializeReanimatedModule(ReanimatedModule);
 
 export default Animated;
 
