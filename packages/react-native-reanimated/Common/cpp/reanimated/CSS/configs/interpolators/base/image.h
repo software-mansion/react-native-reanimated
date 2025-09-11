@@ -4,6 +4,6 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getImageInterpolators();
 
 } // namespace reanimated::css

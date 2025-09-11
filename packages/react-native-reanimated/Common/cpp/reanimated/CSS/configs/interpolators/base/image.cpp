@@ -11,12 +11,15 @@
 
 namespace reanimated::css {
 
-const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
-    VIEW_INTERPOLATORS,
-    InterpolatorFactoriesRecord{
-        {"resizeMode", value<CSSKeyword>("cover")},
-        {"overlayColor", value<CSSColor>(BLACK)},
-        {"tintColor", value<CSSColor>(BLACK)},
-    });
+const InterpolatorFactoriesRecord &getImageInterpolators() {
+  static const auto IMAGE_INTERPOLATORS = mergeInterpolators(
+      getViewInterpolators(),
+      InterpolatorFactoriesRecord{
+          {"resizeMode", value<CSSKeyword>("cover")},
+          {"overlayColor", value<CSSColor>(BLACK)},
+          {"tintColor", value<CSSColor>(BLACK)},
+      });
+  return IMAGE_INTERPOLATORS;
+}
 
 } // namespace reanimated::css

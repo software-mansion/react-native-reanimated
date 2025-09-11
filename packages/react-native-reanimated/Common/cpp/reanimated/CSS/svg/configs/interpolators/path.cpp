@@ -5,9 +5,12 @@
 
 namespace reanimated::css {
 
-const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
-    SVG_COMMON_INTERPOLATORS,
-    // TODO - add more properties
-    InterpolatorFactoriesRecord{});
+const InterpolatorFactoriesRecord &getSvgPathInterpolators() {
+  static const auto SVG_PATH_INTERPOLATORS = mergeInterpolators(
+      getSvgCommonInterpolators(),
+      // TODO - add more properties
+      InterpolatorFactoriesRecord{});
+  return SVG_PATH_INTERPOLATORS;
+}
 
 } // namespace reanimated::css

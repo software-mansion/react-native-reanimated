@@ -4,8 +4,8 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS;
-extern const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_ANDROID;
-extern const InterpolatorFactoriesRecord TEXT_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getIOSTextInterpolators();
+const InterpolatorFactoriesRecord &getAndroidTextInterpolators();
+const InterpolatorFactoriesRecord &getTextInterpolators();
 
 } // namespace reanimated::css

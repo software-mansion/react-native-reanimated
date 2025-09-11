@@ -4,8 +4,8 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord FLEX_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS;
-extern const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getFlexInterpolators();
+const InterpolatorFactoriesRecord &getIOSShadowInterpolators();
+const InterpolatorFactoriesRecord &getTransformsInterpolators();
 
 } // namespace reanimated::css

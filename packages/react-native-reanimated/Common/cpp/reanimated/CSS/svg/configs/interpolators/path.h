@@ -4,6 +4,6 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getSvgPathInterpolators();
 
 } // namespace reanimated::css

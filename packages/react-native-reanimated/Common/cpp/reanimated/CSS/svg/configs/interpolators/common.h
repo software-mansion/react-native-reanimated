@@ -4,11 +4,11 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS;
-extern const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getSvgColorInterpolators();
+const InterpolatorFactoriesRecord &getSvgFillInterpolators();
+const InterpolatorFactoriesRecord &getSvgStrokeInterpolators();
+const InterpolatorFactoriesRecord &getSvgClipInterpolators();
+const InterpolatorFactoriesRecord &getSvgTransformInterpolators();
+const InterpolatorFactoriesRecord &getSvgCommonInterpolators();
 
 } // namespace reanimated::css

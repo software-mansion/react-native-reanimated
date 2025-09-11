@@ -2,10 +2,6 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <reanimated/CSS/configs/interpolators/base/image.h>
-#include <reanimated/CSS/configs/interpolators/base/text.h>
-#include <reanimated/CSS/configs/interpolators/base/view.h>
-
 #include <string>
 #include <unordered_map>
 

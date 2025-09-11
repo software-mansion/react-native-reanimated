@@ -4,6 +4,6 @@
 
 namespace reanimated::css {
 
-extern const InterpolatorFactoriesRecord VIEW_INTERPOLATORS;
+const InterpolatorFactoriesRecord &getViewInterpolators();
 
 } // namespace reanimated::css
