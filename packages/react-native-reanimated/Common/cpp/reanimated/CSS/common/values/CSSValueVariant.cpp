@@ -125,16 +125,12 @@ template class CSSValueVariant<CSSAngle>;
 template class CSSValueVariant<CSSBoolean>;
 template class CSSValueVariant<CSSColor>;
 template class CSSValueVariant<CSSDisplay>;
-template class CSSValueVariant<SVGLength>;
-template class CSSValueVariant<SVGStrokeDashArray>;
-template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<CSSBoxShadow>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
-template CSSValueVariant<SVGLength, CSSKeyword>
-CSSValueVariant<SVGLength, CSSKeyword>::interpolate(
-    double,
-    const CSSValueVariant<SVGLength, CSSKeyword> &,
-    const CSSValueInterpolationContext &) const;
+template class CSSValueVariant<SVGLength>;
+template class CSSValueVariant<SVGStrokeDashArray>;
+template class CSSValueVariant<SVGLength, CSSKeyword>;
+template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 
 } // namespace reanimated::css

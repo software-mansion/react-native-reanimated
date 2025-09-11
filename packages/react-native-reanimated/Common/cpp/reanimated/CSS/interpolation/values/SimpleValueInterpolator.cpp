@@ -16,7 +16,6 @@
 
 namespace reanimated::css {
 
-// Class constructor definition
 template <typename... AllowedTypes>
 SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const PropertyPath &propertyPath,
@@ -27,7 +26,6 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
           std::make_shared<ValueType>(defaultStyleValue),
           viewStylesRepository) {}
 
-// Member function definitions
 template <typename... AllowedTypes>
 std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
     jsi::Runtime &rt,
@@ -56,7 +54,6 @@ template class SimpleValueInterpolator<CSSLength>;
 template class SimpleValueInterpolator<CSSLength, CSSKeyword>;
 template class SimpleValueInterpolator<CSSDouble>;
 template class SimpleValueInterpolator<CSSDouble, CSSKeyword>;
-template class SimpleValueInterpolator<CSSDouble, CSSLength>;
 template class SimpleValueInterpolator<CSSInteger>;
 template class SimpleValueInterpolator<CSSAngle>;
 template class SimpleValueInterpolator<CSSColor>;
@@ -65,9 +62,9 @@ template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;
 template class SimpleValueInterpolator<CSSBoxShadow>;
 template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
+
 template class SimpleValueInterpolator<SVGLength>;
 template class SimpleValueInterpolator<SVGLength, CSSKeyword>;
-template class SimpleValueInterpolator<SVGStrokeDashArray>;
 template class SimpleValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
 
 } // namespace reanimated::css

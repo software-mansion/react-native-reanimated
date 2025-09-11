@@ -10,7 +10,6 @@
 
 namespace reanimated::css {
 
-// Constructor definition
 template <typename... AllowedTypes>
 ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
     const PropertyPath &propertyPath,
@@ -23,7 +22,6 @@ ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
           viewStylesRepository),
       config_(config) {}
 
-// interpolateValue function definition
 template <typename... AllowedTypes>
 folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
