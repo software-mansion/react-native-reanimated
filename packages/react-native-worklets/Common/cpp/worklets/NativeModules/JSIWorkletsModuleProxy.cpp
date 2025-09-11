@@ -202,6 +202,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "executeOnUIRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
@@ -493,6 +494,19 @@ jsi::Value JSIWorkletsModuleProxy::get(
             const jsi::Value *args,
             size_t count) {
           return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
+        });
+  }
+
+  if (name == "runOnRuntimeSync") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi ::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return worklets::runOnRuntimeSync(rt, args[0], args[1]);
         });
   }
 
