@@ -194,9 +194,7 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant fallbackInterpolate(
       const double progress,
       const CSSValueVariant &to,
-      const double fallbackInterpolateThreshold) const {
-    return (progress < fallbackInterpolateThreshold) ? *this : to;
-  }
+      const double fallbackInterpolateThreshold) const;
 };
 
 } // namespace reanimated::css

@@ -114,66 +114,6 @@ CSSValueVariant<AllowedTypes...>::fallbackInterpolate(
   return (progress < fallbackInterpolateThreshold) ? *this : to;
 }
 
-template <typename... AllowedTypes>
-template <typename TValue>
-bool CSSValueVariant<AllowedTypes...>::tryConstruct(TValue &&value) {
-  auto tryOne = [&]<typename TCSSValue>() -> bool {
-    if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-      if constexpr (ValueConstructibleCSSValue<TCSSValue, TValue>) {
-        if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
-          return false;
-        }
-      }
-      storage_ = TCSSValue(std::forward<TValue>(value));
-      return true;
-    }
-    return false;
-  };
-  return (tryOne.template operator()<AllowedTypes>() || ...);
-}
-
-template <typename... AllowedTypes>
-bool CSSValueVariant<AllowedTypes...>::tryConstruct(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
-  auto tryOne = [&]<typename TCSSValue>() -> bool {
-    if (!TCSSValue::canConstruct(rt, jsiValue)) {
-      return false;
-    }
-    storage_ = TCSSValue(rt, jsiValue);
-    return true;
-  };
-  return (tryOne.template operator()<AllowedTypes>() || ...);
-}
-
-template <typename... AllowedTypes>
-bool CSSValueVariant<AllowedTypes...>::tryConstruct(
-    const folly::dynamic &value) {
-  auto tryOne = [&]<typename TCSSValue>() -> bool {
-    if (!TCSSValue::canConstruct(value)) {
-      return false;
-    }
-    storage_ = TCSSValue(value);
-    return true;
-  };
-  return (tryOne.template operator()<AllowedTypes>() || ...);
-}
-
-template <typename... AllowedTypes>
-bool CSSValueVariant<AllowedTypes...>::tryConstruct(const char *value) {
-  auto tryOne = [&]<typename TCSSValue>() -> bool {
-    if constexpr (std::is_constructible_v<TCSSValue, const char *>) {
-      if (!TCSSValue::canConstruct(value)) {
-        return false;
-      }
-      storage_ = TCSSValue(value);
-      return true;
-    }
-    return false;
-  };
-  return (tryOne.template operator()<AllowedTypes>() || ...);
-}
-
 template class CSSValueVariant<CSSLength>;
 template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
@@ -190,33 +130,6 @@ template class CSSValueVariant<SVGStrokeDashArray>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<CSSBoxShadow>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
-
-template bool CSSValueVariant<CSSColor>::tryConstruct(const CSSColor &);
-template bool CSSValueVariant<SVGLength>::tryConstruct(int const &);
-template bool CSSValueVariant<CSSAngle>::tryConstruct(int const &);
-template bool CSSValueVariant<CSSDouble>::tryConstruct<const int &>(
-    const int &);
-template bool CSSValueVariant<CSSLength>::tryConstruct<const int &>(
-    const int &);
-template bool CSSValueVariant<CSSInteger>::tryConstruct<const int &>(
-    const int &);
-template bool CSSValueVariant<CSSBoolean>::tryConstruct<const bool &>(
-    const bool &);
-template bool CSSValueVariant<CSSBoxShadow>::tryConstruct<const CSSBoxShadow &>(
-    const CSSBoxShadow &);
-template bool CSSValueVariant<SVGStrokeDashArray, CSSKeyword>::tryConstruct<
-    const SVGStrokeDashArray &>(const SVGStrokeDashArray &);
-template bool CSSValueVariant<SVGLength, CSSKeyword>::tryConstruct<const int &>(
-    const int &);
-template bool CSSValueVariant<SVGLength, CSSKeyword>::tryConstruct(
-    jsi::Runtime &,
-    const jsi::Value &);
-template bool CSSValueVariant<SVGLength, CSSKeyword>::tryConstruct(
-    const folly::dynamic &);
-template bool CSSValueVariant<CSSLength, CSSKeyword>::tryConstruct<const int &>(
-    const int &);
-template bool CSSValueVariant<CSSDiscreteArray<CSSKeyword>>::tryConstruct<
-    const std::vector<CSSKeyword> &>(const std::vector<CSSKeyword> &);
 
 template CSSValueVariant<SVGLength, CSSKeyword>
 CSSValueVariant<SVGLength, CSSKeyword>::interpolate(
