@@ -1,5 +1,8 @@
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 
+#include <unordered_map>
+#include <array>
+
 namespace reanimated::css {
 
 constexpr std::array<const char *, 13> transformOperationStrings = {

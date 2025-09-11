@@ -1,15 +1,9 @@
 #pragma once
 
-#include <reanimated/CSS/configs/interpolators/base/view.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
 namespace reanimated::css {
 
-const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
-    VIEW_INTERPOLATORS,
-    InterpolatorFactoriesRecord{
-        {"resizeMode", value<CSSKeyword>("cover")},
-        {"overlayColor", value<CSSColor>(BLACK)},
-        {"tintColor", value<CSSColor>(BLACK)},
-    });
+extern const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS;
 
 } // namespace reanimated::css
