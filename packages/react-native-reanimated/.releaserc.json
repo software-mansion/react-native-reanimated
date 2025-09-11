@@ -1,0 +1,6 @@
+{
+  "extends": ["../../.releaserc.json"],
+  "branches": ["main", "@matipl01/github-release-action"],
+  "tagFormat": "reanimated-${version}",
+  "name": "React Native Reanimated"
+}

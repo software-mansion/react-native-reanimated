@@ -9,6 +9,7 @@
     "reanimated"
   ],
   "scripts": {
+    "semantic-release": "semantic-release",
     "test": "jest",
     "lint": "yarn lint:js && yarn lint:common && yarn lint:android && yarn lint:apple",
     "lint:js": "eslint src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
