@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <regex>
+#include <unordered_map>
 
 namespace reanimated::css {
 

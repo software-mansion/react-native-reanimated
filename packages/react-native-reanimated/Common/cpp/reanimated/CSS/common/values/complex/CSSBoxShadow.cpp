@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 CSSBoxShadow::CSSBoxShadow(
