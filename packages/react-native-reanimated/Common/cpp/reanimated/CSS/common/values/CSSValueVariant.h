@@ -74,22 +74,23 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant() = default;
 
   /**
-   * Construct from any TValue that is or can construct one of the AllowedTypes
+   * Construct from any value that is or can construct one of the AllowedTypes
    * (chooses the first one that matches)
    */
-  template <typename TValue>
-  explicit CSSValueVariant(TValue &&value)
-    requires((std::is_constructible_v<AllowedTypes, TValue> || ...))
+  explicit CSSValueVariant(auto &&value)
+    requires((std::is_constructible_v<AllowedTypes, decltype(value)> || ...))
   { // NOLINT(whitespace/braces)
-    // If TValue exactly matches one of AllowedTypes, store it directly:
+    using ValueType = decltype(value);
+
+    // If value type exactly matches one of AllowedTypes, store it directly:
     if constexpr ((std::is_same_v<
-                       std::remove_reference_t<TValue>,
+                       std::remove_reference_t<ValueType>,
                        AllowedTypes> ||
                    ...)) {
-      storage_ = std::forward<TValue>(value);
+      storage_ = std::forward<ValueType>(value);
     } else {
       // Otherwise, try each type in turn
-      if (!tryConstruct(std::forward<TValue>(value))) {
+      if (!tryConstruct(std::forward<ValueType>(value))) {
         throw std::runtime_error(
             "[Reanimated] No compatible type found for construction");
       }
@@ -108,6 +109,10 @@ class CSSValueVariant final : public CSSValue {
     }
   }
 
+  /**
+   * Construct from folly::dynamic if it matches any AllowedType's constructor
+   * (chooses the first one that matches)
+   */
   explicit CSSValueVariant(const folly::dynamic &value) {
     if (!tryConstruct(value)) {
       throw std::runtime_error(
@@ -219,21 +224,22 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Tries to construct type from a given value
    */
-  template <typename TValue>
-  bool tryConstruct(TValue &&value) {
+  bool tryConstruct(auto &&value) {
+    using ValueType = decltype(value);
+
     auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-        if constexpr (ValueConstructibleCSSValue<TCSSValue, TValue>) {
+      if constexpr (std::is_constructible_v<TCSSValue, ValueType>) {
+        if constexpr (ValueConstructibleCSSValue<TCSSValue, ValueType>) {
           // For construction from a non-jsi::Value, we perform a runtime
           // canConstruct check only if the type has a canConstruct method.
           // (this is needed e.g. when different CSS value types can be
           // constructed from the same value type, like CSSLength and
           // CSSKeyword)
-          if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
+          if (!TCSSValue::canConstruct(std::forward<ValueType>(value))) {
             return false;
           }
         }
-        storage_ = TCSSValue(std::forward<TValue>(value));
+        storage_ = TCSSValue(std::forward<ValueType>(value));
         return true;
       }
       return false;
