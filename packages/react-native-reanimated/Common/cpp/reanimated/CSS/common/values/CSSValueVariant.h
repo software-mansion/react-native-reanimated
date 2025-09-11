@@ -58,11 +58,8 @@ concept DynamicConstructibleCSSValue = requires(const folly::dynamic &value) {
  *
  * A std::variant-based container for multiple CSSValue-derived types.
  */
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 class CSSValueVariant final : public CSSValue {
-  static_assert(
-      (CSSValueDerived<AllowedTypes> && ...),
-      "CSSValueVariant accepts only CSSValue-derived types");
   static_assert(
       (JSIConstructibleCSSValue<AllowedTypes> && ...),
       "CSSValueVariant accepts only types that can be constructed from a jsi::Value");
@@ -201,7 +198,7 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant interpolate(
       const double progress,
       const CSSValueVariant &to,
-      const CSSValueInterpolationContext &context) const {
+      const ValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
       return fallbackInterpolate(
           progress, to, context.fallbackInterpolateThreshold);
@@ -230,7 +227,7 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant interpolate(
       const double progress,
       const CSSValueVariant &to,
-      const CSSResolvableValueInterpolationContext &context) const {
+      const ResolvableValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
       return fallbackInterpolate(
           progress, to, context.fallbackInterpolateThreshold);
