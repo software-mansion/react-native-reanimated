@@ -1,18 +1,9 @@
 #pragma once
 
-#include <reanimated/CSS/svg/configs/interpolators/common.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
 namespace reanimated::css {
 
-const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS =
-    mergeInterpolators(
-        SVG_COMMON_INTERPOLATORS,
-        InterpolatorFactoriesRecord{
-            {"cx", value<SVGLength, CSSKeyword>(0)},
-            {"cy", value<SVGLength, CSSKeyword>(0)},
-            {"rx", value<SVGLength, CSSKeyword>(0)},
-            {"ry", value<SVGLength, CSSKeyword>(0)},
-            {"opacity", value<CSSDouble>(1)},
-        });
+extern const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS;
 
 } // namespace reanimated::css
