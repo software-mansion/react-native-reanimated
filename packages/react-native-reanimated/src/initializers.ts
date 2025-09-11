@@ -4,9 +4,9 @@ import { executeOnUIRuntimeSync } from 'react-native-worklets';
 import {
   DEFAULT_LOGGER_CONFIG,
   IS_WEB,
+  ReanimatedError,
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
-  ReanimatedError,
 } from './common';
 import { initSvgCssSupport } from './css/svg';
 import { getStaticFeatureFlag } from './featureFlags';
