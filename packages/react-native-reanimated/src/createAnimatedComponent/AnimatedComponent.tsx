@@ -38,6 +38,7 @@ import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
 import { filterStyles, flattenArray } from './utils';
+import { SharedTransition } from '../layoutReanimation/SharedTransition';
 
 let id = 0;
 
@@ -88,6 +89,22 @@ export default class AnimatedComponent
       this.jestAnimatedProps = { value: {} };
     }
 
+    if (this.props.sharedTransitionTag) {
+      console.log("'Shared transition tag: ", this.props.sharedTransitionTag);
+      updateLayoutAnimations(
+        this.reanimatedID,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        maybeBuild(
+          SharedTransition.duration(500),
+          this.props?.style,
+          this._displayName
+        ),
+        undefined,
+        this.props.sharedTransitionTag
+      );
+    }
+
+    const entering = this.props.entering;
     const skipEntering = this.context?.current;
     if (!skipEntering) {
       this._configureLayoutAnimation(
@@ -369,6 +386,33 @@ export default class AnimatedComponent
         )
     );
   }
+
+  // _onSetLocalRef() {
+  //   const tag = this.getComponentViewTag();
+
+  //   const { layout, entering, exiting } = this.props;
+
+  //   if (layout || entering || exiting) {
+  //     if (!SHOULD_BE_USE_WEB) {
+  //       enableLayoutAnimations(true, false);
+  //     }
+
+  //     if (exiting) {
+  //       const reduceMotionInExiting =
+  //         'getReduceMotion' in exiting &&
+  //         typeof exiting.getReduceMotion === 'function'
+  //           ? getReduceMotionFromConfig(exiting.getReduceMotion())
+  //           : getReduceMotionFromConfig();
+  //       if (!reduceMotionInExiting) {
+  //         updateLayoutAnimations(
+  //           tag,
+  //           LayoutAnimationType.EXITING,
+  //           maybeBuild(exiting, this.props?.style, this._displayName)
+  //         );
+  //       }
+  //     }
+  //   }
+  // }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.
   // It is called before the component gets rerendered. This way we can access components' position before it changed
