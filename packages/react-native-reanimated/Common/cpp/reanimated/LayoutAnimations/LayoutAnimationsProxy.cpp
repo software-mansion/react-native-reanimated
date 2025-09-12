@@ -520,9 +520,9 @@ void LayoutAnimationsProxy::hideTransitioningViews(int index, ShadowViewMutation
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
-#ifdef LAYOUT_ANIMATIONS_LOGS
+//#ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "progress layout animation for tag " << tag << std::endl;
-#endif
+//#endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -655,7 +655,12 @@ void LayoutAnimationsProxy::handleRemovals(
     
     if (startAnimationsRecursively(node, true, true, false, filteredMutations)) {
       auto parent = node->parent.lock();
-      filteredMutations.push_back(ShadowViewMutation::InsertMutation(parent->current.tag, node->current, parent->children.size()));
+      // TODO: handle this better
+      auto current = node->current;
+      if (layoutAnimations_.contains(node->current.tag)){
+        current = *layoutAnimations_.at(node->current.tag).currentView;
+      }
+      filteredMutations.push_back(ShadowViewMutation::InsertMutation(parent->current.tag, current, parent->children.size()));
       parent->children.push_back(node);
       parent->animatedChildrenCount++;
       if (node->state == UNDEFINED){
