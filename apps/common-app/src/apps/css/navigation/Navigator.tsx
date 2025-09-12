@@ -1,4 +1,3 @@
-import { faExchange, faFire } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -6,34 +5,20 @@ import { memo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
-import { RouteCard, ScrollScreen, Stagger, Text } from '@/apps/css/components';
-import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
+import { RouteCard, Text } from '@/apps/css/components';
 import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
-import { BottomTabBar } from './components';
+import BottomTabBar from './BottomTabBar';
 import {
   LocalNavigationProvider,
   useLocalNavigationRef,
 } from './LocalNavigationProvider';
-import type { Routes, TabRoute } from './types';
+import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './routes';
+import { PullToSearchProvider, SearchScreen } from './search';
+import type { Routes } from './types';
 import { isRouteWithRoutes } from './utils';
-
-// We use stack navigator to mimic the tab navigator, thus top-level routes will be
-// displayed as tabs in the bottom tab bar
-const tabRoutes = {
-  Animations: {
-    icon: faFire,
-    name: 'Animations',
-    routes: animationRoutes,
-  },
-  Transitions: {
-    icon: faExchange,
-    name: 'Transitions',
-    routes: transitionRoutes,
-  },
-} satisfies Record<string, TabRoute>;
 
 type RootStackParamList = Record<string, React.ComponentType>;
 
@@ -98,18 +83,14 @@ function createRoutesScreen(
 ): React.ComponentType {
   function RoutesScreen() {
     const navigation = useNavigation();
-    const ref = useLocalNavigationRef();
+    const localNavigationRef = useLocalNavigationRef();
 
-    if (!ref.current) {
-      ref.current = navigation;
+    if (!localNavigationRef.current) {
+      localNavigationRef.current = navigation;
     }
 
     return (
-      <ScrollScreen contentContainerStyle={styles.scrollViewContent}>
-        <Stagger interval={50}>
-          {createRouteCards(routes, path, flatten)}
-        </Stagger>
-      </ScrollScreen>
+      <SearchScreen>{createRouteCards(routes, path, flatten)}</SearchScreen>
     );
   }
 
@@ -187,41 +168,41 @@ function createStackScreens(
   ];
 }
 
-const INITIAL_ROUTE_NAME = Object.values(tabRoutes)[0]?.name;
-
 function Navigator() {
   const shouldReduceMotion = useReducedMotion();
   const currentRoute = useSharedValue<string | undefined>(INITIAL_ROUTE_NAME);
-
-  const tabRoutesArray = Object.values(tabRoutes);
+  const tabRoutesArray = Object.values(TAB_ROUTES);
 
   return (
     <LocalNavigationProvider>
-      <Stack.Navigator
-        screenListeners={{
-          focus: (e) => {
-            currentRoute.value = e.target?.split('-')[0];
-          },
-        }}
-        screenOptions={{
-          animation: 'default',
-          headerStyle: {
-            backgroundColor: colors.background1,
-          },
-          headerTintColor: colors.foreground1,
-          headerTitleAlign: 'center',
-          statusBarStyle: 'dark',
-        }}>
-        {Object.entries(tabRoutes).flatMap(([key, value]) =>
-          createStackScreens(
-            value.routes,
-            value.name,
-            [key],
-            shouldReduceMotion
-          )
-        )}
-      </Stack.Navigator>
-      <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
+      <PullToSearchProvider>
+        <Stack.Navigator
+          screenListeners={{
+            focus: (e) => {
+              currentRoute.value = e.target?.split('-')[0];
+            },
+          }}
+          screenOptions={{
+            animation: 'default',
+            gestureEnabled: true,
+            headerStyle: {
+              backgroundColor: colors.background1,
+            },
+            headerTintColor: colors.foreground1,
+            headerTitleAlign: 'center',
+            statusBarStyle: 'dark',
+          }}>
+          {Object.entries(TAB_ROUTES).flatMap(([key, value]) =>
+            createStackScreens(
+              value.routes,
+              value.name,
+              [key],
+              shouldReduceMotion
+            )
+          )}
+        </Stack.Navigator>
+        <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
+      </PullToSearchProvider>
     </LocalNavigationProvider>
   );
 }
@@ -230,6 +211,7 @@ const styles = StyleSheet.create({
   content: {
     ...flex.fill,
     backgroundColor: colors.background3,
+    overflow: 'hidden',
   },
   listBullet: {
     backgroundColor: colors.foreground1,
@@ -241,11 +223,6 @@ const styles = StyleSheet.create({
   listTitleWrapper: {
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  scrollViewContent: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
   },
 });
 

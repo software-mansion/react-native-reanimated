@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { runOnUI } from 'react-native-reanimated';
+import { runOnUI } from 'react-native-worklets';
 
 export default function LogExample() {
   const handlePress = () => {
@@ -9,7 +9,7 @@ export default function LogExample() {
       // @ts-ignore _toString function is registered for UI runtime
       const actual = global._toString(value);
       // @ts-ignore _log function is registered for UI runtime
-      global._log(actual);
+      globalThis._log(actual);
       if (actual !== expected) {
         throw new Error(`Test failed, expected "${expected}", got "${actual}"`);
       }
@@ -18,7 +18,7 @@ export default function LogExample() {
     runOnUI(() => {
       'worklet';
       // @ts-ignore _log function is registered for UI runtime
-      _log('==============================================');
+      globalThis._log('==============================================');
 
       test(42, '42');
       test(3.14, '3.14');

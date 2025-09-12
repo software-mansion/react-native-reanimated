@@ -1,17 +1,20 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
+import type {
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  WrapperRef,
+} from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
-type Measure = <T extends Component>(
-  animatedRef: AnimatedRef<T>
+type Measure = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 
 /**
@@ -29,7 +32,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return null;
   }
 
@@ -67,25 +70,18 @@ function measureJest() {
   return null;
 }
 
-function measureChromeDebugger() {
-  logger.warn('measure() cannot be used with Chrome Debugger.');
-  return null;
-}
-
 function measureDefault() {
   logger.warn('measure() is not supported on this configuration.');
   return null;
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   measure = measureNative as unknown as Measure;
-} else if (isJest()) {
+} else if (IS_JEST) {
   measure = measureJest;
-} else if (isChromeDebugger()) {
-  measure = measureChromeDebugger;
 } else {
   measure = measureDefault;
 }

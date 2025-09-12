@@ -74,24 +74,44 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant() = default;
 
   /**
-   * Construct from any TValue that is or can construct one of the AllowedTypes
+   * Construct from any value that is or can construct one of the AllowedTypes
    * (chooses the first one that matches)
    */
-  template <typename TValue>
-  explicit CSSValueVariant(TValue &&value)
-    requires((std::is_constructible_v<AllowedTypes, TValue> || ...))
+  explicit CSSValueVariant(auto &&value)
+    requires((std::is_constructible_v<AllowedTypes, decltype(value)> || ...))
   { // NOLINT(whitespace/braces)
-    // If TValue exactly matches one of AllowedTypes, store it directly:
+    using ValueType = decltype(value);
+
+    // If value type exactly matches one of AllowedTypes, store it directly:
     if constexpr ((std::is_same_v<
-                       std::remove_reference_t<TValue>,
+                       std::remove_reference_t<ValueType>,
                        AllowedTypes> ||
                    ...)) {
-      storage_ = std::forward<TValue>(value);
+      storage_ = std::forward<ValueType>(value);
     } else {
-      // Otherwise, try each type in turn
-      if (!tryConstruct(std::forward<TValue>(value))) {
+      // Otherwise, try to construct the CSSValue from each type in turn
+      auto tryOne = [&]<typename TCSSValue>() -> bool {
+        if constexpr (std::is_constructible_v<TCSSValue, ValueType>) {
+          if constexpr (ValueConstructibleCSSValue<TCSSValue, ValueType>) {
+            // For construction from a non-jsi::Value, we perform a runtime
+            // canConstruct check only if the type has a canConstruct method.
+            // (this is needed e.g. when different CSS value types can be
+            // constructed from the same value type, like CSSLength and
+            // CSSKeyword)
+            if (!TCSSValue::canConstruct(std::forward<ValueType>(value))) {
+              return false;
+            }
+          }
+          storage_ = TCSSValue(std::forward<ValueType>(value));
+          return true;
+        }
+        return false;
+      };
+
+      // Try constructing with each allowed type until one succeeds
+      if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
         throw std::runtime_error(
-            "[RNReanimated] No compatible type found for construction");
+            "[Reanimated] No compatible type found for construction");
       }
     }
   }
@@ -101,15 +121,43 @@ class CSSValueVariant final : public CSSValue {
    * (chooses the first one that matches)
    */
   CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-    if (!tryConstruct(rt, jsiValue)) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      // We have to check in a runtime if the type can be constructed from the
+      // provided jsi::Value. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(rt, jsiValue)) {
+        return false;
+      }
+      storage_ = TCSSValue(rt, jsiValue);
+      return true;
+    };
+
+    // Try constructing with each allowed type until one succeeds
+    if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
           stringifyJSIValue(rt, jsiValue));
     }
   }
 
+  /**
+   * Construct from folly::dynamic if it matches any AllowedType's constructor
+   * (chooses the first one that matches)
+   */
   explicit CSSValueVariant(const folly::dynamic &value) {
-    if (!tryConstruct(value)) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      // We have to check in a runtime if the type can be constructed from the
+      // provided folly::dynamic. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(value)) {
+        return false;
+      }
+      storage_ = TCSSValue(value);
+      return true;
+    };
+
+    // Try constructing with each allowed type until one succeeds
+    if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
           folly::toJson(value));
@@ -150,10 +198,13 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Interpolate (non-resolvable)
    */
-  CSSValueVariant interpolate(double progress, const CSSValueVariant &to)
-      const {
+  CSSValueVariant interpolate(
+      const double progress,
+      const CSSValueVariant &to,
+      const CSSValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
-      return fallbackInterpolate(progress, to);
+      return fallbackInterpolate(
+          progress, to, context.fallbackInterpolateThreshold);
     }
 
     return std::visit(
@@ -162,11 +213,12 @@ class CSSValueVariant final : public CSSValue {
             if constexpr (Resolvable<L>) {
               throw std::runtime_error(
                   "[Reanimated] Resolvable value cannot be interpolated as non-resolvable");
-            } else {
+            } else if (fromValue.canInterpolateTo(toValue)) {
               return CSSValueVariant(fromValue.interpolate(progress, toValue));
             }
           }
-          return fallbackInterpolate(progress, to);
+          return fallbackInterpolate(
+              progress, to, context.fallbackInterpolateThreshold);
         },
         storage_,
         to.storage_);
@@ -176,25 +228,27 @@ class CSSValueVariant final : public CSSValue {
    * Interpolate (resolvable)
    */
   CSSValueVariant interpolate(
-      double progress,
+      const double progress,
       const CSSValueVariant &to,
       const CSSResolvableValueInterpolationContext &context) const {
     if (storage_.index() != to.storage_.index()) {
-      return fallbackInterpolate(progress, to);
+      return fallbackInterpolate(
+          progress, to, context.fallbackInterpolateThreshold);
     }
 
     return std::visit(
         [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
           REA_IF_SAME_TYPE(fromValue, toValue) {
-            if constexpr (Resolvable<L>) {
-              return CSSValueVariant(
-                  fromValue.interpolate(progress, toValue, context));
-            } else {
+            if constexpr (!Resolvable<L>) {
               throw std::runtime_error(
                   "[Reanimated] Non-resolvable value cannot be interpolated as resolvable");
+            } else if (fromValue.canInterpolateTo(toValue)) {
+              return CSSValueVariant(
+                  fromValue.interpolate(progress, toValue, context));
             }
           }
-          return fallbackInterpolate(progress, to);
+          return fallbackInterpolate(
+              progress, to, context.fallbackInterpolateThreshold);
         },
         storage_,
         to.storage_);
@@ -204,73 +258,10 @@ class CSSValueVariant final : public CSSValue {
   std::variant<AllowedTypes...> storage_;
 
   CSSValueVariant fallbackInterpolate(
-      double progress,
-      const CSSValueVariant &to) const {
-    return (progress < 0.5) ? *this : to;
-  }
-
-  /**
-   * Tries to construct type from a given value
-   */
-  template <typename TValue>
-  bool tryConstruct(TValue &&value) {
-    auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-        if constexpr (ValueConstructibleCSSValue<TCSSValue, TValue>) {
-          // For construction from a non-jsi::Value, we perform a runtime
-          // canConstruct check only if the type has a canConstruct method.
-          // (this is needed e.g. when different CSS value types can be
-          // constructed from the same value type, like CSSDimension and
-          // CSSKeyword)
-          if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
-            return false;
-          }
-        }
-        storage_ = TCSSValue(std::forward<TValue>(value));
-        return true;
-      }
-      return false;
-    };
-
-    // Try constructing with each allowed type until one succeeds
-    return (tryOne.template operator()<AllowedTypes>() || ...);
-  }
-
-  /**
-   * Tries to construct type from a given jsi::Value
-   */
-  bool tryConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-    auto tryOne = [&]<typename TCSSValue>() -> bool {
-      // We have to check in a runtime if the type can be constructed from the
-      // provided jsi::Value. The first match will be used to construct the
-      // CSS value.
-      if (!TCSSValue::canConstruct(rt, jsiValue)) {
-        return false;
-      }
-      storage_ = TCSSValue(rt, jsiValue);
-      return true;
-    };
-
-    // Try constructing with each allowed type until one succeeds
-    return (tryOne.template operator()<AllowedTypes>() || ...);
-  }
-
-  /**
-   * Tries to construct type from a given folly::dynamic
-   */
-  bool tryConstruct(const folly::dynamic &value) {
-    auto tryOne = [&]<typename TCSSValue>() -> bool {
-      // We have to check in a runtime if the type can be constructed from the
-      // provided folly::dynamic. The first match will be used to construct the
-      // CSS value.
-      if (!TCSSValue::canConstruct(value)) {
-        return false;
-      }
-      storage_ = TCSSValue(value);
-      return true;
-    };
-    // Try constructing with each allowed type until one succeeds
-    return (tryOne.template operator()<AllowedTypes>() || ...);
+      const double progress,
+      const CSSValueVariant &to,
+      const double fallbackInterpolateThreshold) const {
+    return (progress < fallbackInterpolateThreshold) ? *this : to;
   }
 };
 

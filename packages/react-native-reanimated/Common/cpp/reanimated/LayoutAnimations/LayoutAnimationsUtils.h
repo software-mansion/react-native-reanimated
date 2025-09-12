@@ -168,11 +168,10 @@ static inline void updateLayoutMetrics(
 }
 
 static inline bool isRNSScreen(std::shared_ptr<LightNode> node) {
-  return !std::strcmp(
-             node->current.componentName,
-             "RNSScreenStack") ||
-      !std::strcmp(
-          node->current.componentName, "RNSScreen");
+  const auto &componentName = node->current.componentName;
+  return !std::strcmp(componentName, "RNSScreenStack") ||
+      !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
 }
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {

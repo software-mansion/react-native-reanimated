@@ -1,61 +1,19 @@
 'use strict';
-import type { LoggerConfig } from 'react-native-worklets';
-import { updateLoggerConfig } from 'react-native-worklets';
+import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
-import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
-import { ReanimatedError } from './errors';
-import { shouldBeUseWeb } from './PlatformChecker';
-import { PropsAllowlists } from './propsAllowlists';
+import type { LoggerConfig } from './common';
+import { SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
 
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-function assertNoOverlapInLists() {
-  for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
-    if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {
-      throw new ReanimatedError(
-        `Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
-      );
-    }
-  }
-}
-
-export function configureProps(): void {
-  assertNoOverlapInLists();
-  jsiConfigureProps(
-    Object.keys(PropsAllowlists.UI_THREAD_PROPS_WHITELIST),
-    Object.keys(PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST)
-  );
-}
-
+/** @deprecated This function is a no-op in Reanimated 4. */
 export function addWhitelistedNativeProps(
-  props: Record<string, boolean>
+  _props: Record<string, boolean>
 ): void {
-  const oldSize = Object.keys(
-    PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST
-  ).length;
-  PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST = {
-    ...PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST,
-    ...props,
-  };
-  if (
-    oldSize !==
-    Object.keys(PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST).length
-  ) {
-    configureProps();
-  }
+  // Do nothing. This is just for backward compatibility.
 }
 
-export function addWhitelistedUIProps(props: Record<string, boolean>): void {
-  const oldSize = Object.keys(PropsAllowlists.UI_THREAD_PROPS_WHITELIST).length;
-  PropsAllowlists.UI_THREAD_PROPS_WHITELIST = {
-    ...PropsAllowlists.UI_THREAD_PROPS_WHITELIST,
-    ...props,
-  };
-  if (
-    oldSize !== Object.keys(PropsAllowlists.UI_THREAD_PROPS_WHITELIST).length
-  ) {
-    configureProps();
-  }
+/** @deprecated This function is a no-op in Reanimated 4. */
+export function addWhitelistedUIProps(_props: Record<string, boolean>): void {
+  // Do nothing. This is just for backward compatibility.
 }
 
 /**
@@ -75,39 +33,3 @@ export function configureReanimatedLogger(config: LoggerConfig) {
     executeOnUIRuntimeSync(updateLoggerConfig)(config);
   }
 }
-
-const PROCESSED_VIEW_NAMES = new Set();
-
-export interface ViewConfig {
-  uiViewClassName: string;
-  validAttributes: Record<string, unknown>;
-}
-/**
- * Updates UI props whitelist for given view host instance this will work just
- * once for every view name
- */
-
-export function adaptViewConfig(viewConfig: ViewConfig): void {
-  const viewName = viewConfig.uiViewClassName;
-  const props = viewConfig.validAttributes;
-
-  // update whitelist of UI props for this view name only once
-  if (!PROCESSED_VIEW_NAMES.has(viewName)) {
-    const propsToAdd: Record<string, boolean> = {};
-    Object.keys(props).forEach((key) => {
-      // we don't want to add native props as they affect layout
-      // we also skip props which repeat here
-      if (
-        !(key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) &&
-        !(key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST)
-      ) {
-        propsToAdd[key] = true;
-      }
-    });
-    addWhitelistedUIProps(propsToAdd);
-
-    PROCESSED_VIEW_NAMES.add(viewName);
-  }
-}
-
-configureProps();

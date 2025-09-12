@@ -1,7 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <sstream>
+#include <react/debug/react_native_assert.h>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -83,7 +84,9 @@ std::tuple<Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  assert(sizeof...(Args) == count);
+  react_native_assert(
+      sizeof...(Args) == count &&
+      "Argument list has different length than expected");
   return convertArgs<Args...>(rt, args);
 }
 
@@ -96,7 +99,9 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  assert(sizeof...(Args) == count);
+  react_native_assert(
+      sizeof...(Args) == count &&
+      "Argument list has different length than expected");
   return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
 }
 
@@ -195,5 +200,9 @@ jsi::Array convertStringToArray(
     jsi::Runtime &rt,
     const std::string &value,
     const unsigned int expectedSize);
+
+jsi::Object optimizedFromHostObject(
+    jsi::Runtime &rt,
+    std::shared_ptr<jsi::HostObject> &&hostObject);
 
 } // namespace worklets::jsi_utils

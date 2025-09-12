@@ -3,25 +3,14 @@
 
 import type { ReactTestInstance } from 'react-test-renderer';
 
+import { IS_JEST, logger, ReanimatedError } from './common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { ReanimatedError } from './errors';
 import type { DefaultStyle } from './hook/commonTypes';
-import { isJest } from './PlatformChecker';
-
-// Mock ReanimatedView
-jest.mock(
-  'react-native-reanimated/lib/module/specs/ReanimatedNativeComponent',
-  () => ({})
-);
-jest.mock(
-  'react-native-reanimated/src/specs/ReanimatedNativeComponent',
-  () => ({})
-);
 
 declare global {
   namespace jest {
@@ -261,7 +250,7 @@ const afterTest = () => {
 };
 
 export const withReanimatedTimer = (animationTest: () => void) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, you should define your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
   );
   beforeTest();
@@ -270,7 +259,7 @@ export const withReanimatedTimer = (animationTest: () => void) => {
 };
 
 export const advanceAnimationByTime = (time = frameTime) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(time);
@@ -278,14 +267,14 @@ export const advanceAnimationByTime = (time = frameTime) => {
 };
 
 export const advanceAnimationByFrame = (count: number) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(count * frameTime);
   jest.runOnlyPendingTimers();
 };
 
-const requireFunction = isJest()
+const requireFunction = IS_JEST
   ? require
   : () => {
       throw new ReanimatedError(

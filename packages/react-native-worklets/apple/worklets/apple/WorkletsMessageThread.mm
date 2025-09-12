@@ -22,7 +22,6 @@ struct WorkletsMessageThreadPublic {
 // the app.
 void WorkletsMessageThread::quitSynchronous()
 {
-  AssertJavaScriptQueue();
   RCTMessageThread *rctThread = static_cast<RCTMessageThread *>(this);
   WorkletsMessageThreadPublic *rctThreadPublic = reinterpret_cast<WorkletsMessageThreadPublic *>(rctThread);
   rctThreadPublic->m_shutdown = true;

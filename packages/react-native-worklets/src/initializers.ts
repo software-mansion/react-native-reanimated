@@ -1,88 +1,23 @@
 'use strict';
 
-import { mockedRequestAnimationFrame } from './animationFrameQueue/mockedRequestAnimationFrame';
-import { setupRequestAnimationFrame } from './animationFrameQueue/requestAnimationFrame';
-import { reportFatalErrorOnJS } from './errors';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
-import {
-  isChromeDebugger,
-  isJest,
-  isWeb,
-  shouldBeUseWeb,
-} from './PlatformChecker';
+import { bundleValueUnpacker } from './bundleUnpacker';
+import { setupCallGuard } from './callGuard';
+import { registerReportFatalRemoteError } from './errors';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupSetImmediate } from './runLoop/common/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/common/setIntervalPolyfill';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { setupRequestAnimationFrame } from './runLoop/uiRuntime/requestAnimationFrame';
+import { setupSetTimeout } from './runLoop/uiRuntime/setTimeoutPolyfill';
+import { RuntimeKind } from './runtimeKind';
+import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
+import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
-import type { IWorkletsModule } from './WorkletsModule';
+import { WorkletsModule } from './WorkletsModule';
+import type { ValueUnpacker } from './workletTypes';
 
-const IS_JEST = isJest();
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_CHROME_DEBUGGER = isChromeDebugger();
-
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-function overrideLogFunctionImplementation() {
-  'worklet';
-  replaceLoggerImplementation((data) => {
-    'worklet';
-    runOnJS(logToLogBoxAndConsole)(data);
-  });
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-overrideLogFunctionImplementation();
-
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
-} else {
-  // Register WorkletsError and logger config in the UI runtime global scope.
-  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-  // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
-}
-
-// callGuard is only used with debug builds
-export function callGuardDEV<Args extends unknown[], ReturnValue>(
-  fn: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue | void {
-  'worklet';
-  try {
-    return fn(...args);
-  } catch (e) {
-    if (global.__ErrorUtils) {
-      global.__ErrorUtils.reportFatalError(e as Error);
-    } else {
-      throw e;
-    }
-  }
-}
-
-export function setupCallGuard() {
-  'worklet';
-  global.__callGuardDEV = callGuardDEV;
-  global.__ErrorUtils = {
-    reportFatalError: (error: Error) => {
-      runOnJS(reportFatalErrorOnJS)({
-        message: error.message,
-        moduleName: 'Worklets',
-        stack: error.stack,
-      });
-    },
-  };
-}
+let capturableConsole: typeof console;
 
 /**
  * Currently there seems to be a bug in the JSI layer which causes a crash when
@@ -97,7 +32,11 @@ export function setupCallGuard() {
  * we don't copy the methods as they are in the original console object, we copy
  * JavaScript wrappers instead.
  */
-function createMemorySafeCapturableConsole(): typeof console {
+export function getMemorySafeCapturableConsole(): typeof console {
+  if (capturableConsole) {
+    return capturableConsole;
+  }
+
   const consoleCopy = Object.fromEntries(
     Object.entries(console).map(([methodName, method]) => {
       const methodWrapper = function methodWrapper(...args: unknown[]) {
@@ -120,39 +59,153 @@ function createMemorySafeCapturableConsole(): typeof console {
     })
   );
 
+  capturableConsole = consoleCopy as unknown as typeof console;
+
   return consoleCopy as unknown as typeof console;
 }
 
-// We really have to create a copy of console here. Function runOnJS we use on elements inside
-// this object makes it not configurable
-const capturableConsole = createMemorySafeCapturableConsole();
-
-export function setupConsole() {
+export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
-  if (!IS_CHROME_DEBUGGER) {
-    // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-    global.console = {
-      /* eslint-disable @typescript-eslint/unbound-method */
-      assert: runOnJS(capturableConsole.assert),
-      debug: runOnJS(capturableConsole.debug),
-      log: runOnJS(capturableConsole.log),
-      warn: runOnJS(capturableConsole.warn),
-      error: runOnJS(capturableConsole.error),
-      info: runOnJS(capturableConsole.info),
-      /* eslint-enable @typescript-eslint/unbound-method */
-    };
+  // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
+  globalThis.console = {
+    assert: runOnJS(boundCapturableConsole.assert),
+    debug: runOnJS(boundCapturableConsole.debug),
+    log: runOnJS(boundCapturableConsole.log),
+    warn: runOnJS(boundCapturableConsole.warn),
+    error: runOnJS(boundCapturableConsole.error),
+    info: runOnJS(boundCapturableConsole.info),
+  };
+}
+
+let initialized = false;
+
+export function init() {
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+
+  if (globalThis.__RUNTIME_KIND === undefined) {
+    // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+    // is the RN Runtime. We must set it as soon as possible.
+    globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+  }
+
+  initializeRuntime();
+
+  if (SHOULD_BE_USE_WEB) {
+    initializeRuntimeOnWeb();
+  }
+
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    initializeWorkletRuntime();
+  } else {
+    initializeRNRuntime();
+    if (!SHOULD_BE_USE_WEB) {
+      installRNBindingsOnUIRuntime();
+    }
   }
 }
 
-export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
-  if (isWeb()) {
-    return;
+/** A function that should be run on any kind of runtime. */
+function initializeRuntime() {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
-  if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
-    );
+  installSynchronizableUnpacker();
+}
+
+/** A function that should be run only on React Native runtime. */
+function initializeRNRuntime() {
+  if (__DEV__) {
+    const testWorklet = () => {
+      'worklet';
+    };
+    if (!isWorkletFunction(testWorklet)) {
+      throw new WorkletsError(
+        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      );
+    }
   }
+
+  registerReportFatalRemoteError();
+}
+
+/** A function that should be run only on Worklet runtimes. */
+function initializeWorkletRuntime() {
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    setupCallGuard();
+
+    if (__DEV__) {
+      /*
+       * Temporary workaround for Metro bundler. We must implement a dummy
+       * Refresh module to prevent Metro from throwing irrelevant errors.
+       */
+      const Refresh = new Proxy(
+        {},
+        {
+          get() {
+            return () => {};
+          },
+        }
+      );
+
+      globalThis.__r.Refresh = Refresh;
+
+      /* Gracefully handle unwanted imports from React Native. */
+      // @ts-expect-error type not exposed by Metro
+      const modules = require.getModules();
+      // @ts-expect-error type not exposed by Metro
+      const ReactNativeModuleId = require.resolveWeak('react-native');
+
+      const factory = function (
+        _global: unknown,
+        _require: unknown,
+        _importDefault: unknown,
+        _importAll: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports = new Proxy(
+          {},
+          {
+            get: function get(_target, prop) {
+              globalThis.console.warn(
+                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
+              );
+              return {
+                get() {
+                  return undefined;
+                },
+              };
+            },
+          }
+        );
+      };
+
+      const mod = {
+        dependencyMap: [],
+        factory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(ReactNativeModuleId, mod);
+    }
+  }
+}
+
+/** A function that should be run only on RN Runtime in web implementation. */
+function initializeRuntimeOnWeb() {
+  globalThis._WORKLET = false;
+  globalThis._log = console.log;
+  globalThis._getAnimationTimestamp = () => performance.now();
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
     // the method directly using setTimeout, therefore the callback doesn't get the
@@ -162,14 +215,48 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
+}
 
-  if (!SHOULD_BE_USE_WEB) {
-    executeOnUIRuntimeSync(() => {
-      'worklet';
-      setupCallGuard();
-      setupConsole();
-      setupMicrotasks();
-      setupRequestAnimationFrame();
-    })();
+/**
+ * A function that should be run on the RN Runtime to configure the UI Runtime
+ * with callback bindings.
+ */
+function installRNBindingsOnUIRuntime() {
+  if (!WorkletsModule) {
+    throw new WorkletsError(
+      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    );
   }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+
+  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+    /** In bundle mode Runtimes setup their callGuard themselves. */
+    executeOnUIRuntimeSync(setupCallGuard)();
+
+    /**
+     * Register WorkletsError in the UI runtime global scope. (we are using
+     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
+     * before any async operations are executed on the UI runtime).
+     *
+     * There's no need to register the error in bundle mode.
+     */
+    executeOnUIRuntimeSync(registerWorkletsError)();
+  }
+
+  executeOnUIRuntimeSync(() => {
+    'worklet';
+
+    setupConsole(runtimeBoundCapturableConsole);
+    /**
+     * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
+     * separate function once we have a better way to distinguish between
+     * Worklet Runtimes.
+     */
+    setupMicrotasks();
+    setupRequestAnimationFrame();
+    setupSetTimeout();
+    setupSetImmediate();
+    setupSetInterval();
+  })();
 }

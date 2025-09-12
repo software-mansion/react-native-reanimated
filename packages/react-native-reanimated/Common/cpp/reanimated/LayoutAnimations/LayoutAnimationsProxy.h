@@ -23,12 +23,8 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 
 struct LayoutAnimation {
-#if REACT_NATIVE_MINOR_VERSION >= 78
   std::shared_ptr<ShadowView> finalView, currentView, startView;
   Tag parentTag;
-#else
-  std::shared_ptr<ShadowView> finalView, currentView, parentView;
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
   std::optional<double> opacity;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
@@ -61,15 +57,16 @@ struct LayoutAnimationsProxy
 //  mutable std::unordered_map<
 //        mutable std::optional<ShadowView> previousView;
         mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  mutable std::vector<Tag> finishedAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  ContextContainer::Shared contextContainer_;
+  std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      ContextContainer::Shared contextContainer,
+      std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> uiScheduler)
         : sharedTransitionManager_(layoutAnimationsManager->sharedTransitionManager_),

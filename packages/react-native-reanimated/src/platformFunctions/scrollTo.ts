@@ -1,17 +1,11 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
-
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
+import type { WrapperRef } from '../commonTypes';
+import type { AnimatedRef } from '../hook/commonTypes';
 import { dispatchCommand } from './dispatchCommand';
 
-type ScrollTo = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type ScrollTo = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean
@@ -30,42 +24,31 @@ type ScrollTo = <T extends Component>(
  */
 export let scrollTo: ScrollTo;
 
-function scrollToNative(
-  animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
+function scrollToNative<TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   x: number,
   y: number,
   animated: boolean
 ) {
   'worklet';
-  dispatchCommand(
-    // This assertion is needed to comply to `dispatchCommand` interface
-    animatedRef as unknown as AnimatedRef<Component>,
-    'scrollTo',
-    [x, y, animated]
-  );
+  dispatchCommand(animatedRef, 'scrollTo', [x, y, animated]);
 }
 
 function scrollToJest() {
   logger.warn('scrollTo() is not supported with Jest.');
 }
 
-function scrollToChromeDebugger() {
-  logger.warn('scrollTo() is not supported with Chrome Debugger.');
-}
-
 function scrollToDefault() {
   logger.warn('scrollTo() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   scrollTo = scrollToNative as unknown as ScrollTo;
-} else if (isJest()) {
+} else if (IS_JEST) {
   scrollTo = scrollToJest;
-} else if (isChromeDebugger()) {
-  scrollTo = scrollToChromeDebugger;
 } else {
   scrollTo = scrollToDefault;
 }

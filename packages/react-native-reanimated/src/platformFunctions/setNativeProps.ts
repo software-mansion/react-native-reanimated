@@ -1,18 +1,21 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import { processColorsInProps } from '../Colors';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import {
+  IS_JEST,
+  logger,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
+import type { ShadowNodeWrapper, StyleProps, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
-type SetNativeProps = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type SetNativeProps = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
 /**
@@ -36,7 +39,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
@@ -49,23 +52,17 @@ function setNativePropsJest() {
   logger.warn('setNativeProps() is not supported with Jest.');
 }
 
-function setNativePropsChromeDebugger() {
-  logger.warn('setNativeProps() is not supported with Chrome Debugger.');
-}
-
 function setNativePropsDefault() {
   logger.warn('setNativeProps() is not supported on this configuration.');
 }
 
-if (!shouldBeUseWeb()) {
+if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
-} else if (isJest()) {
+} else if (IS_JEST) {
   setNativeProps = setNativePropsJest;
-} else if (isChromeDebugger()) {
-  setNativeProps = setNativePropsChromeDebugger;
 } else {
   setNativeProps = setNativePropsDefault;
 }

@@ -26,7 +26,7 @@ const Comp = () => {
   });
 
   return (
-    <View ref={aref}>
+    <View ref={animatedRef}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <Animated.View style={[styles.box]} />
       </PanGestureHandler>
@@ -57,7 +57,7 @@ interface ComponentCoords {
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/next/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
+The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
 
 #### `absoluteX`
 

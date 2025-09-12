@@ -15,19 +15,19 @@ Install [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs
 
 <Tabs groupId="package-managers">
   <TabItem value="expo" label="EXPO" default>
-
+    ```bash
     npx expo install @babel/plugin-proposal-export-namespace-from
-
+    ```
   </TabItem>
   <TabItem value="npm" label="NPM">
-
+    ```bash
     npm install @babel/plugin-proposal-export-namespace-from
-
+    ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-
+    ```bash
     yarn add @babel/plugin-proposal-export-namespace-from
-
+    ```
   </TabItem>
 </Tabs>
 
@@ -43,14 +43,14 @@ Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin t
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          'react-native-reanimated/plugin',
+          'react-native-worklets/plugin',
       ],
   };
 ```
 
 :::caution
 
-Make sure to list `react-native-reanimated/plugin` last.
+Make sure to list `react-native-worklets/plugin` last.
 
 :::
 
@@ -122,7 +122,7 @@ module.exports = {
 
 ## Web without the Babel plugin
 
-It is possible to use Reanimated without the Babel plugin (`react-native-reanimated/plugin` on the Web, with some additional configuration.
+It is possible to use Reanimated without the Babel plugin (`react-native-worklets/plugin` on the Web, with some additional configuration.
 
 Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
 

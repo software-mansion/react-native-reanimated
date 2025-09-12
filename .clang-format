@@ -37,7 +37,7 @@ BreakConstructorInitializersBeforeComma: false
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: false
 ColumnLimit: 80
-CommentPragmas: "^ IWYU pragma:"
+CommentPragmas: '^ IWYU pragma:'
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
@@ -48,16 +48,16 @@ ForEachMacros: [FOR_EACH_RANGE, FOR_EACH]
 IncludeCategories:
   - Regex: '^<.*\.h(pp)?>'
     Priority: 1
-  - Regex: "^<.*"
+  - Regex: '^<.*'
     Priority: 2
-  - Regex: ".*"
+  - Regex: '.*'
     Priority: 3
 IndentCaseLabels: true
 IndentWidth: 2
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
-MacroBlockBegin: ""
-MacroBlockEnd: ""
+MacroBlockBegin: ''
+MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 ObjCBlockIndentWidth: 2

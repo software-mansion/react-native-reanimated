@@ -1,4 +1,4 @@
-import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
+import type { Component, Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import type { AnimatedStyle, LayoutAnimationStartFunction, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
@@ -16,13 +16,13 @@ export type TrackerCallCount = {
   onUI: number;
 };
 
-export type SharedValueSnapshot = {
+export type SharedValueSnapshot<TValue extends TestValue> = {
   name: string;
-  onJS: TestValue;
-  onUI: TestValue;
+  onJS: TValue;
+  onUI: TValue;
 };
 
-export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
+export type ComponentRef = RefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
 export enum DescribeDecorator {
   ONLY = 'only',
@@ -120,7 +120,9 @@ export type Mismatch = {
   capturedSnapshot: OperationUpdate;
 };
 
-/* eslint-disable no-var */
+export type DefaultValue = 'not_ok' | 'ok';
+export type ValueWrapper<T> = { value: T | DefaultValue };
+
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
@@ -146,4 +148,3 @@ declare global {
     stop: (tag: number) => void;
   };
 }
-/* eslint-enable no-var */

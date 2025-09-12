@@ -8,7 +8,7 @@ import type { SharedValue } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
-import { useAnimatedRef, useScrollViewOffset } from '../hook';
+import { useAnimatedRef, useScrollOffset } from '../hook';
 
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
@@ -29,16 +29,15 @@ export function AnimatedScrollView({
   ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const animatedRef = (
+  const animatedRef =
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
         useAnimatedRef<ScrollView>()
-      : ref
-  ) as AnimatedRef<AnimatedScrollView>;
+      : (ref as AnimatedRef<ScrollView>);
 
   if (scrollViewOffset) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useScrollViewOffset(animatedRef, scrollViewOffset);
+    useScrollOffset(animatedRef, scrollViewOffset);
   }
 
   // Set default scrollEventThrottle, because user expects

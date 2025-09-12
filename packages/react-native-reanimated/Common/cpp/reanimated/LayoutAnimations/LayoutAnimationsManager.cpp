@@ -1,5 +1,4 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/Tools/CollectionUtils.h>
 
 #ifndef NDEBUG
 #include <utility>
@@ -40,7 +39,7 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
     const int tag,
     const bool shouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(shouldAnimateExitingForTag_, tag)
+  return shouldAnimateExitingForTag_.contains(tag)
       ? shouldAnimateExitingForTag_[tag]
       : shouldAnimate;
 }
@@ -49,7 +48,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     const int tag,
     const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(getConfigsForType(type), tag);
+  return getConfigsForType(type).contains(tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
@@ -65,10 +64,10 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!collection::contains(getConfigsForType(type), tag)) {
+    if (!getConfigsForType(type).contains(tag)) {
       return;
     }
     config = getConfigsForType(type)[tag];
@@ -120,7 +119,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
   sharedTransitionsForNativeID_.erase(nativeId);
 }
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
+std::unordered_map<int, std::shared_ptr<Serializable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
@@ -132,7 +131,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case SHARED_ELEMENT_TRANSITION:
       return sharedTransitions_;
     default:
-      assert(false);
+      throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
 

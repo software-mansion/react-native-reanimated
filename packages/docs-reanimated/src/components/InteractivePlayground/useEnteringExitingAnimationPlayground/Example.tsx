@@ -176,7 +176,7 @@ export const EXITING_ANIMATIONS = {
 };
 
 // when springify() on web is enabled, add following props:
-// isSpringBased, mass, damping, stiffness, overshootClamping, restDisplacementThreshold, restSpeedThreshold
+// isSpringBased, mass, damping, stiffness, overshootClamping, energyThreshold
 
 export default function Example({ entering, exiting }: ExampleProps) {
   const [visible, setVisible] = React.useState(true);

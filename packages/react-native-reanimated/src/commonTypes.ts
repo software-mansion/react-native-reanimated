@@ -1,14 +1,21 @@
 'use strict';
 
+import type { ComponentRef, RefObject } from 'react';
 import type {
   ImageStyle,
+  NativeMethods,
+  ScrollResponderMixin,
+  ScrollViewComponent,
   TextStyle,
   TransformsStyle,
+  View,
   ViewStyle,
 } from 'react-native';
-import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
+import type { Maybe } from './common/types';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { AnyRecord } from './css/types';
 import type { EasingFunctionFactory } from './Easing';
 
 type LayoutAnimationOptions =
@@ -117,8 +124,7 @@ export interface BaseLayoutAnimationConfig {
   mass?: number;
   stiffness?: number;
   overshootClamping?: number;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
+  energyThreshold?: number;
 }
 
 export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
@@ -159,7 +165,7 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config: ShareableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
   sharedTransitionTag?: string;
 }
 
@@ -214,6 +220,11 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * method.
    */
   _value: Value;
+  /**
+   * Defined only when enabled with a feature flag
+   * `USE_SYNCHRONIZABLE_FOR_MUTABLES`.
+   */
+  setDirty?: (dirty: boolean) => void;
 }
 
 export type MapperRawInputs = unknown[];
@@ -223,7 +234,7 @@ export type MapperOutputs = SharedValue[];
 export type MapperRegistry = {
   start: (
     mapperID: number,
-    worklet: () => void,
+    worklet: (forceUpdate?: boolean) => void,
     inputs: MapperRawInputs,
     outputs?: MapperOutputs
   ) => void;
@@ -445,10 +456,30 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-/** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
+export type StyleUpdaterContainer = RefObject<
+  ((forceUpdate: boolean) => void) | undefined
+>;
 
-/** @deprecated This type is no longer relevant. */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;
+type NativeScrollRef = Maybe<
+  (
+    | ComponentRef<typeof View>
+    | ComponentRef<typeof ScrollViewComponent>
+    | NativeMethods
+  ) & {
+    __internalInstanceHandle?: AnyRecord;
+  }
+>;
+
+type InstanceMethods = {
+  getScrollResponder?: () => Maybe<
+    (ScrollResponderMixin | React.JSX.Element) & {
+      getNativeScrollRef?: () => NativeScrollRef;
+    }
+  >;
+  getNativeScrollRef?: () => NativeScrollRef;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: () => any;
+  __internalInstanceHandle?: AnyRecord;
+};
+
+export type WrapperRef = (React.Component & InstanceMethods) | InstanceMethods;

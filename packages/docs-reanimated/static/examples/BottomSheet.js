@@ -1,5 +1,4 @@
 import React from 'react';
-import { useColorScheme } from '@mui/material';
 import {
   Pressable,
   SafeAreaView,
@@ -15,9 +14,11 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
+import {useColorMode} from '@docusaurus/theme-common';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
-  const { colorScheme } = useColorScheme();
+  const { colorMode } = useColorMode();
   const height = useSharedValue(0);
   const progress = useDerivedValue(() =>
     withTiming(isOpen.value ? 0 : 1, { duration })
@@ -28,7 +29,7 @@ function BottomSheet({ isOpen, toggleSheet, duration = 500, children }) {
   }));
 
   const backgroundColorSheetStyle = {
-    backgroundColor: colorScheme === 'light' ? '#f8f9ff' : '#272B3C',
+    backgroundColor: colorMode === 'light' ? '#f8f9ff' : '#272B3C',
   };
 
   const backdropStyle = useAnimatedStyle(() => ({
@@ -76,16 +77,11 @@ const sheetStyles = StyleSheet.create({
 });
 
 export default function App() {
-  const { colorScheme } = useColorScheme();
+  const textColor = useThemedTextStyle();
   const isOpen = useSharedValue(false);
 
   const toggleSheet = () => {
     isOpen.value = !isOpen.value;
-  };
-
-  const contentStyle = {
-    color: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
-    textDecorationColor: colorScheme === 'light' ? '#001a72' : '#f8f9ff',
   };
 
   return (
@@ -98,14 +94,14 @@ export default function App() {
         <View style={styles.flex} />
       </View>
       <BottomSheet isOpen={isOpen} toggleSheet={toggleSheet}>
-        <Animated.Text style={contentStyle}>
+        <Animated.Text style={textColor}>
           Discover the indispensable convenience of a bottom sheet in mobile
           app. Seamlessly integrated, it provides quick access to supplementary
           features and refined details.
         </Animated.Text>
         <View style={styles.buttonContainer}>
           <Pressable style={[styles.bottomSheetButton]}>
-            <Text style={[styles.bottomSheetButtonText, contentStyle]}>
+            <Text style={[styles.bottomSheetButtonText, textColor]}>
               Read more
             </Text>
           </Pressable>

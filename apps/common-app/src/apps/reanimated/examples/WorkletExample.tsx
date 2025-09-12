@@ -4,20 +4,17 @@ import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  PanGestureHandler,
 } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
-  runOnUI,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
+import { runOnJS, runOnUI } from 'react-native-worklets';
 
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {
@@ -175,30 +172,12 @@ function ThrowErrorFromGestureDetectorDemo() {
   });
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={styles.height100}>
       <GestureDetector gesture={gesture}>
         <View style={styles.tomatoBox}>
           <Text>GestureDetector</Text>
         </View>
       </GestureDetector>
-    </GestureHandlerRootView>
-  );
-}
-
-function ThrowErrorFromUseAnimatedGestureHandlerDemo() {
-  const gestureHandler = useAnimatedGestureHandler({
-    onActive: () => {
-      throw Error('Hello world from useAnimatedGestureHandler');
-    },
-  });
-
-  return (
-    <GestureHandlerRootView>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={styles.goldBox}>
-          <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
-        </Animated.View>
-      </PanGestureHandler>
     </GestureHandlerRootView>
   );
 }
@@ -219,14 +198,14 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   );
 }
 
-function ThrowErrorFromUseScrollViewOffsetDemo() {
+function ThrowErrorFromuseScrollOffsetDemo() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
-  const offset = useScrollViewOffset(aref);
+  const offset = useScrollOffset(aref);
 
   useAnimatedStyle(() => {
     if (_WORKLET && offset.value > 0) {
-      throw Error('Hello world from useScrollViewOffset');
+      throw Error('Hello world from useScrollOffset');
     }
     return {};
   });
@@ -235,7 +214,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
     <View style={styles.height100}>
       <Animated.ScrollView ref={aref}>
         <View style={styles.cyanBox}>
-          <Text>useScrollViewOffset + useAnimatedStyle</Text>
+          <Text>useScrollOffset + useAnimatedStyle</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -255,9 +234,8 @@ export default function WorkletExample() {
       <ThrowErrorFromUseDerivedValueDemo />
       <ThrowErrorFromUseFrameCallbackDemo />
       <ThrowErrorFromGestureDetectorDemo />
-      <ThrowErrorFromUseAnimatedGestureHandlerDemo />
       <ThrowErrorFromUseAnimatedScrollHandlerDemo />
-      <ThrowErrorFromUseScrollViewOffsetDemo />
+      <ThrowErrorFromuseScrollOffsetDemo />
     </View>
   );
 }
@@ -284,10 +262,5 @@ const styles = StyleSheet.create({
     width: 100,
     height: 500,
     backgroundColor: 'cyan',
-  },
-  goldBox: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'gold',
   },
 });

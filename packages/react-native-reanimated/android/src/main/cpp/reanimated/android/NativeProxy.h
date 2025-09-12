@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 
@@ -45,13 +46,16 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
-  void checkJavaVersion(jsi::Runtime &);
+  void checkJavaVersion();
   void injectCppVersion();
 #endif // NDEBUG
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
+  void synchronouslyUpdateUIProps(
+      const std::vector<int> &intBuffer,
+      const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();

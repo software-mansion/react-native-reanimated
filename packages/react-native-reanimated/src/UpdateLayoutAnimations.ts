@@ -1,14 +1,13 @@
 'use strict';
+import { createSerializable } from 'react-native-worklets';
+
+import { SHOULD_BE_USE_WEB } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
-import {
-  configureLayoutAnimationBatch,
-  makeShareableCloneRecursive,
-} from './core';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { configureLayoutAnimationBatch } from './core';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -60,7 +59,7 @@ export let updateLayoutAnimations: (
   sharedTransitionTag?: string
 ) => void;
 
-if (shouldBeUseWeb()) {
+if (SHOULD_BE_USE_WEB) {
   updateLayoutAnimations = () => {
     // no-op
   };
@@ -77,7 +76,7 @@ if (shouldBeUseWeb()) {
       {
         viewTag,
         type,
-        config: config ? makeShareableCloneRecursive(config) : undefined,
+        config: config ? createSerializable(config) : undefined,
         sharedTransitionTag,
       },
       isUnmounting

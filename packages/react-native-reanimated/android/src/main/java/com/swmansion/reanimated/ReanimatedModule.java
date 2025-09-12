@@ -49,9 +49,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   public boolean installTurboModule() {
     getReactApplicationContext().assertOnJSQueueThread();
     mNodesManager.getNativeProxy().installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      mNodesManager.getNativeProxy().checkCppVersion();
-    }
     return true;
   }
 

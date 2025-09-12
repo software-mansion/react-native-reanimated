@@ -1,6 +1,4 @@
-/* eslint-disable no-unused-expressions */
 /* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   createAnimatedPropAdapter,
@@ -9,7 +7,6 @@ import {
   isSharedValue,
   Keyframe,
   makeMutable,
-  makeShareableCloneRecursive,
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
@@ -18,12 +15,6 @@ import {
 function MakeMutableTest() {
   const mut1 = makeMutable(0);
   const mut2 = makeMutable(true);
-}
-
-function MakeShareableCloneRecursiveTest() {
-  const mut1 = makeShareableCloneRecursive(0);
-  const mut2 = makeShareableCloneRecursive(true);
-  const mut3 = makeShareableCloneRecursive({ foo: 'bar' });
 }
 
 function IsSharedValueTest() {

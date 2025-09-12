@@ -42,20 +42,23 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
   this->value = numericValue * it->second;
 }
 
-CSSAngle::CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isString()) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
+CSSAngle::CSSAngle(const char *cstr) : CSSAngle(std::string_view{cstr}) {}
 
-  std::string strValue = jsiValue.asString(rt).utf8(rt);
-  *this = CSSAngle(strValue);
+CSSAngle::CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  *this = CSSAngle(jsiValue.asString(rt).utf8(rt));
+}
+
+CSSAngle::CSSAngle(const folly::dynamic &value) {
+  *this = CSSAngle(value.asString().c_str());
 }
 
 bool CSSAngle::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   // TODO - improve canConstruct check and add check for string correctness
-  return jsiValue.isString();
+  return jsiValue.isString() || jsiValue.isNumber();
+}
+
+bool CSSAngle::canConstruct(const folly::dynamic &value) {
+  return value.isString() || value.isNumber();
 }
 
 folly::dynamic CSSAngle::toDynamic() const {

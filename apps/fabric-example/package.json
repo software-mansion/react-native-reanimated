@@ -11,15 +11,30 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react-native": "0.79.0"
+    "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch"
   },
   "devDependencies": {
     "prettier": "^3.3.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.13.0"
   },
   "installConfig": {
     "selfReferences": false
+  },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true,
+      "DISABLE_COMMIT_PAUSING_MECHANISM": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "UNSTABLE_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
+      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true
+    }
+  },
+  "worklets": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true,
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+    }
   }
 }

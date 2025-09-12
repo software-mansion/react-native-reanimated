@@ -11,10 +11,8 @@ import { Circle, Svg } from 'react-native-svg';
 const animationDuration = 100;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-Animated.addWhitelistedNativeProps({ r: true });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-Animated.addWhitelistedNativeProps({ text: true });
 
 export default function AnimatedComponent() {
   const r = useSharedValue(20);
@@ -39,7 +37,7 @@ export default function AnimatedComponent() {
   return (
     <View>
       <Svg>
-        // SVG components strip our jest props and cannot be tested
+        {/* SVG components strip our jest props and cannot be tested */}
         <AnimatedCircle
           cx="50%"
           cy="50%"
@@ -69,7 +67,11 @@ describe('animatedProps', () => {
     const circle = getByTestId('circle');
 
     expect(circle).toHaveAnimatedProps({});
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
+
   test('Custom animated component', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const textInput = getByTestId('text');
@@ -81,5 +83,8 @@ describe('animatedProps', () => {
     jest.advanceTimersByTime(animationDuration);
 
     expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
+
+    const rendered = render(<AnimatedComponent />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

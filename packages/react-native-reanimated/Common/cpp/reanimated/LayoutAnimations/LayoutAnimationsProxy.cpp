@@ -87,6 +87,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(Surfac
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
+
+  for (const auto tag : finishedAnimationTags_) {
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+  }
+  finishedAnimationTags_.clear();
   
   transitionMap_.clear();
   transitions_.clear();
@@ -539,7 +546,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   PropsParserContext propsParserContext{
       layoutAnimation.finalView->surfaceId, *contextContainer_};
-#ifdef ANDROID
+#ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
       layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
@@ -581,7 +588,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     layoutAnimation.count--;
     return {};
   }
-
+  finishedAnimationTags_.push_back(tag);
   auto surfaceId = layoutAnimation.finalView->surfaceId;
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
   layoutAnimations_.erase(tag);
@@ -717,14 +724,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     LOG(INFO) << "(addOngoing) " << tag;
 
     mutations.push_back(ShadowViewMutation::UpdateMutation(
-        *layoutAnimation.currentView,
-        *newView,
-#if REACT_NATIVE_MINOR_VERSION >= 78
-        layoutAnimation.parentTag
-#else
-        *layoutAnimation.parentView
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
-        ));
+        *layoutAnimation.currentView, *newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -917,15 +917,10 @@ void LayoutAnimationsProxy::createLayoutAnimation(
   auto currentView = std::make_shared<ShadowView>(oldView);
       auto startView =std::make_shared<ShadowView>(oldView);
 
-#if REACT_NATIVE_MINOR_VERSION >= 78
   layoutAnimations_.insert_or_assign(
       tag,
    LayoutAnimation{finalView, currentView, startView, mutation.parentTag, {}, count});
-#else
-  auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
-  layoutAnimations_.insert_or_assign(
-      tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
+
 }
 
 void LayoutAnimationsProxy::startEnteringAnimation(
@@ -936,9 +931,6 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 #endif
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   auto current = std::make_shared<ShadowView>(mutation.newChildShadowView);
-#if REACT_NATIVE_MINOR_VERSION < 78
-  auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
-#endif
 
   auto &viewProps =
       static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
@@ -947,9 +939,6 @@ void LayoutAnimationsProxy::startEnteringAnimation(
   uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
                               finalView,
                               current,
-#if REACT_NATIVE_MINOR_VERSION < 78
-                              parent,
-#endif // REACT_NATIVE_MINOR_VERSION < 78
                               mutation,
                               opacity,
                               tag]() {
@@ -968,11 +957,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
               finalView,
               current,
             nullptr,
-#if REACT_NATIVE_MINOR_VERSION >= 78
               mutation.parentTag,
-#else
-              parent,
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
               opacity});
       window = strongThis->surfaceManager.getWindow(
           mutation.newChildShadowView.surfaceId);

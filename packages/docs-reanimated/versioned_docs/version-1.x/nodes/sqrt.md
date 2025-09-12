@@ -1,5 +1,3 @@
-<!- TODO - need to explain -->
-
 ## `sqrt`
 
 ```js

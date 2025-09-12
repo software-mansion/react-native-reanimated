@@ -1,5 +1,5 @@
 'use strict';
-import type { CSSTimingFunction } from '../easings';
+import type { CSSTimingFunction } from '../easing';
 import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyTypes } from './helpers';
 

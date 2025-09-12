@@ -69,7 +69,6 @@ describe('Test `Bezier` function', () => {
       'Invalid arguments point1 = (%d, %d) point2 = (%d, %d), x should be in range [0,1]',
       (x1, x2, y1, y2) => {
         expect(() => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _func = Bezier(x1, x2, y1, y2);
         }).toThrow();
       }
@@ -85,7 +84,6 @@ describe('Test `Bezier` function', () => {
       'Valid arguments point1 = (%d, %d) point2 = (%d, %d)',
       (x1, x2, y1, y2) => {
         expect(() => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const _func = Bezier(x1, x2, y1, y2);
         }).not.toThrow();
       }
@@ -252,5 +250,7 @@ describe('Test `Bezier` function', () => {
     });
   });
 
+  // TODO: Fix this test
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   describe('Bezier(a,b,(1-a),(1-b)) should have point symmetry at point (0.5, 0.5)', () => {});
 });

@@ -1,26 +1,23 @@
 'use strict';
 import type { ComponentProps, Ref } from 'react';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
+import type { ShadowNodeWrapper, WrapperRef } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
+  IAnimatedComponentInternalBase,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { ReanimatedError } from '../errors';
-import { CSSManager } from '../managers';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import { CSSManager } from '../platform';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-const IS_JEST = isJest();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -31,8 +28,11 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
 export default class AnimatedComponent<
-  P extends AnyRecord = AnimatedComponentProps,
-> extends Component<P> {
+    P extends AnyRecord = AnimatedComponentProps,
+  >
+  extends Component<P>
+  implements IAnimatedComponentInternalBase
+{
   ChildComponent: AnyComponent;
 
   _CSSManager?: CSSManager;
@@ -65,8 +65,8 @@ export default class AnimatedComponent<
 
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
-    let viewConfig;
     let DOMElement: HTMLElement | null = null;
+    let viewName: string | undefined;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
@@ -74,8 +74,6 @@ export default class AnimatedComponent<
       // TODO - implement a valid solution later on - this is a temporary fix
       viewTag = this._componentRef;
       DOMElement = this._componentDOMRef;
-      shadowNodeWrapper = null;
-      viewConfig = null;
     } else {
       const hostInstance = findHostInstance(this);
       if (!hostInstance) {
@@ -90,11 +88,14 @@ export default class AnimatedComponent<
       }
 
       const viewInfo = getViewInfo(hostInstance);
-      viewTag = viewInfo.viewTag;
-      viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(this, hostInstance);
+      viewTag = viewInfo.viewTag ?? -1;
+      viewName = viewInfo.viewName;
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(
+        this as WrapperRef,
+        hostInstance
+      );
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewConfig };
+    this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }
@@ -207,8 +208,7 @@ export default class AnimatedComponent<
 
     return (
       <ChildComponent
-        {...this.props}
-        {...props}
+        {...(props ?? this.props)}
         {...platformProps}
         style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
