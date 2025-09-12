@@ -1,10 +1,15 @@
 'use strict';
 
-// TODO: Specify the initialization pipeline since now there's no
-// universal source of truth for it.
-import './initializers';
 import './publicGlobals';
 
+import { initializeReanimatedModule } from './initializers';
+import { ReanimatedModule } from './ReanimatedModule';
+
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
+initializeReanimatedModule(ReanimatedModule);
+
+// eslint-disable-next-line import/first
 import * as Animated from './Animated';
 
 export default Animated;
