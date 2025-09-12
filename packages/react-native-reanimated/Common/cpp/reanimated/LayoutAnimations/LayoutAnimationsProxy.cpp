@@ -7,7 +7,8 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <glog/logging.h>
-#include <react/renderer/components/scrollview/ScrollViewShadowNode.h>
+#include <react/renderer/core/ConcreteState.h>
+#include <react/renderer/components/scrollview/ScrollViewState.h>
 #ifdef ANDROID
 #undef LOG
 #define LOG SYSLOG
@@ -15,6 +16,8 @@
 
 #include <set>
 #include <utility>
+
+using ScrollState = ConcreteState<ScrollViewState>;
 
 namespace reanimated {
 
@@ -180,7 +183,7 @@ LayoutMetrics LayoutAnimationsProxy::getAbsoluteMetrics(LightNode::Unshared node
   auto parent = node->parent.lock();
   while (parent){
     if (!strcmp(parent->current.componentName, "ScrollView")){
-      auto state = std::static_pointer_cast<const ScrollViewShadowNode::ConcreteState>(parent->current.state);
+      auto state = std::static_pointer_cast<const ScrollState>(parent->current.state);
       auto data = state->getData();
 //      LOG(INFO) << node->current.tag << " content offset:" << data.contentOffset.x << " " << data.contentOffset.y;
       result.frame.origin -= data.contentOffset;
