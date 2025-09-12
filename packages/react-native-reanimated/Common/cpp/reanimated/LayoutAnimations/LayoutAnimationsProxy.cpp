@@ -1,5 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/LayoutAnimations/PropsDiffer.h>
 #ifndef ANDROID
 #include <react/renderer/components/rnscreens/Props.h>
 #endif
@@ -271,7 +272,27 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
         auto width = before.size.width + transitionProgress_*(after.size.width - before.size.width);
         auto height = before.size.height + transitionProgress_*(after.size.height - before.size.height);
         
-        updateMap.insert_or_assign(tag, UpdateValues{nullptr, {x,y,width,height}});
+        auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView->props);
+        auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView->props);
+        auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+
+        auto d = folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_*(afterRadius - beforeRadius));
+
+      #ifdef RN_SERIALIZABLE_STATE
+        auto rawProps = RawProps(folly::dynamic::merge(
+            layoutAnimation.finalView->props->rawProps, d));
+      #else
+          auto rawProps = RawProps(std::move(d));
+      #endif
+        auto newProps =
+            getComponentDescriptorForShadowView(*layoutAnimation.finalView)
+                .cloneProps(
+                    propsParserContext,
+                    layoutAnimation.finalView->props,
+                    std::move(rawProps));
+        
+        updateMap.insert_or_assign(tag, UpdateValues{newProps, {x,y,width,height}});
       }
     }
     
@@ -1098,26 +1119,13 @@ void LayoutAnimationsProxy::startSharedTransition(const int tag, const ShadowVie
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot currentValues(oldView, window);
-    Snapshot targetValues(after, window);
-
     auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
-    yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
-    yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
-    yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", targetValues.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(uiRuntime, tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, yogaValues);
+    const auto &propsDiff = PropsDiffer(uiRuntime, oldView, after).computeDiff(uiRuntime);
+
+    propsDiff.setProperty(uiRuntime, "windowWidth", window.width);
+    propsDiff.setProperty(uiRuntime, "windowHeight", window.height);
+    
+    strongThis->layoutAnimationsManager_->startLayoutAnimation(uiRuntime, tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION, propsDiff);
   });
 }
 
@@ -1199,7 +1207,8 @@ std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
             facebook::react::ShadowViewMutation &mutation,
             const PropsParserContext &propsParserContext) const {
         auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-        folly::dynamic opacity = folly::dynamic::object("opacity", 1);
+        const auto& props = static_cast<const ViewProps&>(*newView.get()->props);
+        folly::dynamic opacity = folly::dynamic::object("opacity", props.opacity);
         auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
                 propsParserContext, newView->props, RawProps(opacity));
         newView->props = newProps;
