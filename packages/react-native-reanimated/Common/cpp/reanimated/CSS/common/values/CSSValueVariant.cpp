@@ -17,8 +17,7 @@ namespace reanimated::css {
 template <typename... AllowedTypes>
 template <typename TValue>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(TValue &&value)
-  requires((std::is_constructible_v<AllowedTypes, TValue> || ...))
-{
+  requires((std::is_constructible_v<AllowedTypes, TValue> || ...)) {
   using ValueType = TValue;
 
   // If value type exactly matches one of AllowedTypes, store it directly:
