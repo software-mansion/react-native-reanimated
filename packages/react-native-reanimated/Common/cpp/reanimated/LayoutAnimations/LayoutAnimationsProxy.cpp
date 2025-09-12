@@ -272,7 +272,27 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
         auto width = before.size.width + transitionProgress_*(after.size.width - before.size.width);
         auto height = before.size.height + transitionProgress_*(after.size.height - before.size.height);
         
-        updateMap.insert_or_assign(tag, UpdateValues{nullptr, {x,y,width,height}});
+        auto beforeProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.startView->props);
+        auto afterProps = std::static_pointer_cast<const BaseViewProps>(layoutAnimation.finalView->props);
+        auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+        auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
+
+        auto d = folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_*(afterRadius - beforeRadius));
+
+      #ifdef RN_SERIALIZABLE_STATE
+        auto rawProps = RawProps(folly::dynamic::merge(
+            layoutAnimation.finalView->props->rawProps, d));
+      #else
+          auto rawProps = RawProps(std::move(d));
+      #endif
+        auto newProps =
+            getComponentDescriptorForShadowView(*layoutAnimation.finalView)
+                .cloneProps(
+                    propsParserContext,
+                    layoutAnimation.finalView->props,
+                    std::move(rawProps));
+        
+        updateMap.insert_or_assign(tag, UpdateValues{newProps, {x,y,width,height}});
       }
     }
     
