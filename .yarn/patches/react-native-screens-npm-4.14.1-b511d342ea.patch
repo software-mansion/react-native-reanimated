@@ -1,0 +1,138 @@
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 9559ed58054105e9039d82477426929c0bfa8149..e98a5a50cff455b70907acf720b3f58449e3b887 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -704,14 +704,14 @@ RNS_IGNORE_SUPER_CALL_END
+   [_controller notifyFinishTransitioning];
+ }
+ 
+-- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
++- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward isSwiping:(BOOL)isSwiping
+ {
+ #ifdef RCT_NEW_ARCH_ENABLED
+   if (_eventEmitter != nullptr) {
+     std::dynamic_pointer_cast<const react::RNSScreenEventEmitter>(_eventEmitter)
+         ->onTransitionProgress(
+             react::RNSScreenEventEmitter::OnTransitionProgress{
+-                .progress = progress, .closing = closing ? 1 : 0, .goingForward = goingForward ? 1 : 0});
++                .progress = progress, .closing = closing ? 1 : 0, .goingForward = goingForward ? 1 : 0, .swiping = isSwiping ? 1 : 0});
+   }
+   RNSScreenViewEvent *event = [[RNSScreenViewEvent alloc] initWithEventName:@"onTransitionProgress"
+                                                                    reactTag:[NSNumber numberWithInt:self.tag]
+@@ -1488,7 +1488,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+   [RNSScreenWindowTraits updateWindowTraits];
+   if (_shouldNotify) {
+     _closing = NO;
+-    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward];
++    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     [self setupProgressNotification];
+   }
+ }
+@@ -1525,7 +1525,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+ 
+   if (_shouldNotify) {
+     _closing = YES;
+-    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward];
++    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     [self setupProgressNotification];
+   }
+ }
+@@ -1537,7 +1537,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+     // we are going forward or dismissing without swipe
+     // or successfully swiped back
+     [self.screenView notifyAppear];
+-    [self notifyTransitionProgress:1.0 closing:NO goingForward:_goingForward];
++    [self notifyTransitionProgress:1.0 closing:NO goingForward:_goingForward isSwiping:_isSwiping];
+   } else {
+     [self.screenView notifyGestureCancel];
+   }
+@@ -1563,7 +1563,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+   // same flow as in viewDidAppear
+   if (!_isSwiping || _shouldNotify) {
+     [self.screenView notifyDisappear];
+-    [self notifyTransitionProgress:1.0 closing:YES goingForward:_goingForward];
++    [self notifyTransitionProgress:1.0 closing:YES goingForward:_goingForward isSwiping:_isSwiping];
+   }
+ 
+   _isSwiping = NO;
+@@ -1750,17 +1750,17 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+     CGFloat fakeViewAlpha = _fakeView.layer.presentationLayer.opacity;
+     if (_currentAlpha != fakeViewAlpha) {
+       _currentAlpha = fmax(0.0, fmin(1.0, fakeViewAlpha));
+-      [self notifyTransitionProgress:_currentAlpha closing:_closing goingForward:_goingForward];
++      [self notifyTransitionProgress:_currentAlpha closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     }
+   }
+ }
+ 
+-- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
++- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward isSwiping:(BOOL)isSwiping
+ {
+   if ([self.view isKindOfClass:[RNSScreenView class]]) {
+     // if the view is already snapshot, there is not sense in sending progress since on JS side
+     // the component is already not present
+-    [(RNSScreenView *)self.view notifyTransitionProgress:progress closing:closing goingForward:goingForward];
++    [(RNSScreenView *)self.view notifyTransitionProgress:progress closing:closing goingForward:goingForward isSwiping:isSwiping];
+   }
+ }
+ 
+diff --git a/lib/typescript/fabric/ModalScreenNativeComponent.d.ts b/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
+index 011f345d047df232b5d4591d74de6c0622c22f87..310104bfccfa4ea4ac0d51ba769572e254721682 100644
+--- a/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
++++ b/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
+@@ -8,6 +8,7 @@ type TransitionProgressEvent = Readonly<{
+     progress: Double;
+     closing: Int32;
+     goingForward: Int32;
++    swiping: Int32;
+ }>;
+ type HeaderHeightChangeEvent = Readonly<{
+     headerHeight: Double;
+diff --git a/lib/typescript/fabric/ScreenNativeComponent.d.ts b/lib/typescript/fabric/ScreenNativeComponent.d.ts
+index 162e485914a25a0299ba4a4ec9ba4501db230875..3a59862f2db8fb09fe8b1f3f165171eddc35cd6f 100644
+--- a/lib/typescript/fabric/ScreenNativeComponent.d.ts
++++ b/lib/typescript/fabric/ScreenNativeComponent.d.ts
+@@ -8,6 +8,7 @@ type TransitionProgressEvent = Readonly<{
+     progress: Double;
+     closing: Int32;
+     goingForward: Int32;
++    swiping: Int32;
+ }>;
+ type HeaderHeightChangeEvent = Readonly<{
+     headerHeight: Double;
+diff --git a/lib/typescript/types.d.ts b/lib/typescript/types.d.ts
+index 5963ffe45c5ac6ef96653ff19c90054e7abd7ef4..5ceb5b3e4d82ce67790b5175cddeb9a8a573476f 100644
+--- a/lib/typescript/types.d.ts
++++ b/lib/typescript/types.d.ts
+@@ -24,6 +24,7 @@ export type TransitionProgressEventType = {
+     progress: number;
+     closing: number;
+     goingForward: number;
++    swiping: number;
+ };
+ export type GestureResponseDistanceType = {
+     start?: number;
+diff --git a/src/fabric/ModalScreenNativeComponent.ts b/src/fabric/ModalScreenNativeComponent.ts
+index 487614ffea9d709558b7d56cd6074ecf89b9e723..f32f155cbaf7a403cf847a86c77a40ec7b6a44cf 100644
+--- a/src/fabric/ModalScreenNativeComponent.ts
++++ b/src/fabric/ModalScreenNativeComponent.ts
+@@ -21,6 +21,7 @@ type TransitionProgressEvent = Readonly<{
+   progress: Double;
+   closing: Int32;
+   goingForward: Int32;
++  swiping: Int32;
+ }>;
+ 
+ type HeaderHeightChangeEvent = Readonly<{
+diff --git a/src/fabric/ScreenNativeComponent.ts b/src/fabric/ScreenNativeComponent.ts
+index 4703c2d49610678f7c36a91efcbc1261599596f2..19b6ce000d544c3431de547dd8498c359db27372 100644
+--- a/src/fabric/ScreenNativeComponent.ts
++++ b/src/fabric/ScreenNativeComponent.ts
+@@ -21,6 +21,7 @@ type TransitionProgressEvent = Readonly<{
+   progress: Double;
+   closing: Int32;
+   goingForward: Int32;
++  swiping: Int32;
+ }>;
+ 
+ type HeaderHeightChangeEvent = Readonly<{

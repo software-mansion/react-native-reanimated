@@ -1,6 +1,8 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
+import { RuntimeKind } from 'react-native-worklets';
+
 function ReanimatedErrorConstructor(message: string): ReanimatedError {
   'worklet';
   const prefix = '[Reanimated]';
@@ -15,7 +17,7 @@ function ReanimatedErrorConstructor(message: string): ReanimatedError {
  */
 export function registerReanimatedError() {
   'worklet';
-  if (globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     globalThis.ReanimatedError =
       ReanimatedErrorConstructor as IReanimatedErrorConstructor;
   }

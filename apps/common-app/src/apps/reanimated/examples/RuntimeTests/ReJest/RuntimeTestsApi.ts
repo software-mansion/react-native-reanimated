@@ -3,7 +3,7 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import type { MaybeAsync, TestConfiguration, TestValue } from './types';
+import type { DefaultValue, MaybeAsync, TestConfiguration, TestValue } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -111,8 +111,8 @@ export function registerValue<TValue = unknown>(name: string, value: SharedValue
   return valueRegistry.registerValue(name, value);
 }
 
-export async function getRegisteredValue(name: string) {
-  return await valueRegistry.getRegisteredValue(name);
+export async function getRegisteredValue<TValue extends TestValue>(name: string) {
+  return await valueRegistry.getRegisteredValue<TValue>(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
@@ -138,8 +138,12 @@ export function notify(name: string) {
   return testRunnerNotifyFn(name);
 }
 
-export async function waitForNotify(name: string) {
-  return notificationRegistry.waitForNotify(name);
+export async function waitForNotification(name: string, timeout: number | undefined = 10_000) {
+  return notificationRegistry.waitForNotification(name, timeout);
+}
+
+export async function waitForNotifications(names: string[], timeout: number | undefined = 10_000) {
+  return notificationRegistry.waitForNotifications(names, timeout);
 }
 
 export function expect(value: TestValue) {
@@ -148,6 +152,10 @@ export function expect(value: TestValue) {
 
 export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
+}
+
+export function createTestValue<T = DefaultValue>(defaultValue: T) {
+  return testRunner.createTestValue<T>(defaultValue);
 }
 
 export async function mockAnimationTimer() {
@@ -172,4 +180,8 @@ export async function recordAnimationUpdates() {
 
 export async function stopRecordingAnimationUpdates() {
   await animationRecorder.stopRecordingAnimationUpdates();
+}
+
+export function createOrderConstraint() {
+  return testRunner.createOrderConstraint();
 }

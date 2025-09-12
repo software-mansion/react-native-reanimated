@@ -5,7 +5,7 @@ const {
 
 const path = require('path');
 // @ts-expect-error
-const exclusionList = require('metro-config/src/defaults/exclusionList');
+const exclusionList = require('metro-config/private/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 
 const root = path.resolve(__dirname, '../..');

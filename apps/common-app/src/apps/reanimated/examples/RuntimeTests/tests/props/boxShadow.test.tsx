@@ -1,8 +1,5 @@
-// TODO: Enable this test after RuntimeTests are implemented on Fabric
-
 import { useEffect } from 'react';
-import type { BoxShadowValue } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { BoxShadowValue, StyleSheet, View } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
@@ -11,14 +8,18 @@ import {
   describe,
   expect,
   getTestComponent,
+  notify,
   render,
   test,
   useTestRef,
   wait,
+  waitForNotification,
 } from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
 
-describe.skip('animation of BoxShadow', () => {
+const NOTIFICATION_NAME = 'UPDATE_BOX_SHADOW';
+
+describe('animation of BoxShadow', () => {
   enum Component {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',
@@ -38,11 +39,7 @@ describe.skip('animation of BoxShadow', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        boxShadow: [
-          withSpring(boxShadowActiveSV.value as unknown as AnimatableValue, {
-            duration: 700,
-          }),
-        ],
+        boxShadow: [boxShadowActiveSV.value],
       } as DefaultStyle;
     });
 
@@ -54,9 +51,17 @@ describe.skip('animation of BoxShadow', () => {
 
     useEffect(() => {
       const timeout = setTimeout(() => {
-        boxShadowActiveSV.value = finalBoxShadow;
+        boxShadowActiveSV.value = withSpring(
+          finalBoxShadow as unknown as AnimatableValue,
+          {
+            duration: 300,
+          },
+          () => {
+            notify(NOTIFICATION_NAME);
+          },
+        ) as unknown as BoxShadowValue;
         boxShadowPassiveSV.value = finalBoxShadow;
-      }, 1000);
+      }, 500);
 
       return () => clearTimeout(timeout);
     }, [finalBoxShadow, boxShadowActiveSV, boxShadowPassiveSV]);
@@ -74,17 +79,19 @@ describe.skip('animation of BoxShadow', () => {
       description: 'one boxShadow',
       finalBoxShadow: {
         blurRadius: 10,
-        color: 'rgba(39, 185, 245, 0.8)',
+        color: '#ff0000ff',
         offsetX: -20,
         offsetY: 4,
         spreadDistance: 20,
+        inset: false,
       },
       startBoxShadow: {
         blurRadius: 7,
-        color: 'rgba(245, 40, 145, 0.8)',
+        color: '#ff0000fe',
         offsetX: -10,
         offsetY: 6,
         spreadDistance: 10,
+        inset: true,
       },
     },
   ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {
@@ -93,10 +100,27 @@ describe.skip('animation of BoxShadow', () => {
     const activeComponent = getTestComponent(Component.ACTIVE);
     const passiveComponent = getTestComponent(Component.PASSIVE);
 
-    await wait(200);
+    const activeBoxShadow = JSON.parse(
+      await activeComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
+    const passiveBoxShadow = JSON.parse(
+      await passiveComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
 
-    expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
-    expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+    expect(activeBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
+    expect(passiveBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
+
+    await waitForNotification(NOTIFICATION_NAME);
+
+    const passiveBoxShadowFinal = JSON.parse(
+      await passiveComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
+    const activeBoxShadowFinal = JSON.parse(
+      await activeComponent.getAnimatedStyle('boxShadow'),
+    ) as unknown as BoxShadowValue[];
+
+    expect(activeBoxShadowFinal).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+    expect(passiveBoxShadowFinal).toBe([finalBoxShadow], ComparisonMode.ARRAY);
   });
 });
 

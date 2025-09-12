@@ -8,13 +8,18 @@ import type {
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
-import type { AnimateProps } from '../helperTypes';
+import type { AnimatedProps } from '../helperTypes';
 import type { Options } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 import type {
   AnimatedComponentProps,
   InitialComponentProps,
 } from './commonTypes';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnimatableComponent<C extends ComponentType<any>> = C & {
+  jsProps?: string[];
+};
 
 /**
  * Lets you create an Animated version of any React Native component.
@@ -26,21 +31,21 @@ import type {
 
 // Don't change the order of overloads, since such a change breaks current behavior
 export function createAnimatedComponent<P extends object>(
-  component: FunctionComponent<P>,
+  component: AnimatableComponent<FunctionComponent<P>>,
   options?: Options<P>
-): FunctionComponent<AnimateProps<P>>;
+): FunctionComponent<AnimatedProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
-  component: ComponentClass<P>,
+  component: AnimatableComponent<ComponentClass<P>>,
   options?: Options<P>
-): ComponentClass<AnimateProps<P>>;
+): ComponentClass<AnimatedProps<P>>;
 
 export function createAnimatedComponent<P extends object>(
   // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
   // since some external components (like FastImage) are typed just as ComponentType
-  component: ComponentType<P>,
+  component: AnimatableComponent<ComponentType<P>>,
   options?: Options<P>
-): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+): FunctionComponent<AnimatedProps<P>> | ComponentClass<AnimatedProps<P>>;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
@@ -48,13 +53,12 @@ export function createAnimatedComponent<P extends object>(
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
 export function createAnimatedComponent(
-  component: typeof FlatList<unknown>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: Options<any>
-): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
+  component: AnimatableComponent<typeof FlatList<unknown>>,
+  options?: Options<typeof FlatList<unknown>>
+): ComponentClass<AnimatedProps<FlatListProps<unknown>>>;
 
 export function createAnimatedComponent(
-  Component: ComponentType<InitialComponentProps>,
+  Component: AnimatableComponent<ComponentType<InitialComponentProps>>,
   options?: Options<InitialComponentProps>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
@@ -64,7 +68,12 @@ export function createAnimatedComponent(
     })`;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
-      super(Component, props, AnimatedComponent.displayName, options);
+      // User can override component-defined jsProps via options
+      const jsProps = options?.jsProps ?? Component.jsProps;
+      const modifiedOptions = jsProps?.length
+        ? { ...options, jsProps }
+        : options;
+      super(Component, props, AnimatedComponent.displayName, modifiedOptions);
     }
   }
 

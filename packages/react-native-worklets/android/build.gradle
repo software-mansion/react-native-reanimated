@@ -42,11 +42,15 @@ def resolveReactNativeDirectory() {
     )
 }
 
-def getReactNativeMinorVersion() {
+def getReactNativeVersion() {
     def reactNativeRootDir = resolveReactNativeDirectory()
     def reactProperties = new Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-    def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+    return reactProperties.getProperty("VERSION_NAME")
+}
+
+def getReactNativeMinorVersion() {
+    def reactNativeVersion = getReactNativeVersion()
     return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
 }
 
@@ -63,16 +67,41 @@ def toPlatformFileString(String path) {
     return path
 }
 
+def getStaticFeatureFlags() {
+    def featureFlags = new HashMap<String, String>()
+
+    def staticFeatureFlagsFile = file(projectDir.path + "/../src/featureFlags/staticFlags.json")
+    if (!staticFeatureFlagsFile.exists()) {
+        throw new GradleException("[Worklets] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
+    }
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
+        featureFlags[key] = value.toString()
+    }
+
+    def packageJsonFile = file(rootDir.path + "/../package.json")
+    if (packageJsonFile.exists()) {
+        def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
+        packageJson.worklets?.staticFeatureFlags?.each { key, value ->
+            featureFlags[key] = value.toString()
+        }
+    }
+
+    return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+}
+
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
 
+def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
+def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def EXPERIMENTAL_BUNDLING = safeAppExtGet("workletsExperimentalBundling", false)
+def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -154,7 +183,7 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "EXPERIMENTAL_BUNDLING", EXPERIMENTAL_BUNDLING.toString())
+        buildConfigField("boolean", "BUNDLE_MODE", BUNDLE_MODE.toString())
 
         externalNativeBuild {
             cmake {
@@ -164,8 +193,10 @@ android {
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
-                        "-DWORKLETS_EXPERIMENTAL_BUNDLING=${EXPERIMENTAL_BUNDLING}",
-                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                        "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
             }
@@ -213,30 +244,21 @@ android {
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
                 "**/libjsi.so",
-                "**/libfolly_json.so",
-                "**/libfolly_runtime.so",
-                "**/libglog.so",
                 "**/libhermes.so",
-                "**/libhermes-executor-debug.so",
-                "**/libhermes_executor.so",
+                "**/libhermesvm.so",
                 "**/libhermestooling.so",
-                "**/libreactnativejni.so",
-                "**/libturbomodulejsijni.so",
                 "**/libreactnative.so",
-                "**/libreact_nativemodule_core.so",
-                "**/libreact_render*.so",
-                "**/librrc_root.so",
                 "**/libjscexecutor.so",
         ]
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     sourceSets {
         main {
             java {
-                if (EXPERIMENTAL_BUNDLING) {
+                if (BUNDLE_MODE) {
                     srcDirs += "src/experimentalBundling"
                 } else {
                     srcDirs += "src/legacyBundling"
@@ -250,7 +272,6 @@ android {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
-                def packageDir = new File("${project.projectDir}/..")
 
                 def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
                 def output = new File("${packageDir}/compile_commands.json")
@@ -262,12 +283,17 @@ android {
     }
 }
 
+def validateReactNativeVersionResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-react-native-version.js", REACT_NATIVE_VERSION.toString())
+    ignoreExitValue = true
+}
+
 task assertMinimalReactNativeVersionTask {
-    // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 75
-    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Worklets] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
+        if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 

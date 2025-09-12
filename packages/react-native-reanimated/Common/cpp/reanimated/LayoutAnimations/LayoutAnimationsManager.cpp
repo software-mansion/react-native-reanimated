@@ -1,5 +1,4 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/Tools/CollectionUtils.h>
 
 #ifndef NDEBUG
 #include <utility>
@@ -40,7 +39,7 @@ bool LayoutAnimationsManager::shouldAnimateExiting(
     const int tag,
     const bool shouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(shouldAnimateExitingForTag_, tag)
+  return shouldAnimateExitingForTag_.contains(tag)
       ? shouldAnimateExitingForTag_[tag]
       : shouldAnimate;
 }
@@ -49,7 +48,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     const int tag,
     const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(getConfigsForType(type), tag);
+  return getConfigsForType(type).contains(tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
@@ -65,10 +64,10 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!collection::contains(getConfigsForType(type), tag)) {
+    if (!getConfigsForType(type).contains(tag)) {
       return;
     }
     config = getConfigsForType(type)[tag];
@@ -120,7 +119,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
   sharedTransitionsForNativeID_.erase(nativeId);
 }
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
+std::unordered_map<int, std::shared_ptr<Serializable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
@@ -135,49 +134,5 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
-
-//std::optional<ShadowView> SharedTransitionManager::add(const ShadowView& shadowView){
-//  auto& group = groups_[tagToName_[shadowView.tag]];
-//  std::optional<ShadowView> result;
-//  if (!group.stack_.empty()){
-//    result = group.tagToView_[group.stack_.top()];
-//  }
-//  group.stack_.push(shadowView.tag);
-//  group.tagToView_[shadowView.tag] = shadowView;
-//  
-//  return result;
-//}
-//
-//std::optional<std::pair<ShadowView, ShadowView>> SharedTransitionManager::remove(Tag tag){
-//  auto& group = groups_[tagToName_[tag]];
-//  std::optional<std::pair<ShadowView, ShadowView>> result;
-//  if (group.stack_.size()>1){
-//    std::pair<ShadowView, ShadowView> p;
-//    p.first = group.tagToView_[group.stack_.top()];
-//    group.stack_.pop();
-//    p.second = group.tagToView_[group.stack_.top()];
-//    result = p;
-//  } else if (group.stack_.size() == 1){
-//    group.stack_.pop();
-//  }
-//  
-//  return result;
-//}
-//
-//int SharedTransitionManager::createTransitionContainer(SharedTag sharedTag){
-//  containers_.push_back(sharedTag);
-//  return containers_.size();
-//}
-//
-//int SharedTransitionManager::removeTransitionContainer(SharedTag sharedTag){
-//  for (int i=0; i<containers_.size(); i++){
-//    if (containers_[i] == sharedTag){
-//      containers_.erase(containers_.begin() + i);
-//      return i;
-//    }
-//  }
-//  
-//  return -1;
-//}
 
 } // namespace reanimated

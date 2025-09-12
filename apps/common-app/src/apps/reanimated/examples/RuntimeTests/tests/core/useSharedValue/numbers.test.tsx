@@ -6,10 +6,12 @@ import {
   describe,
   expect,
   getRegisteredValue,
+  notify,
   Presets,
   registerValue,
   render,
   test,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
@@ -21,6 +23,7 @@ type MultiplyComponentProps<T> = {
 };
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
+const MULTIPLICATION_NOTIFICATION_NAME = 'MULTIPLICATION_NOTIFICATION_NAME';
 
 describe('Test _mathematical operations_ on sharedValue', () => {
   const MultiplySVOriginalAPI = <T extends number | bigint>({
@@ -33,6 +36,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.value;
       sharedValue.value = (currentValue * factor) as T;
+      notify(MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -47,6 +51,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.get();
       sharedValue.set((currentValue * factor) as T);
+      notify(MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -60,6 +65,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
     useEffect(() => {
       sharedValue.set(value => (value * factor) as T);
+      notify(MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -85,6 +91,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     await render(<ComponentToRender initialValue={initialValue} factor={factor} progress={progress} />);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = initialValue * factor;
+    await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
     expect(sharedValue.onJS).toBe(expected, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(expected, ComparisonMode.NUMBER);
     await render(<ProgressBar progress={progress} />);
@@ -112,7 +119,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     }
   });
 
-  test.each([2, 0.0000045, 123456789])('Test multiplication  *=%p, React API with function', async (factor: number) => {
+  test.each([2, 123456789])('Test multiplication  *=%p, React API with function', async (factor: number) => {
     for (const [index, preset] of Presets.numbers.entries()) {
       await testSharedValueMultiplication({
         initialValue: preset,

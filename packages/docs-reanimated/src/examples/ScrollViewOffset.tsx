@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
+import {
+  Button,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import type { DerivedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedProps,
   useAnimatedRef,
   useDerivedValue,
   useScrollViewOffset,
 } from 'react-native-reanimated';
-import type { DerivedValue } from 'react-native-reanimated';
 
 export default function App() {
   const animatedRef = useAnimatedRef<Animated.ScrollView>();
@@ -22,7 +29,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <AnimatedText text={text} />
-      <Animated.ScrollView
+      <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         ref={animatedRef}
@@ -32,7 +39,7 @@ export default function App() {
             <Text style={styles.center}>{i}</Text>
           </View>
         ))}
-      </Animated.ScrollView>
+      </ScrollView>
       <Button
         title={`Toggle scroll to ${
           isScrollHorizontal ? 'vertical' : 'horizontal'
@@ -72,18 +79,17 @@ const styles = StyleSheet.create({
 });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-Animated.addWhitelistedNativeProps({ text: true });
 
-function AnimatedText({ text, ...props }: { text: DerivedValue<string> }) {
+function AnimatedText(props: { text: DerivedValue<string> }) {
+  const text = props.text;
   const animatedProps = useAnimatedProps(() => ({
     text: text.value,
     defaultValue: text.value,
   }));
   return (
     <AnimatedTextInput
-      editable={false}
       {...props}
-      value={text.value}
+      editable={false}
       animatedProps={animatedProps}
     />
   );

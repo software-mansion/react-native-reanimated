@@ -1,8 +1,10 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
+#include <memory>
 #include <utility>
 
 namespace worklets {
@@ -25,15 +27,20 @@ WorkletsModule::WorkletsModule(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           uiScheduler,
+          getIsOnJSQueueThread(),
           getForwardedRequestAnimationFrame(),
           script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy =
       workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::move(jsiWorkletsModuleProxy));
+      *rnRuntime_,
+      std::static_pointer_cast<jsi::HostObject>(
+          std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy));
+      *rnRuntime_,
+      std::move(optimizedJsiWorkletsModuleProxy),
+      workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
@@ -43,23 +50,23 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
     ,
     jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
         scriptWrapper,
     const std::string &sourceURL
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   script = scriptWrapper->cthis()->getScript();
 #else
   const auto sourceURL = std::string{};
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+#endif // WORKLETS_BUNDLE_MODE
 
   return makeCxxInstance(
       jThis,
@@ -82,6 +89,14 @@ WorkletsModule::getForwardedRequestAnimationFrame() {
     jRequestAnimationFrame(
         javaPart.get(),
         AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+  };
+}
+
+std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
+  return [javaPart = javaPart_]() -> bool {
+    return javaPart->getClass()
+        ->getMethod<jboolean()>("isOnJSQueueThread")
+        .operator()(javaPart);
   };
 }
 

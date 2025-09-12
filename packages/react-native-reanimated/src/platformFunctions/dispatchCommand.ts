@@ -1,17 +1,16 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper } from '../commonTypes';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
+import type { ShadowNodeWrapper, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type DispatchCommand = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type DispatchCommand = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   commandName: string,
   args?: unknown[]
 ) => void;
@@ -35,7 +34,7 @@ function dispatchCommandNative(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return;
   }
 
@@ -53,7 +52,7 @@ function dispatchCommandDefault() {
 
 if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
 } else if (IS_JEST) {

@@ -30,11 +30,11 @@ MatrixOperation TransformOperationInterpolator<MatrixOperation>::interpolate(
     return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
   }
 
-  return MatrixOperation(TransformMatrix::recompose(
+  return MatrixOperation(TransformMatrix3D::recompose(
       decomposedFrom->interpolate(progress, decomposedTo.value())));
 }
 
-TransformMatrix
+TransformMatrix3D
 TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const MatrixOperation &matrixOperation,
     const TransformInterpolatorUpdateContext &context) const {
@@ -42,7 +42,7 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const auto &operations =
         std::get<TransformOperations>(matrixOperation.value);
 
-    TransformMatrix matrix = TransformMatrix::Identity();
+    TransformMatrix3D matrix = TransformMatrix3D::Identity();
 
     for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
       auto operation = operations[i];
@@ -58,7 +58,7 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     return matrix;
   }
 
-  return std::get<TransformMatrix>(matrixOperation.value);
+  return std::get<TransformMatrix3D>(matrixOperation.value);
 }
 
 } // namespace reanimated::css

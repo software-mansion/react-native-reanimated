@@ -8,7 +8,7 @@ import { useEnteringExitingPlayground } from '@site/src/components/InteractivePl
 
 Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
 
-Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/next/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/next/layout-animations/custom-animations).
+Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
 
 <InteractivePlayground usePlayground={useEnteringExitingPlayground} />
 
@@ -113,7 +113,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 FadeOutLeft.duration(500).easing(Easing.ease);
@@ -127,7 +127,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 FadeInUp.springify()
@@ -135,8 +135,7 @@ FadeInUp.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -144,8 +143,7 @@ FadeInUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -368,7 +366,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 FlipOutYLeft.duration(500).easing(Easing.ease);
@@ -382,7 +380,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 FlipInXUp.springify()
@@ -390,8 +388,7 @@ FlipInXUp.springify()
   .mass(3)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -399,8 +396,7 @@ FlipInXUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -497,7 +493,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 LightSpeedOutLeft.duration(500).easing(Easing.ease);
@@ -511,7 +507,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 LightSpeedInLeft.springify()
@@ -519,8 +515,7 @@ LightSpeedInLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -528,8 +523,7 @@ LightSpeedInLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -618,7 +612,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 PinwheelOut.duration(500).easing(Easing.ease);
@@ -632,7 +626,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 PinwheelIn.springify()
@@ -640,8 +634,7 @@ PinwheelIn.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -649,8 +642,7 @@ PinwheelIn.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -745,7 +737,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 RollOutLeft.duration(500).easing(Easing.ease);
@@ -759,7 +751,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 RollInLeft.springify()
@@ -767,8 +759,7 @@ RollInLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -776,8 +767,7 @@ RollInLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -884,7 +874,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 RotateOutDownRight.duration(500).easing(Easing.ease);
@@ -898,7 +888,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 RotateInUpLeft.springify()
@@ -906,8 +896,7 @@ RotateInUpLeft.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -915,8 +904,7 @@ RotateInUpLeft.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1023,7 +1011,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 SlideOutLeft.duration(500).easing(Easing.ease);
@@ -1037,7 +1025,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 SlideInUp.springify()
@@ -1045,8 +1033,7 @@ SlideInUp.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1054,8 +1041,7 @@ SlideInUp.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1149,7 +1135,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 StretchOutX.duration(500).easing(Easing.ease);
@@ -1163,7 +1149,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 StretchInX.springify()
@@ -1171,8 +1157,7 @@ StretchInX.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(5);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1180,8 +1165,7 @@ StretchInX.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 
@@ -1310,7 +1294,7 @@ These are the initial values for each animation that can be customized with the 
 
 #### Time-based <Optional/>
 
-Time-based modifiers relay on [`withTiming`](/docs/next/animations/withTiming) function.
+Time-based modifiers relay on [`withTiming`](/docs/animations/withTiming) function.
 
 ```javascript
 ZoomOutLeft.duration(500).easing(Easing.ease);
@@ -1324,7 +1308,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers relay on [`withSpring`](/docs/next/animations/withSpring) function.
+Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
 
 ```javascript
 ZoomInRotate.springify()
@@ -1332,8 +1316,7 @@ ZoomInRotate.springify()
   .mass(5)
   .stiffness(10)
   .overshootClamping(false)
-  .restDisplacementThreshold(0.1)
-  .restSpeedThreshold(0.1);
+  .energyThreshold(6e-8);
 ```
 
 - `.springify()` enables the spring-based animation configuration.
@@ -1341,8 +1324,7 @@ ZoomInRotate.springify()
 - `.mass(value: number)` is the weight of the spring. Reducing this value makes the animation faster. Defaults to `1`.
 - `.stiffness(value: number)` decides how bouncy the spring is. Defaults to `100`.
 - `.overshootClamping(value: boolean)` decides whether a spring can bounce over the designated position. Defaults to `false`.
-- `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
-- `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
+- `.energyThreshold(value: number)` decides relative energy threshold below which the spring will snap without further oscillations. Defaults to `6e-9`.
 
 #### Common <Optional/>
 

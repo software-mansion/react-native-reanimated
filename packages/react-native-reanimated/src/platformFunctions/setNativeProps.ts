@@ -1,17 +1,21 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import { IS_JEST, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
-import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import {
+  IS_JEST,
+  logger,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
+import type { ShadowNodeWrapper, StyleProps, WrapperRef } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type SetNativeProps = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
+type SetNativeProps = <TRef extends WrapperRef>(
+  animatedRef: AnimatedRef<TRef>,
   updates: StyleProps
 ) => void;
 /**
@@ -35,7 +39,7 @@ function setNativePropsNative(
   updates: StyleProps
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
@@ -54,7 +58,7 @@ function setNativePropsDefault() {
 
 if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   setNativeProps = setNativePropsNative as unknown as SetNativeProps;
 } else if (IS_JEST) {
