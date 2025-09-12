@@ -10569,9 +10569,9 @@ __metadata:
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "npm:6.9.1"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.3.0"
-    react-native-screens: "patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch"
-    react-native-svg: "npm:15.11.2"
+    react-native-safe-area-context: "npm:5.6.0"
+    react-native-screens: "patch:react-native-screens@npm%3A4.14.1#~/.yarn/patches/react-native-screens-npm-4.14.1-b511d342ea.patch"
+    react-native-svg: "npm:15.12.1"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.27"
     react-test-renderer: "npm:19.1.1"
@@ -20924,22 +20924,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch":
-  version: 4.10.0
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.10.0#~/.yarn/patches/react-native-screens-npm-4.10.0-a9c3a4e55e.patch::version=4.10.0&hash=7d1803"
+"react-native-screens@patch:react-native-screens@npm%3A4.14.1#~/.yarn/patches/react-native-screens-npm-4.14.1-b511d342ea.patch":
+  version: 4.14.1
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.14.1#~/.yarn/patches/react-native-screens-npm-4.14.1-b511d342ea.patch::version=4.14.1&hash=4c0f4f"
   dependencies:
     react-freeze: "npm:^1.0.0"
+    react-native-is-edge-to-edge: "npm:^1.2.1"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/3128a09443b13356360b1790a803e55efa0bda994aae4c7564eb59cb5b2b04f0dda0d7cca5b819654216123c18f481df750c4efb9e3cf5693ed4fdfb166669a7
+  checksum: 10/910139fa99f95c24a0d448910155d301fceab56f65b5166c46991d62b34dfe4c54dd7db9f2646b1ab49eadac870398520a700fc00b34fb952acef18c50c3f33a
   languageName: node
   linkType: hard
 
-"react-native-svg@npm:15.11.2":
-  version: 15.11.2
-  resolution: "react-native-svg@npm:15.11.2"
+"react-native-svg@npm:15.12.1":
+  version: 15.12.1
+  resolution: "react-native-svg@npm:15.12.1"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
