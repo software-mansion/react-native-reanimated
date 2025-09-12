@@ -10,6 +10,8 @@
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <vector>
+
 namespace reanimated::css {
 
 template <typename... AllowedTypes>
