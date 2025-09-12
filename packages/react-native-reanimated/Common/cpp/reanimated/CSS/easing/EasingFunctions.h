@@ -7,7 +7,6 @@
 #include <jsi/jsi.h>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace reanimated::css {
 

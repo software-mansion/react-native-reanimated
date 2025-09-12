@@ -1,5 +1,9 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
 
+#include <iomanip>
+#include <regex>
+#include <unordered_map>
+
 namespace reanimated::css {
 
 CSSAngle::CSSAngle() : value(0) {}

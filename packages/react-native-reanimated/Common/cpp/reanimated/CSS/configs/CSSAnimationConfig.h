@@ -4,11 +4,9 @@
 #include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace reanimated::css {

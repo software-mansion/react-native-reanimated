@@ -3,8 +3,6 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <unordered_map>
-#include <utility>
-#include <vector>
 
 namespace reanimated::css {
 

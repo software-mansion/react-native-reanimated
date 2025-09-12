@@ -7,7 +7,7 @@ namespace reanimated::css {
 /**
  * COLORS
  */
-const auto BLACK = CSSColor(0, 0, 0, 255);
-const auto TRANSPARENT = CSSColor::Transparent;
+extern const CSSColor BLACK;
+extern const CSSColor TRANSPARENT;
 
 } // namespace reanimated::css

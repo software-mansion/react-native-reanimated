@@ -1,13 +1,21 @@
 #include <reanimated/CSS/svg/configs/init.h>
 
+#include <reanimated/CSS/configs/interpolators/registry.h>
+
+#include <reanimated/CSS/svg/configs/interpolators/circle.h>
+#include <reanimated/CSS/svg/configs/interpolators/ellipse.h>
+#include <reanimated/CSS/svg/configs/interpolators/line.h>
+#include <reanimated/CSS/svg/configs/interpolators/path.h>
+#include <reanimated/CSS/svg/configs/interpolators/rect.h>
+
 namespace reanimated::css {
 
 void initSvgCssSupport() {
-  registerComponentInterpolators("RNSVGCircle", SVG_CIRCLE_INTERPOLATORS);
-  registerComponentInterpolators("RNSVGEllipse", SVG_ELLIPSE_INTERPOLATORS);
-  registerComponentInterpolators("RNSVGLine", SVG_LINE_INTERPOLATORS);
-  registerComponentInterpolators("RNSVGPath", SVG_PATH_INTERPOLATORS);
-  registerComponentInterpolators("RNSVGRect", SVG_RECT_INTERPOLATORS);
+  registerComponentInterpolators("RNSVGCircle", getSvgCircleInterpolators());
+  registerComponentInterpolators("RNSVGEllipse", getSvgEllipseInterpolators());
+  registerComponentInterpolators("RNSVGLine", getSvgLineInterpolators());
+  registerComponentInterpolators("RNSVGPath", getSvgPathInterpolators());
+  registerComponentInterpolators("RNSVGRect", getSvgRectInterpolators());
 
   // TODO: Add more SVG components as they are implemented
 }

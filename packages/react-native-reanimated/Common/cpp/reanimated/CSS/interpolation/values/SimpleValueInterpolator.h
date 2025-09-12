@@ -23,32 +23,21 @@ class SimpleValueInterpolator : public ValueInterpolator {
   explicit SimpleValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : ValueInterpolator(
-            propertyPath,
-            std::make_shared<ValueType>(defaultStyleValue),
-            viewStylesRepository) {}
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
   std::shared_ptr<CSSValue> createValue(
       jsi::Runtime &rt,
-      const jsi::Value &value) const override {
-    return std::make_shared<ValueType>(rt, value);
-  }
+      const jsi::Value &value) const override;
+
   std::shared_ptr<CSSValue> createValue(
-      const folly::dynamic &value) const override {
-    return std::make_shared<ValueType>(value);
-  }
+      const folly::dynamic &value) const override;
 
   folly::dynamic interpolateValue(
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const override {
-    const auto &from = std::static_pointer_cast<ValueType>(fromValue);
-    const auto &to = std::static_pointer_cast<ValueType>(toValue);
-    return from->interpolate(progress, *to, context).toDynamic();
-  }
+      const CSSValueInterpolationContext &context) const override;
 };
 
 } // namespace reanimated::css

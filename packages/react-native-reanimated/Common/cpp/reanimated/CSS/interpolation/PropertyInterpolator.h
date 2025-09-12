@@ -38,7 +38,7 @@ class PropertyInterpolator {
   virtual folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-      const double fallbackInterpolateThreshold) const = 0;
+      double fallbackInterpolateThreshold) const = 0;
 
  protected:
   const PropertyPath propertyPath_;

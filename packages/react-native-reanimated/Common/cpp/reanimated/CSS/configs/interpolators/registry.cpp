@@ -1,13 +1,17 @@
 #include <reanimated/CSS/configs/interpolators/registry.h>
 
+#include <reanimated/CSS/configs/interpolators/base/image.h>
+#include <reanimated/CSS/configs/interpolators/base/text.h>
+#include <reanimated/CSS/configs/interpolators/base/view.h>
+
 namespace reanimated::css {
 
 namespace {
 
 ComponentInterpolatorsMap registry = {
-    {"View", VIEW_INTERPOLATORS},
-    {"Paragraph", TEXT_INTERPOLATORS},
-    {"Image", IMAGE_INTERPOLATORS},
+    {"View", getViewInterpolators()},
+    {"Paragraph", getTextInterpolators()},
+    {"Image", getImageInterpolators()},
 };
 
 } // namespace
@@ -24,7 +28,7 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(
     // Use View interpolators as a fallback for unknown components
     // (e.g. we get the ScrollView component name for the ScrollView component
     // but it should be styled in the same way as a View)
-    return VIEW_INTERPOLATORS;
+    return getViewInterpolators();
   }
 
   return it->second;

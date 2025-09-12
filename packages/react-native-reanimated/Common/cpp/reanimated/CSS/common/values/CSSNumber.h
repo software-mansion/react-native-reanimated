@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <algorithm>
 #include <string>
 
 namespace reanimated::css {

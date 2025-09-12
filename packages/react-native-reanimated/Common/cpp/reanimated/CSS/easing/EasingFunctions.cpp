@@ -1,5 +1,7 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <vector>
+
 namespace reanimated::css {
 
 inline const std::unordered_map<std::string, EasingFunction>
