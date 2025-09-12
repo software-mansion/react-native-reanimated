@@ -637,6 +637,7 @@ isAndroid = false;
     else if (transitionState_ == ACTIVE && progress == 1) {
       transitionState_ = END;
     }
+    // TODO: unfix
     return 1;
   }
   return {};
@@ -647,6 +648,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel(){
   if (transitionState_){
     transitionState_ = CANCELLED;
     transitionUpdated_ = true;
+    // TODO: unfix
     return 1;
   }
   return {};
