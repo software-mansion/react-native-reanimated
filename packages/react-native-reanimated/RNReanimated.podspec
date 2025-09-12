@@ -18,6 +18,8 @@ compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
+feature_flags = "-DREANIMATED_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
+
 Pod::Spec.new do |s|
 
   s.name         = "RNReanimated"
@@ -43,12 +45,6 @@ Pod::Spec.new do |s|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
       sss.header_dir = "reanimated"
       sss.header_mappings_dir = "apple/reanimated"
-    end
-
-    ss.subspec "view" do |sss|
-      sss.source_files = "Common/NativeView/**/*.{mm,h,cpp}"
-      sss.header_dir = ""
-      sss.header_mappings_dir = "Common/NativeView"
     end
   end
 
@@ -88,7 +84,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags}",
   }
   s.requires_arc = true
 

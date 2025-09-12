@@ -22,6 +22,7 @@ export function getClosure(
   const closureVariables = new Array<Identifier>();
   const libraryBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
+  let recrawled = false;
 
   funPath.traverse(
     {
@@ -39,7 +40,19 @@ export function getClosure(
           return;
         }
 
-        const binding = idPath.scope.getBinding(name);
+        let binding = idPath.scope.getBinding(name);
+
+        if (!binding && !recrawled) {
+          /**
+           * Some plugins might add new identifiers but not update the scope
+           * when they should. To prevent errors stemming from this we recrawl
+           * the scope once per closure assembly.
+           */
+          recrawled = true;
+          idPath.scope.crawl();
+          binding = idPath.scope.getBinding(name);
+        }
+
         if (!binding) {
           /**
            * The variable is unbound - it's either a mistake or implicit capture
@@ -56,7 +69,7 @@ export function getClosure(
 
         if (
           outsideBindingsToCaptureFromGlobalScope.has(name) ||
-          (!state.opts.experimentalBundling &&
+          (!state.opts.bundleMode &&
             internalBindingsToCaptureFromGlobalScope.has(name))
         ) {
           /**
@@ -84,7 +97,7 @@ export function getClosure(
           scope = scope.parent;
         }
 
-        if (state.opts.experimentalBundling && isImport(binding)) {
+        if (state.opts.bundleMode && isImport(binding)) {
           if (
             isImportRelative(binding) &&
             isAllowedForRelativeImports(
@@ -125,7 +138,8 @@ function isImport(binding: Binding): boolean {
   return (
     binding.kind === 'module' &&
     binding.constant &&
-    binding.path.isImportSpecifier() &&
+    (binding.path.isImportSpecifier() ||
+      binding.path.isImportDefaultSpecifier()) &&
     binding.path.parentPath.isImportDeclaration()
   );
 }

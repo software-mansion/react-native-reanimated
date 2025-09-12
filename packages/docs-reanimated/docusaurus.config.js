@@ -52,7 +52,7 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-reanimated',
-          lastVersion: '3.x', // <- this makes 3.x docs as default
+          lastVersion: 'current',
           versions: {
             current: {
               label: '4.x',
@@ -201,6 +201,10 @@ const config = {
                 },
                 {
                   test: /\.tsx?$/,
+                  use: 'babel-loader',
+                },
+                {
+                  test: /\.js$/,
                   use: 'babel-loader',
                 },
               ],

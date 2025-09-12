@@ -2,15 +2,17 @@ import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import type { WorkletRuntime } from 'react-native-reanimated';
 import Animated, {
-  createWorkletRuntime,
   Easing,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {
+  createWorkletRuntime,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from 'react-native-worklets';
 
 export default function WorkletRuntimeExample() {
   return (
@@ -71,10 +73,10 @@ function RunOnUIRunOnJSDemo() {
 
 function CreateWorkletRuntimeDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
+    const runtime = createWorkletRuntime({ name: 'foo' });
     console.log(runtime);
     console.log(runtime.name);
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     console.log(`${runtime}`);
     console.log(String(runtime));
   };
@@ -84,9 +86,12 @@ function CreateWorkletRuntimeDemo() {
 
 function InitializerDemo() {
   const handlePress = () => {
-    createWorkletRuntime('foo', () => {
-      'worklet';
-      console.log('Hello from initializer!');
+    createWorkletRuntime({
+      name: 'foo',
+      initializer: () => {
+        'worklet';
+        console.log('Hello from initializer!');
+      },
     });
   };
 
@@ -103,9 +108,12 @@ function ThrowErrorDemo() {
       'worklet';
       bar();
     }
-    createWorkletRuntime('foo', () => {
-      'worklet';
-      foo();
+    createWorkletRuntime({
+      name: 'foo',
+      initializer: () => {
+        'worklet';
+        foo();
+      },
     });
   };
 
@@ -115,13 +123,16 @@ function ThrowErrorDemo() {
 function PerformanceNowDemo() {
   const handlePress = () => {
     console.log('RN', performance.now());
-    createWorkletRuntime('foo', () => {
-      'worklet';
-      console.log('WR', performance.now());
+    createWorkletRuntime({
+      name: 'foo',
+      initializer: () => {
+        'worklet';
+        console.log('WR', performance.now());
+      },
     });
     runOnUI(() => {
       console.log('UI', performance.now());
-      // @ts-ignore it works
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       console.log('AT', global._getAnimationTimestamp());
     })();
   };
@@ -131,7 +142,7 @@ function PerformanceNowDemo() {
 
 function RunOnRuntimeFromJSDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
+    const runtime = createWorkletRuntime({ name: 'foo' });
     runOnRuntime(runtime, () => {
       'worklet';
       console.log('Hello from background!', Math.random());
@@ -143,7 +154,7 @@ function RunOnRuntimeFromJSDemo() {
 
 function RunOnRuntimeFromUIDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
+    const runtime = createWorkletRuntime({ name: 'foo' });
     runOnUI(() => {
       'worklet';
       const x = Math.random();
@@ -160,7 +171,7 @@ function RunOnRuntimeFromUIDemo() {
 
 function RunOnRuntimeArgsDemo() {
   const handlePress = () => {
-    const runtime = createWorkletRuntime('foo');
+    const runtime = createWorkletRuntime({ name: 'foo' });
     runOnRuntime(runtime, (x: number) => {
       'worklet';
       console.log('Hello from background!', x);
@@ -175,7 +186,7 @@ let runtime: WorkletRuntime | undefined;
 function RunOnRuntimeLongRunningTasksDemo() {
   const handlePress = () => {
     if (runtime === undefined) {
-      runtime = createWorkletRuntime('foo');
+      runtime = createWorkletRuntime({ name: 'foo' });
     }
     for (let i = 0; i < 3; i++) {
       runOnRuntime(runtime, () => {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 #include <react/renderer/components/view/ViewProps.h>
@@ -36,10 +36,10 @@ class ViewStylesRepository {
   }
 
   jsi::Value getNodeProp(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &propName);
   jsi::Value getParentNodeProp(
-      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &propName);
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
@@ -54,7 +54,7 @@ class ViewStylesRepository {
 
   void updateCacheIfNeeded(
       CachedShadowNode &cachedNode,
-      const ShadowNode::Shared &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
   static folly::dynamic getPropertyValue(
       const folly::dynamic &value,

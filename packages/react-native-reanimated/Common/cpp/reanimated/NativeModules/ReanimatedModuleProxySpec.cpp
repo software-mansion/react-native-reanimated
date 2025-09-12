@@ -38,16 +38,6 @@ static jsi::Value REANIMATED_SPEC_PREFIX(getViewProp)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(enableLayoutAnimations)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->enableLayoutAnimations(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
 static jsi::Value REANIMATED_SPEC_PREFIX(registerSensor)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -72,13 +62,22 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
   return jsi::Value::undefined();
 }
 
-static jsi::Value REANIMATED_SPEC_PREFIX(configureProps)(
+static jsi::Value REANIMATED_SPEC_PREFIX(getStaticFeatureFlag)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->getStaticFeatureFlag(rt, std::move(args[0]));
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(setDynamicFeatureFlag)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->configureProps(rt, std::move(args[0]), std::move(args[1]));
+      ->setDynamicFeatureFlag(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -157,7 +156,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSKeyframes)(
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
+      ->registerCSSKeyframes(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
   return jsi::Value::undefined();
 }
 
@@ -167,7 +167,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)(
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSKeyframes(rt, std::move(args[0]));
+      ->unregisterCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -231,14 +231,14 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["getViewProp"] =
       MethodMetadata{3, REANIMATED_SPEC_PREFIX(getViewProp)};
-  methodMap_["enableLayoutAnimations"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(enableLayoutAnimations)};
   methodMap_["registerSensor"] =
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerSensor)};
+  methodMap_["getStaticFeatureFlag"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(getStaticFeatureFlag)};
   methodMap_["unregisterSensor"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterSensor)};
-  methodMap_["configureProps"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(configureProps)};
+  methodMap_["setDynamicFeatureFlag"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(setDynamicFeatureFlag)};
   methodMap_["subscribeForKeyboardEvents"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(subscribeForKeyboardEvents)};
   methodMap_["unsubscribeFromKeyboardEvents"] =
@@ -258,9 +258,9 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
 
   methodMap_["registerCSSKeyframes"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
+      MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
   methodMap_["unregisterCSSKeyframes"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
   methodMap_["applyCSSAnimations"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};

@@ -1,9 +1,9 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 
-import { bundleValueUnpacker } from './bundleUnpacker';
-import { setupCallGuard } from './callGuard';
-import type { ValueUnpacker } from './workletTypes';
+import { init } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
+import { WorkletsError } from './WorkletsError';
 
 /**
  * This function is an entry point for Worklet Runtimes. We can use it to setup
@@ -14,19 +14,25 @@ import type { ValueUnpacker } from './workletTypes';
  * React Native one, and it would break the Worklet Runtime if initialized. The
  * error is caught in C++ code.
  *
- * This function has no effect on the RN Runtime.
+ * This function has no effect on the RN Runtime beside setting the
+ * `_WORKLETS_BUNDLE_MODE` flag.
  */
-export function initializeLibraryOnWorkletRuntime() {
-  globalThis._WORKLETS_EXPERIMENTAL_BUNDLING = true;
-  if (globalThis._WORKLET) {
-    globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
-    setupCallGuard();
+export function bundleModeInit() {
+  if (SHOULD_BE_USE_WEB) {
+    return;
+  }
 
-    // We have to throw an error here because otherwise
-    // the next module to be ran would be the React Native one,
-    // and we cannot allow it on a Worklet Runtime.
-    throw new Error('Worklets initialized successfully');
+  globalThis._WORKLETS_BUNDLE_MODE = true;
+
+  const runtimeKind = globalThis.__RUNTIME_KIND;
+  if (runtimeKind && runtimeKind !== RuntimeKind.ReactNative) {
+    /**
+     * We shouldn't call `init()` on RN Runtime here, as it would initialize our
+     * module before React Native has configured the RN Runtime.
+     */
+    init();
+    throw new WorkletsError('Worklets initialized successfully');
   }
 }
 
-initializeLibraryOnWorkletRuntime();
+bundleModeInit();

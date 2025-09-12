@@ -1,4 +1,3 @@
-/* eslint-disable n/no-callback-literal */
 'use strict';
 
 import {
@@ -27,12 +26,14 @@ import {
   InterfaceOrientation,
   IOSReferenceFrame,
   KeyboardState,
+  reanimatedVersion,
   ReduceMotion,
   SensorType,
   setUpTests,
   withReanimatedTimer,
 } from './index';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
@@ -49,7 +50,6 @@ const hook = {
     _rebuild?: boolean
   ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
-  useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
     const value = { value: init };
     return new Proxy(value, {
@@ -83,7 +83,6 @@ const hook = {
   },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
-  useAnimatedGestureHandler: NOOP_FACTORY,
   useAnimatedReaction: NOOP,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedScrollHandler: NOOP_FACTORY,
@@ -311,8 +310,8 @@ const core = {
   createWorkletRuntime: NOOP,
   runOnRuntime: NOOP,
   makeMutable: ID,
-  makeShareableCloneRecursive: ID,
-  isReanimated3: () => true,
+  createSerializable: ID,
+  isReanimated3: () => false,
   // isConfigured: ADD ME IF NEEDED
   enableLayoutAnimations: NOOP,
   // getViewProp: ADD ME IF NEEDED
@@ -489,6 +488,7 @@ const Reanimated = {
 
 module.exports = {
   __esModule: true,
+  reanimatedVersion,
   ...Reanimated,
   default: Animated,
 };

@@ -1,14 +1,13 @@
 'use strict';
+import { createSerializable } from 'react-native-worklets';
+
 import { SHOULD_BE_USE_WEB } from './common';
 import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
-import {
-  configureLayoutAnimationBatch,
-  makeShareableCloneRecursive,
-} from './core';
+import { configureLayoutAnimationBatch } from './core';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -77,7 +76,7 @@ if (SHOULD_BE_USE_WEB) {
       {
         viewTag,
         type,
-        config: config ? makeShareableCloneRecursive(config) : undefined,
+        config: config ? createSerializable(config) : undefined,
         sharedTransitionTag,
       },
       isUnmounting

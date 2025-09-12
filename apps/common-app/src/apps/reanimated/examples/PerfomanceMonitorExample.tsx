@@ -6,21 +6,27 @@ import BokehExample from './BokehExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import PlanetsExample from './PlanetsExample';
+import ChessboardExample from './ChessboardExample';
 
 enum Examples {
   Empty = 'Empty Example',
   Bokeh = 'Bokeh Example',
   Planets = 'Planets Example',
   Emojis = 'Emoji Waterfall Example',
+  Chessboard = 'Chessboard Example',
 }
 
 export default function PerformanceMonitorExample() {
   const exampleElements = useRef(
     new Map<Examples, JSX.Element>([
-      [Examples.Empty, <EmptyExample />],
-      [Examples.Bokeh, <BokehExample />],
-      [Examples.Planets, <PlanetsExample />],
-      [Examples.Emojis, <EmojiWaterfallExample />],
+      [Examples.Empty, <EmptyExample key="empty-example" />],
+      [Examples.Bokeh, <BokehExample key="bokeh-example" />],
+      [Examples.Planets, <PlanetsExample key="planets-example" />],
+      [
+        Examples.Emojis,
+        <EmojiWaterfallExample key="emoji-waterfall-example" />,
+      ],
+      [Examples.Chessboard, <ChessboardExample key="chessboard-example" />],
     ])
   );
 
@@ -36,6 +42,7 @@ export default function PerformanceMonitorExample() {
           Examples.Bokeh,
           Examples.Planets,
           Examples.Emojis,
+          Examples.Chessboard,
         ].map((element) => (
           <Pressable
             key={element}

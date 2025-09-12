@@ -7,7 +7,7 @@
 #import <worklets/NativeModules/WorkletsModuleProxy.h>
 
 #if __has_include(<React/RCTBundleConsumer.h>)
-// Experimental bundling
+// Bundle mode
 #import <React/NSBigStringBuffer.h>
 #import <React/RCTBundleConsumer.h>
 #endif // __has_include(<React/RCTBundleConsumer.h>)
@@ -17,7 +17,7 @@
                                 RCTCallInvokerModule,
                                 RCTInvalidating
 #if __has_include(<React/RCTBundleConsumer.h>)
-                                // Experimental bundling
+                                // Bundle mode
                                 ,
                                 RCTBundleConsumer
 #endif // __has_include(<React/RCTBundleConsumer.h>)

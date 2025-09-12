@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import type React from 'react';
+import { useCallback, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { interpolateColor, runOnJS } from 'react-native-reanimated';
-import { runOnUIAsync } from 'react-native-worklets';
+import Animated, { interpolateColor } from 'react-native-reanimated';
+import { runOnJS, runOnUIAsync } from 'react-native-worklets';
 
 interface Card {
   id: string;

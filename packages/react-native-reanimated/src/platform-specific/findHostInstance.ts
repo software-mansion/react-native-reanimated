@@ -2,7 +2,8 @@
 'use strict';
 
 import { ReanimatedError } from '../common';
-import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
+import type { WrapperRef } from '../commonTypes';
+import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
 
 export type HostInstance = {
   __internalInstanceHandle?: Record<string, unknown>;
@@ -31,24 +32,25 @@ function resolveFindHostInstance_DEPRECATED() {
     return;
   }
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
     // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
     // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
       ReactFabric?.default?.findHostInstance_DEPRECATED ??
       ReactFabric?.findHostInstance_DEPRECATED;
-  } catch (e) {
+  } catch (_e) {
     throw new ReanimatedError('Failed to resolve findHostInstance_DEPRECATED');
   }
 }
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  component: IAnimatedComponentInternal | React.Component
+  ref: IAnimatedComponentInternalBase | WrapperRef
 ): HostInstance {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(
-    (component as IAnimatedComponentInternal)._componentRef as HostInstance
+    (ref as IAnimatedComponentInternalBase)._componentRef as HostInstance
   );
   if (hostInstance !== undefined) {
     return hostInstance;
@@ -62,8 +64,8 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    (component as IAnimatedComponentInternal)._hasAnimatedRef
-      ? (component as IAnimatedComponentInternal)._componentRef
-      : component
+    (ref as IAnimatedComponentInternalBase)._hasAnimatedRef
+      ? (ref as IAnimatedComponentInternalBase)._componentRef
+      : ref
   );
 }

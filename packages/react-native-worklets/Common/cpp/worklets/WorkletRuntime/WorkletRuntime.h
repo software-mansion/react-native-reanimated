@@ -3,10 +3,14 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
+#include <react/debug/react_native_assert.h>
 
-#include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Public/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueueImpl.h>
+#include <worklets/RunLoop/EventLoop.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
 #include <string>
@@ -18,18 +22,22 @@ using namespace react;
 
 namespace worklets {
 
+/**
+ * Forward declaration to avoid circular dependencies.
+ */
+class JSIWorkletsModuleProxy;
+
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
-      std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
+      uint64_t runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
-      const bool supportsLocking,
-      const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
-      const std::string &sourceUrl);
+      const std::shared_ptr<AsyncQueue> &queue = nullptr,
+      bool enableEventLoop = true);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
   jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
@@ -37,29 +45,21 @@ class WorkletRuntime : public jsi::HostObject,
 
   template <typename... Args>
   inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
+      const std::shared_ptr<SerializableWorklet> &serializableWorklet,
       Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+        rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
-  void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
-    if (queue_ == nullptr) {
-      queue_ = std::make_shared<AsyncQueue>(name_);
-    }
-    queue_->push([=, weakThis = weak_from_this()] {
-      auto strongThis = weakThis.lock();
-      if (!strongThis) {
-        return;
-      }
-
-      strongThis->runGuarded(shareableWorklet);
-    });
-  }
+  void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+
+  jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
+
+  jsi::Value executeSync(
+      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
 
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
@@ -69,14 +69,21 @@ class WorkletRuntime : public jsi::HostObject,
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
 
+  [[nodiscard]] auto getRuntimeId() const -> uint64_t {
+    return runtimeId_;
+  }
+
+  [[nodiscard]] auto getRuntimeName() const -> std::string {
+    return name_;
+  }
+
  private:
+  const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
-#ifndef NDEBUG
-  const bool supportsLocking_;
-#endif
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
+  std::shared_ptr<EventLoop> eventLoop_;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
@@ -88,6 +95,6 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    const jsi::Value &serializableWorkletValue);
 
 } // namespace worklets

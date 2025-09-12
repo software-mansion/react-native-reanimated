@@ -1,6 +1,8 @@
-#include <worklets/Resources/ValueUnpacker.h>
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Resources/Unpackers.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -53,7 +55,6 @@ class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
 static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name,
-    const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
@@ -64,42 +65,50 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
-  if (supportsLocking) {
-    return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
-  } else {
-    return jsiRuntime;
-  }
+  return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
 }
 
 WorkletRuntime::WorkletRuntime(
-    std::shared_ptr<jsi::HostObject> &&jsiWorkletsModuleProxy,
+    uint64_t runtimeId,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
-    const bool supportsLocking,
-    const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
-    const std::string &sourceUrl)
-    : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, supportsLocking, runtimeMutex_)),
-#ifndef NDEBUG
-      supportsLocking_(supportsLocking),
-#endif
-      name_(name) {
+    const std::shared_ptr<AsyncQueue> &queue,
+    bool enableEventLoop)
+    : runtimeId_(runtimeId),
+      runtimeMutex_(std::make_shared<std::recursive_mutex>()),
+      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      name_(name),
+      queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
+  if (enableEventLoop && name != uiRuntimeName) {
+    eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
+    eventLoop_->run();
+  }
+}
+
+void WorkletRuntime::init(
+    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+  jsi::Runtime &rt = *runtime_;
+  const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
+  const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+#ifdef WORKLETS_BUNDLE_MODE
+  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+#endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt,
-      name,
+      name_,
       jsScheduler,
       isDevBundle,
-      std::move(optimizedJsiWorkletsModuleProxy));
+      std::move(optimizedJsiWorkletsModuleProxy),
+      eventLoop_);
 
-#ifdef WORKLETS_EXPERIMENTAL_BUNDLING
+#ifdef WORKLETS_BUNDLE_MODE
   if (!script) {
     throw std::runtime_error(
         "[Worklets] Expected to receive the bundle, but got nullptr instead.");
@@ -107,34 +116,75 @@ WorkletRuntime::WorkletRuntime(
 
   try {
     rt.evaluateJavaScript(script, sourceUrl);
-  } catch (facebook::jsi::JSIException ex) {
-    // Nothing
+  } catch (facebook::jsi::JSError error) {
+    const auto &message = error.getMessage();
+    const auto &stack = error.getStack();
+    if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
+      const auto newMessage =
+          "[Worklets] Failed to initialize runtime. Reason: " + message;
+      JSLogger::reportFatalErrorOnJS(
+          jsScheduler,
+          {.message = newMessage,
+           .stack = stack,
+           .name = "WorkletsError",
+           .jsEngine = "Worklets"});
+    }
   }
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =
       std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-#endif // WORKLETS_EXPERIMENTAL_BUNDLING
+
+  auto synchronizableUnpackerBuffer =
+      std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
+  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
+#endif // WORKLETS_BUNDLE_MODE
+}
+
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &worklet) {
+  react_native_assert(
+      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
+      "the async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet, weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runGuarded(worklet);
+  });
 }
 
 jsi::Value WorkletRuntime::executeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) const {
-  react_native_assert(
-      supportsLocking_ &&
-      ("[Worklets] Runtime \"" + name_ + "\" doesn't support locking.")
-          .c_str());
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(shareableWorklet);
-  auto shareableResult = extractShareableOrThrow(uiRuntime, result);
+  auto result = runGuarded(serializableWorklet);
+  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
   lock.unlock();
-  return shareableResult->toJSValue(rt);
+  return serializableResult->toJSValue(rt);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
+  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  jsi::Runtime &uiRuntime = getJSIRuntime();
+  return job(uiRuntime);
 }
 
 jsi::Value WorkletRuntime::get(
@@ -180,13 +230,13 @@ std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
+    const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
       rt,
-      shareableWorkletValue,
-      "[Worklets] Function passed to `_scheduleOnRuntime` is not a shareable worklet.");
-  workletRuntime->runAsyncGuarded(shareableWorklet);
+      serializableWorkletValue,
+      "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+  workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
 } // namespace worklets

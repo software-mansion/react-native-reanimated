@@ -22,12 +22,11 @@ export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
 // Builds dependencies array for useEvent handlers.
 export function buildDependencies(
   dependencies: DependencyList,
-  handlers: Record<string, WorkletFunction | undefined>
+  handlers: Record<string, WorkletFunction>
 ) {
-  type Handler = (typeof handlers)[keyof typeof handlers];
   const handlersList = Object.values(handlers).filter(
     (handler) => handler !== undefined
-  ) as NonNullable<Handler>[];
+  );
   if (!dependencies) {
     return handlersList;
   }

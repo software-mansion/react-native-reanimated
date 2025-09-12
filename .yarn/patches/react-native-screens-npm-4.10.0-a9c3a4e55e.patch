@@ -1,170 +1,137 @@
-diff --git a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
-index 4772f7c59a8ed0a47208264392f0b79e2877bdae..d974788f05fcfd61d610cd8cd31fb3635d919529 100644
---- a/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
-+++ b/android/src/main/java/com/swmansion/rnscreens/CustomToolbar.kt
-@@ -3,11 +3,11 @@ package com.swmansion.rnscreens
- import android.annotation.SuppressLint
- import android.content.Context
- import android.os.Build
-+import android.view.Choreographer
- import android.view.WindowInsets
- import android.view.WindowManager
- import androidx.appcompat.widget.Toolbar
- import androidx.core.view.WindowInsetsCompat
--import com.facebook.react.modules.core.ChoreographerCompat
- import com.facebook.react.modules.core.ReactChoreographer
- import com.facebook.react.uimanager.ThemedReactContext
- import com.swmansion.rnscreens.utils.InsetsCompat
-@@ -38,18 +38,16 @@ open class CustomToolbar(
-     private var isForceShadowStateUpdateOnLayoutRequested = false
- 
-     private var isLayoutEnqueued = false
--    private val layoutCallback: ChoreographerCompat.FrameCallback =
--        object : ChoreographerCompat.FrameCallback() {
--            override fun doFrame(frameTimeNanos: Long) {
--                isLayoutEnqueued = false
--                // The following measure specs are selected to work only with Android APIs <= 29.
--                // See https://github.com/software-mansion/react-native-screens/pull/2439
--                measure(
--                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
--                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
--                )
--                layout(left, top, right, bottom)
--            }
-+    private val layoutCallback: Choreographer.FrameCallback =
-+        Choreographer.FrameCallback {
-+            isLayoutEnqueued = false
-+            // The following measure specs are selected to work only with Android APIs <= 29.
-+            // See https://github.com/software-mansion/react-native-screens/pull/2439
-+            measure(
-+                MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST),
-+                MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST),
-+            )
-+            layout(left, top, right, bottom)
-         }
- 
-     override fun requestLayout() {
-diff --git a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
-index a275bc9b45c4d4a615d83f4a18d14c7e6d8a3784..efbe5fb1d3a89eba8f3ca1a25eb1e3295844cd9f 100644
---- a/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
-+++ b/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
-@@ -2,6 +2,7 @@ package com.swmansion.rnscreens
- 
- import android.content.Context
- import android.content.ContextWrapper
-+import android.view.Choreographer
- import android.view.View
- import android.view.ViewGroup
- import android.view.ViewParent
-@@ -12,7 +13,6 @@ import androidx.fragment.app.FragmentManager
- import androidx.fragment.app.FragmentTransaction
- import com.facebook.react.ReactRootView
- import com.facebook.react.bridge.ReactContext
--import com.facebook.react.modules.core.ChoreographerCompat
- import com.facebook.react.modules.core.ReactChoreographer
- import com.facebook.react.uimanager.ThemedReactContext
- import com.facebook.react.uimanager.UIManagerHelper
-@@ -30,16 +30,14 @@ open class ScreenContainer(
-     private var isAttached = false
-     private var needsUpdate = false
-     private var isLayoutEnqueued = false
--    private val layoutCallback: ChoreographerCompat.FrameCallback =
--        object : ChoreographerCompat.FrameCallback() {
--            override fun doFrame(frameTimeNanos: Long) {
--                isLayoutEnqueued = false
--                measure(
--                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
--                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
--                )
--                layout(left, top, right, bottom)
--            }
-+    private val layoutCallback: Choreographer.FrameCallback =
-+        Choreographer.FrameCallback {
-+            isLayoutEnqueued = false
-+            measure(
-+                MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-+                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
-+            )
-+            layout(left, top, right, bottom)
-         }
-     private var parentScreenWrapper: ScreenFragmentWrapper? = null
- 
-diff --git a/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt b/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
-index 3889c2f362cf6198822570662c2e18f0f7be82b2..dbaabf7335da5db5c511dc004e820cc042dfa702 100644
---- a/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
-+++ b/android/src/main/java/com/swmansion/rnscreens/ScreenViewManager.kt
-@@ -71,16 +71,6 @@ open class ScreenViewManager :
-         super.removeViewAt(parent, index)
-     }
- 
--    override fun removeView(
--        parent: Screen,
--        view: View,
--    ) {
--        super.removeView(parent, view)
--        if (view is ScreenFooter) {
--            parent.footer = null
--        }
--    }
--
-     override fun updateState(
-         view: Screen,
-         props: ReactStylesDiffMap?,
 diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
-index 8481d2125f37e81e65f1e94b9b10a210813fdecd..daf768ff46b4bc32cc903978ec96c1df92f7e22b 100644
+index 8481d2125f37e81e65f1e94b9b10a210813fdecd..cea53c91761bb689a8a1c16ed214d735e4e06869 100644
 --- a/ios/RNSScreen.mm
 +++ b/ios/RNSScreen.mm
-@@ -1364,13 +1364,6 @@ RNS_IGNORE_SUPER_CALL_END
+@@ -690,13 +690,13 @@ RNS_IGNORE_SUPER_CALL_END
+   [_controller notifyFinishTransitioning];
+ }
  
- @end
+-- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
++- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward isSwiping:(BOOL)isSwiping
+ {
+ #ifdef RCT_NEW_ARCH_ENABLED
+   if (_eventEmitter != nullptr) {
+     std::dynamic_pointer_cast<const react::RNSScreenEventEmitter>(_eventEmitter)
+         ->onTransitionProgress(react::RNSScreenEventEmitter::OnTransitionProgress{
+-            .progress = progress, .closing = closing ? 1 : 0, .goingForward = goingForward ? 1 : 0});
++          .progress = progress, .closing = closing ? 1 : 0, .goingForward = goingForward ? 1 : 0, .swiping = isSwiping ? 1 : 0});
+   }
+   RNSScreenViewEvent *event = [[RNSScreenViewEvent alloc] initWithEventName:@"onTransitionProgress"
+                                                                    reactTag:[NSNumber numberWithInt:self.tag]
+@@ -1425,7 +1425,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+   [RNSScreenWindowTraits updateWindowTraits];
+   if (_shouldNotify) {
+     _closing = NO;
+-    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward];
++    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     [self setupProgressNotification];
+   }
+ }
+@@ -1462,7 +1462,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
  
--#ifdef RCT_NEW_ARCH_ENABLED
--Class<RCTComponentViewProtocol> RNSScreenCls(void)
--{
--  return RNSScreenView.class;
--}
--#endif
--
- #pragma mark - RNSScreen
+   if (_shouldNotify) {
+     _closing = YES;
+-    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward];
++    [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     [self setupProgressNotification];
+   }
+ }
+@@ -1474,7 +1474,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+     // we are going forward or dismissing without swipe
+     // or successfully swiped back
+     [self.screenView notifyAppear];
+-    [self notifyTransitionProgress:1.0 closing:NO goingForward:_goingForward];
++    [self notifyTransitionProgress:1.0 closing:NO goingForward:_goingForward isSwiping:_isSwiping];
+   } else {
+     [self.screenView notifyGestureCancel];
+   }
+@@ -1500,7 +1500,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+   // same flow as in viewDidAppear
+   if (!_isSwiping || _shouldNotify) {
+     [self.screenView notifyDisappear];
+-    [self notifyTransitionProgress:1.0 closing:YES goingForward:_goingForward];
++    [self notifyTransitionProgress:1.0 closing:YES goingForward:_goingForward isSwiping:_isSwiping];
+   }
  
- @implementation RNSScreen {
-@@ -2136,3 +2129,10 @@ RCT_ENUM_CONVERTER(
- #endif
+   _isSwiping = NO;
+@@ -1690,17 +1690,17 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+     CGFloat fakeViewAlpha = _fakeView.layer.presentationLayer.opacity;
+     if (_currentAlpha != fakeViewAlpha) {
+       _currentAlpha = fmax(0.0, fmin(1.0, fakeViewAlpha));
+-      [self notifyTransitionProgress:_currentAlpha closing:_closing goingForward:_goingForward];
++      [self notifyTransitionProgress:_currentAlpha closing:_closing goingForward:_goingForward isSwiping:_isSwiping];
+     }
+   }
+ }
  
- @end
-+
-+#ifdef RCT_NEW_ARCH_ENABLED
-+Class<RCTComponentViewProtocol> RNSScreenCls(void)
-+{
-+  return RNSScreenView.class;
-+}
-+#endif
-diff --git a/ios/RNSScreenStackHeaderConfig.mm b/ios/RNSScreenStackHeaderConfig.mm
-index 0c5b76b68f589e95365176d6201b71de4948ffec..78ad762b9bc68fb2bcba8c6edb6038fa6f43102a 100644
---- a/ios/RNSScreenStackHeaderConfig.mm
-+++ b/ios/RNSScreenStackHeaderConfig.mm
-@@ -1138,13 +1138,6 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
- #endif
- @end
+-- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
++- (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward isSwiping:(BOOL)isSwiping
+ {
+   if ([self.view isKindOfClass:[RNSScreenView class]]) {
+     // if the view is already snapshot, there is not sense in sending progress since on JS side
+     // the component is already not present
+-    [(RNSScreenView *)self.view notifyTransitionProgress:progress closing:closing goingForward:goingForward];
++    [(RNSScreenView *)self.view notifyTransitionProgress:progress closing:closing goingForward:goingForward isSwiping:isSwiping];
+   }
+ }
  
--#ifdef RCT_NEW_ARCH_ENABLED
--Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
--{
--  return RNSScreenStackHeaderConfig.class;
--}
--#endif
--
- @implementation RNSScreenStackHeaderConfigManager
+diff --git a/lib/typescript/fabric/ModalScreenNativeComponent.d.ts b/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
+index ffed502a381ab8f16b61a6115376c40a01bbbaed..693a1c0191702d5e5adc8128384f92ded4b7bfc3 100644
+--- a/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
++++ b/lib/typescript/fabric/ModalScreenNativeComponent.d.ts
+@@ -9,6 +9,7 @@ type TransitionProgressEvent = Readonly<{
+     progress: Double;
+     closing: Int32;
+     goingForward: Int32;
++    swiping: Int32;
+ }>;
+ type HeaderHeightChangeEvent = Readonly<{
+     headerHeight: Double;
+diff --git a/lib/typescript/fabric/ScreenNativeComponent.d.ts b/lib/typescript/fabric/ScreenNativeComponent.d.ts
+index 34013f9ac1cb80e4ea6fd933ccb82c01cfbe7149..d81f7133336cb864d1bedb49ef676d42b67ff17e 100644
+--- a/lib/typescript/fabric/ScreenNativeComponent.d.ts
++++ b/lib/typescript/fabric/ScreenNativeComponent.d.ts
+@@ -9,6 +9,7 @@ type TransitionProgressEvent = Readonly<{
+     progress: Double;
+     closing: Int32;
+     goingForward: Int32;
++    swiping: Int32;
+ }>;
+ type HeaderHeightChangeEvent = Readonly<{
+     headerHeight: Double;
+diff --git a/lib/typescript/types.d.ts b/lib/typescript/types.d.ts
+index 4bc388eff4ba614ad66c4aa29b0ec567bdbac5dd..c4875f46dadda6b6aec8297bfc026c05dbf331be 100644
+--- a/lib/typescript/types.d.ts
++++ b/lib/typescript/types.d.ts
+@@ -24,6 +24,7 @@ export type TransitionProgressEventType = {
+     progress: number;
+     closing: number;
+     goingForward: number;
++    swiping: number;
+ };
+ export type GestureResponseDistanceType = {
+     start?: number;
+diff --git a/src/fabric/ModalScreenNativeComponent.ts b/src/fabric/ModalScreenNativeComponent.ts
+index 8fcdefac813daa08dc924a1dab053e5c477a4681..d42c19e0546a984b047b61f9450348a34d66e55e 100644
+--- a/src/fabric/ModalScreenNativeComponent.ts
++++ b/src/fabric/ModalScreenNativeComponent.ts
+@@ -21,6 +21,7 @@ type TransitionProgressEvent = Readonly<{
+   progress: Double;
+   closing: Int32;
+   goingForward: Int32;
++  swiping: Int32;
+ }>;
  
- RCT_EXPORT_MODULE()
-@@ -1299,3 +1292,10 @@ RCT_ENUM_CONVERTER(
- RCT_ENUM_CONVERTER(RNSBlurEffectStyle, ([self blurEffectsForIOSVersion]), RNSBlurEffectStyleNone, integerValue)
+ type HeaderHeightChangeEvent = Readonly<{
+diff --git a/src/fabric/ScreenNativeComponent.ts b/src/fabric/ScreenNativeComponent.ts
+index 37dbf94c683c08864ed518e504880ec2e1af58a9..01a7c0dbc8eada61516e62960794864e2ea648a2 100644
+--- a/src/fabric/ScreenNativeComponent.ts
++++ b/src/fabric/ScreenNativeComponent.ts
+@@ -21,6 +21,7 @@ type TransitionProgressEvent = Readonly<{
+   progress: Double;
+   closing: Int32;
+   goingForward: Int32;
++  swiping: Int32;
+ }>;
  
- @end
-+
-+#ifdef RCT_NEW_ARCH_ENABLED
-+Class<RCTComponentViewProtocol> RNSScreenStackHeaderConfigCls(void)
-+{
-+  return RNSScreenStackHeaderConfig.class;
-+}
-+#endif
+ type HeaderHeightChangeEvent = Readonly<{

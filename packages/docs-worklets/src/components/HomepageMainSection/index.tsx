@@ -1,0 +1,33 @@
+import HomepageButton, { ButtonStyling } from '../HomepageButton';
+import styles from './styles.module.css';
+import Background from '@site/static/img/background.svg';
+
+export default function HomepageMainSection(): JSX.Element {
+  return (
+    <div className={styles.headerSection}>
+      <Background width={858} height={566} className={styles.background} />
+      <div className={styles.header}>
+        <h1>
+          React Native <span className={styles.headerHighlight}>Worklets</span>
+        </h1>
+      </div>
+      <h2>
+        Powerful multithreading engine. For your React Native apps and
+        libraries. No native code required.
+      </h2>
+
+      <div className={styles.buttons}>
+        <HomepageButton
+          title="Get started"
+          href="/react-native-worklets/docs/"
+        />
+        <HomepageButton
+          hideArrow
+          title="See examples"
+          href="#who-else-is-using-worklets"
+          backgroundStyling={ButtonStyling.TO_BLUE}
+        />
+      </div>
+    </div>
+  );
+}

@@ -1,59 +1,67 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import styles from './styles.module.css';
-import Draggable, { DraggableEvent } from 'react-draggable';
-
+import { useDraggable, useDndMonitor } from '@dnd-kit/core';
 import { bezierEasingValues } from '@site/src/components/InteractivePlayground/PlaygroundChart';
 
 interface Point {
   x: number;
   y: number;
 }
-
-const PlaygroundChartPoint: React.FC<{
+interface PlaygroundChartPointProps {
   label: string;
-  startingPoint: Point;
   bounds: Point;
   pointMoveHandler?: (point: Point) => void;
-  pointControls?: Point;
-}> = ({ label, startingPoint, bounds, pointMoveHandler, pointControls }) => {
-  const [place, setPlace] = useState<{
-    x: number;
-    y: number;
-  }>({
-    x: startingPoint.x,
-    y: startingPoint.y,
+  pointControls: Point;
+}
+
+const PlaygroundChartPoint: React.FC<PlaygroundChartPointProps> = ({
+  label,
+  bounds,
+  pointMoveHandler,
+  pointControls,
+}) => {
+  const { attributes, listeners, setNodeRef } = useDraggable({ id: label });
+  const dragOrigin = useRef<Point | null>(null);
+
+  useDndMonitor({
+    onDragStart({ active }) {
+      if (active.id === label) {
+        dragOrigin.current = { x: pointControls.x, y: pointControls.y };
+      }
+    },
+    onDragMove({ active, delta }) {
+      if (active.id === label && dragOrigin.current && pointMoveHandler) {
+        pointMoveHandler({
+          x: Math.min(
+            Math.max(dragOrigin.current.x + delta.x, 0),
+            bounds.x - bezierEasingValues.handleSize
+          ),
+          y: Math.min(
+            Math.max(dragOrigin.current.y + delta.y, 0),
+            bounds.y - bezierEasingValues.handleSize
+          ),
+        });
+      }
+    },
+    onDragEnd({ active }) {
+      if (active.id === label) {
+        dragOrigin.current = null;
+      }
+    },
   });
 
-  const handlePointDrag = (e: DraggableEvent, position) => {
-    const { x, y } = position;
-
-    setPlace({ x, y });
-    pointMoveHandler({ x, y });
-  };
-
-  useEffect(() => {
-    setPlace({
-      x: pointControls.x,
-      y: pointControls.y,
-    });
-  }, [pointControls.x, pointControls.y]);
-
   return (
-    <>
-      <Draggable
-        position={place}
-        onDrag={handlePointDrag}
-        bounds={{
-          top: 0,
-          left: 0,
-
-          // Limit bound to the borders
-          right: bounds.x - bezierEasingValues.handleSize,
-          bottom: bounds.y - bezierEasingValues.handleSize,
-        }}>
-        <button className={styles.handle}>{label}</button>
-      </Draggable>
-    </>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{
+        position: 'absolute',
+        left: pointControls.x,
+        top: pointControls.y,
+      }}>
+      <button className={styles.handle}>{label}</button>
+    </div>
   );
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
@@ -15,12 +15,12 @@ namespace reanimated::css {
 class CSSTransition {
  public:
   CSSTransition(
-      ShadowNode::Shared shadowNode,
+      std::shared_ptr<const ShadowNode> shadowNode,
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   Tag getViewTag() const;
-  ShadowNode::Shared getShadowNode() const;
+  std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   folly::dynamic getCurrentInterpolationStyle() const;
@@ -37,14 +37,16 @@ class CSSTransition {
   folly::dynamic update(double timestamp);
 
  private:
-  const ShadowNode::Shared shadowNode_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::unordered_set<std::string> allowDiscreteProperties_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
-  TransitionProgressProvider progressProvider_;
   TransitionStyleInterpolator styleInterpolator_;
+  TransitionProgressProvider progressProvider_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
+  void updateAllowedDiscreteProperties();
   bool isAllowedProperty(const std::string &propertyName) const;
 };
 

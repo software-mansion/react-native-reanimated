@@ -136,3 +136,7 @@ button[class*='DocSearch-Button'] {
 [class*='plugin-blog'] [class*='sidebar']:not([class*='navbar-sidebar']) {
   background-color: transparent;
 }
+
+[class*='yearGroupHeading'] {
+  display: none;
+}

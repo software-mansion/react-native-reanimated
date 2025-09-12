@@ -9,14 +9,15 @@
  * this field is not actually defined nor should be used for anything else as
  * assigning any data to those objects will throw an error.
  */
-export type ShareableRef<T = unknown> = {
-  __hostObjectShareableJSRef: T;
+export type SerializableRef<T = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: T;
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
-export type FlatShareableRef<T> =
-  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
+export type FlatSerializableRef<T> =
+  T extends SerializableRef<infer U> ? SerializableRef<U> : SerializableRef<T>;
 
 export type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
@@ -29,26 +30,27 @@ export type WorkletStackDetails = [
   columnOffset: number,
 ];
 
-type WorkletClosure = Record<string, unknown>;
+export type WorkletClosure = Record<string, unknown>;
 
-export interface WorkletInitData {
+interface WorkletInitData {
   code: string;
   /** Only in dev builds. */
   location?: string;
   /** Only in dev builds. */
   sourceMap?: string;
-  /** Only in dev builds. */
-  version?: string;
 }
 
-export interface WorkletProps {
+interface WorkletProps {
   __closure: WorkletClosure;
   __workletHash: number;
-  __initData: WorkletInitData;
+  /** Only in Legacy Bundling. */
+  __initData?: WorkletInitData;
   /** Only for Handles. */
   __init?: () => unknown;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
+  /** Only in dev builds. */
+  __pluginVersion?: string;
 }
 
 export type WorkletFunction<
@@ -59,12 +61,9 @@ export type WorkletFunction<
 export interface WorkletFactory<
   TArgs extends unknown[] = unknown[],
   TReturn = unknown,
-  TClosureVariables extends unknown[] = unknown[],
+  TClosureVariables extends Record<string, unknown> = Record<string, unknown>,
 > {
-  (
-    initData: WorkletInitData,
-    ...closureVariables: TClosureVariables
-  ): WorkletFunction<TArgs, TReturn>;
+  (closureVariables: TClosureVariables): WorkletFunction<TArgs, TReturn>;
 }
 
 export type ValueUnpacker = WorkletFunction<

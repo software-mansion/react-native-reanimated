@@ -69,7 +69,7 @@ An optional worklet that will be run synchronously on the same thread immediatel
 
 - You can use Chrome DevTools to debug the runtime (Hermes only). The runtime will appear in the devices list as `name` passed to `createWorkletRuntime`.
 
-- [Shared values](/docs/fundamentals/glossary#shared-value) are only partially supported in worklet runtimes. If you want to write to a shared value from the RN runtime and read it on the worklet runtime, you need to perform the assignment using [`runOnRuntime`](/docs/threading/runOnRuntime). Otherwise, the value will be updated only in the RN and UI runtimes.
+- [Shared values](/docs/fundamentals/glossary#shared-value) are only partially supported in worklet runtimes. If you want to write to a shared value from the RN runtime and read it on the worklet runtime, you need to perform the assignment using [`runOnRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntime). Otherwise, the value will be updated only in the RN and UI runtimes.
 
 ## Platform compatibility
 

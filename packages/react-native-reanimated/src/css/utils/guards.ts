@@ -6,7 +6,7 @@ import {
   VALID_PREDEFINED_TIMING_FUNCTIONS,
   VALID_STEPS_MODIFIERS,
 } from '../constants';
-import type { PredefinedTimingFunction, StepsModifier } from '../easings/types';
+import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
   AnyRecord,
   CSSAnimationKeyframes,
@@ -23,11 +23,11 @@ const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
 const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
 
-export const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
+const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
   VALID_PREDEFINED_TIMING_FUNCTIONS
 );
 
-export const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
+const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
   VALID_PARAMETRIZED_TIMING_FUNCTIONS
 );
 
@@ -60,10 +60,13 @@ export const isTimeUnit = (value: unknown): value is TimeUnit =>
 export const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
 
-export const isPercentage = (value: string | number): value is `${number}%` =>
+export const isPercentage = (value: unknown): value is `${number}%` =>
   typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
 
-export const isAngleValue = (
+export const isLength = (value: unknown): value is `${number}%` | number =>
+  isNumber(value) || isPercentage(value);
+
+export const isAngle = (
   value: string | number
 ): value is `${number}deg` | `${number}rad` =>
   typeof value === 'string' && /^-?\d+(\.\d+)?(deg|rad)$/.test(value);
