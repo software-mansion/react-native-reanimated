@@ -658,6 +658,9 @@ void LayoutAnimationsProxy::handleRemovals(
       filteredMutations.push_back(ShadowViewMutation::InsertMutation(parent->current.tag, node->current, parent->children.size()));
       parent->children.push_back(node);
       parent->animatedChildrenCount++;
+      if (node->state == UNDEFINED){
+        node->state = WAITING;
+      }
     } else {
         maybeCancelAnimation(node->current.tag);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
@@ -765,7 +768,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
           break;
         }
       }
-      if (!parent->state){
+      if (parent->state == UNDEFINED){
         return;
       }
 
@@ -776,7 +779,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     auto pp = parent->parent.lock();
     for (int i=0; i<pp->children.size(); i++){
       if (pp->children[i]->current.tag == parent->current.tag){
-        LOG(INFO) << "remove2 " << parent->current.tag;
+        LOG(INFO) << "remove2 " << parent->current.tag << ", "<<parent->state;
         cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(pp->current.tag, parent->current, i));
         maybeCancelAnimation(parent->current.tag);
     #ifdef LAYOUT_ANIMATIONS_LOGS
