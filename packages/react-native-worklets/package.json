@@ -99,6 +99,7 @@
       "default": "./lib/module/index.js"
     },
     "./plugin": "./plugin/index.js",
+    "./jestSetup": "./jestSetup.js",
     "./package.json": "./package.json"
   },
   "files": [
