@@ -19,8 +19,11 @@ import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
+import type { RuntimeKind } from 'react-native-worklets';
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
   var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;

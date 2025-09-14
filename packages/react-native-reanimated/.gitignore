@@ -67,3 +67,7 @@ plugin/index.js.map
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+scripts/*.d.ts
+scripts/*.d.ts.map
+

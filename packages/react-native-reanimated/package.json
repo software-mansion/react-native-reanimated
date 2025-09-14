@@ -36,11 +36,24 @@
     "prepack": "cp ../../README.md ./README.md",
     "postpack": "rm ./README.md"
   },
-  "main": "lib/module/index",
-  "module": "lib/module/index",
-  "react-native": "src/index",
-  "source": "src/index",
+  "main": "lib/module/index.js",
+  "module": "lib/module/index.js",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
   "types": "lib/typescript/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.tsx",
+      "types": "./lib/typescript/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./metro-config": {
+      "types": "./metro-config/index.d.ts",
+      "default": "./metro-config/index.js"
+    },
+    "./scripts/validate-worklets-version": "./scripts/validate-worklets-version.js",
+    "./package.json": "./package.json"
+  },
   "files": [
     "Common/",
     "src/",
@@ -145,7 +158,7 @@
     "prettier": "^3.3.3",
     "react": "19.1.1",
     "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch",
-    "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
+    "react-native-builder-bob": "^0.40.13",
     "react-native-gesture-handler": "2.28.0",
     "react-native-svg": "15.12.1",
     "react-native-worklets": "workspace:*",
