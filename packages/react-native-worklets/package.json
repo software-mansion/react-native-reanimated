@@ -98,6 +98,10 @@
       "types": "./lib/typescript/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./bundleMode": {
+      "types": "./bundleMode/index.d.ts",
+      "default": "./bundleMode/index.js"
+    },
     "./plugin": "./plugin/index.js",
     "./jestSetup": "./jestSetup.js",
     "./package.json": "./package.json"
