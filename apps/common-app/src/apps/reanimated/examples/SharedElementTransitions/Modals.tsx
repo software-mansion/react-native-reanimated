@@ -1,12 +1,14 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { StyleSheet, TouchableNativeFeedback } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
+import {
+  Gesture,
+  GestureDetector,
+  type PanGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -27,6 +29,7 @@ interface CardProps {
   transitionTag: string;
   isOpen?: boolean;
   nextScreen: keyof ParamList;
+  goNext?: () => void;
 }
 
 function Card({
@@ -35,18 +38,12 @@ function Card({
   transitionTag,
   isOpen = false,
   nextScreen,
+  goNext,
 }: CardProps) {
-  const goNext = (screenName: keyof ParamList) => {
-    navigation.navigate(screenName, {
-      title,
-      sharedTransitionTag: transitionTag,
-    });
-  };
-
   return (
-    <TouchableNativeFeedback
+    <Pressable
       onPress={() => {
-        goNext(nextScreen);
+        goNext?.();
       }}>
       <Animated.View
         style={
@@ -74,7 +71,7 @@ function Card({
           vel nam facilis ut?
         </Animated.Text>
       </Animated.View>
-    </TouchableNativeFeedback>
+    </Pressable>
   );
 }
 
@@ -88,6 +85,12 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
           title={'Title' + i}
           transitionTag={'sharedTag' + i}
           nextScreen="Screen2"
+          goNext={() =>
+            navigation.navigate('Screen2', {
+              title: 'Title' + i,
+              sharedTransitionTag: 'sharedTag' + i,
+            })
+          }
         />
       ))}
     </Animated.ScrollView>
@@ -99,6 +102,8 @@ function Screen2({
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
   const { title, sharedTransitionTag } = route.params;
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   const goNext = () => {
     navigation.popTo('Screen1', {
@@ -115,26 +120,23 @@ function Screen2({
     startX: number;
     startY: number;
   };
-  const gestureHandler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_, ctx) => {
-      ctx.startX = translation.x.value;
-      ctx.startY = translation.y.value;
-    },
-    onActive: (event, ctx) => {
-      translation.x.value = ctx.startX + event.translationX;
-      translation.y.value = ctx.startY + event.translationY;
-    },
-    onEnd: (_) => {
+
+  const gestureHandler = Gesture.Pan()
+    .onStart((event) => {
+      // ctx.startX = translation.x.value;
+      // ctx.startY = translation.y.value;
+    })
+    .onUpdate((event) => {
+      translation.x.value = event.translationX;
+      translation.y.value = event.translationY;
+    })
+    .onEnd((_) => {
       if (Math.abs(translation.x.value) + Math.abs(translation.y.value) > 150) {
         runOnJS(goNext)();
       }
       translation.x.value = withSpring(0);
       translation.y.value = withSpring(0);
-    },
-  });
+    });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -152,7 +154,7 @@ function Screen2({
   });
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
+    <GestureDetector gesture={gestureHandler}>
       <Animated.View style={[{ flex: 1 }, animatedStyle]}>
         <Card
           navigation={navigation}
@@ -160,9 +162,10 @@ function Screen2({
           transitionTag={sharedTransitionTag}
           isOpen={true}
           nextScreen="Screen1"
+          goNext={goNext}
         />
       </Animated.View>
-    </PanGestureHandler>
+    </GestureDetector>
   );
 }
 
@@ -172,6 +175,7 @@ export default function ModalsExample() {
       screenOptions={{
         presentation: 'transparentModal',
         headerShown: false,
+        animation: 'fade',
       }}>
       <Stack.Screen name="Screen1" component={Screen1} />
       <Stack.Screen name="Screen2" component={Screen2} />

@@ -4,7 +4,12 @@ import type {
 } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { StyleSheet, TouchableNativeFeedback, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  TouchableNativeFeedback,
+  View,
+} from 'react-native';
 import Animated from 'react-native-reanimated';
 
 type ParamList = {
@@ -42,7 +47,7 @@ function Card({
   };
 
   return (
-    <TouchableNativeFeedback
+    <Pressable
       onPress={() => {
         goNext(nextScreen);
       }}>
@@ -68,7 +73,7 @@ function Card({
           vel nam facilis ut?
         </Animated.Text>
       </Animated.View>
-    </TouchableNativeFeedback>
+    </Pressable>
   );
 }
 
