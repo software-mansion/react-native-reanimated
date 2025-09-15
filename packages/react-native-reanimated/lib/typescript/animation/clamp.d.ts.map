@@ -1,1 +1,0 @@
-{"version":3,"file":"clamp.d.ts","sourceRoot":"","sources":["../../../src/animation/clamp.ts"],"names":[],"mappings":"AAgBA,KAAK,aAAa,GAAG,CAAC,CAAC,SAAS,MAAM,GAAG,MAAM,EAC7C,MAAM,EAAE;IACN,GAAG,CAAC,EAAE,CAAC,CAAC;IACR,GAAG,CAAC,EAAE,CAAC,CAAC;CACT,EACD,gBAAgB,EAAE,CAAC,KAChB,CAAC,CAAC;AAEP,eAAO,MAAM,SAAS,EA6GjB,aAAa,CAAC"}

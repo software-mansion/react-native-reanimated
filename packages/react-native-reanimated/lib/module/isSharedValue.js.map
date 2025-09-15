@@ -1,1 +1,0 @@
-{"version":3,"names":["isSharedValue","value","_isReanimatedSharedValue"],"sourceRoot":"../../src","sources":["isSharedValue.ts"],"mappings":"AAAA,YAAY;;AAGZ,OAAO,SAASA,aAAaA,CAC3BC,KAAc,EACW;EACzB,SAAS;;EACT;EACA,OAAQA,KAAK,EAA8BC,wBAAwB,KAAK,IAAI;AAC9E","ignoreList":[]}

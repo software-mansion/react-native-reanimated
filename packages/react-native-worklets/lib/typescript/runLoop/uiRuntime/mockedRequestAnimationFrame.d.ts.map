@@ -1,1 +1,0 @@
-{"version":3,"file":"mockedRequestAnimationFrame.d.ts","sourceRoot":"","sources":["../../../../src/runLoop/uiRuntime/mockedRequestAnimationFrame.ts"],"names":[],"mappings":"AAEA;;;GAGG;AACH,wBAAgB,2BAA2B,CACzC,QAAQ,EAAE,CAAC,SAAS,EAAE,MAAM,KAAK,IAAI,GACpC,UAAU,CAAC,OAAO,UAAU,CAAC,CAE/B"}

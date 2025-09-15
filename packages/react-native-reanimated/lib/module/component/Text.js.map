@@ -1,1 +1,0 @@
-{"version":3,"names":["Text","createAnimatedComponent","AnimatedText"],"sourceRoot":"../../../src","sources":["component/Text.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,IAAI,QAAQ,cAAc;AAEnC,SAASC,uBAAuB,QAAQ,4BAA4B;;AAEpE;AACA;;AAKA,OAAO,MAAMC,YAAY,GAAGD,uBAAuB,CAACD,IAAI,CAAC","ignoreList":[]}

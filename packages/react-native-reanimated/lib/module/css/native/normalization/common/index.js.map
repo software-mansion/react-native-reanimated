@@ -1,1 +1,0 @@
-{"version":3,"names":["normalizeDelay","normalizeDuration","normalizeTimingFunction"],"sourceRoot":"../../../../../../src","sources":["css/native/normalization/common/index.ts"],"mappings":"AAAA,YAAY;;AACZ,SACEA,cAAc,EACdC,iBAAiB,EACjBC,uBAAuB,QAClB,YAAY","ignoreList":[]}

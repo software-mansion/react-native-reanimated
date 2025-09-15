@@ -1,1 +1,0 @@
-{"version":3,"file":"workletFunction.d.ts","sourceRoot":"","sources":["../../src/workletFunction.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,gBAAgB,CAAC;AAEtD;;;;;;;;;;;;;;;;;;;;;;;GAuBG;AACH,wBAAgB,iBAAiB,CAC/B,IAAI,SAAS,OAAO,EAAE,GAAG,OAAO,EAAE,EAClC,WAAW,GAAG,OAAO,EACrB,KAAK,EAAE,OAAO,GAAG,KAAK,IAAI,eAAe,CAAC,IAAI,EAAE,WAAW,CAAC,CAU7D"}

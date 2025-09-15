@@ -1,1 +1,0 @@
-{"version":3,"names":["Image","createAnimatedComponent","AnimatedImage"],"sourceRoot":"../../../src","sources":["component/Image.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,KAAK,QAAQ,cAAc;AAEpC,SAASC,uBAAuB,QAAQ,4BAA4B;;AAEpE;AACA;;AAKA,OAAO,MAAMC,aAAa,GAAGD,uBAAuB,CAACD,KAAK,CAAC","ignoreList":[]}

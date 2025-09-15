@@ -1,1 +1,0 @@
-{"version":3,"names":["logger","createAnimatedPropAdapter","adapter","_nativeProps","warn"],"sourceRoot":"../../src","sources":["PropAdapters.ts"],"mappings":"AAAA,YAAY;;AAEZ,SAASA,MAAM,QAAQ,UAAU;;AAMjC;;AAMA,OAAO,SAASC,yBAAyBA,CACvCC,OAAoC,EACpCC,YAAuB,EACM;EAC7BH,MAAM,CAACI,IAAI,CACT,wLACF,CAAC;EACD,OAAOF,OAAO;AAChB","ignoreList":[]}
