@@ -1,7 +1,7 @@
 'use strict';
 
 import { RuntimeKind } from 'react-native-worklets';
-import { IS_JEST, logger, processColorsInProps, SHOULD_BE_USE_WEB } from "../common/index.js";
+import { IS_JEST, logger, processColorsInProps, SHOULD_BE_USE_WEB } from '../common';
 /**
  * Lets you imperatively update component properties. You should always reach
  * for

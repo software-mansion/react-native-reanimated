@@ -12,7 +12,7 @@ interface AnimatedScrollViewComplement extends ScrollView {
     getNode(): ScrollView;
 }
 declare const AnimatedScrollViewComponent: React.ComponentClass<AnimatedProps<ScrollViewProps>, any>;
-export declare function AnimatedScrollView({ scrollViewOffset, ref, ...restProps }: AnimatedScrollViewProps): React.JSX.Element;
+export declare function AnimatedScrollView({ scrollViewOffset, ref, ...restProps }: AnimatedScrollViewProps): import("react/jsx-runtime").JSX.Element;
 export type AnimatedScrollView = AnimatedScrollViewComplement & typeof AnimatedScrollViewComponent;
 export {};
 //# sourceMappingURL=ScrollView.d.ts.map

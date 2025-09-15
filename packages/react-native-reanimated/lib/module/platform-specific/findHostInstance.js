@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 'use strict';
 
-import { ReanimatedError } from "../common/index.js";
+import { ReanimatedError } from '../common';
 function findHostInstanceFastPath(maybeNativeRef) {
   if (!maybeNativeRef) {
     return undefined;

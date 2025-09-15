@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from "../../common/index.js";
+import { ReanimatedError } from '../../common';
 export function isAffineMatrixFlat(x) {
   'worklet';
 

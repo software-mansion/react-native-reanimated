@@ -2,11 +2,11 @@
 'use strict';
 
 import { createSerializable, isWorkletFunction, runOnUI, RuntimeKind, serializableMappingCache } from 'react-native-worklets';
-import { clampRGBA, convertToRGBA, isColor, rgbaArrayToRGBAColor, toGammaSpace, toLinearSpace } from "../Colors.js";
-import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from "../common/index.js";
-import { ReduceMotion } from "../commonTypes.js";
-import { ReducedMotionManager } from "../ReducedMotion.js";
-import { addMatrices, decomposeMatrixIntoMatricesAndAngles, flatten, getRotationMatrix, isAffineMatrixFlat, multiplyMatrices, scaleMatrix, subtractMatrices } from "./transformationMatrix/matrixUtils.js";
+import { clampRGBA, convertToRGBA, isColor, rgbaArrayToRGBAColor, toGammaSpace, toLinearSpace } from '../Colors';
+import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { ReduceMotion } from '../commonTypes';
+import { ReducedMotionManager } from '../ReducedMotion';
+import { addMatrices, decomposeMatrixIntoMatricesAndAngles, flatten, getRotationMatrix, isAffineMatrixFlat, multiplyMatrices, scaleMatrix, subtractMatrices } from './transformationMatrix/matrixUtils';
 
 /**
  * This variable has to be an object, because it can't be changed for the

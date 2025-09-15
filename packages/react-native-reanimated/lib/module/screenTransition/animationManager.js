@@ -1,7 +1,7 @@
 'use strict';
 
-import { applyStyle } from "./styleUpdater.js";
-import { getSwipeSimulator } from "./swipeSimulator.js";
+import { applyStyle } from './styleUpdater';
+import { getSwipeSimulator } from './swipeSimulator';
 export function startScreenTransition(screenTransitionConfig) {
   'worklet';
 

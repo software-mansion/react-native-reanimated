@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "./common/index.js";
+import { logger } from './common';
 
 // @ts-expect-error This overload is required by our API.
 

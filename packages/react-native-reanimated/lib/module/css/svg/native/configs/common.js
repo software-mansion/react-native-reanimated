@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertStringToNumber, processColorSVG, processOpacity, processStrokeDashArray } from "../processors/index.js";
+import { convertStringToNumber, processColorSVG, processOpacity, processStrokeDashArray } from '../processors';
 const colorAttributes = {
   process: processColorSVG
 };

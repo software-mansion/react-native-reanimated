@@ -1,6 +1,6 @@
 'use strict';
 
-import { commonSvgProps } from "./common.js";
+import { commonSvgProps } from './common';
 export const SVG_ELLIPSE_PROPERTIES_CONFIG = {
   ...commonSvgProps,
   cx: true,

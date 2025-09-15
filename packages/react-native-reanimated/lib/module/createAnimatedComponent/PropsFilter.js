@@ -1,10 +1,10 @@
 'use strict';
 
-import { initialUpdaterRun } from "../animation/index.js";
-import { isSharedValue } from "../isSharedValue.js";
-import { WorkletEventHandler } from "../WorkletEventHandler.js";
-import { getInlineStyle, hasInlineStyles } from "./InlinePropManager.js";
-import { flattenArray, has } from "./utils.js";
+import { initialUpdaterRun } from '../animation';
+import { isSharedValue } from '../isSharedValue';
+import { WorkletEventHandler } from '../WorkletEventHandler';
+import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
+import { flattenArray, has } from './utils';
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
   // event is used.

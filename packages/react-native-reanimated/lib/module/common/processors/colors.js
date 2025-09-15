@@ -1,8 +1,8 @@
 'use strict';
 'worklet';
 
-import { ColorProperties, processColorInitially } from "../../Colors.js";
-import { IS_ANDROID } from "../constants.js";
+import { ColorProperties, processColorInitially } from '../../Colors';
+import { IS_ANDROID } from '../constants';
 export function processColor(color) {
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {

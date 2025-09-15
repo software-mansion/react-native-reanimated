@@ -9,7 +9,7 @@
 //  a simple implementation based on their converter utils (see
 //  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278,
 //  https://culorijs.org/api/#converter).
-import lrgb from "./lrgb.js";
+import lrgb from './lrgb';
 function convertLrgbToOklab({
   r = 0,
   g = 0,

@@ -1,7 +1,7 @@
 'use strict';
 
-import { SHOULD_BE_USE_WEB } from "../common/index.js";
-import { useAnimatedStyle } from "./useAnimatedStyle.js";
+import { SHOULD_BE_USE_WEB } from '../common';
+import { useAnimatedStyle } from './useAnimatedStyle';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 

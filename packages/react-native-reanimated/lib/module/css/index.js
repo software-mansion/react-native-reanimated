@@ -1,6 +1,6 @@
 'use strict';
 
-export { createAnimatedComponent } from "./component/index.js";
-export { cubicBezier, linear, steps } from "./easing/index.js";
-export * from "./stylesheet/index.js";
+export { createAnimatedComponent } from './component';
+export { cubicBezier, linear, steps } from './easing';
+export * from './stylesheet';
 //# sourceMappingURL=index.js.map

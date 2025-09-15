@@ -1,4 +1,4 @@
 'use strict';
 
-export { createAnimatedComponent } from "./createAnimatedComponent.js";
+export { createAnimatedComponent } from './createAnimatedComponent';
 //# sourceMappingURL=index.js.map

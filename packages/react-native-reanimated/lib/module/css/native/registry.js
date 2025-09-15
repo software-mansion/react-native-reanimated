@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../common/index.js";
-import { BASE_PROPERTIES_CONFIG, createStyleBuilder } from "./style/index.js";
+import { ReanimatedError } from '../../common';
+import { BASE_PROPERTIES_CONFIG, createStyleBuilder } from './style';
 export const ERROR_MESSAGES = {
   styleBuilderNotFound: componentName => `CSS style builder for component ${componentName} was not found`
 };

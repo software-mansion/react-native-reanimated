@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "../../common/index.js";
+import { logger } from '../../common';
 
 // This type contains all the properties from SpringConfig, which are changed to be required,
 // except for optional 'reduceMotion' and 'clamp'

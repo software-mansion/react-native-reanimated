@@ -1,7 +1,7 @@
 'use strict';
 
 import { runOnUI } from 'react-native-worklets';
-import { SHOULD_BE_USE_WEB } from "../common/index.js";
+import { SHOULD_BE_USE_WEB } from '../common';
 class JSPropsUpdaterNative {
   static _tagToComponentMapping = new Map();
   registerComponent(animatedComponent, jsProps) {

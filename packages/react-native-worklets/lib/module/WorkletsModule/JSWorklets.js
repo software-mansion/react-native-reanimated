@@ -1,8 +1,8 @@
 'use strict';
 
-import { IS_JEST } from "../PlatformChecker/index.js";
-import { mockedRequestAnimationFrame } from "../runLoop/uiRuntime/mockedRequestAnimationFrame.js";
-import { WorkletsError } from "../WorkletsError.js";
+import { IS_JEST } from '../PlatformChecker';
+import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { WorkletsError } from '../WorkletsError';
 export function createJSWorkletsModule() {
   return new JSWorklets();
 }

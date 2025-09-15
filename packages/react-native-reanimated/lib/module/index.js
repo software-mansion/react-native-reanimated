@@ -1,32 +1,32 @@
 'use strict';
 
-import "./publicGlobals.js";
-import * as Animated from "./Animated.js";
-import { initializeReanimatedModule } from "./initializers.js";
+import './publicGlobals';
+import * as Animated from './Animated';
+import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
 initializeReanimatedModule(ReanimatedModule);
 export default Animated;
-export { cancelAnimation, defineAnimation, GentleSpringConfig, GentleSpringConfigWithDuration, Reanimated3DefaultSpringConfig, Reanimated3DefaultSpringConfigWithDuration, SnappySpringConfig, SnappySpringConfigWithDuration, WigglySpringConfig, WigglySpringConfigWithDuration, withClamp, withDecay, withDelay, withRepeat, withSequence, withSpring, withTiming } from "./animation/index.js";
-export { convertToRGBA, isColor } from "./Colors.js";
-export { processColor, ReanimatedLogLevel } from "./common/index.js";
-export { InterfaceOrientation, IOSReferenceFrame, KeyboardState, ReduceMotion, SensorType } from "./commonTypes.js";
-export { LayoutAnimationConfig } from "./component/LayoutAnimationConfig.js";
-export { PerformanceMonitor } from "./component/PerformanceMonitor.js";
-export { ReducedMotionConfig } from "./component/ReducedMotionConfig.js";
-export { configureReanimatedLogger } from "./ConfigHelper.js";
-export { enableLayoutAnimations, getViewProp, isConfigured, isReanimated3, makeMutable } from "./core.js";
-export * from "./css/index.js";
-export { Easing } from "./Easing.js";
-export { getStaticFeatureFlag, setDynamicFeatureFlag } from "./featureFlags/index.js";
+export { cancelAnimation, defineAnimation, GentleSpringConfig, GentleSpringConfigWithDuration, Reanimated3DefaultSpringConfig, Reanimated3DefaultSpringConfigWithDuration, SnappySpringConfig, SnappySpringConfigWithDuration, WigglySpringConfig, WigglySpringConfigWithDuration, withClamp, withDecay, withDelay, withRepeat, withSequence, withSpring, withTiming } from './animation';
+export { convertToRGBA, isColor } from './Colors';
+export { processColor, ReanimatedLogLevel } from './common';
+export { InterfaceOrientation, IOSReferenceFrame, KeyboardState, ReduceMotion, SensorType } from './commonTypes';
+export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
+export { PerformanceMonitor } from './component/PerformanceMonitor';
+export { ReducedMotionConfig } from './component/ReducedMotionConfig';
+export { configureReanimatedLogger } from './ConfigHelper';
+export { enableLayoutAnimations, getViewProp, isConfigured, isReanimated3, makeMutable } from './core';
+export * from './css';
+export { Easing } from './Easing';
+export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
 export { useAnimatedKeyboard, useAnimatedProps, useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedSensor, useAnimatedStyle, useComposedEventHandler, useDerivedValue, useEvent, useFrameCallback, useHandler, useReducedMotion, useScrollOffset, /** @deprecated Please use {@link useScrollOffset} instead. */
-useScrollOffset as useScrollViewOffset, useSharedValue } from "./hook/index.js";
+useScrollOffset as useScrollViewOffset, useSharedValue } from './hook';
 export { ColorSpace, /** @deprecated Please use {@link Extrapolation} instead. */
-Extrapolate, interpolateColor, useInterpolateConfig } from "./interpolateColor.js";
-export { clamp, Extrapolation, interpolate } from "./interpolation.js";
-export { isSharedValue } from "./isSharedValue.js";
+Extrapolate, interpolateColor, useInterpolateConfig } from './interpolateColor';
+export { clamp, Extrapolation, interpolate } from './interpolation';
+export { isSharedValue } from './isSharedValue';
 export { advanceAnimationByFrame, advanceAnimationByTime, getAnimatedStyle, setUpTests, withReanimatedTimer } from './jestUtils';
 export { BaseAnimationBuilder,
 // Bounce
@@ -50,12 +50,12 @@ SlideInRight, SlideInUp, SlideOutDown, SlideOutLeft, SlideOutRight, SlideOutUp,
 // Stretch
 StretchInX, StretchInY, StretchOutX, StretchOutY,
 // Zoom
-ZoomIn, ZoomInDown, ZoomInEasyDown, ZoomInEasyUp, ZoomInLeft, ZoomInRight, ZoomInRotate, ZoomInUp, ZoomOut, ZoomOutDown, ZoomOutEasyDown, ZoomOutEasyUp, ZoomOutLeft, ZoomOutRight, ZoomOutRotate, ZoomOutUp } from "./layoutReanimation/index.js";
-export { startMapper, stopMapper } from "./mappers.js";
-export { jsVersion as reanimatedVersion } from "./platform-specific/jsVersion.js";
-export { dispatchCommand, getRelativeCoords, measure, scrollTo, setGestureState, setNativeProps } from "./platformFunctions/index.js";
-export { getUseOfValueInStyleWarning } from "./pluginUtils.js";
-export { createAnimatedPropAdapter } from "./PropAdapters.js";
-export { finishScreenTransition, ScreenTransition, startScreenTransition } from "./screenTransition/index.js";
-export { createWorkletRuntime, executeOnUIRuntimeSync, isWorkletFunction, makeShareableCloneRecursive, runOnJS, runOnRuntime, runOnUI } from "./workletFunctions.js";
+ZoomIn, ZoomInDown, ZoomInEasyDown, ZoomInEasyUp, ZoomInLeft, ZoomInRight, ZoomInRotate, ZoomInUp, ZoomOut, ZoomOutDown, ZoomOutEasyDown, ZoomOutEasyUp, ZoomOutLeft, ZoomOutRight, ZoomOutRotate, ZoomOutUp } from './layoutReanimation';
+export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
+export { dispatchCommand, getRelativeCoords, measure, scrollTo, setGestureState, setNativeProps } from './platformFunctions';
+export { getUseOfValueInStyleWarning } from './pluginUtils';
+export { createAnimatedPropAdapter } from './PropAdapters';
+export { finishScreenTransition, ScreenTransition, startScreenTransition } from './screenTransition';
+export { createWorkletRuntime, executeOnUIRuntimeSync, isWorkletFunction, makeShareableCloneRecursive, runOnJS, runOnRuntime, runOnUI } from './workletFunctions';
 //# sourceMappingURL=index.js.map

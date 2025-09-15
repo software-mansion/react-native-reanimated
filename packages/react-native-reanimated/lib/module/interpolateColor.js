@@ -1,11 +1,11 @@
 'use strict';
 
-import { blue, green, hsvToColor, opacity, red, rgbaColor, RGBtoHSV } from "./Colors.js";
-import { processColor, ReanimatedError } from "./common/index.js";
-import { makeMutable } from "./core.js";
-import culori from "./culori/index.js";
-import { useSharedValue } from "./hook/useSharedValue.js";
-import { Extrapolation, interpolate } from "./interpolation.js";
+import { blue, green, hsvToColor, opacity, red, rgbaColor, RGBtoHSV } from './Colors';
+import { processColor, ReanimatedError } from './common';
+import { makeMutable } from './core';
+import culori from './culori';
+import { useSharedValue } from './hook/useSharedValue';
+import { Extrapolation, interpolate } from './interpolation';
 
 /** @deprecated Please use Extrapolation instead */
 export const Extrapolate = Extrapolation;

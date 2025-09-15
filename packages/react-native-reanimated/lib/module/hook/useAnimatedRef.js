@@ -2,9 +2,9 @@
 
 import { useRef, useState } from 'react';
 import { createSerializable, serializableMappingCache } from 'react-native-worklets';
-import { SHOULD_BE_USE_WEB } from "../common/constants.js";
+import { SHOULD_BE_USE_WEB } from '../common/constants';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { makeMutable } from "../mutables.js";
+import { makeMutable } from '../mutables';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 function getComponentOrScrollable(ref) {
   return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;

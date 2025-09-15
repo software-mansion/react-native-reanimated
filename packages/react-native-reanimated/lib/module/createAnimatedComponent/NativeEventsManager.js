@@ -1,8 +1,8 @@
 'use strict';
 
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
-import { WorkletEventHandler } from "../WorkletEventHandler.js";
-import { has } from "./utils.js";
+import { WorkletEventHandler } from '../WorkletEventHandler';
+import { has } from './utils';
 export class NativeEventsManager {
   #managedComponent;
   #componentOptions;

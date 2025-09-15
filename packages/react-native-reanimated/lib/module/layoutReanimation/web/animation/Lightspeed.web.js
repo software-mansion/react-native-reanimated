@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertAnimationObjectToKeyframes } from "../animationParser.js";
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 const DEFAULT_LIGHTSPEED_TIME = 0.3;
 export const LightSpeedInData = {
   LightSpeedInRight: {

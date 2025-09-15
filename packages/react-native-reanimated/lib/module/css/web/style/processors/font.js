@@ -1,6 +1,6 @@
 'use strict';
 
-import { FONT_WEIGHT_MAPPINGS } from "../../../constants/index.js";
+import { FONT_WEIGHT_MAPPINGS } from '../../../constants';
 export const processFontWeight = value => {
   if (typeof value === 'number' || !isNaN(+value)) {
     return String(value);

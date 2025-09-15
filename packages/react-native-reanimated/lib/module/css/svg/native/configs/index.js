@@ -1,8 +1,8 @@
 'use strict';
 
-export * from "./circle.js";
-export * from "./ellipse.js";
-export * from "./line.js";
-export * from "./path.js";
-export * from "./rect.js";
+export * from './circle';
+export * from './ellipse';
+export * from './line';
+export * from './path';
+export * from './rect';
 //# sourceMappingURL=index.js.map

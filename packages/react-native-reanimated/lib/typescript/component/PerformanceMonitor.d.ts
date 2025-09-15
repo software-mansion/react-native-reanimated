@@ -15,5 +15,5 @@ export type PerformanceMonitorProps = {
  * @param smoothingFrames - Determines amount of saved frames which will be used
  *   for fps value smoothing.
  */
-export declare function PerformanceMonitor({ smoothingFrames, }: PerformanceMonitorProps): import("react").JSX.Element;
+export declare function PerformanceMonitor({ smoothingFrames, }: PerformanceMonitorProps): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=PerformanceMonitor.d.ts.map

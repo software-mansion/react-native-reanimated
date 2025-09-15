@@ -1,7 +1,7 @@
 'use strict';
 'worklet';
 
-import { ReanimatedError } from "../errors.js";
+import { ReanimatedError } from '../errors';
 const HORIZONTAL_CONVERSIONS = {
   left: 0,
   center: '50%',

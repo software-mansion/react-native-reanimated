@@ -1,6 +1,6 @@
 'use strict';
 
-export * from "./colors.js";
-export * from "./shadows.js";
-export * from "./transformOrigin.js";
+export * from './colors';
+export * from './shadows';
+export * from './transformOrigin';
 //# sourceMappingURL=index.js.map

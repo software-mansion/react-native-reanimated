@@ -1,9 +1,9 @@
 'use strict';
 
-import { withDelay } from "../../animation/index.js";
-import { getReduceMotionFromConfig } from "../../animation/util.js";
-import { ReanimatedError } from "../../common/index.js";
-import { ReduceMotion } from "../../commonTypes.js";
+import { withDelay } from '../../animation';
+import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../common';
+import { ReduceMotion } from '../../commonTypes';
 export class BaseAnimationBuilder {
   reduceMotionV = ReduceMotion.System;
   randomizeDelay = false;

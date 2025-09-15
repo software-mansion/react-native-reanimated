@@ -1,6 +1,6 @@
 'use strict';
 
-import { commonSvgProps } from "./common.js";
+import { commonSvgProps } from './common';
 
 // @ts-expect-error - remove when more properties are added
 export const SVG_PATH_PROPERTIES_CONFIG = {

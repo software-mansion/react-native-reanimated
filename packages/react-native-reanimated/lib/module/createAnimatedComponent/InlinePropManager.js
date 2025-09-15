@@ -1,10 +1,10 @@
 'use strict';
 
-import { isSharedValue } from "../isSharedValue.js";
-import { startMapper, stopMapper } from "../mappers.js";
-import { updateProps } from "../updateProps/index.js";
-import { makeViewDescriptorsSet } from "../ViewDescriptorsSet.js";
-import { flattenArray } from "./utils.js";
+import { isSharedValue } from '../isSharedValue';
+import { startMapper, stopMapper } from '../mappers';
+import { updateProps } from '../updateProps';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { flattenArray } from './utils';
 function isInlineStyleTransform(transform) {
   if (!Array.isArray(transform)) {
     return false;

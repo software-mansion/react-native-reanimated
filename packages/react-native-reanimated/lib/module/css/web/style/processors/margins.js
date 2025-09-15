@@ -1,6 +1,6 @@
 'use strict';
 
-import { parseDimensionValue } from "../../utils.js";
+import { parseDimensionValue } from '../../utils';
 export const processMarginHorizontal = value => {
   const result = parseDimensionValue(value);
   if (!result) {

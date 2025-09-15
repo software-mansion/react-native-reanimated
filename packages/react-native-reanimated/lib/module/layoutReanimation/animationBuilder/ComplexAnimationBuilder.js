@@ -1,8 +1,8 @@
 'use strict';
 
-import { withSpring, withTiming } from "../../animation/index.js";
-import { assertEasingIsWorklet } from "../../animation/util.js";
-import { BaseAnimationBuilder } from "./BaseAnimationBuilder.js";
+import { withSpring, withTiming } from '../../animation';
+import { assertEasingIsWorklet } from '../../animation/util';
+import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   /**
    * Lets you change the easing curve of the animation. Can be chained alongside

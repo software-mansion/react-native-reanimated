@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { isLength } from "../../../utils/index.js";
+import { ReanimatedError } from '../../../../common';
+import { isLength } from '../../../utils';
 export const ERROR_MESSAGES = {
   invalidDashArray: value => `Invalid stroke dash array value: ${JSON.stringify(value)}`
 };

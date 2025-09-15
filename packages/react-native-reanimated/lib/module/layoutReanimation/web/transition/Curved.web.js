@@ -1,7 +1,7 @@
 'use strict';
 
-import { LayoutAnimationType } from "../../../commonTypes.js";
-import { getEasingByName } from "../Easing.web.js";
+import { LayoutAnimationType } from '../../../commonTypes';
+import { getEasingByName } from '../Easing.web';
 function resetStyle(component) {
   component.style.animationName = ''; // This line prevents unwanted entering animation
   component.style.position = 'absolute';

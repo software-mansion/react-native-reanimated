@@ -1,8 +1,8 @@
 'use strict';
 
-import { WorkletEventHandler } from "../WorkletEventHandler.js";
-import { useEvent } from "./useEvent.js";
-import { useHandler } from "./useHandler.js";
+import { WorkletEventHandler } from '../WorkletEventHandler';
+import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 /**
  * Lets you compose multiple event handlers based on

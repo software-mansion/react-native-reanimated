@@ -1,8 +1,8 @@
 'use strict';
 
-export * from "./conversions.js";
-export * from "./equality.js";
-export * from "./guards.js";
-export * from "./parsers.js";
-export * from "./props.js";
+export * from './conversions';
+export * from './equality';
+export * from './guards';
+export * from './parsers';
+export * from './props';
 //# sourceMappingURL=index.js.map

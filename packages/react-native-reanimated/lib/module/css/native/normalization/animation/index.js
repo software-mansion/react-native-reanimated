@@ -1,7 +1,7 @@
 'use strict';
 
-export { normalizeAnimationKeyframes } from "./keyframes.js";
-export { createSingleCSSAnimationProperties } from "./properties.js";
-export { getAnimationSettingsUpdates } from "./settings.js";
-export { normalizeSingleCSSAnimationSettings } from "./settings.js";
+export { normalizeAnimationKeyframes } from './keyframes';
+export { createSingleCSSAnimationProperties } from './properties';
+export { getAnimationSettingsUpdates } from './settings';
+export { normalizeSingleCSSAnimationSettings } from './settings';
 //# sourceMappingURL=index.js.map

@@ -1,7 +1,7 @@
 'use strict';
 
 import { useEffect, useRef } from 'react';
-import FrameCallbackRegistryJS from "../frameCallback/FrameCallbackRegistryJS.js";
+import FrameCallbackRegistryJS from '../frameCallback/FrameCallbackRegistryJS';
 
 /**
  * @param setActive - A function that lets you start the frame callback or stop

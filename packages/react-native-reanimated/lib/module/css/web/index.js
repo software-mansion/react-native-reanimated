@@ -1,9 +1,9 @@
 'use strict';
 
-export * from "./animationParser.js";
-export * from "./domUtils.js";
-export * from "./keyframes/index.js";
-export * from "./managers/index.js";
-export * from "./normalization/index.js";
-export * from "./utils.js";
+export * from './animationParser';
+export * from './domUtils';
+export * from './keyframes';
+export * from './managers';
+export * from './normalization';
+export * from './utils';
 //# sourceMappingURL=index.js.map

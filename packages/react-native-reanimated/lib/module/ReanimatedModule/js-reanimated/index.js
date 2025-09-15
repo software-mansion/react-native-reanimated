@@ -1,8 +1,8 @@
 'use strict';
 
-import { logger } from "../../common/index.js";
+import { logger } from '../../common';
 import { createReactDOMStyle, createTextShadowValue, createTransformValue } from './webUtils';
-export { createJSReanimatedModule } from "./JSReanimated.js";
+export { createJSReanimatedModule } from './JSReanimated';
 // TODO: Move these functions outside of index file.
 export const _updatePropsJS = (updates, viewRef, isAnimatedProps) => {
   if (viewRef) {

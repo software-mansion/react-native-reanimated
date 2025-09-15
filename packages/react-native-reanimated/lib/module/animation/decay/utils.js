@@ -1,6 +1,6 @@
 'use strict';
 
-import { IS_WEB } from "../../common/index.js";
+import { IS_WEB } from '../../common';
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 

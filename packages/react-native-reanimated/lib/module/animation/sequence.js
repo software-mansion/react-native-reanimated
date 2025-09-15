@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger } from "../common/index.js";
-import { defineAnimation, getReduceMotionForAnimation } from "./util.js";
+import { logger } from '../common';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 /**
  * Lets you run animations in a sequence.

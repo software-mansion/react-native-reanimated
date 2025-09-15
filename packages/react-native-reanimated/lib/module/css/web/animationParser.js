@@ -1,9 +1,9 @@
 'use strict';
 
-import { hasSuffix } from "../../common/index.js";
-import { PROPERTIES_CONFIG } from "./config.js";
-import { createStyleBuilder } from "./style/index.js";
-import { parseTimingFunction } from "./utils.js";
+import { hasSuffix } from '../../common';
+import { PROPERTIES_CONFIG } from './config';
+import { createStyleBuilder } from './style';
+import { parseTimingFunction } from './utils';
 const styleBuilder = createStyleBuilder(PROPERTIES_CONFIG);
 export function processKeyframeDefinitions(definitions) {
   return Object.entries(definitions).reduce((acc, [timestamp, rules]) => {

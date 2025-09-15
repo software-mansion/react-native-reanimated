@@ -1,5 +1,5 @@
 'use strict';
 
-export { default as cssKeyframesRegistry } from "./CSSKeyframesRegistry.js";
-export { default as CSSKeyframesRuleImpl } from "./CSSKeyframesRuleImpl.js";
+export { default as cssKeyframesRegistry } from './CSSKeyframesRegistry';
+export { default as CSSKeyframesRuleImpl } from './CSSKeyframesRuleImpl';
 //# sourceMappingURL=index.js.map

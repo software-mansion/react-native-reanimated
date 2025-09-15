@@ -2,13 +2,14 @@
 
 import { Component } from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from "../../common/index.js";
-import { getViewInfo } from "../../createAnimatedComponent/getViewInfo.js";
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
+import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from "../native/index.js";
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
-import { filterNonCSSStyleProps } from "./utils.js";
+import { filterNonCSSStyleProps } from './utils';
+import { jsx as _jsx } from "react/jsx-runtime";
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
 // to the main one)
@@ -156,10 +157,15 @@ export default class AnimatedComponent extends Component {
         collapsable: false
       }
     });
-    return <ChildComponent {...props ?? this.props} {...platformProps} style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
-    // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-    // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-    ref={this._setComponentRef} />;
+    return /*#__PURE__*/_jsx(ChildComponent, {
+      ...(props ?? this.props),
+      ...platformProps,
+      style: filterNonCSSStyleProps(props?.style ?? this.props.style)
+      // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
+      // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
+      ,
+      ref: this._setComponentRef
+    });
   }
 }
 //# sourceMappingURL=AnimatedComponent.js.map

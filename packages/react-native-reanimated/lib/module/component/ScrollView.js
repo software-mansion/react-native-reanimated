@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { ScrollView } from 'react-native';
-import { createAnimatedComponent } from "../createAnimatedComponent/index.js";
-import { useAnimatedRef, useScrollOffset } from "../hook/index.js";
+import { createAnimatedComponent } from '../createAnimatedComponent';
+import { useAnimatedRef, useScrollOffset } from '../hook';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
-
+import { jsx as _jsx } from "react/jsx-runtime";
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 export function AnimatedScrollView({
   scrollViewOffset,
@@ -29,6 +29,9 @@ export function AnimatedScrollView({
   if (!('scrollEventThrottle' in restProps)) {
     restProps.scrollEventThrottle = 1;
   }
-  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+  return /*#__PURE__*/_jsx(AnimatedScrollViewComponent, {
+    ref: animatedRef,
+    ...restProps
+  });
 }
 //# sourceMappingURL=ScrollView.js.map

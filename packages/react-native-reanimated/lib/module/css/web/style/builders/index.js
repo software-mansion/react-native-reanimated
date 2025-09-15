@@ -1,4 +1,4 @@
 'use strict';
 
-export * from "./shadows.js";
+export * from './shadows';
 //# sourceMappingURL=index.js.map

@@ -1,9 +1,9 @@
 'use strict';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { IS_WEB, logger } from "../common/index.js";
-import { useEvent } from "./useEvent.js";
-import { useSharedValue } from "./useSharedValue.js";
+import { IS_WEB, logger } from '../common';
+import { useEvent } from './useEvent';
+import { useSharedValue } from './useSharedValue';
 const NOT_INITIALIZED_WARNING = 'animatedRef is not initialized in useScrollOffset. Make sure to pass the animated ref to the scrollable component to get scroll offset updates.';
 const NATIVE_SCROLL_EVENT_NAMES = ['onScroll', 'onScrollBeginDrag', 'onScrollEndDrag', 'onMomentumScrollBegin', 'onMomentumScrollEnd'];
 

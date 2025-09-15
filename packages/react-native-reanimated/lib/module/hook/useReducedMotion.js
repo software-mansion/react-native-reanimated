@@ -1,6 +1,6 @@
 'use strict';
 
-import { isReducedMotionEnabledInSystem } from "../ReducedMotion.js";
+import { isReducedMotionEnabledInSystem } from '../ReducedMotion';
 const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
 
 /**

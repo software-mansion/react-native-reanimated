@@ -2,12 +2,12 @@
 'use strict';
 
 import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
-import { ReanimatedError, registerReanimatedError, SHOULD_BE_USE_WEB } from "../common/index.js";
+import { ReanimatedError, registerReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { checkCppVersion } from "../platform-specific/checkCppVersion.js";
-import { jsVersion } from "../platform-specific/jsVersion.js";
-import { assertWorkletsVersion } from "../platform-specific/workletsVersion.js";
-import { ReanimatedTurboModule } from "../specs/index.js";
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import { assertWorkletsVersion } from '../platform-specific/workletsVersion';
+import { ReanimatedTurboModule } from '../specs';
 export function createNativeReanimatedModule() {
   return new NativeReanimatedModule();
 }

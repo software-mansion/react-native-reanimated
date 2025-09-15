@@ -1,7 +1,7 @@
 'use strict';
 
-import { RNScreensTurboModule } from "./RNScreensTurboModule.js";
-import { applyStyle, applyStyleForBelowTopScreen } from "./styleUpdater.js";
+import { RNScreensTurboModule } from './RNScreensTurboModule';
+import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 const BASE_VELOCITY = 400;
 const ADDITIONAL_VELOCITY_FACTOR_X = 400;
 const ADDITIONAL_VELOCITY_FACTOR_Y = 500;

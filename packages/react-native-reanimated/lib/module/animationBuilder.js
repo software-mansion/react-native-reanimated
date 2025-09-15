@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "./common/index.js";
+import { logger } from './common';
 const mockTargetValues = {
   targetOriginX: 0,
   targetOriginY: 0,

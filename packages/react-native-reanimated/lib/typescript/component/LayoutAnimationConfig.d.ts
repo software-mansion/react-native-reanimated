@@ -16,7 +16,7 @@ interface LayoutAnimationConfigProps {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
  */
 export declare class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
-    getMaybeWrappedChildren(): string | number | bigint | boolean | import("react").ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | import("react").ReactPortal | import("react").ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | import("react").JSX.Element[] | null | undefined;
+    getMaybeWrappedChildren(): string | number | bigint | boolean | import("react").ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<string | number | bigint | boolean | import("react").ReactPortal | import("react").ReactElement<unknown, string | import("react").JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | import("react/jsx-runtime").JSX.Element[] | null | undefined;
     setShouldAnimateExiting(): void;
     componentWillUnmount(): void;
     render(): ReactNode;

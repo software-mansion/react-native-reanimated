@@ -1,6 +1,6 @@
 'use strict';
 
-import { maybeAddSuffix } from "../../../../common/index.js";
+import { maybeAddSuffix } from '../../../../common';
 const FILTER_SUFFIXES = {
   brightness: '%',
   blur: 'px',

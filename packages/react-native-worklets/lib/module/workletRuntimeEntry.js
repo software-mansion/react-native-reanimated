@@ -1,9 +1,9 @@
 'use strict';
 
-import { init } from "./initializers.js";
-import { SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
-import { RuntimeKind } from "./runtimeKind.js";
-import { WorkletsError } from "./WorkletsError.js";
+import { init } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
+import { WorkletsError } from './WorkletsError';
 
 /**
  * This function is an entry point for Worklet Runtimes. We can use it to setup

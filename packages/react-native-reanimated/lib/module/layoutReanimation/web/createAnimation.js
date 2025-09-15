@@ -1,14 +1,14 @@
 'use strict';
 
-import { convertAnimationObjectToKeyframes } from "./animationParser.js";
-import { AnimationsData, TransitionType } from "./config.js";
-import { insertWebAnimation } from "./domUtils.js";
-import { CurvedTransition } from "./transition/Curved.web.js";
-import { EntryExitTransition } from "./transition/EntryExit.web.js";
-import { FadingTransition } from "./transition/Fading.web.js";
-import { JumpingTransition } from "./transition/Jumping.web.js";
-import { LinearTransition } from "./transition/Linear.web.js";
-import { SequencedTransition } from "./transition/Sequenced.web.js";
+import { convertAnimationObjectToKeyframes } from './animationParser';
+import { AnimationsData, TransitionType } from './config';
+import { insertWebAnimation } from './domUtils';
+import { CurvedTransition } from './transition/Curved.web';
+import { EntryExitTransition } from './transition/EntryExit.web';
+import { FadingTransition } from './transition/Fading.web';
+import { JumpingTransition } from './transition/Jumping.web';
+import { LinearTransition } from './transition/Linear.web';
+import { SequencedTransition } from './transition/Sequenced.web';
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.

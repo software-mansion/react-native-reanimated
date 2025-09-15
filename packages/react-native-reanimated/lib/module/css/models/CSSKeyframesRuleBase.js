@@ -1,6 +1,6 @@
 'use strict';
 
-import { ANIMATION_NAME_PREFIX } from "../constants/index.js";
+import { ANIMATION_NAME_PREFIX } from '../constants';
 export default class CSSKeyframesRuleBase {
   static currentAnimationID = 0;
 

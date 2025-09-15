@@ -45,6 +45,6 @@ export default class AnimatedComponent extends ReanimatedAnimatedComponent<Anima
     _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void;
     _configureLayoutAnimation(type: LayoutAnimationType, currentConfig: LayoutAnimationOrBuilder | undefined, previousConfig?: LayoutAnimationOrBuilder): void;
     getSnapshotBeforeUpdate(): DOMRect | null;
-    render(): React.JSX.Element;
+    render(): import("react/jsx-runtime").JSX.Element;
 }
 //# sourceMappingURL=AnimatedComponent.d.ts.map

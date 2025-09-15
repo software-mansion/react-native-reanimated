@@ -1,8 +1,8 @@
 'use strict';
 
 import { useEffect, useRef } from 'react';
-import { KeyboardState } from "../commonTypes.js";
-import { makeMutable, subscribeForKeyboardEvents, unsubscribeFromKeyboardEvents } from "../core.js";
+import { KeyboardState } from '../commonTypes';
+import { makeMutable, subscribeForKeyboardEvents, unsubscribeFromKeyboardEvents } from '../core';
 
 /**
  * Lets you synchronously get the position and state of the keyboard.

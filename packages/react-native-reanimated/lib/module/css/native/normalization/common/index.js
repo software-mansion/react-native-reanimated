@@ -1,4 +1,4 @@
 'use strict';
 
-export { normalizeDelay, normalizeDuration, normalizeTimingFunction } from "./settings.js";
+export { normalizeDelay, normalizeDuration, normalizeTimingFunction } from './settings';
 //# sourceMappingURL=index.js.map

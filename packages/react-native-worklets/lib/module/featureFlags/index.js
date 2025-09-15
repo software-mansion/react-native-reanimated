@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger } from "../logger.js";
-import { WorkletsModule } from "../WorkletsModule/index.js";
+import { logger } from '../logger';
+import { WorkletsModule } from '../WorkletsModule';
 export const DynamicFlags = {
   EXAMPLE_DYNAMIC_FLAG: true,
   init() {

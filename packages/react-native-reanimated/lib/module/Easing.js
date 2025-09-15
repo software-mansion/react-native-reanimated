@@ -1,6 +1,6 @@
 'use strict';
 
-import { Bezier } from "./Bezier.js";
+import { Bezier } from './Bezier';
 
 /**
  * The `Easing` module implements common easing functions. This module is used

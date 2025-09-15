@@ -1,7 +1,7 @@
 'use strict';
 
 import { Animated as AnimatedRN, Image as ImageRN, processColor as processColorRN, Text as TextRN, View as ViewRN } from 'react-native';
-import { advanceAnimationByFrame, advanceAnimationByTime, ColorSpace, Extrapolation, getAnimatedStyle, InterfaceOrientation, IOSReferenceFrame, KeyboardState, reanimatedVersion, ReduceMotion, SensorType, setUpTests, withReanimatedTimer } from "./index.js";
+import { advanceAnimationByFrame, advanceAnimationByTime, ColorSpace, Extrapolation, getAnimatedStyle, InterfaceOrientation, IOSReferenceFrame, KeyboardState, reanimatedVersion, ReduceMotion, SensorType, setUpTests, withReanimatedTimer } from './index';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const NOOP = () => {};

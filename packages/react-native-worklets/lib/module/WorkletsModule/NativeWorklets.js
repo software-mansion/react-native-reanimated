@@ -1,10 +1,10 @@
 'use strict';
 
-import { RuntimeKind } from "../runtimeKind.js";
-import { WorkletsTurboModule } from "../specs/index.js";
-import { checkCppVersion } from "../utils/checkCppVersion.js";
-import { jsVersion } from "../utils/jsVersion.js";
-import { WorkletsError } from "../WorkletsError.js";
+import { RuntimeKind } from '../runtimeKind';
+import { WorkletsTurboModule } from '../specs';
+import { checkCppVersion } from '../utils/checkCppVersion';
+import { jsVersion } from '../utils/jsVersion';
+import { WorkletsError } from '../WorkletsError';
 export function createNativeWorkletsModule() {
   return new NativeWorklets();
 }

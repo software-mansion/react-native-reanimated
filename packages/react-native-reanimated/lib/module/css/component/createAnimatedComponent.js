@@ -1,7 +1,7 @@
 'use strict';
 
 import React from 'react';
-import AnimatedComponentImpl from "./AnimatedComponent.js";
+import AnimatedComponentImpl from './AnimatedComponent';
 
 // Don't change the order of overloads, since such a change breaks current behavior
 
@@ -10,7 +10,7 @@ import AnimatedComponentImpl from "./AnimatedComponent.js";
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-
+import { jsx as _jsx } from "react/jsx-runtime";
 export default function createAnimatedComponent(Component) {
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${Component.displayName || Component.name || 'Component'})`;
@@ -19,12 +19,15 @@ export default function createAnimatedComponent(Component) {
     }
   }
   const animatedComponent = props => {
-    return <AnimatedComponent {...props}
-    // Needed to prevent react from signing AnimatedComponent to the ref
-    // (we want to handle the ref assignment in the AnimatedComponent)
-    ref={null} {...props.ref === null ? null : {
-      forwardedRef: props.ref
-    }} />;
+    return /*#__PURE__*/_jsx(AnimatedComponent, {
+      ...props,
+      // Needed to prevent react from signing AnimatedComponent to the ref
+      // (we want to handle the ref assignment in the AnimatedComponent)
+      ref: null,
+      ...(props.ref === null ? null : {
+        forwardedRef: props.ref
+      })
+    });
   };
   animatedComponent.displayName = Component.displayName || Component.name || 'Component';
   return animatedComponent;

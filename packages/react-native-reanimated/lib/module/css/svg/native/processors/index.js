@@ -1,7 +1,7 @@
 'use strict';
 
-export * from "./colors.js";
-export * from "./opacity.js";
-export * from "./others.js";
-export { processStrokeDashArray } from "./stroke.js";
+export * from './colors';
+export * from './opacity';
+export * from './others';
+export { processStrokeDashArray } from './stroke';
 //# sourceMappingURL=index.js.map

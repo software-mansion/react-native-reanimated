@@ -1,7 +1,7 @@
 'use strict';
 
-import { IS_WEB, IS_WINDOW_AVAILABLE } from "./common/index.js";
-import { makeMutable } from "./mutables.js";
+import { IS_WEB, IS_WINDOW_AVAILABLE } from './common';
+import { makeMutable } from './mutables';
 export function isReducedMotionEnabledInSystem() {
   return IS_WEB ? IS_WINDOW_AVAILABLE ?
   // @ts-ignore Fallback if `window` is undefined.

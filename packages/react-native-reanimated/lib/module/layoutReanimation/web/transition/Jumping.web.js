@@ -1,6 +1,6 @@
 'use strict';
 
-import { Easing } from "../../../Easing.js";
+import { Easing } from '../../../Easing';
 export function JumpingTransition(name, transitionData) {
   const {
     translateX,

@@ -2,20 +2,24 @@
 
 import { useMemo, useRef } from 'react';
 import { FlatList } from 'react-native';
-import { createAnimatedComponent } from "../createAnimatedComponent/index.js";
-import { LayoutAnimationConfig } from "./LayoutAnimationConfig.js";
-import { AnimatedView } from "./View.js";
+import { createAnimatedComponent } from '../createAnimatedComponent';
+import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import { AnimatedView } from './View';
+import { jsx as _jsx } from "react/jsx-runtime";
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 const createCellRendererComponent = (itemLayoutAnimationRef, cellRendererComponentStyleRef) => {
   const CellRendererComponent = props => {
-    return <AnimatedView
+    return /*#__PURE__*/_jsx(AnimatedView
     // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
-    layout={itemLayoutAnimationRef?.current} onLayout={props.onLayout} style={[props.style, typeof cellRendererComponentStyleRef?.current === 'function' ? cellRendererComponentStyleRef?.current({
-      index: props.index,
-      item: props.item
-    }) : cellRendererComponentStyleRef?.current]}>
-        {props.children}
-      </AnimatedView>;
+    , {
+      layout: itemLayoutAnimationRef?.current,
+      onLayout: props.onLayout,
+      style: [props.style, typeof cellRendererComponentStyleRef?.current === 'function' ? cellRendererComponentStyleRef?.current({
+        index: props.index,
+        item: props.item
+      }) : cellRendererComponentStyleRef?.current],
+      children: props.children
+    });
   };
   return CellRendererComponent;
 };
@@ -47,14 +51,21 @@ const FlatListRender = function (props, ref) {
   cellRendererComponentStyleRef.current = CellRendererComponentStyle;
   const CellRendererComponent = useMemo(() => createCellRendererComponent(itemLayoutAnimationRef, cellRendererComponentStyleRef), []);
   const animatedFlatList =
+  /*#__PURE__*/
   // @ts-expect-error In its current type state, createAnimatedComponent cannot create generic components.
-  <AnimatedFlatList ref={ref} {...restProps} CellRendererComponent={CellRendererComponent} />;
+  _jsx(AnimatedFlatList, {
+    ref: ref,
+    ...restProps,
+    CellRendererComponent: CellRendererComponent
+  });
   if (skipEnteringExitingAnimations === undefined) {
     return animatedFlatList;
   }
-  return <LayoutAnimationConfig skipEntering skipExiting>
-      {animatedFlatList}
-    </LayoutAnimationConfig>;
+  return /*#__PURE__*/_jsx(LayoutAnimationConfig, {
+    skipEntering: true,
+    skipExiting: true,
+    children: animatedFlatList
+  });
 };
 export const ReanimatedFlatList = FlatListRender;
 

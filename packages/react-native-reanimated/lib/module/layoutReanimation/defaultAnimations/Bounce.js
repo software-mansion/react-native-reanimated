@@ -1,7 +1,7 @@
 'use strict';
 
-import { withSequence, withTiming } from "../../animation/index.js";
-import { ComplexAnimationBuilder } from "../animationBuilder/index.js";
+import { withSequence, withTiming } from '../../animation';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Bounce entering animation. You can modify the behavior by chaining methods

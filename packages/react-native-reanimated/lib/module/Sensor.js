@@ -1,7 +1,7 @@
 'use strict';
 
-import { SensorType } from "./commonTypes.js";
-import { makeMutable } from "./mutables.js";
+import { SensorType } from './commonTypes';
+import { makeMutable } from './mutables';
 import { ReanimatedModule } from './ReanimatedModule';
 function initSensorData(sensorType) {
   if (sensorType === SensorType.ROTATION) {

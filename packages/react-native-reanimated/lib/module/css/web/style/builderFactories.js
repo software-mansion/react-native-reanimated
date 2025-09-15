@@ -1,7 +1,7 @@
 'use strict';
 
-import { hasSuffix } from "../../../common/index.js";
-import { hasProp, isConfigPropertyAlias, isDefined, isRecord, kebabizeCamelCase } from "../../utils/index.js";
+import { hasSuffix } from '../../../common';
+import { hasProp, isConfigPropertyAlias, isDefined, isRecord, kebabizeCamelCase } from '../../utils';
 const hasValueProcessor = configValue => typeof configValue === 'object' && configValue !== null && 'process' in configValue;
 class BuilderBase {
   processedProps = {};

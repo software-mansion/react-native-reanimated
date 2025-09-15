@@ -1,7 +1,7 @@
 'use strict';
 
 import { runOnUI } from 'react-native-worklets';
-import { prepareUIRegistry } from "./FrameCallbackRegistryUI.js";
+import { prepareUIRegistry } from './FrameCallbackRegistryUI';
 export default class FrameCallbackRegistryJS {
   nextCallbackId = 0;
   constructor() {

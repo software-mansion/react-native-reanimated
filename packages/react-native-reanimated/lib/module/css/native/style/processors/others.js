@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
+import { ReanimatedError } from '../../../../common';
 export const ERROR_MESSAGES = {
   unsupportedAspectRatio: ratio => `Unsupported aspect ratio: ${ratio}. Expected a number or a string in "a/b" format.`
 };

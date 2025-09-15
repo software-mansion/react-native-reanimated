@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { isAngle, isNumber, isNumberArray, isPercentage } from "../../../utils/index.js";
+import { ReanimatedError } from '../../../../common';
+import { isAngle, isNumber, isNumberArray, isPercentage } from '../../../utils';
 export const ERROR_MESSAGES = {
   invalidTransform: transform => `Invalid transform property: ${transform}`
 };

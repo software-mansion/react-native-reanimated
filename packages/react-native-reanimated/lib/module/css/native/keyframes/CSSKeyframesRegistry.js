@@ -1,6 +1,6 @@
 'use strict';
 
-import { registerCSSKeyframes, unregisterCSSKeyframes } from "../proxy.js";
+import { registerCSSKeyframes, unregisterCSSKeyframes } from '../proxy';
 /**
  * This class is responsible for managing the registry of CSS animation
  * keyframes. It keeps track of views that use specific animations and handles

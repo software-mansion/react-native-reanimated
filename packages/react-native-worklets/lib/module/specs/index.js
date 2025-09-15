@@ -1,7 +1,7 @@
 'use strict';
 
-import { RuntimeKind } from "../runtimeKind.js";
-import RNWorkletsTurboModule from "./NativeWorkletsModule.js";
+import { RuntimeKind } from '../runtimeKind';
+import RNWorkletsTurboModule from './NativeWorkletsModule';
 export const WorkletsTurboModule = globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative ? RNWorkletsTurboModule :
 // In Bundle Mode, on Worklet Runtimes `RNWorkletsTurboModule` isn't
 // available and shouldn't be accessed. We return null here

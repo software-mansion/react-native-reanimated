@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger } from "../common/index.js";
-import { defineAnimation, getReduceMotionForAnimation, recognizePrefixSuffix } from "./util.js";
+import { logger } from '../common';
+import { defineAnimation, getReduceMotionForAnimation, recognizePrefixSuffix } from './util';
 export const withClamp = function (config, _animationToClamp) {
   'worklet';
 

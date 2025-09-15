@@ -1,7 +1,7 @@
 'use strict';
 
-import { createSerializable, isSerializableRef, makeShareable, makeShareableCloneOnUIRecursive } from "./serializable.js";
-import { serializableMappingCache } from "./serializableMappingCache.js";
+import { createSerializable, isSerializableRef, makeShareable, makeShareableCloneOnUIRecursive } from './serializable';
+import { serializableMappingCache } from './serializableMappingCache';
 
 /** @deprecated Use {@link SerializableRef} instead. */
 

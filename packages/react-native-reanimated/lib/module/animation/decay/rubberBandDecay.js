@@ -1,6 +1,6 @@
 'use strict';
 
-import { SLOPE_FACTOR, VELOCITY_EPS } from "./utils.js";
+import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 const DERIVATIVE_EPS = 0.1;
 export function rubberBandDecay(animation, now, config) {
   'worklet';

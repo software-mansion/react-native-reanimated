@@ -1,8 +1,8 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { MILLISECONDS_REGEX, SECONDS_REGEX, VALID_PREDEFINED_TIMING_FUNCTIONS } from "../../../constants/index.js";
-import { isPredefinedTimingFunction } from "../../../utils/index.js";
+import { ReanimatedError } from '../../../../common';
+import { MILLISECONDS_REGEX, SECONDS_REGEX, VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../constants';
+import { isPredefinedTimingFunction } from '../../../utils';
 export const ERROR_MESSAGES = {
   invalidDelay: timeUnit => `Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
   invalidDuration: duration => `Invalid duration "${duration}". Expected a number, "ms", or "s".`,

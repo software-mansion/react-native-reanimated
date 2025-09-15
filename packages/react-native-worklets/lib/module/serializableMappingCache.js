@@ -1,6 +1,6 @@
 'use strict';
 
-import { SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 /**
  * This symbol is used to represent a mapping from the value to itself.
  *

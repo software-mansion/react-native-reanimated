@@ -1,1 +1,1 @@
-{"version":3,"names":["default","cssKeyframesRegistry","CSSKeyframesRuleImpl"],"sourceRoot":"../../../../../src","sources":["css/native/keyframes/index.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,OAAO,IAAIC,oBAAoB,QAAQ,2BAAwB;AACxE,SAASD,OAAO,IAAIE,oBAAoB,QAAQ,2BAAwB","ignoreList":[]}
+{"version":3,"names":["default","cssKeyframesRegistry","CSSKeyframesRuleImpl"],"sourceRoot":"../../../../../src","sources":["css/native/keyframes/index.ts"],"mappings":"AAAA,YAAY;;AACZ,SAASA,OAAO,IAAIC,oBAAoB,QAAQ,wBAAwB;AACxE,SAASD,OAAO,IAAIE,oBAAoB,QAAQ,wBAAwB","ignoreList":[]}

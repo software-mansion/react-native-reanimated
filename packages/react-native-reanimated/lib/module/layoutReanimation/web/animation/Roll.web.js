@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertAnimationObjectToKeyframes } from "../animationParser.js";
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 const DEFAULT_ROLL_TIME = 0.3;
 export const RollInData = {
   RollInLeft: {

@@ -1,4 +1,4 @@
 'use strict';
 
-export * from "./transition.js";
+export * from './transition';
 //# sourceMappingURL=index.js.map

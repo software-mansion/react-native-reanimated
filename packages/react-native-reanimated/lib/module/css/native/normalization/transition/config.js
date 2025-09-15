@@ -1,10 +1,10 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { areArraysEqual, convertPropertyToArray, deepEqual } from "../../../utils/index.js";
-import { normalizeDelay, normalizeDuration, normalizeTimingFunction } from "../common/index.js";
-import { normalizeTransitionBehavior } from "./settings.js";
-import { createEmptyTransitionConfig, parseTransitionShorthand } from "./shorthand.js";
+import { ReanimatedError } from '../../../../common';
+import { areArraysEqual, convertPropertyToArray, deepEqual } from '../../../utils';
+import { normalizeDelay, normalizeDuration, normalizeTimingFunction } from '../common';
+import { normalizeTransitionBehavior } from './settings';
+import { createEmptyTransitionConfig, parseTransitionShorthand } from './shorthand';
 export const ERROR_MESSAGES = {
   invalidTransitionProperty: transitionProperty => `Invalid transition property "${JSON.stringify(transitionProperty)}"`
 };

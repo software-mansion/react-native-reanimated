@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger } from "./logger.js";
-import { WorkletsError } from "./WorkletsError.js";
+import { logger } from './logger';
+import { WorkletsError } from './WorkletsError';
 const handleCache = new WeakMap();
 export function bundleValueUnpacker(objectToUnpack, category, remoteFunctionName) {
   const workletHash = objectToUnpack.__workletHash;

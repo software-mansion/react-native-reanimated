@@ -1,8 +1,8 @@
 'use strict';
 
-import { logger } from "../../common/index.js";
-import { isSharedValue } from "../../isSharedValue.js";
-import { isAnimationProp, isCSSKeyframesObject, isCSSKeyframesRule, isTransitionProp } from "./guards.js";
+import { logger } from '../../common';
+import { isSharedValue } from '../../isSharedValue';
+import { isAnimationProp, isCSSKeyframesObject, isCSSKeyframesRule, isTransitionProp } from './guards';
 export function filterCSSAndStyleProperties(style) {
   const animationProperties = {};
   let transitionProperties = {};

@@ -2,9 +2,9 @@
 'use strict';
 
 import { runOnJS, runOnUI } from 'react-native-worklets';
-import { IS_JEST, processBoxShadowNative, processBoxShadowWeb, processColorsInProps, processTransformOrigin, ReanimatedError, SHOULD_BE_USE_WEB } from "../common/index.js";
-import jsPropsUpdater from "../createAnimatedComponent/JSPropsUpdater.js";
-import { _updatePropsJS } from "../ReanimatedModule/js-reanimated/index.js";
+import { IS_JEST, processBoxShadowNative, processBoxShadowWeb, processColorsInProps, processTransformOrigin, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
+import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 let updateProps;
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {

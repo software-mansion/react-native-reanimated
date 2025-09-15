@@ -1,4 +1,4 @@
 'use strict';
 
-export { CSSKeyframesRuleImpl, CSSManager } from "./web/index.js";
+export { CSSKeyframesRuleImpl, CSSManager } from './web';
 //# sourceMappingURL=platform.web.js.map

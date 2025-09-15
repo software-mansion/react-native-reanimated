@@ -1,9 +1,9 @@
 'use strict';
 
 import { useEffect } from 'react';
-import { SHOULD_BE_USE_WEB } from "../common/index.js";
-import { startMapper, stopMapper } from "../core.js";
-import { useSharedValue } from "./useSharedValue.js";
+import { SHOULD_BE_USE_WEB } from '../common';
+import { startMapper, stopMapper } from '../core';
+import { useSharedValue } from './useSharedValue';
 
 /**
  * Lets you to respond to changes in a [shared

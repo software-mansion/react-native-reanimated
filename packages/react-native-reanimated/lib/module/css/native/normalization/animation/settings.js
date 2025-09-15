@@ -1,9 +1,9 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { deepEqual, isNumber } from "../../../utils/index.js";
-import { normalizeDelay, normalizeDuration, normalizeTimingFunction } from "../common/index.js";
-import { VALID_ANIMATION_DIRECTIONS, VALID_FILL_MODES, VALID_PLAY_STATES } from "./constants.js";
+import { ReanimatedError } from '../../../../common';
+import { deepEqual, isNumber } from '../../../utils';
+import { normalizeDelay, normalizeDuration, normalizeTimingFunction } from '../common';
+import { VALID_ANIMATION_DIRECTIONS, VALID_FILL_MODES, VALID_PLAY_STATES } from './constants';
 export const ERROR_MESSAGES = {
   invalidAnimationDirection: direction => `Invalid animation direction "${direction}".`,
   invalidIterationCount: iterationCount => `Invalid iteration count "${iterationCount}". Expected a number or "infinite".`,

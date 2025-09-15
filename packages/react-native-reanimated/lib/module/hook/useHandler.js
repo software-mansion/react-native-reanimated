@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
-import { IS_JEST, IS_WEB, ReanimatedError } from "../common/index.js";
-import { areDependenciesEqual, buildDependencies } from "./utils.js";
+import { IS_JEST, IS_WEB, ReanimatedError } from '../common';
+import { areDependenciesEqual, buildDependencies } from './utils';
 
 /**
  * Lets you find out whether the event handler dependencies have changed.

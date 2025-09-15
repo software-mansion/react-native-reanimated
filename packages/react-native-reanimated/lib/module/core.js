@@ -2,11 +2,11 @@
 
 import { controlEdgeToEdgeValues, isEdgeToEdge } from 'react-native-is-edge-to-edge';
 import { createSerializable } from 'react-native-worklets';
-import { logger, ReanimatedError } from "./common/index.js";
+import { logger, ReanimatedError } from './common';
 import { ReanimatedModule } from './ReanimatedModule';
-import { SensorContainer } from "./SensorContainer.js";
-export { startMapper, stopMapper } from "./mappers.js";
-export { makeMutable } from "./mutables.js";
+import { SensorContainer } from './SensorContainer';
+export { startMapper, stopMapper } from './mappers';
+export { makeMutable } from './mutables';
 const EDGE_TO_EDGE = isEdgeToEdge();
 
 /**

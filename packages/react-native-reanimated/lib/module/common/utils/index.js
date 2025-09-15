@@ -1,6 +1,6 @@
 'use strict';
 
-export * from "./guards.js";
-export * from "./parsers.js";
-export * from "./suffix.js";
+export * from './guards';
+export * from './parsers';
+export * from './suffix';
 //# sourceMappingURL=index.js.map

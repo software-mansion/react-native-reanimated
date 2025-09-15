@@ -1,6 +1,6 @@
 'use strict';
 
-import { defineAnimation, getReduceMotionForAnimation } from "./util.js";
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 

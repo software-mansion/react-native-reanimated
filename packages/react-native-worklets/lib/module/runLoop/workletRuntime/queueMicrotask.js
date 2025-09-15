@@ -1,6 +1,6 @@
 'use strict';
 
-import { pushMicrotask } from "./taskQueue.js";
+import { pushMicrotask } from './taskQueue';
 export function setupQueueMicrotask() {
   'worklet';
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ComplexAnimationBuilder } from "../animationBuilder/index.js";
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the

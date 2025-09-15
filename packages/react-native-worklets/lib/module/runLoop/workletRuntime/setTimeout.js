@@ -1,6 +1,6 @@
 'use strict';
 
-import { pushTask } from "./taskQueue.js";
+import { pushTask } from './taskQueue';
 export function setupSetTimeout() {
   'worklet';
 

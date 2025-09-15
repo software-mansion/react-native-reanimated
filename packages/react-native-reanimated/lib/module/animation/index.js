@@ -1,12 +1,12 @@
 'use strict';
 
-export { withClamp } from "./clamp.js";
-export { withDecay } from "./decay/index.js";
-export { withDelay } from "./delay.js";
-export { withRepeat } from "./repeat.js";
-export { withSequence } from "./sequence.js";
-export { GentleSpringConfig, GentleSpringConfigWithDuration, Reanimated3DefaultSpringConfig, Reanimated3DefaultSpringConfigWithDuration, SnappySpringConfig, SnappySpringConfigWithDuration, WigglySpringConfig, WigglySpringConfigWithDuration, withSpring } from "./spring/index.js";
-export { withStyleAnimation } from "./styleAnimation.js";
-export { withTiming } from "./timing.js";
-export { cancelAnimation, defineAnimation, initialUpdaterRun } from "./util.js";
+export { withClamp } from './clamp';
+export { withDecay } from './decay';
+export { withDelay } from './delay';
+export { withRepeat } from './repeat';
+export { withSequence } from './sequence';
+export { GentleSpringConfig, GentleSpringConfigWithDuration, Reanimated3DefaultSpringConfig, Reanimated3DefaultSpringConfigWithDuration, SnappySpringConfig, SnappySpringConfigWithDuration, WigglySpringConfig, WigglySpringConfigWithDuration, withSpring } from './spring';
+export { withStyleAnimation } from './styleAnimation';
+export { withTiming } from './timing';
+export { cancelAnimation, defineAnimation, initialUpdaterRun } from './util';
 //# sourceMappingURL=index.js.map

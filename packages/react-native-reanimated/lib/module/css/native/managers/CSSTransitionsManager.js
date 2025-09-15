@@ -1,7 +1,7 @@
 'use strict';
 
-import { getNormalizedCSSTransitionConfigUpdates, normalizeCSSTransitionProperties } from "../normalization/index.js";
-import { registerCSSTransition, unregisterCSSTransition, updateCSSTransition } from "../proxy.js";
+import { getNormalizedCSSTransitionConfigUpdates, normalizeCSSTransitionProperties } from '../normalization';
+import { registerCSSTransition, unregisterCSSTransition, updateCSSTransition } from '../proxy';
 export default class CSSTransitionsManager {
   transitionConfig = null;
   constructor(shadowNodeWrapper, viewTag) {

@@ -1,4 +1,4 @@
 'use strict';
 
-export { CSSKeyframesRuleImpl, CSSManager } from "./native/index.js";
+export { CSSKeyframesRuleImpl, CSSManager } from './native';
 //# sourceMappingURL=platform.js.map

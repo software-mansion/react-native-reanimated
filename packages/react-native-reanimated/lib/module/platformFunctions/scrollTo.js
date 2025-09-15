@@ -1,6 +1,6 @@
 'use strict';
 
-import { IS_JEST, logger, SHOULD_BE_USE_WEB } from "../common/index.js";
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import { dispatchCommand } from './dispatchCommand';
 /**
  * Lets you synchronously scroll to a given position of a `ScrollView`.

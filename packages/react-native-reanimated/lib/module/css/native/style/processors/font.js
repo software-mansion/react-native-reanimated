@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { FONT_WEIGHT_MAPPINGS } from "../../../constants/index.js";
+import { ReanimatedError } from '../../../../common';
+import { FONT_WEIGHT_MAPPINGS } from '../../../constants';
 const ERROR_MESSAGES = {
   invalidFontWeight: weight => `Invalid font weight value: ${weight}`
 };

@@ -1,8 +1,8 @@
 'use strict';
 
 import { useEffect, useState } from 'react';
-import { cancelAnimation } from "../animation/index.js";
-import { makeMutable } from "../core.js";
+import { cancelAnimation } from '../animation';
+import { makeMutable } from '../core';
 
 /**
  * Lets you define [shared

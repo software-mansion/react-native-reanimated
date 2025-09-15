@@ -27,6 +27,6 @@ export default class AnimatedComponent<P extends AnyRecord = AnimatedComponentPr
     componentDidMount(): void;
     componentWillUnmount(): void;
     shouldComponentUpdate(nextProps: P): boolean;
-    render(props?: ComponentProps<AnyComponent>): import("react").JSX.Element;
+    render(props?: ComponentProps<AnyComponent>): import("react/jsx-runtime").JSX.Element;
 }
 //# sourceMappingURL=AnimatedComponent.d.ts.map

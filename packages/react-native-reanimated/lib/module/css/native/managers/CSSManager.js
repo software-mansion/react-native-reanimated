@@ -1,11 +1,11 @@
 'use strict';
 
-import { ReanimatedError } from "../../../common/index.js";
-import { filterCSSAndStyleProperties } from "../../utils/index.js";
-import { setViewStyle } from "../proxy.js";
-import { getStyleBuilder, hasStyleBuilder } from "../registry.js";
-import CSSAnimationsManager from "./CSSAnimationsManager.js";
-import CSSTransitionsManager from "./CSSTransitionsManager.js";
+import { ReanimatedError } from '../../../common';
+import { filterCSSAndStyleProperties } from '../../utils';
+import { setViewStyle } from '../proxy';
+import { getStyleBuilder, hasStyleBuilder } from '../registry';
+import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionsManager from './CSSTransitionsManager';
 export default class CSSManager {
   styleBuilder = null;
   isFirstUpdate = true;

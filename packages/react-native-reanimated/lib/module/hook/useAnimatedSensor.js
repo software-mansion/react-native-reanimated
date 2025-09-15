@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { callMicrotasks } from 'react-native-worklets';
-import { InterfaceOrientation, IOSReferenceFrame, SensorType } from "../commonTypes.js";
-import { initializeSensor, registerSensor, unregisterSensor } from "../core.js";
+import { InterfaceOrientation, IOSReferenceFrame, SensorType } from '../commonTypes';
+import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237

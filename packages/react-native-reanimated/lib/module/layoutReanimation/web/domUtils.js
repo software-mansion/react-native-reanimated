@@ -1,8 +1,8 @@
 'use strict';
 
-import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from "../../common/index.js";
-import { setElementPosition, snapshots } from "./componentStyle.js";
-import { Animations } from "./config.js";
+import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
+import { setElementPosition, snapshots } from './componentStyle';
+import { Animations } from './config';
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
 const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
 

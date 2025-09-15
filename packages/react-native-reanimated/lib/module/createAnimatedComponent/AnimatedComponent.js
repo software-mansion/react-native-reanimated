@@ -1,19 +1,19 @@
 'use strict';
 
-import "../layoutReanimation/animationsManager.js";
-import { maybeBuild } from "../animationBuilder.js";
-import { IS_JEST, IS_WEB, logger } from "../common/index.js";
-import { LayoutAnimationType } from "../commonTypes.js";
-import { SkipEnteringContext } from "../component/LayoutAnimationConfig.js";
-import ReanimatedAnimatedComponent from "../css/component/AnimatedComponent.js";
-import { configureWebLayoutAnimations, getReducedMotionFromConfig, saveSnapshot, startWebLayoutAnimation, tryActivateLayoutTransition } from "../layoutReanimation/web/index.js";
-import { addHTMLMutationObserver } from "../layoutReanimation/web/domUtils.js";
-import { updateLayoutAnimations } from "../UpdateLayoutAnimations.js";
-import { InlinePropManager } from "./InlinePropManager.js";
-import jsPropsUpdater from "./JSPropsUpdater.js";
-import { NativeEventsManager } from "./NativeEventsManager.js";
-import { PropsFilter } from "./PropsFilter.js";
-import { filterStyles, flattenArray } from "./utils.js";
+import '../layoutReanimation/animationsManager';
+import { maybeBuild } from '../animationBuilder';
+import { IS_JEST, IS_WEB, logger } from '../common';
+import { LayoutAnimationType } from '../commonTypes';
+import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { configureWebLayoutAnimations, getReducedMotionFromConfig, saveSnapshot, startWebLayoutAnimation, tryActivateLayoutTransition } from '../layoutReanimation/web';
+import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
+import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
+import { InlinePropManager } from './InlinePropManager';
+import jsPropsUpdater from './JSPropsUpdater';
+import { NativeEventsManager } from './NativeEventsManager';
+import { PropsFilter } from './PropsFilter';
+import { filterStyles, flattenArray } from './utils';
 let id = 0;
 if (IS_WEB) {
   configureWebLayoutAnimations();

@@ -1,6 +1,6 @@
 'use strict';
 
-import { AnimationsData } from "../config.js";
+import { AnimationsData } from '../config';
 const ExitingFinalStep = 49;
 const EnteringStartStep = 50;
 // Layout transitions on web work in "reverse order". It means that the element is rendered at its destination and then, at the beginning of the animation,

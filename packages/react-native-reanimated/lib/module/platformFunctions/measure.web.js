@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "../common/index.js";
+import { logger } from '../common';
 export function measure(animatedRef) {
   const element = animatedRef();
   if (!element) {

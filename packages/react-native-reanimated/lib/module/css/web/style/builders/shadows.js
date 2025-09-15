@@ -1,9 +1,9 @@
 'use strict';
 
-import { logger } from "../../../../common/index.js";
-import { opacifyColor } from "../../utils.js";
-import { createRuleBuilder } from "../builderFactories.js";
-import { processColor } from "../processors/index.js";
+import { logger } from '../../../../common';
+import { opacifyColor } from '../../utils';
+import { createRuleBuilder } from '../builderFactories';
+import { processColor } from '../processors';
 const processShadowOffset = value => `${value.width}px ${value.height}px`;
 export const boxShadowBuilder = createRuleBuilder({
   shadowColor: {

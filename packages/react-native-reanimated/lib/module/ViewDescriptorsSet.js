@@ -1,6 +1,6 @@
 'use strict';
 
-import { makeMutable } from "./core.js";
+import { makeMutable } from './core';
 export function makeViewDescriptorsSet() {
   const shareableViewDescriptors = makeMutable([]);
   const data = {

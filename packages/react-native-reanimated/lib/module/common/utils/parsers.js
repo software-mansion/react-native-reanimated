@@ -1,7 +1,7 @@
 'use strict';
 'worklet';
 
-import { isLength } from "../utils/guards.js";
+import { isLength } from '../utils/guards';
 const LENGTH_MAPPINGS = ['offsetX', 'offsetY', 'blurRadius', 'spreadDistance'];
 const SHADOW_PARTS_REGEX = /(?:[^\s()]+|\([^()]*\))+/g;
 const SHADOW_SPLIT_REGEX = /(?:[^,()]+|\([^)]*\))+(?=\s*,|$)/g;

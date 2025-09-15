@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertPropertyToArray, parseSingleTransitionShorthand, splitByComma } from "../../utils/index.js";
+import { convertPropertyToArray, parseSingleTransitionShorthand, splitByComma } from '../../utils';
 const createEmptyTransitionConfig = () => ({
   transitionProperty: [],
   transitionDuration: [],

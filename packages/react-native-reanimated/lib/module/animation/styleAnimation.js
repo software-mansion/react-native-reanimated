@@ -1,9 +1,9 @@
 'use strict';
 
-import { ColorProperties } from "../Colors.js";
-import { logger, processColor } from "../common/index.js";
-import { withTiming } from "./timing.js";
-import { defineAnimation, isValidLayoutAnimationProp } from "./util.js";
+import { ColorProperties } from '../Colors';
+import { logger, processColor } from '../common';
+import { withTiming } from './timing';
+import { defineAnimation, isValidLayoutAnimationProp } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined

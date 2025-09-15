@@ -1,8 +1,8 @@
 'use strict';
 
-export { processColor } from "./colors.js";
-export { processFontWeight } from "./font.js";
-export { processInset, processInsetBlock, processInsetInline } from "./insets.js";
-export { processAspectRatio, processGap } from "./others.js";
-export { processTransform } from "./transform.js";
+export { processColor } from './colors';
+export { processFontWeight } from './font';
+export { processInset, processInsetBlock, processInsetInline } from './insets';
+export { processAspectRatio, processGap } from './others';
+export { processTransform } from './transform';
 //# sourceMappingURL=index.js.map

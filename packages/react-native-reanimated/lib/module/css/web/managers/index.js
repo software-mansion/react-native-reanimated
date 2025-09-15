@@ -1,4 +1,4 @@
 'use strict';
 
-export { default as CSSManager } from "./CSSManager.js";
+export { default as CSSManager } from './CSSManager';
 //# sourceMappingURL=index.js.map

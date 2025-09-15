@@ -1,7 +1,7 @@
 'use strict';
 
 import { RuntimeKind } from 'react-native-worklets';
-import { IS_JEST, logger, SHOULD_BE_USE_WEB } from "../common/index.js";
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 /**
  * Lets you synchronously call a command of a native component.
  *

@@ -1,14 +1,14 @@
 'use strict';
 
-import { registerWorkletStackDetails } from "./errors.js";
-import { isSynchronizable } from "./isSynchronizable.js";
-import { logger } from "./logger.js";
-import { SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
-import { serializableMappingCache, serializableMappingFlag } from "./serializableMappingCache.js";
-import { jsVersion } from "./utils/jsVersion.js";
-import { isWorkletFunction } from "./workletFunction.js";
-import { WorkletsError } from "./WorkletsError.js";
-import { WorkletsModule } from "./WorkletsModule/index.js";
+import { registerWorkletStackDetails } from './errors';
+import { isSynchronizable } from './isSynchronizable';
+import { logger } from './logger';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { serializableMappingCache, serializableMappingFlag } from './serializableMappingCache';
+import { jsVersion } from './utils/jsVersion';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
 // for web and jest environments this file provides a stub implementation
 // where no serializable references are used. Instead, the objects themselves are used
 // instead of serializable references, because of the fact that we don't have to deal with

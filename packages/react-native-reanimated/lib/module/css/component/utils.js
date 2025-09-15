@@ -1,6 +1,6 @@
 'use strict';
 
-import { isCSSStyleProp } from "../utils/guards.js";
+import { isCSSStyleProp } from '../utils/guards';
 function filterNonCSSStylePropsRecursive(props) {
   if (Array.isArray(props)) {
     return props.map(prop => filterNonCSSStylePropsRecursive(prop));

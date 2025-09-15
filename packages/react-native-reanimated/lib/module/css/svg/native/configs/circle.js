@@ -1,7 +1,7 @@
 'use strict';
 
-import { processOpacity } from "../processors/index.js";
-import { commonSvgProps } from "./common.js";
+import { processOpacity } from '../processors';
+import { commonSvgProps } from './common';
 export const SVG_CIRCLE_PROPERTIES_CONFIG = {
   ...commonSvgProps,
   cx: true,

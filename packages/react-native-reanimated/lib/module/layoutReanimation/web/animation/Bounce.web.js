@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertAnimationObjectToKeyframes } from "../animationParser.js";
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 const DEFAULT_BOUNCE_TIME = 0.6;
 export const BounceInData = {
   BounceIn: {

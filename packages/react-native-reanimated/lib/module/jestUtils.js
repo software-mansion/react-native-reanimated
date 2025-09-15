@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 'use strict';
 
-import { IS_JEST, logger, ReanimatedError } from "./common/index.js";
+import { IS_JEST, logger, ReanimatedError } from './common';
 const defaultFramerateConfig = {
   fps: 60
 };

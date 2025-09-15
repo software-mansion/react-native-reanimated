@@ -1,14 +1,14 @@
 'use strict';
 
-import { setupCallGuard } from "./callGuard.js";
-import { getMemorySafeCapturableConsole, setupConsole } from "./initializers.js";
-import { SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
-import { setupRunLoop } from "./runLoop/workletRuntime/index.js";
-import { RuntimeKind } from "./runtimeKind.js";
-import { createSerializable, makeShareableCloneOnUIRecursive } from "./serializable.js";
-import { isWorkletFunction } from "./workletFunction.js";
-import { registerWorkletsError, WorkletsError } from "./WorkletsError.js";
-import { WorkletsModule } from "./WorkletsModule/index.js";
+import { setupCallGuard } from './callGuard';
+import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupRunLoop } from './runLoop/workletRuntime';
+import { RuntimeKind } from './runtimeKind';
+import { createSerializable, makeShareableCloneOnUIRecursive } from './serializable';
+import { isWorkletFunction } from './workletFunction';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly

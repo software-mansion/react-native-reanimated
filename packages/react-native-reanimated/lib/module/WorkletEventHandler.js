@@ -1,7 +1,7 @@
 'use strict';
 
-import { SHOULD_BE_USE_WEB } from "./common/index.js";
-import { registerEventHandler, unregisterEventHandler } from "./core.js";
+import { SHOULD_BE_USE_WEB } from './common';
+import { registerEventHandler, unregisterEventHandler } from './core';
 // In JS implementation (e.g. for web) we don't use Reanimated's
 // event emitter, therefore we have to handle here
 // the event that came from React Native and convert it.

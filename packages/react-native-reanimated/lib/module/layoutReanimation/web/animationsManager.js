@@ -1,14 +1,14 @@
 'use strict';
 
-import { logger } from "../../common/index.js";
-import { LayoutAnimationType } from "../../commonTypes.js";
-import { EasingNameSymbol } from "../../Easing.js";
-import { Keyframe } from "../animationBuilder/index.js";
-import { makeElementVisible } from "./componentStyle.js";
-import { getProcessedConfig, handleExitingAnimation, handleLayoutTransition, maybeModifyStyleForKeyframe, setElementAnimation } from "./componentUtils.js";
-import { Animations } from "./config.js";
-import { createAnimationWithInitialValues, createCustomKeyFrameAnimation } from "./createAnimation.js";
-import { areDOMRectsEqual } from "./domUtils.js";
+import { logger } from '../../common';
+import { LayoutAnimationType } from '../../commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import { Keyframe } from '../animationBuilder';
+import { makeElementVisible } from './componentStyle';
+import { getProcessedConfig, handleExitingAnimation, handleLayoutTransition, maybeModifyStyleForKeyframe, setElementAnimation } from './componentUtils';
+import { Animations } from './config';
+import { createAnimationWithInitialValues, createCustomKeyFrameAnimation } from './createAnimation';
+import { areDOMRectsEqual } from './domUtils';
 function chooseConfig(animationType, props) {
   const config = animationType === LayoutAnimationType.ENTERING ? props.entering : animationType === LayoutAnimationType.EXITING ? props.exiting : animationType === LayoutAnimationType.LAYOUT ? props.layout : null;
   return config;

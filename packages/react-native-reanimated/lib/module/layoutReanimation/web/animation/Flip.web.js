@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertAnimationObjectToKeyframes } from "../animationParser.js";
+import { convertAnimationObjectToKeyframes } from '../animationParser';
 const DEFAULT_FLIP_TIME = 0.3;
 export const FlipInData = {
   FlipInYRight: {

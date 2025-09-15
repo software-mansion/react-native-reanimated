@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "../common/index.js";
+import { logger } from '../common';
 function noopFactory(defaultReturnValue) {
   return () => {
     'worklet';

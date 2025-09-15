@@ -1,6 +1,6 @@
 'use strict';
 
-import { createSerializable } from "./serializable.js";
+import { createSerializable } from './serializable';
 export function __installUnpacker() {
   // TODO: Add cache for synchronizables.
   const serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? (value, _) => createSerializable(value) : globalThis._createSerializable;

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from "../../common/index.js";
+import { ReanimatedError } from '../../common';
 export const ERROR_MESSAGES = {
   invalidStepsNumber: stepsNumber => `Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`
 };

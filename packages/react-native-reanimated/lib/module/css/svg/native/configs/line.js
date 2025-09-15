@@ -1,6 +1,6 @@
 'use strict';
 
-import { commonSvgProps } from "./common.js";
+import { commonSvgProps } from './common';
 export const SVG_LINE_PROPERTIES_CONFIG = {
   ...commonSvgProps,
   x1: true,

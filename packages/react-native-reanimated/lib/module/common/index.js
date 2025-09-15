@@ -1,8 +1,8 @@
 'use strict';
 
-export * from "./constants.js";
-export * from "./errors.js";
-export * from "./logger.js";
-export * from "./processors/index.js";
-export * from "./utils/index.js";
+export * from './constants';
+export * from './errors';
+export * from './logger';
+export * from './processors';
+export * from './utils';
 //# sourceMappingURL=index.js.map

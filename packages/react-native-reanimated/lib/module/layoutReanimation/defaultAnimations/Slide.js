@@ -1,6 +1,6 @@
 'use strict';
 
-import { ComplexAnimationBuilder } from "../animationBuilder/index.js";
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Slide from right animation. You can modify the behavior by chaining methods

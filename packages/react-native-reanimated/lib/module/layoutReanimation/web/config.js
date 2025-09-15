@@ -1,15 +1,15 @@
 'use strict';
 
-import { BounceIn, BounceInData, BounceOut, BounceOutData } from "./animation/Bounce.web.js";
-import { FadeIn, FadeInData, FadeOut, FadeOutData } from "./animation/Fade.web.js";
-import { FlipIn, FlipInData, FlipOut, FlipOutData } from "./animation/Flip.web.js";
-import { LightSpeedIn, LightSpeedInData, LightSpeedOut, LightSpeedOutData } from "./animation/Lightspeed.web.js";
-import { Pinwheel, PinwheelData } from "./animation/Pinwheel.web.js";
-import { RollIn, RollInData, RollOut, RollOutData } from "./animation/Roll.web.js";
-import { RotateIn, RotateInData, RotateOut, RotateOutData } from "./animation/Rotate.web.js";
-import { SlideIn, SlideInData, SlideOut, SlideOutData } from "./animation/Slide.web.js";
-import { StretchIn, StretchInData, StretchOut, StretchOutData } from "./animation/Stretch.web.js";
-import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from "./animation/Zoom.web.js";
+import { BounceIn, BounceInData, BounceOut, BounceOutData } from './animation/Bounce.web';
+import { FadeIn, FadeInData, FadeOut, FadeOutData } from './animation/Fade.web';
+import { FlipIn, FlipInData, FlipOut, FlipOutData } from './animation/Flip.web';
+import { LightSpeedIn, LightSpeedInData, LightSpeedOut, LightSpeedOutData } from './animation/Lightspeed.web';
+import { Pinwheel, PinwheelData } from './animation/Pinwheel.web';
+import { RollIn, RollInData, RollOut, RollOutData } from './animation/Roll.web';
+import { RotateIn, RotateInData, RotateOut, RotateOutData } from './animation/Rotate.web';
+import { SlideIn, SlideInData, SlideOut, SlideOutData } from './animation/Slide.web';
+import { StretchIn, StretchInData, StretchOut, StretchOutData } from './animation/Stretch.web';
+import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 export let TransitionType = /*#__PURE__*/function (TransitionType) {
   TransitionType[TransitionType["LINEAR"] = 0] = "LINEAR";
   TransitionType[TransitionType["SEQUENCED"] = 1] = "SEQUENCED";

@@ -1,8 +1,8 @@
 'use strict';
 
 import { createSerializable } from 'react-native-worklets';
-import { SHOULD_BE_USE_WEB } from "./common/index.js";
-import { configureLayoutAnimationBatch } from "./core.js";
+import { SHOULD_BE_USE_WEB } from './common';
+import { configureLayoutAnimationBatch } from './core';
 function createUpdateManager() {
   const animations = [];
   // When a stack is rerendered we reconfigure all the shared elements.

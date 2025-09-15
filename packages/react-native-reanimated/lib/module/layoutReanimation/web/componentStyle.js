@@ -1,6 +1,6 @@
 'use strict';
 
-import { _updatePropsJS } from "../../ReanimatedModule/js-reanimated/index.js";
+import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 export const snapshots = new WeakMap();
 export function makeElementVisible(element, delay) {
   if (delay === 0) {

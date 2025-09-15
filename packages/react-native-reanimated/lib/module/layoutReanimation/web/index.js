@@ -1,6 +1,6 @@
 'use strict';
 
-export { startWebLayoutAnimation, tryActivateLayoutTransition } from "./animationsManager.js";
-export { getReducedMotionFromConfig, saveSnapshot } from "./componentUtils.js";
-export { configureWebLayoutAnimations } from "./domUtils.js";
+export { startWebLayoutAnimation, tryActivateLayoutTransition } from './animationsManager';
+export { getReducedMotionFromConfig, saveSnapshot } from './componentUtils';
+export { configureWebLayoutAnimations } from './domUtils';
 //# sourceMappingURL=index.js.map

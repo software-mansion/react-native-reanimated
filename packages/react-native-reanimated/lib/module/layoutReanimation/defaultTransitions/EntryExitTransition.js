@@ -1,9 +1,9 @@
 'use strict';
 
-import { withSequence, withTiming } from "../../animation/index.js";
-import { logger } from "../../common/index.js";
-import { BaseAnimationBuilder } from "../animationBuilder/index.js";
-import { FadeIn, FadeOut } from "../defaultAnimations/Fade.js";
+import { withSequence, withTiming } from '../../animation';
+import { logger } from '../../common';
+import { BaseAnimationBuilder } from '../animationBuilder';
+import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 export class EntryExitTransition extends BaseAnimationBuilder {
   static presetName = 'EntryExitTransition';
   enteringV = FadeIn;

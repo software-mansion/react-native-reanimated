@@ -1,8 +1,8 @@
 'use strict';
 
-import { withSequence, withTiming } from "../../animation/index.js";
-import { Easing } from "../../Easing.js";
-import { BaseAnimationBuilder } from "../animationBuilder/index.js";
+import { withSequence, withTiming } from '../../animation';
+import { Easing } from '../../Easing';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
  * Layout jumps - quite literally - from one position to another. You can modify

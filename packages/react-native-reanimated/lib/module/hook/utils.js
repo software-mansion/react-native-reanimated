@@ -1,7 +1,7 @@
 'use strict';
 
 import { isWorkletFunction } from 'react-native-worklets';
-import { ReanimatedError } from "../common/index.js";
+import { ReanimatedError } from '../common';
 // Builds one big hash from multiple worklets' hashes.
 export function buildWorkletsHash(worklets) {
   // For arrays `Object.values` returns the array itself.

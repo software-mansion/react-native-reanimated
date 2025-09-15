@@ -1,6 +1,6 @@
 'use strict';
 
-import { ComplexAnimationBuilder } from "../animationBuilder/index.js";
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Linearly transforms the layout from one position to another. You can modify

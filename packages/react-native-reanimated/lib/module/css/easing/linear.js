@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger, ReanimatedError } from "../../common/index.js";
-import { PERCENTAGE_REGEX } from "../constants/index.js";
+import { logger, ReanimatedError } from '../../common';
+import { PERCENTAGE_REGEX } from '../constants';
 export const ERROR_MESSAGES = {
   invalidPointsCount: () => `Invalid linear easing points count. There should be at least two points`,
   invalidInputProgressValue: inputProgress => `Invalid input progress ${inputProgress} value, it should be a percentage between 0% and 100%`

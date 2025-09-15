@@ -1,4 +1,4 @@
 'use strict';
 
-export { default as CSSKeyframesRuleBase } from "./CSSKeyframesRuleBase.js";
+export { default as CSSKeyframesRuleBase } from './CSSKeyframesRuleBase';
 //# sourceMappingURL=index.js.map

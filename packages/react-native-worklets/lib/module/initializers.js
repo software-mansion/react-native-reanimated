@@ -1,20 +1,20 @@
 'use strict';
 
-import { bundleValueUnpacker } from "./bundleUnpacker.js";
-import { setupCallGuard } from "./callGuard.js";
-import { registerReportFatalRemoteError } from "./errors.js";
-import { IS_JEST, SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
-import { setupSetImmediate } from "./runLoop/common/setImmediatePolyfill.js";
-import { setupSetInterval } from "./runLoop/common/setIntervalPolyfill.js";
-import { mockedRequestAnimationFrame } from "./runLoop/uiRuntime/mockedRequestAnimationFrame.js";
-import { setupRequestAnimationFrame } from "./runLoop/uiRuntime/requestAnimationFrame.js";
-import { setupSetTimeout } from "./runLoop/uiRuntime/setTimeoutPolyfill.js";
-import { RuntimeKind } from "./runtimeKind.js";
-import { __installUnpacker as installSynchronizableUnpacker } from "./synchronizableUnpacker.js";
-import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from "./threads.js";
-import { isWorkletFunction } from "./workletFunction.js";
-import { registerWorkletsError, WorkletsError } from "./WorkletsError.js";
-import { WorkletsModule } from "./WorkletsModule/index.js";
+import { bundleValueUnpacker } from './bundleUnpacker';
+import { setupCallGuard } from './callGuard';
+import { registerReportFatalRemoteError } from './errors';
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { setupSetImmediate } from './runLoop/common/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/common/setIntervalPolyfill';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { setupRequestAnimationFrame } from './runLoop/uiRuntime/requestAnimationFrame';
+import { setupSetTimeout } from './runLoop/uiRuntime/setTimeoutPolyfill';
+import { RuntimeKind } from './runtimeKind';
+import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
+import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
+import { isWorkletFunction } from './workletFunction';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
 let capturableConsole;
 
 /**

@@ -1,8 +1,8 @@
 'use strict';
 
-import { hasSuffix, maybeAddSuffix, processColor, ReanimatedError } from "../../common/index.js";
-import { CubicBezierEasing, LinearEasing, StepsEasing } from "../easing/index.js";
-import { kebabizeCamelCase } from "../utils/index.js";
+import { hasSuffix, maybeAddSuffix, processColor, ReanimatedError } from '../../common';
+import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easing';
+import { kebabizeCamelCase } from '../utils';
 export function maybeAddSuffixes(object, key, suffix) {
   if (!(key in object)) {
     return [];

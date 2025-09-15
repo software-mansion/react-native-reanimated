@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { VALID_TRANSITION_BEHAVIORS } from "./constants.js";
+import { ReanimatedError } from '../../../../common';
+import { VALID_TRANSITION_BEHAVIORS } from './constants';
 export const ERROR_MESSAGES = {
   invalidTransitionBehavior: behavior => `Invalid transition behavior "${behavior}".`
 };

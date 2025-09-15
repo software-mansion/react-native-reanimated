@@ -1,8 +1,8 @@
 'use strict';
 
-import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from "../keyframes/index.js";
-import { createSingleCSSAnimationProperties, getAnimationSettingsUpdates, normalizeSingleCSSAnimationSettings } from "../normalization/index.js";
-import { applyCSSAnimations, unregisterCSSAnimations } from "../proxy.js";
+import { cssKeyframesRegistry, CSSKeyframesRuleImpl } from '../keyframes';
+import { createSingleCSSAnimationProperties, getAnimationSettingsUpdates, normalizeSingleCSSAnimationSettings } from '../normalization';
+import { applyCSSAnimations, unregisterCSSAnimations } from '../proxy';
 export default class CSSAnimationsManager {
   attachedAnimations = [];
   constructor(shadowNodeWrapper, viewName, viewTag) {

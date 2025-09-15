@@ -1,8 +1,8 @@
 'use strict';
 
 import { runOnUI } from 'react-native-worklets';
-import { IS_JEST } from "./common/index.js";
-import { isSharedValue } from "./isSharedValue.js";
+import { IS_JEST } from './common';
+import { isSharedValue } from './isSharedValue';
 function createMapperRegistry() {
   'worklet';
 

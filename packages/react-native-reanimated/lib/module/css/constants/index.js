@@ -1,7 +1,7 @@
 'use strict';
 
-export * from "./font.js";
-export * from "./misc.js";
-export * from "./regex.js";
-export * from "./settings.js";
+export * from './font';
+export * from './misc';
+export * from './regex';
+export * from './settings';
 //# sourceMappingURL=index.js.map

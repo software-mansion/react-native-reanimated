@@ -1,10 +1,10 @@
 'use strict';
 'worklet';
 
-import { IS_ANDROID } from "../constants.js";
-import { ReanimatedError } from "../errors.js";
-import { maybeAddSuffix, parseBoxShadowString } from "../utils/index.js";
-import { processColor } from "./colors.js";
+import { IS_ANDROID } from '../constants';
+import { ReanimatedError } from '../errors';
+import { maybeAddSuffix, parseBoxShadowString } from '../utils';
+import { processColor } from './colors';
 const ERROR_MESSAGES = {
   notArrayObject: value => `Box shadow value must be a string or an array of shadow objects (e.g. [{ offsetX, offsetY, color }]). Received: ${JSON.stringify(value)}.`,
   invalidColor: (color, boxShadow) => `Invalid color "${color}" in box shadow "${boxShadow}".`

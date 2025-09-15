@@ -1,8 +1,8 @@
 'use strict';
 
-import { kebabizeCamelCase } from "../../utils/index.js";
-import { normalizeCSSTransitionProperties } from "../normalization/index.js";
-import { maybeAddSuffixes, parseTimingFunction } from "../utils.js";
+import { kebabizeCamelCase } from '../../utils';
+import { normalizeCSSTransitionProperties } from '../normalization';
+import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 export default class CSSTransitionsManager {
   isAttached = false;
   constructor(element) {

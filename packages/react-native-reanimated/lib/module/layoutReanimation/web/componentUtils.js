@@ -1,17 +1,17 @@
 'use strict';
 
-import { logger } from "../../common/index.js";
-import { LayoutAnimationType, ReduceMotion } from "../../commonTypes.js";
-import { EasingNameSymbol } from "../../Easing.js";
-import { _updatePropsJS } from "../../ReanimatedModule/js-reanimated/index.js";
-import { ReducedMotionManager } from "../../ReducedMotion.js";
-import { Keyframe } from "../animationBuilder/index.js";
-import { setElementPosition, snapshots } from "./componentStyle.js";
-import { Animations, TransitionType } from "./config.js";
-import { TransitionGenerator } from "./createAnimation.js";
-import { scheduleAnimationCleanup } from "./domUtils.js";
-import { getEasingByName, maybeGetBezierEasing, WebEasings } from "./Easing.web.js";
-import { prepareCurvedTransition } from "./transition/Curved.web.js";
+import { logger } from '../../common';
+import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
+import { ReducedMotionManager } from '../../ReducedMotion';
+import { Keyframe } from '../animationBuilder';
+import { setElementPosition, snapshots } from './componentStyle';
+import { Animations, TransitionType } from './config';
+import { TransitionGenerator } from './createAnimation';
+import { scheduleAnimationCleanup } from './domUtils';
+import { getEasingByName, maybeGetBezierEasing, WebEasings } from './Easing.web';
+import { prepareCurvedTransition } from './transition/Curved.web';
 function getEasingFromConfig(config) {
   if (!config.easingV) {
     return getEasingByName('linear');

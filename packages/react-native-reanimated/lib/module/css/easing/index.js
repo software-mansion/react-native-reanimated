@@ -1,8 +1,8 @@
 'use strict';
 
-import { CubicBezierEasing } from "./cubicBezier.js";
-import { LinearEasing } from "./linear.js";
-import { StepsEasing } from "./steps.js";
+import { CubicBezierEasing } from './cubicBezier';
+import { LinearEasing } from './linear';
+import { StepsEasing } from './steps';
 export function cubicBezier(x1, y1, x2, y2) {
   return new CubicBezierEasing(x1, y1, x2, y2);
 }

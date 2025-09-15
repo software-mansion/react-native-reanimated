@@ -1,7 +1,7 @@
 'use strict';
 
 import { executeOnUIRuntimeSync } from 'react-native-worklets';
-import { SHOULD_BE_USE_WEB, updateLoggerConfig } from "./common/index.js";
+import { SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
 
 /** @deprecated This function is a no-op in Reanimated 4. */
 export function addWhitelistedNativeProps(_props) {

@@ -1,9 +1,9 @@
 'use strict';
 
 import { executeOnUIRuntimeSync } from 'react-native-worklets';
-import { DEFAULT_LOGGER_CONFIG, IS_WEB, registerLoggerConfig, SHOULD_BE_USE_WEB } from "./common/index.js";
-import { initSvgCssSupport } from "./css/svg/index.js";
-import { getStaticFeatureFlag } from "./featureFlags/index.js";
+import { DEFAULT_LOGGER_CONFIG, IS_WEB, registerLoggerConfig, SHOULD_BE_USE_WEB } from './common';
+import { initSvgCssSupport } from './css/svg';
+import { getStaticFeatureFlag } from './featureFlags';
 export function initializeReanimatedModule(ReanimatedModule) {
   if (!IS_WEB && !ReanimatedModule) {
     throw new ReanimatedError('Tried to initialize Reanimated without a valid ReanimatedModule');

@@ -1,7 +1,7 @@
 'use strict';
 
-import { CSSKeyframesRuleBase } from "../../models/index.js";
-import { processKeyframeDefinitions } from "../animationParser.js";
+import { CSSKeyframesRuleBase } from '../../models';
+import { processKeyframeDefinitions } from '../animationParser';
 export default class CSSKeyframesRuleImpl extends CSSKeyframesRuleBase {
   constructor(keyframes, processedKeyframes) {
     super(keyframes);

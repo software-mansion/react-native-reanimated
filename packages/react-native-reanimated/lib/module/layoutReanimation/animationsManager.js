@@ -1,10 +1,10 @@
 'use strict';
 
 import { executeOnUIRuntimeSync } from 'react-native-worklets';
-import { withStyleAnimation } from "../animation/index.js";
-import { SHOULD_BE_USE_WEB } from "../common/index.js";
-import { LayoutAnimationType } from "../commonTypes.js";
-import { legacy_makeMutableUI as makeMutableUI } from "../mutables.js";
+import { withStyleAnimation } from '../animation';
+import { SHOULD_BE_USE_WEB } from '../common';
+import { LayoutAnimationType } from '../commonTypes';
+import { legacy_makeMutableUI as makeMutableUI } from '../mutables';
 const TAG_OFFSET = 1e9;
 function startObservingProgress(tag, sharedValue) {
   'worklet';

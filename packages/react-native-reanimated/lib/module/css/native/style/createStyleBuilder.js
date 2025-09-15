@@ -1,6 +1,6 @@
 'use strict';
 
-import { isConfigPropertyAlias, isDefined, isRecord } from "../../utils/index.js";
+import { isConfigPropertyAlias, isDefined, isRecord } from '../../utils';
 class StyleBuilderImpl {
   processedProps = {};
   constructor(config, options) {

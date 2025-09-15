@@ -1,6 +1,6 @@
 'use strict';
 
-export * from "./animation/index.js";
-export * from "./common/index.js";
-export * from "./transition/index.js";
+export * from './animation';
+export * from './common';
+export * from './transition';
 //# sourceMappingURL=index.js.map

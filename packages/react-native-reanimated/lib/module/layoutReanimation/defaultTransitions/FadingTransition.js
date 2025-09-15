@@ -1,7 +1,7 @@
 'use strict';
 
-import { withDelay, withSequence, withTiming } from "../../animation/index.js";
-import { BaseAnimationBuilder } from "../animationBuilder/index.js";
+import { withDelay, withSequence, withTiming } from '../../animation';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
  * Fades out components from one position and shows them in another. You can

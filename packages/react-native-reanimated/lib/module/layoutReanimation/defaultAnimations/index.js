@@ -1,13 +1,13 @@
 'use strict';
 
-export * from "./Bounce.js";
-export * from "./Fade.js";
-export * from "./Flip.js";
-export * from "./Lightspeed.js";
-export * from "./Pinwheel.js";
-export * from "./Roll.js";
-export * from "./Rotate.js";
-export * from "./Slide.js";
-export * from "./Stretch.js";
-export * from "./Zoom.js";
+export * from './Bounce';
+export * from './Fade';
+export * from './Flip';
+export * from './Lightspeed';
+export * from './Pinwheel';
+export * from './Roll';
+export * from './Rotate';
+export * from './Slide';
+export * from './Stretch';
+export * from './Zoom';
 //# sourceMappingURL=index.js.map

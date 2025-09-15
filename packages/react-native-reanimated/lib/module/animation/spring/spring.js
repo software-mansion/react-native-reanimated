@@ -1,8 +1,8 @@
 'use strict';
 
-import { defineAnimation, getReduceMotionForAnimation } from "../util.js";
-import { GentleSpringConfig, GentleSpringConfigWithDuration } from "./springConfigs.js";
-import { calculateNewStiffnessToMatchDuration, checkIfConfigIsValid, criticallyDampedSpringCalculations, getEnergy, initialCalculations, isAnimationTerminatingCalculation, scaleZetaToMatchClamps, underDampedSpringCalculations } from "./springUtils.js";
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import { GentleSpringConfig, GentleSpringConfigWithDuration } from './springConfigs';
+import { calculateNewStiffnessToMatchDuration, checkIfConfigIsValid, criticallyDampedSpringCalculations, getEnergy, initialCalculations, isAnimationTerminatingCalculation, scaleZetaToMatchClamps, underDampedSpringCalculations } from './springUtils';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 

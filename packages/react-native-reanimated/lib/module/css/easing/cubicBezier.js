@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from "../../common/index.js";
+import { ReanimatedError } from '../../common';
 export const ERROR_MESSAGES = {
   invalidCoordinate: (coordinate, value) => `Invalid ${coordinate} coordinate for cubic bezier easing point, it should be a number between 0 and 1, received ${value}`
 };

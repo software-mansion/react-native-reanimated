@@ -1,6 +1,6 @@
 'use strict';
 
-import { logger } from "../common/index.js";
+import { logger } from '../common';
 import { ReanimatedModule } from '../ReanimatedModule';
 /** @knipIgnore */
 export const DynamicFlags = {

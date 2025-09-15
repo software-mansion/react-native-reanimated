@@ -1,9 +1,10 @@
 'use strict';
 
 import { Children, Component, createContext, useEffect, useRef } from 'react';
-import { setShouldAnimateExitingForTag } from "../core.js";
+import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
-export const SkipEnteringContext = createContext(null);
+import { jsx as _jsx } from "react/jsx-runtime";
+export const SkipEnteringContext = /*#__PURE__*/createContext(null);
 
 // skipEntering - don't animate entering of children on wrapper mount
 // skipExiting - don't animate exiting of children on wrapper unmount
@@ -13,9 +14,10 @@ function SkipEntering(props) {
   useEffect(() => {
     skipValueRef.current = false;
   }, [skipValueRef]);
-  return <SkipEnteringContext value={skipValueRef}>
-      {props.children}
-    </SkipEnteringContext>;
+  return /*#__PURE__*/_jsx(SkipEnteringContext, {
+    value: skipValueRef,
+    children: props.children
+  });
 }
 
 // skipExiting (unlike skipEntering) cannot be done by conditionally
@@ -36,7 +38,10 @@ function SkipEntering(props) {
  */
 export class LayoutAnimationConfig extends Component {
   getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1 && this.props.skipExiting ? Children.map(this.props.children, child => <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>) : this.props.children;
+    return Children.count(this.props.children) > 1 && this.props.skipExiting ? Children.map(this.props.children, child => /*#__PURE__*/_jsx(LayoutAnimationConfig, {
+      skipExiting: true,
+      children: child
+    })) : this.props.children;
   }
   setShouldAnimateExiting() {
     if (Children.count(this.props.children) === 1) {
@@ -56,9 +61,10 @@ export class LayoutAnimationConfig extends Component {
     if (this.props.skipEntering === undefined) {
       return children;
     }
-    return <SkipEntering shouldSkip={this.props.skipEntering}>
-        {children}
-      </SkipEntering>;
+    return /*#__PURE__*/_jsx(SkipEntering, {
+      shouldSkip: this.props.skipEntering,
+      children: children
+    });
   }
 }
 //# sourceMappingURL=LayoutAnimationConfig.js.map

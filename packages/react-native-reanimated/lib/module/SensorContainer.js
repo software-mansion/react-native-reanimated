@@ -1,6 +1,6 @@
 'use strict';
 
-import Sensor from "./Sensor.js";
+import Sensor from './Sensor';
 export class SensorContainer {
   nativeSensors = new Map();
   getSensorId(sensorType, config) {

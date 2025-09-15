@@ -1,8 +1,8 @@
 'use strict';
 
-import { filterCSSAndStyleProperties } from "../../utils/index.js";
-import CSSAnimationsManager from "./CSSAnimationsManager.js";
-import CSSTransitionsManager from "./CSSTransitionsManager.js";
+import { filterCSSAndStyleProperties } from '../../utils';
+import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionsManager from './CSSTransitionsManager';
 export default class CSSManager {
   constructor(viewInfo) {
     this.element = viewInfo.DOMElement;

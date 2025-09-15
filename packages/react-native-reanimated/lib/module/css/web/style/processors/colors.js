@@ -1,7 +1,7 @@
 'use strict';
 
-import { convertToRGBA, rgbaArrayToRGBAColor } from "../../../../Colors.js";
-import { isNumber } from "../../../utils/index.js";
+import { convertToRGBA, rgbaArrayToRGBAColor } from '../../../../Colors';
+import { isNumber } from '../../../utils';
 export const processColor = value => {
   if (isNumber(value)) {
     const rgbaArray = convertToRGBA(value);

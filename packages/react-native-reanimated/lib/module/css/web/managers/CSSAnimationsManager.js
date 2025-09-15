@@ -1,10 +1,10 @@
 'use strict';
 
-import { convertPropertiesToArrays, kebabizeCamelCase } from "../../utils/index.js";
-import { processKeyframeDefinitions } from "../animationParser.js";
-import { configureWebCSSAnimations, insertCSSAnimation, removeCSSAnimation } from "../domUtils.js";
-import { CSSKeyframesRuleImpl } from "../keyframes/index.js";
-import { maybeAddSuffixes, parseTimingFunction } from "../utils.js";
+import { convertPropertiesToArrays, kebabizeCamelCase } from '../../utils';
+import { processKeyframeDefinitions } from '../animationParser';
+import { configureWebCSSAnimations, insertCSSAnimation, removeCSSAnimation } from '../domUtils';
+import { CSSKeyframesRuleImpl } from '../keyframes';
+import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 const isCSSKeyframesRuleImpl = keyframes => typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
 export default class CSSAnimationsManager {
   // Keys are processed keyframes

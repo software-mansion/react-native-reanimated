@@ -1,10 +1,10 @@
 'use strict';
 
 import { createSerializable, createSynchronizable, executeOnUIRuntimeSync, runOnUI, serializableMappingCache } from 'react-native-worklets';
-import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from "./common/index.js";
-import { getStaticFeatureFlag } from "./featureFlags/index.js";
-import { isFirstReactRender, isReactRendering } from "./reactUtils.js";
-import { valueSetter } from "./valueSetter.js";
+import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { getStaticFeatureFlag } from './featureFlags';
+import { isFirstReactRender, isReactRendering } from './reactUtils';
+import { valueSetter } from './valueSetter';
 function shouldWarnAboutAccessDuringRender() {
   return __DEV__ && isReactRendering() && !isFirstReactRender();
 }

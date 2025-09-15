@@ -1,6 +1,6 @@
 'use strict';
 
-import { processColor } from "../../../native/index.js";
+import { processColor } from '../../../native';
 export const processColorSVG = value => {
   if (value === 'none') {
     return 'transparent';

@@ -1,9 +1,9 @@
 'use strict';
 
 import { WorkletsModule } from 'react-native-worklets';
-import { IS_JEST, IS_WEB, IS_WINDOW_AVAILABLE, logger, ReanimatedError } from "../../common/index.js";
-import { SensorType } from "../../commonTypes.js";
-import { assertWorkletsVersion } from "../../platform-specific/workletsVersion.js";
+import { IS_JEST, IS_WEB, IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
+import { SensorType } from '../../commonTypes';
+import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 export function createJSReanimatedModule() {
   return new JSReanimated();
 }

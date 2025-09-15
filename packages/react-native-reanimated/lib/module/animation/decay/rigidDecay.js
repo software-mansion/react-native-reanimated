@@ -1,6 +1,6 @@
 'use strict';
 
-import { SLOPE_FACTOR, VELOCITY_EPS } from "./utils.js";
+import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 export function rigidDecay(animation, now, config) {
   'worklet';
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from "../../common/index.js";
+import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
 // Since we cannot remove keyframe from DOM by its name, we have to store its id

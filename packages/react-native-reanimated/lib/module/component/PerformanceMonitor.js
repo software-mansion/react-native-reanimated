@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { createAnimatedComponent } from "../createAnimatedComponent/index.js";
-import { useAnimatedProps, useFrameCallback, useSharedValue } from "../hook/index.js";
+import { createAnimatedComponent } from '../createAnimatedComponent';
+import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 function createCircularDoublesBuffer(size) {
   'worklet';
 
@@ -86,9 +87,14 @@ function JsPerformance({
       defaultValue: text
     };
   });
-  return <View style={styles.container}>
-      <AnimatedTextInput style={styles.text} animatedProps={animatedProps} editable={false} />
-    </View>;
+  return /*#__PURE__*/_jsx(View, {
+    style: styles.container,
+    children: /*#__PURE__*/_jsx(AnimatedTextInput, {
+      style: styles.text,
+      animatedProps: animatedProps,
+      editable: false
+    })
+  });
 }
 function UiPerformance({
   smoothingFrames
@@ -112,9 +118,14 @@ function UiPerformance({
       defaultValue: text
     };
   });
-  return <View style={styles.container}>
-      <AnimatedTextInput style={styles.text} animatedProps={animatedProps} editable={false} />
-    </View>;
+  return /*#__PURE__*/_jsx(View, {
+    style: styles.container,
+    children: /*#__PURE__*/_jsx(AnimatedTextInput, {
+      style: styles.text,
+      animatedProps: animatedProps,
+      editable: false
+    })
+  });
 }
 /**
  * A component that lets you measure fps values on JS and UI threads on both the
@@ -126,10 +137,14 @@ function UiPerformance({
 export function PerformanceMonitor({
   smoothingFrames = DEFAULT_BUFFER_SIZE
 }) {
-  return <View style={styles.monitor}>
-      <JsPerformance smoothingFrames={smoothingFrames} />
-      <UiPerformance smoothingFrames={smoothingFrames} />
-    </View>;
+  return /*#__PURE__*/_jsxs(View, {
+    style: styles.monitor,
+    children: [/*#__PURE__*/_jsx(JsPerformance, {
+      smoothingFrames: smoothingFrames
+    }), /*#__PURE__*/_jsx(UiPerformance, {
+      smoothingFrames: smoothingFrames
+    })]
+  });
 }
 const styles = StyleSheet.create({
   monitor: {

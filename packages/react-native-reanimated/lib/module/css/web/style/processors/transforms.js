@@ -1,6 +1,6 @@
 'use strict';
 
-import { createStyleBuilder } from "../builderFactories.js";
+import { createStyleBuilder } from '../builderFactories';
 const transformBuilder = createStyleBuilder({
   perspective: 'px',
   rotate: true,

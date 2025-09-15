@@ -1,11 +1,11 @@
 'use strict';
 
-import { setupSetImmediate } from "../common/setImmediatePolyfill.js";
-import { setupSetInterval } from "../common/setIntervalPolyfill.js";
-import { setupQueueMicrotask } from "./queueMicrotask.js";
-import { setupRequestAnimationFrame } from "./requestAnimationFramePolyfill.js";
-import { setupSetTimeout } from "./setTimeout.js";
-import { setupTaskQueue } from "./taskQueue.js";
+import { setupSetImmediate } from '../common/setImmediatePolyfill';
+import { setupSetInterval } from '../common/setIntervalPolyfill';
+import { setupQueueMicrotask } from './queueMicrotask';
+import { setupRequestAnimationFrame } from './requestAnimationFramePolyfill';
+import { setupSetTimeout } from './setTimeout';
+import { setupTaskQueue } from './taskQueue';
 export function setupRunLoop(animationQueuePollingRate) {
   'worklet';
 

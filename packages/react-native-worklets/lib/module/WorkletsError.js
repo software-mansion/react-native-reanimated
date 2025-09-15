@@ -1,6 +1,6 @@
 'use strict';
 
-import { RuntimeKind } from "./runtimeKind.js";
+import { RuntimeKind } from './runtimeKind';
 function WorkletsErrorConstructor(message) {
   'worklet';
 

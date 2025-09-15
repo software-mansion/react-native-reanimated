@@ -1,7 +1,7 @@
 'use strict';
 
-import { IS_ANDROID, processBoxShadowNative, processColor, processTransformOrigin } from "../../../common/index.js";
-import { processAspectRatio, processFontWeight, processGap, processInset, processInsetBlock, processInsetInline, processTransform } from "./processors/index.js";
+import { IS_ANDROID, processBoxShadowNative, processColor, processTransformOrigin } from '../../../common';
+import { processAspectRatio, processFontWeight, processGap, processInset, processInsetBlock, processInsetInline, processTransform } from './processors';
 const colorAttributes = {
   process: processColor
 };

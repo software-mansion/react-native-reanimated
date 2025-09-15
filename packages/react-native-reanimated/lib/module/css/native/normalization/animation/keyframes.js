@@ -1,9 +1,9 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { PERCENTAGE_REGEX } from "../../../constants/index.js";
-import { isDefined, isNumber } from "../../../utils/index.js";
-import { normalizeTimingFunction } from "../common/index.js";
+import { ReanimatedError } from '../../../../common';
+import { PERCENTAGE_REGEX } from '../../../constants';
+import { isDefined, isNumber } from '../../../utils';
+import { normalizeTimingFunction } from '../common';
 export const ERROR_MESSAGES = {
   invalidOffsetType: selector => `Invalid keyframe selector "${selector}". Only numbers, percentages, "from", and "to" are supported.`,
   invalidOffsetRange: selector => `Invalid keyframe selector "${selector}". Expected a number between 0 and 1 or a percentage between 0% and 100%.`

@@ -1,9 +1,9 @@
 'use strict';
 
-export * from "./keyframes/index.js";
-export * from "./managers/index.js";
-export * from "./normalization/index.js";
-export * from "./proxy.js";
-export * from "./registry.js";
-export * from "./style/index.js";
+export * from './keyframes';
+export * from './managers';
+export * from './normalization';
+export * from './proxy';
+export * from './registry';
+export * from './style';
 //# sourceMappingURL=index.js.map

@@ -1,8 +1,8 @@
 'use strict';
 
-import { ReanimatedError } from "../../../../common/index.js";
-import { cubicBezier, linear, steps } from "../../../easing/index.js";
-import { camelizeKebabCase, isArrayOfLength, isPercentage, isPredefinedTimingFunction, isStepsModifier, parseSingleTransitionShorthand, splitByComma, splitByWhitespace } from "../../../utils/index.js";
+import { ReanimatedError } from '../../../../common';
+import { cubicBezier, linear, steps } from '../../../easing';
+import { camelizeKebabCase, isArrayOfLength, isPercentage, isPredefinedTimingFunction, isStepsModifier, parseSingleTransitionShorthand, splitByComma, splitByWhitespace } from '../../../utils';
 export const createEmptyTransitionConfig = () => ({
   transitionProperty: [],
   transitionDuration: [],

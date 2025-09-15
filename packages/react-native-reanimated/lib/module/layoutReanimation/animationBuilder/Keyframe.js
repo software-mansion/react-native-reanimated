@@ -1,10 +1,10 @@
 'use strict';
 
-import { withDelay, withSequence, withTiming } from "../../animation/index.js";
-import { assertEasingIsWorklet, getReduceMotionFromConfig } from "../../animation/util.js";
-import { ReanimatedError } from "../../common/index.js";
-import { ReduceMotion } from "../../commonTypes.js";
-import { Easing } from "../../Easing.js";
+import { withDelay, withSequence, withTiming } from '../../animation';
+import { assertEasingIsWorklet, getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../common';
+import { ReduceMotion } from '../../commonTypes';
+import { Easing } from '../../Easing';
 class InnerKeyframe {
   reduceMotionV = ReduceMotion.System;
   /*

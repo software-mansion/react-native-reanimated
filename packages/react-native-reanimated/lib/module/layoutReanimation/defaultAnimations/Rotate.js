@@ -1,6 +1,6 @@
 'use strict';
 
-import { ComplexAnimationBuilder } from "../animationBuilder/index.js";
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining

@@ -1,6 +1,6 @@
 'use strict';
 
-export * from "./config.js";
-export { default as createStyleBuilder } from "./createStyleBuilder.js";
-export * from "./processors/index.js";
+export * from './config';
+export { default as createStyleBuilder } from './createStyleBuilder';
+export * from './processors';
 //# sourceMappingURL=index.js.map

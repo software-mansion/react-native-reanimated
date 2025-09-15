@@ -1,6 +1,6 @@
 'use strict';
 
-import { WorkletsError } from "./WorkletsError.js";
+import { WorkletsError } from './WorkletsError';
 const _workletStackDetails = new Map();
 export function registerWorkletStackDetails(hash, stackDetails) {
   _workletStackDetails.set(hash, stackDetails);

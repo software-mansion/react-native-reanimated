@@ -1,7 +1,7 @@
 'use strict';
 
-import { ReanimatedError } from "../../common/index.js";
-import { isTimeUnit, smellsLikeTimingFunction } from "./guards.js";
+import { ReanimatedError } from '../../common';
+import { isTimeUnit, smellsLikeTimingFunction } from './guards';
 export function splitByComma(str) {
   // split by comma not enclosed in parentheses
   const parts = [];

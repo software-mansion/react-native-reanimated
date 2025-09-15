@@ -1,7 +1,7 @@
 'use strict';
 
-import { processBoxShadowWeb } from "../../common/index.js";
-import { boxShadowBuilder, processColor, processFilter, processFontVariant, processFontWeight, processMarginHorizontal, processMarginVertical, processPaddingHorizontal, processPaddingVertical, processTransform, processTransformOrigin, textShadowBuilder } from "./style/index.js";
+import { processBoxShadowWeb } from '../../common';
+import { boxShadowBuilder, processColor, processFilter, processFontVariant, processFontWeight, processMarginHorizontal, processMarginVertical, processPaddingHorizontal, processPaddingVertical, processTransform, processTransformOrigin, textShadowBuilder } from './style';
 const colorAttributes = {
   process: processColor
 };

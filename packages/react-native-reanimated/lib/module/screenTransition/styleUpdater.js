@@ -1,6 +1,6 @@
 'use strict';
 
-import { updateProps } from "../updateProps/index.js";
+import { updateProps } from '../updateProps';
 function createViewDescriptor(screenId) {
   'worklet';
 

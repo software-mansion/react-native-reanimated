@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
-import { initialUpdaterRun } from "../animation/index.js";
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from "../common/index.js";
-import { startMapper, stopMapper } from "../core.js";
-import { updateProps, updatePropsJestWrapper } from "../updateProps/index.js";
-import { makeViewDescriptorsSet } from "../ViewDescriptorsSet.js";
-import { useSharedValue } from "./useSharedValue.js";
-import { buildWorkletsHash, isAnimated, shallowEqual, validateAnimatedStyles } from "./utils.js";
+import { initialUpdaterRun } from '../animation';
+import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { startMapper, stopMapper } from '../core';
+import { updateProps, updatePropsJestWrapper } from '../updateProps';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { useSharedValue } from './useSharedValue';
+import { buildWorkletsHash, isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 function prepareAnimation(frameTimestamp, animatedProp, lastAnimation, lastValue) {
   'worklet';
 

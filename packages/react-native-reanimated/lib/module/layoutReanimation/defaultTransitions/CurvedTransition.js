@@ -1,9 +1,9 @@
 'use strict';
 
-import { withTiming } from "../../animation/index.js";
-import { assertEasingIsWorklet } from "../../animation/util.js";
-import { Easing } from "../../Easing.js";
-import { BaseAnimationBuilder } from "../animationBuilder/index.js";
+import { withTiming } from '../../animation';
+import { assertEasingIsWorklet } from '../../animation/util';
+import { Easing } from '../../Easing';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
  * Layout transitions with a curved animation. You can modify the behavior by

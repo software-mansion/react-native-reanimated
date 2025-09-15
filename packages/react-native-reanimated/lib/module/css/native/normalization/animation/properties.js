@@ -1,6 +1,6 @@
 'use strict';
 
-import { convertPropertiesToArrays } from "../../../utils/index.js";
+import { convertPropertiesToArrays } from '../../../utils';
 export function createSingleCSSAnimationProperties(properties) {
   const {
     animationName: animationNames,

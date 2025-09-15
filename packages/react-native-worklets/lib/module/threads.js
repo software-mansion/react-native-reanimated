@@ -1,12 +1,12 @@
 'use strict';
 
-import { IS_JEST, SHOULD_BE_USE_WEB } from "./PlatformChecker/index.js";
-import { RuntimeKind } from "./runtimeKind.js";
-import { createSerializable, makeShareableCloneOnUIRecursive } from "./serializable.js";
-import { serializableMappingCache } from "./serializableMappingCache.js";
-import { isWorkletFunction } from "./workletFunction.js";
-import { WorkletsError } from "./WorkletsError.js";
-import { WorkletsModule } from "./WorkletsModule/index.js";
+import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+import { RuntimeKind } from './runtimeKind';
+import { createSerializable, makeShareableCloneOnUIRecursive } from './serializable';
+import { serializableMappingCache } from './serializableMappingCache';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
 let runOnUIQueue = [];
 export function setupMicrotasks() {
   'worklet';

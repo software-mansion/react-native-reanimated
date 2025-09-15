@@ -1,7 +1,7 @@
 'use strict';
 
 import { CSSKeyframesRuleImpl } from '../platform';
-import { isCSSKeyframesRule } from "../utils/index.js";
+import { isCSSKeyframesRule } from '../utils';
 function parseAnimationName(animationName) {
   if (typeof animationName !== 'object') {
     return;

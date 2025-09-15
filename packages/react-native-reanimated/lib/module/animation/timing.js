@@ -1,7 +1,7 @@
 'use strict';
 
-import { Easing } from "../Easing.js";
-import { assertEasingIsWorklet, defineAnimation, getReduceMotionForAnimation } from "./util.js";
+import { Easing } from '../Easing';
+import { assertEasingIsWorklet, defineAnimation, getReduceMotionForAnimation } from './util';
 
 /**
  * The timing animation configuration.

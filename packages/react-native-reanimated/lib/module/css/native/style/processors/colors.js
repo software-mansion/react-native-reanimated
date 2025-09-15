@@ -1,6 +1,6 @@
 'use strict';
 
-import { processColor as processColorInternal, ReanimatedError } from "../../../../common/index.js";
+import { processColor as processColorInternal, ReanimatedError } from '../../../../common';
 export const ERROR_MESSAGES = {
   invalidColor: color => `Invalid color value: ${String(color)}`
 };

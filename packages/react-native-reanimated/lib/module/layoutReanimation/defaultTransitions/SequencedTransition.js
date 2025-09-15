@@ -1,7 +1,7 @@
 'use strict';
 
-import { withSequence, withTiming } from "../../animation/index.js";
-import { BaseAnimationBuilder } from "../animationBuilder/index.js";
+import { withSequence, withTiming } from '../../animation';
+import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
  * Transforms layout starting from the X-axis and width first, followed by the
