@@ -13,7 +13,11 @@ struct Promise {
       : resolve_(resolve), reject_(reject), rt_(rt) {}
 
   void resolve(const jsi::Value &result);
-  void reject(const std::string &message, const std::string &stack);
+  void reject(
+      const std::string &message,
+      const std::string &stack,
+      const std::string &name,
+      const std::string &jsEngine);
 
   std::shared_ptr<Serializable> resolve_;
   std::shared_ptr<Serializable> reject_;

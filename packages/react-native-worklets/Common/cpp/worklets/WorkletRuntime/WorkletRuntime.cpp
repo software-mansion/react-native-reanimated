@@ -293,7 +293,7 @@ void runOnRuntimeAsync(
       const auto &message = error.getMessage();
       const auto &stack = error.getStack();
       jsScheduler->scheduleOnJS([promise, message, stack](jsi::Runtime &rnRt) {
-        promise->reject(message, stack);
+        promise->reject(message, stack, "WorkletsError", "Worklets");
       });
     }
   });

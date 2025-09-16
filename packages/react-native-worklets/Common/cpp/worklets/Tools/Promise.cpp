@@ -7,7 +7,11 @@ void Promise::resolve(const jsi::Value &result) {
   resolve.call(rt_, result);
 }
 
-void Promise::reject(const std::string &message, const std::string &stack) {
+void Promise::reject(
+    const std::string &message,
+    const std::string &stack,
+    const std::string &name,
+    const std::string &jsEngine) {
   const auto reject = reject_->toJSValue(rt_).asObject(rt_).asFunction(rt_);
   const auto errorInstance = rt_.global()
                                  .getPropertyAsFunction(rt_, "Error")
@@ -19,6 +23,12 @@ void Promise::reject(const std::string &message, const std::string &stack) {
 
   errorInstance.setProperty(
       rt_, "stack", jsi::String::createFromUtf8(rt_, stack));
+
+  errorInstance.setProperty(
+      rt_, "name", jsi::String::createFromUtf8(rt_, name));
+
+  errorInstance.setProperty(
+      rt_, "jsEngine", jsi::String::createFromUtf8(rt_, jsEngine));
 
   reject.call(rt_, errorInstance);
 }
