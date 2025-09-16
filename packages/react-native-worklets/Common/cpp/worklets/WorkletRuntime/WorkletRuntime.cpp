@@ -1,9 +1,11 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Resources/Unpackers.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -237,6 +239,64 @@ void scheduleOnRuntime(
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->runAsyncGuarded(serializableWorklet);
+}
+
+void runOnRuntimeAsync(
+    jsi::Runtime &rt,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue,
+    const jsi::Value &serializableResolveValue,
+    const jsi::Value &serializableRejectValue) {
+  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt,
+      serializableWorkletValue,
+      "[Worklets] Function `worklet` passed to `runOnRuntimeAsync` is not a serializable worklet.");
+  auto serializableResolve = extractSerializableOrThrow<
+      SerializableRemoteFunction>(
+      rt,
+      serializableResolveValue,
+      "[Worklets] Function `resolve` passed to `runOnRuntimeAsync` is not a serializable function.");
+  auto serializableReject = extractSerializableOrThrow<
+      SerializableRemoteFunction>(
+      rt,
+      serializableRejectValue,
+      "[Worklets] Function `reject` passed to `runOnRuntimeAsync` is not a serializable function.");
+
+  auto promise = std::make_shared<worklets::Promise>(
+      rt, serializableResolve, serializableReject);
+
+  auto eventLoop = workletRuntime->getEventLoop();
+
+  if (!eventLoop) {
+    throw std::runtime_error(
+        "[Worklets] Event Loop is not enabled for the (" +
+        workletRuntime->getRuntimeName() +
+        ") Worklet Runtime. Please enable it to use `runOnRuntimeAsync`.");
+  }
+
+  eventLoop->pushTask([serializableWorklet, &jsScheduler, promise](
+                          jsi::Runtime &workletRt) {
+    try {
+      auto result = serializableWorklet->toJSValue(workletRt)
+                        .asObject(workletRt)
+                        .asFunction(workletRt)
+                        .call(workletRt);
+      auto serializableResult = extractSerializableOrThrow(workletRt, result);
+      jsScheduler->scheduleOnJS(
+          [serializableResult, promise](jsi::Runtime &rnRt) {
+            auto resolveResult = serializableResult->toJSValue(rnRt);
+            promise->resolve(resolveResult);
+          });
+    } catch (const jsi::JSError &error) {
+      const auto &message = error.getMessage();
+      const auto &stack = error.getStack();
+      jsScheduler->scheduleOnJS([promise, message, stack](jsi::Runtime &rnRt) {
+        promise->reject(message, stack);
+      });
+    }
+  });
 }
 
 } // namespace worklets
