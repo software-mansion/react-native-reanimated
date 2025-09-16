@@ -160,6 +160,10 @@ interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
+  shouldWork?: {
+    ios: boolean;
+    android: boolean;
+  };
   missingOnFabric?: boolean;
 }
 
@@ -602,16 +606,28 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🙆‍♂️',
     title: 'Profiles',
     screen: ProfilesExample,
+    shouldWork: {
+      ios: true,
+      android: false, // I sometimes see a flicker when the transition starts to go back
+    },
   },
   ProgressTransitionExample: {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   GalleryExample: {
     icon: '🇮🇹',
     title: 'Gallery',
     screen: GalleryExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
 
   // Old examples
@@ -823,42 +839,82 @@ export const EXAMPLES: Record<string, Example> = {
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
+    shouldWork: {
+      ios: true,
+      android: false, // borderWidth issue
+    },
   },
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
+    shouldWork: {
+      ios: false, // broken header height
+      android: true,
+    },
   },
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   ImageStackExample: {
     title: '[SET] Image Stack',
     screen: ImageStackExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
   },
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
@@ -871,21 +927,42 @@ export const EXAMPLES: Record<string, Example> = {
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
+    shouldWork: {
+      ios: false, // goes too far up for some reason?
+      android: true,
+    },
   },
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    shouldWork: {
+      ios: false, // s2 -> change theme -> go back (progress) will have wrong target
+      android: false, // broken borderRadius for some reason
+    },
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    shouldWork: {
+      ios: false, // broken for modals
+      android: false, // broken transform, I think due to skew
+    },
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    shouldWork: {
+      ios: false, // broken on back gesture
+      android: true,
+    },
   },
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    shouldWork: {
+      // not implemented
+      ios: false,
+      android: false,
+    },
   },
 } as const;

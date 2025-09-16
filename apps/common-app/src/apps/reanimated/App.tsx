@@ -5,6 +5,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -45,6 +46,7 @@ function findExamples(search: string) {
 function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = React.useState('');
   const [wasClicked, setWasClicked] = React.useState<string[]>([]);
+  const platform = Platform.OS as 'ios' | 'android';
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -78,6 +80,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
             }
           }}
           missingOnFabric={EXAMPLES[name].missingOnFabric}
+          shouldWork={EXAMPLES[name].shouldWork?.[platform]}
           wasClicked={wasClicked.includes(name)}
         />
       )}
@@ -94,6 +97,7 @@ interface ItemProps {
   onPress: () => void;
   missingOnFabric?: boolean;
   wasClicked?: boolean;
+  shouldWork?: boolean;
 }
 
 function Item({
@@ -102,6 +106,7 @@ function Item({
   onPress,
   missingOnFabric,
   wasClicked,
+  shouldWork,
 }: ItemProps) {
   const isDisabled = missingOnFabric;
   const Button = IS_MACOS ? Pressable : RectButton;
@@ -116,6 +121,9 @@ function Item({
       enabled={!isDisabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
+      {shouldWork !== undefined && (
+        <Text style={styles.marker}>{shouldWork ? '✅' : '❌'}</Text>
+      )}
     </Button>
   );
 }
@@ -187,6 +195,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     color: 'black',
+  },
+  marker: {
+    fontSize: 20,
+    color: 'black',
+    alignSelf: 'flex-end',
+    marginLeft: 'auto',
   },
   visitedItem: {
     backgroundColor: '#e6f0f7',
