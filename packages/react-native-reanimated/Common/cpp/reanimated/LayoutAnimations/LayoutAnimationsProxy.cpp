@@ -596,6 +596,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
           auto& root = lightNodes_[surfaceId];
           ShadowView s = before;
           s.tag = myTag;
+          auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, {});
+          auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+          viewProps->transform = transformForNode_[before.tag];
+          s.props = newProps;
           filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, root->children.size()));
           filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
