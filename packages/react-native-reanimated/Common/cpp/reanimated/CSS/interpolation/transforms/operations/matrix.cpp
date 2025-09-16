@@ -23,12 +23,12 @@ TransformMatrix2D matrixFromOperations2D(TransformOperations &operations) {
   return result;
 }
 
-std::pair<TransformOperations, bool> flattenAndReverseOperations(
+std::pair<TransformOperations, bool> flattenOperations(
     const TransformOperations &operations) {
   std::deque<std::shared_ptr<TransformOperation>> unprocessedQueue(
       operations.begin(), operations.end());
   TransformOperations result;
-  bool is3D = true;
+  bool is3D = false;
 
   while (!unprocessedQueue.empty()) {
     const auto operation = unprocessedQueue.front();
@@ -61,50 +61,51 @@ std::pair<TransformOperations, bool> flattenAndReverseOperations(
 /**
  * Simplifies the vector of operations by converting to matrices and multiplying
  * transformations that can be converted. This reduces the number of operations
- * in the resulting operations vector.
+ * in the resulting operations vector or returns a single matrix if all
+ * operations can be converted to a matrix.
  */
-TransformOperations simplifyOperations(const TransformOperations &operations) {
-  const auto [reversedOperations, is3D] =
-      flattenAndReverseOperations(operations);
+std::pair<MatrixOperationValue, bool> simplifyOperations(
+    const TransformOperations &operations) {
+  const auto [flattenedOperations, is3D] = flattenOperations(operations);
 
   TransformOperations result;
   TransformOperations toSimplify;
   result.reserve(operations.size());
   toSimplify.reserve(operations.size());
 
-  auto maybeAddMatrixOperation = [&]() {
-    if (!toSimplify.empty()) {
-      if (is3D) {
-        result.emplace_back(std::make_shared<MatrixOperation>(
-            matrixFromOperations3D(toSimplify)));
-      } else {
-        result.emplace_back(std::make_shared<MatrixOperation>(
-            matrixFromOperations2D(toSimplify)));
-      }
-      toSimplify.clear();
-    }
+  const auto simplify = [&]() {
+    return is3D
+        ? std::make_shared<MatrixOperation>(matrixFromOperations3D(toSimplify))
+        : std::make_shared<MatrixOperation>(matrixFromOperations2D(toSimplify));
   };
 
-  for (const auto &operation : reversedOperations) {
+  for (const auto &operation : flattenedOperations) {
     if (operation->shouldResolve()) {
-      maybeAddMatrixOperation();
+      if (toSimplify.size() > 0) {
+        result.emplace_back(simplify());
+        toSimplify.clear();
+      }
+
+      // Keep operations that need to be resolved unchanged in the transform
+      // operations vector
       result.emplace_back(operation);
     } else {
       toSimplify.emplace_back(operation);
     }
   }
 
-  maybeAddMatrixOperation();
+  // Result is empty only if there was not a single operation that needed to be
+  // resolved (all operations were added to the toSimplify vector)
+  if (result.empty()) {
+    return {simplify()->toMatrix(is3D), is3D};
+  }
 
-  // Reverse back to the original order of operations as we were processing
-  // them in the reverse order
-  std::reverse(result.begin(), result.end());
-  return result;
+  return {std::move(result), is3D};
 }
 
 namespace {
 constexpr const char *UNPROCESSED_OPERATIONS_ERROR =
-    "[Reanimated] Cannot convert unprocessed transform operations to matrix without the TransformInterpolationContext";
+    "[Reanimated] Cannot convert unprocessed transform operations to the matrix.";
 }
 
 MatrixOperation::MatrixOperation(jsi::Runtime &rt, const jsi::Value &value)
@@ -142,12 +143,11 @@ MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
 MatrixOperation::MatrixOperation(TransformOperations operations)
     // Simplify operations to reduce the number of matrix
     // multiplications during matrix keyframe interpolation
-    : TransformOperation(TransformOp::Matrix),
-      value(simplifyOperations(std::move(operations))) {
-  const auto &ops = std::get<TransformOperations>(value);
-  is3D_ = std::any_of(
-      ops.begin(), ops.end(), [](const auto &op) { return op->is3D(); });
-}
+    : TransformOperation(TransformOp::Matrix), value([&]() {
+        const auto &[value, is3D] = simplifyOperations(std::move(operations));
+        is3D_ = is3D;
+        return value;
+      }()) {}
 
 bool MatrixOperation::operator==(const TransformOperation &other) const {
   if (type != other.type) {
@@ -176,34 +176,26 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 }
 
 TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
-  if (auto storedMatrix = getStoredMatrix(force3D)) {
-    return storedMatrix;
+  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
+    throw std::runtime_error(UNPROCESSED_OPERATIONS_ERROR);
   }
 
-  throw std::runtime_error(UNPROCESSED_OPERATIONS_ERROR);
+  const auto &storedMatrix = std::get<TransformMatrix::Shared>(value);
+
+  if (force3D && storedMatrix->getDimension() == MATRIX_2D_DIMENSION) {
+    return std::make_shared<const TransformMatrix3D>(TransformMatrix3D::from2D(
+        static_cast<const TransformMatrix2D &>(*storedMatrix)));
+  }
+
+  return storedMatrix;
 }
 
 folly::dynamic MatrixOperation::valueToDynamic() const {
   if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
+    throw std::invalid_argument(UNPROCESSED_OPERATIONS_ERROR);
   }
+
   return std::get<TransformMatrix::Shared>(value)->toDynamic();
-}
-
-TransformMatrix::Shared MatrixOperation::getStoredMatrix(bool force3D) const {
-  if (std::holds_alternative<TransformMatrix::Shared>(value)) {
-    const auto &storedMatrix = std::get<TransformMatrix::Shared>(value);
-
-    if (force3D && storedMatrix->getDimension() == MATRIX_2D_DIMENSION) {
-      return std::make_shared<const TransformMatrix3D>(
-          TransformMatrix3D::from2D(
-              static_cast<const TransformMatrix2D &>(*storedMatrix)));
-    }
-
-    return storedMatrix;
-  }
-  return nullptr;
 }
 
 } // namespace reanimated::css

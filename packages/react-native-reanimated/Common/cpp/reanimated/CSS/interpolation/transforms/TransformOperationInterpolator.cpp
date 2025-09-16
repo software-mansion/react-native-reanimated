@@ -33,23 +33,44 @@ folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
     const std::shared_ptr<TransformOperation> &from,
     const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
-  const auto fromMatrix = std::static_pointer_cast<const TransformMatrix3D>(
-      matrixFromOperation(from, true, context));
-  const auto toMatrix = std::static_pointer_cast<const TransformMatrix3D>(
-      matrixFromOperation(to, true, context));
+  const auto shouldBe3D = from->is3D() || to->is3D();
+
+  const auto fromMatrix = matrixFromOperation(from, shouldBe3D, context);
+  const auto toMatrix = matrixFromOperation(to, shouldBe3D, context);
+
+  TransformMatrix3D result;
+
+  if (shouldBe3D) {
+    result =
+        interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix);
+  } else {
+    const auto result2D =
+        interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
+    // Unfortunately 2d matrices aren't handled properly in RN, so we have to
+    // convert them to 3d
+    // see the issue: https://github.com/facebook/react-native/issues/53639
+    result = TransformMatrix3D::from2D(result2D);
+  }
+
+  return MatrixOperation(result).toDynamic();
+}
+
+template <typename MatrixType>
+MatrixType TransformOperationInterpolator<MatrixOperation>::interpolateMatrix(
+    double progress,
+    const TransformMatrix::Shared &from,
+    const TransformMatrix::Shared &to) const {
+  const auto fromMatrix = std::static_pointer_cast<const MatrixType>(from);
+  const auto toMatrix = std::static_pointer_cast<const MatrixType>(to);
   const auto decomposedFrom = fromMatrix->decompose();
   const auto decomposedTo = toMatrix->decompose();
 
   if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-    return folly::dynamic::object(
-        from->getOperationName(),
-        (progress < 0.5 ? fromMatrix : toMatrix)->toDynamic());
+    return progress < 0.5 ? *fromMatrix : *toMatrix;
   }
 
-  return MatrixOperation(
-             TransformMatrix3D::recompose(
-                 decomposedFrom->interpolate(progress, decomposedTo.value())))
-      .toDynamic();
+  return MatrixType::recompose(
+      decomposedFrom->interpolate(progress, decomposedTo.value()));
 }
 
 TransformMatrix::Shared
@@ -57,13 +78,23 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const std::shared_ptr<TransformOperation> &operation,
     const bool shouldBe3D,
     const TransformInterpolationContext &context) const {
-  const auto &matrixOp = std::static_pointer_cast<MatrixOperation>(operation);
+  const auto &matrixOperation =
+      std::static_pointer_cast<MatrixOperation>(operation);
 
-  if (std::holds_alternative<TransformMatrix::Shared>(matrixOp->value)) {
-    return std::get<TransformMatrix::Shared>(matrixOp->value);
+  if (std::holds_alternative<TransformMatrix::Shared>(matrixOperation->value)) {
+    const auto &matrix =
+        std::get<TransformMatrix::Shared>(matrixOperation->value);
+
+    if (shouldBe3D && !matrixOperation->is3D()) {
+      return std::make_shared<TransformMatrix3D>(TransformMatrix3D::from2D(
+          static_cast<const TransformMatrix2D &>(*matrix)));
+    }
+
+    return matrix;
   }
 
-  const auto &operations = std::get<TransformOperations>(matrixOp->value);
+  const auto &operations =
+      std::get<TransformOperations>(matrixOperation->value);
 
   // Map over operations and resolve unresolved ones
   TransformOperations resolvedOperations;
@@ -73,17 +104,33 @@ TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
       operations.begin(),
       operations.end(),
       std::back_inserter(resolvedOperations),
-      [&](const auto &op) -> std::shared_ptr<TransformOperation> {
-        if (op->shouldResolve()) {
-          const auto &interpolator = context.interpolators->at(op->type);
-          return interpolator->resolveOperation(op, context);
-        } else {
-          return op;
+      [&](const auto &operation) -> std::shared_ptr<TransformOperation> {
+        if (operation->shouldResolve()) {
+          const auto &interpolator = context.interpolators->at(operation->type);
+          return interpolator->resolveOperation(operation, context);
         }
+
+        return operation;
       });
 
-  return std::make_shared<TransformMatrix3D>(
-      matrixFromOperations3D(resolvedOperations));
+  if (shouldBe3D) {
+    return std::make_shared<TransformMatrix3D>(
+        matrixFromOperations3D(resolvedOperations));
+  }
+  return std::make_shared<TransformMatrix2D>(
+      matrixFromOperations2D(resolvedOperations));
 }
+
+// Explicit template instantiations
+template TransformMatrix2D TransformOperationInterpolator<MatrixOperation>::
+    interpolateMatrix<TransformMatrix2D>(
+        double,
+        const TransformMatrix::Shared &,
+        const TransformMatrix::Shared &) const;
+template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::
+    interpolateMatrix<TransformMatrix3D>(
+        double,
+        const TransformMatrix::Shared &,
+        const TransformMatrix::Shared &) const;
 
 } // namespace reanimated::css

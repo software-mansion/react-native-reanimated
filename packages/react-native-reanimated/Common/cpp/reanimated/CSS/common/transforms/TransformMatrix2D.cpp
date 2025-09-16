@@ -6,7 +6,9 @@ TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
     const TransformMatrix2D::Decomposed &other) const {
   // Interpolate rotation using shortest path (handle angle wrapping)
-  double rotationDiff = fmod(other.rotation - rotation + M_PI, 2 * M_PI) - M_PI;
+  constexpr double twoPi = 2.0 * M_PI;
+  double rotationDiff = (other.rotation - rotation);
+  rotationDiff -= twoPi * std::floor((rotationDiff + M_PI) / twoPi);
 
   return {
       .scale = scale.interpolate(progress, other.scale),
@@ -34,9 +36,9 @@ TransformMatrix2D TransformMatrix2D::create<TransformOp::Rotate>(double v) {
   const auto sinVal = std::sin(v);
   // clang-format off
   return TransformMatrix2D({
-    cosVal, -sinVal, 0,
-    sinVal,  cosVal, 0,
-        0,        0, 1
+     cosVal, sinVal, 0,
+    -sinVal, cosVal, 0,
+          0,      0, 1
   });
   // clang-format on
 }
@@ -202,7 +204,7 @@ TransformMatrix2D TransformMatrix2D::recompose(
   // Apply XY shear
   if (decomposed.skew != 0) {
     auto tmp = TransformMatrix2D();
-    tmp[3] = decomposed.skew;
+    tmp[1] = -decomposed.skew;
     result = tmp * result;
   }
 

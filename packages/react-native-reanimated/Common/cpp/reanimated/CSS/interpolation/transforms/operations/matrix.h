@@ -52,8 +52,6 @@ struct MatrixOperation final : public TransformOperation {
 
  private:
   bool is3D_;
-
-  TransformMatrix::Shared getStoredMatrix(bool force3D) const;
 };
 
 } // namespace reanimated::css

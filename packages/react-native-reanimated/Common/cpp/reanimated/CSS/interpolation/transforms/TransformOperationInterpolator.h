@@ -83,6 +83,7 @@ class TransformOperationInterpolator
       const TransformInterpolationContext &context) const override {
     const auto &fromOp = *std::static_pointer_cast<OperationType>(from);
     const auto &toOp = *std::static_pointer_cast<OperationType>(to);
+    LOG(INFO) << "Plain transform interpolate";
     return OperationType(fromOp.value.interpolate(progress, toOp.value))
         .toDynamic();
   }
@@ -121,6 +122,12 @@ class TransformOperationInterpolator<MatrixOperation>
       const TransformInterpolationContext &context) const override;
 
  protected:
+  template <typename MatrixType>
+  MatrixType interpolateMatrix(
+      double progress,
+      const TransformMatrix::Shared &from,
+      const TransformMatrix::Shared &to) const;
+
   TransformMatrix::Shared matrixFromOperation(
       const std::shared_ptr<TransformOperation> &operation,
       bool shouldBe3D,
