@@ -460,7 +460,7 @@ const detailStyles = StyleSheet.create({
   },
   image: {
     height: 300,
-    width: 500,
+    width: '100%',
   },
   description: {
     fontSize: 16,

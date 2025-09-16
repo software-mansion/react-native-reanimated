@@ -34,6 +34,10 @@ class PropsDiffer {
   const ViewProps &targetViewProps_;
   jsi::Object sourceValues_;
   jsi::Object targetValues_;
+  Transform sourceTransform_;
+  Transform targetTransform_;
+  bool needsOverrideSourceTransforms_ = false;
+  bool needsOverrideTargetTransforms_ = false;
 
   void diffFrame(jsi::Runtime &rt);
 
@@ -42,6 +46,7 @@ class PropsDiffer {
   void diffBackgroundColor(jsi::Runtime &rt);
 
   void diffTransform(jsi::Runtime &rt);
+  bool overrideTransformIfNeeded(jsi::Runtime &rt);
   static std::vector<TransformOperationWithDefault>
   getTransformOperationsFromProps(jsi::Runtime &rt, const ViewProps &props);
   static void maybeAddOperationToDiff(
@@ -97,6 +102,8 @@ class PropsDiffer {
         targetValues_(rt) {};
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
+  void overrideSourceTransforms(const Transform &transform);
+  void overrideTargetTransforms(const Transform &transform);
 };
 
 } // namespace reanimated
