@@ -20,8 +20,8 @@ export { isSynchronizable } from './isSynchronizable';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export {
   createWorkletRuntime,
-  runOnRuntimeSync,
   runOnRuntime,
+  runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';
 export { createSerializable, isSerializableRef } from './serializable';
