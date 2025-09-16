@@ -735,9 +735,9 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+// TODO: use the SET flag when it's ready 
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag(
-                      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (false) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",

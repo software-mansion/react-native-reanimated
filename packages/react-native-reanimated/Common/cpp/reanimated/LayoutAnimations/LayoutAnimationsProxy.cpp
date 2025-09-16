@@ -135,8 +135,7 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(LightNode::Unshared nod
   if (!node->current.componentName){
     return result;
   }
-
-  if (!(strcmp(node->current.componentName, "RNSScreen"))){
+  if (!(strcmp(node->current.componentName, "RNSScreen")) || !(strcmp(node->current.componentName, "RNSModalScreen"))){
       bool isActive = false;
 #ifdef ANDROID
       // TODO: this looks like a RNSScreens bug - sometimes there is no active screen at a deeper level, when going back
@@ -161,7 +160,7 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(LightNode::Unshared nod
   return result;
 }
 
-void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node, int index) const{
+void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared& node, int index) const{
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)){
     ShadowView copy = node->current;
     std::vector<react::Point> absolutePositions;
@@ -184,6 +183,11 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(LightNode::Unshared node,
   }
 }
 
+//struct S{
+//  const react::Size frameSize{};
+//  react::Point contentOffset;
+//};
+
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(const LightNode::Unshared &node) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
@@ -200,6 +204,9 @@ std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPath
       if (parent){
         float headerHeight = parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
         viewPosition.y += headerHeight;
+//        auto state = std::reinterpret_pointer_cast<const ConcreteState<S>>(currentNode->current.state);
+//        LOG(INFO) <<"state: " <<state->getData().contentOffset.y;
+//        viewPosition.y += state->getData().contentOffset.y;
       }
     }
     viewPosition += currentNode->current.layoutMetrics.frame.origin;
@@ -221,9 +228,13 @@ void LayoutAnimationsProxy::parseParentTransforms(const LightNode::Unshared &nod
     const auto &viewSize = currentNode->current.layoutMetrics.frame.size;
     if (origin.xy[0].unit == facebook::react::UnitType::Percent) {
       origin.xy[0] = { static_cast<float>(viewSize.width * origin.xy[0].value / 100), UnitType::Point };
+    } else if (origin.xy[0].unit == facebook::react::UnitType::Undefined) {
+      origin.xy[0] = { static_cast<float>(viewSize.width*0.5), UnitType::Point};
     }
     if (origin.xy[1].unit == facebook::react::UnitType::Percent) {
       origin.xy[1] = { static_cast<float>(viewSize.height * origin.xy[1].value / 100), UnitType::Point };
+    } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
+      origin.xy[1] = { static_cast<float>(viewSize.height*0.5), UnitType::Point};
     }
     transforms.emplace_back( props.transform, origin );
     currentNode = currentNode->parent.lock();
@@ -395,17 +406,19 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
         auto d = folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_*(afterRadius - beforeRadius));
 
       #ifdef RN_SERIALIZABLE_STATE
-        auto rawProps = RawProps(folly::dynamic::merge(
-            layoutAnimation.finalView->props->rawProps, d));
+//        auto rawProps = RawProps(folly::dynamic::merge(
+//            layoutAnimation.finalView->props->rawProps, d));
+        Props::Shared newProps = nullptr;
       #else
           auto rawProps = RawProps(std::move(d));
-      #endif
+
         auto newProps =
             getComponentDescriptorForShadowView(*layoutAnimation.finalView)
                 .cloneProps(
                     propsParserContext,
                     layoutAnimation.finalView->props,
                     std::move(rawProps));
+        #endif
         
         updateMap.insert_or_assign(tag, UpdateValues{newProps, {x,y,width,height}});
       }
@@ -465,6 +478,9 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
     switch (mutation.type) {
       case ShadowViewMutation::Update:{
         auto& node = lightNodes_[mutation.newChildShadowView.tag];
+        if (!node){
+          node = std::make_shared<LightNode>();
+        }
         node->previous = mutation.oldChildShadowView;
         node->current = mutation.newChildShadowView;
         auto tag = mutation.newChildShadowView.tag;
@@ -597,7 +613,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
         copy.tag = fakeTag;
         auto copy2 = before;
         copy2.tag = fakeTag;
-        startSharedTransition(fakeTag, copy2, copy, surfaceId);
+        startSharedTransition(fakeTag, copy2, copy, surfaceId, before.tag, after.tag);
         restoreMap_[fakeTag][1] = after.tag;
         if (shouldCreateContainer){
           sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
@@ -1243,6 +1259,7 @@ void LayoutAnimationsProxy::startSharedTransition(const int tag, const ShadowVie
     if (tagBefore == -1) {
       propsDiffer.overrideTargetTransforms(strongThis->transformForNode_[tagAfter]);
     } else {
+        LOG(INFO) << "start with overriden transforms " << tag << " " << tagBefore << " -> " << tagAfter;
       propsDiffer.overrideSourceTransforms(strongThis->transformForNode_[tagBefore]);
       propsDiffer.overrideTargetTransforms(strongThis->transformForNode_[tagAfter]);
     }
