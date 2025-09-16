@@ -48,41 +48,11 @@ class TransformMatrixBase : public TransformMatrix {
   explicit TransformMatrixBase(MatrixArray matrix)
       : TransformMatrix(), matrix_(std::move(matrix)) {}
 
-  explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value)
-      : TransformMatrix() {
-    const auto &array = value.asObject(rt).asArray(rt);
-    for (size_t i = 0; i < SIZE; ++i) {
-      matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
-    }
-  }
-
-  explicit TransformMatrixBase(const folly::dynamic &array)
-      : TransformMatrix() {
-    for (size_t i = 0; i < SIZE; ++i) {
-      matrix_[i] = array[i].asDouble();
-    }
-  }
-
   TransformMatrixBase(const TransformMatrixBase &other)
       : TransformMatrix(), matrix_(other.matrix_) {}
 
   TransformMatrixBase(TransformMatrixBase &&other) noexcept
       : TransformMatrix(), matrix_(std::move(other.matrix_)) {}
-
-  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
-    if (!value.isObject()) {
-      return false;
-    }
-    const auto &obj = value.asObject(rt);
-    if (!obj.isArray(rt)) {
-      return false;
-    }
-    return obj.asArray(rt).size(rt) == SIZE;
-  }
-
-  static bool canConstruct(const folly::dynamic &array) {
-    return array.isArray() && array.size() == SIZE;
-  }
 
   inline bool operator==(const TDerived &other) const {
     return matrix_ == other.matrix_;

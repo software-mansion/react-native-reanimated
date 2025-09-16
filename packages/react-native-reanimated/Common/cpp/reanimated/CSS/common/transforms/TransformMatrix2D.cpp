@@ -2,6 +2,130 @@
 
 namespace reanimated::css {
 
+TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
+    : TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>() {
+  const auto &array = value.asObject(rt).asArray(rt);
+  const auto size = array.size(rt);
+
+  if (size == SIZE) {
+    // Direct 3x3 matrix
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
+    }
+  } else {
+    // Convert 4x4 matrix to 3x3
+    // [m[0], m[1], 0, m[2]]     [m[0], m[1], m[2]]
+    // [m[3], m[4], 0, m[5]]  -> [m[3], m[4], m[5]]
+    // [  0,   0,  1,   0]       [m[6], m[7], m[8]]
+    // [m[6], m[7], 0, m[8]]
+    matrix_[0] = array.getValueAtIndex(rt, 0).asNumber();
+    matrix_[1] = array.getValueAtIndex(rt, 1).asNumber();
+    matrix_[2] = array.getValueAtIndex(rt, 3).asNumber();
+    matrix_[3] = array.getValueAtIndex(rt, 4).asNumber();
+    matrix_[4] = array.getValueAtIndex(rt, 5).asNumber();
+    matrix_[5] = array.getValueAtIndex(rt, 7).asNumber();
+    matrix_[6] = array.getValueAtIndex(rt, 12).asNumber();
+    matrix_[7] = array.getValueAtIndex(rt, 13).asNumber();
+    matrix_[8] = array.getValueAtIndex(rt, 15).asNumber();
+  }
+}
+
+TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
+    : TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>() {
+  const auto size = array.size();
+
+  if (size == SIZE) {
+    // Direct 3x3 matrix
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] = array[i].asDouble();
+    }
+  } else {
+    // Convert 4x4 matrix to 3x3
+    // [m[0], m[1], 0, m[2]]     [m[0], m[1], m[2]]
+    // [m[3], m[4], 0, m[5]]  -> [m[3], m[4], m[5]]
+    // [  0,   0,  1,   0]       [m[6], m[7], m[8]]
+    // [m[6], m[7], 0, m[8]]
+    matrix_[0] = array[0].asDouble();
+    matrix_[1] = array[1].asDouble();
+    matrix_[2] = array[3].asDouble();
+    matrix_[3] = array[4].asDouble();
+    matrix_[4] = array[5].asDouble();
+    matrix_[5] = array[7].asDouble();
+    matrix_[6] = array[12].asDouble();
+    matrix_[7] = array[13].asDouble();
+    matrix_[8] = array[15].asDouble();
+  }
+}
+
+bool TransformMatrix2D::canConstruct(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  if (!value.isObject()) {
+    return false;
+  }
+
+  const auto &obj = value.asObject(rt);
+  if (!obj.isArray(rt)) {
+    return false;
+  }
+
+  const auto &array = obj.asArray(rt);
+  const auto size = array.size(rt);
+
+  // Check if it's a 3x3 matrix (9 elements)
+  if (size == 9) {
+    return true;
+  }
+
+  // Check if it's a 4x4 matrix (16 elements) that can be converted to 2D
+  if (size == 16) {
+    // A 4x4 matrix can be converted to 2D if it has this pattern:
+    // [x, x, 0, x]
+    // [x, x, 0, x]
+    // [0, 0, 1, 0]
+    // [x, x, 0, x]
+
+    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 && // z-column
+        array.getValueAtIndex(rt, 6).asNumber() == 0.0 && // z-column
+        array.getValueAtIndex(rt, 10).asNumber() == 1.0 && // z-scale
+        array.getValueAtIndex(rt, 11).asNumber() == 0.0 && // z-translation
+        array.getValueAtIndex(rt, 14).asNumber() == 0.0 && // z-column
+        array.getValueAtIndex(rt, 15).asNumber() == 1.0; // homogeneous
+  }
+
+  return false;
+}
+
+bool TransformMatrix2D::canConstruct(const folly::dynamic &array) {
+  if (!array.isArray()) {
+    return false;
+  }
+  const auto size = array.size();
+
+  // Check if it's a 3x3 matrix (9 elements)
+  if (size == 9) {
+    return true;
+  }
+
+  // Check if it's a 4x4 matrix (16 elements) that can be converted to 2D
+  if (size == 16) {
+    // A 4x4 matrix can be converted to 2D if it has this pattern:
+    // [x, x, 0, x]
+    // [x, x, 0, x]
+    // [0, 0, 1, 0]
+    // [x, x, 0, x]
+
+    return array[2].asDouble() == 0.0 && // z-column
+        array[6].asDouble() == 0.0 && // z-column
+        array[10].asDouble() == 1.0 && // z-scale
+        array[11].asDouble() == 0.0 && // z-translation
+        array[14].asDouble() == 0.0 && // z-column
+        array[15].asDouble() == 1.0; // homogeneous
+  }
+
+  return false;
+}
+
 TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
     const TransformMatrix2D::Decomposed &other) const {

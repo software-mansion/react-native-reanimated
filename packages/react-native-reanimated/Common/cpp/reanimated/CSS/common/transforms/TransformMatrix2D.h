@@ -34,6 +34,12 @@ class TransformMatrix2D
   using TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>::
       TransformMatrixBase;
 
+  explicit TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix2D(const folly::dynamic &array);
+
+  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value);
+  static bool canConstruct(const folly::dynamic &array);
+
   template <TransformOp TOperation>
   static TransformMatrix2D create(double value);
 

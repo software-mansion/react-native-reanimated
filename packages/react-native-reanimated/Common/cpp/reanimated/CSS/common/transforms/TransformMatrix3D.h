@@ -36,6 +36,9 @@ class TransformMatrix3D
   using TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>::
       TransformMatrixBase;
 
+  explicit TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix3D(const folly::dynamic &array);
+
   template <TransformOp TOperation>
   static TransformMatrix3D create(double value);
   static TransformMatrix3D from2D(const TransformMatrix2D &matrix);
