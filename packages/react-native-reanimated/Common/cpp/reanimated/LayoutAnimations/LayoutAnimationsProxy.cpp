@@ -633,7 +633,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
         }
         auto& la = layoutAnimations_[fakeTag];
         if (la.finalView->layoutMetrics != copy.layoutMetrics){
-          startSharedTransition(fakeTag, copy, copy, surfaceId);
+          startSharedTransition(fakeTag, copy, copy, surfaceId, la.finalView->tag, after.tag);
         }
       }
     }
