@@ -785,7 +785,7 @@ isAndroid = true;
 isAndroid = false;
 #endif
   // TODO: this new approach causes all back transitions to be progress transitions
-  if (isSwiping && !isClosing && !isGoingForward && !isAndroid){
+  if (!isClosing && !isGoingForward && !isAndroid){
     transitionProgress_ = progress;
     if (transitionState_ == NONE && progress < 1){
       transitionState_ = START;
