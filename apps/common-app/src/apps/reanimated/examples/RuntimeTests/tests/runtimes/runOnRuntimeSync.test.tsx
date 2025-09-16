@@ -1,7 +1,7 @@
 import {
   createSynchronizable,
   createWorkletRuntime,
-  runOnJS,
+  scheduleOnRN,
   runOnRuntimeSync,
   scheduleOnRuntime,
 } from 'react-native-worklets';
@@ -35,12 +35,13 @@ describe('runOnRuntimeSync', () => {
     };
 
     // Act
+    // TODO: Replace with `runOnRuntimeAsync`.
     scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       // heavy computation
       new Array(50_000_000).map((_v, i) => i ** 2);
       synchronizable.setBlocking(100);
-      runOnJS(onJSCallback)();
+      scheduleOnRN(onJSCallback);
     });
 
     const result = runOnRuntimeSync(workletRuntime, () => {

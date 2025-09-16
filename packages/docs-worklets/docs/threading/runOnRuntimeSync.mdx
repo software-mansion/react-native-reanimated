@@ -1,11 +1,11 @@
 ---
-sidebar_position: 13
+sidebar_position: 11
 ---
 
 # runOnRuntimeSync
 
 `runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
-
+It might preempt the Runtime where it's called from the thread (it's blocking).
 ## Reference
 
 ```javascript
@@ -16,7 +16,7 @@ const workletRuntime = createWorkletRuntime({ name: 'background' });
 const result = runOnRuntimeSync(workletRuntime, () => {
   'worklet';
   return 2+2;
-});
+}); // This will block the RN Runtime until the worklet is finished
 
 console.log(result); // 4
 ```
@@ -51,9 +51,7 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
 
 ## Remarks
 
-- The worklet cannot be run on the Worker Runtime from [UI
-  Runtime](/docs/fundamentals/glossary#ui-runtime) or another [Worker
-  Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime), unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
+- `runOnRuntimeSync` can only be called on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime) unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
 
 ```javascript
 import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';

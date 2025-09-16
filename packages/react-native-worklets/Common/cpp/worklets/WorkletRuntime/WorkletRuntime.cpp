@@ -242,11 +242,4 @@ void scheduleOnRuntime(
   workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
-jsi::Value runOnRuntimeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue) {
-  auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
-  return workletRuntime->executeSync(rt, serializableWorkletValue);
-}
 } // namespace worklets

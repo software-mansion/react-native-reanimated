@@ -199,17 +199,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return WorkletsModule.runOnRuntimeSync(
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        const result = worklet(...args);
-        return createSerializable(result);
-      })
-    );
-  }
-
   return WorkletsModule.runOnRuntimeSync(
     workletRuntime,
     createSerializable(() => {
