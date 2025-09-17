@@ -61,7 +61,6 @@
     "metro@npm:^0.80.3": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
     "metro@npm:^0.83.1": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
     "metro@npm:0.83.1": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-    "metro@npm:0.82.5": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
     "metro-runtime@npm:^0.80.3": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
     "metro-runtime@npm:0.80.12": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
     "metro-runtime@npm:0.82.1": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
