@@ -1,7 +1,9 @@
 'use strict';
 'worklet';
-import type { ColorValue } from 'react-native';
-import { DynamicColorIOS as DynamicColorIOSNative } from 'react-native';
+import type {
+  ColorValue,
+  DynamicColorIOS as DynamicColorIOSNative,
+} from 'react-native';
 
 import {
   ColorProperties,
@@ -10,7 +12,7 @@ import {
 } from '../../Colors';
 import type { StyleProps } from '../../commonTypes';
 import { IS_ANDROID } from '../constants';
-import { Maybe } from '../types';
+import type { Maybe } from '../types';
 
 type DynamicColorIOSTuple = Parameters<typeof DynamicColorIOSNative>[0];
 
