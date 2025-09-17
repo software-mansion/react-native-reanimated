@@ -2,18 +2,21 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/interpolation/configs.h>
-#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace reanimated::css {
 
 template <typename TOperation>
-concept ResolvableOperation = requires(TOperation operation) {
+concept ResolvableTransformOp = requires(TOperation operation) {
   {
     operation.value
   } -> std::convertible_to<
@@ -21,97 +24,155 @@ concept ResolvableOperation = requires(TOperation operation) {
   requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
 }; // NOLINT(readability/braces)
 
+class TransformInterpolator {
+ public:
+  using Interpolators =
+      std::unordered_map<TransformOp, std::shared_ptr<TransformInterpolator>>;
+
+  struct UpdateContext {
+    const std::shared_ptr<const ShadowNode> &node;
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
+    const std::shared_ptr<Interpolators> &interpolators;
+  };
+
+  virtual ~TransformInterpolator() = default;
+
+  virtual std::shared_ptr<TransformOperation> getDefaultOperation() const = 0;
+  virtual folly::dynamic interpolate(
+      double progress,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const UpdateContext &context) const = 0;
+  virtual std::shared_ptr<TransformOperation> resolveOperation(
+      const std::shared_ptr<TransformOperation> &operation,
+      const UpdateContext &context) const;
+};
+
+using TransformOperationInterpolators = TransformInterpolator::Interpolators;
+using TransformInterpolationContext = TransformInterpolator::UpdateContext;
+
+// Base class with common functionality
+template <typename OperationType>
+class TransformOperationInterpolatorBase : public TransformInterpolator {
+ public:
+  TransformOperationInterpolatorBase(
+      std::shared_ptr<OperationType> defaultOperation)
+      : defaultOperation_(defaultOperation) {}
+
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
+    return defaultOperation_;
+  }
+
+ protected:
+  std::shared_ptr<OperationType> defaultOperation_;
+};
+
 // Base implementation for simple operations
 template <typename OperationType>
 class TransformOperationInterpolator
-    : public TransformInterpolatorBase<OperationType> {
+    : public TransformOperationInterpolatorBase<OperationType> {
  public:
   TransformOperationInterpolator(
       std::shared_ptr<OperationType> defaultOperation)
-      : TransformInterpolatorBase<OperationType>(defaultOperation) {}
+      : TransformOperationInterpolatorBase<OperationType>(defaultOperation) {}
 
-  OperationType interpolate(
+  folly::dynamic interpolate(
       double progress,
-      const OperationType &from,
-      const OperationType &to,
-      const TransformInterpolatorUpdateContext &context) const override {
-    return OperationType{from.value.interpolate(progress, to.value)};
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const override {
+    const auto &fromOp = *std::static_pointer_cast<OperationType>(from);
+    const auto &toOp = *std::static_pointer_cast<OperationType>(to);
+    return OperationType(fromOp.value.interpolate(progress, toOp.value))
+        .toDynamic();
   }
 };
 
 // Specialization for PerspectiveOperation
 template <>
 class TransformOperationInterpolator<PerspectiveOperation>
-    : public TransformInterpolatorBase<PerspectiveOperation> {
+    : public TransformOperationInterpolatorBase<PerspectiveOperation> {
  public:
-  using TransformInterpolatorBase<
-      PerspectiveOperation>::TransformInterpolatorBase;
+  TransformOperationInterpolator(
+      std::shared_ptr<PerspectiveOperation> defaultOperation)
+      : TransformOperationInterpolatorBase<PerspectiveOperation>(
+            defaultOperation) {}
 
-  PerspectiveOperation interpolate(
+  folly::dynamic interpolate(
       double progress,
-      const PerspectiveOperation &from,
-      const PerspectiveOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override;
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const override;
 };
 
 // Specialization for MatrixOperation
 template <>
 class TransformOperationInterpolator<MatrixOperation>
-    : public TransformInterpolatorBase<MatrixOperation> {
+    : public TransformOperationInterpolatorBase<MatrixOperation> {
  public:
-  using TransformInterpolatorBase<MatrixOperation>::TransformInterpolatorBase;
+  TransformOperationInterpolator(
+      std::shared_ptr<MatrixOperation> defaultOperation)
+      : TransformOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
 
-  MatrixOperation interpolate(
+  folly::dynamic interpolate(
       double progress,
-      const MatrixOperation &from,
-      const MatrixOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override;
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const override;
 
  private:
   TransformMatrix3D matrixFromOperation(
       const MatrixOperation &matrixOperation,
-      const TransformInterpolatorUpdateContext &context) const;
+      const TransformInterpolationContext &context) const;
 };
 
 // Specialization for resolvable operations
-template <ResolvableOperation TOperation>
+template <ResolvableTransformOp TOperation>
 class TransformOperationInterpolator<TOperation>
-    : public TransformInterpolatorBase<TOperation> {
+    : public TransformOperationInterpolatorBase<TOperation> {
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
       ResolvableValueInterpolatorConfig config)
-      : TransformInterpolatorBase<TOperation>(defaultOperation),
+      : TransformOperationInterpolatorBase<TOperation>(defaultOperation),
         config_(std::move(config)) {}
 
-  TOperation interpolate(
+  folly::dynamic interpolate(
       double progress,
-      const TOperation &from,
-      const TOperation &to,
-      const TransformInterpolatorUpdateContext &context) const override {
-    return TOperation{from.value.interpolate(
-        progress, to.value, getResolvableValueContext(context))};
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const TransformInterpolationContext &context) const override {
+    const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
+    const auto &toOp = *std::static_pointer_cast<TOperation>(to);
+    return TOperation(
+               fromOp.value.interpolate(
+                   progress, toOp.value, getResolvableValueContext(context)))
+        .toDynamic();
   }
 
-  TOperation resolveOperation(
-      const TOperation &operation,
-      const TransformInterpolatorUpdateContext &context) const override {
+  std::shared_ptr<TransformOperation> resolveOperation(
+      const std::shared_ptr<TransformOperation> &operation,
+      const TransformInterpolationContext &context) const override {
+    const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
     const auto &resolved =
-        operation.value.resolve(getResolvableValueContext(context));
+        resolvableOp->value.resolve(getResolvableValueContext(context));
 
     if (!resolved.has_value()) {
-      return TOperation{operation.value};
+      throw std::invalid_argument(
+          "[Reanimated] Cannot resolve resolvable operation: " +
+          operation->getOperationName() +
+          " for node with tag: " + std::to_string(context.node->getTag()));
     }
 
-    return TOperation{resolved.value()};
+    return std::make_shared<TOperation>(resolved.value());
   }
 
- private:
+ protected:
   const ResolvableValueInterpolatorConfig config_;
 
-  CSSResolvableValueInterpolationContext getResolvableValueContext(
-      const TransformInterpolatorUpdateContext &context) const {
-    return CSSResolvableValueInterpolationContext{
+  ResolvableValueInterpolationContext getResolvableValueContext(
+      const TransformInterpolationContext &context) const {
+    return ResolvableValueInterpolationContext{
         .node = context.node,
         .viewStylesRepository = context.viewStylesRepository,
         .relativeProperty = config_.relativeProperty,
