@@ -1,7 +1,7 @@
 'use strict';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import Animated, {
   DynamicColorIOS,
