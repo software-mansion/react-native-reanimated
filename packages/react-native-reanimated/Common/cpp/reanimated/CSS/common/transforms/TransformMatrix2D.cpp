@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 
+#include <cmath>
+
 namespace reanimated::css {
 
 TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)

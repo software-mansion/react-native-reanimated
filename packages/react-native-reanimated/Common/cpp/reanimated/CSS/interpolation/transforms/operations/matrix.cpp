@@ -2,6 +2,8 @@
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 
 #include <algorithm>
+#include <deque>
+#include <memory>
 
 namespace reanimated::css {
 
@@ -100,12 +102,9 @@ std::pair<MatrixOperationValue, bool> simplifyOperations(
     return {simplify()->toMatrix(is3D), is3D};
   }
 
-  return {std::move(result), is3D};
-}
+  result.emplace_back(simplify());
 
-namespace {
-constexpr const char *UNPROCESSED_OPERATIONS_ERROR =
-    "[Reanimated] Cannot convert unprocessed transform operations to the matrix.";
+  return {std::move(result), is3D};
 }
 
 MatrixOperation::MatrixOperation(jsi::Runtime &rt, const jsi::Value &value)
@@ -176,11 +175,7 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 }
 
 TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
-  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
-    throw std::runtime_error(UNPROCESSED_OPERATIONS_ERROR);
-  }
-
-  const auto &storedMatrix = std::get<TransformMatrix::Shared>(value);
+  const auto &storedMatrix = getMatrixFromVariant();
 
   if (force3D && storedMatrix->getDimension() == MATRIX_2D_DIMENSION) {
     return std::make_shared<const TransformMatrix3D>(TransformMatrix3D::from2D(
@@ -191,11 +186,15 @@ TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
 }
 
 folly::dynamic MatrixOperation::valueToDynamic() const {
-  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
-    throw std::invalid_argument(UNPROCESSED_OPERATIONS_ERROR);
-  }
+  return getMatrixFromVariant()->toDynamic();
+}
 
-  return std::get<TransformMatrix::Shared>(value)->toDynamic();
+const TransformMatrix::Shared &MatrixOperation::getMatrixFromVariant() const {
+  if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
+    throw std::runtime_error(
+        "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
+  }
+  return std::get<TransformMatrix::Shared>(value);
 }
 
 } // namespace reanimated::css

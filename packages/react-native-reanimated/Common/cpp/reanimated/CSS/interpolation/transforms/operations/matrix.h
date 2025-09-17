@@ -4,12 +4,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
-#include <algorithm>
-#include <deque>
-#include <memory>
-#include <numeric>
 #include <utility>
-#include <vector>
+#include <variant>
 
 namespace reanimated::css {
 
@@ -18,13 +14,13 @@ using MatrixOperationValue =
     std::variant<TransformMatrix::Shared, TransformOperations>;
 
 /**
- * Multiplies all the operations in the vector to a single 3D matrix
+ * Multiplies all operations in the vector to a single 3D matrix
  * @param operations - the vector of operations that can be represented in 3D
  */
 TransformMatrix3D matrixFromOperations3D(TransformOperations &operations);
 
 /**
- * Multiplies all the operations in the vector to a single 2D matrix
+ * Multiplies all operations in the vector to a single 2D matrix
  * @param operations - the vector of operations that can be represented in 2D
  */
 TransformMatrix2D matrixFromOperations2D(TransformOperations &operations);
@@ -52,6 +48,8 @@ struct MatrixOperation final : public TransformOperation {
 
  private:
   bool is3D_;
+
+  const TransformMatrix::Shared &getMatrixFromVariant() const;
 };
 
 } // namespace reanimated::css

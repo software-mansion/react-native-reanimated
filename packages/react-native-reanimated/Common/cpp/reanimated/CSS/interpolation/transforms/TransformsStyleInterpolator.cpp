@@ -388,6 +388,10 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
         keyframeProgress, fromOperation, toOperation, transformUpdateContext));
   }
 
+  if (result.empty()) {
+    return folly::dynamic();
+  }
+
   return result;
 }
 

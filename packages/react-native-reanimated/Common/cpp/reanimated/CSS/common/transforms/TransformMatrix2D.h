@@ -5,8 +5,6 @@
 #include <reanimated/CSS/common/transforms/vectors.h>
 
 #include <folly/dynamic.h>
-#include <cmath>
-#include <memory>
 #include <utility>
 
 namespace reanimated::css {

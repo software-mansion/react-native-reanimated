@@ -10,9 +10,11 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
+#include <deque>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 

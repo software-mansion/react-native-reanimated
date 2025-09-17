@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 struct PerspectiveOperation final
@@ -22,8 +24,8 @@ struct PerspectiveOperation final
   }
 
   TransformMatrix::Shared toMatrix(bool /* force3D */) const override {
-    // Perspective is a 3D operation
     if (!cachedMatrix_) {
+      // Perspective is a 3D operation
       cachedMatrix_ = std::make_shared<const TransformMatrix3D>(
           TransformMatrix3D::create<TransformOp::Perspective>(value.value));
     }
