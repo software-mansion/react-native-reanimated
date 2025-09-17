@@ -6,7 +6,6 @@ namespace reanimated::css {
 TransformMatrix3D::TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value)
     : TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>() {
   const auto &array = value.asObject(rt).asArray(rt);
-  const auto size = array.size(rt);
 
   for (size_t i = 0; i < SIZE; ++i) {
     matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
@@ -15,8 +14,6 @@ TransformMatrix3D::TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value)
 
 TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array)
     : TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>() {
-  const auto size = array.size();
-
   for (size_t i = 0; i < SIZE; ++i) {
     matrix_[i] = array[i].asDouble();
   }
