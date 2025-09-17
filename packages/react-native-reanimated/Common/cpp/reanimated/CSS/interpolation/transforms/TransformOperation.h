@@ -28,6 +28,7 @@ struct TransformOperation {
   const TransformOp type;
 
   explicit TransformOperation(TransformOp value);
+  virtual ~TransformOperation() = default;
 
   virtual bool operator==(const TransformOperation &other) const = 0;
 

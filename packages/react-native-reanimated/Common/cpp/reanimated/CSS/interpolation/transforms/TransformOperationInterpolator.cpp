@@ -38,17 +38,21 @@ folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
   const auto fromMatrix = matrixFromOperation(from, shouldBe3D, context);
   const auto toMatrix = matrixFromOperation(to, shouldBe3D, context);
 
+  folly::dynamic value;
+
   if (shouldBe3D) {
-    return interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix)
-        .toDynamic();
+    value = interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix)
+                .toDynamic();
+  } else {
+    // Unfortunately 2D matrices aren't handled properly in RN, so we have to
+    // convert them to 3D
+    // see the issue: https://github.com/facebook/react-native/issues/53639
+    const auto result2D =
+        interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
+    value = TransformMatrix3D::from2D(result2D).toDynamic();
   }
 
-  // Unfortunately 2d matrices aren't handled properly in RN, so we have to
-  // convert them to 3d
-  // see the issue: https://github.com/facebook/react-native/issues/53639
-  const auto result2D =
-      interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
-  return TransformMatrix3D::from2D(result2D).toDynamic();
+  return folly::dynamic::object(from->getOperationName(), value);
 }
 
 template <typename MatrixType>
