@@ -64,7 +64,7 @@ class ValueInterpolator : public PropertyInterpolator {
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const = 0;
+      const ValueInterpolationContext &context) const = 0;
 
  private:
   folly::dynamic convertOptionalToDynamic(

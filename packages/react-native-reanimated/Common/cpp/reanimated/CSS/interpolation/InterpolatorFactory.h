@@ -114,7 +114,7 @@ auto transformOp(
     -> std::enable_if_t<
         std::is_base_of_v<TransformOperation, TOperation> &&
             std::is_constructible_v<TOperation, decltype(defaultValue)> &&
-            ResolvableOperation<TOperation>,
+            ResolvableTransformOp<TOperation>,
         std::shared_ptr<TransformInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
       std::make_shared<TOperation>(defaultValue), std::move(config));
