@@ -108,22 +108,13 @@ auto transformOp(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename TOperation>
-concept ResolvableOperation = requires(TOperation operation) {
-  {
-    operation.value
-  } -> std::convertible_to<
-      typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
-}; // NOLINT(readability/braces)
-
-template <typename TOperation>
 auto transformOp(
     const auto &defaultValue,
     ResolvableValueInterpolatorConfig config)
     -> std::enable_if_t<
         std::is_base_of_v<TransformOperation, TOperation> &&
             std::is_constructible_v<TOperation, decltype(defaultValue)> &&
-            ResolvableOperation<TOperation>,
+            ResolvableTransformOp<TOperation>,
         std::shared_ptr<TransformInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
       std::make_shared<TOperation>(defaultValue), std::move(config));
