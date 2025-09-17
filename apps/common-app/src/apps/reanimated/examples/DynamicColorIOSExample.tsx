@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import {
-  DynamicColorIOS as DynamicColorIOSNative,
+  DynamicColorIOS as RNDynamicColorIOS,
   StyleSheet,
   Text,
   View,
@@ -102,11 +102,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: DynamicColorIOSNative({ light: '#001a72', dark: '#f8f9ff' }),
+    color: RNDynamicColorIOS({ light: '#001a72', dark: '#f8f9ff' }),
     fontFamily: 'Poppins',
   },
   paragraph: {
-    color: DynamicColorIOSNative({ light: '#001a72', dark: '#f8f9ff' }),
+    color: RNDynamicColorIOS({ light: '#001a72', dark: '#f8f9ff' }),
     marginBottom: 10,
     fontFamily: 'Poppins',
   },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: DynamicColorIOSNative({ light: 'white', dark: '#35427C' }),
+    backgroundColor: RNDynamicColorIOS({ light: 'white', dark: '#35427C' }),
     padding: 16,
     borderRadius: 10,
   },
