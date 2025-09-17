@@ -4,7 +4,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import Animated, {
-  DynamicColorIOSAnimated,
+  DynamicColorIOS,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -29,7 +29,7 @@ const AnimatedComponent = () => {
 
     return {
       width: withTiming(pressed.value === 0 ? 100 : 200),
-      backgroundColor: DynamicColorIOSAnimated({
+      backgroundColor: DynamicColorIOS({
         light: lightColor,
         dark: darkColor,
       }),
@@ -37,18 +37,16 @@ const AnimatedComponent = () => {
   });
 
   return (
-    <View>
-      <AnimatedPressable
-        testID={'pressable'}
-        onPress={handlePress}
-        style={[animatedStyle, { height: 100 }]}>
-        <Text>Button</Text>
-      </AnimatedPressable>
-    </View>
+    <AnimatedPressable
+      testID={'pressable'}
+      onPress={handlePress}
+      style={[animatedStyle, { height: 100 }]}>
+      <Text>Button</Text>
+    </AnimatedPressable>
   );
 };
 
-const getBackgroundParsedStyle = () => ({
+const BackgroundParsedStyle = {
   backgroundColor: {
     dynamic: {
       light: LIGHT_COLORS[0],
@@ -57,9 +55,9 @@ const getBackgroundParsedStyle = () => ({
       highContrastDark: undefined,
     },
   },
-});
+};
 
-const getInterpolatedBackgroundParsedStyle = () => ({
+const InterpolatedBackgroundParsedStyle = {
   backgroundColor: {
     dynamic: {
       light: LIGHT_COLORS[1],
@@ -68,25 +66,24 @@ const getInterpolatedBackgroundParsedStyle = () => ({
       highContrastDark: undefined,
     },
   },
-});
+};
 
-const getDefaultStyle = () => ({
+const DefaultStyle = {
   width: 100,
-  ...getBackgroundParsedStyle(),
-});
+  ...BackgroundParsedStyle,
+};
 
-describe('DynamicColorIOSAnimated test', () => {
+describe('DynamicColorIOS test', () => {
   beforeEach(() => {
     jest.useFakeTimers();
   });
 
   afterEach(() => {
     jest.runOnlyPendingTimers();
-    jest.useRealTimers();
   });
 
   test('colors are animating', () => {
-    const style = getDefaultStyle();
+    const style = DefaultStyle;
     const { getByTestId } = render(<AnimatedComponent />);
     const pressable = getByTestId('pressable');
 
@@ -95,15 +92,13 @@ describe('DynamicColorIOSAnimated test', () => {
     fireEvent.press(pressable);
     jest.advanceTimersByTime(600);
 
-    expect(pressable).toHaveAnimatedStyle(
-      getInterpolatedBackgroundParsedStyle()
-    );
+    expect(pressable).toHaveAnimatedStyle(InterpolatedBackgroundParsedStyle);
 
     const rendered = render(<AnimatedComponent />).toJSON();
     expect(rendered).toMatchSnapshot();
   });
   test('other props are not affected', () => {
-    const style = getDefaultStyle();
+    const style = DefaultStyle;
     const { getByTestId } = render(<AnimatedComponent />);
     const pressable = getByTestId('pressable');
 

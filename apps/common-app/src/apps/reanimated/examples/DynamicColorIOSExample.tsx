@@ -1,7 +1,12 @@
 import React, { useEffect } from 'react';
-import { DynamicColorIOS, StyleSheet, Text, View } from 'react-native';
+import {
+  DynamicColorIOS as DynamicColorIOSNative,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Animated, {
-  DynamicColorIOSAnimated,
+  DynamicColorIOS,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -64,7 +69,7 @@ export default function DynamicColorIOSExample() {
 
     return {
       width: width.value,
-      backgroundColor: DynamicColorIOSAnimated({
+      backgroundColor: DynamicColorIOS({
         light: lightColor,
         dark: darkColor,
       }),
@@ -97,11 +102,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: DynamicColorIOS({ light: '#001a72', dark: '#f8f9ff' }),
+    color: DynamicColorIOSNative({ light: '#001a72', dark: '#f8f9ff' }),
     fontFamily: 'Poppins',
   },
   paragraph: {
-    color: DynamicColorIOS({ light: '#001a72', dark: '#f8f9ff' }),
+    color: DynamicColorIOSNative({ light: '#001a72', dark: '#f8f9ff' }),
     marginBottom: 10,
     fontFamily: 'Poppins',
   },
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: DynamicColorIOS({ light: 'white', dark: '#35427C' }),
+    backgroundColor: DynamicColorIOSNative({ light: 'white', dark: '#35427C' }),
     padding: 16,
     borderRadius: 10,
   },

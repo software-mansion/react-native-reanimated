@@ -1,6 +1,7 @@
 'use strict';
 'worklet';
 import type { ColorValue } from 'react-native';
+import { DynamicColorIOS as DynamicColorIOSNative } from 'react-native';
 
 import {
   ColorProperties,
@@ -9,13 +10,9 @@ import {
 } from '../../Colors';
 import type { StyleProps } from '../../commonTypes';
 import { IS_ANDROID } from '../constants';
+import { Maybe } from '../types';
 
-type DynamicColorIOSTuple = {
-  light: ColorValue;
-  dark: ColorValue;
-  highContrastLight?: ColorValue;
-  highContrastDark?: ColorValue;
-};
+type DynamicColorIOSTuple = Parameters<typeof DynamicColorIOSNative>[0];
 
 type DynamicColorValue = ColorValue & {
   dynamic: {
@@ -26,7 +23,7 @@ type DynamicColorValue = ColorValue & {
   };
 };
 
-export function DynamicColorIOSAnimated(
+export function DynamicColorIOS(
   tuple: DynamicColorIOSTuple
 ): DynamicColorValue {
   'worklet';
@@ -79,7 +76,7 @@ export function processColorsInProps(props: StyleProps) {
     if (Array.isArray(value)) {
       props[key] = value.map((c: unknown) => processColor(c));
     } else if (isDynamicColorObject(value)) {
-      const processed: Record<string, any> = { dynamic: {} };
+      const processed = { dynamic: {} as Record<string, Maybe<number>> };
       const dynamicFields = value.dynamic;
       for (const field in dynamicFields) {
         processed.dynamic[field] = processColor(dynamicFields[field]);

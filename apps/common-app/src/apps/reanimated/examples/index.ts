@@ -579,7 +579,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: StrictDOMExample,
   },
   DynamicColorIOSExample: {
-    title: 'DynamicColorIOSAnimated',
+    title: 'DynamicColorIOS',
     screen: DynamicColorIOSExample,
     icon: '🌗',
   },
