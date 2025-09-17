@@ -24,13 +24,13 @@ TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array)
 
 TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
     const double progress,
-    const TransformMatrix3D::Decomposed &other) const {
+    const TransformMatrix3D::Decomposed &to) const {
   return {
-      .scale = scale.interpolate(progress, other.scale),
-      .skew = skew.interpolate(progress, other.skew),
-      .quaternion = quaternion.interpolate(progress, other.quaternion),
-      .translation = translation.interpolate(progress, other.translation),
-      .perspective = perspective.interpolate(progress, other.perspective)};
+      .scale = scale.interpolate(progress, to.scale),
+      .skew = skew.interpolate(progress, to.skew),
+      .quaternion = quaternion.interpolate(progress, to.quaternion),
+      .translation = translation.interpolate(progress, to.translation),
+      .perspective = perspective.interpolate(progress, to.perspective)};
 }
 
 #ifndef NDEBUG
@@ -454,7 +454,7 @@ TransformMatrix3D TransformMatrix3D::fromQuaternion(const Quaternion &q) {
     1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0,
         2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0,
         2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0,
-                    0,                    0,              0, 1
+                    0,                 0,                 0, 1
   });
   // clang-format on
 }

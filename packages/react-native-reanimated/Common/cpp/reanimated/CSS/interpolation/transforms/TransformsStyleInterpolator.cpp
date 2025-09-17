@@ -394,6 +394,7 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
 folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
     const TransformOperations &operations) {
   auto result = folly::dynamic::array();
+  result.reserve(operations.size());
 
   for (const auto &operation : operations) {
     result.push_back(operation->toDynamic());

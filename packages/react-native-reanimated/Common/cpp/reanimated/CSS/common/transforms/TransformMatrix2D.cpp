@@ -14,6 +14,9 @@ TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
     }
   } else {
     // Convert 4x4 matrix to 3x3
+    // (we should call canConstruct first to ensure that the matrix is
+    // convertible to 3x3)
+    //
     // [m[0], m[1], 0, m[2]]     [m[0], m[1], m[2]]
     // [m[3], m[4], 0, m[5]]  -> [m[3], m[4], m[5]]
     // [  0,   0,  1,   0]       [m[6], m[7], m[8]]
@@ -41,6 +44,9 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
     }
   } else {
     // Convert 4x4 matrix to 3x3
+    // (we should call canConstruct first to ensure that the matrix is
+    // convertible to 3x3)
+    //
     // [m[0], m[1], 0, m[2]]     [m[0], m[1], m[2]]
     // [m[3], m[4], 0, m[5]]  -> [m[3], m[4], m[5]]
     // [  0,   0,  1,   0]       [m[6], m[7], m[8]]
@@ -79,18 +85,18 @@ bool TransformMatrix2D::canConstruct(
 
   // Check if it's a 4x4 matrix (16 elements) that can be converted to 2D
   if (size == 16) {
-    // A 4x4 matrix can be converted to 2D if it has this pattern:
+    // A 4x4 matrix can be converted to 2D if it has this pattern
+    // (where x means any number)
     // [x, x, 0, x]
     // [x, x, 0, x]
     // [0, 0, 1, 0]
     // [x, x, 0, x]
-
-    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 && // z-column
-        array.getValueAtIndex(rt, 6).asNumber() == 0.0 && // z-column
-        array.getValueAtIndex(rt, 10).asNumber() == 1.0 && // z-scale
-        array.getValueAtIndex(rt, 11).asNumber() == 0.0 && // z-translation
-        array.getValueAtIndex(rt, 14).asNumber() == 0.0 && // z-column
-        array.getValueAtIndex(rt, 15).asNumber() == 1.0; // homogeneous
+    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 6).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 10).asNumber() == 1.0 &&
+        array.getValueAtIndex(rt, 11).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 14).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 15).asNumber() == 1.0;
   }
 
   return false;
@@ -110,17 +116,14 @@ bool TransformMatrix2D::canConstruct(const folly::dynamic &array) {
   // Check if it's a 4x4 matrix (16 elements) that can be converted to 2D
   if (size == 16) {
     // A 4x4 matrix can be converted to 2D if it has this pattern:
+    // (where x means any number)
     // [x, x, 0, x]
     // [x, x, 0, x]
     // [0, 0, 1, 0]
     // [x, x, 0, x]
-
-    return array[2].asDouble() == 0.0 && // z-column
-        array[6].asDouble() == 0.0 && // z-column
-        array[10].asDouble() == 1.0 && // z-scale
-        array[11].asDouble() == 0.0 && // z-translation
-        array[14].asDouble() == 0.0 && // z-column
-        array[15].asDouble() == 1.0; // homogeneous
+    return array[2].asDouble() == 0.0 && array[6].asDouble() == 0.0 &&
+        array[10].asDouble() == 1.0 && array[11].asDouble() == 0.0 &&
+        array[14].asDouble() == 0.0 && array[15].asDouble() == 1.0;
   }
 
   return false;
@@ -128,17 +131,17 @@ bool TransformMatrix2D::canConstruct(const folly::dynamic &array) {
 
 TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
-    const TransformMatrix2D::Decomposed &other) const {
-  // Interpolate rotation using shortest path (handle angle wrapping)
-  constexpr double twoPi = 2.0 * M_PI;
-  double rotationDiff = (other.rotation - rotation);
-  rotationDiff -= twoPi * std::floor((rotationDiff + M_PI) / twoPi);
+    const TransformMatrix2D::Decomposed &target) const {
+  // Compute shortest signed angular delta (in range −π..π]
+  const double angleDelta =
+      std::remainder(target.rotation - rotation, 2.0 * M_PI);
 
   return {
-      .scale = scale.interpolate(progress, other.scale),
-      .skew = skew + (other.skew - skew) * progress,
-      .rotation = rotation + rotationDiff * progress,
-      .translation = translation.interpolate(progress, other.translation)};
+      .scale = scale.interpolate(progress, target.scale),
+      .skew = skew + (target.skew - skew) * progress,
+      .rotation = rotation + progress * angleDelta,
+      .translation = translation.interpolate(progress, target.translation),
+  };
 }
 
 #ifndef NDEBUG
@@ -286,7 +289,7 @@ std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
 
   const auto translation = matrixCp.getTranslation();
 
-  // Take the 2×2 linear part into two column vectors (col-major)
+  // Take the 2×2 linear part into two column vectors
   std::array<Vector2D, 2> rows;
   for (size_t i = 0; i < 2; ++i) {
     rows[i] = Vector2D(matrixCp[i * 3], matrixCp[i * 3 + 1]);
@@ -321,14 +324,16 @@ TransformMatrix2D TransformMatrix2D::recompose(
   result.translate2d(decomposed.translation);
 
   // Apply Rotation
-  const auto rotationMatrix =
-      TransformMatrix2D::create<TransformOp::Rotate>(decomposed.rotation);
-  result = rotationMatrix * result;
+  if (decomposed.rotation != 0) {
+    const auto rotationMatrix =
+        TransformMatrix2D::create<TransformOp::Rotate>(decomposed.rotation);
+    result = rotationMatrix * result;
+  }
 
   // Apply XY shear
   if (decomposed.skew != 0) {
     auto tmp = TransformMatrix2D();
-    tmp[1] = -decomposed.skew;
+    tmp[3] = decomposed.skew;
     result = tmp * result;
   }
 
@@ -366,11 +371,10 @@ std::pair<Vector2D, double> TransformMatrix2D::computeScaleAndSkew(
 
 double TransformMatrix2D::computeRotation(std::array<Vector2D, 2> &rows) {
   // For 2D, we can compute rotation directly from the orthonormal matrix
-  // The rotation angle is atan2(m10, m00) where m10 is rows[1][0] and m00 is
+  // The rotation angle is atan2(m01, m00) where m01 is rows[0][1] and m00 is
   // rows[0][0]
-  return std::atan2(rows[1][0], rows[0][0]);
+  return std::atan2(rows[0][1], rows[0][0]);
 }
-
 // Explicit template instantiations for unsupported operations
 // These will use the fallback template function that throws an error
 template TransformMatrix2D TransformMatrix2D::create<TransformOp::Perspective>(

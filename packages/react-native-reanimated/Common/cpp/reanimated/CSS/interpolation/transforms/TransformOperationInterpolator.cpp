@@ -40,8 +40,6 @@ folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
 
   TransformMatrix3D result;
 
-  LOG(INFO) << "shouldBe3D? " << shouldBe3D;
-
   if (shouldBe3D) {
     result =
         interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix);

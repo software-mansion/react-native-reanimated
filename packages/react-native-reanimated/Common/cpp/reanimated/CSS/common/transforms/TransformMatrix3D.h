@@ -30,7 +30,7 @@ class TransformMatrix3D
         const Decomposed &decomposed);
 #endif // NDEBUG
 
-    Decomposed interpolate(double progress, const Decomposed &other) const;
+    Decomposed interpolate(double progress, const Decomposed &to) const;
   };
 
   using TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>::
