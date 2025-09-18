@@ -76,14 +76,51 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
 };
 
 /**
+ * Helper function to create a concrete CSSValue from defaultValue
+ */
+template <typename... AllowedTypes>
+CSSValueVariant<AllowedTypes...> createCSSValue(const auto &defaultValue) {
+  using ValueType = decltype(defaultValue);
+  CSSValueVariant<AllowedTypes...> result;
+
+  auto tryOne = [&]<typename TCSSValue>() -> bool {
+    if constexpr (std::is_constructible_v<TCSSValue, ValueType>) {
+      if constexpr (ValueConstructibleCSSValue<TCSSValue, ValueType>) {
+        // For construction from a non-jsi::Value, we perform a runtime
+        // canConstruct check only if the type has a canConstruct method.
+        // (this is needed e.g. when different CSS value types can be
+        // constructed from the same value type, like CSSLength and CSSKeyword)
+        if (!TCSSValue::canConstruct(defaultValue)) {
+          return false;
+        }
+      }
+      result = CSSValueVariant<AllowedTypes...>(
+          std::variant<AllowedTypes...>(TCSSValue(defaultValue)));
+      return true;
+    }
+    return false;
+  };
+
+  // Try constructing with each allowed type until one succeeds
+  if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
+    throw std::runtime_error(
+        "[Reanimated] No compatible type found for construction from defaultValue");
+  }
+
+  return result;
+}
+
+/**
  * Value interpolator factories
  */
 template <typename... AllowedTypes>
 auto value(const auto &defaultValue) -> std::enable_if_t<
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
+  // Create a concrete CSSValue from the defaultValue
+  auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(
-      CSSValueVariant<AllowedTypes...>(defaultValue));
+      std::move(cssValue));
 }
 
 template <typename... AllowedTypes>
@@ -91,8 +128,10 @@ auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config)
     -> std::enable_if_t<
         (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
         std::shared_ptr<PropertyInterpolatorFactory>> {
+  // Create a concrete CSSValue from the defaultValue
+  auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
-      CSSValueVariant<AllowedTypes...>(defaultValue), std::move(config));
+      std::move(cssValue), std::move(config));
 }
 
 /**
