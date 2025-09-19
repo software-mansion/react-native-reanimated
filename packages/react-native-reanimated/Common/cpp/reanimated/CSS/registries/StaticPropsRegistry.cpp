@@ -1,5 +1,7 @@
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 void StaticPropsRegistry::set(
