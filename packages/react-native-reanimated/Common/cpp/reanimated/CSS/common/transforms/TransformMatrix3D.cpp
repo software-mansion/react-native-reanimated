@@ -1,6 +1,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 TransformMatrix3D::TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value)
