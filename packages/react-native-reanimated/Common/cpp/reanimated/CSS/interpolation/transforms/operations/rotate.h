@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
-#include <memory>
 #include <string>
 
 namespace reanimated::css {
@@ -12,26 +11,21 @@ struct RotateOperationBase2D
     : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  explicit RotateOperationBase2D(const std::string &value)
-      : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
+  explicit RotateOperationBase2D(const std::string &value);
 
-  folly::dynamic valueToDynamic() const override {
-    return this->value.toDynamic();
-  }
+  folly::dynamic valueToDynamic() const override;
 };
 
 template <TransformOp TOperation>
-struct RotateOperationBase3D : public RotateOperationBase2D<TOperation> {
-  using RotateOperationBase2D<TOperation>::RotateOperationBase2D;
+struct RotateOperationBase3D
+    : public TransformOperationBase<TOperation, CSSAngle> {
+  using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  bool is3D() const override {
-    return true;
-  }
+  explicit RotateOperationBase3D(const std::string &value);
 
-  TransformMatrix::Shared toMatrix(bool /* force3D */) const override {
-    return std::make_shared<const TransformMatrix3D>(
-        TransformMatrix3D::create<TOperation>(this->value.value));
-  }
+  bool is3D() const override;
+  folly::dynamic valueToDynamic() const override;
+  TransformMatrix::Shared toMatrix(bool /* force3D */) const override;
 };
 
 using RotateOperation = RotateOperationBase2D<TransformOp::Rotate>;
@@ -42,14 +36,8 @@ struct RotateZOperation final
     : public RotateOperationBase2D<TransformOp::RotateZ> {
   using RotateOperationBase2D<TransformOp::RotateZ>::RotateOperationBase2D;
 
-  bool canConvertTo(TransformOp type) const override {
-    return type == TransformOp::Rotate;
-  }
-
-  TransformOperations convertTo(TransformOp type) const override {
-    assertCanConvertTo(type);
-    return {std::make_shared<RotateOperation>(value)};
-  }
+  bool canConvertTo(TransformOp type) const override;
+  TransformOperations convertTo(TransformOp type) const override;
 };
 
 } // namespace reanimated::css

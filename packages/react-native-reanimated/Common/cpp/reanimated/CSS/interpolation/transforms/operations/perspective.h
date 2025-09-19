@@ -11,26 +11,11 @@ struct PerspectiveOperation final
   using TransformOperationBase<TransformOp::Perspective, CSSDouble>::
       TransformOperationBase;
 
-  explicit PerspectiveOperation(double value)
-      : TransformOperationBase<TransformOp::Perspective, CSSDouble>(
-            CSSDouble(value)) {}
+  explicit PerspectiveOperation(double value);
 
-  folly::dynamic valueToDynamic() const override {
-    return value.value != 0 ? value.toDynamic() : folly::dynamic();
-  }
-
-  bool is3D() const override {
-    return true;
-  }
-
-  TransformMatrix::Shared toMatrix(bool /* force3D */) const override {
-    if (!cachedMatrix_) {
-      // Perspective is a 3D operation
-      cachedMatrix_ = std::make_shared<const TransformMatrix3D>(
-          TransformMatrix3D::create<TransformOp::Perspective>(value.value));
-    }
-    return cachedMatrix_;
-  }
+  bool is3D() const override;
+  folly::dynamic valueToDynamic() const override;
+  TransformMatrix::Shared toMatrix(bool /* force3D */) const override;
 };
 
 } // namespace reanimated::css

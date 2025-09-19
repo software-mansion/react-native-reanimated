@@ -39,12 +39,9 @@ struct MatrixOperation final : public TransformOperation {
 
   bool operator==(const TransformOperation &other) const override;
 
-  TransformMatrix::Shared toMatrix(bool force3D) const override;
-
+  bool is3D() const override;
   folly::dynamic valueToDynamic() const override;
-  bool is3D() const override {
-    return is3D_;
-  }
+  TransformMatrix::Shared toMatrix(bool force3D) const override;
 
  private:
   bool is3D_;
