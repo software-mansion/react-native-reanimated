@@ -15,50 +15,9 @@
 namespace reanimated::css {
 
 template <typename... AllowedTypes>
-template <typename TValue>
-CSSValueVariant<AllowedTypes...>::CSSValueVariant(TValue &&value)
-  requires((std::is_constructible_v<AllowedTypes, TValue> || ...))
-{ // NOLINT(whitespace/braces)
-  using ValueType = TValue;
-
-  // If value type exactly matches one of AllowedTypes, store it directly:
-  if constexpr ((std::is_same_v<
-                     std::remove_reference_t<ValueType>,
-                     AllowedTypes> ||
-                 ...)) {
-    storage_ = std::forward<ValueType>(value);
-  } else {
-    // Otherwise, try to construct the CSSValue from each type in turn
-    auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (std::is_constructible_v<TCSSValue, ValueType>) {
-        if constexpr (ValueConstructibleCSSValue<TCSSValue, ValueType>) {
-          // For construction from a non-jsi::Value, we perform a runtime
-          // canConstruct check only if the type has a canConstruct method.
-          // (this is needed e.g. when different CSS value types can be
-          // constructed from the same value type, like CSSLength and
-          // CSSKeyword)
-          if (!TCSSValue::canConstruct(std::forward<ValueType>(value))) {
-            return false;
-          }
-        }
-        storage_ = TCSSValue(std::forward<ValueType>(value));
-        return true;
-      }
-      return false;
-    };
-
-    // Try constructing with each allowed type until one succeeds
-    if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
-      throw std::runtime_error(
-          "[Reanimated] No compatible type found for construction");
-    }
-  }
-}
-
-template <typename... AllowedTypes>
-CSSValueVariant<AllowedTypes...>::CSSValueVariant(const char *value) {
-  *this = CSSValueVariant(std::string(value));
-}
+CSSValueVariant<AllowedTypes...>::CSSValueVariant(
+    std::variant<AllowedTypes...> &&storage)
+    : storage_(std::move(storage)) {}
 
 template <typename... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(
@@ -220,23 +179,5 @@ template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 template class CSSValueVariant<SVGLength>;
 template class CSSValueVariant<SVGLength, CSSKeyword>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
-
-template CSSValueVariant<CSSBoolean>::CSSValueVariant(bool const &);
-template CSSValueVariant<CSSInteger>::CSSValueVariant(int const &);
-template CSSValueVariant<CSSLength>::CSSValueVariant(int const &);
-template CSSValueVariant<CSSDisplay>::CSSValueVariant(char const &);
-template CSSValueVariant<CSSBoxShadow>::CSSValueVariant(CSSBoxShadow const &);
-template CSSValueVariant<CSSColor>::CSSValueVariant(CSSColor const &);
-template CSSValueVariant<CSSDouble>::CSSValueVariant(int const &);
-template CSSValueVariant<CSSDouble, CSSKeyword>::CSSValueVariant(int const &);
-template CSSValueVariant<CSSLength, CSSKeyword>::CSSValueVariant(int const &);
-template CSSValueVariant<CSSDiscreteArray<CSSKeyword>>::CSSValueVariant(
-    std::vector<CSSKeyword> const &);
-template CSSValueVariant<CSSAngle>::CSSValueVariant(int const &);
-
-template CSSValueVariant<SVGStrokeDashArray, CSSKeyword>::CSSValueVariant(
-    SVGStrokeDashArray const &);
-template CSSValueVariant<SVGLength>::CSSValueVariant(int const &);
-template CSSValueVariant<SVGLength, CSSKeyword>::CSSValueVariant(int const &);
 
 } // namespace reanimated::css
