@@ -1,5 +1,6 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { ComponentRef } from 'react';
 import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -26,7 +27,7 @@ export default function SearchFilters({
   queryResults,
   setCurrentFilter,
 }: SearchFiltersProps) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });

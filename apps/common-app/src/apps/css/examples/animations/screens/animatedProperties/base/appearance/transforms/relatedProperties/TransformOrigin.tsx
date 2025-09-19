@@ -124,7 +124,7 @@ export default function TransformOrigin() {
           sections: [
             {
               description:
-                'Single value specified in pixels (or as a number). It is applied only to the **x axis**. The second axis is set to `center` by default.',
+                'Single value specified in pixels (or 3-value array). It is applied only to the **x axis**. The second axis is set to `center` by default.',
               examples: [
                 {
                   title: 'As a pixels string',
@@ -132,7 +132,10 @@ export default function TransformOrigin() {
                 },
                 {
                   title: 'As a number',
-                  transformOrigins: [[-50], [100]],
+                  transformOrigins: [
+                    [-50, 0, 0],
+                    [100, 0, 0],
+                  ],
                 },
               ],
               title: 'Single value',
@@ -148,8 +151,8 @@ export default function TransformOrigin() {
                 {
                   title: 'As a number',
                   transformOrigins: [
-                    [120, -20],
-                    [-50, 60],
+                    [120, -20, 0],
+                    [-50, 60, 0],
                   ],
                 },
               ],
@@ -193,7 +196,7 @@ export default function TransformOrigin() {
               examples: [
                 {
                   title: 'Mixed values',
-                  transformOrigins: ['-75px', '50%', [-25], 'center'],
+                  transformOrigins: ['-75px', '50%', [-25, 0, 0], 'center'],
                 },
               ],
               title: 'Single value',
@@ -206,7 +209,7 @@ export default function TransformOrigin() {
                   title: 'Mixed values',
                   transformOrigins: [
                     '-50px 50%',
-                    [50, 0],
+                    [50, 0, 0],
                     'center bottom',
                     '125%   bottom',
                   ],
