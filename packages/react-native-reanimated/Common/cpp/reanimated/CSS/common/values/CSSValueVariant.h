@@ -74,20 +74,15 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant() = default;
 
   /**
-   * Construct from any value that is or can construct one of the AllowedTypes
-   * (chooses the first one that matches)
+   * Construct from std::variant storage directly
    */
-  template <typename TValue>
-  explicit CSSValueVariant(TValue &&value)
-    requires((std::is_constructible_v<AllowedTypes, TValue> || ...));
-
-  explicit CSSValueVariant(const char *value);
+  explicit CSSValueVariant(std::variant<AllowedTypes...> &&storage);
 
   /**
    * Construct from jsi::Value if it matches any AllowedType's constructor
    * (chooses the first one that matches)
    */
-  CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
   /**
    * Construct from folly::dynamic if it matches any AllowedType's constructor
@@ -96,11 +91,9 @@ class CSSValueVariant final : public CSSValue {
   explicit CSSValueVariant(const folly::dynamic &value);
 
   bool operator==(const CSSValueVariant &other) const;
-
   bool operator==(const CSSValue &other) const;
 
   folly::dynamic toDynamic() const override;
-
   std::string toString() const override;
 
   /**
