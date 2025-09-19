@@ -102,7 +102,7 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant interpolate(
       const double progress,
       const CSSValueVariant &to,
-      const CSSValueInterpolationContext &context) const;
+      const ValueInterpolationContext &context) const;
 
   /**
    * Interpolate (resolvable)
@@ -110,7 +110,7 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant interpolate(
       const double progress,
       const CSSValueVariant &to,
-      const CSSResolvableValueInterpolationContext &context) const;
+      const ResolvableValueInterpolationContext &context) const;
 
  private:
   std::variant<AllowedTypes...> storage_;

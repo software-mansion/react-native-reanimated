@@ -72,7 +72,7 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit TransformsInterpolatorFactory(
-      const std::shared_ptr<TransformInterpolators> &interpolators)
+      const std::shared_ptr<TransformOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -105,7 +105,7 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
     }
   };
 
-  const std::shared_ptr<TransformInterpolators> interpolators_;
+  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
 };
 
 // Non-template function implementations
@@ -123,12 +123,12 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const std::unordered_map<
         std::string,
         std::shared_ptr<TransformInterpolator>> &interpolators) {
-  TransformInterpolators result;
+  TransformOperationInterpolators result;
   for (const auto &[property, interpolator] : interpolators) {
     result[getTransformOperationType(property)] = interpolator;
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformInterpolators>(result));
+      std::make_shared<TransformOperationInterpolators>(result));
 }
 
 } // namespace reanimated::css

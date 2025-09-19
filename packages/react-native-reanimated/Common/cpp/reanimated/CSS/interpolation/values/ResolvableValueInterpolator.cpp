@@ -27,7 +27,7 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
     const std::shared_ptr<CSSValue> &fromValue,
     const std::shared_ptr<CSSValue> &toValue,
-    const CSSValueInterpolationContext &context) const {
+    const ValueInterpolationContext &context) const {
   const auto &from = std::static_pointer_cast<ValueType>(fromValue);
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
   return from

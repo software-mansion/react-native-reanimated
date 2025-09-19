@@ -103,7 +103,7 @@ template <typename... AllowedTypes>
 CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
-    const CSSValueInterpolationContext &context) const {
+    const ValueInterpolationContext &context) const {
   if (storage_.index() != to.storage_.index()) {
     return fallbackInterpolate(
         progress, to, context.fallbackInterpolateThreshold);
@@ -130,7 +130,7 @@ template <typename... AllowedTypes>
 CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
-    const CSSResolvableValueInterpolationContext &context) const {
+    const ResolvableValueInterpolationContext &context) const {
   if (storage_.index() != to.storage_.index()) {
     return fallbackInterpolate(
         progress, to, context.fallbackInterpolateThreshold);

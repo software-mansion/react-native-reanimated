@@ -15,12 +15,12 @@ enum class RelativeTo {
   Self,
 };
 
-struct CSSValueInterpolationContext {
+struct ValueInterpolationContext {
   const std::shared_ptr<const ShadowNode> &node;
   const double fallbackInterpolateThreshold;
 };
 
-struct CSSResolvableValueInterpolationContext {
+struct ResolvableValueInterpolationContext {
   const std::shared_ptr<const ShadowNode> &node;
   const double fallbackInterpolateThreshold;
   const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
@@ -57,9 +57,9 @@ struct CSSResolvableValue : public CSSValue {
   virtual TDerived interpolate(
       double progress,
       const TDerived &to,
-      const CSSResolvableValueInterpolationContext &context) const = 0;
+      const ResolvableValueInterpolationContext &context) const = 0;
   virtual std::optional<TResolved> resolve(
-      const CSSResolvableValueInterpolationContext &context) const = 0;
+      const ResolvableValueInterpolationContext &context) const = 0;
   virtual bool canInterpolateTo(const TDerived &to) const {
     return true;
   }

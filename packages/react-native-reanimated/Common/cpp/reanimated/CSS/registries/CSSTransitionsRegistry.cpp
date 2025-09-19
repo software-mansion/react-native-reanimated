@@ -170,7 +170,7 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
     }
   }
 
-  // updates object contains only allowed properties so we don't need
+  // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
   setInUpdatesRegistry(shadowNode, filteredUpdates);
