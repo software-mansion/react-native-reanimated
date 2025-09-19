@@ -9,6 +9,7 @@
     "worklets"
   ],
   "scripts": {
+    "semantic-release": "semantic-release",
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
     "build:unpackers": "node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
