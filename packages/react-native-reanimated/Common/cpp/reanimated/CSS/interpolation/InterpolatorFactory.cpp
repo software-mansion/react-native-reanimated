@@ -89,8 +89,8 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
-  static TransformMatrix3D &getIdentityMatrix() {
-    static TransformMatrix3D identityMatrix = TransformMatrix3D::Identity();
+  static TransformMatrix2D &getIdentityMatrix() {
+    static TransformMatrix2D identityMatrix = TransformMatrix2D();
     return identityMatrix;
   }
 
@@ -124,11 +124,12 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
         std::string,
         std::shared_ptr<TransformInterpolator>> &interpolators) {
   TransformOperationInterpolators result;
+  result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result[getTransformOperationType(property)] = interpolator;
+    result.emplace(getTransformOperationType(property), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformOperationInterpolators>(result));
+      std::make_shared<TransformOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

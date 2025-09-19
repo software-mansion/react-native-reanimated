@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
 #include <string>
 
 namespace reanimated::css {
@@ -16,7 +17,7 @@ struct TranslateOperationBase
   explicit TranslateOperationBase(const std::string &value)
       : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
 
-  bool isRelative() const override {
+  bool shouldResolve() const override {
     return this->value.isRelative;
   }
 
@@ -24,12 +25,19 @@ struct TranslateOperationBase
     return this->value.toDynamic();
   }
 
-  TransformMatrix3D toMatrix() const override {
-    if (this->value.isRelative) {
+  TransformMatrix::Shared toMatrix(bool force3D) const override {
+    if (shouldResolve()) {
       throw std::invalid_argument(
-          "[Reanimated] Cannot convert relative translate to the matrix.");
+          "[Reanimated] Cannot convert unresolved relative translate value to matrix: " +
+          this->value.toString());
     }
-    return TransformMatrix3D::create<TOperation>(this->value.value);
+
+    if (force3D) {
+      return std::make_shared<TransformMatrix3D>(
+          TransformMatrix3D::create<TOperation>(this->value.value));
+    }
+    return std::make_shared<TransformMatrix2D>(
+        TransformMatrix2D::create<TOperation>(this->value.value));
   }
 };
 

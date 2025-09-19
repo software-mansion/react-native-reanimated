@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
@@ -117,9 +116,16 @@ class TransformOperationInterpolator<MatrixOperation>
       const std::shared_ptr<TransformOperation> &to,
       const TransformInterpolationContext &context) const override;
 
- private:
-  TransformMatrix3D matrixFromOperation(
-      const MatrixOperation &matrixOperation,
+ protected:
+  template <typename MatrixType>
+  MatrixType interpolateMatrix(
+      double progress,
+      const TransformMatrix::Shared &from,
+      const TransformMatrix::Shared &to) const;
+
+  TransformMatrix::Shared matrixFromOperation(
+      const std::shared_ptr<TransformOperation> &operation,
+      bool shouldBe3D,
       const TransformInterpolationContext &context) const;
 };
 

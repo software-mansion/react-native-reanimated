@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 
 #include <folly/dynamic.h>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -10,17 +11,25 @@ namespace reanimated::css {
 
 class TransformMatrix {
  public:
+  using Shared = std::shared_ptr<const TransformMatrix>;
+
+  TransformMatrix() = default;
   virtual ~TransformMatrix() = default;
 
-  virtual double determinant() const = 0;
-
-  virtual double &operator[](size_t index) = 0;
-  virtual const double &operator[](size_t index) const = 0;
-
   virtual size_t getDimension() const = 0;
+  virtual size_t getSize() const = 0;
+
+  virtual bool isSingular() const = 0;
+  virtual bool normalize() = 0;
+  virtual void transpose() = 0;
+  virtual double determinant() const = 0;
 
   virtual std::string toString() const = 0;
   virtual folly::dynamic toDynamic() const = 0;
+
+  virtual double &operator[](size_t index) = 0;
+  virtual const double &operator[](size_t index) const = 0;
+  virtual bool operator==(const TransformMatrix &other) const = 0;
 };
 
 template <typename TDerived, size_t TDimension>
@@ -29,51 +38,72 @@ class TransformMatrixBase : public TransformMatrix {
   static constexpr size_t SIZE = TDimension * TDimension;
   using MatrixArray = std::array<double, SIZE>;
 
+  TransformMatrixBase() : TransformMatrix(), matrix_{} {
+    // Create an identity matrix
+    for (size_t i = 0; i < TDimension; ++i) {
+      matrix_[i * (TDimension + 1)] = 1;
+    }
+  }
+
   explicit TransformMatrixBase(MatrixArray matrix)
-      : matrix_(std::move(matrix)) {}
+      : TransformMatrix(), matrix_(std::move(matrix)) {}
 
-  explicit TransformMatrixBase(jsi::Runtime &rt, const jsi::Value &value) {
-    const auto array = value.asObject(rt).asArray(rt);
-    if (array.size(rt) != SIZE) {
-      throw std::invalid_argument(
-          "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
-          " elements");
-    }
+  TransformMatrixBase(const TransformMatrixBase &other)
+      : TransformMatrix(), matrix_(other.matrix_) {}
 
-    for (size_t i = 0; i < SIZE; ++i) {
-      matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
-    }
+  TransformMatrixBase(TransformMatrixBase &&other) noexcept
+      : TransformMatrix(), matrix_(std::move(other.matrix_)) {}
+
+  inline bool operator==(const TDerived &other) const {
+    return matrix_ == other.matrix_;
   }
 
-  explicit TransformMatrixBase(const folly::dynamic &array) {
-    if (!array.isArray() || array.size() != SIZE) {
-      throw std::invalid_argument(
-          "[Reanimated] Matrix array should have " + std::to_string(SIZE) +
-          " elements");
-    }
-
-    for (size_t i = 0; i < SIZE; ++i) {
-      matrix_[i] = array[i].asDouble();
-    }
+  inline bool operator==(const TransformMatrix &other) const override {
+    return TDimension == other.getDimension() &&
+        matrix_ == static_cast<const TDerived &>(other).matrix_;
   }
 
-  virtual bool operator==(const TDerived &other) const = 0;
-
-  double &operator[](size_t index) override {
+  inline double &operator[](size_t index) override {
     return matrix_[index];
   }
 
-  const double &operator[](size_t index) const override {
+  inline const double &operator[](size_t index) const override {
     return matrix_[index];
   }
 
-  TDerived operator*(const TDerived &rhs) const {
-    return TDerived(multiply(rhs));
+  size_t getDimension() const override {
+    return TDimension;
   }
 
-  TDerived &operator*=(const TDerived &rhs) {
-    matrix_ = multiply(rhs);
-    return static_cast<TDerived &>(*this);
+  size_t getSize() const override {
+    return SIZE;
+  }
+
+  bool isSingular() const override {
+    return determinant() == 0;
+  }
+
+  bool normalize() override {
+    const auto last = matrix_[SIZE - 1];
+    if (last == 0) {
+      return false;
+    }
+    if (last == 1) {
+      return true;
+    }
+
+    for (size_t i = 0; i < SIZE; ++i) {
+      matrix_[i] /= last;
+    }
+    return true;
+  }
+
+  void transpose() override {
+    for (size_t i = 0; i < TDimension; ++i) {
+      for (size_t j = i + 1; j < TDimension; ++j) {
+        std::swap(matrix_[i * TDimension + j], matrix_[j * TDimension + i]);
+      }
+    }
   }
 
   std::string toString() const override {
@@ -96,50 +126,46 @@ class TransformMatrixBase : public TransformMatrix {
     return result;
   }
 
-  size_t getDimension() const override {
-    return TDimension;
+  inline TDerived operator*(const TDerived &rhs) const {
+    return TDerived(multiply(rhs));
   }
 
-  bool isSingular() const {
-    return determinant() == 0;
+  inline TDerived &operator*=(const TDerived &rhs) {
+    matrix_ = multiply(rhs);
+    return static_cast<TDerived &>(*this);
   }
 
-  bool normalize() {
-    const auto last = matrix_[SIZE - 1];
-    if (last == 0) {
-      return false;
+  TransformMatrixBase &operator=(const TransformMatrixBase &other) {
+    if (this != &other) {
+      // Note: dimension_ is const, so we can't reassign it
+      // But since all instances have the same dimension, this is fine
+      matrix_ = other.matrix_;
     }
-    if (last == 1) {
-      return true;
-    }
-
-    for (size_t i = 0; i < SIZE; ++i) {
-      matrix_[i] /= last;
-    }
-    return true;
+    return *this;
   }
 
-  void transpose() {
-    for (size_t i = 0; i < TDimension; ++i) {
-      for (size_t j = i + 1; j < TDimension; ++j) {
-        std::swap(matrix_[i * TDimension + j], matrix_[j * TDimension + i]);
-      }
+  TransformMatrixBase &operator=(TransformMatrixBase &&other) noexcept {
+    if (this != &other) {
+      matrix_ = std::move(other.matrix_);
     }
+    return *this;
   }
 
  protected:
   std::array<double, SIZE> matrix_;
 
   MatrixArray multiply(const TDerived &rhs) const {
-    std::array<double, SIZE> result{};
+    MatrixArray result{};
+
     for (size_t i = 0; i < TDimension; ++i) {
-      for (size_t j = 0; j < TDimension; ++j) {
-        for (size_t k = 0; k < TDimension; ++k) {
-          result[i * TDimension + j] +=
-              matrix_[i * TDimension + k] * rhs[k * TDimension + j];
+      for (size_t k = 0; k < TDimension; ++k) {
+        double temp = matrix_[i * TDimension + k];
+        for (size_t j = 0; j < TDimension; ++j) {
+          result[i * TDimension + j] += temp * rhs[k * TDimension + j];
         }
       }
     }
+
     return result;
   }
 };
