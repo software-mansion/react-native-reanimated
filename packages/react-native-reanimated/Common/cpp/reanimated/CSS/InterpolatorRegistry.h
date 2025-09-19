@@ -10,8 +10,6 @@ namespace reanimated::css {
 using ComponentInterpolatorsMap =
     std::unordered_map<std::string, InterpolatorFactoriesRecord>;
 
-bool hasInterpolators(const std::string &componentName);
-
 const InterpolatorFactoriesRecord &getComponentInterpolators(
     const std::string &componentName);
 
