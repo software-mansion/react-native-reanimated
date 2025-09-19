@@ -3,9 +3,9 @@ import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import type {
+  InstanceOrElement,
   MeasuredDimensions,
   ShadowNodeWrapper,
-  WrapperRef,
 } from '../commonTypes';
 import type {
   AnimatedRef,
@@ -13,7 +13,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <TRef extends WrapperRef>(
+type Measure = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 
