@@ -8,7 +8,6 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
-#include <reanimated/CSS/svg/configs/init.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>

@@ -73,11 +73,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  if constexpr (StaticFeatureFlags::getFlag(
-                    "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
-    css::initSvgCssSupport();
-  }
-
   auto lock = updatesRegistryManager_->lock();
   // Add registries in order of their priority (from the lowest to the
   // highest)
