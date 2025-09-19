@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>

@@ -1,3 +1,4 @@
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
 
 #include <memory>

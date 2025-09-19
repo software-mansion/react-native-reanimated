@@ -1,3 +1,5 @@
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
 #include <memory>
