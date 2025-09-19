@@ -9,60 +9,7 @@ import TabItem from '@theme/TabItem';
 
 It's possible to launch Reanimated in a web browser. For that case all of the functionalities are implemented purely in JavaScript, hence the efficiency of the animations might be lower.
 
-### Step 1: Install the package
-
-Install [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/babel-plugin-transform-export-namespace-from):
-
-<Tabs groupId="package-managers">
-  <TabItem value="expo" label="EXPO" default>
-    ```bash
-    npx expo install @babel/plugin-proposal-export-namespace-from
-    ```
-  </TabItem>
-  <TabItem value="npm" label="NPM">
-    ```bash
-    npm install @babel/plugin-proposal-export-namespace-from
-    ```
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add @babel/plugin-proposal-export-namespace-from
-    ```
-  </TabItem>
-</Tabs>
-
-### Step 2: Add plugins to config file
-
-Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin to your `babel.config.js`.
-
-```js {7,8}
-  module.exports = {
-      presets: [
-        ... // don't add it here :)
-      ],
-      plugins: [
-          ...
-          '@babel/plugin-proposal-export-namespace-from',
-          'react-native-worklets/plugin',
-      ],
-  };
-```
-
-:::caution
-
-Make sure to list `react-native-worklets/plugin` last.
-
-:::
-
-### Step 3: Launch your app
-
-If you use
-[playground](https://github.com/software-mansion-labs/reanimated-3-playground)
-app and want to start it in the browser just type:
-
-```shell
-yarn web
-```
+## Example app
 
 If you want to start the example applications from the
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated) you need to run the following commands inside respository root:
@@ -122,11 +69,17 @@ module.exports = {
 
 ## Web without the Babel plugin
 
-It is possible to use Reanimated without the Babel plugin (`react-native-worklets/plugin` on the Web, with some additional configuration.
+:::caution
 
-Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
+We strongly recommend not opting out of the Worklets Babel plugin, as it is the only configuration we actively test.
 
-In order to use Reanimated without a Babel/SWC plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
+:::
+
+It is possible to use Reanimated without the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
+
+Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklets Babel plugin to automatically infer these dependencies for you.
+
+In order to use Reanimated without the Worklets Babel plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
 
 Passing a dependency array is valid on both Web and native. Adding them will not negatively impact iOS or Android.
 
@@ -148,12 +101,6 @@ const dv = useDerivedValue(
 ```
 
 Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
-
-:::caution
-
-Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
-
-:::
 
 ### ESLint Support
 
