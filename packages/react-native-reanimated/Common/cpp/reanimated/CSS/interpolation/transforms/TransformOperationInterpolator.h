@@ -6,10 +6,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
-#include <algorithm>
-#include <iterator>
 #include <memory>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
