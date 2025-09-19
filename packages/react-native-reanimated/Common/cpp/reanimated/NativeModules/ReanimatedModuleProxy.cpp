@@ -339,6 +339,10 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           config,
           "[Reanimated] Layout animation config must be an object.");
     }
+    auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
+    if (!sharedTag.isUndefined()){
+      batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();
@@ -547,7 +551,7 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &payload,
+    const jsi::Value &payloadd,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
@@ -556,7 +560,7 @@ bool ReanimatedModuleProxy::handleEvent(
       currentTime,
       eventName,
       emitterReactTag,
-      payload);
+      payloadd);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -582,6 +586,40 @@ bool ReanimatedModuleProxy::handleRawEvent(
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
+  }
+  
+  if (!strcmp(eventType.c_str(), "onTransitionProgress")){
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    const auto &eventPayload = rawEvent.eventPayload;
+    jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
+    auto progress = payload.getProperty(rt, "progress").asNumber();
+    auto closing = payload.getProperty(rt, "closing").asNumber();
+    auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
+    auto swiping = payload.getProperty(rt, "swiping").asNumber();
+    
+    auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward, swiping);
+    if (!surfaceId){
+      return false;
+    }
+    // TODO: enumerate -> visit
+    uiManager_->getShadowTreeRegistry().enumerate(
+        [](const ShadowTree &shadowTree, bool&) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+    return false;
+  } else if (!strcmp(eventType.c_str(), "onGestureCancel")){
+    
+    auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
+    if (!surfaceId){
+      return false;
+    }
+    // TODO: enumerate -> visit
+    uiManager_->getShadowTreeRegistry().enumerate(
+        [](const ShadowTree &shadowTree, bool&) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+    return false;
   }
 
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
@@ -692,9 +730,9 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+// TODO: use the SET flag when it's ready 
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag(
-                      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (false) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",

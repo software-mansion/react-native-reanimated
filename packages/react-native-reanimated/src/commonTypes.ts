@@ -95,6 +95,8 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
 }
 
 export type LayoutAnimationFunction = (
@@ -163,6 +165,7 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  sharedTransitionTag?: string;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
