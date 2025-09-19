@@ -1,4 +1,5 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
@@ -12,10 +13,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
-#ifdef REANIMATED_SVG_SUPPORT
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
-#endif
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
@@ -189,7 +188,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"borderBottomStartRadius",
           value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"borderColor", value<CSSColor>(BLACK)},
-         {"borderCurve", value<CSSKeyword>("circular")}, // TODO
+         {"borderCurve", value<CSSKeyword>("circular")},
          {"borderEndColor", value<CSSColor>(BLACK)},
          {"borderEndEndRadius",
           value<CSSLength>(0, {RelativeTo::Self, "width"})},
@@ -275,8 +274,6 @@ const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
 // =================
 // SVG INTERPOLATORS
 // =================
-
-#ifdef REANIMATED_SVG_SUPPORT
 
 const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
     {"color", value<CSSColor>(BLACK)},
@@ -373,27 +370,32 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
          // TODO - add more properties
      }});
 
-#endif // REANIMATED_SVG_SUPPORT
-
 // ==================
 // COMPONENT REGISTRY
 // ==================
 
-ComponentInterpolatorsMap registry = {
-    // React Native Components
-    {"View", VIEW_INTERPOLATORS},
-    {"Paragraph", TEXT_INTERPOLATORS},
-    {"Image", IMAGE_INTERPOLATORS},
+ComponentInterpolatorsMap initializeRegistry() {
+  ComponentInterpolatorsMap registry = {
+      // React Native Components
+      {"View", VIEW_INTERPOLATORS},
+      {"Paragraph", TEXT_INTERPOLATORS},
+      {"Image", IMAGE_INTERPOLATORS},
+  };
 
-#ifdef REANIMATED_SVG_SUPPORT
+  if (StaticFeatureFlags::getFlag(
+          "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     // SVG Components
-    {"RNSVGCircle", SVG_CIRCLE_INTERPOLATORS},
-    {"RNSVGEllipse", SVG_ELLIPSE_INTERPOLATORS},
-    {"RNSVGLine", SVG_LINE_INTERPOLATORS},
-    {"RNSVGPath", SVG_PATH_INTERPOLATORS},
-    {"RNSVGRect", SVG_RECT_INTERPOLATORS},
-#endif
-};
+    registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
+    registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
+    registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
+    registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
+    registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
+  }
+
+  return registry;
+}
+
+ComponentInterpolatorsMap registry = initializeRegistry();
 
 } // namespace
 
