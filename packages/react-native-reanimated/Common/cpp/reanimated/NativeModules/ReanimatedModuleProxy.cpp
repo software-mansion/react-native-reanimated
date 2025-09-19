@@ -1323,7 +1323,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
             ,
-        filterUnmountedTagsFunction_
+        filterUnmountedTagsFunction_,
+        uiManager_,
+        jsInvoker_
 #endif
     );
   }
