@@ -21,6 +21,7 @@ export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
+  runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';
 export { createSerializable, isSerializableRef } from './serializable';
