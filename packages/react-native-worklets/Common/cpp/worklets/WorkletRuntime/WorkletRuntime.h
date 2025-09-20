@@ -10,6 +10,7 @@
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/Promise.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
@@ -77,6 +78,10 @@ class WorkletRuntime : public jsi::HostObject,
     return name_;
   }
 
+  [[nodiscard]] auto getEventLoop() const -> std::shared_ptr<EventLoop> {
+    return eventLoop_;
+  }
+
  private:
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
@@ -97,4 +102,11 @@ void scheduleOnRuntime(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
 
+void runOnRuntimeAsync(
+    jsi::Runtime &rt,
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue,
+    const jsi::Value &serializableResolveValue,
+    const jsi::Value &serializableRejectValue);
 } // namespace worklets
