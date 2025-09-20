@@ -5,7 +5,10 @@ const semverPrerelease = require('semver/functions/prerelease');
 const expectedVersion = require('./worklets-version.json');
 const compatibilityFile = require('../compatibility.json');
 
-/** @returns {{ ok: boolean; message?: string }} */
+/**
+ * @param {string} reanimatedVersion
+ * @returns {{ ok: boolean; message?: string }}
+ */
 function validateVersion(reanimatedVersion) {
   let workletsVersion;
   try {
@@ -37,8 +40,8 @@ function validateVersion(reanimatedVersion) {
 
   for (const key in compatibilityFile) {
     if (semverSatisfies(reanimatedVersion, key)) {
-      // @ts-ignore
       supportedWorkletsVersions.push(
+        // @ts-ignore
         ...compatibilityFile[key]['react-native-worklets']
       );
     }

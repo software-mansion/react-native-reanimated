@@ -6,7 +6,6 @@ import type {
   AnimatedPropsAdapterWorklet,
 } from './commonTypes';
 
-// @ts-expect-error This overload is required by our API.
 export function createAnimatedPropAdapter(
   adapter: AnimatedPropsAdapterFunction,
   nativeProps?: string[]

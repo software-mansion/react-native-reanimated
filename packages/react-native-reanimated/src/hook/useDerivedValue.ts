@@ -30,7 +30,6 @@ export interface DerivedValue<Value = unknown>
  *   updater function
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue
  */
-// @ts-expect-error This overload is required by our API.
 export function useDerivedValue<Value>(
   updater: () => Value,
   dependencies?: DependencyList
