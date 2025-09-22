@@ -36,7 +36,7 @@ class ResolvableValueInterpolator final
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const override;
+      const ValueInterpolationContext &context) const override;
 
  private:
   const ResolvableValueInterpolatorConfig &config_;
