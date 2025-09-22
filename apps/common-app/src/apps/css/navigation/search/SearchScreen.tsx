@@ -165,7 +165,7 @@ export default function SearchScreen({ children }: SearchScreenProps) {
               style={[
                 flex.fill,
                 IS_WEB && {
-                  // @ts-expect-error - scrollbarGutter is a valid CSS property on web
+                  // @ts-ignore
                   scrollbarGutter: 'stable both-edges',
                 },
               ]}

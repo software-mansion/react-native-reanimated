@@ -186,8 +186,9 @@ function DropdownContent({
   toggleMeasurements,
 }: DropdownContentProps): JSX.Element {
   // TODO - fix infinite type recursion or create a repro and report the issue
-  // to the RN team
-  const flattenedStyle = StyleSheet.flatten(style);
+  // to the RN team. For now we are casting the type to any.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedStyle = StyleSheet.flatten(style as any) as ViewStyle;
   const windowDimensions = Dimensions.get('window');
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollOffset(scrollRef);

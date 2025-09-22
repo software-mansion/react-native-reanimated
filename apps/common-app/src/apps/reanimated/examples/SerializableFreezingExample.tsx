@@ -98,7 +98,7 @@ function tryModifyConvertedHostObject() {
     return;
   }
   createSerializable(obj);
-  // @ts-expect-error It's ok
+  // @ts-ignore
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
@@ -113,7 +113,7 @@ function tryModifyConvertedPlainObject() {
 function tryModifyConvertedRegExpLiteral() {
   const obj = /a/;
   createSerializable(obj);
-  // @ts-expect-error It's ok
+  // @ts-ignore
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
@@ -121,14 +121,14 @@ function tryModifyConvertedRegExpInstance() {
   // eslint-disable-next-line prefer-regex-literals
   const obj = new RegExp('a');
   createSerializable(obj);
-  // @ts-expect-error It's ok
+  // @ts-ignore
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 
 function tryModifyConvertedArrayBuffer() {
   const obj = new ArrayBuffer(8);
   createSerializable(obj);
-  // @ts-expect-error It's ok
+  // @ts-ignore
   obj.prop = 2; // shouldn't warn because it's not frozen
 }
 

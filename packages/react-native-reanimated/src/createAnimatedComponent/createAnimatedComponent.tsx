@@ -3,9 +3,11 @@ import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
 import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
+import type { InstanceOrElement } from '../commonTypes';
 import type { AnyRecord } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
+import type { ExtractElementRef } from '../hook/commonTypes';
 import type { Options } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 import type {
@@ -13,14 +15,19 @@ import type {
   InitialComponentProps,
 } from './commonTypes';
 
+export type AnimatedComponentRef<TInstance> =
+  | Ref<ExtractElementRef<TInstance>>
+  | (TInstance extends InstanceOrElement ? AnimatedRef<TInstance> : never)
+  // Accept untyped AnimatedRef as well to allow passing a reference created
+  // with the useAnimatedRef hook call without specifying the type
+  | AnimatedRef;
+
 export type AnimatedComponentType<
   Props extends AnyRecord = object,
   Instance = unknown,
 > = (
   props: Omit<AnimatedProps<Props>, 'ref'> & {
-    // Accept untyped AnimatedRef as well to allow passing a reference created
-    // with the useAnimatedRef hook call without specifying the type
-    ref?: Ref<Instance> | AnimatedRef;
+    ref?: AnimatedComponentRef<Instance>;
   }
 ) => ReactNode;
 
@@ -60,10 +67,7 @@ export function createAnimatedComponent<
 >(
   Component: TInstance,
   options?: Options<InitialComponentProps>
-): AnimatedComponentType<
-  Readonly<React.ComponentProps<TInstance>>,
-  ComponentRef<TInstance>
->;
+): AnimatedComponentType<Readonly<React.ComponentProps<TInstance>>, TInstance>;
 
 export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,10 +75,7 @@ export function createAnimatedComponent<
 >(
   Component: TInstance,
   options?: Options<InitialComponentProps>
-): AnimatedComponentType<
-  Readonly<React.ComponentProps<TInstance>>,
-  ComponentRef<TInstance>
-> {
+): AnimatedComponentType<Readonly<React.ComponentProps<TInstance>>, TInstance> {
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
@@ -91,7 +92,7 @@ export function createAnimatedComponent<
 
   const animatedComponent = (
     props: AnimatedProps<InitialComponentProps> & {
-      ref?: Ref<ComponentRef<TInstance>> | AnimatedRef;
+      ref?: AnimatedComponentRef<TInstance>;
     }
   ) => (
     <AnimatedComponent

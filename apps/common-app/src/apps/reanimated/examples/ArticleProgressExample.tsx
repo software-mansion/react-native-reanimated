@@ -46,6 +46,8 @@ export default function ArticleProgressExample() {
     return { width };
   }, []);
 
+  const c = scrollViewRef.current;
+
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />

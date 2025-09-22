@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "customConditions": ["react-native-strict-api"],
     "baseUrl": ".",
     "declaration": true,
     "preserveSymlinks": true,

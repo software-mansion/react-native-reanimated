@@ -151,7 +151,7 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<host object> returns serializable ref', () => {
-    // @ts-expect-error It's ok
+    // @ts-ignore
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const serializableRef = createSerializable(hostObjectValue);
 
@@ -159,7 +159,7 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<host function> returns serializable ref', () => {
-    // @ts-expect-error It's ok
+    // @ts-ignore
     const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
     const serializableRef = createSerializable(hostFunction);
 
@@ -167,7 +167,7 @@ describe('Test isSerializableRef', () => {
   });
 
   test('check if createSerializable<TurboModule-like object> returns serializable ref', () => {
-    // @ts-expect-error This global host object isn't exposed in the types.
+    // @ts-ignore
     const proto = globalThis.__reanimatedModuleProxy;
     const obj = {
       a: 1,
