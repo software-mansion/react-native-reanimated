@@ -18,6 +18,8 @@ string(
     -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
+# flags to optimize the binary size
+string(APPEND CMAKE_CXX_FLAGS " -fvisibility=hidden -ffunction-sections -fdata-sections")
 
 if(${REANIMATED_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
@@ -87,6 +89,8 @@ set_target_properties(
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
+# remove dead code sections
+set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
 
 target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android
                       worklets)
