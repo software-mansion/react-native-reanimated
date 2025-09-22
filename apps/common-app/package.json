@@ -7,7 +7,8 @@
     "lint": "eslint . --flag unstable_config_lookup_from_file",
     "format": "prettier --write --list-different .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
-    "type:check": "tsc --noEmit"
+    "type:check": "tsc --noEmit",
+    "type:check:strict": "tsc --noEmit --customConditions react-native-strict-api"
   },
   "peerDependencies": {
     "react-native": "*"
@@ -32,7 +33,7 @@
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.1.1",
     "react-native-gesture-handler": "2.28.0",
-    "react-native-pager-view": "6.9.1",
+    "react-native-pager-view": "7.0.0",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.6.0",
     "react-native-screens": "4.14.1",

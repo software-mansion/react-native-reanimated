@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/utils/keyframes.h>
 
@@ -27,7 +27,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<TransformInterpolators> &interpolators,
+      const std::shared_ptr<TransformOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getStyleValue(
@@ -53,7 +53,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const folly::dynamic &lastUpdateValue) override;
 
  private:
-  const std::shared_ptr<TransformInterpolators> interpolators_;
+  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
 
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
@@ -85,15 +85,15 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  TransformOperations interpolateOperations(
+  folly::dynamic interpolateOperations(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static folly::dynamic convertResultToDynamic(
+  static folly::dynamic convertOperationsToDynamic(
       const TransformOperations &operations);
-  TransformInterpolatorUpdateContext createUpdateContext(
+  TransformInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };
 

@@ -117,7 +117,7 @@ function initializeRuntime() {
 
 /** A function that should be run only on React Native runtime. */
 function initializeRNRuntime() {
-  if (__DEV__) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB) {
     const testWorklet = () => {
       'worklet';
     };

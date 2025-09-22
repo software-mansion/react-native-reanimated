@@ -14,5 +14,7 @@ export const processFontWeight: ValueProcessor<number | string> = (value) => {
   }
 };
 
-export const processFontVariant: ValueProcessor<FontVariant[]> = (value) =>
-  value.join(', ');
+export const processFontVariant: ValueProcessor<
+  ReadonlyArray<FontVariant> | string
+  // @ts-expect-error Implementation will be fixed in the next PR
+> = (value) => value.join(', ');

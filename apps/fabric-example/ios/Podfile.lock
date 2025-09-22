@@ -1781,7 +1781,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-pager-view (6.9.1):
+  - react-native-pager-view (7.0.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -3129,7 +3129,7 @@ SPEC CHECKSUMS:
   React-logger: 2fb8a9f32bbc80f6a37dc02c95579d5d3bf6fb58
   React-Mapbuffer: 54166856b49f9e140c3db0c5ddba90dc256a402c
   React-microtasksnativemodule: 36b1d448cbf4c8ef706d5e6c4267238943a369d1
-  react-native-pager-view: a0516effb17ca5120ac2113bfd21b91130ad5748
+  react-native-pager-view: 0b0b445d3cb9f8e9972842edf6ddf892b46bdc55
   react-native-safe-area-context: a72764e0eb5d6b79b7450e5d0ae919eb1a4567b4
   React-NativeModulesApple: 71d6462e4b71c937be98abcd077f8823711b1586
   React-oscompat: 807cec62bbd3251a44defc198424c20ee9d1558c
@@ -3166,7 +3166,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNGestureHandler: f1dd7f92a0faa2868a919ab53bb9d66eb4ebfcf5
-  RNReanimated: 4ab6911f7241a67d916cf4df6d6526f174caef67
+  RNReanimated: 3b47c33660454c6f9700b463e92daa282030866a
   RNScreens: 6ced6ae8a526512a6eef6e28c2286e1fc2d378c3
   RNSVG: 287504b73fa0e90a605225aa9f852a86d5461e84
   RNWorklets: c220127c1264b89f8aedd76172be000355215a63

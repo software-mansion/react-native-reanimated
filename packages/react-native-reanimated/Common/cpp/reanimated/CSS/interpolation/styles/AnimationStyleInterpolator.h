@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/configs/interpolators/registry.h>
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 #include <memory>

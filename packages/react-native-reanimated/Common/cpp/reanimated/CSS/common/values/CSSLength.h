@@ -27,9 +27,9 @@ struct CSSLength : public CSSResolvableValue<CSSLength, double> {
   CSSLength interpolate(
       double progress,
       const CSSLength &to,
-      const CSSResolvableValueInterpolationContext &context) const override;
+      const ResolvableValueInterpolationContext &context) const override;
   std::optional<double> resolve(
-      const CSSResolvableValueInterpolationContext &context) const override;
+      const ResolvableValueInterpolationContext &context) const override;
 
   bool operator==(const CSSLength &other) const;
 

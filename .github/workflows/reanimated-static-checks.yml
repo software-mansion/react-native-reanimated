@@ -43,6 +43,10 @@ jobs:
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn type:check
+      - name: Check TypeScript types with React Native Strict API
+        working-directory: ${{ env.PACKAGE_PATH }}
+        # TODO - change to type:check:strict once the types in the example app are updated
+        run: yarn type:check:strict:src
       - name: Lint JavaScript
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn lint:js

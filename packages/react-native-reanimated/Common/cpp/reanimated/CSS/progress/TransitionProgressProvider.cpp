@@ -1,5 +1,7 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
+#include <limits>
+
 namespace reanimated::css {
 
 // TransitionPropertyProgressProvider

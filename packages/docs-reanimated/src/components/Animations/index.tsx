@@ -85,17 +85,6 @@ useDerivedValue(() => {
     docsLink:
       'https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard',
   },
-  {
-    title: 'Shared Element Transitions',
-    body: 'Seamlessly animate elements between navigation screens with a single line of code.',
-
-    code: `function App() {
-  return <Animated.View sharedTransitionTag="hero-element" />
-}`,
-    component: <SharedElementExample />,
-    docsLink:
-      'https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview',
-  },
 ];
 
 const Animations = () => {
