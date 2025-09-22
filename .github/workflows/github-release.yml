@@ -1,0 +1,111 @@
+name: GitHub Release
+
+on:
+  push:
+    branches: ['@matipl01/github-release-action']
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to release'
+        required: true
+        type: choice
+        options:
+          - reanimated
+          - worklets
+      version:
+        description: 'Version to release (e.g. 4.2.0)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to release from'
+        required: true
+        type: string
+        default: 'main'
+      dry_run:
+        description: 'Dry run (test without creating release)'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      PACKAGE: ${{ inputs.package || 'reanimated' }}
+      VERSION: ${{ inputs.version || 'test-version' }}
+      BRANCH: ${{ inputs.branch || '4.0-stable' || github.ref_name }}
+      DRY_RUN: ${{ inputs.dry_run || 'true' }}
+      PACKAGE_DIR: packages/${{ (inputs.package || 'reanimated') == 'reanimated' && 'react-native-reanimated' || 'react-native-worklets' }}
+      PACKAGE_NAME: ${{ (inputs.package || 'reanimated') == 'reanimated' && 'React Native Reanimated' || 'React Native Worklets' }}
+    steps:
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ env.BRANCH }}"
+          PACKAGE="${{ env.PACKAGE }}"
+
+          case "$PACKAGE" in
+            "reanimated")
+              if [[ "$BRANCH" =~ ^(main|[0-9]+\.[0-9]+-stable)$ ]]; then
+                echo "✅ Valid reanimated branch: $BRANCH"
+              else
+                echo "❌ Invalid reanimated branch: $BRANCH (expected: main or X.Y-stable)"
+                exit 1
+              fi
+              ;;
+            "worklets")
+              if [[ "$BRANCH" =~ ^(main|worklets-[0-9]+\.[0-9]+-stable)$ ]]; then
+                echo "✅ Valid worklets branch: $BRANCH"
+              else
+                echo "❌ Invalid worklets branch: $BRANCH (expected: main or worklets-X.Y-stable)"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "❌ Unknown package: $PACKAGE"
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run semantic-release
+        working-directory: ${{ env.PACKAGE == 'reanimated' && 'packages/react-native-reanimated' || 'packages/react-native-worklets' }}
+        run: |
+          if [ "${{ env.DRY_RUN }}" = "true" ]; then
+            echo "🧪 Running in dry-run mode - no release will be created"
+            yarn semantic-release --dry-run
+          else
+            echo "🚀 Creating actual release"
+            yarn semantic-release
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up
+        run: |
+          echo "✅ Workflow completed successfully"

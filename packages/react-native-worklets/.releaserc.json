@@ -1,0 +1,6 @@
+{
+  "extends": ["../../.releaserc.json"],
+  "branches": ["main", "@matipl01/github-release-action"],
+  "tagFormat": "worklets-${version}",
+  "name": "React Native Worklets"
+}

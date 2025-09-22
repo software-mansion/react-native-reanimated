@@ -1,0 +1,51 @@
+{
+  "branches": ["main", "@matipl01/github-release-action"],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {
+              "type": "feat",
+              "section": "🚀 Features"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes"
+            },
+            {
+              "type": "perf",
+              "section": "⚡ Performance Improvements"
+            },
+            {
+              "type": "docs",
+              "section": "📚 Documentation"
+            },
+            {
+              "type": "revert",
+              "section": "🔄 Reverts"
+            }
+          ],
+          "other": "📝 Other Changes"
+        }
+      }
+    ],
+    "semantic-release-yarn",
+    [
+      "@semantic-release/github",
+      {
+        "successComment": "🎉 This PR is included in version ${nextRelease.version} of ${name}!\n\n**Release Notes:**\n${nextRelease.notes}",
+        "releasedLabels": ["${nextRelease.version}"],
+        "addReleases": "bottom"
+      }
+    ]
+  ]
+}
