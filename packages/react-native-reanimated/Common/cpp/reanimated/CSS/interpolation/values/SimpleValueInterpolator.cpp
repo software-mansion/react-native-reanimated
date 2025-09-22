@@ -60,6 +60,9 @@ template class SimpleValueInterpolator<CSSBoolean>;
 template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;
 template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
+#ifdef ANDROID
+template class SimpleValueInterpolator<CSSShadowRadiusAndroid>;
+#endif
 
 template class SimpleValueInterpolator<SVGLength>;
 template class SimpleValueInterpolator<SVGLength, CSSKeyword>;

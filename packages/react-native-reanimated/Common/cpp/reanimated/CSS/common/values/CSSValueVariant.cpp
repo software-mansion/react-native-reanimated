@@ -209,6 +209,9 @@ template class CSSValueVariant<CSSBoolean>;
 template class CSSValueVariant<CSSColor>;
 template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
+#ifdef ANDROID
+template class CSSValueVariant<CSSShadowRadiusAndroid>;
+#endif
 
 template class CSSValueVariant<SVGLength>;
 template class CSSValueVariant<SVGLength, CSSKeyword>;
@@ -225,6 +228,9 @@ template CSSValueVariant<CSSLength, CSSKeyword>::CSSValueVariant(int const &);
 template CSSValueVariant<CSSDiscreteArray<CSSKeyword>>::CSSValueVariant(
     std::vector<CSSKeyword> const &);
 template CSSValueVariant<CSSAngle>::CSSValueVariant(int const &);
+#ifdef ANDROID
+template CSSValueVariant<CSSShadowRadiusAndroid>::CSSValueVariant(int const &);
+#endif
 
 template CSSValueVariant<SVGStrokeDashArray, CSSKeyword>::CSSValueVariant(
     SVGStrokeDashArray const &);
