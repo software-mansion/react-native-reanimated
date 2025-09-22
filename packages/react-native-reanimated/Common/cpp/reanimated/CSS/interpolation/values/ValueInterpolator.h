@@ -6,14 +6,9 @@
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 namespace reanimated::css {
-
-struct ValueInterpolatorUpdateContext {
-  const std::shared_ptr<const ShadowNode> &node;
-};
 
 struct ValueKeyframe {
   double offset;

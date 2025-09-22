@@ -4,7 +4,6 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
-#include <algorithm>
 #include <string>
 
 namespace reanimated::css {

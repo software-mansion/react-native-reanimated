@@ -1,5 +1,7 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
