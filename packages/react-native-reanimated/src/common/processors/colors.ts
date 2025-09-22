@@ -11,7 +11,8 @@ import {
   processColorInitially,
 } from '../../Colors';
 import type { StyleProps } from '../../commonTypes';
-import { IS_ANDROID } from '../constants';
+import { IS_ANDROID, IS_IOS } from '../constants';
+import { ReanimatedError } from '../errors';
 import type { Maybe } from '../types';
 
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
@@ -78,6 +79,11 @@ export function processColorsInProps(props: StyleProps) {
     if (Array.isArray(value)) {
       props[key] = value.map((c: unknown) => processColor(c));
     } else if (isDynamicColorObject(value)) {
+      if (!IS_IOS) {
+        throw new ReanimatedError(
+          'DynamicColorIOS is not available on this platform.'
+        );
+      }
       const processed = { dynamic: {} as Record<string, Maybe<number>> };
       const dynamicFields = value.dynamic;
       for (const field in dynamicFields) {
