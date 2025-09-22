@@ -12,7 +12,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { IS_ANDROID } from '@/utils';
+import { IS_IOS } from '@/utils';
 
 const LIGHT_COLORS = ['#38acdd', '#57b495'];
 const DARK_COLORS = ['#b58df1', '#ff6259'];
@@ -30,9 +30,12 @@ const getDynamicColors = () => {
 };
 
 const Swatches = ({ colors, label }: { colors: any; label: string }) => {
+  const dynamicColors = getDynamicColors();
   return (
     <>
-      <Text style={styles.paragraph}>{label}</Text>
+      <Text style={[styles.paragraph, { color: dynamicColors.paragraph }]}>
+        {label}
+      </Text>
       <View style={styles.swatchesContainer}>
         <View style={[styles.swatch, { backgroundColor: colors[0] }]} />
         <View style={[styles.swatch, { backgroundColor: colors[1] }]} />
@@ -54,7 +57,9 @@ const Description = ({
       DynamicColorIOS is a way to define colors that automatically adapt to
       light and dark mode on iOS.
     </Text>
-    <Text style={styles.header}>What this example does?</Text>
+    <Text style={[styles.header, { color: colors.header }]}>
+      What this example does?
+    </Text>
     <Text style={[styles.paragraph, { color: colors.paragraph }]}>
       This example should interpolate between two colors. After toggling
       appearance of the phone the two interpolated colors should change to
@@ -64,11 +69,11 @@ const Description = ({
 );
 
 export default function DynamicColorIOSExample() {
-  if (IS_ANDROID) {
+  if (!IS_IOS) {
     return (
       <View style={styles.container}>
         <Text style={styles.paragraph}>
-          DynamicColorIOS is not supported on Android.
+          DynamicColorIOS is only supported on iOS.
         </Text>
       </View>
     );
@@ -100,19 +105,18 @@ export default function DynamicColorIOSExample() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={{ backgroundColor: dynamicColors.background }}>
-        <View
-          style={[
-            styles.contentContainer,
-            { backgroundColor: dynamicColors.contentBackground },
-          ]}>
-          <Description colors={dynamicColors} />
-          <Swatches colors={LIGHT_COLORS} label="Light mode colors" />
-          <Swatches colors={DARK_COLORS} label="Dark mode colors" />
-        </View>
-        <Animated.View style={[styles.box, animatedStyle]} />
+    <View
+      style={[styles.container, { backgroundColor: dynamicColors.background }]}>
+      <View
+        style={[
+          styles.contentContainer,
+          { backgroundColor: dynamicColors.contentBackground },
+        ]}>
+        <Description colors={dynamicColors} />
+        <Swatches colors={LIGHT_COLORS} label="Light mode colors" />
+        <Swatches colors={DARK_COLORS} label="Dark mode colors" />
       </View>
+      <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
 }
