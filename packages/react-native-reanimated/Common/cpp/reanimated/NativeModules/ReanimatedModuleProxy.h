@@ -223,6 +223,9 @@ class ReanimatedModuleProxy
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#ifdef ANDROID
+  const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+#endif // ANDROID
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;

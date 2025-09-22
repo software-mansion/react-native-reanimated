@@ -220,7 +220,38 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-// nothing
+std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(
+    std::vector<int> &tags) {
+  if (tags.empty()) {
+    return {};
+  }
+
+  static const auto method =
+      getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>(
+          "preserveMountedTags");
+  auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+  jArrayInt->setRegion(0, tags.size(), tags.data());
+
+  if (!method(javaPart_.get(), jArrayInt)) {
+    return {};
+  }
+
+  auto region = jArrayInt->getRegion(0, tags.size());
+  return region;
+}
+
+void NativeProxy::synchronouslyUpdateUIProps(
+    const std::vector<int> &intBuffer,
+    const std::vector<double> &doubleBuffer) {
+  static const auto method = getJniMethod<void(
+      jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
+      "synchronouslyUpdateUIProps");
+  auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
+  auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
+  jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
+  jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
+  method(javaPart_.get(), jArrayInt, jArrayDouble);
+}
 #else
 jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
@@ -434,7 +465,10 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+  auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
+
+  auto synchronouslyUpdateUIPropsFunction =
+      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif
@@ -468,7 +502,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+      preserveMountedTags,
+      synchronouslyUpdateUIPropsFunction,
 #else
       updatePropsFunction,
       scrollToFunction,

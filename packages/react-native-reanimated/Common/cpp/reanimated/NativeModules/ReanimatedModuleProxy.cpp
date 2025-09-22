@@ -75,6 +75,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
       propsRegistry_(std::make_shared<PropsRegistry>()),
+#ifdef ANDROID
+      filterUnmountedTagsFunction_(
+          platformDepMethodsHolder.filterUnmountedTagsFunction),
+#endif // ANDROID
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -943,7 +947,14 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler());
+        workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+            ,
+        filterUnmountedTagsFunction_,
+        uiManager_,
+        jsInvoker_
+#endif
+    );
   }
 }
 
