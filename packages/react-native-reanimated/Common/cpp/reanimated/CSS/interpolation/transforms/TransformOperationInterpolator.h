@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/configs.h>
-#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
@@ -69,19 +68,13 @@ class TransformOperationInterpolator
     : public TransformOperationInterpolatorBase<OperationType> {
  public:
   TransformOperationInterpolator(
-      std::shared_ptr<OperationType> defaultOperation)
-      : TransformOperationInterpolatorBase<OperationType>(defaultOperation) {}
+      std::shared_ptr<OperationType> defaultOperation);
 
   folly::dynamic interpolate(
       double progress,
       const std::shared_ptr<TransformOperation> &from,
       const std::shared_ptr<TransformOperation> &to,
-      const TransformInterpolationContext &context) const override {
-    const auto &fromOp = *std::static_pointer_cast<OperationType>(from);
-    const auto &toOp = *std::static_pointer_cast<OperationType>(to);
-    return OperationType(fromOp.value.interpolate(progress, toOp.value))
-        .toDynamic();
-  }
+      const TransformInterpolationContext &context) const override;
 };
 
 // Specialization for PerspectiveOperation
@@ -136,51 +129,23 @@ class TransformOperationInterpolator<TOperation>
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
-      ResolvableValueInterpolatorConfig config)
-      : TransformOperationInterpolatorBase<TOperation>(defaultOperation),
-        config_(std::move(config)) {}
+      ResolvableValueInterpolatorConfig config);
 
   folly::dynamic interpolate(
       double progress,
       const std::shared_ptr<TransformOperation> &from,
       const std::shared_ptr<TransformOperation> &to,
-      const TransformInterpolationContext &context) const override {
-    const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
-    const auto &toOp = *std::static_pointer_cast<TOperation>(to);
-    return TOperation(
-               fromOp.value.interpolate(
-                   progress, toOp.value, getResolvableValueContext(context)))
-        .toDynamic();
-  }
+      const TransformInterpolationContext &context) const override;
 
   std::shared_ptr<TransformOperation> resolveOperation(
       const std::shared_ptr<TransformOperation> &operation,
-      const TransformInterpolationContext &context) const override {
-    const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
-    const auto &resolved =
-        resolvableOp->value.resolve(getResolvableValueContext(context));
-
-    if (!resolved.has_value()) {
-      throw std::invalid_argument(
-          "[Reanimated] Cannot resolve resolvable operation: " +
-          operation->getOperationName() +
-          " for node with tag: " + std::to_string(context.node->getTag()));
-    }
-
-    return std::make_shared<TOperation>(resolved.value());
-  }
+      const TransformInterpolationContext &context) const override;
 
  protected:
   const ResolvableValueInterpolatorConfig config_;
 
   ResolvableValueInterpolationContext getResolvableValueContext(
-      const TransformInterpolationContext &context) const {
-    return ResolvableValueInterpolationContext{
-        .node = context.node,
-        .viewStylesRepository = context.viewStylesRepository,
-        .relativeProperty = config_.relativeProperty,
-        .relativeTo = config_.relativeTo};
-  }
+      const TransformInterpolationContext &context) const;
 };
 
 } // namespace reanimated::css

@@ -1,5 +1,11 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/values/CSSAngle.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
+
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
@@ -181,5 +187,77 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
 folly::dynamic TransformOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
+
+// TransformOperationBase implementation
+template <TransformOp TOperation, typename TValue>
+TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
+    : TransformOperation(TOperation), value(std::move(value)) {}
+
+template <TransformOp TOperation, typename TValue>
+bool TransformOperationBase<TOperation, TValue>::operator==(
+    const TransformOperation &other) const {
+  if (type != other.type) {
+    return false;
+  }
+  const auto &otherOperation =
+      static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
+  return value == otherOperation.value;
+}
+
+template <TransformOp TOperation, typename TValue>
+TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(
+    bool force3D) const {
+  if constexpr (Resolvable<TValue>) {
+    // Handle resolvable operations
+    throw std::runtime_error(
+        "[Reanimated] Cannot convert resolvable operation to matrix: " +
+        getOperationName());
+  } else {
+    // Handle regular operations
+    const auto shouldBe3D = this->is3D() || force3D;
+
+    if (cachedMatrix_) {
+      const auto resultDimension =
+          shouldBe3D ? MATRIX_3D_DIMENSION : MATRIX_2D_DIMENSION;
+      if (cachedMatrix_->getDimension() == resultDimension) {
+        return cachedMatrix_;
+      }
+    }
+
+    TransformMatrix::Shared result;
+    if (shouldBe3D) {
+      result = std::make_shared<const TransformMatrix3D>(
+          TransformMatrix3D::create<TOperation>(this->value.value));
+    } else {
+      result = std::make_shared<const TransformMatrix2D>(
+          TransformMatrix2D::create<TOperation>(this->value.value));
+    }
+
+    cachedMatrix_ = result;
+    return result;
+  }
+}
+
+// Rotate operations
+template struct TransformOperationBase<TransformOp::Rotate, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateZ, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateX, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateY, CSSAngle>;
+
+// Translate operations
+template struct TransformOperationBase<TransformOp::TranslateX, CSSLength>;
+template struct TransformOperationBase<TransformOp::TranslateY, CSSLength>;
+
+// Scale operations
+template struct TransformOperationBase<TransformOp::ScaleX, CSSDouble>;
+template struct TransformOperationBase<TransformOp::ScaleY, CSSDouble>;
+template struct TransformOperationBase<TransformOp::Scale, CSSDouble>;
+
+// Skew operations
+template struct TransformOperationBase<TransformOp::SkewX, CSSAngle>;
+template struct TransformOperationBase<TransformOp::SkewY, CSSAngle>;
+
+// Perspective operation
+template struct TransformOperationBase<TransformOp::Perspective, CSSDouble>;
 
 } // namespace reanimated::css

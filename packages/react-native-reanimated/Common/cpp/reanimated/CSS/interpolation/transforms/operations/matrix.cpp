@@ -174,6 +174,14 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
       *std::get<TransformMatrix::Shared>(otherOperation->value);
 }
 
+bool MatrixOperation::is3D() const {
+  return is3D_;
+}
+
+folly::dynamic MatrixOperation::valueToDynamic() const {
+  return getMatrixFromVariant()->toDynamic();
+}
+
 TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
   const auto &storedMatrix = getMatrixFromVariant();
 
@@ -183,10 +191,6 @@ TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
   }
 
   return storedMatrix;
-}
-
-folly::dynamic MatrixOperation::valueToDynamic() const {
-  return getMatrixFromVariant()->toDynamic();
 }
 
 const TransformMatrix::Shared &MatrixOperation::getMatrixFromVariant() const {
