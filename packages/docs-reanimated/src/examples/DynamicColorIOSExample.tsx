@@ -19,7 +19,7 @@ export default function DynamicColorIOSExample() {
       progress.value = withTiming(progress.value === 0 ? 1 : 0);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [progress]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const lightColor = interpolateColor(progress.value, [0, 1], LIGHT_COLORS);
