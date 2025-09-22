@@ -53,7 +53,7 @@ export default function SearchResults({
       )}
       style={
         IS_WEB && {
-          // @ts-ignore
+          // @ts-expect-error - scrollbarGutter is a valid CSS property on web
           scrollbarGutter: 'stable both-edges',
         }
       }
