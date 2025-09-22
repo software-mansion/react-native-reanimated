@@ -12,8 +12,8 @@ import {
 } from '../../Colors';
 import type { StyleProps } from '../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../constants';
-import type { Maybe } from '../types';
 import { ReanimatedError } from '../errors';
+import type { Maybe } from '../types';
 
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
 
