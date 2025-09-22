@@ -52,7 +52,7 @@ type StyleBuilderPropertyConfig<
   | PropertyValueConfigBase<P>
   | RuleBuilder<P>
   | {
-      process?: ValueProcessor<Required<P>[K]>; // for custom value processing
+      process?: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
       name?: string; // for custom property name
     };
 
@@ -62,15 +62,15 @@ type RuleBuilderPropertyConfig<
 > =
   | PropertyValueConfigBase<P>
   | {
-      process: ValueProcessor<Required<P>[K]>; // for custom value processing
+      process: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
     };
 
 export type StyleBuilderConfig<P extends AnyRecord> = {
-  [K in keyof Required<P>]: StyleBuilderPropertyConfig<P, K>;
+  [K in keyof P]: StyleBuilderPropertyConfig<P, K>;
 };
 
 export type RuleBuilderConfig<P extends AnyRecord> = {
-  [K in keyof Required<P>]: RuleBuilderPropertyConfig<P, K>;
+  [K in keyof P]: RuleBuilderPropertyConfig<P, K>;
 };
 
 export type AnyBuilderConfig<P extends AnyRecord> =

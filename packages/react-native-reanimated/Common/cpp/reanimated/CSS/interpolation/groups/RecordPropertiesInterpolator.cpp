@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
+#include <unordered_set>
+
 namespace reanimated::css {
 
 RecordPropertiesInterpolator::RecordPropertiesInterpolator(

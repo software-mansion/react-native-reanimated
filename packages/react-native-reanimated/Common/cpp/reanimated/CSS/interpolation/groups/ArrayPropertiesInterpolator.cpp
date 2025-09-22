@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 
+#include <algorithm>
+
 namespace reanimated::css {
 
 ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
