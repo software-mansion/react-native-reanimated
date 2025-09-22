@@ -2,9 +2,6 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
-
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 

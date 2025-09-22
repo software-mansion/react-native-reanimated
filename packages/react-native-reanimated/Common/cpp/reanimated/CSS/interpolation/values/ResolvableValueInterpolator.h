@@ -4,6 +4,8 @@
 #include <reanimated/CSS/interpolation/values/SimpleValueInterpolator.h>
 
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace reanimated::css {
 
