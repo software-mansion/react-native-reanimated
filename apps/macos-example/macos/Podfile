@@ -13,7 +13,7 @@ target 'MacOSExample-macOS' do
 
   use_react_native!(
     :path => '../node_modules/react-native-macos',
-    :hermes_enabled => false,
+    :hermes_enabled => true,
     :fabric_enabled => true,
     :new_arch_enabled => true,
     # An absolute path to your application root.
