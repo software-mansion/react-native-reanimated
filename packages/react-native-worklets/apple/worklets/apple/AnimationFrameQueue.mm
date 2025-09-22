@@ -6,6 +6,7 @@
 #import <chrono>
 
 #import <React/RCTAssert.h>
+#import <QuartzCore/CADisplayLink.h>
 
 constexpr auto TIME_SAMPLES_AMOUNT = 4;
 
@@ -34,7 +35,11 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 {
   AssertJavaScriptQueue();
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
+    bool supportsProMotion = false;
+    #if !TARGET_OS_OSX
     bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
+    #endif // !TARGET_OS_OSX
+
     SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
     currentFrameRate_ = supportsProMotion ? FrameRateRange::BEST : FrameRateRange::STANDARD;
     displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:frameCallback];
@@ -120,7 +125,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     frameRateRange = FrameRateRange::POOR;
   }
   if (currentFrameRate_.preferred != frameRateRange.preferred) {
+  #if !TARGET_OS_OSX
     displayLink_.preferredFrameRateRange = frameRateRange;
+  #endif
     currentFrameRate_ = frameRateRange;
   }
 }
