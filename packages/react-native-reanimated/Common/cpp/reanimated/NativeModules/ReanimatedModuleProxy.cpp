@@ -68,16 +68,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      filterUnmountedTagsFunction_(
+          platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  if constexpr (StaticFeatureFlags::getFlag(
-                    "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
-    css::initSvgCssSupport();
-  }
-
   auto lock = updatesRegistryManager_->lock();
   // Add registries in order of their priority (from the lowest to the
   // highest)
@@ -1318,7 +1315,14 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler());
+        workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+            ,
+        filterUnmountedTagsFunction_,
+        uiManager_,
+        jsInvoker_
+#endif
+    );
   }
 }
 

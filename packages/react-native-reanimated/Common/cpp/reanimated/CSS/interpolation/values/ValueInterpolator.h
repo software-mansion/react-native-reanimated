@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 namespace reanimated::css {
@@ -48,7 +47,7 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-      const double fallbackInterpolateThreshold) const override;
+      double fallbackInterpolateThreshold) const override;
 
  protected:
   std::vector<ValueKeyframe> keyframes_;
@@ -65,7 +64,7 @@ class ValueInterpolator : public PropertyInterpolator {
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const = 0;
+      const ValueInterpolationContext &context) const = 0;
 
  private:
   folly::dynamic convertOptionalToDynamic(

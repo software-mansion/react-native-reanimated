@@ -199,7 +199,7 @@ export function Range({
           hiddenLabel
           disabled={disabled}
           size="small"
-          inputProps={{ min: min, max: max, step: step }}
+          slotProps={{ htmlInput: { min: min, max: max, step: step } }}
           sx={TextFieldStyling}
           value={value}
           onChange={(e) => {
