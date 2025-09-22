@@ -2,14 +2,14 @@
 sidebar_position: 5
 ---
 
-# DynamicColorIOSAnimated
+# DynamicColorIOS
 
-`DynamicColorIOSAnimated` is a workletized version of a [`DynamicColorIOS`](https://reactnative.dev/docs/dynamiccolorios) to use within Reanimated. It's a way to define colors that automatically adap to light and dark mode on iOS.
+`DynamicColorIOS` is a workletized version of a [`DynamicColorIOS`](https://reactnative.dev/docs/dynamiccolorios) to use within Reanimated. It's a way to define colors that automatically adap to light and dark mode on iOS.
 
 ## Reference
 
 ```tsx
-import { DynamicColorIOSAnimated } from 'react-native-reanimated';
+import { DynamicColorIOS } from 'react-native-reanimated';
 
 function Example() {
   const progress = useSharedValue(0);
@@ -18,7 +18,7 @@ function Example() {
     // ...
 
     return {
-      backgroundColor: DynamicColorIOSAnimated({
+      backgroundColor: DynamicColorIOS({
         light: lightColor,
         dark: darkColor,
       }),
@@ -31,7 +31,7 @@ function Example() {
 <summary>Type definitions</summary>
 
 ```typescript
-function DynamicColorIOSAnimated(
+function DynamicColorIOS(
   {
     light: ColorValue,
     dark: ColorValue,
