@@ -81,7 +81,7 @@ export function processColorsInProps(props: StyleProps) {
     } else if (isDynamicColorObject(value)) {
       if (!IS_IOS) {
         throw new ReanimatedError(
-          'DynamicColorIOS is only supported on iOS platform.'
+          'DynamicColorIOS is not available on this platform.'
         );
       }
       const processed = { dynamic: {} as Record<string, Maybe<number>> };
