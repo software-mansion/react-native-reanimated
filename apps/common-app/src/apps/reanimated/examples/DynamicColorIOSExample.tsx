@@ -68,17 +68,7 @@ const Description = ({
   </>
 );
 
-export default function DynamicColorIOSExample() {
-  if (!IS_IOS) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.paragraph}>
-          DynamicColorIOS is only supported on iOS.
-        </Text>
-      </View>
-    );
-  }
-
+function Example() {
   const progress = useSharedValue(0);
   const width = useSharedValue(100);
   const dynamicColors = getDynamicColors();
@@ -119,6 +109,19 @@ export default function DynamicColorIOSExample() {
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
+}
+
+export default function DynamicColorIOSExample() {
+  if (!IS_IOS) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.paragraph}>
+          DynamicColorIOS is only supported on iOS.
+        </Text>
+      </View>
+    );
+  }
+  return <Example />;
 }
 
 const styles = StyleSheet.create({
