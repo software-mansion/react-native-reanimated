@@ -4,7 +4,7 @@ import { ERROR_MESSAGES, processColor } from '../colors';
 
 describe(processColor, () => {
   describe('converts color strings to numbers for all color props', () => {
-    it.each([
+    test.each([
       ['backgroundColor', 'red', 0xff0000ff],
       ['color', 'rgb(255, 200, 0)', 0xffc800ff],
       ['textDecorationColor', 'rgba(50, 100, 150, 0.6)', 0x32649699],
@@ -29,7 +29,7 @@ describe(processColor, () => {
   });
 
   describe('throws an error for invalid color values', () => {
-    it.each([
+    test.each([
       'invalid',
       '#1',
       'rgb(255, 255, 255, 0.5)',

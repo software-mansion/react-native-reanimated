@@ -41,7 +41,7 @@ describe('CSSAnimationsManager', () => {
 
   describe('update', () => {
     describe('single animation', () => {
-      it('attaches a new animation if no animation is attached', () => {
+      test('attaches a new animation if no animation is attached', () => {
         const animationProperties = {
           animationName: {
             from: { opacity: 0 },
@@ -62,7 +62,7 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
-      it('updates an existing animation if keyframes are the same and animation settings are different', () => {
+      test('updates an existing animation if keyframes are the same and animation settings are different', () => {
         const animationProperties = {
           animationName: {
             from: { opacity: 0 },
@@ -96,7 +96,7 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
-      it('attaches a new animation if keyframes are different', () => {
+      test('attaches a new animation if keyframes are different', () => {
         const animationProperties = {
           animationName: {
             from: { opacity: 0 },
@@ -129,7 +129,7 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
-      it('detaches an existing animation if the new config is empty', () => {
+      test('detaches an existing animation if the new config is empty', () => {
         const animationProperties = {
           animationName: {
             from: { opacity: 0 },
@@ -153,7 +153,7 @@ describe('CSSAnimationsManager', () => {
     });
 
     describe('unmountCleanup', () => {
-      it('removes animation keyframes from the keyframes registry', () => {
+      test('removes animation keyframes from the keyframes registry', () => {
         // Prepare the manager
         manager.update({
           animationName: [

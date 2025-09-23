@@ -140,6 +140,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -153,6 +154,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 1 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -173,6 +175,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 2 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -282,7 +285,7 @@ describe('Tests of Test Framework', () => {
 
   // TODO: Fix these tests - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
   // Uncomment tests when fixed
-  // test('withTiming - match snapshot - ✅', async () => {
+  //test('withTiming - match snapshot - ✅', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<AnimatedComponent />);
@@ -299,7 +302,7 @@ describe('Tests of Test Framework', () => {
   //   expect(updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
-  // test('withTiming - match snapshot - ❌', async () => {
+  //test('withTiming - match snapshot - ❌', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<AnimatedComponent />);
@@ -314,7 +317,7 @@ describe('Tests of Test Framework', () => {
   //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
-  // test('layoutAnimation - entering - ✅', async () => {
+  //test('layoutAnimation - entering - ✅', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<LayoutAnimation />);
@@ -368,6 +371,7 @@ describe('Tests of Test Framework', () => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
+
     test('console.error  with with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');

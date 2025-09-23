@@ -4,7 +4,7 @@ import React from 'react';
 import Animated, { useSharedValue } from '../src';
 
 describe('useSharedValue', () => {
-  it('retains value on rerender', () => {
+  test('retains value on rerender', () => {
     // Given
     const initialValue = 0;
     const updatedValue = 1;
