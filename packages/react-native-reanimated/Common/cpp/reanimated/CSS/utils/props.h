@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/configs/interpolators/registry.h>
 
 #include <memory>
 #include <string>
