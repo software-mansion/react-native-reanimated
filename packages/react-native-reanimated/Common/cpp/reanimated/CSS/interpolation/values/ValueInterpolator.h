@@ -15,9 +15,6 @@ struct ValueInterpolatorUpdateContext {
   const std::shared_ptr<const ShadowNode> &node;
 };
 
-template <typename TValue>
-struct is_css_value : std::is_base_of<CSSValue, TValue> {};
-
 struct ValueKeyframe {
   double offset;
   std::optional<std::shared_ptr<CSSValue>> value;
