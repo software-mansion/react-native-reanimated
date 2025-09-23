@@ -10,6 +10,10 @@ namespace reanimated::css {
 
 using namespace facebook;
 
+struct ValueInterpolatorUpdateContext {
+  const std::shared_ptr<const ShadowNode> &node;
+};
+
 enum class RelativeTo {
   Parent,
   Self,

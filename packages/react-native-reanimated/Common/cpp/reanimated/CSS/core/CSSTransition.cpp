@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 CSSTransition::CSSTransition(

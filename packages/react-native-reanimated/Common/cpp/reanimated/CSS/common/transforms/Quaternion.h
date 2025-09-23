@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #ifndef NDEBUG
 #include <iostream>
 #endif // NDEBUG

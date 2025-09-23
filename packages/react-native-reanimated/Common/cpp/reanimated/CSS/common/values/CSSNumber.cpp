@@ -1,6 +1,8 @@
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
+#include <algorithm>
+
 namespace reanimated::css {
 
 template <typename TDerived, typename TValue>
