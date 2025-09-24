@@ -26,27 +26,29 @@ export default function DynamicColorIOSExample() {
     const darkColor = interpolateColor(progress.value, [0, 1], DARK_COLORS);
 
     return {
+      // highlight-start
       backgroundColor: DynamicColorIOS({
         light: lightColor,
         dark: darkColor,
       }),
+      // highlight-end
     };
   });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 16,
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-      }}>
+    <View>
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
   box: {
     height: 100,
     width: 100,

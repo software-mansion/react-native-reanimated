@@ -18,10 +18,12 @@ function Example() {
     // ...
 
     return {
+      // highlight-start
       backgroundColor: DynamicColorIOS({
         light: lightColor,
         dark: darkColor,
       }),
+      // hightlight-end
     };
   });
 }
@@ -38,10 +40,10 @@ function DynamicColorIOS(
     highContrastLight?: ColorValue,
     highContrastDark?: ColorValue
   }
-): DynamicColorIOSReturnType;
+): DynamicColorValue;
 
-type DynamicColorIOSReturnType = {
-  dynamic?: {
+type DynamicColorValue = {
+  dynamic: {
     light: ColorValue,
     dark: ColorValue,
     highContrastLight?: ColorValue,
