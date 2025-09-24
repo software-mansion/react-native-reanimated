@@ -1,7 +1,7 @@
 export {};
 
 describe('Simple animation Test', () => {
-  test('Visits the test page and tests component width before and after animation', () => {
+  it('Visits the test page and tests component width before and after animation', () => {
     // open NextExample page
     cy.visit('http://localhost:3000');
 
