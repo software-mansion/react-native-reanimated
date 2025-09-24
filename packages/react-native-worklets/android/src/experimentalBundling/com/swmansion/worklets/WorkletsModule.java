@@ -3,7 +3,6 @@ package com.swmansion.worklets;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.BundleConsumer;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
@@ -21,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec
-    implements LifecycleEventListener, BundleConsumer {
+    implements LifecycleEventListener {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -41,16 +40,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   private boolean mSlowAnimationsEnabled;
   private BigStringBufferWrapper mScriptWrapper = null;
   private String mSourceURL = null;
-
-  @Override
-  public void setScriptWrapper(BigStringBufferWrapper scriptWrapper) {
-    mScriptWrapper = scriptWrapper;
-  }
-
-  @Override
-  public void setSourceURL(String sourceURL) {
-    mSourceURL = sourceURL;
-  }
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -89,6 +78,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
 
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
+
+    mSourceURL = context.getSourceURL();
+    mScriptWrapper = context.getBundle();
 
     mHybridData =
         initHybrid(
