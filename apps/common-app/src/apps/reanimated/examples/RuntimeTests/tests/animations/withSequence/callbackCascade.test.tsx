@@ -201,7 +201,7 @@ describe(`Cascade of callbacks`, () => {
 //     );
 //   };
 
-//test('Test order of cascade of callback (no direct nesting nesting)', async () => {
+// test('Test order of cascade of callback (no direct nesting nesting)', async () => {
 //   await mockAnimationTimer();
 //   const updatesContainerActive = await recordAnimationUpdates();
 //   await render(<CallbackComponent />);

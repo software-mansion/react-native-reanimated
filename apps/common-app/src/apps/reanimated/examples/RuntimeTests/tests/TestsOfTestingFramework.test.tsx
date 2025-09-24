@@ -285,7 +285,7 @@ describe('Tests of Test Framework', () => {
 
   // TODO: Fix these tests - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
   // Uncomment tests when fixed
-  //test('withTiming - match snapshot - ✅', async () => {
+  // test('withTiming - match snapshot - ✅', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<AnimatedComponent />);
@@ -302,7 +302,7 @@ describe('Tests of Test Framework', () => {
   //   expect(updatesContainer.getUpdates(greenComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
-  //test('withTiming - match snapshot - ❌', async () => {
+  // test('withTiming - match snapshot - ❌', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<AnimatedComponent />);
@@ -317,7 +317,7 @@ describe('Tests of Test Framework', () => {
   //   expect(updatesContainer.getUpdates(brownComponent)).toMatchNativeSnapshots(greenNative);
   // });
 
-  //test('layoutAnimation - entering - ✅', async () => {
+  // test('layoutAnimation - entering - ✅', async () => {
   //   await mockAnimationTimer();
   //   const updatesContainer = await recordAnimationUpdates();
   //   await render(<LayoutAnimation />);
