@@ -12,6 +12,11 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
+#if __has_include(<React/RCTBundleProvider.h>)
+// Bundle mode
+#import <React/RCTBundleProvider.h>
+#endif // __has_include(<React/RCTBundleProvider.h>)
+
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
 
@@ -33,11 +38,10 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
-#if __has_include(<React/RCTBundleConsumer.h>)
+#if __has_include(<React/RCTBundleProvider.h>)
 // Bundle mode
-@synthesize scriptBuffer = scriptBuffer_;
-@synthesize sourceURL = sourceURL_;
-#endif // __has_include(<React/RCTBundleConsumer.h>)
+@synthesize bundleProvider = bundleProvider_;
+#endif // __has_include(<React/RCTBundleProvider.h>)
 
 - (void)checkBridgeless
 {
@@ -66,8 +70,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  script = [scriptBuffer_ getBuffer];
-  sourceURL = [sourceURL_ UTF8String];
+  script = [bundleProvider_ getBundle];
+  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = _callInvoker.callInvoker;
