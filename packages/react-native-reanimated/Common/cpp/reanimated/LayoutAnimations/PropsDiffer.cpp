@@ -591,13 +591,13 @@ void PropsDiffer::diffBorderWidth(
     if (sourceValue.has_value()) {
       sourceValues_.setProperty(rt, name, source);
     } else {
-      sourceValues_.setProperty(rt, name, react::toString(defaultSourceWidth));
+      sourceValues_.setProperty(rt, name, defaultSourceWidth);
     }
 
     if (targetValue.has_value()) {
       targetValues_.setProperty(rt, name, target);
     } else {
-      targetValues_.setProperty(rt, name, react::toString(defaultTargetWidth));
+      targetValues_.setProperty(rt, name, defaultTargetWidth);
     }
   }
 }
