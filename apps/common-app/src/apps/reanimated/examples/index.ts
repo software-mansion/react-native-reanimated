@@ -881,7 +881,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: NestedStacksExample,
     shouldWork: {
       ios: true,
-      android: false, // borderWidth issue
+      android: true,
     },
   },
   ModalsExample: {
