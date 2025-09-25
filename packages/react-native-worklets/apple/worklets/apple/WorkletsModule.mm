@@ -12,10 +12,10 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
-#if __has_include(<React/NSBigStringBuffer.h>)
+#if __has_include(<React/RCTBundleProvider.h>)
 // Bundle mode
-#import <React/NSBigStringBuffer.h>
-#endif // __has_include(<React/NSBigStringBuffer.h>)
+#import <React/RCTBundleProvider.h>
+#endif // __has_include(<React/RCTBundleProvider.h>)
 
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
@@ -70,7 +70,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  script = [[bundleProvider_ getBundle] getBuffer];
+  script = [bundleProvider_ getBundle];
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 

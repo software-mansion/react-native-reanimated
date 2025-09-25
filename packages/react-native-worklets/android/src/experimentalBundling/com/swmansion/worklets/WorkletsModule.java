@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
-import com.facebook.react.fabric.BigStringBufferWrapper;
+import com.facebook.react.fabric.BundleWrapper;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
@@ -38,7 +38,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private BigStringBufferWrapper mScriptWrapper = null;
+  private BundleWrapper mBundleWrapper = null;
   private String mSourceURL = null;
 
   /**
@@ -53,7 +53,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      BigStringBufferWrapper scriptWrapper,
+      BundleWrapper bundleWrapper,
       String sourceURL);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
@@ -80,7 +80,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mSourceURL = context.getSourceURL();
-    mScriptWrapper = context.getBundle();
+    mBundleWrapper = context.getBundle();
 
     mHybridData =
         initHybrid(
@@ -88,7 +88,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            mScriptWrapper,
+            mBundleWrapper,
             mSourceURL);
     return true;
   }
