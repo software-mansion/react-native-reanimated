@@ -23,7 +23,16 @@ import type {
 } from './commonTypes';
 
 function getComponentOrScrollable(ref: InternalHostInstance) {
-  return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
+  return ref.getNativeScrollRef?.() ?? ref.getScrollResponder?.() ?? ref;
+}
+
+function getTagOrComponent(ref: InternalHostInstance) {
+  return (
+    ref.getScrollableNode?.() ??
+    ref.getNativeScrollRef?.() ??
+    ref.getScrollResponder?.() ??
+    ref
+  );
 }
 
 function useAnimatedRefBase<TRef extends InstanceOrElement>(
@@ -41,7 +50,13 @@ function useAnimatedRefBase<TRef extends InstanceOrElement>(
         wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
+        fun.getTag = () => {
+          const handle = getTagOrComponent(ref);
+          if (typeof handle === 'number') {
+            return handle;
+          }
+          return findNodeHandle(handle);
+        };
         fun.current = ref;
 
         if (observers.size) {
@@ -111,7 +126,7 @@ function useAnimatedRefNative<
 function useAnimatedRefWeb<
   TRef extends InstanceOrElement = HostInstance,
 >(): AnimatedRef<TRef> {
-  return useAnimatedRefBase(getComponentOrScrollable);
+  return useAnimatedRefBase(getComponentOrScrollable as any);
 }
 
 /**
