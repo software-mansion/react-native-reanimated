@@ -4,13 +4,13 @@ import type { StepsModifier } from '../types';
 
 describe(StepsEasing, () => {
   describe('constructor', () => {
-    it('throws error if stepsNumber is not positive', () => {
+    test('throws error if stepsNumber is not positive', () => {
       expect(() => new StepsEasing(-1)).toThrow(
         ERROR_MESSAGES.invalidStepsNumber(-1)
       );
     });
 
-    it('throws error if stepsNumber is not an integer', () => {
+    test('throws error if stepsNumber is not an integer', () => {
       expect(() => new StepsEasing(1.5)).toThrow(
         ERROR_MESSAGES.invalidStepsNumber(1.5)
       );
@@ -18,7 +18,7 @@ describe(StepsEasing, () => {
   });
 
   describe('toString', () => {
-    it.each([
+    test.each([
       [1, 'jump-end', 'steps(1, jump-end)'],
       [2, 'jump-start', 'steps(2, jump-start)'],
       [3, 'jump-both', 'steps(3, jump-both)'],
@@ -34,7 +34,7 @@ describe(StepsEasing, () => {
 
   describe('normalize', () => {
     describe('jump-start', () => {
-      it('returns correct normalized object', () => {
+      test('returns correct normalized object', () => {
         const easing = new StepsEasing(4, 'jump-start');
         expect(easing.normalize()).toEqual({
           name: 'steps',
@@ -49,7 +49,7 @@ describe(StepsEasing, () => {
     });
 
     describe('jump-end', () => {
-      it('returns correct normalized object', () => {
+      test('returns correct normalized object', () => {
         const easing = new StepsEasing(4, 'jump-end');
         expect(easing.normalize()).toEqual({
           name: 'steps',
@@ -65,7 +65,7 @@ describe(StepsEasing, () => {
     });
 
     describe('jump-both', () => {
-      it('returns correct normalized object', () => {
+      test('returns correct normalized object', () => {
         const easing = new StepsEasing(4, 'jump-both');
         expect(easing.normalize()).toEqual({
           name: 'steps',

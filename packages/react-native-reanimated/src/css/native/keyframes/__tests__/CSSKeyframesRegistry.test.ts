@@ -30,7 +30,7 @@ describe('CSSKeyframesRegistry', () => {
   });
 
   describe('add', () => {
-    it('calls registerCSSKeyframes when adding a new animation', () => {
+    test('calls registerCSSKeyframes when adding a new animation', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
@@ -42,7 +42,7 @@ describe('CSSKeyframesRegistry', () => {
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
-    it('does not call registerCSSKeyframes when adding an existing animation', () => {
+    test('does not call registerCSSKeyframes when adding an existing animation', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag2); // animation won't be registered again, even though the viewTag is different
 
@@ -55,7 +55,7 @@ describe('CSSKeyframesRegistry', () => {
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
-    it('calls registerCSSKeyframes for the new animation added', () => {
+    test('calls registerCSSKeyframes for the new animation added', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
       cssKeyframesRegistry.add(keyframesRule2, VIEW_NAME, viewTag1); // viewTag can be the same, animations aren't added separately for different views
 
@@ -77,7 +77,7 @@ describe('CSSKeyframesRegistry', () => {
   });
 
   describe('remove', () => {
-    it('calls unregisterCSSKeyframes when removed animation is used only by a single view', () => {
+    test('calls unregisterCSSKeyframes when removed animation is used only by a single view', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
       cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag1);
 
@@ -88,14 +88,14 @@ describe('CSSKeyframesRegistry', () => {
       );
     });
 
-    it('does not call unregisterCSSKeyframes when viewTag is not found', () => {
+    test('does not call unregisterCSSKeyframes when viewTag is not found', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
       cssKeyframesRegistry.remove(keyframesRule1.name, VIEW_NAME, viewTag2);
 
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
     });
 
-    it('does not call unregisterCSSKeyframes until removed for the last view that uses it', () => {
+    test('does not call unregisterCSSKeyframes until removed for the last view that uses it', () => {
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag1);
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag2);
       cssKeyframesRegistry.add(keyframesRule1, VIEW_NAME, viewTag3);
