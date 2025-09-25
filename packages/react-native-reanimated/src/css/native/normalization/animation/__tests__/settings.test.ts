@@ -24,18 +24,18 @@ import {
 } from '../settings';
 
 describe(normalizeDirection, () => {
-  it('returns "normal" by default', () => {
+  test('returns "normal" by default', () => {
     expect(normalizeDirection()).toBe('normal');
   });
 
   describe('when valid value is passed', () => {
-    it.each([...VALID_ANIMATION_DIRECTIONS])('returns %p', (direction) => {
+    test.each([...VALID_ANIMATION_DIRECTIONS])('returns %p', (direction) => {
       expect(normalizeDirection(direction)).toBe(direction);
     });
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'normal ', 'alternateReverse'])(
+    test.each(['invalid', 'normal ', 'alternateReverse'])(
       'throws an error for %p',
       (direction) => {
         const value = direction as CSSAnimationDirection;
@@ -48,28 +48,28 @@ describe(normalizeDirection, () => {
 });
 
 describe(normalizeIterationCount, () => {
-  it('returns 1 by default', () => {
+  test('returns 1 by default', () => {
     expect(normalizeIterationCount()).toBe(1);
   });
 
   describe('when number is passed', () => {
-    it.each([0, 1, 2.5, 5])('returns %p', (iterationCount) => {
+    test.each([0, 1, 2.5, 5])('returns %p', (iterationCount) => {
       expect(normalizeIterationCount(iterationCount)).toBe(iterationCount);
     });
 
-    it('returns "-1" for Infinity', () => {
+    test('returns "-1" for Infinity', () => {
       expect(normalizeIterationCount(Infinity)).toBe(-1);
     });
   });
 
   describe('when "infinite" is passed', () => {
-    it('returns -1', () => {
+    test('returns -1', () => {
       expect(normalizeIterationCount('infinite')).toBe(-1);
     });
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'infinite '])(
+    test.each(['invalid', 'infinite '])(
       'throws an error for %p',
       (iterationCount) => {
         const value = iterationCount as CSSAnimationIterationCount;
@@ -81,7 +81,7 @@ describe(normalizeIterationCount, () => {
   });
 
   describe('when negative number is passed', () => {
-    it('throws an error', () => {
+    test('throws an error', () => {
       expect(() => normalizeIterationCount(-1)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.negativeIterationCount(-1))
       );
@@ -90,18 +90,18 @@ describe(normalizeIterationCount, () => {
 });
 
 describe(normalizeFillMode, () => {
-  it('returns "none" by default', () => {
+  test('returns "none" by default', () => {
     expect(normalizeFillMode()).toBe('none');
   });
 
   describe('when valid value is passed', () => {
-    it.each([...VALID_FILL_MODES])('returns %p', (fillMode) => {
+    test.each([...VALID_FILL_MODES])('returns %p', (fillMode) => {
       expect(normalizeFillMode(fillMode)).toBe(fillMode);
     });
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'none '])('throws an error for %p', (fillMode) => {
+    test.each(['invalid', 'none '])('throws an error for %p', (fillMode) => {
       const value = fillMode as CSSAnimationFillMode;
       expect(() => normalizeFillMode(value)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidFillMode(value))
@@ -111,28 +111,31 @@ describe(normalizeFillMode, () => {
 });
 
 describe(normalizePlayState, () => {
-  it('returns "running" by default', () => {
+  test('returns "running" by default', () => {
     expect(normalizePlayState()).toBe('running');
   });
 
   describe('when valid value is passed', () => {
-    it.each([...VALID_PLAY_STATES])('returns %p', (playState) => {
+    test.each([...VALID_PLAY_STATES])('returns %p', (playState) => {
       expect(normalizePlayState(playState)).toBe(playState);
     });
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'running '])('throws an error for %p', (playState) => {
-      const value = playState as CSSAnimationPlayState;
-      expect(() => normalizePlayState(value)).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidPlayState(value))
-      );
-    });
+    test.each(['invalid', 'running '])(
+      'throws an error for %p',
+      (playState) => {
+        const value = playState as CSSAnimationPlayState;
+        expect(() => normalizePlayState(value)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidPlayState(value))
+        );
+      }
+    );
   });
 });
 
 describe(normalizeSingleCSSAnimationSettings, () => {
-  it('fills missing values with defaults', () => {
+  test('fills missing values with defaults', () => {
     expect(normalizeSingleCSSAnimationSettings({})).toEqual({
       duration: 0,
       timingFunction: 'ease',
@@ -144,7 +147,7 @@ describe(normalizeSingleCSSAnimationSettings, () => {
     });
   });
 
-  it('returns normalized settings', () => {
+  test('returns normalized settings', () => {
     expect(
       normalizeSingleCSSAnimationSettings({
         animationDuration: '3.5s',
@@ -168,7 +171,7 @@ describe(normalizeSingleCSSAnimationSettings, () => {
 });
 
 describe(getAnimationSettingsUpdates, () => {
-  it('returns an empty object if no settings are changed', () => {
+  test('returns an empty object if no settings are changed', () => {
     const settings: NormalizedSingleCSSAnimationSettings = {
       duration: 1000,
       timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
@@ -193,7 +196,7 @@ describe(getAnimationSettingsUpdates, () => {
       playState: 'running',
     };
 
-    it.each([
+    test.each([
       { duration: 2000 },
       { timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
       { direction: 'reverse' },

@@ -8,11 +8,11 @@ import { processBoxShadowNative } from '../shadows';
 describe(processBoxShadowNative, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
-      it('returns undefined when input is "none"', () => {
+      test('returns undefined when input is "none"', () => {
         expect(processBoxShadowNative('none')).toBeUndefined();
       });
 
-      it.each([
+      test.each([
         ['', 0],
         [',,', 0], // only commas
         ['0 0 10px 0 red', 1],
@@ -23,7 +23,7 @@ describe(processBoxShadowNative, () => {
     });
 
     describe('when input is an array of objects', () => {
-      it.each([
+      test.each([
         [[], 0],
         [[{ offsetX: 0, offsetY: 0 }], 1],
         [
@@ -44,7 +44,7 @@ describe(processBoxShadowNative, () => {
 
   describe('returns correct shadow values', () => {
     describe('when input is a string', () => {
-      it('provides proper default values', () => {
+      test('provides proper default values', () => {
         expect(processBoxShadowNative('0 0')).toEqual([
           {
             offsetX: 0,
@@ -56,7 +56,7 @@ describe(processBoxShadowNative, () => {
         ]);
       });
 
-      it.each([
+      test.each([
         [
           '0 0 10px 0',
           [
@@ -91,7 +91,7 @@ describe(processBoxShadowNative, () => {
     });
 
     describe('when input is an array of objects', () => {
-      it.each([
+      test.each([
         [
           [{ offsetX: 0, offsetY: 0, blurRadius: 10, color: 'red' }],
           [

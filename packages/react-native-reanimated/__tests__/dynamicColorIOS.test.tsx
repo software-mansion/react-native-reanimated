@@ -97,6 +97,7 @@ describe('DynamicColorIOS test', () => {
     const rendered = render(<AnimatedComponent />).toJSON();
     expect(rendered).toMatchSnapshot();
   });
+
   test('other props are not affected', () => {
     const style = DefaultStyle;
     const { getByTestId } = render(<AnimatedComponent />);
