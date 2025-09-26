@@ -17633,6 +17633,7 @@ __metadata:
     "@docusaurus/plugin-debug": "npm:^3.8.1"
     "@docusaurus/preset-classic": "npm:^3.8.1"
     "@docusaurus/tsconfig": "npm:3.8.1"
+    "@docusaurus/types": "npm:^3.8.1"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.0"
     "@mdx-js/react": "npm:3.0.0"
