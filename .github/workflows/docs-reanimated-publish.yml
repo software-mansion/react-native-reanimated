@@ -55,6 +55,6 @@ jobs:
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: packages/docs-reanimated/build
+          FOLDER: packages/docs-reanimated/build/react-native-reanimated
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
