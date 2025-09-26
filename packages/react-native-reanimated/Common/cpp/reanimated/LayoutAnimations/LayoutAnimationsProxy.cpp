@@ -1374,9 +1374,8 @@ std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const PropsParserContext &propsParserContext) const {
   auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-//  opacity = ;
   auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(folly::dynamic::merge(opacity, newView->props->rawProps)));
+      propsParserContext, newView->props, RawProps(opacity));
   newView->props = newProps;
   return newView;
 }
