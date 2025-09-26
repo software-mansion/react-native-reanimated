@@ -20,6 +20,7 @@ jobs:
     env:
       REANIMATED_DOCS_DIR: packages/docs-reanimated
       WORKLETS_DOCS_DIR: packages/docs-worklets
+      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -30,10 +31,10 @@ jobs:
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
       - name: Install monorepo node dependencies
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn install
       - name: Build Reanimated package
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
       - name: Install Reanimated docs node dependencies
         working-directory: ${{ env.REANIMATED_DOCS_DIR }}
