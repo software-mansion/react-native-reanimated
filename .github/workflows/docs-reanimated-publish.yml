@@ -28,6 +28,9 @@ jobs:
         with:
           cache: 'yarn'
 
+      - name: Clear annotations
+        run: .github/workflows/helper/clear-annotations.sh
+
       - name: Configure git user info
         run: >-
           git config --local user.email "action@github.com"
