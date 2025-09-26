@@ -15468,7 +15468,7 @@ __metadata:
     prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
-    react: "npm:  19.1.1"
+    react: "npm:19.1.1"
     react-colorful: "npm:5.6.1"
     react-dom: "npm:19.1.1"
     react-native: "npm:0.71.4"
@@ -29548,13 +29548,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:  19.1.1, react@npm:19.1.1":
-  version: 19.1.1
-  resolution: "react@npm:19.1.1"
-  checksum: 10/9801530fdc939e1a7a499422e930515b2400809cb39c2872984e99f832d233f61659a693871183dac3155c2f9b2c9dcf4440a56bd18983277ae92860e38c3a61
-  languageName: node
-  linkType: hard
-
 "react@npm:18.3.1":
   version: 18.3.1
   resolution: "react@npm:18.3.1"
@@ -29568,6 +29561,13 @@ __metadata:
   version: 19.1.0
   resolution: "react@npm:19.1.0"
   checksum: 10/d0180689826fd9de87e839c365f6f361c561daea397d61d724687cae88f432a307d1c0f53a0ee95ddbe3352c10dac41d7ff1ad85530fb24951b27a39e5398db4
+  languageName: node
+  linkType: hard
+
+"react@npm:19.1.1":
+  version: 19.1.1
+  resolution: "react@npm:19.1.1"
+  checksum: 10/9801530fdc939e1a7a499422e930515b2400809cb39c2872984e99f832d233f61659a693871183dac3155c2f9b2c9dcf4440a56bd18983277ae92860e38c3a61
   languageName: node
   linkType: hard
 
