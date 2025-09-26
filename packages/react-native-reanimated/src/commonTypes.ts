@@ -1,5 +1,4 @@
 'use strict';
-import React from 'react';
 import type { Component, ElementType, RefObject } from 'react';
 import type {
   FlatList,
@@ -460,7 +459,7 @@ type ScrollResponderType = InternalHostInstance &
         | GetProp<SectionList, 'getScrollResponder'>
       >
     > &
-      React.JSX.Element
+      JSX.Element
   >;
 
 export type InternalHostInstance = Partial<
