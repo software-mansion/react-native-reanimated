@@ -8,6 +8,7 @@
       "packages/eslint-plugin-reanimated",
       "packages/react-native-worklets/plugin",
       "packages/react-native-worklets",
+      "packages/docs-reanimated",
       "apps/common-app",
       "apps/fabric-example",
       "apps/macos-example",
