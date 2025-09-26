@@ -612,7 +612,6 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
             auto beforeViewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(s.props));
             auto afterViewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(after.props));
 
-            SYSLOG(INFO) << "(dupa)" << "before: " << beforeViewProps->borderRadii.all.value_or(ValueUnit{}).value << " " <<beforeViewProps->rawProps << ", after: " << afterViewProps->borderRadii.all.value_or(ValueUnit{}).value << " " << afterViewProps->rawProps;
           s.tag = myTag;
           auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, {});
           auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
