@@ -40,11 +40,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(Surfac
   bool isInTransition = transitionState_;
   
   if (isInTransition){
-    updateLightTree(mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_){
     auto actualTop = topScreen[surfaceId];
-    updateLightTree(mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
     auto reactTop = findTopScreen(lightNodes_[surfaceId]);
     if (reactTop->current.tag == actualTop->current.tag){
       synchronized_ = true;
@@ -56,7 +56,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(Surfac
       findSharedElementsOnScreen(beforeTopScreen, 0);
     }
     
-    updateLightTree(mutations, filteredMutations);
+    updateLightTree(propsParserContext, mutations, filteredMutations);
     
     root = lightNodes_[surfaceId];
     auto afterTopScreen = findTopScreen(root);
@@ -446,7 +446,7 @@ void LayoutAnimationsProxy::handleProgressTransition(ShadowViewMutationList &fil
   }
 }
 
-void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutations, ShadowViewMutationList& filteredMutations) const {
+void LayoutAnimationsProxy::updateLightTree(const PropsParserContext& propsParserContext, const ShadowViewMutationList &mutations, ShadowViewMutationList& filteredMutations) const {
   
   std::unordered_set<Tag> moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++){
@@ -482,7 +482,21 @@ void LayoutAnimationsProxy::updateLightTree(const ShadowViewMutationList &mutati
           node = std::make_shared<LightNode>();
         }
         node->previous = mutation.oldChildShadowView;
+        #ifdef ANDROID
+        if (node->current.props) {
+          // on android rawProps are used to store the diffed props
+          // so we need to merge them
+          // this should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
+            auto& currentRawProps = node->current.props->rawProps;
+            auto mergedRawProps = folly::dynamic::merge(currentRawProps, mutation.newChildShadowView.props->rawProps);
+            node->current = mutation.newChildShadowView;
+            node->current.props = getComponentDescriptorForShadowView(node->current).cloneProps(propsParserContext, mutation.newChildShadowView.props, RawProps(mergedRawProps));
+        } else {
+            node->current = mutation.newChildShadowView;
+        }
+        #else
         node->current = mutation.newChildShadowView;
+        #endif
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)){
           layout_.push_back(node);
@@ -595,6 +609,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
         if (shouldCreateContainer){
           auto& root = lightNodes_[surfaceId];
           ShadowView s = before;
+            auto beforeViewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(s.props));
+            auto afterViewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(after.props));
+
+            SYSLOG(INFO) << "(dupa)" << "before: " << beforeViewProps->borderRadii.all.value_or(ValueUnit{}).value << " " <<beforeViewProps->rawProps << ", after: " << afterViewProps->borderRadii.all.value_or(ValueUnit{}).value << " " << afterViewProps->rawProps;
           s.tag = myTag;
           auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, {});
           auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
@@ -1345,8 +1363,9 @@ std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
     const PropsParserContext &propsParserContext) const {
   auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+//  opacity = ;
   auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
+      propsParserContext, newView->props, RawProps(folly::dynamic::merge(opacity, newView->props->rawProps)));
   newView->props = newProps;
   return newView;
 }

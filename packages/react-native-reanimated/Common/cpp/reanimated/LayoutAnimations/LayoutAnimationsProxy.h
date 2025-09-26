@@ -95,7 +95,7 @@ struct LayoutAnimationsProxy
                   const;
         void handleProgressTransition(ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         
-        void updateLightTree(const ShadowViewMutationList &mutations, ShadowViewMutationList& filteredMutations) const;
+        void updateLightTree(const PropsParserContext& propsParserContext, const ShadowViewMutationList &mutations, ShadowViewMutationList& filteredMutations) const;
         
         void handleSharedTransitionsStart(const LightNode::Unshared &afterTopScreen, const LightNode::Unshared &beforeTopScreen, ShadowViewMutationList &filteredMutations, const ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext, SurfaceId surfaceId) const;
         

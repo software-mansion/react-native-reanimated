@@ -937,7 +937,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: ChangeThemeSharedExample,
     shouldWork: {
       ios: false, // s2 -> change theme -> go back (progress) will have wrong target
-      android: false, // broken borderRadius for some reason
+      android: true,
     },
   },
   NestedRotationSharedExample: {
