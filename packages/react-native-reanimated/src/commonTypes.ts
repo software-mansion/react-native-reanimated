@@ -1,4 +1,5 @@
 'use strict';
+import React from 'react';
 import type { Component, ElementType, RefObject } from 'react';
 import type {
   FlatList,
@@ -44,14 +45,8 @@ export interface KeyframeProps extends StyleProps {
 }
 
 type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+  | { 0: KeyframeProps & { easing?: never }; from?: never }
+  | { 0?: never; from: KeyframeProps & { easing?: never } };
 
 type LastFrame =
   | { 100?: KeyframeProps; to?: never }
@@ -358,9 +353,7 @@ export enum InterfaceOrientation {
   ROTATION_270 = 270,
 }
 
-export type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
-};
+export type ShadowNodeWrapper = { __hostObjectShadowNodeWrapper: never };
 
 export enum KeyboardState {
   UNKNOWN = 0,
@@ -467,7 +460,7 @@ type ScrollResponderType = InternalHostInstance &
         | GetProp<SectionList, 'getScrollResponder'>
       >
     > &
-      JSX.Element
+      React.JSX.Element
   >;
 
 export type InternalHostInstance = Partial<

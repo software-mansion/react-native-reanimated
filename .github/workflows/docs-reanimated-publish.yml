@@ -34,7 +34,8 @@ jobs:
           && git config --local user.name "GitHub Action"
 
       - name: Install monorepo node dependencies
-        run: yarn install --immutable
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn install
 
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
