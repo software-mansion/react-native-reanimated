@@ -81,5 +81,9 @@
   },
   "engines": {
     "node": ">=18.0"
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces",
+    "selfReferences": false
   }
 }

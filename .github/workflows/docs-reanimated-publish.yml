@@ -18,14 +18,27 @@ jobs:
     env:
       REANIMATED_DOCS_DIR: packages/docs-reanimated
       WORKLETS_DOCS_DIR: packages/docs-worklets
+      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: Check out
         uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'yarn'
 
       - name: Configure git user info
         run: >-
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
       - name: Build Reanimated docs
         working-directory: ${{ env.REANIMATED_DOCS_DIR }}
