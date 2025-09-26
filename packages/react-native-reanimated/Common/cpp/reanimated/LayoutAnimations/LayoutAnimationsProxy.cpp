@@ -260,7 +260,11 @@ void LayoutAnimationsProxy::parseParentTransforms(const LightNode::Unshared &nod
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
-    transformForNode_[node->current.tag] = combinedMatrix;
+    transformForNode_[node->current.tag] = Transform::FromTransformOperation(
+                                                                             react::TransformOperation(TransformOperationType::Arbitrary),
+                                                                             {},
+                                                                             combinedMatrix
+                                                                         );
   }
 }
 
