@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BoxShadowValue, StyleSheet, View } from 'react-native';
+import { BoxShadowValue, StyleSheet, View, ViewStyle } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
@@ -12,7 +12,6 @@ import {
   render,
   test,
   useTestRef,
-  wait,
   waitForNotification,
 } from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
@@ -37,10 +36,10 @@ describe('animation of BoxShadow', () => {
     const refActive = useTestRef('ACTIVE');
     const refPassive = useTestRef('PASSIVE');
 
-    const styleActive = useAnimatedStyle(() => {
+    const styleActive = useAnimatedStyle<ViewStyle>(() => {
       return {
         boxShadow: [boxShadowActiveSV.value],
-      } as DefaultStyle;
+      } as unknown as DefaultStyle;
     });
 
     const stylePassive = useAnimatedStyle(() => {

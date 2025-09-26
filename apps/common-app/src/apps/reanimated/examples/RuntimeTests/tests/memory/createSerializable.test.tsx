@@ -202,7 +202,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableHostObject', async () => {
     // Arrange
-    // @ts-expect-error It's ok
+    // @ts-ignore
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const hostObjectKeys = Object.keys(hostObjectValue);
 
@@ -572,7 +572,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableHostFunction', async () => {
     // Arrange
-    // @ts-expect-error It's ok
+    // @ts-ignore
     const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
 
     // Act
@@ -597,7 +597,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableTurboModuleLike', async () => {
     // Arrange
-    // @ts-expect-error This global host object isn't exposed in the types.
+    // @ts-ignore
     const proto = globalThis.__reanimatedModuleProxy;
     const reanimatedModuleKeys = Object.keys(proto);
     const obj = {

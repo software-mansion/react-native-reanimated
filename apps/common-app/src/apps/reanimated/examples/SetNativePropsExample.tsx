@@ -1,10 +1,9 @@
-import React from 'react';
-import { Button, StyleSheet } from 'react-native';
+import React, { ComponentRef } from 'react';
+import { Button, StyleSheet, TextInput } from 'react-native';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  TextInput,
 } from 'react-native-gesture-handler';
 import Animated, {
   setNativeProps,
@@ -24,7 +23,7 @@ function delay(ms: number) {
 export default function SetNativePropsExample() {
   const [text, setText] = React.useState('Hello');
 
-  const animatedRef = useAnimatedRef<TextInput>();
+  const animatedRef = useAnimatedRef<ComponentRef<typeof TextInput>>();
 
   const send = () => {
     delay(500);
