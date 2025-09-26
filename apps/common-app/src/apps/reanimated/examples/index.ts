@@ -608,7 +608,7 @@ export const EXAMPLES: Record<string, Example> = {
     screen: ProfilesExample,
     shouldWork: {
       ios: true,
-      android: false, // I sometimes see a flicker when the transition starts to go back
+      android: true,
     },
   },
   ProgressTransitionExample: {

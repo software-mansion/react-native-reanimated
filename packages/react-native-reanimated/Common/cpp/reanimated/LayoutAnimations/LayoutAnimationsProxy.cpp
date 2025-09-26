@@ -613,10 +613,22 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(const LightNode::Unshar
             auto afterViewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(after.props));
 
           s.tag = myTag;
-          auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, {});
-          auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
-          viewProps->transform = transformForNode_[before.tag];
-          s.props = newProps;
+
+          if (transformForNode_.contains(before.tag)){
+#ifdef ANDROID
+
+              auto array = folly::dynamic::array(folly::dynamic::object("matrix", transformForNode_[before.tag].operator folly::dynamic()));
+              folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
+              auto newRawProps = folly::dynamic::merge(s.props->rawProps, newTransformDynamic);
+              auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, RawProps(newRawProps));
+              auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+#else
+            auto newProps = getComponentDescriptorForShadowView(s).cloneProps(propsParserContext, s.props, {});
+            auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+            viewProps->transform = transformForNode_[before.tag];
+#endif
+            s.props = newProps;
+          }
           filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, root->children.size()));
           filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
