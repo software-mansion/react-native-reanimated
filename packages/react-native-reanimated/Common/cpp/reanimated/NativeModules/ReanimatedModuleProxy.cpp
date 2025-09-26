@@ -345,7 +345,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           "[Reanimated] Layout animation config must be an object.");
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
-    if (!sharedTag.isUndefined()){
+    if (!sharedTag.isUndefined()) {
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
   }
@@ -592,8 +592,8 @@ bool ReanimatedModuleProxy::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  
-  if (!strcmp(eventType.c_str(), "onTransitionProgress")){
+
+  if (!strcmp(eventType.c_str(), "onTransitionProgress")) {
     jsi::Runtime &rt =
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     const auto &eventPayload = rawEvent.eventPayload;
@@ -602,26 +602,26 @@ bool ReanimatedModuleProxy::handleRawEvent(
     auto closing = payload.getProperty(rt, "closing").asNumber();
     auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
     auto swiping = payload.getProperty(rt, "swiping").asNumber();
-    
-    auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward, swiping);
-    if (!surfaceId){
+
+    auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(
+        tag, progress, closing, goingForward, swiping);
+    if (!surfaceId) {
       return false;
     }
     // TODO: enumerate -> visit
     uiManager_->getShadowTreeRegistry().enumerate(
-        [](const ShadowTree &shadowTree, bool&) {
+        [](const ShadowTree &shadowTree, bool &) {
           shadowTree.notifyDelegatesOfUpdates();
         });
     return false;
-  } else if (!strcmp(eventType.c_str(), "onGestureCancel")){
-    
+  } else if (!strcmp(eventType.c_str(), "onGestureCancel")) {
     auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
-    if (!surfaceId){
+    if (!surfaceId) {
       return false;
     }
     // TODO: enumerate -> visit
     uiManager_->getShadowTreeRegistry().enumerate(
-        [](const ShadowTree &shadowTree, bool&) {
+        [](const ShadowTree &shadowTree, bool &) {
           shadowTree.notifyDelegatesOfUpdates();
         });
     return false;
@@ -735,7 +735,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-// TODO: use the SET flag when it's ready 
+// TODO: use the SET flag when it's ready
 #ifdef ANDROID
     if constexpr (false) {
       static const std::unordered_set<std::string> synchronousProps = {

@@ -1,5 +1,8 @@
 'use strict';
-import type { ILayoutAnimationBuilder, LayoutAnimationFunction } from '../commonTypes';
+import type {
+  ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
+} from '../commonTypes';
 import type { BaseAnimationBuilder } from './animationBuilder';
 import { ComplexAnimationBuilder } from './animationBuilder';
 
@@ -28,8 +31,8 @@ export class SharedTransition
         target: Record<string, number | string>;
       };
       const animationFactory = (value: number | string) => {
-        return delayFunction(delay, animation(value, config))
-      }
+        return delayFunction(delay, animation(value, config));
+      };
       const initialValues: any = {};
       const animations: any = {};
       for (const key in values.source) {
@@ -38,20 +41,24 @@ export class SharedTransition
         const target = values.target[key];
         if (Array.isArray(target)) {
           if (key === 'transform') {
-            animations[key] = target.map((item: Record<string, number | string>) => {
-              const key = Object.keys(item)[0];
-              return {
-                [key]: animationFactory(item[key]),
-              };
-            });
-          } else if (key === 'boxShadow') {
-            animations[key] = target.map((item: Record<string, number | string>) => {
-              const boxShadow: Record<string, unknown> = {};
-              for (const shadowKey of Object.keys(item)) {
-                boxShadow[shadowKey] = animationFactory(item[shadowKey]);
+            animations[key] = target.map(
+              (item: Record<string, number | string>) => {
+                const key = Object.keys(item)[0];
+                return {
+                  [key]: animationFactory(item[key]),
+                };
               }
-              return boxShadow;
-            });
+            );
+          } else if (key === 'boxShadow') {
+            animations[key] = target.map(
+              (item: Record<string, number | string>) => {
+                const boxShadow: Record<string, unknown> = {};
+                for (const shadowKey of Object.keys(item)) {
+                  boxShadow[shadowKey] = animationFactory(item[shadowKey]);
+                }
+                return boxShadow;
+              }
+            );
           } else if (key === 'transformOrigin') {
             animations[key] = target.map(animationFactory);
           } else {

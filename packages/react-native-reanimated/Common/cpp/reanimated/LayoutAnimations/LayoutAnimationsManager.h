@@ -1,8 +1,7 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <react/renderer/mounting/ShadowView.h>
-
+#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSLogger.h>
@@ -12,11 +11,11 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <stack>
 
 namespace reanimated {
 
@@ -25,26 +24,26 @@ using namespace worklets;
 using SharedTag = std::string;
 
 struct SharedTransitionGroup {
-//  std::string name;
-//  std::optional<ShadowView> current;
+  //  std::string name;
+  //  std::optional<ShadowView> current;
   std::unordered_map<Tag, ShadowView> tagToView_;
   Tag fakeTag = -1;
 };
 
 struct Transition {
   ShadowView snapshot[2];
-  Tag parentTag[2] = {0,0};
+  Tag parentTag[2] = {0, 0};
 };
 
-struct SharedTransitionManager{
+struct SharedTransitionManager {
   std::unordered_map<std::string, SharedTransitionGroup> groups_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-  
-//  SharedTransitionGroup getGroupForTag();
-//  int createTransitionContainer(SharedTag sharedTag);
-//  int removeTransitionContainer(SharedTag sharedTag);
-//  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
+
+  //  SharedTransitionGroup getGroupForTag();
+  //  int createTransitionContainer(SharedTag sharedTag);
+  //  int removeTransitionContainer(SharedTag sharedTag);
+  //  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
 };
 
 using TransitionMap = std::unordered_map<SharedTag, Transition>;
@@ -60,7 +59,8 @@ struct LayoutAnimationConfig {
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-  : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),  jsLogger_(jsLogger) {}
+      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),
+        jsLogger_(jsLogger) {}
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
@@ -75,13 +75,13 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
 
-//  private:
+  //  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(
       const LayoutAnimationType type);
-  
+
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 
-private:
+ private:
   std::shared_ptr<JSLogger> jsLogger_;
 
   std::unordered_map<int, std::shared_ptr<Serializable>>

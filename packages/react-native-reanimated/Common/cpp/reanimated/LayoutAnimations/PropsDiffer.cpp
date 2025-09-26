@@ -26,19 +26,14 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
 
 void PropsDiffer::overrideSourceTransforms(const Transform &transform) {
   sourceTransform_ = Transform::FromTransformOperation(
-      TransformOperation(TransformOperationType::Arbitrary),
-      {},
-      transform
-  );
+      TransformOperation(TransformOperationType::Arbitrary), {}, transform);
   needsOverrideSourceTransforms_ = true;
 }
 
 void PropsDiffer::overrideTargetTransforms(const Transform &transform) {
   targetTransform_ = Transform::FromTransformOperation(
-      TransformOperation(TransformOperationType::Arbitrary),
-      {},
-      transform
-  );;
+      TransformOperation(TransformOperationType::Arbitrary), {}, transform);
+  ;
   needsOverrideTargetTransforms_ = true;
 }
 

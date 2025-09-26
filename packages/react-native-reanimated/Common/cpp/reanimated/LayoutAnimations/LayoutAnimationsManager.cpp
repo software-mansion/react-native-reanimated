@@ -15,7 +15,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
-    if (type == SHARED_ELEMENT_TRANSITION){
+    if (type == SHARED_ELEMENT_TRANSITION) {
       sharedTransitionsForNativeID_[tag] = config;
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
       continue;
@@ -110,11 +110,12 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
-  
+
   auto setConfig = sharedTransitionsForNativeID_[nativeId];
-  if (setConfig){
+  if (setConfig) {
     sharedTransitions_.insert_or_assign(tag, setConfig);
-    sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
+    sharedTransitionManager_->tagToName_[tag] =
+        sharedTransitionManager_->nativeIDToName_[nativeId];
   }
   sharedTransitionsForNativeID_.erase(nativeId);
 }
