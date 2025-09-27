@@ -153,7 +153,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__) {
+if (__DEV__ && !SHOULD_BE_USE_WEB) {
   function runOnUIWorklet(): void {
     'worklet';
     throw new WorkletsError(
@@ -392,7 +392,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__) {
+if (__DEV__ && !SHOULD_BE_USE_WEB) {
   function runOnUIAsyncWorklet(): void {
     'worklet';
     throw new WorkletsError(
