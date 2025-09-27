@@ -5,8 +5,18 @@ import {
 } from '@shopify/flash-list';
 import type { Ref } from 'react';
 import React, { useCallback, useImperativeHandle, useRef } from 'react';
-import type { ListRenderItem as FlatListRenderItem } from 'react-native';
-import { Button, StyleSheet, Switch, Text, View } from 'react-native';
+import type {
+  ListRenderItem as FlatListRenderItem,
+  SectionListRenderItem,
+} from 'react-native';
+import {
+  Button,
+  SectionList,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
 import { runOnUI } from 'react-native-worklets';
 
@@ -38,6 +48,10 @@ export default function ScrollToExample() {
     {
       title: 'FlatList',
       component: FlatListExample,
+    },
+    {
+      title: 'SectionList',
+      component: SectionListExample,
     },
     {
       title: 'FlashList',
@@ -165,6 +179,57 @@ const FlashListExample = ({ animated, ref }: ExampleProps) => {
   return <AnimatedFlashList ref={aref} renderItem={renderItem} data={DATA} />;
 };
 
+const AnimatedSectionList = Animated.createAnimatedComponent(
+  SectionList<number>
+);
+
+const SectionListExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<typeof AnimatedSectionList>();
+
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(_WORKLET);
+      aref.current?.scrollToLocation({
+        sectionIndex: Math.floor((Math.random() * DATA.length) / 10),
+        itemIndex: Math.floor((Math.random() * DATA.length) / 10),
+      });
+    },
+    scrollFromUI() {
+      runOnUI(() => {
+        console.log(_WORKLET);
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      })();
+    },
+  }));
+
+  const renderItem = useCallback<SectionListRenderItem<any>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
+
+  const sections = React.useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => ({
+        title: `Section ${i + 1}`,
+        data: DATA.slice(i * 10, (i + 1) * 10),
+      })),
+    []
+  );
+
+  return (
+    <AnimatedSectionList
+      ref={aref}
+      renderItem={renderItem}
+      style={styles.fill}
+      sections={sections}
+      renderSectionHeader={({ section: { title } }) => (
+        <Text style={styles.header}>{title}</Text>
+      )}
+      stickySectionHeadersEnabled={false}
+    />
+  );
+};
+
 const styles = StyleSheet.create({
   optionsRow: {
     flexDirection: 'row',
@@ -187,6 +252,11 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 50,
+    textAlign: 'center',
+  },
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });

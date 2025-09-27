@@ -25,10 +25,11 @@ export function getShadowNodeWrapperFromRef(
     }
   }
 
-  const resolvedRef =
-    ref.getScrollResponder?.()?.getNativeScrollRef?.() ??
-    ref.getNativeScrollRef?.() ??
-    ref;
+  const resolvedRef = ref._reactInternals
+    ? ref
+    : (ref.getScrollResponder?.()?.getNativeScrollRef?.() ??
+      ref.getNativeScrollRef?.() ??
+      ref);
 
   const resolvedInstance =
     ref?.__internalInstanceHandle ??
