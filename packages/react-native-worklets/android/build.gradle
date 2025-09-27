@@ -102,6 +102,7 @@ def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
 def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
+def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -196,7 +197,8 @@ android {
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
+                        "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
             }

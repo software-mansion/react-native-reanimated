@@ -17,17 +17,17 @@
 #include <string>
 #include <thread>
 
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 #include <hermes/inspector-modern/chrome/Registration.h>
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 
 namespace worklets {
 
 using namespace facebook;
 using namespace react;
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 using namespace facebook::hermes::inspector_modern;
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
@@ -121,9 +121,9 @@ class WorkletHermesRuntime
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   WorkletsReentrancyCheck reentrancyCheck_;
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   chrome::DebugSessionToken debugToken_;
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 };
 
 } // namespace worklets
