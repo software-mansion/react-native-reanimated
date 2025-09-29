@@ -11,6 +11,7 @@ import type {
 } from 'react-native';
 import {
   Button,
+  ScrollView,
   SectionList,
   StyleSheet,
   Switch,
@@ -18,7 +19,8 @@ import {
   View,
 } from 'react-native';
 import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
-import { runOnUI } from 'react-native-worklets';
+import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
+import { scheduleOnUI, getRuntimeKind } from 'react-native-worklets';
 
 const DATA = [...Array(100).keys()];
 
@@ -57,13 +59,20 @@ export default function ScrollToExample() {
       title: 'FlashList',
       component: FlashListExample,
     },
+    {
+      title: 'RNGHScrollView',
+      component: RNGHScrollViewExample,
+    },
   ];
 
   const Example = examples[currentExample].component;
 
   return (
     <>
-      <View style={styles.optionsRow}>
+      <ScrollView
+        contentContainerStyle={styles.optionsRow}
+        horizontal
+        style={styles.optionsContainer}>
         {examples.map(({ title }, index) => (
           <Button
             disabled={index === currentExample}
@@ -72,7 +81,7 @@ export default function ScrollToExample() {
             onPress={() => setCurrentExample(index)}
           />
         ))}
-      </View>
+      </ScrollView>
       <View style={styles.buttons}>
         <View style={styles.optionsRow}>
           <Text style={styles.switchLabel}>Animated</Text>
@@ -102,14 +111,14 @@ const ScrollViewExample = ({ animated, ref }: ExampleProps) => {
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
-      console.log(_WORKLET);
+      console.log(getRuntimeKind());
       aref.current?.scrollTo({ y: getRandomOffset(), animated });
     },
     scrollFromUI() {
-      runOnUI(() => {
-        console.log(_WORKLET);
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
         scrollTo(aref, 0, getRandomOffset(), animated);
-      })();
+      });
     },
   }));
 
@@ -129,14 +138,14 @@ const FlatListExample = ({ animated, ref }: ExampleProps) => {
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
-      console.log(_WORKLET);
+      console.log(getRuntimeKind());
       aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
     },
     scrollFromUI() {
-      runOnUI(() => {
-        console.log(_WORKLET);
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
         scrollTo(aref, 0, getRandomOffset(), animated);
-      })();
+      });
     },
   }));
 
@@ -160,14 +169,14 @@ const FlashListExample = ({ animated, ref }: ExampleProps) => {
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
-      console.log(_WORKLET);
+      console.log(getRuntimeKind());
       aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
     },
     scrollFromUI() {
-      runOnUI(() => {
-        console.log(_WORKLET);
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
         scrollTo(aref, 0, getRandomOffset(), animated);
-      })();
+      });
     },
   }));
 
@@ -188,20 +197,21 @@ const SectionListExample = ({ animated, ref }: ExampleProps) => {
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
-      console.log(_WORKLET);
+      console.log(getRuntimeKind());
       aref.current?.scrollToLocation({
         sectionIndex: Math.floor((Math.random() * DATA.length) / 10),
         itemIndex: Math.floor((Math.random() * DATA.length) / 10),
       });
     },
     scrollFromUI() {
-      runOnUI(() => {
-        console.log(_WORKLET);
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
         scrollTo(aref, 0, getRandomOffset(), animated);
-      })();
+      });
     },
   }));
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderItem = useCallback<SectionListRenderItem<any>>(
     ({ item }) => <Text style={styles.text}>{item}</Text>,
     []
@@ -230,13 +240,43 @@ const SectionListExample = ({ animated, ref }: ExampleProps) => {
   );
 };
 
+const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
+
+const RNGHScrollViewExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<typeof AnimatedRNGHScrollView>();
+
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollTo({ y: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
+
+  return (
+    <AnimatedRNGHScrollView ref={aref} style={styles.fill}>
+      {DATA.map((_, i) => (
+        <Text key={i} style={styles.text}>
+          {i}
+        </Text>
+      ))}
+    </AnimatedRNGHScrollView>
+  );
+};
+
 const styles = StyleSheet.create({
+  optionsContainer: {
+    flexGrow: 0,
+  },
   optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
     marginVertical: 10,
+    fontSize: 10,
+    gap: 3,
   },
   switchLabel: {
     fontSize: 20,

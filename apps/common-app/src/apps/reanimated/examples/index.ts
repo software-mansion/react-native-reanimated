@@ -134,6 +134,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 
 interface Example {
   icon?: string;
@@ -416,6 +417,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '𝌍',
     title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
+  },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',

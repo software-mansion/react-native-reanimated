@@ -22,6 +22,15 @@ void RNRuntimeDecorator::decorate(
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
+
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "__getTagFromShadowNodeWrapper",
+      [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
+        auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
+            rt, shadowNodeWrapper);
+        return jsi::Value(rt, static_cast<double>(node->getTag()));
+      });
 #endif // NDEBUG
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
