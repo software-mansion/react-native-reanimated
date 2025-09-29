@@ -344,30 +344,23 @@ void LayoutAnimationsProxy::handleProgressTransition(
         if (beforeTopScreen->current.tag != afterTopScreen->current.tag) {
           for (auto &[sharedTag, transition] : transitions_) {
             const auto &[before, after] = transition.snapshot;
-            const auto &[beforeParentTag, afterParentTag] =
-                transition.parentTag;
+            const auto &[beforeParentTag, afterParentTag] = transition.parentTag;
 
             auto &root = lightNodes_[surfaceId];
             ShadowView s = before;
             s.tag = myTag;
             filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
-            filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                surfaceId, s, root->children.size()));
-            filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-                after, after, afterParentTag));
+            filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, s, root->children.size()));
+            filteredMutations.push_back(ShadowViewMutation::UpdateMutation(after, after, afterParentTag));
             auto p = lightNodes_[before.tag]->parent.lock();
-            auto m1 =
-                ShadowViewMutation::InsertMutation(p->current.tag, before, 8);
             filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
                 before,
-                *cloneViewWithoutOpacity(m1, propsParserContext),
+                cloneViewWithoutOpacity(before, propsParserContext),
                 p->current.tag));
 
             auto m = ShadowViewMutation::UpdateMutation(
-                after, after, afterParentTag);
-            m = ShadowViewMutation::UpdateMutation(
                 after,
-                *cloneViewWithoutOpacity(m, propsParserContext),
+                cloneViewWithoutOpacity(after, propsParserContext),
                 afterParentTag);
             filteredMutations.push_back(m);
             auto node = std::make_shared<LightNode>();
@@ -525,7 +518,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
               ShadowViewMutation::UpdateMutation(after, after, afterParentTag);
           m = ShadowViewMutation::UpdateMutation(
               after,
-              *cloneViewWithoutOpacity(m, propsParserContext),
+              cloneViewWithoutOpacity(after, propsParserContext),
               afterParentTag);
           filteredMutations.push_back(m);
           auto node = std::make_shared<LightNode>();
@@ -581,10 +574,9 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     if (node) {
       auto view = node->current;
       auto parentTag = node->parent.lock()->current.tag;
-      auto m = ShadowViewMutation::UpdateMutation(view, view, parentTag);
-      m = ShadowViewMutation::UpdateMutation(
-          *cloneViewWithoutOpacity(m, propsParserContext),
-          *cloneViewWithOpacity(m, propsParserContext),
+      auto m = ShadowViewMutation::UpdateMutation(
+          cloneViewWithoutOpacity(view, propsParserContext),
+          cloneViewWithOpacity(view, propsParserContext),
           parentTag);
       filteredMutations.push_back(m);
     }
@@ -614,10 +606,8 @@ void LayoutAnimationsProxy::hideTransitioningViews(
   for (auto &[sharedTag, transition] : transitions_) {
     const auto &shadowView = transition.snapshot[index];
     const auto &parentTag = transition.parentTag[index];
-    auto m =
-        ShadowViewMutation::UpdateMutation(shadowView, shadowView, parentTag);
-    m = ShadowViewMutation::UpdateMutation(
-        shadowView, *cloneViewWithoutOpacity(m, propsParserContext), parentTag);
+    auto m = ShadowViewMutation::UpdateMutation(
+        shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag);
     filteredMutations.push_back(m);
   }
 }
@@ -854,10 +844,6 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     std::shared_ptr<LightNode> parent,
     std::shared_ptr<LightNode> child,
     ShadowViewMutationList &cleanupMutations) const {
-  //  parent->removeChildFromUnflattenedTree(child);
-  //  if (!parent->isMutationMode()) {
-  //    return;
-  //  }
   for (auto it = parent->children.begin(); it != parent->children.end(); it++) {
     if ((*it)->current.tag == child->current.tag) {
       parent->children.erase(it);
@@ -868,10 +854,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     return;
   }
 
-  //  auto node = std::static_pointer_cast<MutationNode>(parent);
-
   if (parent->children.size() == 0 && parent->state != ANIMATING) {
-    //    nodeForTag_.erase(parent->current.tag);
     auto pp = parent->parent.lock();
     for (int i = 0; i < pp->children.size(); i++) {
       if (pp->children[i]->current.tag == parent->current.tag) {
@@ -942,7 +925,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
           node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->state = DELETED;
-      //      nodeForTag_.erase(subNode->tag);
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->current));
     } else {
       subNode->state = WAITING;
@@ -1004,26 +986,26 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
 // When entering animations start, we temporarily set opacity to 0
 // so that we can immediately insert the view at the right position
 // and schedule the animation on the UI thread
-std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
-    facebook::react::ShadowViewMutation &mutation,
+ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
+    const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
-  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+  auto newView = shadowView;
   folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
-  newView->props = newProps;
+  auto newProps = getComponentDescriptorForShadowView(newView).cloneProps(
+      propsParserContext, newView.props, RawProps(opacity));
+  newView.props = newProps;
   return newView;
 }
 
-std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithOpacity(
-    facebook::react::ShadowViewMutation &mutation,
+ShadowView LayoutAnimationsProxy::cloneViewWithOpacity(
+    const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
-  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  const auto &props = static_cast<const ViewProps &>(*newView.get()->props);
+  auto newView = shadowView;
+  const auto &props = static_cast<const ViewProps &>(*newView.props);
   folly::dynamic opacity = folly::dynamic::object("opacity", props.opacity);
-  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
-  newView->props = newProps;
+  auto newProps = getComponentDescriptorForShadowView(newView).cloneProps(
+      propsParserContext, newView.props, RawProps(opacity));
+  newView.props = newProps;
   return newView;
 }
 
@@ -1066,11 +1048,10 @@ ShadowView LayoutAnimationsProxy::createLayoutAnimation(ShadowView &before, cons
   auto finalView = after;
   auto currentView = oldView;
   auto startView = oldView;
+  
+  auto la =  LayoutAnimation{finalView, currentView, startView, parentTag, {}, count};
 
-  layoutAnimations_.insert_or_assign(
-      tag,
-      LayoutAnimation{
-          finalView, currentView, startView, parentTag, {}, count});
+  layoutAnimations_.insert_or_assign(tag, std::move(la));
   
   return oldView;
 }
@@ -1101,9 +1082,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(const LightNode::Unshared& no
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->layoutAnimations_.insert_or_assign(
-          tag,
-          LayoutAnimation{newChildShadowView, newChildShadowView, newChildShadowView, parentTag, opacity});
+      auto la = LayoutAnimation{newChildShadowView, newChildShadowView, newChildShadowView, parentTag, opacity};
+      strongThis->layoutAnimations_.insert_or_assign(tag, std::move(la));
       window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
     }
 

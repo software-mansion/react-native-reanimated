@@ -177,12 +177,12 @@ struct LayoutAnimationsProxy
   void updateOngoingAnimationTarget(
       const int tag,
       const ShadowViewMutation &mutation) const;
-  std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
-      facebook::react::ShadowViewMutation &mutation,
+  ShadowView cloneViewWithoutOpacity(
+      const ShadowView &shadowView,
       const PropsParserContext &propsParserContext) const;
 
-  std::shared_ptr<ShadowView> cloneViewWithOpacity(
-      facebook::react::ShadowViewMutation &mutation,
+  ShadowView cloneViewWithOpacity(
+      const ShadowView &shadowView,
       const PropsParserContext &propsParserContext) const;
   void maybeRestoreOpacity(
       LayoutAnimation &layoutAnimation,
