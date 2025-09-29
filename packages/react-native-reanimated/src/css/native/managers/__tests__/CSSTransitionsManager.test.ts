@@ -27,7 +27,7 @@ describe('CSSTransitionsManager', () => {
 
   describe('update', () => {
     describe('attaching transition', () => {
-      it('registers a transition if there is no existing transition', () => {
+      test('registers a transition if there is no existing transition', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
@@ -44,7 +44,7 @@ describe('CSSTransitionsManager', () => {
     });
 
     describe('updating transition', () => {
-      it("doesn't update transition if method was called with the same config", () => {
+      test("doesn't update transition if method was called with the same config", () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
@@ -60,7 +60,7 @@ describe('CSSTransitionsManager', () => {
         expect(updateCSSTransition).not.toHaveBeenCalled();
       });
 
-      it('updates transition if method was called with different config', () => {
+      test('updates transition if method was called with different config', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
@@ -93,7 +93,7 @@ describe('CSSTransitionsManager', () => {
     });
 
     describe('detaching transition', () => {
-      it('detaches transition if method was called with null config and there is existing transition', () => {
+      test('detaches transition if method was called with null config and there is existing transition', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
@@ -110,7 +110,7 @@ describe('CSSTransitionsManager', () => {
       });
     });
 
-    it("doesn't call detach if there is no existing transition", () => {
+    test("doesn't call detach if there is no existing transition", () => {
       manager.update(null);
       expect(registerCSSTransition).not.toHaveBeenCalled();
       expect(unregisterCSSTransition).not.toHaveBeenCalled();

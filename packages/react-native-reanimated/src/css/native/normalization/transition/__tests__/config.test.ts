@@ -18,7 +18,7 @@ import {
 
 describe(normalizeCSSTransitionProperties, () => {
   describe('when there is a single transition property', () => {
-    it('normalizes transition config', () => {
+    test('normalizes transition config', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'all',
         transitionDuration: '1.5s',
@@ -40,7 +40,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('uses default values for unspecified properties', () => {
+    test('uses default values for unspecified properties', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'opacity',
       };
@@ -58,7 +58,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('returns null if transition property is "none"', () => {
+    test('returns null if transition property is "none"', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'none',
       };
@@ -66,7 +66,7 @@ describe(normalizeCSSTransitionProperties, () => {
       expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
 
-    it('returns null if transition property is an empty array', () => {
+    test('returns null if transition property is an empty array', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: [],
       };
@@ -74,7 +74,7 @@ describe(normalizeCSSTransitionProperties, () => {
       expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
 
-    it('ignores redundant transition settings', () => {
+    test('ignores redundant transition settings', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'all',
         transitionDuration: ['1.5s', 1000, '100ms'],
@@ -97,7 +97,7 @@ describe(normalizeCSSTransitionProperties, () => {
   });
 
   describe('when there are multiple transition properties', () => {
-    it('uses proper values if different properties have different settings', () => {
+    test('uses proper values if different properties have different settings', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'transform'],
         transitionDuration: ['1.5s', '2s'],
@@ -125,7 +125,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('uses the same settings for all properties if only single values are provided', () => {
+    test('uses the same settings for all properties if only single values are provided', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'width'],
         transitionDuration: '1.5s',
@@ -153,7 +153,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('cycles through values if their number is different than the number of transition properties', () => {
+    test('cycles through values if their number is different than the number of transition properties', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['width', 'opacity', 'transform'],
         transitionDuration: ['1.5s', '2s'],
@@ -187,7 +187,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('uses the last transition property settings if the same transition property is specified multiple times', () => {
+    test('uses the last transition property settings if the same transition property is specified multiple times', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'opacity'],
         transitionDuration: ['1.5s', '2s'],
@@ -209,7 +209,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('returns only "all" string if "all" appears in the list of properties and keeps other property settings in the settings object', () => {
+    test('returns only "all" string if "all" appears in the list of properties and keeps other property settings in the settings object', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['all', 'opacity'],
         transitionDuration: ['1.5s', '2s'],
@@ -237,7 +237,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('throws an error if one of the transition properties is "none"', () => {
+    test('throws an error if one of the transition properties is "none"', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'none'] as CSSTransitionProperty,
         transitionDuration: ['1.5s', '2s'],
@@ -254,7 +254,7 @@ describe(normalizeCSSTransitionProperties, () => {
   });
 
   describe('when there is no transitionProperty', () => {
-    it('uses "all" as a default transition property', () => {
+    test('uses "all" as a default transition property', () => {
       const config: CSSTransitionProperties = { transitionDuration: '2s' };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
@@ -272,7 +272,7 @@ describe(normalizeCSSTransitionProperties, () => {
   });
 
   describe('transition shorthand', () => {
-    it('properly parses transition shorthand', () => {
+    test('properly parses transition shorthand', () => {
       const config: CSSTransitionProperties = {
         transition:
           '4s, opacity 2s ease-in 1s, transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -303,7 +303,7 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    it('overrides transition shorthand settings with settings after transition shorthand', () => {
+    test('overrides transition shorthand settings with settings after transition shorthand', () => {
       const config: CSSTransitionProperties = {
         transition:
           'opacity 2s ease-in, transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -333,7 +333,7 @@ describe(normalizeCSSTransitionProperties, () => {
 });
 
 describe(getNormalizedCSSTransitionConfigUpdates, () => {
-  it('returns empty object if nothing changed', () => {
+  test('returns empty object if nothing changed', () => {
     const oldConfig: NormalizedCSSTransitionConfig = {
       properties: 'all',
       settings: {
@@ -363,7 +363,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
   });
 
   describe('property changes', () => {
-    it.each([
+    test.each([
       ['all', ['opacity'], ['opacity']],
       [['opacity'], 'all', 'all'],
       [['opacity'], ['transform'], ['transform']],
@@ -388,7 +388,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
       }
     );
 
-    it.each([
+    test.each([
       'all',
       ['opacity'],
       ['opacity', 'transform'],
@@ -413,7 +413,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
 
   describe('settings changes', () => {
     describe('single transition settings', () => {
-      it('returns all new settings if at least one setting changed', () => {
+      test('returns all new settings if at least one setting changed', () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
           properties: 'all',
           settings: {
@@ -451,7 +451,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
         });
       });
 
-      it('returns empty object if nothing changed', () => {
+      test('returns empty object if nothing changed', () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
           properties: 'all',
           settings: {
@@ -482,7 +482,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
     });
 
     describe('multiple transition settings', () => {
-      it('returns all new settings if at least one setting changed', () => {
+      test('returns all new settings if at least one setting changed', () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
           properties: ['opacity', 'transform', 'width'],
           settings: {

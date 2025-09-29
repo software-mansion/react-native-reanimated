@@ -71,7 +71,7 @@
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.25.2",
     "@react-native-community/cli": "20.0.0",
-    "@react-native/eslint-config": "0.82.0-rc.0",
+    "@react-native/eslint-config": "0.82.0-rc.4",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.1.1",
     "babel-plugin-worklets": "workspace:*",
