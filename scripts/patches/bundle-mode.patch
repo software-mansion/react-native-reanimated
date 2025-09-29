@@ -75,29 +75,28 @@ index cb4f1c4adc..b05b824d9c 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
 diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index 7810a059bc..b8095d694e 100644
+index 64c031cba0..0ecda6e036 100644
 --- a/apps/fabric-example/package.json
 +++ b/apps/fabric-example/package.json
 @@ -11,7 +11,7 @@
    },
    "dependencies": {
      "common-app": "workspace:*",
--    "react-native": "0.82.0-rc.0"
-+    "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch"
+-    "react-native": "0.82.0-rc.4"
++    "react-native": "patch:react-native@npm%3A0.82.0-rc.4#~/.yarn/patches/react-native-npm-0.82.0-rc.4-228ad0ffa7.patch"
    },
    "devDependencies": {
      "prettier": "^3.3.3"
 diff --git a/package.json b/package.json
-index 6a77357267..fa77b14543 100644
+index 6a77357267..b13ccd7ddc 100644
 --- a/package.json
 +++ b/package.json
-@@ -49,5 +49,28 @@
+@@ -49,5 +49,27 @@
      "prettier": "^3.3.3",
      "prettier-plugin-jsdoc": "^1.3.0",
      "typescript": "5.8.3"
 +  },
 +  "resolutions": {
-+    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch",
 +    "metro@npm:^0.82.0": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
 +    "metro@npm:^0.82.2": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
 +    "metro@npm:0.82.4": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
